@@ -11,6 +11,8 @@ def generate(prop, ports, signal, expr, clock, reset):
     width = ports[name]['width']
     if kind in ('onehot', 'mutex'):
         zero = prop.get('allow_zero', kind == 'mutex')
+        if type(zero) is not bool:
+            raise ValueError('allow_zero must be a boolean')
         return [], f'(({name} & ({name} - {width}\'d1)) == 0)' + ('' if zero else f' && ({name} != 0)')
     if kind == 'array_bound':
         size = prop['size']
@@ -24,6 +26,8 @@ def generate(prop, ports, signal, expr, clock, reset):
         operation = prop.get('operation', 'add')
         symbol = '+' if operation == 'add' else '-'
         body = [f'wire [{width}:0] rvwa_extended = {{1\'b0,{name}}} {symbol} {{1\'b0,{other}}};']
+        if type(prop.get('signed', False)) is not bool:
+            raise ValueError('signed must be a boolean')
         if prop.get('signed', False):
             bad = (f'({name}[{width-1}] == {other}[{width-1}])' if operation == 'add' else
                    f'({name}[{width-1}] != {other}[{width-1}])')

@@ -47,8 +47,8 @@ def populate(plan, database, capture):
             if signal.name not in ports or ports[signal.name]['direction'] != 'output':
                 skipped.append({'signal': signal.path, 'reason': 'internal enum needs RTL exposure'})
                 continue
-            if len(states) > 1 and all(v > 0 and (v & (v-1)) == 0 for v in states):
-                contracts.append({'id': f'onehot_{signal.name}', 'kind': 'onehot', 'signal': signal.name})
+            if len(states) > 1 and all(v >= 0 and (v & (v-1)) == 0 for v in states):
+                contracts.append({'id': f'onehot_{signal.name}', 'kind': 'mutex' if 0 in states else 'onehot', 'signal': signal.name})
             fsms.append({'signal': signal.name, 'states': states,
                          'transitions': [[a, b] for a in states for b in states]})
         by_name = {s.name: s for s in signals}
@@ -63,7 +63,7 @@ def populate(plan, database, capture):
                                       'signal': left.name, 'other': right.name, 'signed': left.type == 'SInt',
                                       'operation': 'add' if match[2] == '+' else 'sub'})
         for pid, address, enable, depth in db.q('SELECT p.id,p.address,p.enable,m.depth FROM mem_ports p JOIN memories m ON m.id=p.memory_id WHERE p.component_id=?', (cid,)):
-            if address in ports and (enable in (None, '1') or enable in ports and ports[enable]['width'] == 1):
+            if type(depth) is int and depth > 0 and address in ports and depth <= 2**ports[address]['width'] and (enable in (None, '1') or enable in ports and ports[enable]['width'] == 1):
                 contracts.append({'id': f'array_port_{pid}', 'kind': 'array_bound', 'signal': address,
                                   'enable': enable or '1', 'size': depth})
             else:

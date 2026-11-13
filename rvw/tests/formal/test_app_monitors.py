@@ -105,3 +105,10 @@ def test_bounded_starvation_and_handshake_refuse_fairness():
     with pytest.raises(ValueError, match='general liveness'):
         generate(spec, dict(prop, fairness='pop'))
     assert 'rvwa_age' in generate(spec, dict(kind='handshake_progress', valid='push', ready='pop', bound=3))
+
+
+def test_boolean_options_do_not_change_meaning_from_strings():
+    with pytest.raises(ValueError, match='boolean'):
+        generate(plan(), dict(kind='onehot', signal='a', allow_zero='false'))
+    with pytest.raises(ValueError, match='boolean'):
+        generate(plan(), dict(kind='arithmetic_overflow', signal='a', other='b', signed='false'))
