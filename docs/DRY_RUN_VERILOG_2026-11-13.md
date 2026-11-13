@@ -172,3 +172,54 @@ prints 2. The full 46-program regression and final 46 Spike matches above ran
 at workstation `9fa90545`, with unchanged compiler flags. A later PicoRV32
 smoke at `c6b7effc` checks the forced-rebuild path: one conclusive pass,
 55 cycles and 15 retirements.
+
+### Current-main recheck
+
+A follow-up walk uses workstation `25e761bf` and the same clean scratch commit
+`1350919`. All requested code fixes were already merged. No core source change
+was needed. The original two-revision gate evidence above was checked in the
+journal and logs. That gate was not repeated in this recheck.
+
+The local Spike shim initially had ABI version 6. Current main requires version
+7. Rebuilding the shim from the installed checkout resolves the doctor C2
+mapping error. After that rebuild, all applicable doctor checks are ready.
+JDK, javac and sbt remain `not_applicable`. The checkout gate is inconclusive
+because the pre-existing untracked `out/` remains in the workstation worktree.
+
+Checks and VIP generation succeed with the declared memory-request port map.
+UVM generation also succeeds with explicit `--rtl picorv32.v`. These outputs
+remain skeletons. No UVM scenario was executed. The initial UVM recheck omitted
+`--rtl` and was corrected before recording this result.
+
+The reviewed RVFI wrapper again reports add and cover bounded at depth 8.
+The add instruction activation cover is reached. Overall ISA status remains
+inconclusive. The three hand-written SVA tasks again report bounded engine
+passes at depth 8. Their input closure, attribution and non-vacuity remain
+uncertified. The suite status is `unknown`.
+
+The median ELF builds without gem5. The Python OoO model again consumes the
+15-retirement smoke trace. Its model remains hypothetical and uncalibrated.
+
+Scratch logs: `current-checks.log`, `current-vip.log`,
+`current-uvm-corrected.log`, `current-isa.log`, `current-sva.log`,
+`current-arch.log`, `current-ooo.log`, and `current-shim-build.log`.
+Doctor JSON is `core/rvw/out/current-doctor-rebuilt.json`.
+
+The targeted HDL tests report 20 passes. The fast set reports 1,939 passes,
+1 skip and 8,294 deselections. Release hygiene reports 40 passes. MCP discovery
+has no skipped-provider stderr. These tests ran before the report-only commit.
+
+The current-main full regression finishes with 46 passes, zero inconclusive
+results and `ok=true`. Its run is
+`2026-11-13T11-22-28Z-picorv32-full-1350919-b32127`.
+The published generation is `b5f51b58e85849d38dcbd5b0d7ac4231`.
+The initial batch timed out after 11 results during a native rebuild.
+This invocation overlapped doctor smoke checks in the same scratch build
+directory. The runner retried the remaining 34 programs and completed all 46.
+Keep this retry history with the final counts. The log is
+`logs/1794568947717485000.log`; JSON is `core/rvw/out/current-full.json`.
+
+All 46 sealed-generation traces match Spike after each ELF hash is checked
+against its conclusive C1 record. This includes all six original subword
+mismatch cases. No masks were relaxed. The log is `current-cosim.log`.
+Per-case results and the summary are in `core/rvw/out/current-cosim/`.
