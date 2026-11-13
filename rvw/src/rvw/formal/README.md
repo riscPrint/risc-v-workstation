@@ -3064,3 +3064,20 @@ The 2026-11-13 VexRiscv capacity table and exact limits are in
 `examples/formal/deep/vexriscv-capacity.md`. All 43 compiled safety problems
 remain unsolved. RAM, adder, UF and state-cut attempts earned no qualified gain.
 The table lists missing property classes and witness-reconstruction failures.
+
+## ISA kit signoff table
+
+`rvw formal isa --project PROJECT --out OUT --timeout 110` runs all selected
+bounded instruction and consistency checks. It prints one row per check and
+writes `rvw.isa-signoff/1` to `OUT/result.json`. Use `--unbounded` to run the
+instruction proof portfolio after the bounded checks. `--engines` selects up
+to three proof engines. MCP tool `formal_isa` returns the same report.
+
+Outcomes are `proven`, `bounded` with its cycle bound, `failed`, `unsupported`,
+`not applicable`, or `inconclusive`. Timeout and missing reachability evidence
+are inconclusive. Machine checks without bindings and adapter equivalence
+remain explicit gaps. Generated instruction models in the project run through
+the same instruction checker. The command does not infer their provenance.
+Exit 1 means a check failed. Exit 3 means that full ISA signoff is incomplete.
+Use a new output directory for each run. The native trees retain exact source
+hashes, assumptions and individual cycle settings.

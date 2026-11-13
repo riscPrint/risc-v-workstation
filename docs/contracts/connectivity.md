@@ -108,3 +108,15 @@ self-contained source hashes and formal input identity. `rvw.riscv-proof/1`
 records per-check engine-race results. Bounded and unbounded engine outcomes
 retain the portfolio meanings. Source assumptions without activation evidence
 keep the campaign inconclusive. These formats grant no ISA signoff.
+
+## ISA kit report
+
+`rvw formal isa` and MCP `formal_isa` write `rvw.isa-signoff/1` to
+`result.json`. `rows` carry `check`, `status`, optional `depth`, `reason` and
+an evidence path relative to the output directory. `bounded` means only the
+specified cycle bound. `proven` requires a successful unbounded portfolio
+result under its activation policy. Native failures are `failed`. Timeouts,
+unreachable retirement and tool errors remain `inconclusive`. Missing bindings
+are `unsupported`. `not applicable` identifies a check covered elsewhere or
+excluded by an explicit project scope. Overall status is `fail` on a check
+failure and otherwise `inconclusive`; this version does not grant full signoff.
