@@ -42,7 +42,7 @@ class Frontend:
         self.events = Counter()
         self.position = 0
 
-    def advance(self, cycle, instructions, blocked=False):
+    def advance(self, cycle, instructions, blocked=False, memory=None):
         c = self.config
         if blocked:
             self.events['frontend_recovery_cycles'] += 1
@@ -97,7 +97,8 @@ class Frontend:
             end, signature, hit = self.fills[block]
             self.position += 1
             last = self.position == end
-            self.fetch.append((op, cycle + c.fetch_latency, hit, last, signature))
+            cache_delay = memory.fetch(op, cycle) if memory is not None else 0
+            self.fetch.append((op, cycle + c.fetch_latency + cache_delay, hit, last, signature))
             active.add(block)
             if last:
                 del self.fills[block]

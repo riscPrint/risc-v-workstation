@@ -3532,6 +3532,19 @@ per-size cycles and per-class signed slope errors. Missing evidence exits 2.
 The report is local timing evidence, not a C4 verdict or complete C8 capture.
 Stock llvm-mca cannot load generated TableGen. The built-in baseline does not
 validate a generated model. See `Arch/SCHED_MODELS.md` for limits.
+### Own-core component-library adapter
+
+The optional `components` configuration object selects shared native
+component study sections. The own model delegates cache hierarchy,
+prefetch, TLB and branch component behavior to `rvw.csim.lib.Components`.
+It does not implement their algorithms. `components` in the run report
+retains native component statistics. Data service uses issue-cycle times
+after translation. Instruction service requires explicit front-end timing.
+The own translation object and component TLB cannot be enabled together.
+BTB lookup delay adds to branch resolution delay. History is actual-path
+history at issue. FTQ-directed prefetch, instruction TLB service and
+speculative predictor repair remain unsupported. Accuracy is inconclusive.
+
 ### Shared O3 project descriptions
 
 `rvw.arch-core/1` accepts an optional `ooo` object for O3 descriptions. gem5
