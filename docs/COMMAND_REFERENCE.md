@@ -14,7 +14,7 @@ An entry here states availability. It does not qualify a native flow.
 
 ```text
 usage: rvw [-h] [--version] [--project PROJECT]
-    {agent-bench,arch,bisect,bugmem,bundle,checks,cosim,cov,csim,debug,doctor,evidence,farm,fault,formal,init,lint,mcp,memory,ooo,perf,plan,privilege,query,reduce,regress,sim,speed-compare,speed-sweep,backends,uvm-ral,uvm-cpu,hdl,cocotb,soc,uvm,verification-plan,wave,workloads}
+    {agent-bench,arch,bisect,bugmem,bundle,checks,cosim,cov,csim,debug,doctor,evidence,farm,fault,formal,init,lint,mcp,memory,ooo,perf,plan,privilege,probes,query,reduce,regress,sim,speed-compare,speed-sweep,backends,uvm-ral,uvm-cpu,hdl,cocotb,soc,uvm,verification-plan,wave,workloads}
     ...
 ```
 
@@ -1445,6 +1445,34 @@ usage: rvw privilege reference [-h] [--spike SPIKE] [--timeout TIMEOUT]
 ```text
 usage: rvw privilege check [-h] --results RESULTS --platform PLATFORM
     [--timeout TIMEOUT] [--json] [--project PROJECT] directory
+```
+
+### `rvw probes`
+
+```text
+usage: rvw probes [-h] [--project PROJECT] {list,summary,convert} ...
+```
+
+### `rvw probes list`
+
+```text
+usage: rvw probes list [-h] (--db DB | --events EVENTS) [--json] [--project
+    PROJECT]
+```
+
+### `rvw probes summary`
+
+```text
+usage: rvw probes summary [-h] [--project PROJECT] events
+```
+
+### `rvw probes convert`
+
+```text
+usage: rvw probes convert [-h] --to
+    {bp-events,cache,counts,etrace-ingress,hpm,interrupts,kanata,mmu} --out
+    OUT [--c2 C2] [--c1 C1] [--probe PROBE] [--roi ROI] [--json] [--project
+    PROJECT] events
 ```
 
 ### `rvw query`
@@ -3398,6 +3426,30 @@ Roll up project requirements and feature evidence. Report coverage holes, test/f
 Arguments: `plan` (required), `previous`, `out`.
 
 Starts a background job: yes.
+
+### `probes_convert`
+
+Convert a rvw.probe-events/1 stream into a consumer format: bp-events, cache, counts, etrace-ingress, hpm, interrupts, kanata, mmu. bp-events, counts and interrupts need the run C2 (c2); counts also needs C1 (c1). Refuses events that do not align with C2.
+
+Arguments: `events` (required), `to` (required), `out` (required), `c2`, `c1`, `probe`, `roi_start`, `roi_end`.
+
+Starts a background job: no.
+
+### `probes_list`
+
+List simulation probes from a design database (db) or a probe event stream (events), and for each consumer tool whether the probes enable it or which events are missing.
+
+Arguments: `db`, `events`.
+
+Starts a background job: no.
+
+### `probes_summary`
+
+Event counts and counter totals of a rvw.probe-events/1 stream.
+
+Arguments: `events` (required).
+
+Starts a background job: no.
 
 ### `query_build_db`
 
