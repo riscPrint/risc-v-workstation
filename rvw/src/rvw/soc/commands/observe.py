@@ -51,5 +51,5 @@ def mcp_tools():
     for command,names,handler in [('observe',['binding','out'],generate_job),
                                   ('observe_pack',['binding','pins','trace','result','out'],pack_job)]:
         result.append(ToolSpec('soc_'+command,'Generate or package independently sampled RTL transaction tags. Matching samples remain inconclusive.',
-                              schema({name:{'type':'string'} for name in names},names),handler,long=True))
+                              schema({name:{'type':'string'} for name in names},names),handler,long=True, side_effects='long-running; writes generated observations or reports to out', native_tools=()))
     return result

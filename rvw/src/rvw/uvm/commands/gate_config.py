@@ -21,4 +21,4 @@ def mcp_tools():
     string={'type':'string'}
     return [ToolSpec('uvm_gate_config','Bind a pure SV UVM build to a C4 build suite.',
         schema({'build_dir':string,'source_repo':string,'out':string,'seeds':{'type':'array','items':{'type':'integer'}}},
-               ['build_dir','source_repo','out']),configure)]
+               ['build_dir','source_repo','out']),configure, side_effects='writes generated files under out', native_tools=())]

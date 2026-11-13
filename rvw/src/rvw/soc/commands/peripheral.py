@@ -28,4 +28,4 @@ def run(args):
 def mcp_tools():
     from rvw.mcp.spec import ToolSpec, schema
     return [ToolSpec('soc_peripheral', 'Get a bounded SpinalSoc register map and project binder.',
-        schema({'kind':{'type':'string'}, 'name':{'type':'string'}, 'base':{'type':'integer'}}, ['kind','name','base']), peripheral)]
+        schema({'kind':{'type':'string'}, 'name':{'type':'string'}, 'base':{'type':'integer'}}, ['kind','name','base']), peripheral, side_effects='read-only', native_tools=())]

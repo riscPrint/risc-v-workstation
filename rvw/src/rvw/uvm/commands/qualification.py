@@ -15,4 +15,4 @@ def register(sub):
 def mcp_tools():
     string={'type':'string'}
     return [ToolSpec('uvm_qualification','Render measured SV CPU and feature-probe qualification.',
-        schema({'cpu_results':string,'probes':string,'out':string},['cpu_results','probes','out']),generate)]
+        schema({'cpu_results':string,'probes':string,'out':string},['cpu_results','probes','out']),generate, side_effects='writes generated files under out', native_tools=())]
