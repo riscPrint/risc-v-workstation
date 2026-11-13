@@ -33,6 +33,9 @@ LOCK = {"lock": {**S, "description": "machine lock to hold (default $RVW_HEAVY_L
 
 def mcp_tools():
     return [
+        ToolSpec("cov_campaign", "Execute bounded ISA candidates through C1 and strict complete Spike checks. Resume validates saved artifacts. CPU-hour metrics remain unqualified.",
+                 schema({"settings": S, "work_dir": S, "resume": B}, ["settings", "work_dir"]),
+                 handler("rvw.cov.campaign_cli", "campaign"), long=True),
         ToolSpec("cov_generate", "Solve one declared pinned integer ISA goal with Z3. Emits a bounded payload and solver evidence. A generated candidate earns no coverage hits and is not a core correctness result.",
                  schema({"manifest": S, "source_root": S, "goal": S, "work_dir": S,
                          "registers": {"type": "array", "items": I, "minItems": 3, "maxItems": 3},

@@ -1106,3 +1106,8 @@ match the complete Spike trace, and pass ELF-bound payload sampling. The closed
 loop, payload-region qualification, full attempt CPU accounting, safe resume,
 held-out mutants and five-seed paired native campaigns in #349 remain open.
 This command is not the random baseline and is not a PSS implementation.
+
+### Bounded execution loop
+
+See [the campaign interface](CAMPAIGN.md) for `rvw cov campaign`, its project
+settings, payload sampling, resume checks and unqualified CPU accounting.
