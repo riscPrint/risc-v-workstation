@@ -33,13 +33,15 @@ def load(path):
         raise ValueError(f'run binding schema must be {SCHEMA}')
     if not isinstance(b.get('adapter'), list) or not b['adapter'] or not b.get('platform'):
         raise ValueError('run binding needs an adapter argv list and a platform')
-    def where(p):
+    def where(p, *, command=False):
         text = os.path.expandvars(p)
         if '$' in text:
             raise ValueError(f'unset environment variable in {p}')
         q = Path(text)
-        return str(q if q.is_absolute() else (path.parent/q).resolve()) if ('/' in text or text.startswith('.')) else text
-    b['adapter'] = [where(b['adapter'][0])] + list(b['adapter'][1:])
+        if command and '/' not in text and not (path.parent/q).is_file():
+            return text
+        return str(q if q.is_absolute() else (path.parent/q).resolve())
+    b['adapter'] = [where(b['adapter'][0], command=True)] + list(b['adapter'][1:])
     b['platform'] = where(b['platform'])
     b['_dir'] = path.parent
     return b
