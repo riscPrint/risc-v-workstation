@@ -74,8 +74,12 @@ def qualify(elf, results, platform, manifest, source_root, candidate, coverage_p
 
 
 @captured.command
-def campaign(settings, work_dir, resume=False):
+def campaign(settings, work_dir, resume=False, replay=None):
     """Run a bounded integer campaign from project-owned runtime and adapter data."""
+    if replay is not None:
+        if type(replay) is not int or replay<0:
+            raise ValueError('replay must be a nonnegative attempt index')
+        resume=True
     settings = Path(settings).resolve()
     data = json.loads(captured.read_text(settings))
     required = {'schema', 'manifest', 'source_root', 'project', 'config', 'registers',
@@ -126,15 +130,19 @@ def campaign(settings, work_dir, resume=False):
         verify_inputs(out,report['input_generation'],identity)
         for attempt in report['attempts']:
             verify_attempt(out,attempt)
-            for name, expected in attempt.get('artifacts', {}).items():
-                if digest(out/name) != expected:
-                    raise ValueError('resume artifact changed: '+name)
+            if replay is None:
+                for name, expected in attempt.get('artifacts', {}).items():
+                    if digest(out/name) != expected:
+                        raise ValueError('resume artifact changed: '+name)
     else:
         out.mkdir(parents=True, exist_ok=False)
         report['input_generation']=seal_inputs(out,identity)
     selected = load_config(project=path('project'))
     if data['config'] not in selected.configs:
         raise ValueError('unknown core configuration')
+    if replay is not None:
+        from .campaign_replay import replay_attempt
+        return replay_attempt(out,report,replay,selected,data,manifest,root,path('platform'))
     guide = None
     if data.get('rtl_plan'):
         from .guidance import Guide

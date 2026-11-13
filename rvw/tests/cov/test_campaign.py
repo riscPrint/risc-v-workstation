@@ -219,3 +219,66 @@ def test_complete_match_without_native_identity_retains_reference_but_no_hits(tm
     report=c.qualify('elf',result.parent,'platform','manifest','root',{})
     assert report['status']=='identity_error' and report['new_hits']==[]
     assert report['comparison']==comparison
+
+
+def test_replay_uses_archived_elf_and_preserves_original_state(tmp_path,monkeypatch):
+    settings=setup(tmp_path,monkeypatch);seen=[]
+    def qualify(*args):
+        seen.append(args[0])
+        return {'status':'qualified','execution_identity':'fixture-native','coverage':{
+            'groups':{'g':{'hits':[{'bin':[1],'count':1},{'bin':[2],'count':1}]}}}}
+    monkeypatch.setattr(c,'qualify',qualify)
+    out=tmp_path/'out';original=c.campaign(settings,out)
+    pointer=(out/'state/current').read_bytes()
+    replay=c.campaign(settings,out,replay=0)
+    assert replay['status']=='qualified' and replay['same_execution_identity'] is True
+    assert replay['credited_new_hits']==[] and replay['sealed_generation']
+    assert (out/'state/current').read_bytes()==pointer
+    assert seen[0]!=seen[-1] and 'attempt-evidence' in seen[-1].parts
+    assert original['hits']==['g:[1]','g:[2]']
+
+
+def test_replay_changed_context_is_not_qualified(tmp_path,monkeypatch):
+    settings=setup(tmp_path,monkeypatch)
+    def evidence(identity):
+        return {'status':'qualified','execution_identity':identity,'coverage':{'groups':{'g':{
+            'hits':[{'bin':[1],'count':1},{'bin':[2],'count':1}]}}}}
+    monkeypatch.setattr(c,'qualify',lambda *a:evidence('old'))
+    out=tmp_path/'out';c.campaign(settings,out)
+    monkeypatch.setattr(c,'qualify',lambda *a:evidence('new'))
+    replay=c.campaign(settings,out,replay=0)
+    assert replay['status']=='identity_error' and replay['same_execution_identity'] is False
+    assert replay['credited_new_hits']==[]
+
+
+def test_no_elf_attempt_cannot_execute_replay(tmp_path,monkeypatch):
+    settings=setup(tmp_path,monkeypatch)
+    monkeypatch.setattr(c,'generate',lambda *a:{'status':'unsupported'})
+    out=tmp_path/'out';c.campaign(settings,out)
+    assert c.campaign(settings,out,replay=0)['status']=='unsupported'
+
+
+def test_replay_cli_and_mcp_reject_negative_index(tmp_path):
+    import subprocess,sys
+    from rvw.cov.campaign_cli import execute_json
+    ran=subprocess.run([sys.executable,'-m','rvw','cov','campaign','--settings','unused',
+        '--work-dir',str(tmp_path/'unused'),'--replay','-1','--json'],capture_output=True,text=True)
+    assert ran.returncode==2,ran.stderr
+    with pytest.raises(ValueError) as error:
+        execute_json(settings='unused',work_dir=tmp_path/'unused',replay=-1)
+    assert json.loads(ran.stdout)['message']==str(error.value)
+
+
+def test_replay_never_uses_altered_working_elf(tmp_path,monkeypatch):
+    settings=setup(tmp_path,monkeypatch);seen=[]
+    def qualify(*args):
+        seen.append(args[0].read_bytes())
+        return {'status':'qualified','execution_identity':'fixture-native','coverage':{
+            'groups':{'g':{'hits':[{'bin':[1],'count':1},{'bin':[2],'count':1}]}}}}
+    monkeypatch.setattr(c,'qualify',qualify)
+    out=tmp_path/'out';c.campaign(settings,out)
+    (out/'attempt-0000/elfs/program.elf').write_bytes(b'altered')
+    result=c.campaign(settings,out,replay=0)
+    assert result['status']=='qualified' and seen[-1]==b'fake elf'
+    with pytest.raises(ValueError,match='resume artifact changed'):
+        c.campaign(settings,out,resume=True)

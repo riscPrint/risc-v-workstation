@@ -44,7 +44,7 @@ def mcp_tools():
                          "distances":{"type":"array","items":I}, "memory":B}, ["goal","work_dir","registers"]),
                  handler("rvw.cov.action_cli", "actions"), long=True),
         ToolSpec("cov_campaign", "Execute bounded ISA candidates through C1 and strict complete Spike checks. Resume validates saved artifacts. CPU-hour metrics remain unqualified.",
-                 schema({"settings": S, "work_dir": S, "resume": B}, ["settings", "work_dir"]),
+                 schema({"settings": S, "work_dir": S, "resume": B, "replay": {**I,"minimum":0}}, ["settings", "work_dir"]),
                  handler("rvw.cov.campaign_cli", "campaign"), long=True),
         ToolSpec("cov_generate", "Solve one declared pinned integer ISA goal with Z3. Emits a bounded payload and solver evidence. A generated candidate earns no coverage hits and is not a core correctness result.",
                  schema({"manifest": S, "source_root": S, "goal": S, "work_dir": S,

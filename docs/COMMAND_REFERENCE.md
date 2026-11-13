@@ -409,7 +409,7 @@ usage: rvw cov [-h] [--project PROJECT]
 
 ```text
 usage: rvw cov campaign [-h] --settings SETTINGS --work-dir WORK_DIR
-    [--resume] [--json] [--project PROJECT]
+    [--resume] [--replay REPLAY] [--json] [--project PROJECT]
 ```
 
 ### `rvw cov actions`
@@ -2706,7 +2706,7 @@ Starts a background job: yes.
 
 Execute bounded ISA candidates through C1 and strict complete Spike checks. Resume validates saved artifacts. CPU-hour metrics remain unqualified.
 
-Arguments: `settings` (required), `work_dir` (required), `resume`.
+Arguments: `settings` (required), `work_dir` (required), `resume`, `replay`.
 
 Starts a background job: yes.
 
