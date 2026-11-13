@@ -81,4 +81,33 @@ class LiveDevicesSpec extends AnyFunSuite {
     assert(d.tick(2999) == 0)
     assert(d.read(0xc200004L, 4) == 0)
   }
+  test("UART firmware modem control survives snapshots and resets") {
+    val d = fresh()
+    d.write(0x10000004L, 1, 3)
+    val state = d.snapshot()
+    assert(d.read(0x10000004L, 1) == 3)
+    d.reset()
+    assert(d.read(0x10000004L, 1) == 0)
+    d.restore(state)
+    assert(d.read(0x10000004L, 1) == 3)
+    intercept[IllegalArgumentException](d.write(0x10000004L, 1, 16))
+  }
+
+  test("CLINT RV64 accesses preserve both halves and reject other wide registers") {
+    val d = fresh()
+    val value = (BigInt(1) << 32) + 5
+    d.write(0x2004000L, 8, value)
+    assert(d.read(0x2004000L, 8) == value)
+    assert(d.read(0x2004000L, 4) == 5)
+    assert(d.read(0x2004004L, 4) == 1)
+    d.tick(100)
+    assert(d.read(0x200bff8L, 8) == 10)
+    d.write(0x2004000L, 8, 3)
+    assert(d.tick(100).testBit(7))
+    d.reset()
+    assert(d.read(0x2004000L, 8) == (BigInt(1) << 64) - 1)
+    intercept[IllegalArgumentException](d.read(0x2000000L, 8))
+    intercept[IllegalArgumentException](d.write(0xc002000L, 8, 0))
+  }
+
 }

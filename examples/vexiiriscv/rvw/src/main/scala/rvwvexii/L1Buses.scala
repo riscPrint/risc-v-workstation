@@ -10,7 +10,7 @@ import scala.collection.mutable
   * line, one memory word per cycle, after `latency()` cycles; responses keep command order.
   * A write burst stores each beat at once and answers after its last beat. Call `tick` once
   * per sampled edge; it reads the handshakes of that edge and drives the next responses. */
-class L1Buses(dut: VexiiRiscv, memory: mutable.LongMap[Int], inRam: (Long, Long) => Boolean,
+class L1Buses(dut: VexiiRiscv, memory: riscvsim.ByteMemory, inRam: (Long, Long) => Boolean,
     latency: () => Long) {
   private def read(addr: Long, n: Int): BigInt = (0 until n).foldLeft(BigInt(0)) { (v, i) =>
     v | (BigInt(memory.getOrElse(addr + i, 0)) << (8 * i))

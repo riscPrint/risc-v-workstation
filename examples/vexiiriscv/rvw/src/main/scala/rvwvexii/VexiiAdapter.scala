@@ -13,11 +13,12 @@ import scala.collection.mutable
 
 class VexiiAdapter(val xlen: Int) extends CoreAdapter {
   override def freshInstancePerRun = true
+  override def supportsBootPayloads = true
   type Model = SimCompiled[VexiiRiscv]
   override def irqInputMask: BigInt = if (xlen == 64) 0xa88 else 0x888
   def core = "vexiiriscv"
   val configs = VexiiTop.configs.filter(_.startsWith(s"rv$xlen"))
-  def isa(config: String) = s"rv${xlen}im${if (config.endsWith("asu")) "a" else ""}_zicsr_zifencei"
+  def isa(config: String) = s"rv${xlen}im${if (VexiiTop.supervisor(config)) "a" else ""}${if (VexiiTop.compressed(config)) "c" else ""}_zicsr_zifencei"
   def sourceDir = new File(sys.env("VEXIIRISCV")).getCanonicalFile
   override def replayEnv = Seq("VEXIIRISCV" -> sourceDir.getPath) ++
     Seq("RVW_COSIM_DPI", "RVW_COSIM_FAULT_ORDER", "RVW_VEX_LOCK", "RVW_VEX_XLEN", "RVW_VEX_DEVICE_MAP", "RVW_DEVICE_LIBRARY").flatMap(
@@ -61,9 +62,11 @@ class VexiiAdapter(val xlen: Int) extends CoreAdapter {
     require(ctx.elf.entry == ramBase, "ELF entry must equal reset PC 0x80000000")
     val tohost = new ToHost(ToHost.find(ctx.elf).getOrElse(
       throw new IllegalArgumentException("ELF has no tohost symbol")), busBytes)
-    val memory = mutable.LongMap.empty[Int]
+    val ramSize = job.socMap.flatMap(_.regions.find(_.kind == "ram")).map(_.size.toLong).getOrElse(this.ramSize)
+    require(ramSize > 0 && ramSize <= 128L * 1024 * 1024, "RAM size must be at most 128 MiB")
+    val memory = new ByteMemory(ramBase, ramSize.toInt)
     def inRam(a: Long, n: Long): Boolean = a >= ramBase && n >= 0 && a + n <= ramBase + ramSize
-    ctx.elf.load { (addr, bytes) =>
+    ctx.loadMemory { (addr, bytes) =>
       require(inRam(addr, bytes.length), "ELF segment outside RAM")
       bytes.indices.foreach(i => memory(addr + i) = bytes(i) & 255)
     }
@@ -79,6 +82,9 @@ class VexiiAdapter(val xlen: Int) extends CoreAdapter {
     val konataLog = if (job.konata) Some(new konata.Backend(new File(job.out, "konata.log"))) else None
     val bench = ctx.elf.symbol("bench_stats").map(new MemWords(_, 2, busBytes))
     var backend: C2Backend = null
+    var lastRetiredPc = Option.empty[BigInt]
+    var lastRetiredMode = Option.empty[Int]
+    val retiredByMode = Array.fill(4)(0L)
     var probes = Option.empty[ProbeCollector]
     val loadAddresses = mutable.LongMap.empty[(Long, Long)]
     val storeAddresses = mutable.LongMap.empty[(Long, Long)]
@@ -234,6 +240,7 @@ class VexiiAdapter(val xlen: Int) extends CoreAdapter {
         backend = new C2Backend(xlen, () => ctl.cycle, () => (tap.privilege.toInt & 3),
           () => if (traps.nonEmpty) traps.dequeue() else throw new IllegalStateException("trap reported without trap-entry values"),
           r => {
+            lastRetiredPc = Some(r.pc); lastRetiredMode = Some(r.mode); retiredByMode(r.mode) += 1
             val faulted = if (sys.env.get("RVW_COSIM_FAULT_ORDER").contains(r.order.toString)) {
               require(r.rd != 0, "fault target must write a GPR")
               r.copy(rdWdata = r.rdWdata ^ 1)
@@ -247,7 +254,7 @@ class VexiiAdapter(val xlen: Int) extends CoreAdapter {
           (addr, sizeLog2, data) => {
             bench.foreach(_.onStore(addr, sizeLog2, data))
             for (m <- mailbox; (step, _) <- stimulusWords if addr == BigInt(step) && sizeLog2 == 3) m.request(ctl.cycle, data)
-            tohost.onStore(addr, sizeLog2, data) match {
+            if (!job.config.endsWith("_linux")) tohost.onStore(addr, sizeLog2, data) match {
               case Some(ToHost.Pass) => finish = Some((Status.Pass, None, None))
               case Some(f: ToHost.Fail) => finish = Some((Status.Fail, Some(f.code), Some(s"tohost = ${Hex(f.raw)}")))
               case None =>
@@ -298,7 +305,11 @@ class VexiiAdapter(val xlen: Int) extends CoreAdapter {
       .map(m => (Status.Error, Some(s"stimulus served ${m.served} of its events"))).getOrElse((status, message))
     RunOutcome(finalStatus, cycles, retired, code, finalMessage,
       ujson.Obj("traps" -> RvwJson.num(if (backend == null) 0L else backend.traps), "rvfi_records" -> RvwJson.num(retired),
-        "tohost" -> Hex(tohost.value), "rvfi_monitor" -> false, "memory_bytes" -> RvwJson.num(ramSize),
+        "completion" -> (if (job.config.endsWith("_linux")) "bounded" else "tohost"),
+        "tohost" -> (if (job.config.endsWith("_linux")) ujson.Null else ujson.Str(Hex(tohost.value))), "rvfi_monitor" -> false, "memory_bytes" -> RvwJson.num(ramSize),
+        "retired_by_mode" -> ujson.Obj.from(retiredByMode.indices.map(i => i.toString -> RvwJson.num(retiredByMode(i)))),
+        "last_retired_pc" -> lastRetiredPc.map(v => ujson.Str(Hex(v))).getOrElse(ujson.Null),
+        "last_retired_mode" -> lastRetiredMode.map(v => ujson.Num(v)).getOrElse(ujson.Null),
         "device_output" -> live.map(_.outputs).getOrElse(ujson.Obj()),
         "commit_source" -> "VexiiRiscvProbe", "translated_addresses" -> ujson.Arr.from(translatedAddresses),
         "mmu_walks" -> RvwJson.num(walkCapture.map(_.walks.toLong).getOrElse(0L)),

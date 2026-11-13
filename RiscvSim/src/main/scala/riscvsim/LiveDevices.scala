@@ -33,7 +33,7 @@ final class LiveDevices(map: SimMap) {
     val input = c.obj.get("rx").map(_.arr.toSeq).getOrElse(Seq.empty)
     require(input.map(e => SimMap.number(e("cycle"))).sliding(2).forall(p => p.size < 2 || p.head <= p.last), "unordered UART input")
     var position = 0
-    var ier, divisorLow, divisorHigh, lcr, scratch = 0L
+    var ier, divisorLow, divisorHigh, lcr, scratch, mcr = 0L
     var fifo = false
     var overrun = false
     override def tick(cycle: Long): Unit = {
@@ -47,11 +47,12 @@ final class LiveDevices(map: SimMap) {
     }
     def save: ujson.Value = ujson.Obj("rx" -> ujson.Arr.from(rx), "tx" -> tx.toString,
       "position" -> position, "ier" -> ier, "dl" -> divisorLow, "dh" -> divisorHigh,
-      "lcr" -> lcr, "scratch" -> scratch, "fifo" -> fifo, "overrun" -> overrun)
+      "lcr" -> lcr, "scratch" -> scratch, "mcr" -> mcr, "fifo" -> fifo, "overrun" -> overrun)
     def restore(v: ujson.Value): Unit = {
       rx.clear(); v("rx").arr.foreach(b => rx.enqueue(b.num.toInt))
       tx.clear(); tx.append(v("tx").str); position = v("position").num.toInt
       ier = SimMap.number(v("ier")).toLong; divisorLow = SimMap.number(v("dl")).toLong; divisorHigh = SimMap.number(v("dh")).toLong
+      mcr = v.obj.get("mcr").map(SimMap.number).getOrElse(BigInt(0)).toLong
       lcr = SimMap.number(v("lcr")).toLong; scratch = SimMap.number(v("scratch")).toLong
       fifo = v("fifo").bool; overrun = v("overrun").bool
     }
@@ -64,6 +65,7 @@ final class LiveDevices(map: SimMap) {
       case 1 => ier
       case 2 => (if (fifo) 0xc0 else 0) | (if ((ier & 1) != 0 && rx.nonEmpty) 4 else if ((ier & 2) != 0) 2 else 1)
       case 3 => lcr
+      case 4 => mcr
       case 5 => val v = 0x60L | (if (rx.nonEmpty) 1 else 0) | (if (overrun) 2 else 0); overrun = false; v
       case 7 => scratch
       case _ => throw new IllegalArgumentException(s"unsupported UART read $o")
@@ -75,6 +77,7 @@ final class LiveDevices(map: SimMap) {
       case 1 => require((v & ~3L) == 0, "unsupported UART interrupt enable"); ier = v
       case 2 => require((v & ~7L) == 0, "unsupported UART FIFO control"); fifo = (v & 1) != 0; if ((v & 2) != 0) rx.clear()
       case 3 => lcr = v & 255
+      case 4 => require((v & ~15L) == 0, "unsupported UART modem control"); mcr = v
       case 7 => scratch = v & 255
       case _ => throw new IllegalArgumentException(s"unsupported UART write $o")
     }
@@ -169,13 +172,24 @@ final class LiveDevices(map: SimMap) {
   def contains(address: Long, bytes: Int): Boolean = entries.exists(_._1.contains(BigInt(address), bytes))
   def read(address: Long, bytes: Int): BigInt = {
     val (r, _, d) = selected(address, bytes, 'r')
-    require(bytes == (if (d.isInstanceOf[Uart]) 1 else 4), "unsupported device read width")
-    BigInt(d.read((BigInt(address) - r.base).toLong))
+    val offset = (BigInt(address) - r.base).toLong
+    if (bytes == 8 && d.isInstanceOf[Clint] && Set(0x4000L, 0xbff8L)(offset))
+      (BigInt(d.read(offset)) & 0xffffffffL) | ((BigInt(d.read(offset + 4)) & 0xffffffffL) << 32)
+    else {
+      require(bytes == (if (d.isInstanceOf[Uart]) 1 else 4), "unsupported device read width")
+      BigInt(d.read(offset))
+    }
   }
   def write(address: Long, bytes: Int, value: BigInt): Unit = {
     val (r, _, d) = selected(address, bytes, 'w')
-    require(bytes == (if (d.isInstanceOf[Uart]) 1 else 4), "unsupported device write width")
-    d.write((BigInt(address) - r.base).toLong, value.toLong)
+    val offset = (BigInt(address) - r.base).toLong
+    if (bytes == 8 && d.isInstanceOf[Clint] && Set(0x4000L, 0xbff8L)(offset)) {
+      d.write(offset, (value & 0xffffffffL).toLong)
+      d.write(offset + 4, ((value >> 32) & 0xffffffffL).toLong)
+    } else {
+      require(bytes == (if (d.isInstanceOf[Uart]) 1 else 4), "unsupported device write width")
+      d.write(offset, value.toLong)
+    }
   }
   def tick(cycle: Long): BigInt = {
     entries.foreach(_._3.tick(cycle))

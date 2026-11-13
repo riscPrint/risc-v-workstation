@@ -22,14 +22,13 @@ cd "$HOME/projects/VexiiRiscv"
 git checkout -b rvw-project 9f70315deb3390b283995c5b8f1bd38215ecf52b
 git submodule update --init ext/SpinalHDL ext/rvls
 cp "$RVW_HOME/examples/vexiiriscv/rvw.toml" rvw.toml
-cp "$RVW_HOME/examples/vexiiriscv/live-devices.json" live-devices.json
 cp -R "$RVW_HOME/examples/vexiiriscv/rvw" rvw
 unset VEXIIRISCV RVW_PROJECT RVW_CORE
 export RVW_PYTHON="$RVW_HOME/rvw/.venv/bin/python"
 export RVW_LOCK_PYTHON="$RVW_PYTHON"
 export RISCV_TESTS_SOURCE=/path/to/riscv-tests
 rvw/build-tests.sh
-git add rvw.toml rvw live-devices.json
+git add rvw.toml rvw
 git commit -m 'Add workstation project files'
 ```
 
@@ -482,13 +481,13 @@ satp readback check because they request ASID 7. The rich profile now enables
 
 ## Interrupt-driven UART echo
 
-`live-devices.json` defines the RAM, UART FIFO, CLINT and PLIC map. The adapter
+`rvw/live-devices.json` defines the RAM, UART FIFO, CLINT and PLIC map. The adapter
 uses `LiveDevices` for this map. It connects software, timer and external levels
 to the real core interrupt inputs. The existing DeviceApiV1 map remains available.
 A request must select one device map. Live MMIO regions must match the project
 PMA regions. Device state is fresh for each run.
 
-Run `rvw/programs/device-echo.S` with `--soc-map live-devices.json` and fixed
+Run `rvw/programs/device-echo.S` with `--soc-map rvw/live-devices.json` and fixed
 memory latency zero. The program enables the UART FIFO and RX interrupt. It
 claims the PLIC source, drains five bytes, echoes `echo\n`, and completes the
 claim. It also services CLINT software and timer interrupts before reporting
@@ -558,3 +557,62 @@ pairs, and the pending instruction injection hook. Source path aliases are
 for display. Raw runs remain in the worker checkout. Missing raw runs on a
 clean checkout become explicit evidence holes. The plan covers these bounded
 stimulus samples. It does not qualify the whole core or grant C4 acceptance.
+
+## OpenSBI and bounded Linux startup
+
+`rvw/opensbi/prepare.py` builds a reset ELF, DTB and supervisor test payload.
+Supply an OpenSBI `fw_jump.bin` built for `rv64ima_zicsr_zifencei`, ABI `lp64`,
+`FW_TEXT_START=0x80200000`, `FW_JUMP_ADDR=0x80400000` and an empty
+`FW_JUMP_FDT_OFFSET=`. This preserves the DTB address from the reset prelude.
+The sample uses OpenSBI revision `bd613dd92113f683052acfb23d9dc8ba60029e0a`.
+Build it from a private checkout with the supplied UART/CLINT configuration:
+
+```sh
+rvw/.venv/bin/python examples/vexiiriscv/rvw/opensbi/build.py \
+  --source /path/to/private/opensbi --out /tmp/new-opensbi-build \
+  --llvm-prefix /path/to/llvm/bin
+```
+
+The builder uses `FW_OPTIONS=1` to suppress boot diagnostics.
+It records configuration, platform-source and firmware hashes. The firmware
+uses the project-owned single-hart UART/CLINT platform. Linux receives the
+generated DTB. Use `platform/rvw/firmware/fw_jump.bin` from the build directory.
+Apple's Clang has no RISC-V backend. Homebrew LLVM and LLD supply the tested build path.
+
+```sh
+rvw/.venv/bin/python examples/vexiiriscv/rvw/opensbi/prepare.py \
+  --firmware /path/to/fw_jump.bin --out /tmp/new-vexii-boot
+examples/vexiiriscv/rvw/run64.sh run --config rv64imasu \
+  --elf /tmp/new-vexii-boot/reset.elf \
+  --boot-payloads /tmp/new-vexii-boot/payloads.json \
+  --soc-map /tmp/new-vexii-boot/devices.json --out /tmp/new-vexii-run \
+  --seed 1 --mem-latency 0 --max-cycles 10000000 --wall-timeout 600 --rvfi-trace --json
+```
+
+The supervisor payload prints `S`. It calls the SBI base extension. It checks
+the return code and specification version 2.0. It reports through `tohost`.
+Preparation records hashes for the reset ELF, firmware, payload and DTB. Supply `--kernel /path/to/Image` to place a Linux image at the firmware
+jump address. That variant uses 128 MiB RAM and an early-console command line.
+Select `--config rv64imacsu_linux` for bounded Linux execution.
+This profile ignores the bare-metal `tohost` convention. It cannot earn a
+program pass from a Linux memory store. Preparation reserves the first 4 MiB
+for reset code and firmware. Use a 600-second
+wall limit for bounded Linux execution. No initramfs is included.
+
+The native Spinal adapter cannot save or restore Verilator and harness state.
+The loader captures boot bytes before compilation. Replay starts from reset
+and needs the original inputs. The VexRiscv checkpoint sample does not qualify VexiiRiscv restore.
+
+The native OpenSBI control passed at cycle 304,429 with 126,162 retirements.
+It observed 14 supervisor instructions and a supervisor ecall. The C2 parser
+accepted the complete trace. The firmware reported no PMP configuration warning.
+See [the boot sample](rvw/opensbi/results.json) for hashes and source identity.
+Live VexiiRiscv checkpoint restore remains open.
+
+The 600-second Linux sample retired 1,726,669 instructions. Supervisor mode
+accounted for 1,597,511 of them. It observed 15 MMU walks and 328,491 translated
+memory addresses. The last PC was `0xffffffff8021296e` in supervisor mode.
+UART output was empty. C1 ended with a wall-clock timeout. This does not
+establish a completed Linux boot. See [the prefix sample](rvw/opensbi/linux-results.json).
+The Linux run did not capture C2. The generic DTB firmware attempts also
+exceeded their bounds. The passing SBI control uses the fixed-map platform.

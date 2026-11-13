@@ -1,0 +1,6 @@
+config PLATFORM_RVW
+ bool
+ select IPI_MSWI
+ select SERIAL_UART8250
+ select TIMER_MTIMER
+ default y
