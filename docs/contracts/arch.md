@@ -564,3 +564,11 @@ false). True enables deterministic committed-mix speculative filler on the
 Python scheduler. Explicit functional path providers take precedence. Filler
 uses shared queue capacity, never retires, and makes no cache transactions.
 This option does not claim that captured wrong-path instructions were used.
+
+## Finite store acceptance
+
+`store_drain_width` is a nonnegative integer, default zero. A positive value
+requires buffered stores. Committed stores retain their existing shared
+store-queue slots until FIFO cache acceptance. Additional service beyond
+component L1 hit latency blocks drain. The positive width limits accepted
+stores per cycle. The measured region still ends at final retirement.

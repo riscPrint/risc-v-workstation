@@ -1037,3 +1037,61 @@ No variant result selects a parameter.
 
 [Retained results](../../../../examples/naxriscv/rvw/arch/occupancy-results.json) include
 the configuration, engine hash, absolute errors and paired results.
+
+## Finite store drain
+
+`store_drain_width` defaults to zero and keeps the earlier policy. A positive
+value needs `store_policy: buffered`. Stores keep their shared store-queue
+slot after commit. A FIFO sends committed stores to the cache at this width.
+Hit latency is pipelined. Additional refill delay blocks the head. A full
+store queue stops rename. Commit uses slots already reserved at rename, so
+it needs no second buffer allocation. Fences wait for drain acceptance.
+Loads check undrained stores as well as older ROB stores. Full overlap
+forwards. Partial overlap waits until the undrained store leaves the queue.
+
+Cache writes start at drain, not at speculative store execution. The run
+still ends at last retirement. It does not add final store visibility time
+after the measured program ends. `stores_drained`, `store_drain_blocked`,
+`store_drain_service_cycles` and `store_drain_fence_wait` describe this policy.
+This model does not reproduce cache-coherence acknowledgement or device I/O.
+
+## Resource study: drain
+
+This stage meets the criterion on 14/24 pairs and 5/15 nonzero changes.
+Training mean absolute IPC error is 7.33%.
+Held-out mean absolute IPC error is 9.48% across six programs.
+Same-step pooled elasticity rank tau-b is 1.000, with 0 model ties.
+This rank uses the measured large steps. It is separate from the original
+local sensitivity tau-b of 0.707 with three unresolved ties. The original
+same-step rank is 0.667. Parameters stay fixed at the base-only fit.
+No variant result selects a parameter.
+
+| Variant | Program | RTL change (%) | Model change (%) | Criterion |
+|---|---|---:|---:|---|
+| iq16 | median | -1.682 | -0.613 | outside |
+| rob128 | median | +0.000 | +0.000 | within |
+| lq8 | median | -1.057 | +0.000 | outside |
+| sq8 | median | +0.000 | +0.000 | within |
+| iq16 | qsort | -0.617 | -0.274 | outside |
+| rob128 | qsort | +0.000 | +0.000 | within |
+| lq8 | qsort | -0.359 | +0.000 | outside |
+| sq8 | qsort | -0.294 | +0.000 | outside |
+| iq16 | multiply | -0.303 | -0.217 | within |
+| rob128 | multiply | +0.000 | +0.000 | within |
+| lq8 | multiply | -0.021 | +0.000 | outside |
+| sq8 | multiply | +0.000 | +0.000 | within |
+| iq16 | towers | -0.627 | -1.719 | outside |
+| rob128 | towers | +0.000 | +0.000 | within |
+| lq8 | towers | -1.388 | -0.041 | outside |
+| sq8 | towers | -4.393 | -0.507 | outside |
+| iq16 | vvadd | -8.244 | -8.658 | within |
+| rob128 | vvadd | +0.000 | +0.000 | within |
+| lq8 | vvadd | -2.902 | +0.595 | outside |
+| sq8 | vvadd | +0.000 | +0.000 | within |
+| iq16 | memcpy | -12.497 | -8.699 | within |
+| rob128 | memcpy | +0.000 | +0.000 | within |
+| lq8 | memcpy | -7.988 | -4.058 | within |
+| sq8 | memcpy | -10.902 | -9.613 | within |
+
+[Retained results](../../../../examples/naxriscv/rvw/arch/drain-results.json) include
+the configuration, engine hash, absolute errors and paired results.

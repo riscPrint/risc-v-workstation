@@ -35,6 +35,7 @@ class Config:
     memory_policy: str = "ordered"
     store_policy: str = "ordered"
     wrong_path_occupancy: bool = False
+    store_drain_width: int = 0
     dependence_entries: int = 1024
     replay_penalty: int = 5
     forwarding_latency: int = 1
@@ -104,6 +105,10 @@ class Config:
             raise ValueError("unsupported branch_prediction")
         if self.branch_prediction != "sequential" and any(k in self.components for k in ("branch", "btb", "ras", "indirect")):
             raise ValueError("select static prediction or component prediction")
+        if type(self.store_drain_width) is not int or self.store_drain_width < 0:
+            raise ValueError("store_drain_width must be nonnegative")
+        if self.store_drain_width and self.store_policy != "buffered":
+            raise ValueError("finite drain requires buffered stores")
         if type(self.wrong_path_occupancy) is not bool:
             raise ValueError("wrong_path_occupancy must be boolean")
         if type(self.branch_speculation) is not bool:
@@ -238,6 +243,8 @@ def _simulate(instructions, config, max_cycles=1_000_000, predictor=None, memory
     unresolved_branch = None
     wrong_parent = fetch_guard = None
     wrong_fetched = deque()
+    draining = deque()
+    drain_ready = None
     # Predictors implement predict(pc, fallthrough) and update(pc, actual_next).
     from .structures import StaticPredictor, BackwardPredictor
     predictor = predictor or (BackwardPredictor() if config.branch_prediction == "static_btfn" else StaticPredictor())
@@ -248,6 +255,29 @@ def _simulate(instructions, config, max_cycles=1_000_000, predictor=None, memory
     from .dependence import Dependence
     dependence = Dependence(config.dependence_entries)
     for cycle in range(max_cycles):
+        for _ in range(config.store_drain_width):
+            if not draining:
+                break
+            head = draining[0]
+            if drain_ready is None:
+                service = 0
+                if memory is not None:
+                    service = (memory.access_instruction(head.insn, cycle) if hasattr(memory, "access_instruction") else
+                               memory.access(head.insn.address, head.insn.size, True, cycle))
+                    if type(service) is not int or service < 0:
+                        raise ValueError("memory service must return nonnegative cycles")
+                # A hit is pipelined at drain_width. Only additional
+                # service beyond the hit latency blocks acceptance.
+                hit = config.components.get('memory', {}).get('l1d', {}).get('latency', 0)
+                drain_ready = cycle + max(0, service - hit)
+                events['store_drain_service_cycles'] += service
+            if cycle < drain_ready:
+                events['store_drain_blocked'] += 1
+                break
+            draining.popleft()
+            stores -= 1
+            events['stores_drained'] += 1
+            drain_ready = None
         if wrong_parent is not None and wrong_parent.done is not None and wrong_parent.done <= cycle:
             removed = {e for e in rob if e.wrong_parent is wrong_parent}
             rob = deque(e for e in rob if e not in removed)
@@ -288,7 +318,10 @@ def _simulate(instructions, config, max_cycles=1_000_000, predictor=None, memory
                 else:
                     allocated_float -= 1
             loads -= entry.insn.kind == "load"
-            stores -= entry.insn.kind == "store"
+            if entry.insn.kind == "store" and config.store_drain_width:
+                draining.append(entry)
+            else:
+                stores -= entry.insn.kind == "store"
         attribution.observe(committed, cycle < blocked_until, bool(rob))
         if observer is not None:
             observer.cycle = cycle
@@ -316,6 +349,9 @@ def _simulate(instructions, config, max_cycles=1_000_000, predictor=None, memory
             if any(dep.done is None or dep.done > cycle for dep in entry.deps):
                 dependency_blocked = True
                 continue
+            if entry.insn.kind in ('fence', 'system') and draining:
+                events['store_drain_fence_wait'] += 1
+                continue
             older_branches = []
             for previous in rob:
                 if previous is entry:
@@ -339,7 +375,7 @@ def _simulate(instructions, config, max_cycles=1_000_000, predictor=None, memory
             latency = config.latencies[kind]
             forwarded = False
             if kind in ("load", "store"):
-                older = []
+                older = list(draining)
                 for previous in rob:
                     if previous is entry:
                         break
@@ -363,7 +399,7 @@ def _simulate(instructions, config, max_cycles=1_000_000, predictor=None, memory
                         store = overlapping[-1]
                         if not (store.insn.address <= entry.insn.address and
                                 store.insn.address + store.insn.size >= entry.insn.address + entry.insn.size):
-                            if any(p.done > cycle for p in overlapping):
+                            if any(p in draining or p.done > cycle for p in overlapping):
                                 events["partial_forward_blocked"] += 1
                                 continue
                         else:
@@ -385,7 +421,7 @@ def _simulate(instructions, config, max_cycles=1_000_000, predictor=None, memory
                 events["forwarded_loads"] += 1
             if entry.wrong_parent is not None and kind == "store":
                 events["wrong_path_store_requests_suppressed"] += 1
-            if kind in ("load", "store") and memory is not None and not forwarded and not (entry.wrong_parent is not None and (kind == "store" or getattr(wrong_path, "occupancy_only", False))):
+            if kind in ("load", "store") and memory is not None and not forwarded and not (kind == "store" and config.store_drain_width) and not (entry.wrong_parent is not None and (kind == "store" or getattr(wrong_path, "occupancy_only", False))):
                 # The component owner supplies access(address, size, write, cycle).
                 # It returns an additional service delay in model cycles.
                 if entry.wrong_parent is not None:
@@ -584,6 +620,8 @@ def _simulate(instructions, config, max_cycles=1_000_000, predictor=None, memory
                                 fetch_entries=len(frontend.fetch) if frontend else len(fetched),
                                 decode_entries=len(frontend.decoded) if frontend else 0).items():
             peaks[name] = max(peaks[name], count)
+        if config.store_drain_width:
+            peaks["undrained_stores"] = max(peaks["undrained_stores"], len(draining))
     raise ValueError("model cycle budget exhausted")
 
 
@@ -691,9 +729,9 @@ def run(config_path, trace_path, max_cycles=1_000_000, effective_config=None):
                 engine_sha256=sha256(engine).hexdigest(), wall_s=perf_counter()-start,
                 accuracy_status="inconclusive", configuration_status="snapshot_checked" if configuration else "unchecked",
                 configuration_evidence=configuration,
-                limits=["fixed latency", "committed path only; no wrong-path resource use",
+                limits=["fixed latency", "committed trace; optional statistical or functional wrong-path occupancy",
                         "branch prediction at issue; no speculative predictor history",
-                        "cache timing needs a component service; no replay or translation faults",
+                        "cache timing needs a component service; translation faults are not modeled",
                         "topdown is an approximate commit-slot partition",
                         "disambiguation uses traced addresses after store issue"],
                 cycle_order=["commit", "issue", "rename", *(["decode"] if config.frontend else []), "fetch"])
