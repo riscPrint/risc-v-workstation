@@ -2958,3 +2958,28 @@ fault. Enabled masking must recover the declared canonical address and value.
 The reference selects Smnpm explicitly. These cases do not check debug,
 instruction-fetch or guest pointer-masking interactions. Their independent
 walk and PMA checks remain inconclusive.
+
+### Privilege campaign artifacts
+
+`rvw regress privilege build` reads `rvw.privilege/1`: `modes` selects distinct
+M/S/U modes and `isa` selects an RV64 compiler and Spike ISA string. The current
+control matrix requires `priv = "msu"` when given. It writes self-checking ELFs,
+sources, a linker script, a suite fragment and `rvw.privilege-build/1` manifest.
+The manifest records the description hash, specification URL, configuration,
+scenario IDs, ELF/source hashes and functional group names in `bins`.
+
+`reference` writes `rvw.privilege-reference/1` JSON to stdout. It records command,
+return code, model hash and per-scenario self-check status. It is reference-only.
+`check` writes `rvw.privilege-check/1`: it binds the build manifest and each C1
+result by SHA-256. A group passes only if every member has a passing C1 result
+and a complete strict Spike match with a passing end event, positive instruction
+count and zero synchronizations. Missing or duplicate evidence is inconclusive.
+These artifacts do not change C1, C2 or C3 and do not grant C4 acceptance.
+
+The privilege description also accepts `kind = "wfi"` and a `timer` object with
+integer `mtime`, `mtimecmp`, `msip` and `delta`. The generator programs the
+project-owned timer/software device and crosses the two sources with MIE
+clear/set. The delta is in timer ticks. C1 execution bounds the wait. It makes
+no minimum sleep or physical clock-gating claim. Builds include
+`functional-groups.json` for C2 observation coverage. Observation hits do not
+grant the architectural pass groups from `privilege check`.

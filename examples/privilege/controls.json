@@ -1,0 +1,5 @@
+{
+  "schema": "rvw.privilege/1",
+  "modes": ["M", "S", "U"],
+  "isa": "rv64im_zicsr_zifencei"
+}

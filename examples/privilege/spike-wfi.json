@@ -1,0 +1,6 @@
+{
+  "schema": "rvw.privilege/1",
+  "kind": "wfi",
+  "isa": "rv64im_zicsr_zifencei",
+  "timer": {"mtime": 33603576, "mtimecmp": 33570816, "msip": 33554432, "delta": 100}
+}
