@@ -115,3 +115,13 @@ def test_extracted_reset_bank():
     result = run_on(Path(root) / 'design.db', analyze)
     groups = [f for f in result['findings'] if f['rule'] == 'rdc.async_assert_crossing']
     assert len(groups) == 1 and groups[0]['count'] == 4
+
+
+def test_extracted_toggle_payload():
+    root = os.environ.get('RVW_LINT_TOGGLE')
+    if not root:
+        pytest.skip('set RVW_LINT_TOGGLE to the LintToggleFixture output')
+    result = run_on(Path(root) / 'design.db', analyze)
+    assert any(c['kind'] == 'qualified_data' for c in result['crossings'])
+    assert not any(f['rule'] == 'cdc.comb_before_sync' for f in result['findings'])
+    assert result['cdc']['obligations']

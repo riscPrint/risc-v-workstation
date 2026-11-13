@@ -247,7 +247,7 @@ def analyze(design, emit, intent, pairs):
         if r['relationship'] in ('related', 'declared_synchronous'):
             kind, rule, sev = 'synchronous_related', 'cdc.related_clock_crossing', 'info'
             msg = 'Clocks share a source or are declared synchronous. Timing analysis covers this path.'
-        elif not r['direct'] and (n >= 2 or tagged(dst)):
+        elif not r['direct'] and (n >= 2 or (r['library'] or {}).get('kind') == 'buffer_cc'):
             kind, rule, sev = 'glitch_before_sync', 'cdc.comb_before_sync', 'error'
             msg = 'Combinational logic drives a synchronizer input. A glitch can be captured.'
         elif r['fanout'] and (n == 1) and (tagged(dst) or width == 1):
@@ -265,7 +265,8 @@ def analyze(design, emit, intent, pairs):
         else:
             qualifiers = sorted(design.signals[i]['path'] for i in design.upstream_regs(r['dst']) & sync_ends
                                 if i != r['dst'])
-            if width > 1 and qualifiers:
+            held = (x.library(r['src']) or {}).get('kind') in ('toggle_handshake', 'handshake')
+            if qualifiers and (width > 1 or held):
                 kind, rule, sev = 'qualified_data', 'cdc.qualified_data_candidate', 'info'
                 msg = 'Multi-bit data is sampled under a synchronized qualifier. Data stability is a proof obligation.'
                 # The qualifier's source register is in the data source's domain.

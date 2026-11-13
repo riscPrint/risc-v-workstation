@@ -567,3 +567,12 @@ no source retain their separate endpoints. Existing waiver IDs must be reviewed.
 
 The extracted bank test uses `Test/runMain spinaldb.LintBankFixture OUTPUT`
 and `RVW_LINT_BANK=OUTPUT` with `test_lint_extracted.py -k reset_bank`.
+
+### Toggle payload recognition
+
+A `crossClockDomain` tag on a held payload does not identify a synchronizer
+stage. The combinational-before-sync check now requires a register chain or
+a `BufferCC` destination. A one-bit payload from a recognised toggle bridge
+can use its synchronized qualifier, as a wider payload can. Each such path
+keeps a data-stability obligation. Neither the tag nor the library class
+proves that the source holds the data for enough destination cycles.

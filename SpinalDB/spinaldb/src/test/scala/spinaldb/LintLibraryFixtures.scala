@@ -46,3 +46,23 @@ object LintLibraryFixtures {
       new LibraryReference)
   }
 }
+
+/** Both Bool and bus payloads use a toggle qualifier, not a bank of synchronizers. */
+class ToggleDataReference extends Component {
+  val clkA, clkB = in Bool()
+  val input = slave Flow(Bits(1 bits))
+  val output = master Flow(Bits(1 bits))
+  val cdA = ClockDomain(clkA, config=ClockDomainConfig(resetKind=BOOT))
+  val cdB = ClockDomain(clkB, config=ClockDomainConfig(resetKind=BOOT))
+  val bridge = new FlowCCUnsafeByToggle(Bits(1 bits), cdA, cdB)
+  bridge.io.input << input
+  output << bridge.io.output
+}
+object LintToggleFixture {
+  def main(args: Array[String]): Unit = {
+    val dir = Paths.get(args(0)); Files.createDirectories(dir)
+    SpinalDB.generate(SpinalConfig(targetDirectory=dir.resolve("rtl").toString),
+      dir.resolve("design.db").toFile, DbOptions(pdg=false, blocks=false, hgldd=false))(
+      new ToggleDataReference)
+  }
+}
