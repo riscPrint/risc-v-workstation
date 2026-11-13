@@ -7,7 +7,7 @@
       "generated": 7,
       "bound": 7,
       "proven": 0,
-      "bounded": 1,
+      "bounded": 7,
       "fired": 0,
       "firing_count": 0,
       "unbound": 0,
@@ -17,7 +17,7 @@
       "generated": 7,
       "bound": 7,
       "proven": 0,
-      "bounded": 0,
+      "bounded": 7,
       "fired": 0,
       "firing_count": 0,
       "unbound": 0,
@@ -27,7 +27,7 @@
       "generated": 2,
       "bound": 2,
       "proven": 0,
-      "bounded": 0,
+      "bounded": 2,
       "fired": 0,
       "firing_count": 0,
       "unbound": 0,
@@ -37,7 +37,7 @@
       "generated": 1,
       "bound": 1,
       "proven": 0,
-      "bounded": 0,
+      "bounded": 1,
       "fired": 0,
       "firing_count": 0,
       "unbound": 0,
@@ -51,7 +51,7 @@
       "elf_sha256": "57fe9d07aff30466b8ec6023bc1db8c1524337785d68fe82cb52988b6884d4c7"
     }
   ],
-  "formal": "../../out/qualification-proof-v2/result.json",
+  "formal": "$CHECKOUT/SpinalChecks/out/resume-formal/soc-results/result.json",
   "limitations": [
     "Null means NOT RUN. Zero means no matching observation in supplied evidence.",
     "Simulation covers exercised behavior only. Formal requirements are project associations.",
@@ -67,11 +67,12 @@
   },
   "artifacts_sha256": {
     "inventory": "4a1f0ec41eb44a1682c49339c94ae2cd33e26a48bd9ad8e5bb4a49e9da35c0b8",
-    "formal": "e3e5d4587d3b12d3a3cb9f2265da05ae020e78cbbf7c8d05b652ed0a11af6f3e"
+    "formal": "ccf0c4cca097bdbc32e0dd0c13ed9eec5754e6f8a0fb5aae4990d91799e8824c"
   },
   "limits": [
-    "One selected check has a bounded pass at depth 4 with two initial reset samples. No activation evidence or unbounded proof.",
     "Bounded simulation covers only the recorded programs. Source changes during this item are uncommitted in the capture. No release acceptance.",
-    "The SoC uses the limited RV32 instruction stub and hello only. The selected check is inside the single UART instance. This is not an ISA-qualified CPU."
-  ]
+    "The SoC uses the limited RV32 instruction stub and hello only. The selected check is inside the single UART instance. This is not an ISA-qualified CPU.",
+    "All generated IDs passed depth-4 BMC on the retained #921 formal capture. Vexii PC check is the original strict rule. No activation evidence or unbounded proof."
+  ],
+  "formal_campaign": "SpinalChecks/connected-depth4-results.json"
 }

@@ -1003,15 +1003,15 @@ binding fails elaboration. See the three VexRiscv project bindings in
 
 These native results were recorded on 2026-11-13. Bound means that the check
 was compiled into the simulation. Fired counts check IDs, then total events.
-Unbound means a generated check had no native binding. Each selected formal
-check passed BMC through depth 4 with two initial reset samples. No activation
-measurement or unbounded proof was obtained. All other checks remain unproven.
+Unbound means a generated check had no native binding. All 99 generated check
+IDs passed BMC through depth 4 with two initial reset samples. No activation
+measurement or unbounded proof was obtained.
 
 | Design and programs | Generated | Bound | Proven | Bounded | Fired IDs / events | Unbound and reason |
 |---|---:|---:|---:|---:|---:|---|
-| VexRiscv, 49 aligned ISA programs | 57 | 57 | 0 | 1 | 0 / 0 | 0; all native bindings present |
-| VexiiRiscv, scratch and absent-CSR programs | 25 | 25 | 0 | 1 | 0 / 0 | 0; all native bindings present |
-| Composed SoC, RV32 stub hello | 17 | 17 | 0 | 1 | 0 / 0 | 0; all native bindings present |
+| VexRiscv, 49 aligned ISA programs | 57 | 57 | 0 | 57 | 0 / 0 | 0; all native bindings present |
+| VexiiRiscv, scratch and absent-CSR programs | 25 | 25 | 0 | 25 | 0 / 0 | 0; all native bindings present |
+| Composed SoC, RV32 stub hello | 17 | 17 | 0 | 17 | 0 / 0 | 0; all native bindings present |
 
 VexRiscv has 49 C1 passes. VexiiRiscv has two C1 passes after the exact
 PC hold cancellation binding. The two original PC valid-hold firings are tool
@@ -1020,12 +1020,18 @@ the original finding remain in [the evidence](../examples/vexiiriscv/checks-evid
 its UART output is `hello\n`. These captures use different cores and programs.
 They do not transfer ISA support or check coverage between designs.
 
-The formal selections are VexRiscv `stream.valid_hold:iBus_cmd`, VexiiRiscv
-`stream.valid_hold:FetchCachelessPlugin_logic_bus_cmd`, and the composed SoC's
-`stream.valid_hold:uart.uart.io_write`. The last check stays in the full SoC
-hierarchy. The preparer rejects a shared owner module that would instantiate
-more than one selected assertion. It retains memory init files. Reset is
-constrained in the selected check's clock domain. Other inputs stay arbitrary.
+The [expanded formal record](connected-depth4-results.json) contains every
+selected ID: 57 VexRiscv, 25 VexiiRiscv and 17 SoC. Each job selects one fail
+signal and keeps the full hierarchy. The run used `rvw formal regress` with
+`--jobs 3 --timeout 60`. The regression status remains `unknown` because these
+are bounded passes. No property activation was measured.
+
+The formal RTL is the retained #921 capture. In particular, the Vexii PC check
+is the original strict rule before the later hold cancellation binding. This
+small-bound result does not resolve the longer simulation firing by itself.
+The preparer rejects shared owner modules that would instantiate more than one
+selected assertion. It retains memory init files. Reset is constrained in the
+selected check's clock domain. Other inputs stay arbitrary.
 
 Record files: [VexRiscv](../examples/vexriscv/checks-qualification.json),
 [VexiiRiscv](../examples/vexiiriscv/checks-qualification.json), and
