@@ -1,0 +1,73 @@
+{
+  "schema": "rvw.trace-candidates/1",
+  "status": "candidates",
+  "samples": 42769,
+  "traces": 49,
+  "refuted": 730,
+  "inactive": 57,
+  "scope": "supplied finite traces only; candidates need review and fresh formal checks",
+  "candidate_counts": {
+    "implies": 27,
+    "mutex": 13,
+    "stable": 46,
+    "onehot0": 1
+  },
+  "examples": [
+    {
+      "id": "trace_17",
+      "kind": "implies",
+      "signals": [
+        "property_stage0_fire",
+        "property_stage0_valid"
+      ],
+      "activated": 17931,
+      "member_hits": {
+        "property_stage0_fire": 17931,
+        "property_stage0_valid": 19960
+      },
+      "status": "observed_candidate"
+    },
+    {
+      "id": "trace_507",
+      "kind": "stable",
+      "signals": [
+        "property_stage0_stuck",
+        "property_stage0_pc"
+      ],
+      "activated": 2232,
+      "member_hits": {
+        "property_stage0_stuck": 2232,
+        "property_stage0_pc": 42769
+      },
+      "status": "observed_candidate"
+    },
+    {
+      "id": "trace_323",
+      "kind": "mutex",
+      "signals": [
+        "property_stage0_fire",
+        "property_stage0_stuck"
+      ],
+      "activated": 20163,
+      "member_hits": {
+        "property_stage0_fire": 17931,
+        "property_stage0_stuck": 2232
+      },
+      "status": "observed_candidate"
+    },
+    {
+      "id": "trace_873",
+      "kind": "onehot0",
+      "signals": [
+        "property_stage0_fire",
+        "property_stage0_stuck"
+      ],
+      "activated": 20163,
+      "member_hits": {
+        "property_stage0_fire": 17931,
+        "property_stage0_stuck": 2232
+      },
+      "status": "observed_candidate"
+    }
+  ]
+}

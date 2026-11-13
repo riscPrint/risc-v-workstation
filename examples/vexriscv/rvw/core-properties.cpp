@@ -1,6 +1,7 @@
 #include "VVexTop.h"
 #include "verilated.h"
 #include <cstdint>
+#include <cstdlib>
 #include <fstream>
 #include <iostream>
 #include <vector>
@@ -19,6 +20,8 @@ int main(int argc, char **argv) {
       value |= uint32_t(ram.at(((address & ~3u) - 0x80000000u) + i)) << (8 * i);
     return value;
   };
+  std::ofstream samples;
+  if (const char *path = std::getenv("RVW_PROPERTY_TRACE")) samples.open(path);
   VVexTop dut;
   dut.reset = 1;
   dut.clk = 0;
@@ -41,6 +44,34 @@ int main(int argc, char **argv) {
       dut.dBus_rsp_ready = dpending;
       dut.dBus_rsp_data = data;
       dut.eval();
+      if (samples.is_open() && !dut.reset) {
+        samples << "{";
+        samples << "\"property_stage0_valid\":" << uint64_t(dut.property_stage0_valid);
+        samples << ",\"property_stage0_fire\":" << uint64_t(dut.property_stage0_fire);
+        samples << ",\"property_stage0_stuck\":" << uint64_t(dut.property_stage0_stuck);
+        samples << ",\"property_stage0_pc\":" << uint64_t(dut.property_stage0_pc);
+        samples << ",\"property_stage1_valid\":" << uint64_t(dut.property_stage1_valid);
+        samples << ",\"property_stage1_fire\":" << uint64_t(dut.property_stage1_fire);
+        samples << ",\"property_stage1_stuck\":" << uint64_t(dut.property_stage1_stuck);
+        samples << ",\"property_stage1_pc\":" << uint64_t(dut.property_stage1_pc);
+        samples << ",\"property_stage2_valid\":" << uint64_t(dut.property_stage2_valid);
+        samples << ",\"property_stage2_fire\":" << uint64_t(dut.property_stage2_fire);
+        samples << ",\"property_stage2_stuck\":" << uint64_t(dut.property_stage2_stuck);
+        samples << ",\"property_stage2_pc\":" << uint64_t(dut.property_stage2_pc);
+        samples << ",\"property_stage3_valid\":" << uint64_t(dut.property_stage3_valid);
+        samples << ",\"property_stage3_fire\":" << uint64_t(dut.property_stage3_fire);
+        samples << ",\"property_stage3_stuck\":" << uint64_t(dut.property_stage3_stuck);
+        samples << ",\"property_stage3_pc\":" << uint64_t(dut.property_stage3_pc);
+        samples << ",\"property_ibus_valid\":" << uint64_t(dut.property_ibus_valid);
+        samples << ",\"property_ibus_ready\":" << uint64_t(dut.property_ibus_ready);
+        samples << ",\"property_ibus_pc\":" << uint64_t(dut.property_ibus_pc);
+        samples << ",\"property_dbus_valid\":" << uint64_t(dut.property_dbus_valid);
+        samples << ",\"property_dbus_ready\":" << uint64_t(dut.property_dbus_ready);
+        samples << ",\"property_dbus_address\":" << uint64_t(dut.property_dbus_address);
+        samples << ",\"property_dbus_write\":" << uint64_t(dut.property_dbus_write);
+        samples << ",\"property_retire\":" << uint64_t(dut.property_retire);
+        samples << "}\n";
+      }
       bool ia = !dut.reset && dut.iBus_cmd_valid && dut.iBus_cmd_ready;
       bool da = !dut.reset && dut.dBus_cmd_valid && dut.dBus_cmd_ready;
       uint32_t pc = dut.iBus_cmd_payload_pc;

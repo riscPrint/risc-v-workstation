@@ -3,6 +3,7 @@
 import argparse
 import hashlib
 import json
+import os
 from pathlib import Path
 import re
 
@@ -33,7 +34,7 @@ def instrument(source, statements):
     return model[:end] + '\n'.join(counters) + '\n' + model[end:], properties
 
 
-def run(rtl, programs, out):
+def run(rtl, programs, out, samples=False):
     out.mkdir(parents=True, exist_ok=False)
     model, props = instrument((rtl / 'VexTop.v').read_text(), (rtl / 'properties.sv').read_text())
     (out / 'simulation.sv').write_text(model)
@@ -61,7 +62,8 @@ def run(rtl, programs, out):
         memory.write_bytes(image)
         with (directory / 'run.log').open('w') as log:
             proc = run_group(['nice', '-n', '10', str(out / 'obj/VVexTop'), str(memory),
-                              str(elf.symbols['tohost'])], stdout=log, stderr=log, timeout=30)
+                              str(elf.symbols['tohost'])], stdout=log, stderr=log, timeout=30,
+                              env=dict(os.environ, **({'RVW_PROPERTY_TRACE': str(directory / 'samples.jsonl')} if samples else {})))
         memory.unlink()
         text = (directory / 'run.log').read_text()
         observations = {}
@@ -95,5 +97,6 @@ if __name__ == '__main__':
     parser.add_argument('--rtl', type=Path, required=True)
     parser.add_argument('--out', type=Path, required=True)
     parser.add_argument('program', type=Path, nargs='+')
+    parser.add_argument('--samples', action='store_true', help='capture pre-edge project signals for candidate mining')
     args = parser.parse_args()
-    raise SystemExit(run(args.rtl.resolve(), args.program, args.out.resolve()))
+    raise SystemExit(run(args.rtl.resolve(), args.program, args.out.resolve(), args.samples))
