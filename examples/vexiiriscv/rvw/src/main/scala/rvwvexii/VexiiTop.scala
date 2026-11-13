@@ -12,7 +12,12 @@ import vexiiriscv.misc.{PipelineBuilderPlugin, PrivilegedPlugin, TrapPlugin}
 /** RV32IM, machine mode only, cacheless native fetch and LSU buses, no MMU, PMP or debug unit.
   * `*_cached` adds the upstream fetch and LSU L1 caches and the BTB/GShare/RAS predictors. */
 object VexiiTop {
-  def liveMap = riscvsim.SimMap.load(sys.props.get("rvwvexii.bootMap").map(new java.io.File(_)).getOrElse(new java.io.File(new java.io.File(sys.props("riscvsim.script")).getParentFile, "live-devices.json")))
+  def liveMap = riscvsim.SimMap.load(sys.props.get("rvwvexii.bootMap").map(new java.io.File(_)).getOrElse {
+    val directory = sys.props.get("riscvsim.script").map(p => new java.io.File(p).getParentFile)
+      .orElse(sys.env.get("RVW_ADAPTER").map(p => new java.io.File(p)))
+      .getOrElse(throw new IllegalArgumentException("set RVW_ADAPTER for database elaboration"))
+    new java.io.File(directory, "live-devices.json")
+  })
   val configs = Seq("rv32im", "rv32imasu", "rv64imasu", "rv64ima", "rv64imacsu", "rv64imacsu_linux", "rv32im_cached", "rv32im_bitpasta", "rv32im_bitpasta_ipc")
 
   def supervisor(config: String) = config.endsWith("asu") || config.startsWith("rv64imacsu")

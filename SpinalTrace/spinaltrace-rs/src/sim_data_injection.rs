@@ -1,7 +1,7 @@
 /*
     Note: this file contains some copied (slightly modified) code from the tywaves translator in the surfer-tywaves repository 
 */
-use std::{collections::HashMap, fs::File, io::BufReader, path::Path};
+use std::{collections::HashMap, path::Path};
 
 use tywaves_rs::{hgldd, tyvcd::{builder::{GenericBuilder, TyVcdBuilder}, spec::{Variable, VariableKind}, trace_pointer::TraceFinder}};
 use anyhow::Result;
@@ -173,9 +173,7 @@ impl TywavesInterface {
     // 3) Add the information to the node
 
     pub fn inject_sim_data(&self, pdg: &mut ExportablePDG, vcd_path: impl AsRef<Path>) -> Result<()> {
-        let file = File::open(vcd_path)?;
-        let reader = BufReader::new(file);
-        let mut parser = vcd::Parser::new(reader);
+        let mut parser = crate::vcd_input::open(vcd_path)?;
         let header = parser.parse_header()?;
 
         let signal_mapping = build_signal_map(&header, &self.extra_scopes);
@@ -343,7 +341,7 @@ fn build_signal_map(header: &vcd::Header, root: &[String]) -> HashMap<IdCode, Ve
 /// (clocked: assigned at the end of cycle L; combinational: computed in cycle L+1) shows the value of
 /// the signal it assigns during cycle L+1, i.e. just before the rising edge that ends that cycle.
 pub fn inject_raw_values(pdg: &mut ExportablePDG, vcd_path: impl AsRef<Path>, extra_scopes: &[String], clock: &str) -> Result<()> {
-    let mut parser = vcd::Parser::new(BufReader::new(File::open(vcd_path)?));
+    let mut parser = crate::vcd_input::open(vcd_path)?;
     let header = parser.parse_header()?;
     let mut clock_path = extra_scopes.to_vec();
     clock_path.extend(clock.split('.').map(String::from));

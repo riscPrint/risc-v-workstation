@@ -1006,3 +1006,23 @@ C1 replay and regression acceptance. See the recipe for the exact commands.
 The launcher currently applies nice priority twice. The measured run had
 niceness 20. Correcting that launch profile and measuring throughput is the
 next speed item. No trace or wave was written for these boot slices.
+## Dependency debug measurements
+
+The database entry resolves its device map from `RVW_ADAPTER` when no simulator
+JVM property exists. `rvw/build-db.sh` selects the pinned SpinalHDL source axis.
+Set `RVW_VEX_LOCK=vex-trace`, `RVW_SBT_LOCK=sbt-trace` and `RVW_NICE=15` for a
+private trace build. The adapter records the wave time of cycle one through
+`SimSession.runCtl`.
+
+| Private RV32IM check | Measured result |
+|---|---|
+| Database | 4 components; 2,000 signals; 3 memories; 1,785 assignments; 291 conditions; 2,403 edges |
+| Elaboration / extraction | 11.6 s / 16.2 s |
+| PDG / blocks / HGLDD | 2.1 s / 1.5 s / 5.8 s; stored gzip sizes 99,351 / 50,721 / 57,997 bytes |
+| Instrumented smoke | 100 cycles; 18 retirements; 48.3 s model setup |
+| FST window | Cycles 10 to 40; 27,602 bytes |
+
+The cold source build took 465 s before the missing device-map property stopped
+elaboration. The corrected warm database command took 66 s. These results cover
+extraction and one short simulation. They do not establish complete causal
+attribution, GUI rendering or other configurations.

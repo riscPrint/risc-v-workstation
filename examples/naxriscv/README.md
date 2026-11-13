@@ -996,3 +996,12 @@ The signatures use machine mode. S/U, standard Sm and Sv39 ACT4 are NOT RUN.
 Both comparisons have zero synchronization and no output masks.
 Use `NAX_ACT4_OUT` for the external build output. The existing RV32 suite
 and defaults are unchanged.
+## Debug support on the legacy axis
+
+| Capability | Exact scope |
+|---|---|
+| Build axis | `RVW_SPINAL_SOURCE=$NAXRISCV/ext/SpinalHDL`, selected with Scala 2.13.14; the libraries also declare a 2.12.18 cross-build |
+| Database consumers | The prior measured `rv32imasu` database contains PDG, HGLDD and 24 module diagrams. These measurements were not repeated for the trace task. |
+| Memory API | The compatibility layer has no `MemReadAsyncWrite` in the old API. It does not invent such ports. Mixed-width memory writes remain unmodelled in the PDG. |
+| Causal accuracy | Artifact export does not establish a complete dynamic chain. Source locations, memory modelling and clock-domain limits remain explicit. |
+| Retirement binding | C2 comes from the upstream commit probe. There is no native RVFI port. A packed two-lane formal binding must not be treated as a simulation signal binding. |
