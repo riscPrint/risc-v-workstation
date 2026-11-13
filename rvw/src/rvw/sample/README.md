@@ -80,3 +80,16 @@ nice -n 15 python -c 'import sys; from pathlib import Path; from rvw.sample.vali
 Each `profile.csim` ends with `END N`. Run in the installed `rvw` Python
 environment. The counts above qualify only these small functional runs.
 They do not fill the full-RTL sampling error table.
+## Measure warm-up bias
+
+`rvw sample STUDY.json --warmup-sweep --start 50000 --length 10000 --warmup-lengths 0 100 1000 10000 --target-percent 1 --out /path/to/warmup`
+keeps the measured interval fixed. Each checkpoint moves back by the requested
+warm-up length. The reference runs from reset through the same interval.
+MCP: `sample_warmup`. The smallest observed length within the error target
+applies only to this interval. There is no assumed monotonic convergence.
+This uses detailed warming when the adapter has no qualified cache/predictor
+injection port. The current bootstrap adapter uses the uncached configuration.
+Cached VexRiscv and VexiiRiscv bootstrap adapters still need native qualification.
+
+Retirement-span timing excludes latency before the first measured retirement.
+The warm-up report does not measure that part of cold-start cost.
