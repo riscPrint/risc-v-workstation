@@ -17,7 +17,7 @@ RULES = {
     'lint.undriven': ('error', 'Signal has no driver.'),
     'lint.constant_register': ('info', 'Register is never assigned after reset.'),
     'lint.fsm_unreachable': ('warning', 'Enumerated state is never assigned to the state register.'),
-    'lint.no_reset': ('info', 'Register has no reset in a clock domain with a reset.'),
+    'lint.no_reset': ('info', 'Register has no reset on a clock with resettable state.'),
     'lint.clock_as_data': ('error', 'A clock net reaches register data or control logic.'),
     'lint.unconnected_output': ('warning', 'Output port of a child component has no loads.'),
     'lint.naming': ('warning', 'Name breaks the naming rule.'),
@@ -161,6 +161,8 @@ def analyze(db, config=None):
     clock_nets = {i for i, s in live.items() if s.get('clock_role') == 'clock'} | {
         d.by_path[x['clock']] for x in d.domains.values() if x.get('clock') in d.by_path}
     role = {i for i, s in live.items() if s.get('clock_role')}
+    reset_clocks = {(dom.get('clock_key'), dom.get('clock_edge')) for dom in d.domains.values()
+                    if dom.get('clock_key') and (dom.get('reset') or dom.get('soft_reset'))}
 
     # Combinational loops: cycles through wires only.
     for comp in sccs(sorted(comb), lambda v: [w for w in d.outgoing[v] if w in comb and
@@ -244,7 +246,8 @@ def analyze(db, config=None):
             emit('lint.constant_register', i)
         if s['kind'] == 'reg' and s['reset_value'] is None:
             dom = d.domains.get(s['clock_domain_id']) or {}
-            if dom.get('reset') or dom.get('soft_reset'):
+            if (dom.get('reset') or dom.get('soft_reset') or
+                    (dom.get('clock_key'), dom.get('clock_edge')) in reset_clocks):
                 emit('lint.no_reset', i)
         limit = conf.get('lint.max_fanout', {}).get('limit', 512)
         fanout = len(d.loads(i))
