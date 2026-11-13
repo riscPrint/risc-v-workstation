@@ -257,6 +257,30 @@ is x7. Architectural code only does register arithmetic with it. The wrong-path
 load uses a secret-derived address. The receivers are the paired data bus trace
 and retirement timing. There is no cache receiver on these cacheless cores.
 
+### Probe and bus observations
+
+The harness also samples probe events. It finds SpinalProbes wires
+(`rvwprobe__KIND__NAME__FIELD`) in the top module and the binding's declared
+`events` (kind, name, `valid` and `fields` on internal signals). It writes
+`probe-events.jsonl` (`rvw.probe-events/1`) per run, cut at the `tohost` store
+retirement like C2, so `rvw probes convert` reads it. Branch `semantics` and
+other elaboration metadata come from the binding's `probe_meta`. Observation
+channels: `branch_events`, `cache_events`, `tlb_events`, `probe_events` (all
+non-counter events), `probe_counters` (totals in the window) and
+`bus_handshakes` (cycle of every command and response on every bus).
+Event cycles are relative to the window start.
+
+On VexRiscv the example `ProbePlugin` gives branch, flush, retire and counter
+probes. On VexiiRiscv the binding declares the upstream Whiteboxer
+prediction-learn port as a `branch` event. The VexRiscv stream converts to
+`rvw.bp-events/1` with matching C2 order. The VexiiRiscv learn port fires
+before commit (4 events for 3 retired branches in one run), so that converter
+refuses it. It still serves as an observation channel. Neither example core has caches or
+a TLB, so `cache_events` and `tlb_events` are only tested with synthetic sites.
+With `probe-ct.json` (a loop of divides): VexRiscv gives `no_leak_observed` on
+cycles, handshakes, branch events and counters. VexiiRiscv differs in cycles,
+handshakes and branch-event timing, reduced to one `remu`.
+
 ### Results on the example cores (2026-11-13, Verilator 5.049, Spike)
 
 Each row is one command on RTL generated from the pinned example revisions

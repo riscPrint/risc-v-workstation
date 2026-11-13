@@ -1,0 +1,48 @@
+{
+  "contract": "constant-time",
+  "clauses": [
+    "pc",
+    "memory",
+    "branch"
+  ],
+  "observations": [
+    "cycles",
+    "bus_handshakes",
+    "branch_events",
+    "probe_counters"
+  ],
+  "public": {
+    "reset": "cold"
+  },
+  "program": [
+    "li x8, 3",
+    "1:",
+    "addi x8, x8, -1",
+    "div x10, x6, x7",
+    "bnez x8, 1b",
+    "remu x11, x6, x7"
+  ],
+  "secrets": [
+    {
+      "x6": 7,
+      "x7": 3
+    },
+    {
+      "x6": 2147483647,
+      "x7": 1
+    }
+  ],
+  "minimize_runs": 6,
+  "timeout": 1800,
+  "adapter_command": [
+    "{python}",
+    "-m",
+    "rvw.sec.core_adapter",
+    "--binding",
+    "core.json",
+    "--template",
+    "case.S",
+    "{request}",
+    "{out}"
+  ]
+}

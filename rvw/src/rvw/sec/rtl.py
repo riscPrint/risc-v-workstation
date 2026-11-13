@@ -212,6 +212,11 @@ def testbench(binding, widths, ift=None):
         L.append(f'  if ({t["valid"]}) $fdisplay(fd, "T %0d %h %h", cycle, {t["cause"]}, {t["tval"]});')
         if t.get('privilege') and not ift:
             L.append(f'  if (dut.{t["privilege"]} != last_priv) begin $fdisplay(fd, "P %0d %0d", cycle, dut.{t["privilege"]}); last_priv = dut.{t["privilege"]}; end')
+    if not ift:
+        from .probe_events import discover, testbench_lines
+        L += testbench_lines(discover(binding))
+    for bus in binding['buses']:
+        L.append(f'  if ({bus["rsp_valid"]}) $fdisplay(fd, "A %0d {bus["name"]}", cycle);')
     if ift:
         for i, (sink, when) in enumerate(ift[1]):
             cond = f'(|{sink}__t)' + (f' && ({when} || (|{when}__t))' if when else '')
@@ -276,11 +281,23 @@ def simulate(binding, exe, elf, out, taint_words=None, max_cycles=None):
     result = parse((out/'sim.log').read_text(), mem, binding)
     result['tohost_address'] = tohost
     result['image'] = bytes(mem)
+    if not taint_words:
+        from . import probe_events
+        sites = probe_events.discover(binding)
+        result['probe_sites'] = sites
+        if sites:
+            # Same window as the C2 trace: up to the retirement of the tohost store.
+            rows = cut(result)
+            last = rows[-1]['cycle'] if rows else result['cycles']
+            probe_events.write(out/'probe-events.jsonl', sites, [r for r in result['probe_rows'] if r[0] <= last], last,
+                               dict(core=binding.get('name', binding['top']), config='sec', elf=str(elf),
+                                    rtl_sha256=hashlib.sha256(b''.join(p.read_bytes() for p in binding['rtl'])).hexdigest()))
     return result
 
 
 def parse(text, mem, binding):
-    result = dict(retired=[], bus=[], traps=[], sinks=[], privilege=[], cycles=None, done=None, tohost=None)
+    result = dict(retired=[], bus=[], traps=[], sinks=[], privilege=[], responses=[], probe_rows=[],
+                  cycles=None, done=None, tohost=None)
     for line in text.splitlines():
         w = line.split()
         if not w:
@@ -299,6 +316,11 @@ def parse(text, mem, binding):
             result['bus'].append(dict(cycle=int(w[1]), bus=w[2], address=int(w[3], 16), write=bool(int(w[4]))))
         elif w[0] == 'T':
             result['traps'].append(dict(cycle=int(w[1]), cause=int(w[2], 16), tval=int(w[3], 16)))
+        elif w[0] == 'A':
+            result['responses'].append(dict(cycle=int(w[1]), bus=w[2]))
+        elif w[0] == 'Q':
+            v = [int(x) for x in w[1:]]
+            result['probe_rows'].append((v[0], v[1], v[2:]))
         elif w[0] == 'P':
             result['privilege'].append((int(w[1]), int(w[2])))
         elif w[0] == 'S':

@@ -13,9 +13,11 @@ from pathlib import Path
 import shutil
 import sys
 from . import rtl
+from . import probe_events
 from .common import native
 
-CHANNELS = ('cycles', 'retire_cycles', 'dbus_trace', 'ibus_trace', 'dbus_addresses', 'bus_timing')
+CHANNELS = ('cycles', 'retire_cycles', 'dbus_trace', 'ibus_trace', 'dbus_addresses', 'bus_timing',
+            'bus_handshakes', 'branch_events', 'cache_events', 'tlb_events', 'probe_events', 'probe_counters')
 
 
 def render(template, request):
@@ -92,6 +94,25 @@ def observe(result, names, start_pc=None, probe=None, mode=None):
             obs[name] = [[e['address'], e['write']] for e in bus if e['bus'] == 'dbus']
         elif name == 'bus_timing':
             obs[name] = [[e['cycle']-origin, e['bus']] for e in bus]
+        elif name == 'bus_handshakes':
+            # Cycle-accurate request and response edges of every bus.
+            edges = [[e['cycle']-origin, e['bus'], 'cmd'] for e in bus] + \
+                    [[e['cycle']-origin, e['bus'], 'rsp'] for e in result.get('responses', []) if origin <= e['cycle'] <= end]
+            obs[name] = sorted(edges)
+        elif name in ('branch_events', 'cache_events', 'tlb_events', 'probe_events', 'probe_counters'):
+            if not result.get('probe_sites'):
+                raise ValueError(f'{name} needs probe sites in the RTL (SpinalProbes wires or binding events)')
+            events = [e for e in probe_events.collect(result) if origin <= e['cycle'] <= end]
+            if name == 'probe_counters':
+                totals = {}
+                for e in events:
+                    if e['kind'] == 'counter':
+                        totals[e['name']] = totals.get(e['name'], 0)+e.get('inc', 1)
+                obs[name] = totals
+                continue
+            kind = {'branch_events': 'branch', 'cache_events': 'cache', 'tlb_events': 'tlb'}.get(name)
+            obs[name] = [dict(e, cycle=e['cycle']-origin) for e in events
+                         if (e['kind'] == kind if kind else e['kind'] != 'counter')]
         else:
             raise ValueError(f'unknown observation channel {name}; choose from {", ".join(CHANNELS)}')
     return obs

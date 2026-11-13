@@ -84,3 +84,15 @@ checks only those fields against the reference and reports them as
 `architectural_keys`. `observer_mode` limits the contract projection, and the
 adapter's observations, to retirements in that privilege mode. In
 `adapter_command`, `{python}` is the running interpreter.
+
+## Probe observations from native runs
+
+A native run writes `probe-events.jsonl` in `rvw.probe-events/1` when the RTL has
+SpinalProbes wires or the binding declares `events` (`kind`, `name`, `valid`,
+`fields: {field: [signal, width]}`, optional `meta`). `probe_meta` maps
+`KIND:NAME` to the probe's elaboration metadata. The stream ends at the cycle of
+the retirement of the `tohost` store, like the C2 trace. Case observation
+channels `branch_events`, `cache_events`, `tlb_events` and `probe_events` are
+lists of `{cycle, kind, name, field...}` with window-relative cycles;
+`probe_counters` is `{name: total}`; `bus_handshakes` is a sorted list of
+`[cycle, bus, "cmd"|"rsp"]`.
