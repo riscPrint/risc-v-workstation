@@ -188,3 +188,13 @@ retain their Unit result. The optional Vex binding compares accepted machine
 and user-alias half reads against this expected state. Read observations do
 not initialize or update expected state. Native example clean runs require
 nine inserted monitors. Seeded `hpm_read` runs retain fail status.
+
+## AXI response precedence
+
+AXI transaction checks require an earlier accepted AR before RVALID.
+BVALID requires AW and the complete W packet to have been accepted on
+earlier sampling edges. Current-edge request handshakes do not authorize
+a current-edge response. This applies to AXI4 and AXI4-Lite. Internal
+AW/W pairing can still use current accepted inputs. W can precede AW.
+This follows the read and write dependency rules in Arm IHI 0022H.
+TileLink's separate same-cycle response rules are unchanged.

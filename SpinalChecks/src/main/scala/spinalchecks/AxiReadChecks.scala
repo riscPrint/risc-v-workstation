@@ -25,19 +25,17 @@ private[spinalchecks] object AxiReadChecks {
     val push = ar.fire
     val aIndex = (ai.resize(log2Up(ids * depth)) |<< ptrWidth) | tails(ai).resized
     val rIndex = (ri.resize(log2Up(ids * depth)) |<< ptrWidth) | heads(ri).resized
-    val fresh = counts(ri) === 0 && ar.valid && ai === ri
     val aLen = if (c.useLen) ar.len else U(0, 8 bits)
     val aLock = if (c.useLock) ar.lock === 1 else False
-    val len = fresh.mux(aLen, lens(rIndex))
-    val lock = fresh.mux(aLock, locks(rIndex))
+    val len = lens(rIndex)
+    val lock = locks(rIndex)
     val last = if (c.useLast) r.last else beats(ri) === len.resize(9)
     val pop = r.fire && last
-    val present = counts(ri) =/= 0 || fresh
+    val present = counts(ri) =/= 0
     emit("axi4.read_match", "_r", r.valid.isInput,
       "read ID, ordered per-ID burst length and exclusive response",
       r.valid && (!present || last =/= (beats(ri) === len.resize(9)) ||
-        (if (c.useResp) r.resp === 1 && !lock else False) ||
-        (fresh && r.ready && !ar.ready)))
+        (if (c.useResp) r.resp === 1 && !lock else False)))
     val total = Reg(UInt(log2Up(limit + 1) bits)).init(0)
     emit("axi4.read_capacity", "_ar", ar.valid.isInput, s"declared read issuing limit $limit",
       push && !pop && total === limit)

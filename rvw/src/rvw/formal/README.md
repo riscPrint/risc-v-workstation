@@ -2877,3 +2877,14 @@ parameters. The project microarchitecture document can bind this rule, ROB
 count conservation and the other resource templates by named signals. See
 `rvw/src/rvw/checks/README.md` for port names. This does not infer flush or
 rename-recovery semantics.
+
+### AXI response precedence
+
+RVALID requires an AR accepted on an earlier edge. BVALID requires AW
+and the complete W packet accepted on earlier edges. A current-edge
+handshake does not authorize a response on that edge. The generated
+AXI4/AXI4-Lite trackers and native Spinal AXI4 trackers enforce this order.
+W can still arrive before AW. Reset clears pending transaction state.
+A later response to discarded state is an orphan.
+See the read/write dependency rules in
+[Arm IHI 0022H](https://developer.arm.com/-/media/Arm%20Developer%20Community/PDF/IHI0022H_amba_axi_protocol_spec.pdf).

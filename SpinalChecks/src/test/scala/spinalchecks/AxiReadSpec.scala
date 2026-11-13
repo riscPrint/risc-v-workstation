@@ -30,7 +30,8 @@ class AxiReadSpec extends AnyFunSuite {
       dut.clockDomain.forkStimulus(10); dut.clockDomain.waitSampling(4)
       def step(): Unit = dut.clockDomain.waitFallingEdge()
       step(); ar.valid #= true; ar.id #= 0; ar.len #= 1
-      step(); ar.id #= 1; ar.len #= 0
+      if (fault == "samecycle") { r.valid #= true; r.id #= 0; r.last #= false }
+      step(); ar.id #= 1; ar.len #= 0; r.valid #= false
       step(); ar.valid #= false
       r.valid #= true; r.id #= (if (fault == "orphan") 2 else 1); r.last #= true
       if (fault == "exokay") r.resp #= 1
@@ -70,6 +71,9 @@ class AxiReadSpec extends AnyFunSuite {
         dut.clockDomain.waitSampling(3)
         assert(ChecksSim.firings(dut).isEmpty)
       }
+  }
+  test("RVALID needs a request accepted on an earlier edge") {
+    assert(run("samecycle").contains("axi4.read_match"))
   }
   test("AXI4 orphan ID, early last and EXOKAY without exclusive each fire") {
     for (f <- Seq("orphan", "early", "exokay")) assert(run(f).contains("axi4.read_match"), f)

@@ -943,3 +943,8 @@ its separate probe capacity with `formal buses --depth`.
 model as `bind`. The expected state does not come from DUT storage or read
 data. The optional Vex example binds both machine and user-alias RV32 halves.
 Its native runtime tests cover clean reads and seeded read-observation faults.
+
+AXI4 native read/write trackers require a request accepted on an earlier
+edge before a response is valid. They do not use current-edge request
+bypass to authorize RVALID or BVALID. TileLink response timing follows
+its separate protocol rules.

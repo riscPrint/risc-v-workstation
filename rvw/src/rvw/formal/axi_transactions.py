@@ -54,7 +54,7 @@ integer rvw_rc[0:RVW_IDS-1],rvw_rh[0:RVW_IDS-1],rvw_rt[0:RVW_IDS-1];
 reg [7:0] rvw_rlen[0:RVW_IDS*RVW_DEPTH-1];
 reg rvw_rlock[0:RVW_IDS*RVW_DEPTH-1];
 reg [8:0] rvw_rbeat[0:RVW_IDS-1];
-wire rvw_rpresent=rvw_rc[rvw_rid]>0 || (rvw_arf && rvw_arid==rvw_rid);
+wire rvw_rpresent=rvw_rc[rvw_rid]>0;
 wire [7:0] rvw_read_len=rvw_rc[rvw_rid]>0 ? rvw_rlen[rvw_rid*RVW_DEPTH+rvw_rh[rvw_rid]] : {n['arlen']};
 wire rvw_read_lock=rvw_rc[rvw_rid]>0 ? rvw_rlock[rvw_rid*RVW_DEPTH+rvw_rh[rvw_rid]] : {n['arlock']};
 wire rvw_rpop=rvw_rf && {n['rl']};
@@ -75,7 +75,7 @@ wire [8:0] rvw_pair_beats=rvw_wc>0 ? rvw_wlen[rvw_wh] : rvw_wbeat+9'd1;
 wire rvw_current_aw=rvw_ac>rvw_wc || (rvw_ac==rvw_wc && rvw_awf);
 wire [7:0] rvw_current_len=rvw_ac>rvw_wc ? rvw_alen[(rvw_ah+rvw_wc)%RVW_DEPTH] : {n['awlen']};
 wire rvw_pair=rvw_av && rvw_wv && (rvw_bc[rvw_pair_id]<RVW_DEPTH || (rvw_bf && rvw_bid==rvw_pair_id));
-wire rvw_bpresent=rvw_bc[rvw_bid]>0 || (rvw_pair && rvw_pair_id==rvw_bid);
+wire rvw_bpresent=rvw_bc[rvw_bid]>0;
 wire rvw_write_lock=rvw_bc[rvw_bid]>0 ? rvw_block[rvw_bid*RVW_DEPTH+rvw_bh[rvw_bid]] : rvw_pair_lock;
 always @(posedge clk) begin
  if(reset) begin
