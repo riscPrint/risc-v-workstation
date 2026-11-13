@@ -130,3 +130,10 @@ A bounded result needs both assertion PASS and trigger cover PASS. A missing
 binding is unsupported. An absent project feature can be not applicable only
 with an explicit reason. Source copies are instrumented under the output tree.
 The reset assumption is `reset == $initstate`.
+
+## Architectural-state reset and halt
+
+`rvw.architectural-state/1` accepts optional boolean `reset_active_low`, default
+false. `signals.halt` is optional. If present, it is a one-bit aligned observation.
+Without it, generated RVFI halt remains zero. Trap write suppression and frame
+assertions remain in force. A generated map is not an equivalence certificate.

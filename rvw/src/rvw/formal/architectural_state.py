@@ -9,12 +9,14 @@ from rvw.common.proc import run_group
 from .riscv import FIELDS
 
 
-def monitor(xlen, csrs=()):
+def monitor(xlen, csrs=(), *, halt=False):
     """The project supplies retirement-aligned pre/post state, not guessed latency."""
     widths = dict(retire=1, insn=32, pc_before=xlen, pc_after=xlen,
                   regs_before=xlen*32, regs_after=xlen*32, rs1=5, rs2=5, rd=5,
                   trap=1, intr=1, mode=2, mem_addr=xlen, mem_rmask=xlen//8,
                   mem_wmask=xlen//8, mem_rdata=xlen, mem_wdata=xlen)
+    if halt:
+        widths['halt'] = 1
     widths.update({f'csr_{name}_{phase}': xlen for name in csrs for phase in ('before','after')})
     ports = [f'input [{width-1}:0] {name}' for name,width in widths.items()]
     rvfi_widths = dict.fromkeys(FIELDS, xlen)
@@ -24,7 +26,7 @@ def monitor(xlen, csrs=()):
     text = ['module rvw_state_monitor(input clock,reset,' + ',\n'.join(ports) + ');',
             'reg [63:0] order = 0;',
             'always @(posedge clock) if(reset) order <= 0; else if(retire) order <= order + 1;']
-    values = dict(valid='retire && !reset',order='order',insn='insn',trap='trap',halt='0',intr='intr',
+    values = dict(valid='retire && !reset',order='order',insn='insn',trap='trap',halt='halt' if halt else '0',intr='intr',
                   mode='mode',ixl='1' if xlen==32 else '2',rs1_addr='rs1',rs2_addr='rs2',
                   rd_addr='trap ? 0 : rd', pc_rdata='pc_before',pc_wdata='pc_after',
                   rs1_rdata=f'rs1 ? regs_before[rs1*{xlen} +: {xlen}] : 0',
@@ -53,8 +55,11 @@ def generate(manifest, out):
         raise ValueError('CSRs must have unique names')
     for name in csrs:
         ident(name)
-    text,widths,rvfi_widths = monitor(xlen,csrs)
     signals = plan['signals']
+    text,widths,rvfi_widths = monitor(xlen,csrs,halt='halt' in signals)
+    active_low = plan.get('reset_active_low', False)
+    if type(active_low) is not bool:
+        raise ValueError('reset_active_low must be boolean')
     if set(signals) != set(widths):
         raise ValueError('map every retirement, state and memory signal; no implicit zero observations')
     if len(set(signals.values())) != len(signals):
@@ -101,7 +106,7 @@ def generate(manifest, out):
         if port['direction'] not in ('input','output'):
             raise ValueError('inout state interfaces are unsupported')
         if name in (clock,reset):
-            local = 'clock' if name==clock else 'reset'
+            local = 'clock' if name==clock else '~reset' if active_low else 'reset'
         else:
             local = name if name.startswith('rvw_state_') else f'aux_{index}'
             kind = '(* anyseq *) reg' if port['direction']=='input' else 'wire'

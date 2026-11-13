@@ -3187,3 +3187,13 @@ the observed field. Final native status is an engine observation. Source
 conditions and cross-engine disagreement still control the problem verdict.
 The property ID identifies the manifest problem, which can contain a bundle
 of assertions. This is not per-assertion progress inside one bundled engine.
+
+### Active-low reset and halt in state maps
+
+Architectural-state maps can set `reset_active_low = true`. The formal wrapper
+then drives the core reset with `~reset`. Add a `halt` signal to observe a core's
+halt state. Older maps retain the constant-zero halt output. These options do
+not change the trap rule: a trapping instruction has no destination write, and
+the register frame must stay unchanged. The PicoRV32 example has measured
+simulation comparisons and a retained bounded equivalence failure. See
+`examples/picorv32/formal/README.md` before using that map for signoff.
