@@ -279,3 +279,11 @@ present integer counts are projected. Nested native statistics are retained.
 Project RTL maps must use matching predicates, including replay and page-walk
 traffic. Ratios and averages are not projected as counts. No counter match
 or accuracy claim is implied by this projection.
+## Native OoO scheduler ABI 2
+
+The optional native scheduler adds fixed ordered memory and static sequential
+branch timing. It preserves the `rvw.ooo-run/1` fields and reports `backend:
+native`. Unsupported policies use Python in auto mode. Explicit native mode
+refuses them. Rebuild the library with `scripts/install.sh --with-ooo` after
+an ABI change. Component algorithms remain in ComponentSims. Benchmarks report
+kernel and Python-call times separately; neither includes C2 parsing.
