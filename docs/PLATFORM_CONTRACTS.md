@@ -370,6 +370,13 @@ It defaults to 4 and must be a power of two. Spike applies it through
 entry wins. This priority is fixed and cannot be changed by a platform setting.
 Sail refuses non-default grain until its configuration mapping is implemented.
 
+Sail scalar fault observations use its independent instruction operands and
+memory log. Within one virtual page, logged physical fragment offsets map to
+attempted bytes. Completed masks and data include only logged fragments.
+Overlapping fragments and split-page effects are refused. This does not add
+partial-effect observation to Spike. A missing backend observation remains
+an error. Synthetic fragments validate the adapter, not native partial faults.
+
 C2 version 2 can declare `"csr_snapshot": ["0x300", "0x341"]` in its header.
 Each instruction must then carry `"csr_state": {"0x300": "0x…", "0x341": "0x…"}`.
 The key set must equal the declared set. Values are full XLEN state after the
