@@ -25,13 +25,13 @@ def main(args):
 
 
 def register(subparsers):
-    p=subparsers.add_parser('riscv-abstract',help='run conditional single-flight RVFI proofs with lazy RAM abstraction')
+    p=subparsers.add_parser('riscv-abstract',help='run conditional RVFI proofs with selected pipeline and RAM reductions')
     p.add_argument('--manifest',required=True)
     p.add_argument('--out',required=True)
     p.add_argument('--engines',help='comma-separated proof engines; default: manifest selection')
     p.add_argument('--checks',help='comma-separated instruction checks')
     p.add_argument('--timeout',type=float,default=120)
-    p.add_argument('--budget',type=float,default=240,help='RAM phase budget per check; concrete cover is separate')
+    p.add_argument('--budget',type=float,default=240,help='reduction phase budget per check; concrete cover is separate')
     p.add_argument('--json',action='store_true')
     p.set_defaults(func=main)
 

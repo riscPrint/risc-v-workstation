@@ -1153,3 +1153,16 @@ does not establish an absolute capacity limit. Missing receipts and jobs
 remain explicit errors. Native passes require a recorded nonempty property
 set. Cover success requires a witness. The overall verdict remains
 inconclusive. A native counterexample returns exit 1; other results return 3.
+
+## Separate ISA reductions
+
+`rvw.riscv-abstraction/1` accepts optional boolean `pipeline_restriction`
+and `ram_abstraction` fields. Both default to true. At least one must be true.
+RAM-only mode does not add a pipeline restriction. Single-flight-only mode
+retains concrete RAM and stores the native engine report in `native_portfolio`.
+The result records both flags, the restriction or null, source identity,
+per-check time limits, reduction budget, elapsed time and host load.
+Retirement covers retain their own elapsed time, limit and host load.
+All source assumptions remain. Conditional engine success does not certify
+whole-pipeline or observer correctness. Existing combined-model behavior stays
+the default. No core-specific signals or invariants are added to generic code.
