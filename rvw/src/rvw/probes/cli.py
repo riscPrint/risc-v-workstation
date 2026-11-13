@@ -14,6 +14,7 @@ def register(subparsers):
     src = check.add_mutually_exclusive_group(required=True)
     src.add_argument("--db", type=Path)
     src.add_argument("--events", type=Path)
+    check.add_argument("--consumer", help="consumer ID, such as perf-causal; name each missing field binding")
     check.add_argument("--require", action="append")
     check.add_argument("--validate", action="store_true",
                        help="validate the event stream against the contract (ordering, fields, counters, IDs)")
@@ -93,7 +94,7 @@ def _convert(args):
 def _check(args):
     from .check import check
     try:
-        result = check(db=args.db, events=args.events, require=args.require, c2=args.c2, validate=args.validate)
+        result = check(db=args.db, events=args.events, require=args.require, c2=args.c2, validate=args.validate, consumer=args.consumer)
     except (ValueError, OSError) as exc:
         return _fail(exc)
     print(json.dumps(result, indent=2))

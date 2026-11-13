@@ -91,3 +91,18 @@ each beat against the independent memory image. Before full-line completion,
 a lookup hit requires every requested byte to be present in the beat inventory.
 Its data must match memory. A hit on another word remains a violation. Fill,
 eviction and flush events clear the corresponding partial-byte inventory.
+
+## Measured causes and producer dependencies
+
+The `dependency` probe has fields `id` and `producer`. Both name instruction
+IDs from the stage probes. `Probe.dependency` declares this event. Kanata
+conversion writes a W edge and retains producers that already retired.
+Unknown consumers or producers are errors. An edge records data flow. It
+cannot establish that the consumer stalled or that the edge caused a stall.
+Explicit `stall` samples remain the only source of measured stall causes.
+
+`rvw probes check --consumer perf-causal` names the required stage ID,
+retirement ID, stall sample and dependency ID/producer bindings. MCP accepts
+the same `consumer` field. This checks declarations. It does not prove wiring
+or activation. Convert the captured events to Kanata and use `rvw perf` for
+measured cause counts and the remaining unknown zero-retirement intervals.

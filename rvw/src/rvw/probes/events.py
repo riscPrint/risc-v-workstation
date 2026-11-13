@@ -8,7 +8,7 @@ from pathlib import Path
 
 SCHEMA = "rvw.probe-events/1"
 KINDS = ("branch", "cache", "bus", "tlb", "walk", "stage", "retire", "flush", "stall", "csr", "interrupt",
-         "trace", "counter", "fault", "custom")
+         "trace", "counter", "fault", "custom", "dependency")
 
 
 @dataclass

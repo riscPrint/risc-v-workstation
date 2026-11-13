@@ -7,6 +7,10 @@ the existing format the converter writes, and the `rvw probes convert --to` name
 from __future__ import annotations
 
 CONSUMERS = [
+    dict(id="perf-causal", tool="rvw perf (measured causes and dependencies)",
+         needs=[("stage", ["id"]), ("retire", ["id"]), ("stall", []), ("dependency", ["id", "producer"])],
+         format="Kanata 0004 with stall and W records", converter="kanata",
+         note="measured reason samples identify blocked cycles; dependency edges alone are not causes"),
     dict(id="csim-compare-rtl", tool="rvw csim compare-rtl", needs=[("branch", ["pc", "taken", "target", "predicted_taken"])],
          format="rvw.bp-events/1", converter="bp-events",
          note="branch events at the commit point, aligned to C2 retirements"),

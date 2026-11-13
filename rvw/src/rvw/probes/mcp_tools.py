@@ -28,7 +28,7 @@ def mcp_tools():
         ToolSpec('probes_check', 'Name missing required probe kinds or kind/name bindings. With validate (or c2), also '
                  'validate an event stream against the contract (fields, end record, counters, instruction IDs, walk '
                  'grouping; retired-event probes against C2) and name each misplaced probe. Clean is not a wiring proof.',
-                 schema({'db': S, 'events': S, 'require': {'type':'array','items':S}, 'c2': S,
+                 schema({'db': S, 'events': S, 'require': {'type':'array','items':S}, 'c2': S, 'consumer': S,
                          'validate': {'type': 'boolean'}}, []), check,
                  annotations={'readOnlyHint': True}, side_effects='read-only', native_tools=()),
         ToolSpec('probes_list', 'List simulation probes from a design database (db) or a probe event stream '
