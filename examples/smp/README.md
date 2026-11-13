@@ -300,3 +300,26 @@ are consistent with native herd7. The maximum checker time was 180 ms.
 See `rvw/campaign-stress-results.json` and
 `rvw/campaign-stress-herd-results.json`. No forbidden native execution was
 found in this budget. The negative controls are checker tests, not core bugs.
+
+## Full-program DUT-order replay
+
+`rvw/programs/full-replay.S` runs 128 shared AMOs per hart, register arithmetic,
+branches, a completion barrier and exact final-value checks. Build the common
+ELF with `rvw/cosim_program.py --source rvw/programs/full-replay.S --out DIR`.
+Use full paths from the workstation root as in the earlier build example.
+Run `serial2` with seeds 17 and 23 into `DIR/run-17` and `DIR/run-23`.
+Then run `rvw/replay_check.py --inputs DIR` with the workstation Python.
+
+The serialized memory gate permits later requests from its current hart while
+previous requests retire. It blocks every other hart until that interval ends.
+Blocking later requests from the owner froze the core pipeline on the longer
+program. The gate retains an outstanding count and checks retirement ownership.
+It does not change the core or replace DUT values with reference values.
+
+Both native runs passed. Spike matched 2,622 retirements at seed 17, with
+1,317 on hart 0 and 1,305 on hart 1. It matched 2,613 at seed 23, with
+1,308 on hart 0 and 1,305 on hart 1. Each hart used zero masks and zero
+synchronizations. Separate injected result faults were rejected on hart 0 and
+hart 1. See `rvw/full-replay-results.json`. The eight gate checks also passed.
+These are complete finite programs under serialized memory visibility.
+They do not qualify arbitrary concurrent weak-memory replay.
