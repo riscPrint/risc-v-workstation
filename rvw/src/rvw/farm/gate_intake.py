@@ -31,6 +31,8 @@ def intake(root):
         raise ValueError('no C3 evidence for native farm gate')
     cells=[]
     for suite in suites:
+        if suite.extra.get('filter'):
+            raise ValueError('filtered_gate: subset evidence does not cover the tier')
         if suite.source.get('identity_complete') is False:
             raise ValueError('C3 source identity is incomplete')
         for test in suite.tests:

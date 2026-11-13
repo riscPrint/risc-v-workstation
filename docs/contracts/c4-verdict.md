@@ -137,3 +137,15 @@ This is a bounded deterministic acceptance rule. It makes no population estimate
 No confidence interval, noise distribution or statistical significance is claimed. A declared performance workload without a
 baseline or without passing results on every seed is inconclusive, even when its failure
 is known or unchanged. A new correctness failure still rejects.
+
+## Filtered gate scope
+
+The C4 `gate` block records `filter`: the list of `--filter` regular
+expressions, or null when no command filter was given. It also records
+`selected_tests` and `total_tests`. These count test/config cells within the
+tier before seed expansion. The total keeps the tier and suite exclusions.
+A non-null filter makes this a subset gate. Its result carries
+`scope: filtered`. An `accept` covers only the selected tests.
+A consumer that needs tier acceptance must treat a subset `accept` as
+`inconclusive` with cause `filtered_gate`. Plan checks and native farm gate
+intake enforce this rule. Unfiltered gates keep their verdict behavior.
