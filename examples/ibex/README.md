@@ -276,7 +276,7 @@ The simulation exporter normalizes their conventions as described above.
 | Native ISA | 51 C1 passes and complete strict Spike matches |
 | Native ACT4 | 148 C1 passes; 148 strict first differences at reset mtvec |
 | Final targeted formal/lint/hygiene tests | 130 passed, 15 skipped |
-| Final fast Python set | 3,621 passed, 4 skipped; two unchanged nice-priority test failures |
+| Final fast Python set | 3,634 passed, 4 skipped; two unchanged nice-priority test failures |
 | Release hygiene | Passed |
 | Packages, enum parameters and generate blocks | Exercised by the whole functional core import |
 | SystemVerilog interfaces | Not exercised by this configuration |
