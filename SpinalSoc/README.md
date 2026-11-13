@@ -162,3 +162,36 @@ captured-input regression setup. [The VexiiRiscv example](examples/vexii/README.
 has a separate source build for its pinned Spinal dependencies. Both expose
 AXI4 masters through `AxiCoreWrapper` and wire machine interrupt inputs.
 Debug transport and debug module integration remain open.
+
+## Simple CPU memory bus
+
+`SimpleCpuBus` carries one 32-bit word transfer at a time. The CPU holds `valid`,
+address, write data and byte mask until `ready` completes the transfer. `error`
+and `rdata` are valid with `ready`. Reads ignore the mask. Addresses select an
+aligned word; the CPU performs load extraction and store lane alignment.
+`SimpleToApb` buffers the request, inserts APB setup, preserves wait states,
+and returns the read data/error. APB byte strobes carry the write mask.
+
+A project wrapper implements `SimpleCoreWrapper` and exposes a master
+`SimpleCpuBus`, interrupt inputs in mip positions, and a debug-reset input.
+Select `core.bus = "simple"` in the composition JSON. The composer inserts the
+bridge and enables byte writes in RAM. For example:
+
+```scala
+class ProjectCore extends Component with SimpleCoreWrapper {
+  val io = new Bundle {
+    val bus = master(SimpleCpuBus())
+    val interrupts = in Bits(32 bits)
+    val debugReset = in Bool()
+  }
+  def bus = io.bus
+  def interrupts = io.interrupts
+  def debugReset = io.debugReset
+  // Instantiate the real CPU. Bind memory completion, interrupt and reset.
+  // Freeze its pipeline until a memory request completes if it has no ready port.
+}
+```
+
+The example is a binding outline. It does not execute a CPU until mapped.
+`runMain rvwsoc.SimpleBusSmoke` tests wait states, strobes, data and errors.
+AXI4-Lite wrappers can still use the existing `AxiLiteCoreWrapper` and ingress.

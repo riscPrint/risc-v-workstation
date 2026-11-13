@@ -25,8 +25,8 @@ def compose(source, out, elf=None):
     keys(spec['core'], {'class', 'bus'}, {'class', 'bus'})
     core = scala_name(spec['core']['class'])
     bus = spec['core']['bus']
-    if bus not in ('apb3', 'axi4', 'axi4-lite', 'tilelink'):
-        raise ValueError('core bus must be apb3, axi4, axi4-lite or tilelink')
+    if bus not in ('apb3', 'axi4', 'axi4-lite', 'tilelink', 'simple'):
+        raise ValueError('core bus must be apb3, axi4, axi4-lite, tilelink or simple')
     byte_writes = bus != 'apb3'
     if type(spec['clock_hz']) is not int or spec['clock_hz'] <= 0 or spec['reset'] not in ('sync_high', 'async_high'):
         raise ValueError('positive clock_hz and sync_high or async_high reset required')

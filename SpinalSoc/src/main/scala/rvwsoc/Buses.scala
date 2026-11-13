@@ -81,6 +81,11 @@ class LiteToApb(config: AxiLite4Config) extends Component {
 }
 
 object BusIngress {
+  def apply(bus: SimpleCpuBus): Apb3 = {
+    val bridge = new SimpleToApb(bus.addressWidth)
+    bridge.io.cpu <> bus
+    bridge.io.apb
+  }
   def apply(bus: AxiLite4): Apb3 = {
     val bridge = new LiteToApb(bus.config)
     bridge.io.up << bus

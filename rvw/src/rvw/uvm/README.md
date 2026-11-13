@@ -118,3 +118,15 @@ checks for multiple mapped regions. Sample each bus monitor at its own clock.
 Call `reset()` when the peripheral reset is asserted. Unknown-reset reads do
 not add a comparison. Use separate scoreboards for autonomous registers.
 The existing `SocEnvironment` interface is unchanged.
+
+## Custom project buses
+
+`uvm new --adapter adapter.json` (MCP `uvm_new.adapter`) accepts a project-owned
+`rvw.uvm-adapter/1` file for pyuvm. It names `bus` (a top-level database bundle),
+`profile` (the agent family), `bindings` (an object of project pin mappings), and
+`scenario` (a Python file relative to the adapter). The generator copies that
+scenario into the bench. The scenario binds the custom pins and uses
+`services.checked(...)` for each expected result. Zero checks still refuse a pass.
+For example: `{"schema":"rvw.uvm-adapter/1","bus":"top.io.mem","profile":"cpu",
+"bindings":{"address":"io_address"},"scenario":"scenario.py"}`.
+Generation does not establish protocol or CPU qualification.

@@ -13,7 +13,10 @@ def bus_type(class_name):
     return BUS_TYPES.get(leaf)
 
 
-def generate(db, soc, out, *, rtl=None, language='pyuvm', profile='auto'):
+def generate(db, soc, out, *, rtl=None, language='pyuvm', profile='auto', adapter=None):
+    if adapter is not None:
+        from .profiles import generate as generate_profile
+        return generate_profile(db, soc, out, rtl=rtl, language=language, profile=profile, adapter=adapter)
     from .profiles import classify
     with_db = DesignDB(Path(db).resolve())
     try:

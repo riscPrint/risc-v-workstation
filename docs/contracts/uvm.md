@@ -106,3 +106,10 @@ Automatic bench generation requires supported typed bus metadata. A database
 with plain Verilog ports returns `status: unsupported` and writes no bench.
 The CLI exits 2. MCP returns the same status. Supply a project-owned bench
 and explicit protocol pin bindings. Port names alone do not establish a bus.
+
+## Project adapter selection
+
+`uvm new --adapter FILE` and MCP `uvm_new.adapter` accept `rvw.uvm-adapter/1`.
+Required fields are `bus`, `profile`, `bindings` and `scenario`. The selected bus
+must be a top-level database bundle. The scenario is copied from a path relative
+to the adapter. This pyuvm path retains the generated positive-check requirement.
