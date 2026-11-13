@@ -84,6 +84,10 @@ class VexiiAdapter(val xlen: Int) extends CoreAdapter {
     var traceEnded = false
     val konataLog = if (job.konata) Some(new konata.Backend(new File(job.out, "konata.log"))) else None
     val bench = ctx.elf.symbol("bench_stats").map(new MemWords(_, 2, busBytes))
+    require(!VexiiTop.floating(job.config) || !sys.env.get("RVW_COSIM_DPI").contains("1"),
+      "FP state capture buffers one run; streaming DPI is not bound")
+    val fpProjection = if (VexiiTop.floating(job.config) && job.rvfiTrace) Some(new FpCommitState(xlen)) else None
+    var retirementProbe: VexiiRiscvProbe = null
     var backend: C2Backend = null
     var lastRetiredPc = Option.empty[BigInt]
     var lastRetiredMode = Option.empty[Int]
@@ -185,7 +189,17 @@ class VexiiAdapter(val xlen: Int) extends CoreAdapter {
         var irqLevels = BigInt(-1)
         // Registered before the probe: the trap values are queued before the probe reports the trap.
         def sampleCycle(): Unit = {
-          if (backend != null) tap.fp.foreach { case (_, status, applied, _) =>
+          if (backend != null) tap.fp.foreach { case (fcsr, status, applied, _, effects) =>
+            if (fpProjection.nonEmpty) {
+              val capture = fpProjection.get
+              if (effects.allocate.toBoolean) capture.allocate(effects.allocateId.toInt)
+              val flags = effects.flagEvents.collect { case (valid, id, value) if valid.toBoolean =>
+                (id.toInt, value.toBigInt) }.toSeq
+              val writes = if (effects.csrWrite.toBoolean)
+                Seq((effects.csrId.toInt, effects.csrAddress.toInt, effects.csrData.toBigInt)) else Nil
+              val dirty = if (effects.dirty.toBoolean) Seq(effects.dirtyId.toInt) else Nil
+              capture.observe(fcsr.toBigInt, status.toBigInt, flags, writes, dirty)
+            }
             if (applied.toBoolean) backend.returnStatus(status.toBigInt)
           }
           ctl.tick()
@@ -303,7 +317,7 @@ class VexiiAdapter(val xlen: Int) extends CoreAdapter {
             // Walks that ended by this retirement's cycle go on it (C2 `mmu_walks`).
             val walks = walkCapture.map(_.due(r.cycle)).getOrElse(Nil)
             val sampled = if (walks.isEmpty) faulted else faulted.copy(extra = Seq("mmu_walks" -> ujson.Arr.from(walks)))
-            events += ((r.cycle, () => writer.foreach(_.write(sampled))))
+            events += ((r.cycle, () => writer.foreach(_.write(fpProjection.map(_.project(sampled)).getOrElse(sampled)))))
           },
           (c, cause, tval, intr) => {
             if (intr) external(c, "taken", ujson.Obj("cause" -> Hex(cause)))
@@ -318,12 +332,14 @@ class VexiiAdapter(val xlen: Int) extends CoreAdapter {
               case None =>
             }
           }, if (tap.lsuVirtualAddress.nonEmpty) logicalAddress else (_, _, address) => address,
-          tap.fp.map { case (fcsr, status, _, _) => () => (fcsr.toBigInt, status.toBigInt) },
+          tap.fp.map { case (fcsr, status, _, _, _) => () => (fcsr.toBigInt, status.toBigInt) },
           if (VexiiTop.compressed(job.config)) Some(pc => {
             val low = read(pc.toLong, 2).toLong
             if ((low & 3) != 3) low else read(pc.toLong, 4).toLong
-          }) else None, () => tap.fp.map(_._4.toBigInt).getOrElse(BigInt(0)))
+          }) else None, commitObserved = r => fpProjection.foreach(c =>
+            c.retire(r.order, retirementProbe.harts(0).microOpRetirePtr)))
         val probe = new VexiiRiscvProbe(dut, konataLog, withRvls = false)
+        retirementProbe = probe
         probe.checkLiveness = false
         probe.trace = job.konata
         probe.add(backend)
@@ -371,11 +387,15 @@ class VexiiAdapter(val xlen: Int) extends CoreAdapter {
               finishAt = Some(ctl.cycle)
               probe.enabled = false
             }
-            val watermark = backend.pendingCycle.getOrElse(Long.MaxValue)
+            val readyToFinish = finishTarget.contains(physicalRetired)
+            if (readyToFinish) fpProjection.foreach(_.finish(tap.fp.exists(_._5.pending.toBoolean)))
+            val watermark = if (fpProjection.nonEmpty && !readyToFinish) Long.MinValue
+              else backend.pendingCycle.getOrElse(Long.MaxValue)
             val ready = events.filter(_._1 <= watermark).sortBy(_._1).toVector
             events.filterInPlace(_._1 > watermark)
             ready.foreach(_._2())
-            finish.filter(_ => finishTarget.contains(physicalRetired)).foreach { case (s, c, m) =>
+            if (readyToFinish) fpProjection.foreach(_.validateFinal())
+            finish.filter(_ => readyToFinish).foreach { case (s, c, m) =>
               writer.foreach(_.end(ctl.cycle, s.name)); traceEnded = true
               ctl.finish(s, c, m)
             }

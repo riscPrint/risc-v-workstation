@@ -120,7 +120,9 @@ class TrapTapPlugin extends FiberPlugin {
       val flagsWb = host[vexiiriscv.execute.fpu.FpuFlagsWritebackPlugin]
       val lateFlags = CombInit(flagsWb.logic.flagsOr.asBits.andMask(!flagsWb.lane.isFreezed()))
         .setName("rvw_fp_late_flags").simPublic()
-      (fcsr, mstatus, xretApplied, lateFlags)
+      val effects = new FpEventTaps(host[vexiiriscv.test.WhiteboxerPlugin].logic,
+        host[vexiiriscv.execute.CsrAccessPlugin], plugin, flagsWb)
+      (fcsr, mstatus, xretApplied, lateFlags, effects)
     }
     val privilege = CombInit(host[PrivilegedPlugin].logic.harts(0).privilege).setName("rvw_privilege").simPublic()
     val walk = host.get[vexiiriscv.memory.MmuPlugin].map(new WalkTap(_))

@@ -105,3 +105,25 @@ The upstream probe gives expanded compressed instructions. The adapter uses
 the expanded fields for register effects and reads the raw encoding at the
 retired PC for C2. A final non-control compressed instruction advances two
 bytes. Intermediate next PCs come from the next observed retirement.
+
+## Correlated FP state writes
+
+The FP capture binds the real enabled flag, CSR and FS dirty write ports.
+It registers each enable, value and micro-op ID on the edge that updates
+storage. Decode allocation gives each reused hardware ID a new generation.
+The generic `FpCommitState` checks actual fcsr and FS/SD storage against
+those observed writes. A missing flag, missing dirty update, unexplained
+state change or unretired effect stops capture. It never fills DUT data
+from Spike.
+
+Records use retirement order after all their state writes have settled.
+FP destination data still comes directly from the upstream committed RF
+probe. The accepted FCSR writes and observed raised flags supply accrued
+flags and rounding state. FS/SD comes from the observed dirty requests and
+actual status writes. Other mstatus bits retain the existing RTL capture,
+including the later machine-return apply edge.
+
+FP records are buffered for one bounded run. Streaming DPI is not bound.
+Overlapping CSR and FP writes without separate physical snapshots stop
+capture. Final projected state must equal final actual storage. These are
+capture limits, not waived comparisons or core qualification.
