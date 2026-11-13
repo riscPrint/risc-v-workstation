@@ -1604,3 +1604,170 @@ unsupported capabilities receive no execution credit. MTIP and CLINT results
 do not establish Sstc support. Superpage rows overlap the translation matrix.
 Only the repeated-reset campaign is new in this final audit. Other counts
 refer to retained captures. No result is hardware or whole-core qualification.
+
+## Project input recipes
+
+Use these recipes before the related commands above. Replace signal names,
+paths and limits with values from the new core. Keep the files beside its
+`rvw.toml`. A generated file is not passing execution evidence.
+
+### Map a Spinal core through its ports
+
+A no-argument Spinal top with a supported memory interface can use the mapped
+adapter. This path creates a runnable adapter after you review its bindings.
+The manual skeleton remains the path for other interfaces.
+
+```sh
+rvw init --spinal-top mycore.Top --isa rv32im --reset-pc 0x80000000  --bus 'mem:req-rsp:cmd_valid=io_req,cmd_ready=io_ready,address=io_addr,write=io_write,wdata=io_wdata,mask=io_mask,rsp_valid=io_rsp,rdata=io_rdata'  --rvfi-prefix io_rvfi_ --json
+```
+
+`req-rsp` requires `cmd_valid`, `address`, `rsp_valid` and `rdata`.
+Its optional roles are `cmd_ready`, `write`, `wdata`, `mask`, `error` and
+`rsp_ready`. `valid-ready` requires `valid`, `ready`, `address` and `rdata`.
+Its optional roles are `wdata` and `mask`. Add `write_response=1` when the
+bus acknowledges stores through its response interface. Review actual
+acceptance and response timing. Help lists roles; it does not infer timing.
+The MCP `init_scaffold` tool currently creates the manual skeleton only.
+Use this CLI path for mapped init.
+
+Review `rvw/cosim.json` before removing `review_required`. Its `aligned_mem`
+field selects the C2 address convention. With `true`, report the word-aligned
+address, lane-shifted byte masks and lane-shifted data. With `false`, report
+the effective byte address and unshifted masks and data. Validate byte and
+halfword accesses with Spike before expanding the suite. Do not change the
+platform to hide a mismatch in the observer.
+
+The mapped adapter supports probe capture. It does not support `--konata`.
+Bind actual stage and retirement events, run with `--probes`, then convert:
+
+```sh
+rvw probes convert run/probe-events.jsonl --to kanata --out run/konata.log
+rvw perf run/konata.log --result run/result.json --json
+```
+
+Compare probe retirement counts with C1 and C2. An open final ID is not a
+complete retirement record. Keep the difference in the report.
+
+### Configure bundle and bisect
+
+Mapped init does not create a debug configuration. Add this project section:
+
+```toml
+[debug]
+config = "rvw/debug.toml"
+```
+
+Create `rvw/debug.toml` with the core name, wave clock expression, wave time
+units per clock period and the source selector used by its launcher:
+
+```toml
+[core]
+name = "my-core"
+clock = 'clk$'
+period = 10
+source_env = "RVW_CORE_SOURCE"
+```
+
+The period above is an example. Check it against the captured wave. A
+bundle without a wave cannot establish wave timing or pipeline snapshots.
+Use `--no-rerun --no-spinaltrace` for a report from existing C1/C2 only.
+Bisect needs committed good and bad revisions and the original ELF.
+Keep source and tool inputs stable during gate and bisect calls.
+
+### Generate checks from an explicit binding
+
+Create `checks.generate.json`:
+
+```json
+{"schema":"rvw.check-generation/1","queues":"checks.rules.json"}
+```
+
+Create `checks.rules.json`. This example checks an observed three-bit control
+state against the inclusive bound 5. Bind it to the actual retained signal.
+
+```json
+{
+  "schema":"rvw.micro-checks/1", "top":"Top",
+  "rules":[{"id":"control_range","kind":"counter_bounds","width":3,
+    "entries":5,"ports":{"clk":"clk","reset":"reset",
+    "active":"check_active","value":"control_state"}}]
+}
+```
+
+```sh
+rvw checks plan --json
+rvw checks generate --all --out run/checks --json
+```
+
+`--all` selects all supplied generator inputs. It does not invent missing
+bindings. The generated monitor must still compile and run on the design.
+Bind `check_active` to an actual one-bit RTL signal. Expressions and literal
+constants are refused as signal bindings. Its active-high reset must match
+the bound reset signal.
+
+### Supply lint and autocheck inputs
+
+A minimal structural lint file is:
+
+```json
+{"schema":"rvw.lint-settings/1","config":"default","top":"Top",
+ "files":["run/Top.v"],"db":"run/design.db",
+ "backends":["structural"],"timeout_s":30,"waivers":[]}
+```
+
+Use the database from the same elaboration as the RTL. Add `verilator` to
+`backends` for native RTL lint. A structural report is not CDC signoff.
+
+An autocheck manifest declares RTL, clock, reset and all top-level ports:
+
+```json
+{
+  "schema":"rvw.autocheck/1","top":"Top","verilog":["run/Top.v"],
+  "clock":"clk","reset":"reset",
+  "ports":{"clk":{"direction":"input","width":1},
+    "reset":{"direction":"input","width":1},
+    "state":{"direction":"output","width":3}},
+  "fsms":[{"signal":"state","states":[0,1,2,3,4,5],"transitions":[]}]
+}
+```
+
+Replace this port list with the complete design port list. Add only reviewed
+legal transitions. Use a short initial depth and property budget:
+
+```sh
+rvw formal autocheck autocheck.json --out run/autocheck  --kind fsm_state --max-properties 8 --depth 8 --timeout 10 --json
+```
+
+For constant-value asynchronous-reset flip-flops, add
+`--event-model --async-reset`. This selects sampled event semantics. It does
+not establish physical reset-release behavior. Autocheck observes selected
+properties. `formal isa` needs a separate project-owned retirement or state
+binding from the ISA section above. Missing bindings remain unsupported.
+
+### Run an explicit timing what-if
+
+The trace timing model can run without gem5. Create `timing.json`:
+
+```json
+{
+  "fetch_width":1,"fetch_entries":4,"rename_width":1,"rob_entries":8,
+  "issue_width":1,"issue_entries":4,"load_entries":2,"store_entries":2,
+  "commit_width":1,"issue_order":"in_order",
+  "latencies":{"alu":1,"multiply":3,"divide":32,"load":2,"store":1,
+    "branch":1,"jump":1,"csr":1,"fence":1,"system":1}
+}
+```
+
+```sh
+rvw arch ooo-what-if timing.json run/rvfi.jsonl  --set issue_width=2 --out run/what-if --json
+```
+
+These are illustrative parameters. Replace them with the project's intended
+model. The result measures the same committed trace under two model settings.
+It does not predict a changed program, wrong-path execution or RTL speedup.
+
+Security campaigns need a project adapter that accepts paired secret inputs
+and produces independent observations. A C1 launcher alone is insufficient.
+Do not pass an empty manifest or a reference-model report as DUT evidence.
+SoC and UVM also need actual wrapper, protocol and pin bindings. The sections
+above state their limits. Stop those native paths until these bindings exist.
