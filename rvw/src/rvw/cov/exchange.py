@@ -150,7 +150,13 @@ def merge_exchanges(reports):
         if signature(other)!=identity:
             raise ValueError('incompatible coverage source, bin semantics or exclusions')
         for left,right in zip(first['rows'],other['rows']):
-            left['count']+=right['count']
+            if left['kind']=='assertion:peak_active':
+                left['count']=max(left['count'],right['count'])
+            elif left['kind']=='assertion:active':
+                if left['count']!=right['count']:
+                    raise ValueError('incompatible active assertion snapshots')
+            else:
+                left['count']+=right['count']
     return first
 
 

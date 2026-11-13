@@ -298,6 +298,8 @@ context. Native UCIS metric tags and arbitrary vendor profiles are unsupported.
 Import returns `rvw.coverage-exchange/1`: context, rows with id/kind/count/metadata,
 status `reported`, and `proof_exclusions_verified=false`. Unknown XML structures
 are errors. Compatible merges require identical context and bin semantics.
+Event counters add across compatible reports. Peak-active counters merge by
+maximum. Active snapshots must agree and do not add.
 The optional input `rvw.assertion-counters/1` has a design hash and property
 id/source/count dictionaries. Counters alone grant no proof or non-vacuity.
 Native DAT exports retain exact point keys. LCOV uses `verilator_coverage`.
