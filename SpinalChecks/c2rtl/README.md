@@ -334,3 +334,35 @@ the exception handler used by RISC-V NaN conversion macros.
 Use [the native HardFloat runner](README-hardfloat.md) for binary16/binary32 unit
 exports against pinned SoftFloat. It checks result bits, rounding and flags.
 Case restrictions, transaction bounds and inconclusive runs stay explicit.
+
+## Confirmed example bindings
+
+`rvw formal datapath --unit ... --confirm` now runs one reviewed proposal.
+See [binding review and evidence](../../rvw/src/rvw/formal/README-datapath-kit.md).
+These native runs use actual exported or extracted arithmetic boundaries.
+All listed passes include definedness. No proposal alone earns a pass.
+
+| Core | Boundary and input domain | Compared result | Result |
+| --- | --- | --- | --- |
+| VexRiscv | Extracted product, 8-bit unsigned operands | Low 8 bits | Proved |
+| VexRiscv | Extracted divider, all 32-bit dividends, divisor zero | All 32 bits | Proved |
+| VexiiRiscv | Helper multiplier, signed 8-bit operand projection | All 32 bits | Proved |
+| VexiiRiscv | Default DivRadix, all 32-bit dividends, divisor zero | All 32 bits | Proved |
+| NaxRiscv | Standalone 8-bit helper configurations, all operands | 8-bit MUL and DIVU | Proved |
+| NaxRiscv | Standalone 16- and 32-bit helper configurations, all operands | Word MUL and DIVU | Inconclusive, 45 s each |
+
+The VexRiscv product-cell and divider extraction runners remain under
+`examples/vexriscv/formal/`. The VexiiRiscv export runners remain under
+`examples/vexiiriscv/formal/`. Generate those arithmetic adapters first.
+For proposal discovery, give the adapter module an arithmetic name such as
+`VexMulLow` or `VexDiv`; a module rename changes no arithmetic logic. Build
+its database with `rvw query build-hdl`. Review `--unit` output, then use
+`--component '' --confirm` on the root word adapter with its generated C model.
+Use its documented latency bound. The explicit edited-binding interface can
+also bind a module without name hints.
+
+See `confirmed-bindings.json` for the reviewed Vex bindings and proof-input
+hashes. See [NaxRiscv's runner and width ledger](../../examples/naxriscv/formal/README.md).
+These checks do not cover instruction decode or complete core pipelines.
+Unrestricted 32-bit arithmetic remains open. The optional VexiiRiscv bitpasta
+IPC fault remains a confirmed counterexample in the separate findings.

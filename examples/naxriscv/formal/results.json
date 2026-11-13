@@ -1,0 +1,72 @@
+{
+  "schema": "rvw.nax-datapath/1",
+  "source_revision": "9f452d50560d02fb391bc8039f5453c54e0911af",
+  "spinal_version": "1.15.0",
+  "scope": "real arithmetic helper source; parameterized standalone configurations; no core pipeline proof",
+  "source_files": {
+    "src/main/scala/naxriscv/utilities/DivRadix4.scala": {
+      "sha256": "579433500214432b4291b6603e366bc1c6c21450495f64946a7d28cf397031de",
+      "selected_sha256": "17626f8f7c4e78909f0304ccacad37c091e19928228b653e2dadb3222007d4cb"
+    },
+    "src/main/scala/naxriscv/utilities/Misc.scala": {
+      "sha256": "da8eaf3df124a7d1f15e8753f06edfbea51ee951941f5bdc7ad4b1c6ad1d09ec",
+      "selected_sha256": "85ada98fce68d9060c8c5cbd8464a86d52d0e4add5a961befe27729b1bbb5f8d"
+    }
+  },
+  "cases": [
+    {
+      "operation": "mul",
+      "width": 8,
+      "status": "proved",
+      "reason": null,
+      "wall_s": 2.29,
+      "rtl_sha256": "df7ea518d521eff1771a3f69ee1057c688d20994654562d6e8a2bc052565f152",
+      "binding_sha256": "cda8e6beb1f9d346350e523e4be4dd2c73c14aa041f89e038a6ba5f62ae0c22d"
+    },
+    {
+      "operation": "divu",
+      "width": 8,
+      "status": "proved",
+      "reason": null,
+      "wall_s": 2.705,
+      "rtl_sha256": "4ff798d53bf7e9d3a3f823d58f3287d7e3e821d6a431f78768f2d0a30488ba9b",
+      "binding_sha256": "0f1acbcefe502cf2d056ec85002a29aa221868b3e81e8e40cf82263a50af3cc1"
+    },
+    {
+      "operation": "mul",
+      "width": 16,
+      "status": "inconclusive",
+      "reason": "cbmc timed out",
+      "wall_s": 45.013,
+      "rtl_sha256": "c8f60bfd3093f2d6bc1b247080436e761128f8273e108cb1577cffb784c2af6d",
+      "binding_sha256": "a8617543b96ac0ab6eccea448d38429cf8014dce3a62a43486f0811e9e632032"
+    },
+    {
+      "operation": "divu",
+      "width": 16,
+      "status": "inconclusive",
+      "reason": "cbmc timed out",
+      "wall_s": 45.163,
+      "rtl_sha256": "57acfe3f676f8ebc1e44710ee539e30333c211eec681d898cc8eda1ce5d9884d",
+      "binding_sha256": "273e6da15200d223a6471c6b68a12feb528e42bcc51dec83dbfba45fbadd11d4"
+    },
+    {
+      "operation": "mul",
+      "width": 32,
+      "status": "inconclusive",
+      "reason": "cbmc timed out",
+      "wall_s": 45.087,
+      "rtl_sha256": "3c6f7d9d3995ff7c9b253fcfd952a94a5b9352542cac464abadfd1c23f49c243",
+      "binding_sha256": "bf26188530d07e583cbc2de663b80151514adb7b7c5c0348608230d21ff7fcab"
+    },
+    {
+      "operation": "divu",
+      "width": 32,
+      "status": "inconclusive",
+      "reason": "cbmc timed out",
+      "wall_s": 45.142,
+      "rtl_sha256": "5ca86cc3cc7421e8edabc27709944438a26bec275efc98e8a31eff7610954f49",
+      "binding_sha256": "521a88ba3eff4083ffd5d1cedb0f42a587510d03223245777c3322e8884b1f6b"
+    }
+  ]
+}

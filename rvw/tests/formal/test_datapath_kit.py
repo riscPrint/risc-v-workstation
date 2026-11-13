@@ -62,3 +62,63 @@ def test_cli_finds_default_database(tmp_path,monkeypatch):
     monkeypatch.setenv('RVW_DESIGNDB',str(path))
     assert main(['formal','datapath','--unit','mul','--out',str(tmp_path/'default')])==0
     assert (tmp_path/'default/proposal.json').exists()
+
+
+def test_confirmation_refuses_ambiguous_candidate(tmp_path):
+    from rvw.formal.datapath_kit import select
+    _, conn = database(tmp_path)
+    report = propose(SimpleNamespace(conn=conn), 'mul', 32)
+    assert select(report)['ports']['a'] == 'a'
+    report['candidates'].append(dict(report['candidates'][0], component='cpu.other'))
+    with pytest.raises(ValueError, match='one candidate'):
+        select(report)
+    assert select(report, 'cpu.mul')['top'] == 'Multiplier'
+    report['candidates'][0]['missing_roles'] = ['a']
+    with pytest.raises(ValueError, match='edited --binding'):
+        select(report, 'cpu.mul')
+    conn.close()
+
+
+def test_each_port_match_has_evidence_in_plain_output(tmp_path):
+    from rvw.formal.datapath_kit import describe
+    _, conn = database(tmp_path)
+    report = propose(SimpleNamespace(conn=conn), 'mul', 32)
+    assert report['candidates'][0]['port_matches']['a']['path'] == 'cpu.mul.a'
+    text = describe(report)
+    assert 'a <- a: in 32 bits' in text and 'exact alias' in text
+    conn.close()
+
+
+def test_confirm_runs_only_the_selected_binding(tmp_path, monkeypatch):
+    from rvw.cli import main
+    from rvw.formal import datapath
+    path, conn = database(tmp_path); conn.close()
+    seen = []
+    original = datapath.run
+    def proof(args):
+        if args.unit: return original(args)
+        seen.append(json.loads(Path(args.binding).read_text()))
+        assert args.confirm is False and args.component is None
+        return 0
+    monkeypatch.setattr(datapath, 'run', proof)
+    assert main(['formal','datapath','--unit','mul','--db',str(path),'--confirm',
+                 '--rtl','dut.v','--model','mul.c','--width','32','--out',str(tmp_path/'confirmed')]) == 0
+    assert seen == [{'top':'Multiplier','ports':{'a':'a','b':'b','y':'y','clk':'clk','reset':'reset'}}]
+
+
+def test_edited_binding_is_used_without_overwriting_review(tmp_path, monkeypatch):
+    from rvw.cli import main
+    from rvw.formal import datapath
+    path, conn = database(tmp_path); conn.close()
+    edited = {'top':'Reviewed', 'ports':{'a':'left','b':'right','y':'product'}, 'constants':{'mode':0}}
+    binding = tmp_path/'binding.json'; binding.write_text(json.dumps(edited))
+    original = datapath.run
+    def proof(args):
+        if args.unit: return original(args)
+        assert json.loads(Path(args.binding).read_text()) == edited
+        return 3
+    monkeypatch.setattr(datapath, 'run', proof)
+    assert main(['formal','datapath','--unit','mul','--db',str(path),'--confirm',
+                 '--binding',str(binding),'--rtl','dut.v','--model','mul.c','--width','32',
+                 '--out',str(tmp_path/'edited')]) == 3
+    assert json.loads(binding.read_text()) == edited

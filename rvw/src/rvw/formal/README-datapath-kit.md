@@ -2,35 +2,44 @@
 
 ```sh
 rvw formal datapath --unit mul --db design.db --width 32 --out binding-proposal
-rvw formal datapath --unit fpu-add --db design.db --out fp-proposal --json
+rvw formal datapath --unit mul --db design.db --width 32 --component cpu.mul \
+  --confirm --rtl unit.v --model mul32.c --out confirmed
 ```
 
 This mode reads a captured SpinalDB database. It searches component paths,
-module names, class names and Area names for arithmetic unit hints. It then
-checks component port names, directions and optional widths. It writes
-`proposal.json`. It does not elaborate RTL or run a solver.
+module names, class names and Area names for arithmetic hints. Each proposed
+port match prints its name, direction, width, source path and matching rule.
+`proposal.json` retains the same evidence as `port_matches`. Names and port
+shapes do not establish operation, signedness or protocol semantics.
 
-The result is `needs_confirmation` when candidates exist, or `no_candidates`.
-Every candidate includes the source ports, matched hints, proposed `binding`,
-missing roles, ambiguous roles and unbound ports. No candidate is approved.
-Review operation and signedness, formats, reset, protocol, latency and extra
-ports. Confirm the reference model. FP bindings also require rounding and flags.
+Without `--confirm`, the result is `needs_confirmation` or `no_candidates`.
+No solver runs. Review operation and signedness, formats, reset, protocol,
+latency, extra ports and the C model. FP bindings need rounding and flags.
 
-Copy the chosen `binding` object to a binding file after review. Supply missing
-ports, constants and unused reference operands as the real unit requires. Use
-the existing proof command with `--rtl`, `--model`, `--width` and `--binding`.
-Choose `--latency` or `--max-latency` from the actual protocol. Proposal mode
-rejects proof inputs. It cannot run a guessed binding.
+After review, use `--confirm` with RTL, a C model and width. Select one
+candidate with `--component` when needed. Use `--component ''` for the root
+module. Missing or ambiguous roles require an edited binding. The command
+writes `confirmed-binding.json`, then runs the existing datapath proof under
+`proof/`. It preserves the proof exit code. Confirmation alone is not a pass.
+The proposed evidence and confirmed binding are printed on stderr in JSON
+mode, so stdout retains one proof result.
 
-Units include `mul`, `mulh`, `mulhu`, `mulhsu`, `div`, `divu`, `rem`, `remu`,
-`fpu-add`, `fpu-mul`, `fpu-fma`, `fpu-div`, `fpu-sqrt` and `fpu-convert`.
-MCP tool: `formal_datapath_kit`. The existing `formal_datapath` tool runs proofs.
+To edit a proposal, copy its `binding` object to a file. Add the ports,
+constants and unused reference operands that the real unit requires. Supply
+that file with `--binding`. Use `--unit ... --confirm --binding edited.json`
+to retain proposal evidence, or use the existing proof interface with
+`--rtl`, `--model`, `--width` and `--binding`. The proof validates the binding
+against mapped RTL. An edited binding is not replaced by name hints.
+Choose `--latency` or `--max-latency` from the actual unit protocol.
+
+MCP tool `formal_datapath_kit` accepts `confirm`, `component`, `binding`,
+`rtl`, `model`, width and latency settings. `formal_datapath` remains the
+explicit binding proof interface.
 
 ## Limits
 
-Names and port shapes cannot establish arithmetic semantics. An integrated plugin
-can appear as an Area inside a core. Such a candidate may have no usable module
-boundary. Extract that boundary before binding it. The kit does not cut internal
-signals or invent a transaction adapter. Mixed-width conversions need explicit
-format and binding review. Components with unrelated arithmetic names can be
-candidates. The report retains those hints for the designer to inspect.
+An integrated plugin can appear as an Area without a module boundary.
+Extract that boundary before binding it. The kit does not cut internal
+signals or invent a transaction adapter. Mixed-width conversions need
+explicit format review. Unbound ports remain proof obligations. Confirmation
+does not constrain them or waive arithmetic or definedness checks.
