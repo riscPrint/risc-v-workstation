@@ -8,6 +8,8 @@ from . import campaign, etrace
 def register(subparsers):
     parser = subparsers.add_parser('debug', help='simulated debug, compliance campaigns and trace checks')
     sub = parser.add_subparsers(dest='debug_command', required=True)
+    from rvw.common.subcommands import register_commands
+    register_commands('rvw.debug', sub)
     dm = sub.add_parser('openocd', help='check a caller-owned RV64 simulated JTAG target')
     dm.add_argument('--config', required=True, type=Path)
     dm.add_argument('--openocd', default='openocd')

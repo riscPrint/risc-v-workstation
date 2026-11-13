@@ -615,6 +615,7 @@
         "debug_checks",
         "debug_ingress_check",
         "debug_interop",
+        "debug_state_compare",
         "debug_suite",
         "debug_tap",
         "lsp_request",

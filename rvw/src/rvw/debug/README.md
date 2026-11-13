@@ -406,3 +406,51 @@ and [Spike remote JTAG support](https://github.com/riscv-software-src/riscv-isa-
 The debug profile follows [Debug 0.13.2](https://github.com/riscv/riscv-debug-spec/releases/tag/0.13.2).
 Do not infer Debug 1.0 or full Sdtrig support from this profile.
 Keep core signal names and configs outside generic code. Do not change core RTL.
+
+## Architectural state at RTL halts
+
+`rvw debug state-compare` compares all 32 GPRs, DPC and selected CSRs with
+native Spike after each single-step halt. The MCP tool is `debug_state_compare`.
+The command reloads all ELF load segments and their zero-filled tails through
+DMI, then fences code writes. Spike loads the same validated ELF. The command
+initializes GPRs and `mscratch` to zero on both sides. It sets DPC to the
+platform reset PC. It then requests one RTL single step per Spike step.
+Only cause 4 and a normal reference retirement qualify for comparison.
+A missing halt, a trap or a different cause is an error, never a match.
+The first state difference stops the campaign.
+
+The directed program `rvw/tests/fixtures/debug/state.S` changes GPRs and
+mscratch, then takes and skips a branch before a stable add/jump loop. Compile
+it with the selected example's linker script and RV32IM toolchain. A 16-step
+run covers those changes.
+
+```sh
+rvw debug state-compare --profile PROFILE --elf ELF --platform PLATFORM \
+  --shim SPIKE_SHIM --steps 16 --csr 0x340 --out "$RUN_ROOT/state"
+```
+
+GPRs use Access Register commands. CSRs and DPC use Access Register when
+supported, or abstract postexec commands through the program buffer otherwise.
+The command restores its temporary program-buffer GPRs through the existing
+DMI helpers. The result lists the selected CSRs. A match covers those CSRs
+and the bounded instruction sequence only. It does not cover all CSRs,
+free-running retirement alignment, asynchronous halt requests or interrupts.
+Do not select cycle-dependent counters for exact equality.
+
+Measured with `state.S`, 16 steps, seed 1 and memory latency 0:
+
+| RTL target | Halt comparisons | Compared at each halt | Result |
+|---|---:|---|---|
+| VexRiscv `rv32im_jtag`, `a62c145a`, SpinalHDL 1.15.0 | 16 | 32 GPRs, DPC, mscratch | 16 match |
+| VexiiRiscv `rv32im_jtag`, `9f70315d`, SpinalHDL `de72faf6` | 16 | 32 GPRs, DPC, mscratch | 16 match |
+
+The program takes and skips a branch and changes mscratch twice. No state
+mask or retirement resynchronization is used. Other CSRs, trap steps and
+free-running halt alignment are not qualified by these runs.
+
+```sh
+riscv64-unknown-elf-gcc -march=rv32im_zicsr_zifencei -mabi=ilp32 -nostdlib -nostartfiles \
+  -T examples/vexriscv/rvw/programs/link.ld -Wl,--build-id=none \
+  rvw/tests/fixtures/debug/state.S -o "$RUN_ROOT/state.elf"
+Cosim/build.sh "$RUN_ROOT/librvw_spike.so"
+```

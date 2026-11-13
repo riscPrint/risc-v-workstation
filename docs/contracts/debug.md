@@ -54,6 +54,24 @@ The database capture and staleness warnings accompany the record.
 This record is structural. It does not prove that independently chosen waves
 and sources came from the captured elaboration.
 
+## Architectural state at single-step halts
+
+`rvw debug state-compare` and MCP `debug_state_compare` require an explicit
+RTL transport profile, the same ELF loaded by RTL and Spike, a platform and a
+native Spike shim. The command reloads ELF segments into RTL through DMI,
+including zero-filled memory tails. Spike loads the same ELF. The command
+initializes GPRs and mscratch independently to zero. At each cause-4 halt it compares DPC, all 32 GPRs and selected CSRs with
+Spike after one normal retirement. Default CSR selection is mscratch (0x340).
+CSRs may use abstract postexec program-buffer access when direct Access Register
+CSR commands are absent. Missing halts and non-step causes raise an error.
+Reference traps are not treated as retirements. No DUT value seeds Spike.
+
+The output `results.json` uses C3 with suite `debug-state`. Its tests contain
+per-halt pass/fail status and state differences. It also records requested steps,
+GPR count and selected CSRs. The command summary reports `match` or `mismatch`. Exit 0 means all requested
+halts matched; exit 1 means a difference. A setup or transport error cannot earn
+a match. Output is runtime data and stays outside the source repository.
+
 ## Interop optional features
 
 With both a profile and a port, `debug interop` uses the port as the transport
