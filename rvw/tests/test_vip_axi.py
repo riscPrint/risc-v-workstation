@@ -120,3 +120,15 @@ def test_reset_reuses_seed_and_clears_memory():
     model.step(Pins(reset_n=0))
     assert model.step(Pins())==first
     assert not model.memory
+
+
+@pytest.mark.parametrize('size,addr,mask,data', [(0,1,2,0xAB00),(1,2,12,0xABCD0000)])
+def test_narrow_byte_lanes(size,addr,mask,data):
+    model,sc=Subordinate(2),Scoreboard(); mon=Monitor(sc.observe)
+    def tick(p):
+        p=model.step(p); mon.sample(p); return p
+    manager=Manager(tick)
+    a=Address(addr,size=size)
+    manager.write(a,[Write(data,mask)])
+    assert manager.read(a)[0].data==data
+    mon.finish()
