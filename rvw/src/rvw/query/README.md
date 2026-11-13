@@ -192,3 +192,18 @@ error because the database has no HDL expression type checker.
 tied to known bits, unconnected, or unknown. Old databases return unavailable.
 All commands accept `--json`. MCP names use the `query_` prefix and underscores.
 Source locations describe the captured database. Rebuild after source edits.
+
+## Source-hash build cache
+
+Pass `build-hdl --cache-dir DIR` to reuse an unchanged design database.
+MCP `query_build_hdl` accepts `cache_dir`. Keep the cache and output database
+outside source directories. The key includes source content, source paths,
+ordered options, tool binary and plugin hashes, Scala source roots for Chisel,
+and translator/schema code. Slang also hashes files in source and include trees.
+A hit copies the stored database without native elaboration. A changed key runs
+a full elaboration. This does not rebuild individual modules in isolation.
+The result includes `cache.key`, `cache.status` (`hit` or `rebuilt`) and
+`cache.scope` (`whole-design`). Damaged cache entries are rebuilt.
+Tool shared libraries and environment settings other than the selected plugins,
+firtool and GHDL prefix are not hashed. Clear the cache after tool environment
+changes. Builds without `--cache-dir` keep their prior behavior.

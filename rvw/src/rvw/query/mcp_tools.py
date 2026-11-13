@@ -98,12 +98,12 @@ def _build_db(out: str, design: str | None = None, entry: str | None = None, con
 
 def _build_hdl(sources: list, top: str, out: str, frontend: str = "yosys", include_dirs: list | None = None,
                defines: list | None = None, parameters: list | None = None, std: str | None = None,
-               library: str = "work", source_roots: list | None = None, timeout: int = 300) -> dict:
+               library: str = "work", source_roots: list | None = None, timeout: int = 300, cache_dir: str | None = None) -> dict:
     from .hdl import build_hdl
     try:
         result = build_hdl(sources, top, out, frontend=frontend, include_dirs=include_dirs or (),
                            defines=defines or (), parameters=parameters or (), std=std, library=library,
-                           source_roots=source_roots or (), timeout=timeout)
+                           source_roots=source_roots or (), timeout=timeout, cache_dir=cache_dir)
     except (ValueError, OSError) as e:
         raise ToolError(str(e)) from None
     return {**result, "info": run_on(out, ops.info)}
@@ -127,6 +127,7 @@ def mcp_tools() -> list[ToolSpec]:
                          "defines": {"type": "array", "items": {"type": "string"}, "description": "NAME[=VALUE]"},
                          "parameters": {"type": "array", "items": {"type": "string"}, "description": "NAME=VALUE"},
                          "std": {"type": "string"}, "library": {"type": "string", "default": "work"},
+                         "cache_dir": {"type": "string", "description": "source-hash cache outside source directories"},
                          "source_roots": {"type": "array", "items": {"type": "string"}}, "timeout": {"type": "integer", "default": 300}},
                         ["sources", "top", "out"]),
                  _build_hdl),
