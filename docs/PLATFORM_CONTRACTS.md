@@ -3810,6 +3810,16 @@ proof, physical-power, scan-coverage or ATPG evidence. UPF import is unsupported
 
 ### Project CSR generation
 
+#### Literal power-switch gating
+
+`rvw.upf-subset/1` can include `switches` from single-control
+`create_power_switch` declarations. The optional `switches` map in
+`rvw.upf-bindings/1` names sampling clock/reset, independent input/output
+availability and positive `settle_cycles`. After that many stable request
+samples, output availability must match input availability and the declared
+control sense. Names of supply ports do not establish physical connectivity.
+No analog ramp, glitch or clock-gating semantics are inferred.
+
 #### Literal retention and supply tables
 
 `rvw.upf-subset/1` can also retain `retention` and `psts` declarations.

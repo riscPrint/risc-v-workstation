@@ -56,3 +56,21 @@ and an explicit `states` map from labels to unique unsigned integer codes.
 The generated monitor checks membership in the declared tuples. It does not
 infer voltage, state transitions or physical retention from those codes.
 Native SBY tests prove good retention/table fixtures and reject seeded faults.
+
+## Power-switch gating
+
+`create_power_switch` accepts a declared domain, one input supply port, one
+output supply port, one control port and one on-state. Port arguments are
+`{LOCAL_NAME RTL_NET}`. The on-state is `{STATE INPUT_PORT CONTROL}` or the
+single negation `!CONTROL`. General Boolean expressions are refused.
+The [OpenROAD UPF reference](https://openroad.readthedocs.io/en/latest/main/src/upf/README.html#create-power-switch)
+describes these command options.
+
+The optional `switches` binding map has one entry per switch. Each entry names
+`clk`, `reset`, independent `input_good` and `output_good` observations and a
+positive `settle_cycles` bound. The monitor checks output availability after
+that many consecutive samples of the requested supply state. It permits
+transients before that bound. The control path and sense come from UPF.
+The observation clock must remain active. This checks a project settling
+contract. It does not model analog power ramps or physical gating cells.
+Clock-gating import remains unsupported.
