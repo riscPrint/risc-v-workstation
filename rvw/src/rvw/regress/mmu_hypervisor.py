@@ -52,6 +52,7 @@ _start:
  hfence.gvma x0, x0
  hfence.vvma x0, x0
  li t3, 0x40000000
+access_setup:
  li a0, 43
 access_site:
  {access}
@@ -146,7 +147,7 @@ fromhost: .dword 0
  csrc mstatus, t0
  li t0, 0x800
  csrs mstatus, t0
- la t0, access_site
+ la t0, access_setup
  csrw mepc, t0
  li t3, 0x40000000
  mret
