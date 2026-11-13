@@ -13,7 +13,16 @@ def timing(job, **arguments):
 
 
 def mcp_tools():
-    return [ToolSpec("ooo_run", "Predict committed-path OoO timing. Accuracy remains inconclusive.",
+    tools = []
+    for action, fields in (("calibrate", ("plan",)),
+                           ("predict", ("calibration", "config", "trace")),
+                           ("score_prediction", ("prediction", "c1"))):
+        def handler(job, _action=action, **arguments):
+            return run_function(job, "rvw.ooo.evidence", _action, arguments)
+        tools.append(ToolSpec("ooo_" + action, "Report saved OoO timing evidence without a fidelity verdict.",
+            schema({k: {"type": "string"} for k in (*fields, "out", "project")}, [*fields, "out"]),
+            handler, long=True))
+    return tools + [ToolSpec("ooo_run", "Predict committed-path OoO timing. Accuracy remains inconclusive.",
                     schema({"config": {"type": "string"}, "trace": {"type": "string"},
                             "max_cycles": {"type": "integer", "minimum": 1},
                             "effective_config": {"type": "string"}}, ["config", "trace"]),

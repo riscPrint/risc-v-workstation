@@ -2869,6 +2869,23 @@ the snapshot SHA-256, revision, selected config and extraction keys. Exporter
 correctness and current RTL agreement remain unverified. `accuracy_status`
 remains `inconclusive`. Without a snapshot the configuration stays `unchecked`.
 
+### Saved own-core model calibration
+
+`rvw.ooo-calibration-plan/1` selects one fixed configuration, an event map and
+training/heldout samples. Paths resolve beside the plan. Each sample binds
+saved C1, complete C2, ELF bytes and event counts. ELF and trace hash overlap
+across splits is an error. Regions cover the whole program only.
+`rvw.ooo-calibration/1` records captures, individual errors, event correlations
+and declared budget comparisons. Missing events and zero denominators remain
+explicit. Accuracy stays inconclusive. Event predicate equivalence is not
+verified automatically. No fitting or RTL execution occurs.
+
+`rvw.ooo-prediction/1` records the frozen calibration hash, held-out trace,
+config, engine, identity and local creation time. `rvw.ooo-prediction-score/1`
+binds its hash and the later conclusive C1 hash in a separate exclusive file.
+Scoring rechecks captures and exact identities. Local timestamp checks are
+not trusted chronology. No native speed qualification is established.
+
 ### Experimental trace-driven OoO timing reports
 
 `rvw ooo CONFIG TRACE --max-cycles N --json` is a separate native timing

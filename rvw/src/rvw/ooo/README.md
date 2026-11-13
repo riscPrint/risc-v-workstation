@@ -102,3 +102,42 @@ The snapshot hash and source keys are retained in the report.
 
 `ooo_run` exposes the same operation as a cancellable MCP job. Tests use small
 synthetic schedules. No RTL accuracy or native speed qualification was run.
+
+## Saved calibration and predictions
+
+```
+rvw arch ooo-calibrate PLAN --out calibration.json --json
+rvw arch ooo-predict calibration.json CONFIG TRACE --out prediction.json --json
+rvw arch ooo-score prediction.json LATER_C1 --out score.json --json
+```
+
+All output files must be new. The matching MCP jobs are `ooo_calibrate`,
+`ooo_predict` and `ooo_score_prediction`. They support cancellation.
+
+PLAN uses schema `rvw.ooo-calibration-plan/1`. Its `config` and `event_map`
+paths and each sample's `elf`, `trace`, `c1` and `events` paths resolve beside
+PLAN. Each sample also has a unique `id` and `split` (`training` or `heldout`).
+Both splits must be nonempty. Equal ELF or trace hashes across splits are
+errors. This command scores a frozen configuration. It does not fit settings.
+
+The event map is an object keyed by report event name. Each value defines
+`model_event`, `rtl_event`, `edge`, `unit`, `identity`, `family` and
+`region: whole-program`. The producer must use equivalent event predicates.
+The RTL event file has `c1_sha256`, `trace_sha256` and a `counts` object keyed
+by RTL event name. Missing counts and zero denominators stay explicit.
+Correlation needs at least three nonconstant samples. Coverage needs five
+held-out samples and three declared event families. Per-workload IPC errors
+and per-event errors are compared with 10% and 15% budgets. The result retains
+raw input hashes. Budget comparisons do not certify fidelity.
+
+Only complete whole-program regions are supported. C1 must be a conclusive
+pass with the captured ELF hash. C1/C2 core, config, ELF identity and retired
+instruction count must match. ROI slicing and event-map semantic verification
+are not implemented. Event counts remain producer declarations.
+
+Predictions use a frozen held-out trace, configuration and engine. Scores go
+in separate files. Scoring rechecks calibration captures, prediction hashes,
+C1 identity, seed, memory timing and instruction count. The later C1 file must
+have a local modification time after prediction creation. Local times are
+not trusted chronology. A later C2 stream comparison, later event scoring,
+three-repeat native speed qualification and hardware accuracy remain open.

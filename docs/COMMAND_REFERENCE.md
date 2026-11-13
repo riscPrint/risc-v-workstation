@@ -42,8 +42,28 @@ usage: rvw agent-bench serve [-h] --pack PACK --out OUT --task TASK [--project
 
 ```text
 usage: rvw arch [-h] [--project PROJECT]
-    {sched-generate,sched-measure,search,predict,score-prediction,memory-extract,pareto,memory-report,sweep,build,run,calibrate,compare,fit,inspect,measure,linux}
+    {ooo-calibrate,ooo-predict,ooo-score,sched-generate,sched-measure,search,predict,score-prediction,memory-extract,pareto,memory-report,sweep,build,run,calibrate,compare,fit,inspect,measure,linux}
     ...
+```
+
+### `rvw arch ooo-calibrate`
+
+```text
+usage: rvw arch ooo-calibrate [-h] --out OUT [--json] [--project PROJECT] plan
+```
+
+### `rvw arch ooo-predict`
+
+```text
+usage: rvw arch ooo-predict [-h] --out OUT [--json] [--project PROJECT]
+    calibration config trace
+```
+
+### `rvw arch ooo-score`
+
+```text
+usage: rvw arch ooo-score [-h] --out OUT [--json] [--project PROJECT]
+    prediction c1
 ```
 
 ### `rvw arch sched-generate`
@@ -1272,7 +1292,7 @@ usage: rvw workloads verify [-h] [--json] --build BUILD --out OUT [--oracle
 
 ## MCP tools
 
-The default server exposes 90 built-in tools, including the four job tools.
+The default server exposes 95 built-in tools, including the four job tools.
 `--only` filters packages. `RVW_MCP_PLUGINS` can add tools.
 `rvw mcp --list --json` returns full input schemas.
 CLI commands without an MCP entry are CLI-only.
@@ -1695,11 +1715,35 @@ Arguments: `settings` (required).
 
 Starts a background job: yes.
 
+### `ooo_calibrate`
+
+Report saved OoO timing evidence without a fidelity verdict.
+
+Arguments: `plan` (required), `out` (required), `project`.
+
+Starts a background job: yes.
+
+### `ooo_predict`
+
+Report saved OoO timing evidence without a fidelity verdict.
+
+Arguments: `calibration` (required), `config` (required), `trace` (required), `out` (required), `project`.
+
+Starts a background job: yes.
+
 ### `ooo_run`
 
 Predict committed-path OoO timing. Accuracy remains inconclusive.
 
 Arguments: `config` (required), `trace` (required), `max_cycles`, `effective_config`.
+
+Starts a background job: yes.
+
+### `ooo_score_prediction`
+
+Report saved OoO timing evidence without a fidelity verdict.
+
+Arguments: `prediction` (required), `c1` (required), `out` (required), `project`.
 
 Starts a background job: yes.
 
