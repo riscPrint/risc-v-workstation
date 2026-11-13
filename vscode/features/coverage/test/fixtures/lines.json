@@ -1,0 +1,1 @@
+{"schema": "rvw.coverage/1", "points": [{"scala": {"file": "A.scala", "line": 3}, "count": 1, "fields": {"t": "line"}}, {"scala": {"file": "A.scala", "line": 3}, "count": 0, "fields": {"t": "toggle"}}]}

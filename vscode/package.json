@@ -23,6 +23,10 @@
     "onCommand:cosim.disassembly",
     "onCommand:coverage.open",
     "onView:coverage.results",
+    "onCommand:coverage.decorate",
+    "onCommand:coverage.holes",
+    "onCommand:coverage.plan",
+    "onCommand:coverage.clearLines",
     "onCommand:debug.open",
     "onCommand:lint.run",
     "onCommand:lint.open",
@@ -85,6 +89,22 @@
       {
         "command": "coverage.evidence",
         "title": "Coverage: Open Selected Evidence"
+      },
+      {
+        "command": "coverage.decorate",
+        "title": "Coverage: Decorate Scala Lines"
+      },
+      {
+        "command": "coverage.holes",
+        "title": "Coverage: Open Functional Coverage Holes"
+      },
+      {
+        "command": "coverage.plan",
+        "title": "Coverage: Open Verification Plan Status"
+      },
+      {
+        "command": "coverage.clearLines",
+        "title": "Coverage: Clear Line Decorations"
       },
       {
         "command": "debug.open",
@@ -287,6 +307,10 @@
           "name": "RVW Coverage"
         },
         {
+          "id": "coverage.holes",
+          "name": "RVW Coverage Holes and Plan"
+        },
+        {
           "id": "perf.results",
           "name": "RVW Performance"
         },
@@ -340,6 +364,26 @@
           "command": "coverage.trace",
           "when": "view == coverage.results",
           "group": "results"
+        },
+        {
+          "command": "coverage.decorate",
+          "when": "view == coverage.holes",
+          "group": "navigation"
+        },
+        {
+          "command": "coverage.holes",
+          "when": "view == coverage.holes",
+          "group": "navigation"
+        },
+        {
+          "command": "coverage.plan",
+          "when": "view == coverage.holes",
+          "group": "navigation"
+        },
+        {
+          "command": "coverage.clearLines",
+          "when": "view == coverage.holes",
+          "group": "navigation"
         },
         {
           "command": "perf.open",
