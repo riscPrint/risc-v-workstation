@@ -43,7 +43,7 @@ keep the issue list in `TODO.md` in step with them.
 | `RiscvSim/` | Runs ELFs on a Spinal RISC-V core in Verilator through the run contract (C1): result JSON, RVFI trace (C2), waves, Konata, coverage, replay. Generic library in `RiscvSim/src/`; BOOM's adapter in `RiscvSim/boom/` (`run.sh`). |
 | `examples/smp/` | Pinned cacheless VexiiRiscv SMP adapter with two to eight RTL harts and C2/2 capture. See its `README.md`. |
 | `examples/vexriscv/` | External RV32IM VexRiscv adapter, regression config, Spike platform and SpinalDB entry. See its `README.md`. |
-| `examples/vexiiriscv/` | External RV32IM VexiiRiscv adapter (C2 from the upstream probe), regression config, Spike platform and SpinalDB entry. See its `README.md`. |
+| `examples/vexiiriscv/` | External RV32/RV64 VexiiRiscv adapter (C2 from the upstream probe), regression config, Spike platform and SpinalDB entry. See its `README.md`. |
 | `examples/picorv32/` | External Verilog PicoRV32 project written by `rvw init --verilog-top`: generic mapped adapter, regression, Spike platform and Yosys query entry. See its `README.md`. |
 | `rvw/src/rvw/workloads/` | Pinned open workload builds and Spike/QEMU output checks; local Linux and licensed SPEC manifests. |
 | `ComponentSims/` | Native trace-driven component models (direction predictors to TAGE-SC-L, BTB/RAS/ITTAGE, FTQ front end, caches, replacement, prefetchers, TLB, store sets, value prediction). CLI/MCP in `rvw/src/rvw/csim/` (`rvw csim`). See its `README.md`. |

@@ -29,6 +29,7 @@ class C2Backend(xlen: Int, cycle: () => Long, mode: () => Int, nextTrap: () => (
   private val stores = mutable.LongMap.empty[(Long, Long, BigInt)]
   private var load: Option[(Long, Long, BigInt)] = None
   private var store: Option[(Long, Long, BigInt)] = None
+  private val io = mutable.Queue.empty[(Boolean, Long, Int, BigInt)]
 
   private def bytes(data: Array[Byte], len: Long): BigInt =
     (0 until len.toInt).foldLeft(BigInt(0))((v, i) => v | (BigInt(data(i) & 0xff) << (8 * i)))
@@ -51,13 +52,24 @@ class C2Backend(xlen: Int, cycle: () => Long, mode: () => Int, nextTrap: () => (
       case Some(v) if rdField != 0 => (rdField, v & mask)
       case _ => (0, BigInt(0))
     }
+    if (load.isEmpty && store.isEmpty && io.nonEmpty && Set(0x03L, 0x23L)(insn & 0x7f)) {
+      val (write, address, size, data) = io.dequeue()
+      val expectedWrite = (insn & 0x7f) == 0x23
+      val raw = if (expectedWrite) ((insn >> 25) << 5) | ((insn >> 7) & 31) else insn >> 20
+      val immediate = (raw.toInt << 20) >> 20
+      require(write == expectedWrite && (BigInt(address) & mask) == ((regs(rs1) + immediate) & mask),
+        "I/O observation does not match retiring instruction")
+      if (write) store = Some((address, size.toLong, data)) else load = Some((address, size.toLong, data))
+    }
     val (memAddr, rmask, rdataMem, wmask, wdataMem) = (load, store) match {
       case (Some((a, n, d)), None) => (BigInt(a), ((1 << n) - 1).toInt, d, 0, BigInt(0))
       case (None, Some((a, n, d))) => (BigInt(a), 0, BigInt(0), ((1 << n) - 1).toInt, d)
       case (None, None) => (BigInt(0), 0, BigInt(0), 0, BigInt(0))
-      case _ => throw new IllegalStateException("one micro-op reported both a load and a store")
+      case (Some((a, n, d)), Some((sa, sn, sd))) =>
+        require(a == sa && n == sn, "atomic read/write addresses differ")
+        (BigInt(a), ((1 << n) - 1).toInt, d, ((1 << sn) - 1).toInt, sd)
     }
-    val r = RvfiRecord(order, cycle(), insn, trap = false, halt = false, intr = handler, mode = mode(), ixl = 1,
+    val r = RvfiRecord(order, cycle(), insn, trap = false, halt = false, intr = handler, mode = mode(), ixl = (if (xlen == 64) 2 else 1),
       rs1 = rs1, rs1Rdata = regs(rs1), rs2 = rs2, rs2Rdata = regs(rs2), rd = rd, rdWdata = wdata,
       pc = pcValue, pcNext = 0, memAddr = memAddr, memRmask = rmask, memWmask = wmask,
       memRdata = rdataMem, memWdata = wdataMem, memFault = false)
@@ -90,9 +102,9 @@ class C2Backend(xlen: Int, cycle: () => Long, mode: () => Int, nextTrap: () => (
     stores(id) = (addr, len, bytes(data, len))
   override def storeCommit(hartId: Int, id: Long): Unit = store = stores.remove(id)
   override def storeConditional(hartId: Int, failure: Boolean): Unit =
-    throw new IllegalStateException("store-conditional is outside this adapter's RV32IM scope")
+    if (failure) store = None
   override def ioAccess(hartId: Int, access: TraceIo): Unit =
-    throw new IllegalStateException(f"I/O access at 0x${access.address}%x is outside this adapter's RAM map")
+    if (!access.error) io.enqueue((access.write, access.address, access.size, bytes(access.data, access.size)))
 
   override def newCpuMemoryView(viewId: Int, readIds: Long, writeIds: Long): Unit = ()
   override def newCpu(hartId: Int, isa: String, priv: String, physWidth: Int, pmpNum: Int, triggerCount: Int,

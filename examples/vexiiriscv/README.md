@@ -67,7 +67,7 @@ support and is excluded.
 
 ## Design
 
-The only configuration is `rv32im`: `ParamSimple` defaults with `m` added. It
+The default configuration is `rv32im`: `ParamSimple` defaults with `m` added. It
 has machine mode only, one decode and one execute lane, cacheless native fetch
 and LSU buses, no MMU, PMP, caches, FPU or debug unit. RAM is 16 MiB at
 `0x80000000`. The reset PC is `0x80000000`. The upstream PMA map also has an I/O
@@ -113,9 +113,8 @@ hardware correctness. They apply only to this configuration.
 
 ## Limits
 
-- One configuration. Compressed, atomic, FPU, supervisor, MMU and cache
-  configurations need more trace mapping (RVC `rd` decoding, LR/SC and AMO
-  effects, I/O accesses).
+- Compressed, FPU and cached configurations have no validated trace mapping.
+  The additional supervisor configurations below are experimental.
 - No riscv-formal monitor. The probe is the only commit source.
 - `rvw query` cannot see the `rvw_trap_*` tap signals. They are simulation-only.
 - SpinalDB and RiscvSim are compiled against SpinalHDL 1.15.0 and run on the
@@ -220,3 +219,36 @@ The absent-supervisor-CSR program retired 26 instructions in 158 cycles.
 Clean runs had zero firings. The seeded read fault fired the scratch read
 checker and retained `fail`; the absent-CSR control stayed clean. Native runs
 used `vex-csr`. Formal was NOT RUN. See [the native record](csr-native-results.json).
+## Supervisor suite configuration
+
+`rv32imasu` adds A, S/U modes, Sv32 and eight PMP entries with 4-byte
+regions. `rv64imasu` uses Sv39 and eight PMP entries with 16-byte regions.
+Both keep one hart, one lane and cacheless fetch and LSU buses. They do not
+implement Sv48, Sv57, H, pointer masking, PBMT or NAPOT page mappings.
+The adapter services LR/SC and AMO commands on the native LSU bus. C2 retains
+both observed AMO read and write effects. The RV64 profile uses `rvw64.toml`
+and `rvw/run64.sh`. The launcher selects XLEN before constructing the driver.
+A batch cannot mix XLEN values.
+
+Use a private core copy. Set `VEXIIRISCV`, `RVW_HOME`, `RVW_VEX_LOCK` and
+`RISCVSIM_WORK` as in the native setup. From this workstation checkout, also
+pass `--source "$VEXIIRISCV"` to `rvw regress run`. The environment variable
+alone does not override the regression source checkout.
+
+`rvw/prepare-suites.py --out DIR` builds a selected Sv39 matrix, privilege
+controls and the five supported single-hart ordering programs. It records
+excluded MMU scenarios and their reasons. Update suite directories in a
+project copy of `rvw64.toml` to `DIR/mmu`, `DIR/privilege` and `DIR/ordering`.
+Use `rvw regress plan --features rvw/features64.json` to inspect requirements.
+
+`rvw64-devices.toml` selects the optional DeviceApiV1 host binding. Build the
+library with `RiscvSim/scripts/build-devices.py`. Set `RVW_DEVICE_LIBRARY`,
+`PYTHONHOME` and `PYTHONPATH` from its output before running regressions.
+`rvw/devices64.json` supplies CLINT and PLIC regions and output-to-pin routes.
+`rvw/clint64.json` is passed as raw JSON to preserve its 64-bit reset value.
+The adapter ticks each model before MMIO on every sampled cycle. An explicit
+IRQ schedule replaces device input levels for that run. Each run gets fresh
+device handles. This path has no checkpoint binding or multi-hart claim.
+
+Current supervisor validation is in progress. No RTL pass count is claimed
+for these new configurations until the C1 runs and strict Spike checks finish.

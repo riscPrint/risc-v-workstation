@@ -1,0 +1,47 @@
+{
+  "devices": [
+    {
+      "base": "0x02000000",
+      "size": "0x10000",
+      "irq_map": [
+        [
+          0,
+          3
+        ],
+        [
+          1,
+          7
+        ]
+      ],
+      "config": "clint64.json"
+    },
+    {
+      "base": "0x0c000000",
+      "size": "0x400000",
+      "irq_map": [
+        [
+          0,
+          11
+        ],
+        [
+          1,
+          9
+        ]
+      ],
+      "config": {
+        "model": "plic",
+        "map": {
+          "priority": 0,
+          "pending": 4096,
+          "enable": 8192,
+          "enable_stride": 128,
+          "context": 2097152,
+          "context_stride": 4096,
+          "sources": 2,
+          "contexts": 2
+        },
+        "levels": []
+      }
+    }
+  ]
+}

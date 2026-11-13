@@ -11,17 +11,16 @@ import vexiiriscv.misc.PrivilegedPlugin
 import vexiiriscv.test.{VexiiRiscvProbe, konata}
 import scala.collection.mutable
 
-object VexiiAdapter extends CoreAdapter {
+class VexiiAdapter(val xlen: Int) extends CoreAdapter {
   override def freshInstancePerRun = true
   type Model = SimCompiled[VexiiRiscv]
-  override def irqInputMask: BigInt = 0x888
+  override def irqInputMask: BigInt = if (xlen == 64) 0xa88 else 0x888
   def core = "vexiiriscv"
-  val configs = VexiiTop.configs
-  def xlen = 32
-  def isa(config: String) = "rv32im_zicsr_zifencei"
+  val configs = VexiiTop.configs.filter(_.startsWith(s"rv$xlen"))
+  def isa(config: String) = s"rv${xlen}im${if (config.endsWith("asu")) "a" else ""}_zicsr_zifencei"
   def sourceDir = new File(sys.env("VEXIIRISCV")).getCanonicalFile
   override def replayEnv = Seq("VEXIIRISCV" -> sourceDir.getPath) ++
-    Seq("RVW_COSIM_DPI", "RVW_COSIM_FAULT_ORDER", "RVW_VEX_LOCK").flatMap(
+    Seq("RVW_COSIM_DPI", "RVW_COSIM_FAULT_ORDER", "RVW_VEX_LOCK", "RVW_VEX_XLEN", "RVW_VEX_DEVICE_MAP", "RVW_DEVICE_LIBRARY").flatMap(
       name => sys.env.get(name).map(name -> _))
   val ramBase = 0x80000000L
   val ramSize = 0x1000000L
@@ -39,13 +38,13 @@ object VexiiAdapter extends CoreAdapter {
 
   /** In-order memory responses after a fixed latency, or after 0..3 seeded wait cycles. */
   private class Responder(latency: () => Long) {
-    val queue = mutable.Queue.empty[(Long, BigInt, Boolean, Int)]
+    val queue = mutable.Queue.empty[(Long, BigInt, Boolean, Int, Boolean)]
     var driven = false
-    def accept(cycle: Long, data: BigInt, error: Boolean, id: Int): Unit = queue.enqueue((cycle + latency(), data, error, id))
+    def accept(cycle: Long, data: BigInt, error: Boolean, id: Int, scMiss: Boolean = false): Unit = queue.enqueue((cycle + latency(), data, error, id, scMiss))
     /** Call once per sampled edge: retires the response the core sampled, returns the next one to drive. */
-    def next(cycle: Long): Option[(BigInt, Boolean, Int)] = {
+    def next(cycle: Long): Option[(BigInt, Boolean, Int, Boolean)] = {
       if (driven) { queue.dequeue(); driven = false }
-      queue.headOption.filter(_._1 <= cycle).map { case (_, d, e, id) => driven = true; (d, e, id) }
+      queue.headOption.filter(_._1 <= cycle).map { case (_, d, e, id, sc) => driven = true; (d, e, id, sc) }
     }
   }
 
@@ -64,6 +63,8 @@ object VexiiAdapter extends CoreAdapter {
     def read(addr: Long, n: Int): BigInt = (0 until n).foldLeft(BigInt(0)) { (v, i) =>
       v | (BigInt(memory.getOrElse(addr + i, 0)) << (8 * i))
     }
+    val devices = sys.env.get("RVW_VEX_DEVICE_MAP").map(path =>
+      new DeviceBus(new File(path), new File(sys.env("RVW_DEVICE_LIBRARY")), job.seed))
     var writer = Option.empty[RvfiTraceWriter]
     val events = mutable.ArrayBuffer.empty[(Long, () => Unit)]
     var finish = Option.empty[(Status, Option[Long], Option[String])]
@@ -84,6 +85,7 @@ object VexiiAdapter extends CoreAdapter {
         val tap = dut.host[TrapTapPlugin].logic
         val ibus = dut.host[FetchCachelessPlugin].logic.bus
         val dbus = dut.host[LsuCachelessPlugin].logic.bus
+        if (dut.host[PrivilegedPlugin].p.withSupervisor) priv.int.s.external #= false
         priv.int.m.timer #= false
         priv.int.m.software #= false
         priv.int.m.external #= false
@@ -91,6 +93,7 @@ object VexiiAdapter extends CoreAdapter {
         ibus.cmd.ready #= true
         ibus.rsp.valid #= false
         dbus.cmd.ready #= true
+        if (dbus.p.withAmo) dbus.rsp.scMiss #= false
         dbus.rsp.valid #= false
         cd.forkStimulus(10)
         val random = new scala.util.Random(job.seed)
@@ -99,6 +102,7 @@ object VexiiAdapter extends CoreAdapter {
         val lsu = new Responder(() => latency())
         val ibytes = ibus.p.dataWidth / 8
         val dbytes = dbus.p.dataWidth / 8
+        var reservation = Option.empty[Long]
         val traps = mutable.Queue.empty[(BigInt, BigInt)]
         var irqLevels = BigInt(-1)
         // Registered before the probe: the trap values are queued before the probe reports the trap.
@@ -106,7 +110,9 @@ object VexiiAdapter extends CoreAdapter {
           ctl.tick()
           val cycle = ctl.cycle
           dut.host[PrivilegedPlugin].logic.rdtime #= cycle
-          val levels = job.irqSchedule.map(_.levelsAt(cycle)).getOrElse(BigInt(0))
+          val deviceLevels = devices.map(_.tick(cycle)).getOrElse(BigInt(0))
+          val levels = job.irqSchedule.map(_.levelsAt(cycle)).getOrElse(deviceLevels)
+          if (dut.host[PrivilegedPlugin].p.withSupervisor) priv.int.s.external #= levels.testBit(9)
           priv.int.m.software #= levels.testBit(3)
           priv.int.m.timer #= levels.testBit(7)
           priv.int.m.external #= levels.testBit(11)
@@ -121,19 +127,41 @@ object VexiiAdapter extends CoreAdapter {
             val cmd = dbus.cmd
             val addr = cmd.address.toLong & ~(dbytes - 1L)
             val ok = inRam(addr, dbytes)
-            if (cmd.write.toBoolean && ok) {
-              val data = cmd.data.toBigInt
+            val atomic = dbus.p.withAmo && cmd.amoEnable.toBoolean
+            val op = if (atomic) cmd.amoOp.toInt else -1
+            val old = read(addr, dbytes)
+            val scMiss = op == 3 && !reservation.contains(addr)
+            val width = 1 << cmd.size.toInt
+            val shift = (cmd.address.toLong - addr).toInt * 8
+            val fieldMask = (BigInt(1) << (width * 8)) - 1
+            val data = if (atomic && op != 2 && op != 3)
+              (BigInt(VexiiRiscvProbe.amoWriteValue(op, width, (cmd.data.toBigInt >> shift).toLong, (old >> shift).toLong)) & fieldMask) << shift
+            else cmd.data.toBigInt
+            val write = if (atomic) op != 2 && !scMiss else cmd.write.toBoolean
+            if (ok && write) {
               val mask = cmd.mask.toInt
               for (i <- 0 until dbytes if (mask & (1 << i)) != 0) memory(addr + i) = ((data >> (8 * i)) & 255).toInt
+              reservation = None
             }
-            lsu.accept(cycle, if (cmd.write.toBoolean) BigInt(0) else read(addr, dbytes), !ok, cmd.id.toInt)
+            if (ok && op == 2) reservation = Some(addr)
+            if (op == 3) reservation = None
+            if (devices.exists(_.contains(cmd.address.toLong, width))) {
+              require(!atomic, "device atomics are unsupported")
+              if (cmd.write.toBoolean) devices.get.write(cmd.address.toLong, width, cmd.data.toBigInt >> shift)
+              val result = if (cmd.write.toBoolean) BigInt(0) else devices.get.read(cmd.address.toLong, width) << shift
+              lsu.accept(cycle, result, false, cmd.id.toInt)
+            } else {
+              lsu.accept(cycle, if (atomic || !cmd.write.toBoolean) old else BigInt(0), !ok, cmd.id.toInt, scMiss)
+            }
           }
           fetch.next(cycle) match {
-            case Some((d, e, id)) => ibus.rsp.valid #= true; ibus.rsp.word #= d; ibus.rsp.error #= e; ibus.rsp.id #= id
+            case Some((d, e, id, _)) => ibus.rsp.valid #= true; ibus.rsp.word #= d; ibus.rsp.error #= e; ibus.rsp.id #= id
             case None => ibus.rsp.valid #= false
           }
           lsu.next(cycle) match {
-            case Some((d, e, id)) => dbus.rsp.valid #= true; dbus.rsp.data #= d; dbus.rsp.error #= e; dbus.rsp.id #= id
+            case Some((d, e, id, sc)) =>
+              dbus.rsp.valid #= true; dbus.rsp.data #= d; dbus.rsp.error #= e; dbus.rsp.id #= id
+              if (dbus.p.withAmo) dbus.rsp.scMiss #= sc
             case None => dbus.rsp.valid #= false
           }
         }
@@ -178,6 +206,7 @@ object VexiiAdapter extends CoreAdapter {
       }
       result
     } finally {
+      devices.foreach(_.close())
       if (backend != null) backend.drain()
       konataLog.foreach(_.close())
     }
@@ -200,5 +229,5 @@ object VexiiAdapter extends CoreAdapter {
 }
 
 object Main {
-  def main(args: Array[String]): Unit = new Driver(VexiiAdapter).main(args)
+  def main(args: Array[String]): Unit = new Driver(new VexiiAdapter(sys.env.getOrElse("RVW_VEX_XLEN", "32").toInt)).main(args)
 }
