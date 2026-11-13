@@ -210,6 +210,9 @@ class Spike:
         lib.rvw_read_host_csr.argtypes = [C.c_void_p, C.c_uint, C.POINTER(C.c_uint64)]
         lib.rvw_prv.argtypes = [C.c_void_p]
         lib.rvw_prv.restype = C.c_uint
+        if hasattr(lib, "rvw_vector_memory"):
+            lib.rvw_vector_memory.argtypes = [C.c_void_p]
+            lib.rvw_vector_memory.restype = C.c_char_p
         lib.rvw_vector.argtypes = [C.c_void_p, C.POINTER(C.c_uint64), C.POINTER(C.c_uint8), C.c_size_t]
         lib.rvw_virtual.argtypes = [C.c_void_p, C.c_int]
         lib.rvw_virtual.restype = C.c_uint
@@ -279,6 +282,9 @@ class Spike:
             data = (C.c_uint8 * (32*65536//8))()
             if self.lib.rvw_vector(self.handle, meta, data, len(data)):
                 raise ValueError(self.error())
+            if hasattr(self.lib, "rvw_vector_memory"):
+                import json
+                result["vector_accesses"] = json.loads(self.lib.rvw_vector_memory(self.handle))
             self.vector_config = dict(vlen=int(meta[0]), elen=int(meta[1]))
             width = int(meta[0])//8
             result["vector"] = dict(zip(("vstart", "vl", "vtype", "vcsr", "vs"), map(int, meta[2:])))

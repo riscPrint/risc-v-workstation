@@ -108,6 +108,8 @@ def check(trace_path, model, platform, history=10, sync=SYNC_KINDS, *, ordered_e
     count, trap_events, sync_count = 0, 0, 0
     translation_count = 0
     csr_snapshot_steps = 0
+    vector_memory_steps = 0
+    vector_memory_accesses = 0
     fault_access_steps = 0
     instret_synced = False
     sync_recent = deque(maxlen=history)
@@ -152,6 +154,8 @@ def check(trace_path, model, platform, history=10, sync=SYNC_KINDS, *, ordered_e
                                    "two_stage_translations": translation_count,
                                    "csr_snapshot": trace.header.get("csr_snapshot", []),
                                    "csr_snapshot_steps": csr_snapshot_steps,
+                                   "vector_memory_steps": vector_memory_steps,
+                                   "vector_memory_accesses": vector_memory_accesses,
                                    "fault_access_steps": fault_access_steps},
                 "platform_policy": {key: getattr(platform, key) for key in
                                     ("privilege_modes", "misaligned", "endianness",
@@ -272,6 +276,9 @@ def check(trace_path, model, platform, history=10, sync=SYNC_KINDS, *, ordered_e
                 if not hasattr(model, "translations"):
                     raise ValueError("reference cannot check two-stage translation records")
                 expected["hypervisor"]["translations"] = model.translations(expected)
+            if trace.header.get("vector_memory"):
+                vector_memory_steps += 1
+                vector_memory_accesses += len(actual["vector_accesses"])
             fields = ["pc", "pc_next", "insn", "mode", "trap", "rd", "mem_rmask", "mem_wmask", "mem_fault"]
             if trace.header["schema"] == "rvw.rvfi/2" and trace.state:
                 state_fields = ["fd_valid", "fflags", "fcsr"]

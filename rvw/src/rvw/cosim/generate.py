@@ -30,6 +30,8 @@ def generate(elf, out, platform, limit=1000000, *, shim, verify=lambda: None,
                 if i == 0:
                     if "vector" in e:
                         header["vector"] = model.vector_config
+                        if "vector_accesses" in e:
+                            header["vector_memory"] = True
                     if "hypervisor" in e:
                         header["hypervisor"] = True
                     emit(header)
@@ -37,6 +39,8 @@ def generate(elf, out, platform, limit=1000000, *, shim, verify=lambda: None,
                 if extensions:
                     row.update(fd_valid=bool(e["fd_valid"]), fd=e["fd"], fd_wdata=hex(e["fd_wdata"]),
                                fflags=hex(e["fflags"]), fcsr=hex(e["fcsr"]))
+                    if "vector_accesses" in e:
+                        row["vector_accesses"] = e["vector_accesses"]
                     for name in ("vector", "hypervisor"):
                         if name in e:
                             row[name] = serialize(e[name])

@@ -72,7 +72,7 @@ Principles (from `ROADMAP.md`):
 
 - [Project configuration (`rvw.project/1`)](contracts/project.md)
 - [C1. Run contract (core adapter)](contracts/c1-run.md)
-- [C2. RVFI trace (`rvfi.jsonl`)](contracts/c2-rvfi-trace.md)
+- [C2. RVFI trace (`rvfi.jsonl`), including ordered vector memory](contracts/c2-rvfi-trace.md)
 - [C3. Suite results (`rvw.results/1`)](contracts/c3-results.md)
 - [C4. Verdict (`rvw regress compare`)](contracts/c4-verdict.md)
 - [C5. Failure bundle (`rvw bundle`)](contracts/c5-bundle.md)
