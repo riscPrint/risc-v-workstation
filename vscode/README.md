@@ -132,3 +132,50 @@ node --test scripts/package-notices.test.mjs
 The check builds and inspects a local VSIX and an engine npm archive. It uses
 `--skip-license` only because the project license is unresolved in #37.
 It does not authorize public distribution.
+
+## Producer compatibility checks
+
+The Node tests call the installed Python producers. Set up `rvw/.venv` with
+`cd rvw && uv venv && uv pip install -e '.[dev,mcp]'` before `npm test`.
+Run all Node commands from `vscode/`. The field list in
+`src/results/producer-fields.json` is shared with the Python fast tests.
+Coverage fixtures are trimmed output from these producers on small test inputs.
+They are format samples. They are not native core qualification results.
+
+| Feature | Data path checked | How to produce its input | Further check |
+|---|---|---|---|
+| Regression | C4 raw and common envelope decisions work; C1/C3 serializers feed the loaders | `rvw regress gate --tier quick --base-rev BASE --json` | Native C3 and gate campaign; live window |
+| Project results | C4 uses the retained decision; C3 shows producer test counts | Same C4 command; `rvw regress run --tier quick --out RUN --json`; `rvw bundle RUN` | Native C1/C3/C5 files; live explorer |
+| Coverage | Current merge, report, functional and plan producers work on small inputs | `rvw cov merge TEST=coverage.dat --out merged.json --json`; `rvw cov report merged.json --json`; `rvw cov functional trace.jsonl --json`; `rvw plan status plan.json --json` | Native coverage; live gutters and source paths |
+| Lint | Current rules/structural report and SARIF produce equal diagnostics on a captured database | `rvw lint --settings settings.json --sarif lint.sarif --json` | Fresh VexRiscv CDC/RDC; live Problems and quick-fixes |
+| Workstation | Current agent guide loads all workflows and steps | `rvw agent guide --json` | Live activity bar and saved checklist state |
+| LSP | See the stdio test below | `rvw lsp --db design.db --lint-settings settings.json` | Fresh VexRiscv database and live client |
+| Cosim | Native output check NOT RUN | `rvw cosim check --elf ELF --trace trace.jsonl --json` | Native mismatch; live disassembly jump |
+| Formal | Native output check NOT RUN | `rvw formal regress manifest.toml --out FORMAL --json`; `rvw formal autocheck manifest.json --out AUTO --json` | Native properties, activation results and proof core; live highlights |
+| Architecture | Current study schema works without native execution; result and aggregate layout have unit checks | `rvw csim run study.json trace.csim --json`; `rvw csim sweep study.json trace.csim --param branch.model=bimodal,gshare --json` | Native study table; live report |
+| Performance | Native output check NOT RUN | `rvw perf kanata.log --json` | Native report and pipeline; live grid |
+| Wave | Native output check NOT RUN | `rvw wave find wave.vcd valid --json`; `rvw wave session save session.json --wave wave.vcd --query query.rvwq.json --json`; `rvw wave session open session.json --json` | Native wave, query and session; live viewer |
+| Navigation | Native output check NOT RUN | `rvw query build --config CONFIG`; `rvw query where SIGNAL --json` | Fresh source hashes; live cross-navigation |
+| SpinalBlocks and debug | Native output check NOT RUN | Use the project's database and block export build commands | Fresh export and wave binding; live views |
+
+The bounded native attempt used a private VexRiscv checkout, `vex-vscode2`
+and `sbt-vscode2`, with `nice -n 15`. It stopped after 120 seconds before a
+C1 file was written. No native format audit or planted-failure result is
+claimed. No GUI check ran. Raw outputs stay outside Git.
+
+Regenerate the small producer data outside the repository:
+
+```sh
+rvw/.venv/bin/python vscode/scripts/producer-samples.py > "$RUN_ROOT/python-producers.json"
+rvw/.venv/bin/python -m pytest rvw/tests/test_vscode_contracts.py -q
+```
+
+The stdio test uses a database restored from a committed extractor SQL capture.
+It sends initialize, definition, hover, references, document symbols and
+shutdown requests to a real `rvw lsp` process. It opens a document with actual
+rules/structural lint settings and checks published diagnostics against the
+lint producer. This does not test a fresh VexRiscv extraction.
+
+```sh
+rvw/.venv/bin/python -m pytest rvw/tests/test_vscode_lsp_stdio.py -q
+```

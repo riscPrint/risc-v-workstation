@@ -6,18 +6,23 @@ import {lines,holes} from '../src/lines';
 import {parseReport,children} from '../../../src/results/model';
 import {checkProducer} from '../../../src/results/contracts';
 import {object} from '../../../src/results/model';
+import {summary,traceFile} from '../../project/src/model';
 import {parseLint,ruleGroups} from '../../lint/src/model';
 import {workflows} from '../../workstation/src/model';
 
 test('current Python coverage, plan and guide producers feed the actual models',()=>{
  const samples=JSON.parse(execFileSync(resolve('../rvw/.venv/bin/python'),['scripts/producer-samples.py'],{encoding:'utf8'}));
- for(const name of ['guide','functional','coverage','coverage_report','plan','lint'] as const) checkProducer(name,samples[name]);
+ for(const name of ['guide','functional','coverage','coverage_report','plan','lint','run','suite','csim_study'] as const) checkProducer(name,samples[name]);
  const lint=parseLint(JSON.stringify(samples.lint)), sarif=parseLint(JSON.stringify(samples.sarif));
  assert.equal(lint.status,samples.lint.status);
  assert.ok(lint.diagnostics.length>0);
  assert.equal(lint.diagnostics.filter(d=>d.waived===undefined).length,samples.lint.active_findings);
  assert.equal(ruleGroups(lint).flatMap(g=>g.findings).length,lint.diagnostics.length);
  assert.deepEqual(sarif,lint);
+ assert.match(summary(samples.run),/rvw.run\/1: fail/);
+ assert.equal(traceFile(samples.run),samples.run.artifacts.rvfi_trace);
+ const suiteTitle=summary(samples.suite);
+ for(const [status,count] of Object.entries(samples.suite_counts))assert.ok(suiteTitle.includes(`${count} ${status}`));
  const merged=parseReport('coverage',JSON.stringify(samples.coverage));
  const report=parseReport('coverage',JSON.stringify(samples.coverage_report));
  assert.equal(lines(merged)[0].hit,samples.coverage_report.summary.hit);

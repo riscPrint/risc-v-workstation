@@ -7,11 +7,12 @@ import sqlite3
 from rvw.agent.guide import load
 from rvw.lint.cli import report as lint_report
 from rvw.lint.sarif import convert as sarif
+from rvw.csim.study import run as csim_run
 from rvw.cov import code
 from rvw.cov.functional import functional
 from rvw.mcp.envelope import envelope
 from rvw.plan import VPlan
-from rvw.results.schema import Verdict
+from rvw.results.schema import Verdict, RunResult, SuiteResults, TestEntry
 
 
 def produce(root):
@@ -45,7 +46,12 @@ def produce(root):
         'config': meta.get('config', 'captured'), 'top': meta['toplevel'],
         'db': str(database), 'backends': ['rules', 'structural']}))
     lint = lint_report(settings)
-    return {'lint': lint, 'sarif': sarif(lint), 'guide': load(), 'functional': coverage, 'coverage': merged,
+    suite = SuiteResults(run_id='parser-test', suite='small', core='external',
+        config='small', created='2026-01-01T00:00:00Z',
+        tests=[TestEntry(id='pass', status='pass'), TestEntry(id='planted', status='fail')])
+    return {'run': RunResult(status='fail', core='external', config='small',
+                            fail_code=3, artifacts={'rvfi_trace': 'trace.jsonl'}).to_dict(),
+            'suite': suite.to_dict(), 'suite_counts': suite.counts(), 'csim_study': csim_run({'branch': {'model': 'bimodal'}}, []), 'lint': lint, 'sarif': sarif(lint), 'guide': load(), 'functional': coverage, 'coverage': merged,
             'coverage_report': code.report(merged), 'plan': VPlan(plan).status(),
             'gates': [envelope(Verdict(verdict=v, tests=t).to_dict()) for v, t in
                       [('accept', 'pass'), ('reject', 'fail'), ('inconclusive', 'incomplete')]]}
