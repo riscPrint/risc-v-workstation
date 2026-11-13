@@ -52,7 +52,7 @@
       }
     ],
     "views": {
-      "explorer": [
+      "workstation.container": [
         {
           "id": "wave.results",
           "name": "RVW Wave Query"

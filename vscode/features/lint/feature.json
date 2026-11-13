@@ -73,7 +73,7 @@
       ]
     },
     "views": {
-      "explorer": [
+      "workstation.container": [
         {
           "id": "lint.rules",
           "name": "RVW Lint, CDC, RDC and SDC"

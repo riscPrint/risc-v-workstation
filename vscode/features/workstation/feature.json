@@ -1,0 +1,81 @@
+{
+  "id": "workstation",
+  "title": "Workstation",
+  "description": "Workstation saved results.",
+  "activationEvents": [
+    "onCommand:workstation.guide",
+    "onCommand:workstation.refreshGuide",
+    "onCommand:workstation.reset",
+    "onView:workstation.results"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "workstation.guide",
+        "title": "Workstation: Load Saved Agent Guide"
+      },
+      {
+        "command": "workstation.refreshGuide",
+        "title": "Workstation: Read rvw Agent Guide"
+      },
+      {
+        "command": "workstation.reset",
+        "title": "Workstation: Reset Workflow Checklist"
+      }
+    ],
+    "views": {
+      "workstation.container": [
+        {
+          "id": "workstation.results",
+          "name": "Tools and Workflows"
+        }
+      ]
+    },
+    "menus": {
+      "view/title": [
+        {
+          "command": "workstation.guide",
+          "when": "view == workstation.results",
+          "group": "navigation"
+        },
+        {
+          "command": "workstation.refreshGuide",
+          "when": "view == workstation.results",
+          "group": "navigation"
+        },
+        {
+          "command": "workstation.reset",
+          "when": "view == workstation.results",
+          "group": "navigation"
+        }
+      ]
+    },
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "workstation.container",
+          "title": "Workstation",
+          "icon": "dist/workstation/icon.svg"
+        }
+      ]
+    },
+    "configuration": {
+      "properties": {
+        "workstation.rvwExecutable": {
+          "type": "string",
+          "default": "rvw",
+          "description": "Path to rvw.",
+          "restricted": true
+        }
+      }
+    }
+  },
+  "tests": {
+    "unit": [
+      "test/model.test.ts"
+    ]
+  },
+  "assets": {
+    "icon.svg": "icon.svg"
+  }
+}

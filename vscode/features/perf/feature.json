@@ -43,7 +43,7 @@
       }
     ],
     "views": {
-      "explorer": [
+      "workstation.container": [
         {
           "id": "perf.results",
           "name": "RVW Performance"

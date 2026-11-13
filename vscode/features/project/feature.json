@@ -27,7 +27,7 @@
       }
     ],
     "views": {
-      "explorer": [
+      "workstation.container": [
         {
           "id": "project.results",
           "name": "RVW Project Results"

@@ -1,0 +1,3 @@
+# Workstation activity bar
+
+The Workstation icon contains saved result views and a Tools and Workflows tree. Tool entries open the existing thin features. Workflow steps come from the bundled rvw agent guide. Expand a workflow to see its checklist. Hover a step for its CLI, MCP and decision fields. Checking a step records manual progress in workspace state. It runs no command and establishes no verdict. Reset Workflow Checklist clears marks. Load Saved Agent Guide reads JSON. Read rvw Agent Guide calls only `rvw agent guide --json` in a trusted workspace. A missing executable or file gives a message. The bundled guide works without rvw.
