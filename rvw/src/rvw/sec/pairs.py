@@ -65,7 +65,10 @@ def compare(a,b,plan):
         # An observer mode limits the contract to that privilege's retirements.
         mode=plan.get('observer_mode')
         return rows if mode is None else [r for r in rows if r.get('mode')==mode]
-    if projection(observer(region(a['reference'])),clauses) != projection(observer(region(b['reference'])),clauses):
+    left, right = observer(region(a['reference'])), observer(region(b['reference']))
+    if not left or not right:
+        return dict(status='inconclusive', channels=[], reason='observer has no reference retirements in one or both runs')
+    if projection(left,clauses) != projection(right,clauses):
         return dict(status='ineligible', channels=[])
     channels = [k for k in plan['observations'] if a['observations'][k] != b['observations'][k]]
     return dict(status='violation' if channels else 'no_leak_observed',channels=channels)

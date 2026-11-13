@@ -1091,3 +1091,6 @@ unique for that path. The checker combines the terms with OR. Each term
 retains its source-review reason in the inventory detail. Terms suppress
 valid-hold and payload-stability obligations only at the selected sample.
 Unknown cancellation logic retains strict checks.
+## Missing evidence and positive results
+
+Local and distributed RTL grids require at least one property. Empty property maps fail before output creation or solver/SSH dispatch. An empty work set cannot produce a passing proof grid.

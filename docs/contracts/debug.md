@@ -35,3 +35,7 @@ terminal states and states without an admissible fair infinite continuation.
 The explicit finite graph supplies the state and edge universe. Fairness uses
 state justice. A pass establishes progress possibility in that graph only.
 Infeasible fairness remains inconclusive. No RTL translation claim is added.
+
+## Missing evidence and positive results
+
+Known packet vectors require nonempty packet bytes and expected messages. An empty vector yields `inconclusive` and cannot qualify an adapter. Empty transport round trips do not establish packet compatibility.

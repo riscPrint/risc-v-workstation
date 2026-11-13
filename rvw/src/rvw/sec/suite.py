@@ -2,6 +2,7 @@
 import json
 from pathlib import Path
 from .common import publish
+from rvw.common.verdicts import producer_verdict
 
 
 def collect(reports,out):
@@ -13,6 +14,9 @@ def collect(reports,out):
             if not isinstance(r,dict): raise ValueError('report must be an object')
             if r.get('schema')!='rvw.sec/1' or r.get('status') not in ('violation','no_leak_observed','inconclusive'):
                 raise ValueError('expected executed rvw.sec/1 report')
+            expected={'violation':'fail','no_leak_observed':'pass','inconclusive':'inconclusive'}[r['status']]
+            if ('verdict' in r or r.get('inconclusive')) and producer_verdict(r)!=expected:
+                raise ValueError('producer verdict conflicts with technique status')
             if r['status']=='no_leak_observed' and (r.get('complete') is not True or r.get('findings')):
                 raise ValueError('clean report lacks complete evidence')
             if r['status']=='violation' and not r.get('findings'):
@@ -26,7 +30,8 @@ def collect(reports,out):
             entry=dict(id=str(index),status='error',message=str(e),inconclusive='invalid or missing report')
         if entry['status'] != 'pass': entry['signature']='sec:suite:'+entry['id']+':'+entry['status']
         entries.append(entry)
-    result=publish(out,'suite',findings,bool(entries) and all(e.get('evidence_complete') is True for e in entries),
+    result=publish(out,'suite',findings,bool(entries) and all(e.get('evidence_complete') is True and
+        producer_verdict(e) in ('pass','fail') for e in entries),
                    techniques=entries,limits='Sampled digital evidence. Never secure or proof.')
     suite=json.loads((out/'results.json').read_text());suite['tests']=entries
     (out/'results.json').write_text(json.dumps(suite,indent=2)+'\n')

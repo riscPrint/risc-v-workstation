@@ -135,3 +135,9 @@ remain unchanged. Generated APB observation outputs preserve every MMIO
 bus for the passive VIP and register oracle. The known-reset RAL profile
 requires activity on every MMIO bus. It excludes CPU execution and supports
 one clock domain. Unknown-reset and autonomous behavior remain separate.
+
+## Missing evidence and positive results
+
+Feature and qualification tables require conclusive C3 pass entries. An explicit blocked verdict or an inconclusive marker cannot establish support. Counts of recorded runs do not establish qualification.
+
+Ignored-feature warnings also prevent positive probe qualification.

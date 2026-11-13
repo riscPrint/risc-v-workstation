@@ -1,5 +1,6 @@
 """Derive a bounded engine feature table from C3 conformance evidence."""
 from rvw.results import load_results
+from rvw.common.verdicts import producer_verdict
 from rvw.sim.uvm_features import UNSUPPORTED
 
 FEATURES = {
@@ -18,7 +19,7 @@ def table(path):
     for test, (name, workaround) in FEATURES.items():
         found = [t for t in report.tests if t.id == test]
         rows.append({'feature': name, 'test': test,
-                     'status': 'checked' if found and all(t.status == 'pass' for t in found) else 'not established',
+                     'status': 'checked' if found and all(t.conclusive and producer_verdict(dict(t.extra,status=t.status))=='pass' for t in found) else 'not established',
                      'runs': len(found), 'workaround': workaround})
     rows.extend([
         {'feature': 'Accellera HDL backdoor/VPI', 'test': None, 'status': 'not established', 'runs': 0,

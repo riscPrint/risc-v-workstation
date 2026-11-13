@@ -49,6 +49,10 @@ def verify_vectors(vectors, params):
         try:
             data = bytes.fromhex(vector['bytes'].replace(' ', ''))
             want = [_normal(m) for m in vector['messages']]
+            if not data or not want:
+                report.append({'vector': index, 'status': 'inconclusive',
+                               'reason': 'packet vectors need nonempty bytes and messages'})
+                continue
             got, rest = ntrace.unpack(data, params)
             got = [m.as_dict() for m in got]
             packed = ntrace.pack([ntrace.Message(m['tcode'], {k: v for k, v in m.items() if k not in ('tcode', 'src')},
