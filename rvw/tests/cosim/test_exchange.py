@@ -57,3 +57,16 @@ def test_rvvi_mixed_sparse_retirement_is_not_discarded():
     encoded += 'RET 0x80000004 0x13\n'
     with pytest.raises(ValueError, match='mixed'):
         import_stream(encoded, 'rvvi')
+
+
+def test_rvvi_multihart_roundtrip():
+    header, row = fixture()
+    header.update(harts=[0], capabilities=['multihart', 'state'])
+    row.update(hart=0, epoch=0, capture_seq='1', order='0')
+    reset = dict(event='reset', cycle=0, hart=0, epoch=0, capture_seq='0')
+    end = dict(event='hart_end', cycle=2, hart=0, epoch=0,
+               capture_seq='2', status='pass')
+    rows = [header, reset, row, end]
+    restored, sparse = import_stream(export(rows, 'rvvi'), 'rvvi')
+    assert restored == rows
+    assert not sparse

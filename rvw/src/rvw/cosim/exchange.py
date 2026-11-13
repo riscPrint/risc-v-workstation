@@ -100,9 +100,9 @@ def import_stream(text, kind):
             if 'RET' in tokens or 'TRAP' in tokens:
                 key = 'RET' if 'RET' in tokens else 'TRAP'
                 pos = tokens.index(key)
-                if obj['order'] != orders.get(hart, 0):
+                if int(obj['order']) != orders.get(hart, 0):
                     raise ValueError('RVVI order conflicts with C2 state')
-                orders[hart] = obj['order'] + 1
+                orders[hart] = int(obj['order']) + 1
                 if 'MODE' in tokens and int(tokens[tokens.index('MODE')+1], 0) != obj['mode']:
                     raise ValueError('RVVI mode conflicts with C2 state')
                 if (int(tokens[pos+1], 0), int(tokens[pos+2], 0), key == 'TRAP') != (int(obj['pc'], 16), int(obj['insn'], 16), obj['trap']):
