@@ -326,6 +326,45 @@ On both unpatched in-order cores, wrong-path loads never reach the bus.
   A cacheless core has no cache receiver. A clean result does not prove that the
   core never speculates.
 
+## Leakage campaigns
+
+`rvw sec campaign --manifest campaign.json --out out/campaign [--resume]` runs a
+coverage-guided loop of contract pairs through the same case adapter. MCP:
+`sec_campaign`. Each iteration:
+
+1. selects a contract from `contracts` (round robin);
+2. takes a corpus program and mutates it (insert, delete or replace an
+   instruction; a branch stays with its label), or generates a new one from the
+   RV32IM grammar (`classes`: alu, alui, mul, div, load, store, branch);
+3. mutates the secret pair (bit flip of one secret register, or new values with
+   boundary values such as 0, 1, 0x7fffffff, 0x80000000);
+4. runs the pair without reduction. New coverage keys from the first case's
+   observations (per-instruction retirement latency, bus trace length, probe
+   branch outcomes, probe counter values) add the program to the corpus;
+5. reduces a violation with the paired reducer and files it under its root-cause
+   signature: the reduced program's sorted mnemonics and the differing channels.
+
+The grammar keeps secrets (x6, x7) out of load and store addresses and branch
+conditions, so the architectural contract normally holds and a difference is
+microarchitectural. `budget` bounds pairs and seconds. `state.json` is written
+after each pair; `--resume` continues until the budget (raise it in the
+manifest to continue a finished campaign). Outputs: `report.json` (`rvw.sec/1`),
+`results.json` (one C3 `fail` per signature, or one `pass`/`error`) and
+`report.md`. A clean campaign is `no_leak_observed` for the pairs it ran.
+
+Results with `examples/*/rvw/sec/campaign.json` (both contracts, seed 11,
+24 pairs each, RTL from the pinned revisions):
+
+| Core | Outcomes | Coverage keys / corpus | Signatures (reduced witness) |
+|---|---|---|---|
+| VexiiRiscv | 18 `no_leak_observed`, 6 violations | 24 / 14 | `remu` (`remu x15, x7, x5`, 3 pairs, both contracts), `div` (`div x10, x7, x10`, 3 pairs) |
+| VexRiscv | 24 `no_leak_observed` | 47 / 18 | none |
+
+The first VexRiscv campaign found a harness bug: RVFI reports a byte store's
+data replicated across the word. Store data now compares on its written byte
+lanes, as `rvw cosim` does.
+
+
 ## Remaining integration work
 
 The default pair generator is a small seeded ALU grammar. Broader instruction,

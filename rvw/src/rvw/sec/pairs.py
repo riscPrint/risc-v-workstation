@@ -105,7 +105,11 @@ def run(manifest, out):
             if 'pc' not in r['c2_keys'] or not set(r['c2_keys']) <= set(keys):
                 raise ValueError('c2_keys must include pc and name C2 retirement fields')
             keys = tuple(r['c2_keys']); checked_keys.add(keys)
-        if [[x.get(k) for k in keys] for x in reference] != [[x.get(k) for k in keys] for x in rtl]:
+        from rvw.cosim.checker import masked
+        def fields(x):
+            # Store data compares on its written byte lanes, as rvw cosim does.
+            return [masked(x[k], x.get('mem_wmask', 0)) if k == 'mem_wdata' and k in x else x.get(k) for k in keys]
+        if [fields(x) for x in reference] != [fields(x) for x in rtl]:
             raise ValueError('RTL differs from independent reference')
         if set(r['observations']) != set(plan['observations']):
             raise ValueError('missing or extra microarchitectural observation channels')
