@@ -6,9 +6,9 @@ from . import core
 def _run(args):
     try:
         if args.action == "list":
-            value = core.load(args.manifest)
+            value = core.load(core.recipe(args.recipe) if args.recipe else args.manifest)
         elif args.action == "build":
-            value = core.build(args.manifest, args.source, args.out, args.cc, args.bench)
+            value = core.build(core.recipe(args.recipe) if args.recipe else args.manifest, args.source, args.out, args.cc, args.bench)
         else:
             value = core.verify(args.build, args.out, args.oracle, args.timeout, args.trace)
         print(json.dumps(value, indent=2))
@@ -26,7 +26,9 @@ def register(subparsers):
         p.set_defaults(func=_run)
         p.add_argument("--json", action="store_true", help="output is always JSON")
         if action != "verify":
-            p.add_argument("--manifest", help="local manifest; default: Embench smoke set")
+            choice = p.add_mutually_exclusive_group()
+            choice.add_argument("--manifest", help="local manifest; default: Embench smoke set")
+            choice.add_argument("--recipe", choices=("embench", "riscv-tests", "coremark", "zstd"))
         if action == "build":
             p.add_argument("--source", required=True)
             p.add_argument("--out", required=True)

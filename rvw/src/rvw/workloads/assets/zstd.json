@@ -1,0 +1,25 @@
+{
+  "schema": "rvw.workloads/1",
+  "suite": "zstd-static-roundtrip",
+  "source_url": "https://github.com/facebook/zstd",
+  "revision": "f8745da6ff1ad1e7bab384bd1f9d742439278e99",
+  "compiler_version": "riscv64-unknown-elf-gcc (g1b306039a) 15.1.0",
+  "workloads": [
+    {
+      "id": "zstd-roundtrip",
+      "mode": "bare",
+      "args": [],
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "inputs": "262144 bytes: (i/127) XOR (i%31), truncated to a byte; level 1",
+      "expected": "compress below half input size; decompress to exact input; HTIF exit 0",
+      "build": [
+        "python3",
+        "{assets}/build_zstd.py",
+        "{cc}",
+        "{source}",
+        "{out}",
+        "{assets}"
+      ]
+    }
+  ]
+}

@@ -1732,15 +1732,16 @@ usage: rvw workloads [-h] [--project PROJECT] {list,build,verify} ...
 ### `rvw workloads list`
 
 ```text
-usage: rvw workloads list [-h] [--json] [--manifest MANIFEST] [--project
-    PROJECT]
+usage: rvw workloads list [-h] [--json] [--manifest MANIFEST | --recipe
+    {embench,riscv-tests,coremark,zstd}] [--project PROJECT]
 ```
 
 ### `rvw workloads build`
 
 ```text
-usage: rvw workloads build [-h] [--json] [--manifest MANIFEST] --source SOURCE
-    --out OUT [--cc CC] [--bench BENCH] [--project PROJECT]
+usage: rvw workloads build [-h] [--json] [--manifest MANIFEST | --recipe
+    {embench,riscv-tests,coremark,zstd}] --source SOURCE --out OUT [--cc CC]
+    [--bench BENCH] [--project PROJECT]
 ```
 
 ### `rvw workloads verify`
@@ -2934,3 +2935,27 @@ Explain why a signal has its value at a time: database assignments, which one wa
 Arguments: `wave` (required), `period`, `clock`, `signal` (required), `at` (required), `db`, `depth`, `max_nodes`.
 
 Starts a background job: no.
+
+### `workloads_build`
+
+Build or reference-check pinned open workloads. No RTL accuracy claim.
+
+Arguments: `manifest`, `recipe`, `source` (required), `out` (required), `cc`, `bench`.
+
+Starts a background job: yes.
+
+### `workloads_list`
+
+Build or reference-check pinned open workloads. No RTL accuracy claim.
+
+Arguments: `manifest`, `recipe`.
+
+Starts a background job: yes.
+
+### `workloads_verify`
+
+Build or reference-check pinned open workloads. No RTL accuracy claim.
+
+Arguments: `build_path` (required), `out` (required), `oracle` (required), `timeout`, `trace`.
+
+Starts a background job: yes.

@@ -96,3 +96,53 @@ checker and compressed instructions. FP memory instructions occur in both the
 FP and load/store categories. Conditional branch transitions give taken counts,
 not predictor misses. The profile leaves cache and predictor miss fields null.
 Instruction logs can use much more disk space than the ELFs.
+
+## Additional open recipes
+
+Use `--recipe embench|riscv-tests|coremark|zstd` with `list` or `build`.
+A recipe and a local `--manifest` are mutually exclusive. Sources stay outside
+the workstation. Recipes pin full source revisions and the compiler line.
+They do not download sources. Use the matching source checkout, including
+its declared dependencies. Each output directory must be new.
+
+```sh
+rvw workloads list --recipe riscv-tests
+rvw workloads build --recipe riscv-tests --source /path/to/riscv-tests \
+  --bench median,dhrystone --out /path/to/bench-build
+rvw workloads build --recipe coremark --source /path/to/coremark \
+  --out /path/to/coremark-build
+rvw workloads build --recipe zstd --source /path/to/zstd \
+  --out /path/to/zstd-build
+rvw workloads verify --build /path/to/bench-build/build.json \
+  --out /path/to/bench-check --oracle spike --timeout 60
+```
+
+The riscv-tests recipe includes median, qsort, rsort, towers, vvadd, memcpy,
+multiply, Dhrystone and spmv. It reuses the existing architecture Makefile and
+runtime patch. Those files are copied into the captured assets before use.
+The manifest pins the environment repository separately. The local source's
+`env` checkout must contain that revision. Console output is suppressed by
+the existing runtime. Upstream self-checks still determine the HTIF exit.
+
+The CoreMark recipe is a short algorithm workload. It calls the upstream
+list, matrix and state kernels for one iteration with the 6k reference seeds.
+It checks the upstream CRCs `d4b0`, `be52` and `5e47`. The only port-header
+change selects a pointer-sized integer for RV64. The upstream algorithms stay
+unchanged. This driver omits the official timing flow. It produces no
+CoreMark score and is not a compliant CoreMark measurement.
+
+The zstd recipe builds the pinned v1.5.7 compression and decompression library.
+It compresses a deterministic 256 KiB input with a static level-1 context. It
+requires compressed size below half the input size, then checks every restored
+byte. Static contexts avoid a bare-metal heap. This is a round-trip self-check,
+not independent decoder validation. No SPEC source or licensed input is used.
+
+Manifests can add `dependencies`, mapping source-relative Git repository paths
+to full revisions. Build archives each dependency into the source capture.
+`runtime_files` can name workstation-relative files to copy into
+`assets/workstation/`. The assets hash includes those copies. Source and
+runtime paths cannot escape their roots. Builders use Python 3 and the pinned
+compiler. Python and host build utilities remain local dependencies.
+
+The cancellable MCP tools are `workloads_list`, `workloads_build` and
+`workloads_verify`. They select the same recipes and checkers as the CLI.

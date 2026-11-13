@@ -1,0 +1,25 @@
+{
+  "schema": "rvw.workloads/1",
+  "suite": "coremark-algorithm-smoke",
+  "source_url": "https://github.com/eembc/coremark",
+  "revision": "1f483d5b8316753a742cbf5590caf5bd0a4e4777",
+  "compiler_version": "riscv64-unknown-elf-gcc (g1b306039a) 15.1.0",
+  "workloads": [
+    {
+      "id": "coremark-smoke",
+      "mode": "bare",
+      "args": [],
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "inputs": "6000-byte buffer, seeds 0/0/0x66, one iteration",
+      "expected": "upstream 6k reference CRCs d4b0/be52/5e47; HTIF exit 0; no score",
+      "build": [
+        "python3",
+        "{assets}/build_coremark.py",
+        "{cc}",
+        "{source}",
+        "{out}",
+        "{assets}"
+      ]
+    }
+  ]
+}
