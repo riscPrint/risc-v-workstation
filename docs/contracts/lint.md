@@ -71,3 +71,12 @@ The database condition alone does not prove that the emitted RTL infers a latch.
 Each unresolved row has `rule`, `endpoint`, and `reason`. The backend remains
 `inconclusive` while any such row exists. Named partial assignments retain the
 `lint.latch` finding. This does not certify the unresolved temporary as latch-free.
+
+## Counted structural findings
+
+Structural diagnostics group paths with the same rule, severity, effective
+source and destination clock/reset signatures, and recognised library class.
+`count` gives the number of paths. `members` retains each path's endpoints and
+source locations. The top-level endpoint is the first member. Crossings remain
+in the detailed CDC/RDC inventories. Grouping does not establish protection.
+Waiver IDs change because the full diagnostic content changes.
