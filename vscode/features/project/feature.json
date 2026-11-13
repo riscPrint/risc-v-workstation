@@ -1,0 +1,69 @@
+{
+  "id": "project",
+  "title": "Project Results",
+  "description": "Project Results saved results.",
+  "activationEvents": [
+    "onCommand:project.refresh",
+    "onCommand:project.open",
+    "onView:project.results"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "project.refresh",
+        "title": "Project Results: Refresh Project Results"
+      },
+      {
+        "command": "project.open",
+        "title": "Project Results: Open Saved Result"
+      },
+      {
+        "command": "project.trace",
+        "title": "Project Results: Open Trace Location"
+      },
+      {
+        "command": "project.source",
+        "title": "Project Results: Open Recorded Source"
+      }
+    ],
+    "views": {
+      "explorer": [
+        {
+          "id": "project.results",
+          "name": "RVW Project Results"
+        }
+      ]
+    },
+    "menus": {
+      "view/title": [
+        {
+          "command": "project.refresh",
+          "when": "view == project.results",
+          "group": "navigation"
+        },
+        {
+          "command": "project.open",
+          "when": "view == project.results",
+          "group": "navigation"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "project.trace",
+          "when": "view == project.results",
+          "group": "navigation"
+        },
+        {
+          "command": "project.source",
+          "when": "view == project.results",
+          "group": "navigation"
+        }
+      ]
+    }
+  },
+  "tests": {
+    "unit": [
+      "test/model.test.ts"
+    ]
+  }
+}

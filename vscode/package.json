@@ -32,6 +32,9 @@
     "onCommand:navigation.loads",
     "onCommand:perf.open",
     "onView:perf.results",
+    "onCommand:project.refresh",
+    "onCommand:project.open",
+    "onView:project.results",
     "onCommand:regress.open",
     "onView:regress.results",
     "onCustomEditor:spinalblocks.diagram",
@@ -150,6 +153,22 @@
         "title": "Performance: Open Selected Evidence"
       },
       {
+        "command": "project.refresh",
+        "title": "Project Results: Refresh Project Results"
+      },
+      {
+        "command": "project.open",
+        "title": "Project Results: Open Saved Result"
+      },
+      {
+        "command": "project.trace",
+        "title": "Project Results: Open Trace Location"
+      },
+      {
+        "command": "project.source",
+        "title": "Project Results: Open Recorded Source"
+      },
+      {
         "command": "regress.open",
         "title": "Regression: Open Report"
       },
@@ -262,6 +281,10 @@
           "name": "RVW Performance"
         },
         {
+          "id": "project.results",
+          "name": "RVW Project Results"
+        },
+        {
           "id": "regress.results",
           "name": "RVW Regression"
         },
@@ -337,6 +360,16 @@
           "command": "perf.trace",
           "when": "view == perf.results",
           "group": "results"
+        },
+        {
+          "command": "project.refresh",
+          "when": "view == project.results",
+          "group": "navigation"
+        },
+        {
+          "command": "project.open",
+          "when": "view == project.results",
+          "group": "navigation"
         },
         {
           "command": "regress.open",
@@ -418,6 +451,16 @@
         {
           "command": "perf.source",
           "when": "view == perf.results && viewItem == rvw.signal",
+          "group": "navigation"
+        },
+        {
+          "command": "project.trace",
+          "when": "view == project.results",
+          "group": "navigation"
+        },
+        {
+          "command": "project.source",
+          "when": "view == project.results",
           "group": "navigation"
         },
         {
