@@ -847,7 +847,7 @@ class PhaseInsertChecks(cfg: ChecksConfig, result: ChecksResult) extends PhaseNe
           val idle = Reg(UInt(log2Up(p.maxCycles + 1) bits)).init(0).setName(s"chk_progress_${sanitize(p.name)}_idle")
           when(event) { idle := 0 }.elsewhen(idle =/= p.maxCycles) { idle := idle + 1 }
           val ctx = ctxOf(c)
-          ctx.emit(rec, ctx.active(ClockDomain.current) && !event && idle === p.maxCycles,
+          ctx.emit(rec, ctx.active(ClockDomain.current) && !event && idle >= p.maxCycles - 1,
             s"failed: no progress for ${p.maxCycles} cycles")
         }
       }
