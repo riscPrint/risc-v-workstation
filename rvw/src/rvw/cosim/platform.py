@@ -76,6 +76,7 @@ class Platform:
     ecall_tval: str = "zero"
     sail_reference_isa: str | None = None
     memory_read_convention: str = "architectural"
+    scalar_split_ram: bool = False
 
     @classmethod
     def load(cls, core, path=None):
@@ -97,6 +98,9 @@ class Platform:
                 ranges("ram"), ranges("mmio"), obj.get("pmp_regions", 8), obj.get("aligned_mem", False), obj.get("reference_isa"),
                 obj.get("illegal_insn_tval", "insn"), obj.get("mode_after_change", False),
                 obj.get("trace_from_reset", True))
+        p.scalar_split_ram = obj.get('scalar_split_ram', False)
+        if type(p.scalar_split_ram) is not bool:
+            raise ValueError('scalar_split_ram must be a boolean')
         p.memory_read_convention = obj.get('memory_read_convention', 'architectural')
         if p.memory_read_convention not in ('architectural', 'full_word'):
             raise ValueError('memory_read_convention must be architectural or full_word')

@@ -120,7 +120,8 @@ Platform policy keys are explicit in the BOOM and VexRiscv JSON files:
 - `split_page` and `split_bus` must be `refuse`. Scalar C2 cannot describe
   partial writes, bus fault precedence or intermediate transactions. Completed
   accesses across an XLEN word, and multiple reference memory effects, are
-  refused. XLEN is the trace word boundary, not a claim about physical bus width.
+  refused unless the narrow `scalar_split_ram` exception below applies.
+  XLEN is the trace word boundary, not a claim about physical bus width.
   An alignment trap before a split compares as a trap. Partial effects and fault
   precedence after a split are outside this comparison. Other policies are refused.
 - `endianness`: an object with `instruction`, `data`, `page_table` and `device`.
@@ -868,3 +869,22 @@ The generic Spinal/Verilator harness can link `lockstep_dpi.cc` with
 its `observe` callback while the core clock is stopped. See the VexRiscv native
 lockstep test in `examples/vexriscv/rvw/tests/test_lockstep_native.py`.
 The existing Scala socket transport remains the default.
+
+## Completed split accesses in bare RAM
+
+Set `scalar_split_ram: true` in the cosim platform to compare an ordinary
+scalar load or store across an XLEN word boundary. The default is false.
+The existing `misaligned` policy must still select `emulate` for loads and
+stores. Keep `split_page` and `split_bus` set to `refuse`: the opt-in is a
+narrow exception for completed architectural RAM effects.
+
+The Spike shim requires M-mode, no active MPRV, no virtualization and zero
+PMP regions. The complete access must fit in one RAM region and one 4 KiB
+page. It must not overlap MMIO. The shim checks that the reference memory
+log covers every byte exactly once before it emits one scalar C2 effect.
+Faults with partial memory effects remain refused. Other split accesses
+remain refused. This compares architectural completion. It does not check
+bus transactions, partial stores, page faults or fault order.
+
+Rebuild the Spike shim with `Cosim/build.sh` after updating the workstation.
+The shim behavior version is 7. Older libraries are refused.

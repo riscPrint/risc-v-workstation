@@ -39,7 +39,7 @@ class _Serialized:
 
 
 # The shim behaviour this code expects (Cosim/spike_shim.cc, rvw_shim_version). Bump both together.
-SHIM_VERSION = 6
+SHIM_VERSION = 7
 SHIM_SOURCE = Path(__file__).resolve().parents[4] / "Cosim/spike_shim.cc"
 REBUILD = "rebuild with Cosim/build.sh"
 
@@ -199,6 +199,7 @@ class Spike:
                                   C.POINTER(C.c_uint64), C.c_size_t, C.c_uint64, C.c_uint, C.c_uint64, C.c_char_p, C.c_int, C.c_int]
         lib.rvw_create.restype = C.c_void_p
         lib.rvw_destroy.argtypes = [C.c_void_p]
+        lib.rvw_scalar_split_ram.argtypes = [C.c_void_p, C.c_int]
         lib.rvw_write.argtypes = [C.c_void_p, C.c_uint64, C.c_void_p, C.c_size_t]
         lib.rvw_step.argtypes = [C.c_void_p, C.POINTER(Effect), C.c_uint64,
                                 C.c_uint64, C.c_uint64, C.c_int]
@@ -227,6 +228,7 @@ class Spike:
                                      int(platform.absent_pmp_csrs == "read_zero_write_ignored"))
         if not self.handle:
             raise ValueError(self.error())
+        lib.rvw_scalar_split_ram(self.handle, int(platform.scalar_split_ram))
         try:
             for extension in platform.reference_extensions:
                 if lib.rvw_register_extension(self.handle, extension["name"].encode()):
