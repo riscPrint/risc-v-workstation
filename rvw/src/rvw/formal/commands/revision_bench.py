@@ -36,4 +36,4 @@ def mcp_tools():
     return [ToolSpec('formal_revision_bench','Measure fresh re-proofs with cone-matched lemmas. Report signed time saved.',
         schema({'base':{'type':'string'},'revised':{'type':'string'},'out':{'type':'string'},
                 'timeout':{'type':'number','exclusiveMinimum':0},'trials':{'type':'integer','minimum':1,'maximum':20}},
-               ['base','revised','out']),_runner('revision-bench'),long=True)]
+               ['base','revised','out']),_runner('revision-bench'),long=True, side_effects='long-running; writes generated artifacts and reports to out; launches selected native tools', native_tools=('Yosys', 'SymbiYosys', 'yosys-smtbmc', 'Yices', 'Z3', 'Boolector', 'Bitwuzla', 'CVC4', 'CVC5', 'MathSAT', 'ABC', 'suprove', 'Avy', 'rIC3', 'EBMC', 'pono', 'btormc', 'btorsim'))]

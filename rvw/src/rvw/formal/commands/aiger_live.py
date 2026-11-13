@@ -34,4 +34,4 @@ def mcp_tools():
                             'method': {'type': 'string', 'enum': ['l2s', 'k-live', 'rlive']},
                             'k': {'type': 'integer', 'minimum': 1, 'maximum': 1024},
                             'timeout': {'type': 'number', 'exclusiveMinimum': 0}}, ['out', 'manifest']),
-                    _runner('aiger-live'), long=True)]
+                    _runner('aiger-live'), long=True, side_effects='long-running; writes generated artifacts and reports to out; launches selected native tools', native_tools=('Yosys', 'rIC3'))]

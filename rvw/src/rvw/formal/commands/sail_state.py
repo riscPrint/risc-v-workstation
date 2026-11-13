@@ -32,4 +32,4 @@ def mcp_tools():
     return [ToolSpec('formal_sail_state',
                      'Generate pinned Sail FP sign results, CSR intents and privileged entry decisions. Excludes full machine state.',
                      schema({name: {'type': 'string'} for name in ('model', 'compiler', 'out')},
-                            ['model', 'compiler', 'out']), run, long=True)]
+                            ['model', 'compiler', 'out']), run, long=True, side_effects='long-running; writes generated artifacts and reports to out; launches selected native tools', native_tools=('Sail',))]

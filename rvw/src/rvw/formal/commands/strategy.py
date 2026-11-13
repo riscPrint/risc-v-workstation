@@ -38,4 +38,4 @@ def mcp_tools():
         return data
     return [ToolSpec('formal_strategy', 'Plan engine order and candidate abstractions. Runs no proof.',
         schema({'model': {'type':'string'}, 'history': {'type':'array','items':{'type':'string'}},
-                'out': {'type':'string'}}, ['model','out']), plan, long=True)]
+                'out': {'type':'string'}}, ['model','out']), plan, long=True, side_effects='long-running; writes generated artifacts and reports to out', native_tools=())]

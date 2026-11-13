@@ -28,4 +28,4 @@ def mcp_tools():
     return [ToolSpec('formal_initial_split', 'Split every initial value of an RTL variable while retaining full transitions.',
                     schema({'manifest': {'type': 'string'}, 'out': {'type': 'string'},
                             'timeout': {'type': 'number', 'exclusiveMinimum': 0}}, ['out', 'manifest']),
-                    _runner('initial-split'), long=True)]
+                    _runner('initial-split'), long=True, side_effects='long-running; writes generated artifacts and reports to out; launches selected native tools', native_tools=('Yosys', 'SymbiYosys', 'yosys-smtbmc', 'Yices', 'Z3', 'Boolector', 'Bitwuzla', 'CVC4', 'CVC5', 'MathSAT', 'ABC', 'suprove', 'Avy', 'rIC3', 'EBMC', 'pono', 'btormc', 'btorsim'))]

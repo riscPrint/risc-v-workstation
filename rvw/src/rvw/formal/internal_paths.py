@@ -133,4 +133,4 @@ def mcp_tools():
     properties={key:{'type':'string'} for key in ('source','destination','top','out')}
     properties.update(verilog={'type':'array','items':{'type':'string'}},timeout={'type':'number'},max_nodes={'type':'integer'})
     return [ToolSpec('formal_internal_path','Check conservative internal RTL paths. No Boolean influence or design acceptance verdict.',
-                     {'type':'object','properties':properties,'required':['source','destination','top','out','verilog'],'additionalProperties':False},execute,long=True)]
+                     {'type':'object','properties':properties,'required':['source','destination','top','out','verilog'],'additionalProperties':False},execute,long=True, side_effects='long-running; writes generated artifacts and reports to out; launches selected native tools', native_tools=('Yosys',))]

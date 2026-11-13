@@ -32,4 +32,4 @@ def mcp_tools():
                     schema({'manifest': {'type': 'string'}, 'out': {'type': 'string'},
                             'timeout': {'type': 'number', 'exclusiveMinimum': 0},
                             'cross_check': {'type': 'boolean'}}, ['out', 'manifest']),
-                    _runner('uf-prove'), long=True)]
+                    _runner('uf-prove'), long=True, side_effects='long-running; writes generated artifacts and reports to out; launches selected native tools', native_tools=('Yosys', 'SymbiYosys', 'yosys-smtbmc', 'Yices', 'Z3', 'Boolector', 'Bitwuzla', 'CVC4', 'CVC5', 'MathSAT', 'ABC', 'suprove', 'Avy', 'rIC3', 'EBMC', 'pono', 'btormc', 'btorsim'))]

@@ -49,4 +49,4 @@ def mcp_tools():
     return [ToolSpec('formal_isa', 'Run the ISA kit. Return per-check bounds, failures and unsupported gaps.',
                      schema({'out': {'type':'string'}, 'machine': {'type':'string'}, 'timeout': {'type':'number', 'exclusiveMinimum':0},
                              'unbounded': {'type':'boolean'}, 'engines': {'type':'string'}}, ['out']),
-                     mcp_run, long=True)]
+                     mcp_run, long=True, side_effects='long-running; writes generated artifacts and reports to out; launches selected native tools', native_tools=('Yosys', 'SymbiYosys', 'yosys-smtbmc', 'Yices', 'Z3', 'Boolector', 'Bitwuzla', 'CVC4', 'CVC5', 'MathSAT', 'ABC', 'suprove', 'Avy', 'rIC3', 'EBMC', 'pono', 'btormc', 'btorsim'))]
