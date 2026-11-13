@@ -6,6 +6,23 @@ Power and electromagnetic leakage are out of scope.
 A clean result is `no_leak_observed`. It never means `secure`.
 Formal security proofs belong to `rvw formal security`.
 
+## Techniques at a glance
+
+Real results come from RTL generated from the pinned VexRiscv and VexiiRiscv
+example revisions (details in the sections below).
+
+| Technique | Command | It can show | It cannot show | Real result |
+|---|---|---|---|---|
+| Unit IFT | `ift` | a secret input or register reaches a sink of a small unit under given stimulus | whole-core behavior; source-level provenance | seeded Verilog units |
+| Whole-core IFT | `ift-core` | a secret memory word or CSR reaches a bus address or handshake in one program, with the cycle; which RAM words received tainted data | leaks outside the chosen sinks and program; exact causes (gate taint can over-taint) | both cores: constant-time XOR clean; secret branch and secret table index flagged; `mscratch` binding on VexRiscv |
+| Contract pairs | `contract` | a timing, bus or probe difference between two secrets with equal architectural traces, reduced to a short witness | absence of leaks for other secrets or programs | VexiiRiscv `remu` latency depends on operands (14 vs 38 cycles); VexRiscv divide is fixed (34) |
+| Isolation | `isolation` | timing a lower privilege observes across a privilege switch (`observer_mode`) | PMP/ePMP behavior (neither core has PMP); state cleanup outside the observed channels | VexRiscv M/U: constant-time handler clean; secret-dependent handler flagged (48 vs 84 cycles) |
+| Speculative self-tests | `spec-suite` | a wrong-path access with a secret-derived address on the bus or in timing | that a core never speculates; cache receivers on cacheless cores | both in-order paths clean; a patched VexRiscv that issues flushed loads is flagged for v1, v2 and rsb |
+| Campaign | `campaign` | new leak signatures from generated and mutated pairs, deduplicated | coverage of the whole input space; a clean campaign is bounded by its budget | VexiiRiscv: `remu` and `div` signatures in 24 pairs; VexRiscv: none in 24 pairs |
+| Model pre-check | `model-check` | predicted timing leakage of a planned unit before RTL | transient, cache or predictor leaks; exact cycle counts | predicts the direction of both cores' divide results |
+| Unit latency | `latency` | operand-dependent latency of a unit for given operands | crypto correctness, warm pipelines | seeded units |
+| Critical faults | `fault` | a single-bit upset in a declared register changes security observations, or is detected | multi-bit, clock, voltage or physical faults | seeded units |
+
 ## Dynamic information flow
 
 ```
@@ -15,8 +32,8 @@ rvw sec ift --rtl unit.v --top unit --policy policy.json --stimulus samples.json
 Policy JSON names `clock`, active-high synchronous `reset`, `sources` and `sinks`.
 Sources and sinks name flattened Yosys signals. An internal register can be a source.
 A memory is mapped to registers. Name the mapped storage signals as sources.
-Bind memory regions and key CSRs to these signals in project data. Automatic address
-range decoding is not implemented. For a handshake timing sink, select its valid,
+Bind memory regions and key CSRs to these signals in project data. For whole cores,
+`ift-core` binds RAM words and CSRs automatically (below). For a handshake timing sink, select its valid,
 ready or grant signal. For a debug or bus sink, select its observed output signals.
 An optional scalar public input `declassifier` permits sink taint while it is high.
 This is a sampled release permission. It does not erase taint or prove authorization.
@@ -93,7 +110,8 @@ when the contract is still equal and the leak persists. `minimize_runs` bounds
 trials and defaults to 16. The witness is not necessarily a global minimum.
 Missing or mismatched evidence gives `inconclusive`. No eligible comparison also
 gives `inconclusive`. Adapter claims and external tool dependencies are trusted.
-No native whole-core campaign has been run for this interface.
+`python -m rvw.sec.core_adapter` is a native whole-core adapter for this
+interface (see "Native runs on a whole core").
 
 ## Speculative gadget templates
 
@@ -113,9 +131,11 @@ with the public pointer. Threshold calibration belongs to the project.
 The generated suite expects no leak, including on an in-order core. A speculation
 declaration does not make a leak expected or acceptable. Generation is not an
 executed self-checking core suite. These templates do not demonstrate that a core
-speculates, triggers a gadget, or prevents leakage. Native core execution and
-portable training/flush adapters remain open. RISC-V has no universal predictor
-training or cache-flush interface for all cores.
+speculates, triggers a gadget, or prevents leakage. These RV64 templates need a
+project receiver. For RV32 cores bound with `rvw.sec-core/1`, `spec-suite` runs
+executed gadgets with bus and timing receivers. Portable training and flush
+adapters remain open. RISC-V has no universal predictor training or cache-flush
+interface for all cores.
 
 ## Operand-independent latency
 
@@ -431,12 +451,18 @@ prediction on RTL with `sec contract` when RTL exists.
 
 ## Remaining integration work
 
-The default pair generator is a small seeded ALU grammar. Broader instruction,
-memory and privilege fuzz grammars need project bindings. Gadget generation
-still needs executed core suites. PMP/ePMP, predictor/cache cleanup and declared
-Zkt decoding need independent project models and native core evidence. IFT
-memory regions need mapped signal declarations; dynamic source-level taint
-provenance is not implemented. These limits remain open work.
+- Cache and TLB observation channels exist but no example core has caches or a
+  TLB. They need a core with them and its probes.
+- Neither example core has PMP or a supervisor mode in these runs. ePMP and
+  supervisor isolation need such a configuration.
+- VexiiRiscv has no RVFI. Its C2 check compares `pc` and `insn` only, and its CSR
+  storage is a RAM, so CSR secrets cannot be bound there.
+- The campaign grammar is RV32IM without CSRs, privilege changes or loops.
+- The model pre-check is committed-path only.
+- Dynamic source-level taint provenance is not implemented.
+- Whole-core IFT ties X constants to zero, as the two-state Verilator run does.
+  An X constant is then a public constant. The unit `ift` pass instead treats X
+  as unknown and tainted (next section).
 
 ## Generated RTL reset and unknown constants
 

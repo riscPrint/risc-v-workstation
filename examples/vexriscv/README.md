@@ -970,3 +970,10 @@ location. It reproduced fail code 3 at cycle 9,023 with 2,005 retirements.
 All sixteen checks passed. The trace checkpoint was cycle 4,500. The archive
 was about 33.6 MB. This is local relocation evidence. Native execution on a
 second machine was NOT RUN. See [the sample](rvw/replay-results.json).
+
+## Security runs
+
+`rvw/sec/` holds the project data for `rvw sec` native runs on this core: core
+binding, case templates, IFT programs and policies, contract, campaign and
+model pre-check manifests. See [its README](rvw/sec/README.md) and the
+results in [`rvw/src/rvw/sec/README.md`](../../rvw/src/rvw/sec/README.md).

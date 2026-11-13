@@ -18,4 +18,6 @@ rvw sec spec-suite --binding rvw/sec/core.json --template rvw/sec/spec.S --out o
   applied. The patch lets flushed loads reach the data bus. It is a positive
   control for the speculative receiver, not a core change.
 - `ift/`: programs and policies (secret `secret_key` words, or the `mscratch` register).
-- `case.S`, `spec.S`, `isolation-*.S`: case templates for `python -m rvw.sec.core_adapter`.
+- `case.S`, `spec.S`, `isolation-*.S`, `campaign.S`: case templates for `python -m rvw.sec.core_adapter`.
+- `campaign.json`, `probe-ct.json`, `model-precheck.json`: campaign, probe-channel and model pre-check manifests.
+- `soc-sec.json` and `ift/auto-policy.json`: a `keystore` SoC region and `mscratch` as automatic IFT secrets.
