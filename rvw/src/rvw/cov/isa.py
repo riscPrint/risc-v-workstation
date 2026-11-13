@@ -11,7 +11,7 @@ from . import captured
 
 
 def extensions(isa):
-    match = re.fullmatch(r'rv(32|64)([iemafdqclbjtpv]+)((?:_[a-z][a-z0-9]*)*)', isa)
+    match = re.fullmatch(r'rv(32|64)([iemafdqclbjtpvh]+)((?:_[a-z][a-z0-9]*)*)', isa)
     if not match:
         raise ValueError(f'expected an unversioned, expanded ISA string: {isa}')
     return int(match[1]), set(match[2]) | set(filter(None, match[3].split('_')))

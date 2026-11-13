@@ -14,4 +14,5 @@ def test_generated_vex_plan_selects_fast_instruction_engines():
             assert plan['check_options'][name]['cycles']==[20]
     for name in ('reg_ch0','pc_fwd_ch0','pc_bwd_ch0','causal_ch0','liveness_ch0','unique_ch0','cover'):
         assert name in checks
+    assert plan['check_options']['pc_fwd_ch0']=={'cycles':[5,15],'engine':'btor btormc'}
     assert 'VEXRISCV_FAIRNESS' not in str(plan)

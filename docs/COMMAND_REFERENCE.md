@@ -3254,7 +3254,7 @@ Starts a background job: yes.
 
 ### `formal_profiles`
 
-Track pinned RVA23/RVB23 named requirements, configuration declarations and hash-bound proof evidence. No full profile acceptance verdict.
+Track pinned RVA23/RVB23 extension, base and conditional clauses. Export source-bound catalogs. No full profile acceptance verdict.
 
 Arguments: `manifest` (required), `baseline`, `out` (required).
 

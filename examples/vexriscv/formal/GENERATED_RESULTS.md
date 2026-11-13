@@ -1,10 +1,10 @@
 # Generated VexRiscv check results
 
-Native run: 2026-11-13. The generated project selected 44 checks. Each check had a 110-second limit. The run used the upstream FormalSimple RTL snapshot. It did not build the workstation simulation variant.
+Initial native run: 2026-11-13. The generated project selected 44 checks. Each check had a 110-second limit. The run used the upstream FormalSimple RTL snapshot. It did not build the workstation simulation variant.
 
 Outcome: 42 bounded PASS, one assertion FAIL, one timeout. All 37 instruction checks returned bounded PASS. No unbounded proof or adapter-conformance pass is claimed. The C4 verdict is reject because liveness failed.
 
-The generated wrapper has unconstrained auxiliary inputs. It has no bus fairness assumptions. Its liveness failure is an environment-scoped counterexample. It does not establish an unbounded core deadlock. The forward-PC check timed out. A separate ABC retry at depth 20 was queued. Its outcome is not part of this table.
+The generated wrapper has unconstrained auxiliary inputs. It has no bus fairness assumptions. Its liveness failure is an environment-scoped counterexample. It does not establish an unbounded core deadlock. The forward-PC check timed out. Later forward-PC retries are recorded below. This table retains the initial campaign outcomes.
 
 RTL SHA-256: `545c0864dec04e72a7b74480464866c8af876c21ff7833f8f7d67dba6aa9e7c1`.
 Checker SHA-256: `f5ea12d7167f0f3e2e4c3848b0667add6ddd6439c17ff6585d9c9ed306fbc0f9`.
@@ -58,3 +58,24 @@ Evidence: `/tmp/conn-vex-generated-checks/results.json`, `verdict.json`, and the
 | unique_ch0 | bounded PASS | [1, 10, 30] | abc bmc3 | 25.9 |
 | causal_ch0 | bounded PASS | [10, 30] | abc bmc3 | 39.8 |
 | cover | bounded PASS | [1, 20] | smtbmc bitwuzla | 9.2 |
+
+## Forward-PC retries
+
+| Attempt | Cycles | Engine | Limit seconds | Native outcome |
+| --- | --- | --- | --- | --- |
+| Initial campaign | [10, 30] | btor btormc | 110 | timeout |
+| ABC retry | [10, 20] | abc bmc3 | 110 | timeout |
+| BTORMC retry | [5, 15] | btor btormc | 90 | bounded PASS |
+
+The BTORMC retry passed forward-PC in 15.8 wall seconds. Its retirement cover
+passed at cycles [1,20] in 11.2 wall seconds. The captured RTL, wrapper and
+checker hashes equal those in the initial campaign. Settings hashes differ.
+The generated example now selects the [5,15] forward-PC bound.
+
+Selected outcomes across these attempts are 43 bounded PASS and one liveness
+assertion FAIL. This combines different explicit cycle bounds. It is not a
+fresh uniform-depth campaign or an unbounded proof. Earlier timeouts remain
+inconclusive attempts. The liveness failure and C4 reject are retained.
+
+Retry evidence: `/tmp/conn-vex-pcfwd-abc20/results.json` and
+`/tmp/conn-vex-pcfwd-btor15/results.json`.

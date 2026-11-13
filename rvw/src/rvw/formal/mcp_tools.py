@@ -237,7 +237,7 @@ def mcp_tools():
                  schema({"model": S, "compiler": S, "out": S}, ["model", "out"]), _sail_zicond, long=True),
         ToolSpec("formal_custom_isa", "Export versioned pure custom R-type semantics, GNU software hooks and verification plans. Does not run a DUT.",
                  schema({"manifest": S, "out": S}, ["manifest", "out"]), _custom_isa, long=True),
-        ToolSpec("formal_profiles", "Track pinned RVA23/RVB23 named requirements, configuration declarations and hash-bound proof evidence. No full profile acceptance verdict.",
+        ToolSpec("formal_profiles", "Track pinned RVA23/RVB23 extension, base and conditional clauses. Export source-bound catalogs. No full profile acceptance verdict.",
                  schema({"manifest": S, "baseline": S, "out": S}, ["manifest", "out"]), _profiles, long=True),
         ToolSpec("formal_power", "Generate sampled low-power checks and declared DFT inventory. No proof or ATPG run.",
                  schema({"intent": S, "out": S, "db": S}, ["intent", "out"]), _power, long=True),

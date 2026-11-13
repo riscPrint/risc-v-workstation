@@ -59,7 +59,7 @@ Principles (from `ROADMAP.md`):
 - [Lint and CDC/RDC](contracts/lint.md)
 - [Memory order and multi-hart](contracts/memory.md)
 - [MMU suites](contracts/mmu.md)
-- [Verification obligations](contracts/obligations.md)
+- [Verification obligations and profile catalogs](contracts/obligations.md)
 - [Performance and pipeline events](contracts/perf.md)
 - [Power intent](contracts/power.md)
 - [Privilege and interrupt suites](contracts/privilege.md)

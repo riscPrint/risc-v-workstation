@@ -91,7 +91,7 @@ identity. Missing observations are errors; differing observations are failures.
 Other case kinds remain unexecuted. C3 vector passes do not establish plan
 closure, mutation coverage, architectural correctness or C4 acceptance.
 
-## Pinned named-profile obligations
+## Pinned profile obligations
 
 `rvw.profile-plan/1` supplies `isa_manifest`, selected `profiles` and hash-pinned
 AsciiDoc `documents`. Optional tables map obligation IDs to `proofs`, `tests`,
@@ -103,10 +103,27 @@ unprivileged extension requirements without weakening mandatory items.
 source revision/URL when supplied, and separate implemented/verified/missing/
 unsupported/not-selected inventories per profile. Verified requires a hash-bound
 unbounded pass with assertions and reachable environment. It is scoped to the
-reviewed obligation-to-proof mapping and retains restrictions. Base clauses,
-notes, implicit dependencies and full-profile acceptance are excluded.
+reviewed obligation-to-proof mapping and retains restrictions. Base and recognized
+conditional clauses use explicit declarations. Attached notes remain in the
+obligation text. Full-profile acceptance is excluded.
 
 A baseline diff reports changed text, mandatory/optional category and activation,
 affected checkers and missing tests. Test presence has hashes but implies no
 execution. Changes require explicit adoption. This command changes no source,
 pin or model. Valid reports exit 3 and remain inconclusive. Input errors exit 2.
+
+### Profile clause catalogs
+
+`rvw.profile-plan/1` accepts `declarations`, a map from base or standalone clause
+ID to Boolean implementation declaration. Only true establishes declared
+implementation. XLEN must still be 64. Proof evidence is separate. Conditional
+obligations use `when_any`, a list of extension conjunctions. Optional Sha uses
+its captured constituent definition. Attached notes remain in obligation text.
+
+`rvw.profile-source-index/1` records source file names, SHA-256 values, revisions,
+URLs and obligation spans. Each row has a stable ID, profile, kind, requirement,
+source hash, line range, obligation-text hash, checker/test mappings and optional
+inheritance or condition metadata. Materialization verifies file and span hashes.
+It emits `rvw.spec-obligations/1` catalogs. Empty checker mappings remain explicit
+and must not be treated as adopted reviewed catalogs. Profile reports identify
+the index/catalog artifacts and all unmapped checkers. No pin or model is changed.
