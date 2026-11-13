@@ -17,11 +17,16 @@ def main():
     here=Path(__file__).resolve().parent
     root=here.parents[2]
     out=args.out.resolve();out.mkdir(parents=True,exist_ok=True)
+    # A failed rerun must not leave an earlier C1 result available to consumers.
+    for result in (out/'result.json', out/'native/clean/result.json'):
+        result.unlink(missing_ok=True)
     env=dict(os.environ,RVW_OOO_RUN_ROOT=str(out/'native'))
     if args.fault:env['RVW_OOO_FAULT']=str(args.fault.resolve())
     run=run_group([str(root/'scripts/with-lock.sh'),'sbt-csr','nice','-n','15',
         'sbt','-batch','runMain spinalchecks.examples.ooo.Run clean'],cwd=here,env=env,capture=True,timeout=110)
     (out/'native.log').write_text(run.stdout+run.stderr)
+    if run.timed_out or run.returncode != 0 or not (out/'native/clean/result.json').is_file():
+        return 2
     for file in (out/'native/clean').glob('*'):
         if file.is_file():shutil.copyfile(file,out/file.name)
     return 0 if (out/'result.json').exists() else 2
