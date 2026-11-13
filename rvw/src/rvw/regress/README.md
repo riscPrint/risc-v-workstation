@@ -860,6 +860,15 @@ pointer cases. See `examples/mmu/pointer.json`. These run through the same
 build, reference, C1 suite and coverage paths. Keep each extension campaign
 outside default tiers until the selected project declares it supported.
 
+The `examples/mmu/protocol.json` campaign adds two-hart A/D and software RSW
+updates plus IPI-based shootdowns. Replace its software-interrupt address with
+the project map. Use a two-hart C1 configuration. Optional `mmu report
+--protocol-config probes.json` checks declared translation probes in the
+identity-bound MMU sidecar. It checks atomic A/D updates, TLB fill/hit/range
+invalidation, stale entries and shootdown acknowledgements. PBMT transaction
+types require the project policy. No bus-ordering or cache-coherence result is
+inferred. The example probe paths are placeholders for the project adapter.
+
 The `examples/mmu/fault-walks.json` campaign checks invalid PTEs and PMP-denied
 PTE reads at every level of Sv32, Sv39, Sv48 and Sv57. Build separate XLEN
 suites as described in `examples/mmu/README.md`. The optional C2 `mmu_walks`

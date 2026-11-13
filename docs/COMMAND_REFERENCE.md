@@ -1052,7 +1052,7 @@ usage: rvw regress mmu check [-h] --results RESULTS --platform PLATFORM
 
 ```text
 usage: rvw regress mmu report [-h] --results RESULTS [--checked CHECKED]
-    [--json] [--project PROJECT] directory
+    [--protocol-config PROTOCOL_CONFIG] [--json] [--project PROJECT] directory
 ```
 
 ### `rvw regress vector`

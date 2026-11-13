@@ -3063,6 +3063,40 @@ level-zero RV64 mapping. The Spike reference uses `-p2`. The C1 project must
 select an adapter configuration with two harts. Request, acknowledgement and
 completion use RAM mailboxes and explicit memory fences. No IPI is implied.
 Neither option supports the independent immutable-walk checker yet.
+### Translation protocol probes
+
+`rvw regress mmu report --protocol-config FILE` reads `rvw.mmu-probes/1`.
+The project declares `harts`, a `probes` object that maps event kinds to probe
+paths, and optional `pbmt_types` mapping PBMT numbers as strings to memory-type
+names. The example paths and memory-type names require project replacement.
+Events remain in the identity-bound `rvw.mmu-observations/1` sidecar.
+Each has an ordered `cycle` and `kind`. Translation events give `hart`.
+
+`pte_write` gives physical `address` and `data`. `ad_atomic` gives `address`,
+`old`, `new` and `set_bits` (64 or 192). The old value must equal the current
+observed PTE. The new value must preserve all bits except the set A/D bits.
+`tlb_fill` gives `entry`, aligned `va`/`pa` bases, power-of-two byte `size`,
+`asid`, optional `global`, `pte_address` and `pte`. A fill must use the current
+observed PTE. `tlb_hit` gives `entry`, `va`, `pa` and `asid`. It must match a
+retained entry. `tlb_invalidate` is a completion with `va` and `asid`, each
+nullable for all addresses or all ASIDs. An address invalidates the containing
+range. ASID-specific invalidations preserve global entries.
+
+`shootdown_request` gives unique `request`, target hart list `targets`, and
+optional `va`/`asid` scope. `shootdown_ack` gives `request` and `hart`.
+It requires a prior matching local invalidation completion. A
+`shootdown_complete` requires every target acknowledgement. `memory_type`
+gives `pbmt` and `memory_type`; it requires the explicit project policy.
+Missing initial PTEs, unfinished requests and absent probes are inconclusive.
+Protocol results remain separate from architectural coverage. This checker
+does not infer missing events, bus ordering or cache coherence.
+
+MMU `atomic_ad = true` selects a two-hart RV64 store with hardware A/D and a
+software AMO update to RSW. The final full PTE must contain both updates.
+It does not establish that DUT updates overlap. A `shootdown` scenario can
+provide `ipi` with project-owned `msip` base and per-hart `stride`. It delivers
+an actual M software interrupt before local SFENCE and acknowledgement.
+
 ### Ordered MMU walk observations
 
 C2 retirements may contain `mmu_walks`, a list of completed walk records.

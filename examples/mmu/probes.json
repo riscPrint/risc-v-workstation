@@ -1,0 +1,22 @@
+{
+  "schema": "rvw.mmu-probes/1",
+  "harts": [
+    0,
+    1
+  ],
+  "probes": {
+    "pte_write": "project.pte_write",
+    "ad_atomic": "project.ad_atomic",
+    "tlb_fill": "project.tlb_fill",
+    "tlb_hit": "project.tlb_hit",
+    "tlb_invalidate": "project.tlb_invalidate",
+    "shootdown_request": "project.shootdown_request",
+    "shootdown_ack": "project.shootdown_ack",
+    "shootdown_complete": "project.shootdown_complete",
+    "memory_type": "project.memory_type"
+  },
+  "pbmt_types": {
+    "1": "nc",
+    "2": "io"
+  }
+}

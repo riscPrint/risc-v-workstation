@@ -43,6 +43,8 @@ def check_walk(s, events):
             raise ValueError('observation cycles must be ordered')
         previous = cycle
         kind = event['kind']
+        if kind not in ('walk_request', 'walk_response', 'bus_a'):
+            continue
         address = number(event['address'])
         if kind == 'walk_request':
             if address not in expected or event['command'] != 0:
