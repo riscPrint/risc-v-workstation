@@ -655,3 +655,58 @@ for source pins, measured variants, limits and reproduction commands.
 The [nine-CSR Vexii record](../examples/vexiiriscv/csr-bank-native-results.json) has nine RTL passes,
 eight Spike passes and one retained `marchid` configuration mismatch. The new
 33-check binding has no formal run. Earlier 25-check formal evidence stays separate.
+
+## Give your core a SoC
+
+Use the composer when the core needs a verification memory map, bus fabric
+and peripherals. Keep the core wrapper and composition file in the core's
+project. The wrapper selects a supported ingress and binds its interrupt vector
+and debug-reset input. See [SpinalSoc](../SpinalSoc/README.md) for the exact
+wrapper traits and [the Vex example](../SpinalSoc/examples/vex/README.md) for a
+real CPU integration.
+
+1. Create a `rvw.soc/1` map with aligned, disjoint windows and explicit registers.
+2. Create a `rvw.soc-compose/1` composition with one binder per region.
+3. Select the core wrapper and its bus in `core.class` and `core.bus`.
+4. Set the clock frequency and reset kind.
+5. Add explicit domains for peripherals which use a separate clock.
+6. Generate the top with `rvw soc compose SPEC --out NEW_DIR`.
+7. Compile the generated top with the wrapper and selected peripheral sources.
+8. Run a directed program or independent bus-master test with assertions enabled.
+9. Supply consumer bindings to `rvw soc verify MAP --manifest VERIFY --out NEW_DIR`.
+10. Read every row and its detailed reasons in `result.json`.
+
+`rvw soc peripheral watchdog` and `rvw soc peripheral block` export the new
+register profiles. Their examples drive a composer-generated SoC through its
+simple-bus ingress. They are peripheral/fabric tests and execute no CPU
+instructions. Watchdog reset requests need an explicit project reset-controller
+binding. The block device is volatile and implements no physical SD signalling.
+
+The composed VexRiscv example was measured on 2026-11-13 at seed 31. Its real
+CPU register program passed in 248 cycles and 36 retired instructions. The
+combined verification command produced this table:
+
+| kind | generated | ran | result |
+|---|---|---|---|
+| protocol | yes | yes | inconclusive |
+| registers | yes | yes | inconclusive |
+| vip | yes | yes | inconclusive |
+| uvm | yes | yes | pass |
+| connectivity | yes | yes | inconclusive |
+| decode | yes | yes | proven |
+| cdc_rdc | yes | yes | inconclusive |
+
+The pyuvm bench checked 17 known-reset reads with an independent bus master.
+The fabric proof covers map windows and unmapped completion. It excludes core
+and peripheral state. Connectivity timed out during internal RTL binding.
+Multi-domain lint ran on the composition with a 10 MHz CLINT domain. It found
+2 clock sources, 293 registers, 9 CDC paths and 2,507 structural findings.
+Those findings and unrun reset/protocol obligations remain open. Sampled
+protocol/register/VIP matches do not qualify every behavior. Read the
+[measured record](../SpinalSoc/examples/vex/VERIFICATION.md) before reusing the
+profile. A new core, peripheral or clock configuration needs fresh evidence.
+
+The UART profile is still a subset. Full 16550 behavior, boot-from-flash,
+native AXI4/TileLink crossbars, AXI width conversion, composer-hosted SMP,
+external-IP import and composed debug-module integration remain separate work.
+The existing standalone SMP example is unchanged.
