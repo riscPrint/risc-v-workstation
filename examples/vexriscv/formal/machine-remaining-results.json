@@ -1,0 +1,78 @@
+{
+  "schema": "rvw.vex-machine-history/1",
+  "core": "vexriscv-rv32im-machine-history",
+  "status": "fail",
+  "rows": [
+    {
+      "check": "csr_consistency",
+      "status": "inconclusive",
+      "depth": 25,
+      "evidence": "csr_consistency/csr_consistency/check.sby",
+      "native": {
+        "check": "INCOMPLETE",
+        "cover": "PASS"
+      },
+      "reason": "Assertion timed out at 180 seconds; mscratch trigger reached."
+    },
+    {
+      "check": "instruction_memory",
+      "status": "inconclusive",
+      "depth": 25,
+      "evidence": "instruction_memory/instruction_memory/check.sby",
+      "native": {
+        "check": "INCOMPLETE",
+        "cover": "PASS"
+      },
+      "reason": "Assertion timed out at 180 seconds; retirement at watched PC reached."
+    },
+    {
+      "check": "flush_retirement",
+      "status": "bounded",
+      "depth": 25,
+      "evidence": "flush_retirement/flush_retirement/check.sby",
+      "native": {
+        "check": "PASS",
+        "cover": "PASS"
+      },
+      "reason": "Live history and removal checks passed; normal retirement reached."
+    },
+    {
+      "check": "trap_pc_chain",
+      "status": "failed",
+      "depth": 25,
+      "evidence": "trap_pc_chain/trap_pc_chain/check.sby",
+      "native": {
+        "check": "FAIL",
+        "cover": "PASS"
+      },
+      "reason": "MRET payload 0x80000005 precedes retirement at 0x80000004; alignment triage remains."
+    }
+  ],
+  "limits": [
+    "Only mscratch read-enabled transactions are selected for CSR consistency.",
+    "Bounded or timed-out transition checks; not complete machine signoff.",
+    "See MACHINE_REMAINING.md for bus assumptions and trap alignment limits."
+  ],
+  "retries": [
+    {
+      "check": "csr_consistency",
+      "status": "bounded",
+      "depth": 15,
+      "evidence": "csr_consistency-15/csr_consistency/check.sby",
+      "native": {
+        "check": "PASS",
+        "cover": "PASS"
+      }
+    },
+    {
+      "check": "instruction_memory",
+      "status": "bounded",
+      "depth": 15,
+      "evidence": "instruction_memory-15/instruction_memory/check.sby",
+      "native": {
+        "check": "PASS",
+        "cover": "PASS"
+      }
+    }
+  ]
+}
