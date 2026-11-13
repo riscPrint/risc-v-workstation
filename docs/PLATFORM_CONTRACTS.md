@@ -3236,3 +3236,14 @@ observations only for reference cases and writes C3 with incomplete source
 identity. Missing observations are errors; differing observations are failures.
 Other case kinds remain unexecuted. C3 vector passes do not establish plan
 closure, mutation coverage, architectural correctness or C4 acceptance.
+
+### Symbolic datapath result
+
+`rvw.datapath/1` records the `yosys-boolean-cbmc` backend, source and tool hashes,
+width, rounding, case split and fixed transaction latency. `proved` exits 0 only
+when CBMC exits 0 and every property succeeds, including the result assertion.
+`counterexample` exits 1 only for result, flags or completion violations.
+C safety failures, unwinding failures, missing tools and timeouts are
+`inconclusive`, exit 3. This is not a C4 acceptance result. The `properties`
+array retains CBMC property descriptions, statuses and available traces.
+The reference model and dependencies are trusted specification inputs.

@@ -107,3 +107,64 @@ after rounding, subnormal handling, signed zero, NaN payload and signaling NaN
 rules, and the five exception flags. The RTL must return both result bits and
 flags. It must use the same declared latency and handshake contract. Host C
 floating-point types cannot supply this oracle. No FP rounding result is claimed.
+
+## Symbolic real-width backend
+
+`rvw formal datapath` uses Yosys `techmap` and CBMC. The flow converts the
+closed Boolean netlist to C. It gives the same symbolic operands to this model
+and the C reference. CBMC bit-blasts both models. It checks result equality,
+C safety and loop unwinding. No truth table is built. Install CBMC with
+`brew install cbmc`. Native validation used CBMC 6.11.0 and Yosys 0.70.
+
+```sh
+rvw formal datapath --rtl mul.v --model SpinalChecks/c2rtl/models/mul32.c \
+  --reference-tree SpinalChecks/c2rtl/models --reference-include . \
+  --width 32 --out /tmp/mul-check
+```
+
+The top must be `dut`. It has unsigned `a`, `b`, `y` ports of width 8, 16, 32
+or 64. Optional ports are `c` of the same width, `rm` of width 3 and `flags`
+of width 5. The reference has this exact type:
+`uint64_t reference(uint64_t a, uint64_t b, uint64_t c, uint8_t rm, uint8_t *flags)`.
+It must return an in-range result. It must have defined behavior. It must not
+constrain symbolic inputs, call nondeterministic functions or use host FP.
+The reference source and its dependencies are trusted specification inputs.
+
+For a sequential transaction, set `--latency N`. The DUT must also have scalar
+`clk`, `reset`, `start`, `done` ports. Reset is synchronous and active high.
+The harness holds operands stable, resets for one clock and pulses start for
+one clock. It checks that done is false before N clocks and true at N clocks.
+It checks the result at N clocks. Iterative units can use this contract.
+Back-to-back requests, variable completion latency and arbitrary initial
+transactions are outside this contract. Registers start unconstrained.
+Generated clocks, latches, memories, blackboxes, RTL assumptions and unsupported
+cells are refused. The Boolean translator refuses combinational loops.
+
+`--unwind` limits C loops. Unwinding assertions remain on. A safety or unwinding
+failure makes the result inconclusive. Only complete success for every property
+can produce `proved`. Only result, flag or completion failures can produce
+`counterexample`. Results and traces are in `cbmc.log` and `result.json`.
+The MCP tool is `formal_datapath`.
+
+The `models/` directory contains independent RISC-V MUL, MULH, MULHSU, MULHU,
+DIV, DIVU, REM and REMU specifications for XLEN 32 and 64. They include division
+by zero and signed overflow behavior. Unsigned arithmetic avoids C signed
+integer overflow. They use CBMC's 128-bit integer support for high products.
+
+SoftFloat wrappers cover F/D add, multiply, fused multiply-add, divide and
+square root. Each sets after-rounding tininess and clears flags before the
+call. `--rounding 0..4` selects the RISC-V rounding mode. NaNs are canonical.
+Subnormals and signed zeros use SoftFloat behavior. Bind the `flags` output.
+`--case` splits on operand a: all, finite, nan, infinity, zero or subnormal.
+A case proof applies only to that case. It is not a whole-domain result.
+Fetch SoftFloat outside the repository and pin revision
+`07ebd29db0cfb55723a79fbbffe99103ef38e305` from
+<https://github.com/ucb-bar/berkeley-softfloat-3>.
+Use `--reference-tree` for its root, `--reference-source` for each C dependency,
+and `--reference-include` for each include directory. The flow copies and hashes
+the tree before the run. The `softfloat.py ROOT OPERATION` helper prints the dependency arguments and
+writes a CBMC platform header in the external tree. It checks the pinned revision
+and selects the RISC-V specialization. Conversion wrappers cover F32/F64 format
+changes and signed/unsigned integer conversions at the same width. F32/F64 format
+changes use the 64-bit interface; F32 occupies the low 32 bits.
+Native FP DUT qualification remains open.
