@@ -10,8 +10,10 @@ COMMON = {"project": {**S, "description": "project file or directory"}, "elf": {
 
 def mcp_tools():
     from .exchange_cli import mcp_tools as exchange_tools
+    from .vector_source import mcp_tools as vector_tools
     return [
         *exchange_tools(),
+        *vector_tools(),
         ToolSpec("cosim_check", "Check a recorded C2 RVFI trace against Spike or Sail to locate the first architectural mismatch. "
                  "Preserves synchronization scope and matching-prefix/end status. A match does not mean the program "
                  "passed: check end_status. The Sail executable comes from RVW_SAIL on the server. "

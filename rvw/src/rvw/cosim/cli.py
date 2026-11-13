@@ -21,6 +21,8 @@ def register(subparsers):
     register_dii(subs)
     from .exchange_cli import register as register_exchange
     register_exchange(subs)
+    from .vector_source import register as register_vector_source
+    register_vector_source(subs)
     for action in ("check", "generate", "live"):
         cmd = subs.add_parser(action, help={"check": "check C2 against a model", "generate": "make a C2 trace from Spike",
                                           "live": "launch an adapter and check C2 during simulation"}[action])
