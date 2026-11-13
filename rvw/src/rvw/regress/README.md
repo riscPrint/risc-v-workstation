@@ -971,3 +971,12 @@ The output fragments branch to project-owned `rvw_test_fail` on a bad result.
 The project runtime must provide that label and its own successful termination.
 Compile and run the fragments through C1 to earn DUT evidence. Native Sail and
 DUT campaigns are not part of the fixture tests.
+
+### Input identity migration
+
+The generic input command and selected-toolchain fields remain required until
+adapter-owned identities replace their captured dependencies. See
+[the adapter inventory and removal conditions](IDENTITY_MIGRATION.md) for #76.
+A local fake-adapter test confirms that an unchanged adapter identity can miss a
+changed declared command. Generic capture correctly invalidates reuse in that
+case. Removal is blocked on complete replacement identities and negative tests.
