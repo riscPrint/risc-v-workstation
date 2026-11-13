@@ -29,6 +29,7 @@ keep the issue list in `TODO.md` in step with them.
 | `rvw/src/rvw/init/` | Minimal Spinal/sbt core project scaffold. See its `README.md`. |
 | `rvw/src/rvw/doctor/` | Setup diagnostics, explicit installer forwarding and `rvw_doctor` MCP. See its `README.md`. |
 | `rvw/src/rvw/farm/` | Native SSH shards and a static C3/C4 history dashboard. |
+| `rvw/src/rvw/checks/` | Project check generation and explicit missing-binding summaries. See its `README.md`. |
 | `rvw/src/rvw/soc/` | Project-owned SoC map validation, software exports and bounded design checks. See its `README.md`. |
 | `rvw/src/rvw/bugmem/` | Bug-pattern memory: stored failure signatures, root causes and similarity matching. See its `README.md`. |
 | `rvw/src/rvw/agent_bench/` | Restricted agent fixture benchmark and scoring. See its `README.md`. |
