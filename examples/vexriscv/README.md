@@ -655,7 +655,7 @@ rvw/.venv/bin/python -m pytest rvw/tests/formal/test_vex_generated_checks.py -q
 ```
 
 The native entry is `rvwvex.CsrChecksRuntime model.json OUT MODE ELF...`.
-Modes are `none`, `csr` and `hpm`. The latter two seed observation faults.
+Modes are `none`, `csr`, `hpm` and `hpm_read`. The last three modes seed observation faults.
 They leave core storage and program instructions intact. A seeded run succeeds
 only when the required monitor fires. Its `rvw.checks-run/1` report retains
 status `fail`. A clean run requires program success and zero firing checks.
@@ -667,3 +667,11 @@ The counter program writes both RV32 halves, crosses low-half wraparound and
 reads user aliases from M mode. Its Spike reference enables Zicntr. This is
 an M-only, no-debug example. It does not qualify privilege filters, programmable
 HPM events, AIA behavior, general CSR aliases or physical hardware.
+
+The HPM binding compares machine and user-alias read responses against its
+independent expected counter. It checks both RV32 halves. `hpm_read` corrupts
+only the observed read response. It must fire all four read monitors during
+the counter program. Clean execution requires all nine CSR/HPM monitors to
+remain clear. The program must execute at least eight counter-half reads.
+These aliases are exercised from M mode. Lower-mode counter-enable rules
+and programmable event selectors remain outside this example.

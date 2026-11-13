@@ -12,20 +12,22 @@ import scala.collection.mutable
 /** Bounded example execution. Observation faults do not modify the core. */
 object CsrChecksRuntime {
   def main(args: Array[String]): Unit = {
-    require(args.length >= 4, "usage: CsrChecksRuntime model.json out-dir none|csr|hpm program.elf ...")
+    require(args.length >= 4, "usage: CsrChecksRuntime model.json out-dir none|csr|hpm|hpm_read program.elf ...")
     val model = CsrChecksPlugin.loadModel(args(0))
     val out = new File(args(1)).getCanonicalFile
-    require(Set("none", "csr", "hpm")(args(2)))
+    require(Set("none", "csr", "hpm", "hpm_read")(args(2)))
     val fault = args(2)
     val core = VexTop.configuration()
     core.plugins += new CsrChecksPlugin(model, observationFault = fault == "csr")
-    core.plugins += new HpmChecksPlugin(observationFault = fault == "hpm")
+    core.plugins += new HpmChecksPlugin(observationFault = fault == "hpm", readObservationFault = fault == "hpm_read")
     val (config, result) = SpinalChecks.install(VexTop.spinalConfig.copy(targetDirectory = new File(out, "rtl").getPath),
       ChecksConfig(mode = Mode.Monitor, enable = Seq("csr.*", "hpm.*"), reportPath = new File(out, "checks.json").getPath))
     val compiled = SimConfig.withConfig(config).workspacePath(out.getPath).workspaceName("native").withVerilator.compile(new VexRiscv(core))
-    require(result.inserted.count(_.kind.startsWith("csr.")) == 3 && result.inserted.count(_.kind == "hpm.count") == 2)
+    require(result.inserted.count(_.kind.startsWith("csr.")) == 3 && result.inserted.count(_.kind == "hpm.count") == 2 &&
+      result.inserted.count(_.kind == "hpm.read") == 4)
     var scratchInstructions = 0L
     var counterInstructions = 0L
+    var counterReads = 0L
     for ((path, index) <- args.drop(3).zipWithIndex) {
       val elf = ElfFile(path)
       require(elf.xlen == 32 && elf.entry == 0x80000000L)
@@ -35,6 +37,7 @@ object CsrChecksRuntime {
       def word(address: Long): BigInt = (0 until 4).foldLeft(BigInt(0))((v, i) =>
         v | (BigInt(memory.getOrElse((address & ~3L) + i, 0)) << (8 * i)))
       val scratchBefore = scratchInstructions
+      val readsBefore = counterReads
       compiled.doSim(name = s"program_$index") { dut =>
         val cd = dut.clockDomain
         val ibus = dut.config.get(classOf[IBusSimplePlugin]).iBus
@@ -81,6 +84,8 @@ object CsrChecksRuntime {
               val address = (insn >> 20) & 0xfff
               if (address == 0x340) scratchInstructions += 1
               if (Set(0xb00L, 0xb80L, 0xb02L, 0xb82L)(address)) counterInstructions += 1
+              if (Set(0xb00L, 0xb80L, 0xb02L, 0xb82L, 0xc00L, 0xc80L, 0xc02L, 0xc82L)(address) &&
+                  ((insn >> 7) & 31) != 0) counterReads += 1
             }
           }
         }
@@ -92,12 +97,14 @@ object CsrChecksRuntime {
         require(done.nonEmpty && host.value == 1, s"program failed or timed out: tohost=${host.value}")
         if (fault == "none") require(fs.isEmpty, fs.map(_.check.id).mkString(", "))
         if (fault == "hpm") require(fs.exists(_.check.kind == "hpm.count"), "HPM observation fault was not detected")
+        if (fault == "hpm_read" && counterReads > readsBefore)
+          require(fs.exists(_.check.kind == "hpm.read"), "HPM read observation fault was not detected")
         // An absent-CSR program has no mscratch write. Its initial state stays unknown.
         if (fault == "csr" && scratchInstructions > scratchBefore)
           require(fs.exists(_.check.kind == "csr.state"), "CSR observation fault was not detected")
       }
     }
-    require(scratchInstructions >= 3 && counterInstructions >= 4, "programs did not exercise scratch and counter CSRs")
-    println(s"CSR_CHECKS_RUNTIME_OK fault=$fault scratch_instructions=$scratchInstructions counter_instructions=$counterInstructions")
+    require(scratchInstructions >= 3 && counterInstructions >= 4 && counterReads >= 8, "programs did not exercise scratch and counter CSRs")
+    println(s"CSR_CHECKS_RUNTIME_OK fault=$fault scratch_instructions=$scratchInstructions counter_instructions=$counterInstructions counter_reads=$counterReads")
   }
 }

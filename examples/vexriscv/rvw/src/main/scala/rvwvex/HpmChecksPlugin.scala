@@ -6,7 +6,7 @@ import vexriscv.plugin._
 import spinalchecks._
 
 /** Project-owned bindings for this M-only, no-debug configuration. */
-class HpmChecksPlugin(observationFault: Boolean = false) extends Plugin[VexRiscv] {
+class HpmChecksPlugin(observationFault: Boolean = false, readObservationFault: Boolean = false) extends Plugin[VexRiscv] {
   override def build(pipeline: VexRiscv): Unit = {
     val csr = pipeline.config.get(classOf[CsrPlugin])
     require(csr.config.mcycleAccess == CsrAccess.READ_WRITE && csr.config.minstretAccess == CsrAccess.READ_WRITE,
@@ -27,8 +27,18 @@ class HpmChecksPlugin(observationFault: Boolean = false) extends Plugin[VexRiscv
       val data = Mux(writeHigh, csr.writeData() ## B(0, 32 bits), B(0, 32 bits) ## csr.writeData()).asUInt
       val mask = Mux(writeHigh, B(BigInt("ffffffff00000000", 16), 64 bits), B(BigInt("ffffffff", 16), 64 bits)).asUInt
       val checked = if (observationFault) observed ^ U(1, 64 bits) else observed
-      HpmChecks.bind(name, HpmModel(1, 64, 0, meaning), checked, event, False, True,
+      val expected = HpmChecks.track(name, HpmModel(1, 64, 0, meaning), checked, event, False, True,
         writeLow || writeHigh, data, mask)
+      def reads(label: String, lo: Int, hi: Int): Unit = {
+        require(Seq(lo, hi).forall(a => csr.csrMapping.mapping.get(a).exists(_.exists(_.isInstanceOf[CsrRead]))),
+          "read callbacks require existing counter mappings")
+        val readLow = csr.isReading(lo)
+        val readHigh = csr.isReading(hi)
+        val response = if (readObservationFault) csr.readData() ^ B(1, 32 bits) else csr.readData()
+        HpmChecks.bindHalfRead(name + "_" + label, expected, readHigh, response, readLow || readHigh)
+      }
+      reads("machine", low, high)
+      reads("user", low + 0x100, high + 0x100)
     }
     counter("mcycle", 0xb00, 0xb80, U(1, 1 bits), "one active core clock sample; debug is disabled")
     counter("minstret", 0xb02, 0xb82, pipeline.stages.last.arbitration.isFiring.asUInt,
