@@ -162,6 +162,11 @@ def register(sub) -> None:
     c.add_argument("--pdg", help="SpinalTrace pdg.json for this captured design")
     c.add_argument("--criterion", help="SpinalTrace failing assertion criterion, e.g. line:Top.scala:20")
     c.add_argument("--at-time", type=int, help="SpinalTrace sample time in VCD units")
+    c.add_argument("--minimize", action="store_true", help="reduce input changes and trace prefixes with exact-property replay")
+    c.add_argument("--max-checks", type=int, default=100)
+    c.add_argument("--emit-testbench", action="store_true", help="generate a portable Verilog replay model and testbench")
+    c.add_argument("--db", help="SpinalDB database for structural driver analysis")
+    c.add_argument("--signal", help="failing design signal for driver analysis")
     c.add_argument("--open", action="store_true", help="open Surfer after typed lookup succeeds")
     from . import cex
     c.set_defaults(func=cex.run)

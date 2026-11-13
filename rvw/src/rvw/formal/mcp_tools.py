@@ -25,7 +25,7 @@ COMMON = {
     "tie": {"type": "array", "items": S, "description": "PORT=VALUE constants for toplevel inputs (all flows; listed in "
             "the result's `restrictions`)"},
 }
-FLAGS = {"free_reset", "first_failure", "outputs", "payload", "x_inputs", "combinational", "event_model", "async_reset", "open", "xprop"}
+FLAGS = {"free_reset", "first_failure", "outputs", "payload", "x_inputs", "combinational", "event_model", "async_reset", "open", "xprop", "minimize", "emit_testbench"}
 
 
 def _argv(command, args):
@@ -119,6 +119,7 @@ def mcp_tools():
                  schema({"result": S, "out": S, "trace_index": I,
                          "edit": {"type": "array", "items": S},
                          "hgldd": S, "pdg": S, "criterion": S, "at_time": I, "open": B,
+                         "minimize": B, "max_checks": I, "emit_testbench": B, "db": S, "signal": S,
                          "timeout": {"type": "number", "exclusiveMinimum": 0}}, ["result", "out"]),
                  _runner("cex"), long=True),
         ToolSpec("formal_bmc", "Bounded model check of a design's assertions from reset (SymbiYosys). Use for shallow "

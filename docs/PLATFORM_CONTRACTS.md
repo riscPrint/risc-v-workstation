@@ -2912,3 +2912,14 @@ means `not_observed_bounded`. Unbounded passing targets mean
 Plans with reachability targets have aggregate status `inconclusive` because
 reached targets are observations. No exclusion is authorized. Optional `xprop`
 records the status and path of a separate bounded output X-propagation result.
+
+### Counterexample reduction
+
+The optional `reduction` field in `rvw.formal.cex/1` has schema
+`rvw.cex-reduction/1`. It records each exact-property replay check, removed input
+events, the retained end time, and whether all earlier prefixes were tested.
+`status=reproduced` is a simulation observation under the retained assumptions.
+It is not a proof. Initial values remain. Reduction can stop at `max_checks`.
+The optional `testbench` field records generated model and stimulus paths. Its
+`status=generated` does not imply compilation or failure reproduction. The
+optional `why` field contains SpinalDB drivers, fan-in and staleness diagnostics.
