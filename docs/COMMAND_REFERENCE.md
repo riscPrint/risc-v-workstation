@@ -1200,7 +1200,8 @@ usage: rvw mcp [-h] [--list] [--only ONLY] [--json] [--project PROJECT]
 
 ```text
 usage: rvw memory [-h] [--project PROJECT]
-    {images,check,axiomatic,generate,tilelink-bind,directory} ...
+    {images,check,axiomatic,generate,tilelink-bind,directory,concurrent-smoke}
+    ...
 ```
 
 ### `rvw memory images`
@@ -1244,6 +1245,14 @@ usage: rvw memory directory [-h] [--profile {mesi,moesi}] [--lines LINES]
     [--requests REQUESTS] [--limit LIMIT] [--bug
     {lost_ack,stale_data,early_grant,starvation,cyclic_wait}] [--project
     PROJECT]
+```
+
+### `rvw memory concurrent-smoke`
+
+```text
+usage: rvw memory concurrent-smoke [-h] --out OUT [--seed SEED] [--harts
+    HARTS] [--length LENGTH] [--gcc GCC] [--spike SPIKE] [--timeout TIMEOUT]
+    [--project PROJECT]
 ```
 
 ### `rvw ooo`
@@ -2964,6 +2973,14 @@ Starts a background job: no.
 Check C2/2 serialized memory against independent stimulus bytes. No RVWMO proof.
 
 Arguments: `trace` (required), `reference` (required).
+
+Starts a background job: no.
+
+### `memory_concurrent_smoke`
+
+Run a bounded native Spike completion smoke; ordering and RTL remain unchecked.
+
+Arguments: `out` (required), `seed`, `harts`, `length`, `gcc`, `spike`, `timeout`.
 
 Starts a background job: no.
 

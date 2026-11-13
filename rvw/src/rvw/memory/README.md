@@ -133,3 +133,18 @@ counterexample. The report states the named weak-fairness assumptions and model
 bounds. Use RVW_ROOT to select the installed tools checkout. See the queued
 profile section in `SpinalChecks/coherence/README.md` for semantics and limits.
 A finite-model pass is not a coherent-fabric RTL result.
+
+## Native concurrent completion smoke
+
+`rvw memory concurrent-smoke --out smoke --seed 7 --harts 3 --length 20`
+links the generated fragments into one bare-metal image. A hart-ID dispatch
+starts one fragment per Spike hart. Separate completion flags and a final
+HTIF tohost write require every hart to finish. The wrapper has no C runtime
+or shared stack. Shared data starts at zero in a separate writable section.
+
+The command uses installed RISC-V GCC and Spike through `nice -n 10`. Each
+command has a timeout of at most 60 seconds. Missing tools and timeout are
+inconclusive. The report records source/ELF hashes, ISA, seed, hart count and
+the Spike command. It also records `ordering:not_checked` and `rtl:not_run`.
+A pass establishes native completion only. It is not an RVWMO result. Capture
+a project C2/2 trace with complete dependencies to use the axiomatic checker.

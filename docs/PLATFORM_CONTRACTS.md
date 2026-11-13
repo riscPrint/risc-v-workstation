@@ -135,6 +135,14 @@ ignored annotation. It returns a native C1 outcome. A compile-only result is
 not a run outcome. `physical_signoff` remains false. The simulation README
 lists exact fields. No standard-cell library or native gate backend is bundled.
 
+## Concurrent reference completion smoke
+
+`rvw.concurrent-smoke/1` records source and ELF hashes, seed, ISA, hart count,
+program length, command and bounded native completion status. Pass requires
+all generated fragments to reach their completion flag before HTIF exit.
+`ordering:not_checked` and `rtl:not_run` keep reference completion separate
+from memory-model and RTL evidence. Tool absence or timeout is inconclusive.
+
 ## Finite coherence directory experiments
 
 `rvw.coherence-fair/1` reports pass, fail or inconclusive for a finite model
