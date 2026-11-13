@@ -468,7 +468,11 @@ def checkout(repo: Path, rev: str, core: str) -> Source:
     if rev == WORKTREE:
         return describe(repo)
     _check_git_features(repo)
-    sha = resolve_rev(repo, rev)
+    repo = repo.resolve()
+    repository = _git(repo, "rev-parse", "--show-toplevel")
+    repository = Path(repository).resolve() if repository else repo
+    subdirectory = repo.relative_to(repository)
+    sha = resolve_rev(repository, rev)
     root = src_cache_dir() / core
     modified = []
     for n in range(CHECKOUT_SLOTS):
@@ -477,14 +481,17 @@ def checkout(repo: Path, rev: str, core: str) -> Source:
             root.mkdir(parents=True, exist_ok=True)
             with _dest_lock(dest):
                 if not _published(dest, sha):
-                    _publish(repo, sha, dest)
+                    _publish(repository, sha, dest)
         try:
             s = describe(dest)
             why = _unusable(s, sha)
         except ValueError as e:
             why = str(e)
         if why is None:
-            return s
+            selected = dest / subdirectory
+            if not selected.is_dir():
+                raise RuntimeError(f"source directory {subdirectory} is absent at {sha}")
+            return Source(selected, s.rev, s.dirty, s.fingerprint, s.links, s.reusable)
         modified.append(f"{dest}: {why}")
     raise RuntimeError(f"no clean checkout of {sha} is left in {root}: " + "; ".join(modified)
                        + ". Remove the modified checkouts once no run uses them, or set RVW_SRC_CACHE "
