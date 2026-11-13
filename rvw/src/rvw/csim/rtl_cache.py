@@ -163,7 +163,10 @@ def compare(study_path, c2_path, events_path, cache: str = "dcache", level: str 
             f.write(f"END {instructions}\n")
     worst = sorted(({"pc": hex(pc), **dict(v)} for pc, v in per_pc.items()), key=lambda r: -r["disagreements"])[:top]
     return {"schema": REPORT, "status": "inconclusive" if reasons else "compared", "reasons": reasons,
-            "cache": cache, "level": level, "study": data.get("name"), "study_sha256": cfg.digest(data),
+            "cache": cache, "level": level,
+            "access_semantics": sorted({p.meta.get("semantics", "unspecified") for p in stream.of_kind("cache")
+                                        if p.meta.get("cache") == cache and p.meta.get("event") == "access"}),
+            "study": data.get("name"), "study_sha256": cfg.digest(data),
             "trace": str(c2_path), "events": str(events_path), "instructions": instructions,
             "rtl_events": {"access": len(rtl), "fill": fills, "evict": evicts},
             "model_accesses": len(model), "unsampled_tail": unsampled, "summary": summary, "misaligned": misaligned,

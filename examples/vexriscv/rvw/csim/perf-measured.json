@@ -1,0 +1,825 @@
+{
+  "schema": "rvw.example-cache-perf/1",
+  "date": "2026-11-13",
+  "config": "rv32im_cached",
+  "phase": "physical-lookups-and-refill-beats",
+  "runs": [
+    {
+      "program": "smoke",
+      "elf_sha256": "2b237c2fa80a93644f3af9bf7fbdbc70f06830a2ce6b314a89918d3ce41893b8",
+      "rtl_sha256": "5d8019969a5ea49b319b2affb21d811744f965a037f72c5862ebdacd7a0fad81",
+      "status": "pass",
+      "inconclusive": null,
+      "cycles": 241,
+      "instret": 17,
+      "cache_check": {
+        "schema": "rvw.probe-cache-check/1",
+        "status": "consistent",
+        "elf": "$CHECKOUT/examples/vexriscv/rvw/out/programs/smoke",
+        "c2_stores": 2,
+        "geometry": {
+          "icache": {
+            "sets": 128,
+            "ways": 1
+          },
+          "dcache": {
+            "sets": 128,
+            "ways": 1
+          }
+        },
+        "caches": {
+          "dcache": {
+            "line_bytes": 32,
+            "evict_probe": true,
+            "access": 3,
+            "misses": 2,
+            "fill": 1,
+            "fill_data_checked": 1,
+            "hits_checked": 1,
+            "writeback_data_checked": 0,
+            "early_restart_hits_checked": 0,
+            "retired_accesses_not_residency_checks": 0
+          },
+          "icache": {
+            "line_bytes": 32,
+            "evict_probe": false,
+            "flush": 1,
+            "refill_beat": 24,
+            "refill_beats_checked": 24,
+            "fill": 3,
+            "fill_data_checked": 3,
+            "lookup": 20,
+            "hits_checked": 20,
+            "access": 17,
+            "retired_accesses_not_residency_checks": 17,
+            "writeback_data_checked": 0,
+            "early_restart_hits_checked": 0
+          }
+        },
+        "mismatches": []
+      },
+      "perf_summary": {
+        "start": 1,
+        "end_exclusive": 242,
+        "cycles": 241,
+        "fetched": 21,
+        "instret": 17,
+        "flushed": 2,
+        "open": 2,
+        "ipc": 0.07053941908713693,
+        "flush_fraction": 0.09523809523809523,
+        "dependencies": 0
+      },
+      "stall_causes": [
+        {
+          "scope": "decode",
+          "cause": "operand_wait",
+          "evidence": "inferred",
+          "cycles": 6,
+          "zero_retirement_cycles": 3
+        },
+        {
+          "scope": "fetch",
+          "cause": "empty",
+          "evidence": "inferred",
+          "cycles": 148,
+          "zero_retirement_cycles": 144
+        },
+        {
+          "scope": "fetch",
+          "cause": "icache_miss",
+          "evidence": "measured",
+          "cycles": 27,
+          "zero_retirement_cycles": 25
+        },
+        {
+          "scope": "memory",
+          "cause": "dcache_miss",
+          "evidence": "inferred",
+          "cycles": 9,
+          "zero_retirement_cycles": 9
+        },
+        {
+          "scope": "memory",
+          "cause": "load_miss",
+          "evidence": "inferred",
+          "cycles": 2,
+          "zero_retirement_cycles": 2
+        }
+      ],
+      "cross_check": {
+        "result_sha256": "264e062a513d466a2017a298b38611fc71d7cbab06bbaef304f1f93d996f34e5",
+        "result_ipc": 0.07053941908713693,
+        "result_status": "pass",
+        "artifact_matches": null,
+        "cycles_delta": 0,
+        "instret_delta": 0,
+        "ipc_delta": 0.0,
+        "exact_counter_match": true
+      },
+      "sample_bounds": {
+        "first_cycle": 1,
+        "last_cycle": 241
+      },
+      "evidence_sha256": {
+        "result.json": "264e062a513d466a2017a298b38611fc71d7cbab06bbaef304f1f93d996f34e5",
+        "rvfi.jsonl": "027fb92ed741fe20acb6a2b0ddd6bcf66fb3f24053825e8f34933ea166928f34",
+        "probe-events.jsonl": "fa076a233decddb9583672d322a127b5aea5b8d92e8c99ac53486b0814d12ac4"
+      }
+    },
+    {
+      "program": "branches",
+      "elf_sha256": "89640cc283934cbf05d783e0ee57e20426d49a2297585916502456e78a0a511d",
+      "rtl_sha256": "5d8019969a5ea49b319b2affb21d811744f965a037f72c5862ebdacd7a0fad81",
+      "status": "pass",
+      "inconclusive": null,
+      "cycles": 59435,
+      "instret": 35659,
+      "cache_check": {
+        "schema": "rvw.probe-cache-check/1",
+        "status": "consistent",
+        "elf": "$CHECKOUT/examples/vexriscv/rvw/out/programs/branches",
+        "c2_stores": 1,
+        "geometry": {
+          "icache": {
+            "sets": 128,
+            "ways": 1
+          },
+          "dcache": {
+            "sets": 128,
+            "ways": 1
+          }
+        },
+        "caches": {
+          "dcache": {
+            "line_bytes": 32,
+            "evict_probe": true,
+            "access": 1,
+            "misses": 1,
+            "fill_data_checked": 0,
+            "hits_checked": 0,
+            "writeback_data_checked": 0,
+            "early_restart_hits_checked": 0,
+            "retired_accesses_not_residency_checks": 0
+          },
+          "icache": {
+            "line_bytes": 32,
+            "evict_probe": false,
+            "flush": 1,
+            "refill_beat": 48,
+            "refill_beats_checked": 48,
+            "fill": 6,
+            "fill_data_checked": 6,
+            "lookup": 43870,
+            "hits_checked": 43870,
+            "access": 35659,
+            "retired_accesses_not_residency_checks": 35659,
+            "writeback_data_checked": 0,
+            "early_restart_hits_checked": 0
+          }
+        },
+        "mismatches": []
+      },
+      "perf_summary": {
+        "start": 1,
+        "end_exclusive": 59436,
+        "cycles": 59435,
+        "fetched": 43870,
+        "instret": 35659,
+        "flushed": 8209,
+        "open": 2,
+        "ipc": 0.5999663497938925,
+        "flush_fraction": 0.1871210394346934,
+        "dependencies": 0
+      },
+      "stall_causes": [
+        {
+          "scope": "decode",
+          "cause": "operand_wait",
+          "evidence": "inferred",
+          "cycles": 5998,
+          "zero_retirement_cycles": 4499
+        },
+        {
+          "scope": "fetch",
+          "cause": "empty",
+          "evidence": "inferred",
+          "cycles": 9513,
+          "zero_retirement_cycles": 2766
+        },
+        {
+          "scope": "fetch",
+          "cause": "icache_miss",
+          "evidence": "measured",
+          "cycles": 54,
+          "zero_retirement_cycles": 50
+        },
+        {
+          "scope": "frontend",
+          "cause": "mispredict_recovery",
+          "evidence": "inferred",
+          "cycles": 4855,
+          "zero_retirement_cycles": 0
+        }
+      ],
+      "cross_check": {
+        "result_sha256": "cb5ac96bbff6978e605105809ab2c0bdf00ec18c92007deb59fed6cc9f766e34",
+        "result_ipc": 0.5999663497938925,
+        "result_status": "pass",
+        "artifact_matches": null,
+        "cycles_delta": 0,
+        "instret_delta": 0,
+        "ipc_delta": 0.0,
+        "exact_counter_match": true
+      },
+      "sample_bounds": {
+        "first_cycle": 1,
+        "last_cycle": 59435
+      },
+      "evidence_sha256": {
+        "result.json": "cb5ac96bbff6978e605105809ab2c0bdf00ec18c92007deb59fed6cc9f766e34",
+        "rvfi.jsonl": "7f081e046103481a7b11e88a2dcbf7bc0b625c69340527fe85f90272ea326e5b",
+        "probe-events.jsonl": "3354634bb58fdcce49441db36a2c0b4bafb565f98c64c09c5ea26c2110e0ac09"
+      }
+    },
+    {
+      "program": "cache",
+      "elf_sha256": "51763dc6aa1ac866016acfe194e0f772a8db0f14b67c52297cfa666e06ca7180",
+      "rtl_sha256": "5d8019969a5ea49b319b2affb21d811744f965a037f72c5862ebdacd7a0fad81",
+      "status": "pass",
+      "inconclusive": null,
+      "cycles": 7774,
+      "instret": 3342,
+      "cache_check": {
+        "schema": "rvw.probe-cache-check/1",
+        "status": "consistent",
+        "elf": "$RUN_ROOT/cache-probes",
+        "c2_stores": 513,
+        "geometry": {
+          "icache": {
+            "sets": 128,
+            "ways": 1
+          },
+          "dcache": {
+            "sets": 128,
+            "ways": 1
+          }
+        },
+        "caches": {
+          "dcache": {
+            "line_bytes": 32,
+            "evict_probe": true,
+            "access": 769,
+            "misses": 513,
+            "fill": 256,
+            "fill_data_checked": 256,
+            "hits_checked": 256,
+            "evict": 192,
+            "writeback_data_checked": 0,
+            "early_restart_hits_checked": 0,
+            "retired_accesses_not_residency_checks": 0
+          },
+          "icache": {
+            "line_bytes": 32,
+            "evict_probe": false,
+            "flush": 2,
+            "refill_beat": 40,
+            "refill_beats_checked": 40,
+            "fill": 5,
+            "fill_data_checked": 5,
+            "lookup": 3602,
+            "hits_checked": 3602,
+            "access": 3342,
+            "retired_accesses_not_residency_checks": 3342,
+            "writeback_data_checked": 0,
+            "early_restart_hits_checked": 0
+          }
+        },
+        "mismatches": []
+      },
+      "perf_summary": {
+        "start": 1,
+        "end_exclusive": 7775,
+        "cycles": 7774,
+        "fetched": 3858,
+        "instret": 3342,
+        "flushed": 514,
+        "open": 2,
+        "ipc": 0.42989452019552354,
+        "flush_fraction": 0.1332296526697771,
+        "dependencies": 0
+      },
+      "stall_causes": [
+        {
+          "scope": "decode",
+          "cause": "operand_wait",
+          "evidence": "inferred",
+          "cycles": 1024,
+          "zero_retirement_cycles": 767
+        },
+        {
+          "scope": "fetch",
+          "cause": "empty",
+          "evidence": "inferred",
+          "cycles": 1311,
+          "zero_retirement_cycles": 791
+        },
+        {
+          "scope": "fetch",
+          "cause": "icache_miss",
+          "evidence": "measured",
+          "cycles": 45,
+          "zero_retirement_cycles": 43
+        },
+        {
+          "scope": "frontend",
+          "cause": "mispredict_recovery",
+          "evidence": "inferred",
+          "cycles": 2,
+          "zero_retirement_cycles": 0
+        },
+        {
+          "scope": "memory",
+          "cause": "dcache_miss",
+          "evidence": "inferred",
+          "cycles": 2304,
+          "zero_retirement_cycles": 2304
+        },
+        {
+          "scope": "memory",
+          "cause": "load_miss",
+          "evidence": "inferred",
+          "cycles": 512,
+          "zero_retirement_cycles": 512
+        }
+      ],
+      "cross_check": {
+        "result_sha256": "b4be90c6e99112197db817126b8d15bcbaa249cc570586b49927b6397a014b0a",
+        "result_ipc": 0.42989452019552354,
+        "result_status": "pass",
+        "artifact_matches": null,
+        "cycles_delta": 0,
+        "instret_delta": 0,
+        "ipc_delta": 0.0,
+        "exact_counter_match": true
+      },
+      "sample_bounds": {
+        "first_cycle": 1,
+        "last_cycle": 7774
+      },
+      "evidence_sha256": {
+        "result.json": "b4be90c6e99112197db817126b8d15bcbaa249cc570586b49927b6397a014b0a",
+        "rvfi.jsonl": "030a6fdf26462a5a73c2ec00acca8131b503a4abdd70a38ef5468e041438d13d",
+        "probe-events.jsonl": "1a4149ddbd322fc2134b96d6244b5f976e03d8359e20ad0d157c7edcbae092b0"
+      },
+      "component_comparisons": {
+        "dcache": {
+          "schema": "rvw.csim-cache-compare/1",
+          "status": "compared",
+          "reasons": [],
+          "cache": "dcache",
+          "level": "l1d",
+          "access_semantics": [
+            "lookup"
+          ],
+          "study": "vexriscv-rv32im_cached-caches",
+          "study_sha256": "f8f4281e17c48662c659a63267e836f7b51918115eebd01caf9c61b473cb7839",
+          "trace": "$RUN_ROOT/perf-vex-bounds/cache/rvfi.jsonl",
+          "events": "$RUN_ROOT/perf-vex-bounds/cache/probe-events.jsonl",
+          "instructions": 3342,
+          "rtl_events": {
+            "access": 769,
+            "fill": 256,
+            "evict": 192
+          },
+          "model_accesses": 769,
+          "unsampled_tail": 0,
+          "summary": {
+            "accesses": 769,
+            "both_hit": 256,
+            "both_miss": 513,
+            "rtl_hit_model_miss": 0,
+            "model_hit_rtl_miss": 0,
+            "loads": 256,
+            "stores": 513,
+            "agreement": 1.0,
+            "rtl_miss_rate": 0.6671001300390117,
+            "model_miss_rate": 0.6671001300390117,
+            "miss_rate_error": 0.0,
+            "rtl_mpki": 153.50089766606823,
+            "model_mpki": 153.50089766606823
+          },
+          "misaligned": null,
+          "first_disagreements": [],
+          "per_pc": [],
+          "model_stats": {
+            "size_kib": 4,
+            "ways": 1,
+            "sets": 128,
+            "latency": 1,
+            "replacement": "lru",
+            "perfect": false,
+            "demand_accesses": 769,
+            "demand_hits": 256,
+            "demand_misses": 513,
+            "demand_mpki": 153.5008977,
+            "miss_rate": 0.66710013,
+            "average_latency": 2.66449935,
+            "write_allocate": false,
+            "write_back": false,
+            "flushes": 0,
+            "prefetch_requests_from_upper": 0,
+            "prefetch_misses_from_upper": 0,
+            "writebacks": 0,
+            "prefetch": {
+              "requested": 0,
+              "dropped_present": 0,
+              "dropped_queue_full": 0,
+              "issued": 0,
+              "sent_to_lower": 0,
+              "useful": 0,
+              "late": 0,
+              "useless_evicted": 0,
+              "pollution_misses": 0,
+              "accuracy": 0,
+              "coverage": 0,
+              "prefetchers": []
+            },
+            "replacement_stats": {},
+            "storage": {
+              "bits": 37760,
+              "kib": 4.609375,
+              "parts": {
+                "data": 32768,
+                "tags": 4992,
+                "replacement_extra": 0,
+                "prefetchers": 0
+              }
+            }
+          },
+          "trace_out": null,
+          "note": "Agreement is a measured model gap, not an RTL correctness or fidelity verdict."
+        },
+        "icache": {
+          "schema": "rvw.csim-cache-compare/1",
+          "status": "compared",
+          "reasons": [],
+          "cache": "icache",
+          "level": "l1i",
+          "access_semantics": [
+            "retired-refill-attribution"
+          ],
+          "study": "vexriscv-rv32im_cached-caches",
+          "study_sha256": "f8f4281e17c48662c659a63267e836f7b51918115eebd01caf9c61b473cb7839",
+          "trace": "$RUN_ROOT/perf-vex-bounds/cache/rvfi.jsonl",
+          "events": "$RUN_ROOT/perf-vex-bounds/cache/probe-events.jsonl",
+          "instructions": 3342,
+          "rtl_events": {
+            "access": 3342,
+            "fill": 5,
+            "evict": 0
+          },
+          "model_accesses": 3342,
+          "unsampled_tail": 0,
+          "summary": {
+            "accesses": 3342,
+            "both_hit": 3336,
+            "both_miss": 4,
+            "rtl_hit_model_miss": 1,
+            "model_hit_rtl_miss": 1,
+            "loads": 3342,
+            "stores": 0,
+            "agreement": 0.9994015559545183,
+            "rtl_miss_rate": 0.0014961101137043686,
+            "model_miss_rate": 0.0014961101137043686,
+            "miss_rate_error": 0.0,
+            "rtl_mpki": 1.4961101137043686,
+            "model_mpki": 1.4961101137043686
+          },
+          "misaligned": null,
+          "first_disagreements": [
+            {
+              "index": 3337,
+              "order": 3337,
+              "pc": "0x80000058",
+              "address": "0x80000058",
+              "store": false,
+              "rtl_hit": true,
+              "model_hit": false,
+              "rtl_cycle": 7612
+            },
+            {
+              "index": 3338,
+              "order": 3338,
+              "pc": "0x8000005c",
+              "address": "0x8000005c",
+              "store": false,
+              "rtl_hit": false,
+              "model_hit": true,
+              "rtl_cycle": 7757
+            }
+          ],
+          "per_pc": [
+            {
+              "pc": "0x80000058",
+              "disagreements": 1,
+              "rtl_misses": 0,
+              "model_misses": 1
+            },
+            {
+              "pc": "0x8000005c",
+              "disagreements": 1,
+              "rtl_misses": 1,
+              "model_misses": 0
+            }
+          ],
+          "model_stats": {
+            "size_kib": 4,
+            "ways": 1,
+            "sets": 128,
+            "latency": 1,
+            "replacement": "lru",
+            "perfect": false,
+            "demand_accesses": 3342,
+            "demand_hits": 3337,
+            "demand_misses": 5,
+            "demand_mpki": 1.496110114,
+            "miss_rate": 0.001496110114,
+            "average_latency": 1.011968881,
+            "write_allocate": true,
+            "write_back": true,
+            "flushes": 1,
+            "prefetch_requests_from_upper": 0,
+            "prefetch_misses_from_upper": 0,
+            "writebacks": 0,
+            "prefetch": {
+              "requested": 0,
+              "dropped_present": 0,
+              "dropped_queue_full": 0,
+              "issued": 0,
+              "sent_to_lower": 0,
+              "useful": 0,
+              "late": 0,
+              "useless_evicted": 0,
+              "pollution_misses": 0,
+              "accuracy": 0,
+              "coverage": 0,
+              "prefetchers": []
+            },
+            "replacement_stats": {},
+            "storage": {
+              "bits": 37760,
+              "kib": 4.609375,
+              "parts": {
+                "data": 32768,
+                "tags": 4992,
+                "replacement_extra": 0,
+                "prefetchers": 0
+              }
+            }
+          },
+          "trace_out": null,
+          "note": "Agreement is a measured model gap, not an RTL correctness or fidelity verdict."
+        }
+      }
+    },
+    {
+      "program": "throughput",
+      "elf_sha256": "5af3cc0cafd24e8a1b2dcc6007712bbc90e3728f68d4246440629c4c2fc7efc2",
+      "rtl_sha256": "5d8019969a5ea49b319b2affb21d811744f965a037f72c5862ebdacd7a0fad81",
+      "status": "pass",
+      "inconclusive": null,
+      "cycles": 7630,
+      "instret": 3342,
+      "cache_check": {
+        "schema": "rvw.probe-cache-check/1",
+        "status": "consistent",
+        "elf": "$RUN_ROOT/cache-throughput",
+        "c2_stores": 513,
+        "geometry": {
+          "icache": {
+            "sets": 128,
+            "ways": 1
+          },
+          "dcache": {
+            "sets": 128,
+            "ways": 1
+          }
+        },
+        "caches": {
+          "dcache": {
+            "line_bytes": 32,
+            "evict_probe": true,
+            "access": 769,
+            "misses": 513,
+            "fill": 256,
+            "fill_data_checked": 256,
+            "hits_checked": 256,
+            "evict": 192,
+            "writeback_data_checked": 0,
+            "early_restart_hits_checked": 0,
+            "retired_accesses_not_residency_checks": 0
+          },
+          "icache": {
+            "line_bytes": 32,
+            "evict_probe": false,
+            "flush": 1,
+            "refill_beat": 32,
+            "refill_beats_checked": 32,
+            "fill": 4,
+            "fill_data_checked": 4,
+            "lookup": 3602,
+            "hits_checked": 3602,
+            "access": 3342,
+            "retired_accesses_not_residency_checks": 3342,
+            "writeback_data_checked": 0,
+            "early_restart_hits_checked": 0
+          }
+        },
+        "mismatches": []
+      },
+      "perf_summary": {
+        "start": 1,
+        "end_exclusive": 7631,
+        "cycles": 7630,
+        "fetched": 3858,
+        "instret": 3342,
+        "flushed": 514,
+        "open": 2,
+        "ipc": 0.4380078636959371,
+        "flush_fraction": 0.1332296526697771,
+        "dependencies": 0
+      },
+      "stall_causes": [
+        {
+          "scope": "decode",
+          "cause": "operand_wait",
+          "evidence": "inferred",
+          "cycles": 1024,
+          "zero_retirement_cycles": 767
+        },
+        {
+          "scope": "fetch",
+          "cause": "empty",
+          "evidence": "inferred",
+          "cycles": 1176,
+          "zero_retirement_cycles": 656
+        },
+        {
+          "scope": "fetch",
+          "cause": "icache_miss",
+          "evidence": "measured",
+          "cycles": 36,
+          "zero_retirement_cycles": 34
+        },
+        {
+          "scope": "frontend",
+          "cause": "mispredict_recovery",
+          "evidence": "inferred",
+          "cycles": 2,
+          "zero_retirement_cycles": 0
+        },
+        {
+          "scope": "memory",
+          "cause": "dcache_miss",
+          "evidence": "inferred",
+          "cycles": 2304,
+          "zero_retirement_cycles": 2304
+        },
+        {
+          "scope": "memory",
+          "cause": "load_miss",
+          "evidence": "inferred",
+          "cycles": 512,
+          "zero_retirement_cycles": 512
+        }
+      ],
+      "cross_check": {
+        "result_sha256": "ca317dd3b0e5beba5aa200a54660241496b9226fa918b7188611fcde06bb2670",
+        "result_ipc": 0.4380078636959371,
+        "result_status": "pass",
+        "artifact_matches": null,
+        "cycles_delta": 0,
+        "instret_delta": 0,
+        "ipc_delta": 0.0,
+        "exact_counter_match": true
+      },
+      "sample_bounds": {
+        "first_cycle": 1,
+        "last_cycle": 7630
+      },
+      "evidence_sha256": {
+        "result.json": "ca317dd3b0e5beba5aa200a54660241496b9226fa918b7188611fcde06bb2670",
+        "rvfi.jsonl": "f03d0711787160ac55eced8912001300298a0cf1e078b216bc80198e5926343f",
+        "probe-events.jsonl": "3fa758891904405fc88aeb8e49beab01cfbc41d1a67101bb596bdc948b8334a8"
+      }
+    }
+  ],
+  "calibration": {
+    "status": "reported",
+    "accuracy_status": "inconclusive",
+    "budgets": {
+      "ipc_percent": 10,
+      "nonzero_event_percent": 15,
+      "observed_events_within_budget": false,
+      "observed_ipc_within_budget": false,
+      "sufficient_coverage": false
+    },
+    "limits": [
+      "saved whole-program observations only; no fitting performed",
+      "event mappings are producer declarations, not independently verified",
+      "no native RTL speed qualification; no fidelity verdict"
+    ],
+    "samples": [
+      {
+        "program": "branches",
+        "split": "heldout",
+        "model_ipc": 0.48606245655166774,
+        "rtl_ipc": 0.5999663497938925,
+        "ipc_error_percent": -18.985046958275976,
+        "event_errors": {
+          "branches": {
+            "error_percent": 0.0,
+            "measured": 9002,
+            "modeled": 9002,
+            "status": "reported"
+          },
+          "mispredicts": {
+            "error_percent": 61.77136972193615,
+            "measured": 4855,
+            "modeled": 7854,
+            "status": "reported"
+          },
+          "retired": {
+            "error_percent": 0.0,
+            "measured": 35659,
+            "modeled": 35659,
+            "status": "reported"
+          }
+        },
+        "engine_sha256": "10e4f5ba924f4e0a470a39c8caa35129c398fd323dde4877ac5add63838b1e94"
+      },
+      {
+        "program": "throughput",
+        "split": "heldout",
+        "model_ipc": 0.4809325082745719,
+        "rtl_ipc": 0.4380078636959371,
+        "ipc_error_percent": 9.79997121888041,
+        "event_errors": {
+          "branches": {
+            "error_percent": 0.0,
+            "measured": 769,
+            "modeled": 769,
+            "status": "reported"
+          },
+          "mispredicts": {
+            "error_percent": 25450.0,
+            "measured": 2,
+            "modeled": 511,
+            "status": "reported"
+          },
+          "retired": {
+            "error_percent": 0.0,
+            "measured": 3342,
+            "modeled": 3342,
+            "status": "reported"
+          }
+        },
+        "engine_sha256": "10e4f5ba924f4e0a470a39c8caa35129c398fd323dde4877ac5add63838b1e94"
+      },
+      {
+        "program": "smoke",
+        "split": "training",
+        "model_ipc": 0.22972972972972974,
+        "rtl_ipc": 0.07053941908713693,
+        "ipc_error_percent": 225.6756756756757,
+        "event_errors": {
+          "branches": {
+            "error_percent": 0.0,
+            "measured": 4,
+            "modeled": 4,
+            "status": "reported"
+          },
+          "mispredicts": {
+            "error_percent": null,
+            "measured": 0,
+            "modeled": 1,
+            "status": "zero_denominator"
+          },
+          "retired": {
+            "error_percent": 0.0,
+            "measured": 17,
+            "modeled": 17,
+            "status": "reported"
+          }
+        },
+        "engine_sha256": "10e4f5ba924f4e0a470a39c8caa35129c398fd323dde4877ac5add63838b1e94"
+      }
+    ]
+  },
+  "limits": [
+    "Recovery and refill spans can overlap. Inferred spans are not total lost CPU cycles.",
+    "VexiiRiscv supplies a commit-stage view only; C1 uses upstream completion-based retirement.",
+    "The frozen timing models are approximate. No fitting or timing fidelity is claimed."
+  ]
+}

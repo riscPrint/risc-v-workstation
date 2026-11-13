@@ -6,7 +6,9 @@ Rules, per cache name (the `cache` meta of `Probe.cacheAccess`):
     cycle (all C2 stores retired before it applied);
   * `evict` removes a resident line; `flush` removes every line;
   * `writeback` bytes must equal the memory image at that cycle;
-  * an `access` with `hit` true needs its line resident (a hit on a line never filled is a
+  * physical `access`/`lookup` hits need a resident line or independently checked refill bytes;
+    retired-refill attribution needs a separate physical lookup stream.
+  * a legacy `access` with `hit` true needs its line resident (a hit on a line never filled is a
     false hit);
   * with a geometry (sets x ways), a fill into a full set needs an `evict` first. A cache
     with no evict probe gets an implied eviction instead (counted; with more than one way the
@@ -85,6 +87,7 @@ def check(stream: Stream, c2_path, out, elf=None, geometry: dict[str, tuple[int,
     for p in probes.values():
         if p.meta.get("event") in ("fill", "writeback") and "data" in dict(p.fields):
             line_bytes[p.meta["cache"]] = dict(p.fields)["data"] // 8
+    partial = {c: set() for c in caches}
     resident: dict[str, set[int]] = {c: set() for c in caches}
     uncertain: dict[str, set[int]] = {c: set() for c in caches}
     counts: dict[str, dict] = {c: defaultdict(int) for c in caches}
@@ -106,7 +109,18 @@ def check(stream: Stream, c2_path, out, elf=None, geometry: dict[str, tuple[int,
         set_of = (lambda a: (a // lb) % sets) if sets else None
         c = counts[cache]
         c[event] += 1
-        if event == "fill":
+        if event == "refill_beat":
+            size = dict(p.fields).get("data", 0) // 8
+            if not size:
+                bad(cache, cycle, "refill beat has no data", address=_hex(v["address"]))
+            else:
+                got = v["data"].to_bytes(size, "little")
+                want = oracle.at(cycle).read(v["address"], size)
+                c["refill_beats_checked"] += 1
+                if got != want:
+                    bad(cache, cycle, "refill beat differs from memory", address=_hex(v["address"]))
+                partial[cache].update(range(v["address"], v["address"] + size))
+        elif event == "fill":
             if line in resident[cache]:
                 bad(cache, cycle, "duplicate fill", line=_hex(line))
             elif sets:
@@ -123,6 +137,7 @@ def check(stream: Stream, c2_path, out, elf=None, geometry: dict[str, tuple[int,
                             resident[cache].difference_update(peers)
                             uncertain[cache].add(set_of(line))
             resident[cache].add(line)
+            partial[cache].difference_update(range(line, line + lb))
             if "data" in v:
                 got = v["data"].to_bytes(lb, "little")
                 want = oracle.at(cycle).read(line, lb)
@@ -135,6 +150,7 @@ def check(stream: Stream, c2_path, out, elf=None, geometry: dict[str, tuple[int,
                 if not (sets and set_of(line) in uncertain[cache]):
                     bad(cache, cycle, "eviction of a line that is not resident", line=_hex(line))
             resident[cache].discard(line)
+            partial[cache].difference_update(range(line, line + lb))
         elif event == "writeback":
             if "data" in v:
                 got = v["data"].to_bytes(lb, "little")
@@ -145,24 +161,38 @@ def check(stream: Stream, c2_path, out, elf=None, geometry: dict[str, tuple[int,
                         bytes=[i for i in range(lb) if got[i] != want[i]][:8])
         elif event == "flush":
             resident[cache].clear()
+            partial[cache].clear()
             uncertain[cache].clear()
-        elif event == "access" and "hit" in v:
+        elif event == "access" and p.meta.get("semantics") == "retired-refill-attribution":
+            # A buffered instruction can retire after its line was invalidated.
+            # This stream attributes refill cost; it is not a physical tag lookup.
+            c["retired_accesses_not_residency_checks"] += 1
+        elif event in ("access", "lookup") and "hit" in v:
             if v["hit"]:
                 if sets and set_of(line) in uncertain[cache]:
                     c["hits_unchecked"] += 1
                 elif line not in resident[cache]:
-                    bad(cache, cycle, "hit on a line that is not resident", line=_hex(line), address=_hex(v["address"]))
+                    size = dict(p.fields).get("data", 0) // 8
+                    needed = set(range(v["address"], v["address"] + size))
+                    if size and needed <= partial[cache]:
+                        c["early_restart_hits_checked"] += 1
+                        if v["data"].to_bytes(size, "little") != oracle.at(cycle).read(v["address"], size):
+                            bad(cache, cycle, "early restart data differs from memory", address=_hex(v["address"]))
+                    else:
+                        bad(cache, cycle, "hit on a line that is not resident", line=_hex(line), address=_hex(v["address"]))
                 else:
                     c["hits_checked"] += 1
             else:
                 c["misses"] += 1
     complete = _complete(stream, evs)
-    checked = sum(c["fill_data_checked"] + c["hits_checked"] + c["writeback_data_checked"] for c in counts.values())
-    status = "mismatch" if mismatches else ("consistent" if complete and checked else "inconclusive")
+    checked = sum(c["fill_data_checked"] + c["hits_checked"] + c["writeback_data_checked"] + c["early_restart_hits_checked"] for c in counts.values())
+    missing_lookup = any(c["retired_accesses_not_residency_checks"] and not c["lookup"] for c in counts.values())
+    status = "mismatch" if mismatches else ("consistent" if complete and checked and not missing_lookup else "inconclusive")
     data = {"schema": SCHEMA, "status": status, "elf": str(elf), "c2_stores": len(stores),
             "geometry": {k: {"sets": s, "ways": w} for k, (s, w) in geometry.items()},
             "caches": {k: {"line_bytes": line_bytes.get(k), "evict_probe": has_evict[k], **dict(v)} for k, v in counts.items()},
             "mismatches": mismatches}
     if status == "inconclusive":
-        data["reason"] = "nothing checked (no fill data or hits)" if complete else "incomplete probe stream or C2 trace"
+        data["reason"] = ("retired access attribution needs physical lookup events for residency checks" if missing_lookup else
+                          "nothing checked (no fill data or hits)" if complete else "incomplete probe stream or C2 trace")
     return _write(out, data)

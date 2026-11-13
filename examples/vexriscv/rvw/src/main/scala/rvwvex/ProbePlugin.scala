@@ -88,6 +88,13 @@ class ProbePlugin extends Plugin[VexRiscv] {
       case None => Probe.stall("fetch", "empty", fetchEmpty, evidence = "inferred")
     }
 
+    // Recovery means redirect until decode becomes occupied. Other causes can overlap.
+    val recovering = RegInit(False)
+    when(decode.arbitration.isValid) { recovering := False }
+    when(bp.jumpInterface.valid) { recovering := True }
+    Probe.stall("frontend", "mispredict_recovery", recovering && !decode.arbitration.isValid,
+      evidence = "inferred")
+
     // Event counters (names are the calibration plan's RTL event names).
     Probe.counter("cycles", True)
     Probe.counter("retired", retire)

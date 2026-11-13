@@ -15,7 +15,7 @@ import vexiiriscv.fetch.FetchL1Plugin
   *    Accesses that trap for another reason, and I/O, are left out.
   *  - `fill`: a refill completes, with the line bytes. `evict`: a refill replaces a loaded way
   *    (victim line address). `writeback`: a dirty line burst completes, with its bytes.
-  *  - `flush`: the fetch L1 starts a full invalidation (FENCE.I).
+  *  - `flush`: the fetch L1 completes a full invalidation (FENCE.I).
   * Counters: `icache_accesses`, `icache_misses`, `icache_fills`, `dcache_accesses`,
   * `dcache_misses`, `dcache_load_misses`, `dcache_store_misses`, `dcache_fills`,
   * `dcache_writebacks`, `dcache_hazards`. */
@@ -40,6 +40,11 @@ object CacheProbes {
     val beats = bus.p.lineSize * 8 / bus.p.dataWidth
     val pending = Reg(UInt(widthOf(bus.cmd.address) bits))
     when(bus.cmd.fire) { pending := bus.cmd.address }
+    val beatIndex = Reg(UInt(log2Up(beats) bits)) init(0)
+    when(bus.rsp.fire) { beatIndex := beatIndex + 1 }
+    val beatAddress = ((pending >> lineBits) << lineBits) +
+      (beatIndex.resize(widthOf(pending) bits) << log2Up(bus.p.dataWidth / 8))
+    Probe.cacheAccess("icache", "refill_beat", bus.rsp.fire, beatAddress, data = Some(bus.rsp.data))
     val (filled, line) = lineCapture(bus.rsp.fire, bus.rsp.data, beats)
     Probe.cacheAccess("icache", "fill", filled, (pending >> lineBits) << lineBits, data = Some(line))
     val missLine = Reg(UInt(widthOf(bus.cmd.address) - lineBits bits))
@@ -47,10 +52,13 @@ object CacheProbes {
     val hits = for ((valid, pc) <- commits) yield {
       val missed = missValid && missLine === (pc.resize(widthOf(bus.cmd.address)) >> lineBits)
       when(valid && missed) { missValid := False }
-      Probe.cacheAccess("icache", "access", valid, pc, hit = Some(!missed))
+      Probe.cacheAccess("icache", "access", valid, pc, hit = Some(!missed), semantics = "retired-refill-attribution")
       (valid, missed)
     }
     when(bus.cmd.fire) { missValid := True; missLine := bus.cmd.address >> lineBits }
+    val ctrl = f.logic.ctrl
+    Probe.cacheAccess("icache", "lookup", ctrl.up.isMoving, f.logic.refill.start.address,
+      hit = Some(ctrl(f.logic.WAYS_HIT)), data = Some(ctrl(vexiiriscv.fetch.Fetch.WORD)))
     val inv = f.logic.invalidate
     Probe.cacheAccess("icache", "flush", inv.done && inv.cmd.valid, U(0, 32 bits))
     Probe.counter("icache_accesses", hits.map(_._1.asUInt.resize(4 bits)).reduce(_ + _))
