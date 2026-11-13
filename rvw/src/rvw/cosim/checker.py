@@ -199,6 +199,11 @@ def check(trace_path, model, platform, history=10, sync=SYNC_KINDS, *, ordered_e
                     irq_inputs = {}
                 irq_level(actual["cycle"], actual["levels"])
                 continue
+            if actual.get("event") == "external_interrupt":
+                if not hasattr(model, 'external_interrupt_event'):
+                    raise ValueError('reference cannot consume declared external-interrupt evidence')
+                model.external_interrupt_event(actual)
+                continue
             if actual.get("event") == "debug":
                 if not hasattr(model, 'debug_event'):
                     raise ValueError('reference cannot check debug transitions')

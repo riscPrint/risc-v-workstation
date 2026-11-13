@@ -510,3 +510,50 @@ preserves every data bit and mask bit. The reference still checks every active
 byte. Do not use this mapping for effective-address data, shifted strobes or
 faults. Fault mapping remains explicit. The helper rejects trapped effects.
 The full-word co-simulation input checks remain strict.
+
+## External-interrupt evidence extension
+
+This is the shared format for external-interrupt evidence. A single-hart C2/1
+or C2/2 header declares `external_interrupts.schema` as
+`rvw.external-interrupts/1`. The declaration can include project-owned device
+layout, pin routing and the stimulus plan. A consumer must validate those
+inputs before it uses them as reference state. This declaration grants no
+comparison coverage by itself. A reference that cannot consume it must refuse.
+
+Each record has `event: external_interrupt`, `cycle`, `seq`, `before_order`
+and `kind`. Cycles are nondecreasing with all C2 records. `seq` is an integer
+that starts at zero and increases by one for each extension record.
+`before_order` is the next retirement index in the serialized trace. Zero
+means before the first retirement. The adapter drains all earlier completed
+retirements before it assigns this field. It does not infer retirement timing
+from the reference. At an interrupt, it emits `taken` immediately before the
+C2 trap event, after all older retirements. Thus `before_order` names the
+retirement boundary where the DUT took the interrupt.
+
+| kind | Fields | Observed action |
+|---|---|---|
+| `pins` | `levels` | Changed interrupt input levels in mip bit positions |
+| `source` | positive `source`, boolean `level` | PLIC source input change |
+| `mmio` | `address`, `bytes`, `value`, boolean `write` | Accepted device read or write, including claim and complete |
+| `ack` | `address`, `bytes`, `value`, positive `step` | Harness write to the declared stimulus acknowledgement word |
+| `taken` | `cause` | DUT interrupt trap at this retirement boundary |
+
+Addresses, values, levels and causes are lowercase hex strings. Width is in
+bytes: 1, 2, 4 or 8, at most XLEN/8. Values must fit the width. `taken.cause`
+includes the XLEN interrupt bit. Capture MMIO at acceptance, not at request
+presentation. A PLIC claim is a read of a declared context claim register.
+Completion is a write to that register. Device layout remains project data.
+Records at the same cycle retain sample order through `seq`.
+
+A conclusive replay must check source changes against the stimulus plan,
+replay device accesses on an independent device model, check claim/complete
+values, check pin routing and bind each `taken` record to its C2 trap. An
+acknowledgement may update only the declared mailbox address at a served step.
+It is an external RAM write, not an instruction or an arbitrary memory waiver.
+Missing events or an unsupported device are inconclusive or an error. Never
+infer missing pin changes, claim events or acknowledgement writes from a
+successful program result.
+
+`RvfiTraceWriter.externalInterrupt` emits this envelope. The C2 reader checks
+the declaration, sequence, retirement boundary and payload types. Checkpoint
+resume with this extension is not supported; a fresh capture starts at seq 0.
