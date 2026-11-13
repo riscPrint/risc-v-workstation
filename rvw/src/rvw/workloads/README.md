@@ -241,7 +241,11 @@ Override `sort_size`, `spmv_rows` and `dhrystone_runs` in `target`.
 The Dhrystone variant checks all printed final scalar, record and string
 values. It runs one fixed loop count. It is not an official Dhrystone score.
 `runtime: user-counters` uses a CSR-free single-hart startup and user counter
-reads for cores without machine CSRs. C1 still supplies the full-run counts.
+reads for cores without machine CSRs. It also updates benchmark timer headers.
+`runtime: no-counters` uses the same startup without guest counter reads.
+It removes the Dhrystone timing output and keeps the kernel and final checker.
+C1 supplies full-run counts for both runtime choices. No guest score is implied.
+Each build keeps `build.log`, including linker output for a failed program.
 
 The runner reuses C1 `run-many` with one worker. Each manifest entry has its
 own wall limit. The launch budget also covers adapter setup. The runner saves campaign identity before launch. Resume validates complete
@@ -289,3 +293,8 @@ A profile can place settings beside its TOML as `PROFILE.bench.json`.
 That file takes priority over `rvw/bench.json`. Optional `targets` entries
 map configuration names to overrides of `target`, for example an ISA or ABI.
 An explicit `--settings` still has first priority.
+
+The VexiiRiscv adapter can observe terminal completion before physical retirement.
+It freezes the C1 instruction boundary at termination. It then waits for physical
+commits to reach that boundary. Those drain cycles remain in the measured window.
+The result records `physical_retirements` and `commit_drain_cycles` in `details`.

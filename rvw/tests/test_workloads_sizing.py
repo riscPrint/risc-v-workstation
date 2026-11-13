@@ -36,7 +36,7 @@ def test_checker_and_csr_free_start(tmp_path):
     source = source_tree(tmp_path, 'dhrystone')
     (source / 'benchmarks/dhrystone/dhrystone_main.c').write_text(
         'if (User_Time < Too_Small_Time) {}\n  return 0;')
-    (source / 'benchmarks/dhrystone/dhrystone.h').write_text('#define NUMBER_OF_RUNS 500')
+    (source / 'benchmarks/dhrystone/dhrystone.h').write_text('#define NUMBER_OF_RUNS 500\n#define Start_Timer() read_csr(mcycle)\n#define Other_Timer() read_csr(minstreth)')
     out = tmp_path / 'out'; out.mkdir()
     result = recipe.prepare(source, out, 'dhrystone', {'RUNTIME': 'user-counters', 'DHRYSTONE_RUNS': '10'})
     assert 'csrr' not in (result / 'common/crt.S').read_text()
@@ -44,7 +44,11 @@ def test_checker_and_csr_free_start(tmp_path):
     assert 'return Int_Glob != 5' in text
     assert 'strcmp(Str_2_Loc' in text
     assert 'if (0)' in text
-    assert '#define NUMBER_OF_RUNS 10' in (result / 'dhrystone/dhrystone.h').read_text()
+    header = (result / 'dhrystone/dhrystone.h').read_text()
+    assert '#define NUMBER_OF_RUNS 10' in header
+    assert 'read_csr(cycle)' in header
+    assert 'read_csr(instreth)' in header
+    assert 'read_csr(mcycle)' not in header
 
 
 def test_spmv_keeps_the_pinned_expected_prefix(tmp_path):
@@ -54,3 +58,17 @@ def test_spmv_keeps_the_pinned_expected_prefix(tmp_path):
     out = tmp_path / 'out'; out.mkdir()
     result = recipe.prepare(source, out, 'spmv', {'SPMV_ROWS': '8'})
     assert (result / 'spmv/dataset1.h').read_text() == text.replace('R 500', 'R 8')
+
+
+def test_counter_free_runtime_removes_guest_timer_reads(tmp_path):
+    source = source_tree(tmp_path, 'dhrystone')
+    (source / 'benchmarks/dhrystone/dhrystone_main.c').write_text(
+        'if (User_Time < Too_Small_Time) {}\n  Microseconds = (User_Time / Number_Of_Runs);\n'
+        '  printf("Microseconds for one run through Dhrystone: %ld", Microseconds);\n  return 0;')
+    (source / 'benchmarks/dhrystone/dhrystone.h').write_text(
+        '#define NUMBER_OF_RUNS 500\n#define Start_Timer() read_csr(mcycle)\n')
+    out = tmp_path / 'out'; out.mkdir()
+    result = recipe.prepare(source,out,'dhrystone',{'RUNTIME':'no-counters'})
+    assert 'read_csr(mcycle)' not in (result / 'dhrystone/dhrystone.h').read_text()
+    assert 'Microseconds =' not in (result / 'dhrystone/dhrystone_main.c').read_text()
+    assert 'return Int_Glob != 5' in (result / 'dhrystone/dhrystone_main.c').read_text()

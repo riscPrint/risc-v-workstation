@@ -1,0 +1,33 @@
+{
+  "schema": "rvw.rtl-bench-settings/1",
+  "recipe": "riscv-tests",
+  "programs": [
+    "median",
+    "qsort",
+    "rsort",
+    "towers",
+    "vvadd",
+    "memcpy",
+    "multiply",
+    "dhrystone",
+    "spmv"
+  ],
+  "target": {
+    "march": "rv64im",
+    "abi": "lp64",
+    "ram_base": "0x80000000",
+    "ram_size": "0x1000000",
+    "sort_size": 128,
+    "dhrystone_runs": 10,
+    "runtime": "no-counters",
+    "spmv_rows": 8
+  },
+  "max_cycles": 2000000,
+  "bounded": true,
+  "probes": true,
+  "targets": {
+    "rv64imacsu": {
+      "march": "rv64imac"
+    }
+  }
+}

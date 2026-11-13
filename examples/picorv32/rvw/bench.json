@@ -16,7 +16,7 @@
     "march": "rv32im",
     "abi": "ilp32",
     "ram_base": "0x80000000",
-    "ram_size": "0x1000000",
+    "ram_size": "0x100000",
     "sort_size": 128,
     "dhrystone_runs": 10,
     "runtime": "user-counters",

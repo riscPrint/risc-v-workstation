@@ -44,7 +44,9 @@ static uint64_t read_instret64(void) {
 
 void setStats(int enable)
 {
-#if __riscv_xlen == 32
+#if defined(RVW_NO_COUNTERS)
+  (void)enable;
+#elif __riscv_xlen == 32
   static uint64_t start_cycles, start_instret;
   uint64_t cycles = read_cycle64(), instret = read_instret64();
   if (enable) { start_cycles = cycles; start_instret = instret; }
