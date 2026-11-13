@@ -3048,6 +3048,10 @@ It does not prove the restrictions or remove them from the design.
 
 ## Unbounded RVFI instruction portfolio
 
+Use the [separate reduction options](riscv-abstract-options.md) to compare
+RAM-only and single-flight-only instruction experiments. Existing manifests
+retain both reductions. No new core instruction proof is claimed.
+
 `rvw formal riscv-proof --project PROJECT --checks insn_add_ch0,insn_and_ch0
 --out OUT --engines abc:pdr,smtbmc:yices --timeout 180` captures the upstream
 `mode prove` instruction checkers. The generated testbench enables

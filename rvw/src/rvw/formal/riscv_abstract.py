@@ -24,6 +24,8 @@ def restrict(source, plan):
 
 
 def cover(target, top, depth, solver, out, timeout):
+    from .runtime import load_average
+    began=time.monotonic();load_start=load_average()
     file=out/(target.stem+'-cover.sby')
     file.write_text(f'[options]\nmode cover\ndepth {depth}\n[engines]\nsmtbmc {solver}\n[script]\nread -formal -sv {target.name}\nprep -top {top}\n[files]\n{target.name}\n')
     with (out/(target.stem+'-cover.log')).open('w') as log:
@@ -31,7 +33,9 @@ def cover(target, top, depth, solver, out, timeout):
     directory=out/file.stem;status=directory/'status'
     token=status.read_text().split()[0] if status.is_file() else ''
     reached=(not result.timed_out and result.returncode==0 and token=='PASS' and bool(list(directory.glob('engine_*/trace*.vcd'))))
-    return dict(status='reached' if reached else 'timeout' if result.timed_out else 'inconclusive',evidence=directory.name)
+    return dict(status='reached' if reached else 'timeout' if result.timed_out else 'inconclusive',evidence=directory.name,
+                wall_s=time.monotonic()-began,timeout_s=timeout,
+                load_average_start=load_start,load_average_end=load_average())
 
 
 
@@ -99,21 +103,34 @@ def run(cfg, plan, out, *, timeout=120, budget=240):
     from rvw.formal.lazy_ram import run as lazy_ram
     if plan.get('schema')!='rvw.riscv-abstraction/1':
         raise ValueError('expected rvw.riscv-abstraction/1')
+    pipeline=plan.get('pipeline_restriction',True)
+    memory=plan.get('ram_abstraction',True)
+    if type(pipeline) is not bool or type(memory) is not bool or not (pipeline or memory):
+        raise ValueError('select pipeline_restriction, ram_abstraction or both as booleans')
     if any(not math.isfinite(x) or x<=0 for x in (timeout,budget)):
         raise ValueError('timeout and budget must be finite and positive')
     out=Path(out).resolve();out.mkdir(parents=True,exist_ok=False)
     captured=capture(cfg,out/'capture');rows=[]
     for job in captured['jobs']:
+        from .runtime import load_average
+        began=time.monotonic();load_start=load_average()
         path=out/'capture'/job['sources'][0]['path']
-        source,assumption=restrict(path.read_text(),plan)
-        target=out/(job['id']+'-single-flight.sv');target.write_text(source)
-        ram=dict(top=job['top'],memory=plan['memory'],engines=plan.get('engines',['abc:pdr']),
+        source,assumption=restrict(path.read_text(),plan) if pipeline else (path.read_text(),None)
+        target=out/(job['id']+('-single-flight.sv' if pipeline else '-ram-source.sv'));target.write_text(source)
+        ram=dict(top=job['top'],memory=plan.get('memory'),engines=plan.get('engines',['abc:pdr']),
                  depth=cfg['depth'],max_words=plan.get('max_words',64),keep_words=plan.get('keep_words',[]),
                  sources=[dict(path=target.name,sha256=hashlib.sha256(target.read_bytes()).hexdigest())])
         try:
-            deadline=time.monotonic()+budget
-            result=lazy_ram(ram,out,out/job['id'],timeout=timeout,budget=budget)
-            result=retry_rtlil(result,ram,out/job['id'],min(timeout,deadline-time.monotonic()))
+            if memory:
+                deadline=time.monotonic()+budget
+                result=lazy_ram(ram,out,out/job['id'],timeout=timeout,budget=budget)
+                result=retry_rtlil(result,ram,out/job['id'],min(timeout,deadline-time.monotonic()))
+            else:
+                from .portfolio import race
+                native=race(dict(job,sources=ram['sources'],engines=ram['engines']),out,out/job['id'],timeout=min(timeout,budget))
+                result=dict(status='fail' if native['status']=='fail' else 'inconclusive',
+                            native_portfolio=native,conditional_native_proof=native_closed(native),
+                            stop_reason='conditional_engine_result')
         except (ValueError,OSError) as exc:
             result=dict(schema='rvw.formal-lazy-ram/1',status='unsupported',error=str(exc))
         (out/job['id']).mkdir(exist_ok=True)
@@ -122,12 +139,15 @@ def run(cfg, plan, out, *, timeout=120, budget=240):
             reach=cover(target,job['top'],cfg['depth'],cfg['solver'],out,min(timeout,60))
         except (ValueError,OSError) as exc:
             reach=dict(status='error',error=str(exc))
-        rows.append(dict(check=job['id'],concrete_conditional_cover=reach,**result))
+        rows.append(dict(check=job['id'],concrete_conditional_cover=reach,
+                         wall_s=time.monotonic()-began,timeout_s=timeout,budget_s=budget,
+                         load_average_start=load_start,load_average_end=load_average(),**result))
     result=dict(schema='rvw.riscv-abstract/1',status='fail' if any(r['status']=='fail' for r in rows) else 'inconclusive',rows=rows,
                 restriction=assumption,source_identity=captured['formal_inputs'],
-                limits=['Tracked pipeline signals are restricted to one active instruction. This is not a proven invariant.',
+                pipeline_restriction=pipeline,ram_abstraction=memory,
+                limits=(['Tracked pipeline signals are restricted to one active instruction. This is not a proven invariant.',
                         'Project data must include every relevant one-bit stage observation.',
-                        'RAM word abstraction is an overapproximation. Abstract failures need refinement.',
+                        ] if pipeline else [])+(['RAM word abstraction is an overapproximation. Abstract failures need refinement.'] if memory else [])+[
                         'Source reset and bus assumptions remain. Conditional cover does not discharge every assumption.',
                         'Engine success does not establish full-pipeline ISA conformance.'])
     (out/'result.json').write_text(json.dumps(result,indent=2)+'\n')
