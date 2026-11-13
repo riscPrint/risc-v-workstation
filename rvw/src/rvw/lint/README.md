@@ -122,6 +122,9 @@ waivers apply as for the other backends. The `fsm_unreachable` check finds
 states that are never written. It does not prove that written states are
 reachable. Blackbox edges make the backend `inconclusive`.
 
+MCP: `lint_report` (`settings`, optional `sarif`) and `lint_emit` (`settings`,
+`out`, optional `sarif`) run the same report as background jobs.
+
 `rvw lint --sarif PATH` also writes all findings (all backends and stale
 waivers) as SARIF 2.1.0. Each result keeps the rule, level (`info` becomes
 `note`), file and line, the endpoint as a logical location, the finding `id` as
@@ -370,7 +373,9 @@ finding. Both retain warnings. They do not suppress individual crossings.
 
 `cdc.reconvergence` checks merging second-stage outputs up to the next register,
 through combinational nodes. `rdc.reconvergence` checks merging register paths
-with different reset signatures. These checks do not cover arbitrary sequential
+with different reset signatures. A merge whose every cross-reset path is
+declared protected (isolation or reset order) is not reported; it is listed in
+`rdc.protected_merges`. These checks do not cover arbitrary sequential
 latency or memory/blackbox paths. Functional reconvergence remains unrun.
 
 Reset pairs declare source release before destination release. The check accepts

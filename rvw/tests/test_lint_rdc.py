@@ -115,3 +115,15 @@ def test_missing_domain_is_inconclusive(tmp_path):
     assert r['rdc']['status'] == 'inconclusive'
     assert 'rdc.missing_domain' in rules(r)
     assert r['rdc']['crossings'][0]['status'] == 'inconclusive'
+
+
+def test_reconvergence_respects_declared_protection(tmp_path):
+    b = two_resets(tmp_path)
+    b.reg('local', 2)
+    b.edge('local', 'dst')
+    b.edge('en', 'dst', 'cond')
+    db = b.done()
+    assert 'rdc.reconvergence' in rules(analyze(db))
+    r = analyze(db, {'isolation': [dict(destination='dst', qualifier='en', reason='gated after reset')]})
+    assert 'rdc.reconvergence' not in rules(r)
+    assert r['rdc']['protected_merges'] == ['dst']
