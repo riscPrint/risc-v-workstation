@@ -553,7 +553,7 @@ Optional tool set: 22 tools. Load MCP profile `core` with `rvw_tools_load`. Read
 
 A C1 run or a regression test reports fail, assert, timeout or rvfi_error.
 
-Optional tool set: 57 tools. Load MCP profile `debug` with `rvw_tools_load`. Read the tool names in `rvw agent guide --json`. Use `rvw_tools_describe` before a call.
+Optional tool set: 58 tools. Load MCP profile `debug` with `rvw_tools_load`. Read the tool names in `rvw agent guide --json`. Use `rvw_tools_describe` before a call.
 
 1. **identity**: Check the source revision, RTL hash, ELF hash, config and seed of the failing run and each cited artifact. Reject stale waves, wrong ELFs and incomplete runs before cause analysis. (manual)
    - If identities match and the failure is reproduced: go to `bundle`.
