@@ -9,7 +9,7 @@ import rvwsoc.AxiCoreWrapper
 
 /** Project-owned RV32IM wrapper. No cache, MMU, supervisor mode or debug unit. */
 class VexCore extends Component with AxiCoreWrapper {
-  val config = DBusSimpleBus.getAxi4Config().copy(useId = true, idWidth = 1)
+  val config = DBusSimpleBus.getAxi4Config().copy(useId = true, idWidth = 1, readIssuingCapability = 2, writeIssuingCapability = 2, combinedIssuingCapability = 4)
   val io = new Bundle {
     val bus = master(Axi4(config))
     val interrupts = in Bits(32 bits)

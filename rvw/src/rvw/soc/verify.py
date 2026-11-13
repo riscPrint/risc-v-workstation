@@ -56,6 +56,16 @@ def generate(source, out, settings):
                     db.close()
                 (out/'cdc_rdc.json').write_text(dumps(report))
                 row.update(generated=True, ran=True, result='inconclusive', details=report)
+            elif kind == 'protocol' and entry.get('composition'):
+                from .compose import compose
+                from .configuration import configuration
+                spec, _ = configuration(Path(entry['composition']))
+                if load(Path(entry['composition']).parent/spec['map']) != model:
+                    raise ValueError('protocol composition map differs from the selected map')
+                report = compose(entry['composition'],out/'protocol')
+                metadata = json.loads((out/'protocol/composition.json').read_text())
+                row.update(generated=True, complete=False, details=dict(files=report['files'],bindings=metadata['protocol_bindings']),
+                           reason='Native binds emitted; run a fresh build with assertions enabled.')
             elif kind in ('protocol', 'vip'):
                 from rvw.formal.simple_bus_checks import render
                 directory = out/kind

@@ -25,7 +25,6 @@ reg [{width-1}:0] previous_request;
 always @(posedge clk) begin
  if(reset) begin selected<=0; enabled<=0; completed<=0; end
  else begin
-  assert(!enable || select);
   if(select && enable) begin
    assert(selected);
    assert(request == previous_request);

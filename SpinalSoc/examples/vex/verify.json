@@ -15,7 +15,8 @@
   ],
   "checks": {
     "protocol": {
-      "capture": "{out}/native/apb.jsonl"
+      "capture": "{out}/native/apb.jsonl",
+      "composition": "compose.json"
     },
     "registers": {
       "capture": "{out}/native/apb.jsonl"

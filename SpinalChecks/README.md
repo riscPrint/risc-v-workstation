@@ -1052,3 +1052,11 @@ The source file name is a basename. Helper functions can pass `sourceDepth = 1`
 to `assertOn`, `assumeOn` or `coverOn` to use their caller's source location.
 Finite temporal simulation measures antecedent matches separately from vacuous
 implication passes. See the formal README for separate activation-cover jobs.
+## Explicit composer bus binds
+
+`spinalchecks.BusAssertions` exposes the existing AXI4 address, read/write
+transaction and TileLink transaction checks to composers that own a bus
+instance. `BusAssertions(axi)` returns missing issuing-limit declarations
+as gaps. It does not invent queue limits. AXI tracking uses the bus config's
+positive read/write issuing capabilities. The existing generated-check
+phase and its interfaces remain unchanged. Channel stability is separate.

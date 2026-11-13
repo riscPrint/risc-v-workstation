@@ -48,3 +48,19 @@ UART, CLINT, PLIC and finisher. Every MMIO bus was exercised. This harness
 uses the same device map and simple-bus ingress. It excludes CPU execution.
 A wrong UART LCR reset expectation failed the native bench. Formal
 connectivity and a multi-domain lint run were NOT RUN. The single-clock program cannot qualify CDC or RDC.
+
+## Native ingress and boundary checks
+
+A fresh composition also binds core AXI channel stability and the existing
+SpinalChecks AXI address/read/write transaction rules. The wrapper declares
+two read, two write and four combined issuing slots for the checker metadata.
+APB checks cover actual peripheral pins after legacy bridges as well as the
+fabric-side ports. All five programs (`hello`, `interrupt`, `external`,
+`uart_irq`, `verify`) passed with these binds at seed 31. `verify` still
+measured 248 cycles and 36 retired instructions. An unsolicited AXI B
+response failed `axi4.write_match` in a separate native fixture. A changed
+held request address failed the native channel-stability assertion.
+
+These results establish sampled assertion execution. The table's protocol
+row remains inconclusive for complete protocol qualification. No AXI stress,
+coherence, liveness or multi-domain protocol proof is claimed here.

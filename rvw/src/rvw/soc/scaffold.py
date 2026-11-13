@@ -17,6 +17,9 @@ def new(name,out):
     build=(library/'build.sbt').read_text().split('Compile / unmanagedSourceDirectories')[0]
     build+='\nCompile / unmanagedSourceDirectories += baseDirectory.value / "generated"\n'
     build+='Compile / unmanagedSourceDirectories += file('+json.dumps(str(library/'src/main/scala'))+')\n'
+    checker_names = ['ProtocolChecks.scala','AxiReadChecks.scala','AxiWriteChecks.scala',
+                     'TileLinkProbeChecks.scala','BusAssertions.scala']
+    build += 'Compile / unmanagedSources ++= Seq('+','.join(json.dumps(n) for n in checker_names)+').map(file('+json.dumps(str(home/'SpinalChecks/src/main/scala/spinalchecks'))+') / _)\n'
     files={'soc.json':dumps(obj),'compose.json':dumps(spec),'build.sbt':build,
         'project/build.properties':(library/'project/build.properties').read_text(),
         'src/main/scala/ProjectCore.scala':'package board\n/** Replace this idle wrapper with a Component with rvwsoc.CoreWrapper. */\nclass ProjectCore extends rvwsoc.IdleCore\n',
