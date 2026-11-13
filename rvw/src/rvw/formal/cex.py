@@ -280,6 +280,11 @@ def navigation(args, capture, out, original):
         result['causes'] = call('spinaltrace-cli', argv)
         if not (out / 'dynpdg.json').is_file():
             result['causes']['status'] = 'inconclusive'
+        elif result['causes']['status'] == 'completed':
+            from .explain import explain
+            explanation = explain(json.loads((out / 'dynpdg.json').read_text()))
+            common.write_json(out / 'explanation.json', explanation)
+            result['explanation'] = explanation
     if args.open:
         if not hgldd or result['types']['status'] != 'completed':
             result['viewer'] = {'status': 'inconclusive', 'error': 'typed lookup must complete before opening Surfer'}

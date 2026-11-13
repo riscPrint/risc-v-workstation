@@ -264,6 +264,8 @@ def mcp_tools():
                  schema({"project": S, "out": S, "timeout": {"type": "number", "exclusiveMinimum": 0}}, ["out"]), _riscv, long=True),
         ToolSpec("formal_rvfi_generate", "Generate an RVFI wrapper and project configuration from a core-owned port binding. No proof is run.",
                  schema({"manifest": S, "out": S}, ["manifest", "out"]), _rvfi_generate, long=True),
+        ToolSpec("formal_shortest", "Search increasing BMC depths for the sole captured assertion. Unknown depths cannot certify minimality.",
+                 schema({"result": S, "out": S, "max_depth": I, "timeout": {"type": "number", "exclusiveMinimum": 0}, "engine": S}, ["result", "out"]), _runner("shortest"), long=True),
         ToolSpec("formal_proof_core", "Extract a deletion-minimal solver core for one named SMT query. Not an RTL proof.",
                  schema({"smt2": S, "mapping": S, "result": S, "depth": I, "property": S, "db": S, "solver": S,
                          "timeout": {"type": "number", "exclusiveMinimum": 0}, "out": S},

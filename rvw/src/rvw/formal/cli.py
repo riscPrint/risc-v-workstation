@@ -187,6 +187,15 @@ def register(sub) -> None:
     report.add_argument("--out", required=True)
     report.add_argument("--json", action="store_true")
     report.set_defaults(func=testplan.run)
+    from . import shortest
+    shortest_parser = s.add_parser("shortest", help="search the shortest failing depth of a captured single-assertion model")
+    shortest_parser.add_argument("--result", required=True)
+    shortest_parser.add_argument("--out", required=True)
+    shortest_parser.add_argument("--max-depth", type=int, default=20)
+    shortest_parser.add_argument("--timeout", type=float, default=60)
+    shortest_parser.add_argument("--engine", default="smtbmc:z3")
+    shortest_parser.add_argument("--json", action="store_true")
+    shortest_parser.set_defaults(func=shortest.run)
     from . import cores
     core = s.add_parser("proof-core", help="extract a deletion-minimal core from a named SMT query")
     core.add_argument("--smt2")
