@@ -74,7 +74,7 @@ def execute_json(*, trace, core=None, platform=None, project=None, strict=False)
                     conditional_masks=masks,
                     platform_policy={key: getattr(p, key) for key in
                         ('privilege_modes', 'pmp_regions', 'absent_pmp_csrs', 'ecall_tval',
-                         'illegal_insn_tval', 'misaligned', 'endianness')},
+                         'illegal_insn_tval', 'misaligned', 'endianness', 'scalar_split_ram')},
                     limits=['No reference was run. Configured comparisons are not matches.',
                             'Conditional masks list allowed synchronization, not applied masks.',
                             'Run cosim check to see applied masks and actual state coverage.',

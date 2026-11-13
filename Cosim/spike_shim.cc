@@ -40,6 +40,7 @@ struct Machine : simif_t {
   uint64_t io_addr = 0, io_value = 0;
   bool inject = false;
   bool step_virtual = false;
+  bool scalar_split_ram = false;
   std::string vector_memory = "[]";
   Machine(const char* instruction_set, const uint64_t* regions, size_t nr,
           const uint64_t* mmio, size_t ni, uint64_t pc, unsigned pmp, uint64_t grain,
@@ -108,6 +109,7 @@ struct Machine : simif_t {
       (((e.insn>>12)&7)==0 || ((e.insn>>12)&7)>=5);
     // Refuse emulated split accesses before execution. A fault on the second
     // part could leave partial stores that scalar C2 cannot report.
+    unsigned split_width=0; uint64_t split_addr=0; bool split_store=false;
     if(cfg.misaligned) {
       insn_t insn(e.insn);
       unsigned op=e.insn&0x7f, f=(e.insn>>12)&7, width=0, rs=0;
@@ -127,8 +129,19 @@ struct Machine : simif_t {
         }
       }
       uint64_t addr=(s->XPR[rs]+offset) & (cpu->get_xlen()==32 ? 0xffffffffULL : ~0ULL);
-      if(width && addr%(cpu->get_xlen()/8)+width>cpu->get_xlen()/8)
-        throw std::runtime_error("split bus/page access is outside scalar C2 comparison");
+      if(width && addr%(cpu->get_xlen()/8)+width>cpu->get_xlen()/8) {
+        // Only completed ordinary accesses to inert bare RAM can be aggregated.
+        // No translation, PMP checks, page split, device access or partial fault.
+        bool safe=scalar_split_ram && (op==3 || op==0x23) && width<=cpu->get_xlen()/8 &&
+          s->prv==3 && !s->v && !cfg.pmpregions && !(s->mstatus->read() & (1ULL<<17)) &&
+          addr/4096==(addr+width-1)/4096;
+        bool in_ram=false;
+        for(auto r:ram) if(contains(r,addr,width)) in_ram=true;
+        for(auto r:io) if(addr<r.base+r.size && r.base<addr+width) safe=false;
+        if(!safe || !in_ram)
+          throw std::runtime_error("split bus/page access is outside scalar C2 comparison");
+        split_addr=addr; split_width=width; split_store=op==0x23;
+      }
     }
     // Spike's load log stores addresses and sizes, but not raw load values.
     // Preserve the pre-store value of AMOs (including rd=x0); ordinary loads
@@ -214,6 +227,26 @@ struct Machine : simif_t {
         }
         for(auto [addr,data,size]:writes) append("write",addr,data,size);
         out << "]"; vector_memory=out.str();
+      } else if(split_width) {
+        const auto& accesses=split_store ? s->log_mem_write : s->log_mem_read;
+        if(!(split_store ? s->log_mem_read : s->log_mem_write).empty())
+          throw std::runtime_error("mixed split memory effects");
+        uint64_t covered=0;
+        for(auto [addr,data,size]:accesses) {
+          if(cpu->get_xlen()==32) addr &= 0xffffffffULL;
+          if(!size || size>split_width || addr<split_addr || addr-split_addr>split_width-size)
+            throw std::runtime_error("split effect outside architectural access: " + std::to_string(addr) + "+" + std::to_string(size) + " expected " + std::to_string(split_addr) + "+" + std::to_string(split_width));
+          uint64_t lanes=((1ULL<<size)-1)<<(addr-split_addr);
+          if(covered & lanes) throw std::runtime_error("duplicate split memory effect");
+          covered |= lanes;
+        }
+        if(covered!=(1ULL<<split_width)-1)
+          throw std::runtime_error("incomplete split memory effects");
+        uint64_t value=0;
+        for(unsigned i=0;i<split_width;i++) value |= uint64_t(uint8_t(*addr_to_mem(split_addr+i)))<<(8*i);
+        e.mem_addr=split_addr;
+        if(split_store) { e.mem_wmask=covered; e.mem_wdata=value; }
+        else { e.mem_rmask=covered; e.mem_rdata=value; }
       } else {
         if(s->log_mem_read.size()>1 || s->log_mem_write.size()>1)
           throw std::runtime_error("multiple memory accesses cannot be represented by scalar C2");
@@ -264,7 +297,8 @@ static thread_local std::string error;
 extern "C" {
 // ABI/behaviour version; rvw/src/rvw/cosim/spike.py (SHIM_VERSION) refuses any other value.
 // 3: explicit privilege, misaligned and absent-PMP platform arguments.
-unsigned rvw_shim_version() { return 6; }
+unsigned rvw_shim_version() { return 7; }
+void rvw_scalar_split_ram(void* m,int enable) { static_cast<Machine*>(m)->scalar_split_ram=enable!=0; }
 // sha256 of the spike_shim.cc this library was built from; spike.py compares it with the source.
 const char* rvw_shim_source_sha256() { return RVW_SHIM_SOURCE_SHA256; }
 const char* rvw_shim_build_sha256() { return RVW_SHIM_BUILD_SHA256; }
