@@ -46,7 +46,7 @@ def monitor(check, selection=None):
         text += ['(* anyconst *) reg [31:0] watched_addr;', '(* anyconst *) reg [31:0] watched_data;',
                  'always @(posedge clock) if(!reset && fetch && fetch_addr == watched_addr) assume(fetch_data == watched_data);']
     if check == 'csr_consistency':
-        from .csr_catalog import catalog
+        from rvw.csr.catalog import catalog
         definition = catalog()['registers'][selection['csr']]['definition']
         mask = selection['write_mask']
         if type(mask) is not int or not 0 <= mask < 2**32:

@@ -6,6 +6,7 @@ from __future__ import annotations
 import json
 import re
 from pathlib import Path
+from rvw.csr.catalog import load_model
 
 MODES = {'U': 0, 'S': 1, 'M': 3}
 POLICIES = {'RW', 'RO', 'WARL', 'WLRL', 'WPRI'}
@@ -16,10 +17,7 @@ def integer(v):
 
 
 def load(path):
-    obj = json.loads(Path(path).read_text())
-    if obj.get('schema') == 'rvw.csr-selection/1':
-        from .csr_catalog import materialize
-        obj = materialize(obj)
+    obj = load_model(path)
     if obj.get('schema') != 'rvw.csr/1' or obj.get('xlen') not in (32, 64):
         raise ValueError('expected rvw.csr/1 and xlen 32 or 64')
     if not obj.get('csrs'):

@@ -2,6 +2,7 @@
 from pathlib import Path
 from xml.etree import ElementTree as ET
 from .model import load
+from rvw.csr.catalog import peripheral_registers
 
 NS='http://www.accellera.org/XMLSchema/IPXACT/1685-2014'
 ET.register_namespace('ipxact',NS)
@@ -19,12 +20,12 @@ def ipxact(obj):
         if not region['registers']: continue
         block=element(root,'addressBlock')
         for k,v in [('name',region['name']),('baseAddress',hex(region['base'])),('range',hex(region['size'])),('width',32),('usage','register')]: element(block,k,v)
-        for r in region['registers']:
+        for r in peripheral_registers(region):
             reg=element(block,'register')
             for k,v in [('name',r['name']),('addressOffset',hex(r['offset'])),('size',r['width']),('access',{'r':'read-only','w':'write-only','rw':'read-write'}[r['access']])]:element(reg,k,v)
             field=element(reg,'field')
-            element(field,'name',r['name'])
-            element(field,'bitOffset',0);element(field,'bitWidth',r['width'])
+            element(field,'name',r['fields'][0]['name'])
+            element(field,'bitOffset',r['fields'][0]['lsb']);element(field,'bitWidth',r['fields'][0]['width'])
             if r['reset'] is not None:
                 reset=element(element(field,'resets'),'reset')
                 element(reset,'value',hex(r['reset']));element(reset,'mask',hex((1<<r['width'])-1))

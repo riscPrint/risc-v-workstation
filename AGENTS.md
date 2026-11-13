@@ -35,6 +35,7 @@ keep the issue list in `TODO.md` in step with them.
 | `rvw/src/rvw/checks/` | Project check generation and explicit missing-binding summaries. See its `README.md`. |
 | `rvw/src/rvw/soc/` | Project-owned SoC map validation, software exports and bounded design checks. See its `README.md`. |
 | `rvw/src/rvw/bugmem/` | Bug-pattern memory: stored failure signatures, root causes and similarity matching. See its `README.md`. |
+| `rvw/src/rvw/csr/` | Shared pinned CSR metadata and project MMIO projections. See its `README.md`. |
 | `rvw/src/rvw/agent/` | Agent playbook: `rvw agent guide`, MCP `agent_guide` and `rvw://agent/guide`. See its `README.md`. |
 | `rvw/src/rvw/agent_bench/` | Restricted agent fixture benchmark and scoring. See its `README.md`. |
 | `rvw/src/rvw/memory/` | Multi-image inputs and independent serialized memory checks. See its `README.md`. |

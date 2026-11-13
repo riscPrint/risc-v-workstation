@@ -1,9 +1,13 @@
 """C2 vector and hypervisor state. Missing observations are errors."""
 import re
 
-H_CSRS = (0x100, 0x105, 0x141, 0x142, 0x143,
-          0x300, 0x302, 0x303, 0x341, 0x342, 0x343, 0x600, 0x602, 0x603, 0x643, 0x64a, 0x680,
-          0x200, 0x205, 0x241, 0x242, 0x243, 0x280, 0x34a, 0x34b)
+from rvw.csr.catalog import address
+
+H_CSR_NAMES = ('sstatus', 'stvec', 'sepc', 'scause', 'stval',
+               'mstatus', 'medeleg', 'mideleg', 'mepc', 'mcause', 'mtval',
+               'hstatus', 'hedeleg', 'hideleg', 'htval', 'htinst', 'hgatp',
+               'vsstatus', 'vstvec', 'vsepc', 'vscause', 'vstval', 'vsatp', 'mtinst', 'mtval2')
+H_CSRS = tuple(address(name) for name in H_CSR_NAMES)
 
 
 def has_extension(isa, letter):

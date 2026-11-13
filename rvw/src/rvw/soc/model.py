@@ -6,6 +6,7 @@ from pathlib import Path
 from xml.etree import ElementTree as ET
 
 from rvw.cosim.platform import Platform, number
+from rvw.csr.catalog import load_model, peripheral_registers
 
 
 def keys(obj, allowed, required=()):
@@ -28,7 +29,7 @@ def disjoint(items, base, size):
 
 
 def load(path):
-    obj = json.loads(Path(path).read_text())
+    obj = load_model(path)
     keys(obj, {'schema', 'name', 'address_bits', 'platform', 'regions', 'interrupts'},
          {'schema', 'name', 'address_bits', 'platform', 'regions', 'interrupts'})
     if obj['schema'] != 'rvw.soc/1':
@@ -125,7 +126,7 @@ def svd(obj):
         add(per, 'name', r['name'])
         add(per, 'baseAddress', hex(r['base']))
         regs = ET.SubElement(per, 'registers')
-        for g in r['registers']:
+        for g in peripheral_registers(r):
             reg = ET.SubElement(regs, 'register')
             for k, v in [('name', g['name']), ('addressOffset', hex(g['offset'])), ('size', g['width']),
                          ('access', {'r':'read-only', 'w':'write-only', 'rw':'read-write'}[g['access']])]:
@@ -171,8 +172,8 @@ def generate(source, out):
     for r in obj['regions']:
         prefix = 'RVW_' + r['name'].upper()
         header += [f'#define {prefix}_BASE UINT64_C({hex(r["base"])})', f'#define {prefix}_SIZE UINT64_C({hex(r["size"])})']
-        for g in r['registers']:
-            header += [f'#define {prefix}_{g["name"].upper()}_ADDR UINT64_C({hex(r["base"] + g["offset"])})']
+        for g in peripheral_registers(r):
+            header += [f'#define {prefix}_{g["name"].upper()}_ADDR UINT64_C({hex(g["address"])})']
         if r['kind'] == 'ram':
             linker += [f'  {r["name"]} ({r["permissions"]}) : ORIGIN = {hex(r["base"])}, LENGTH = {hex(r["size"])}']
             b, s = r['base'], r['size']
