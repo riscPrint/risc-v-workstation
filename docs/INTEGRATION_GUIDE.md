@@ -459,3 +459,58 @@ See [SpinalChecks](../SpinalChecks/README.md#connected-captures-on-three-designs
 for selected check IDs, assumptions, capture records and reproduction commands.
 Unknown cancellation semantics retain strict checks. Project cancellation
 bindings require an exact stream path, condition, sample timing and review reason.
+
+## UVM and VIP integration
+
+Select the project's actual bus, clock/reset domain, memory map and completion
+condition. Supply a live binding or a declared capture-replay path. A generated
+bench is a scaffold. Its unchanged scenario hook must fail. A build or empty
+UVM phase cannot qualify the DUT. See [the UVM flow](../rvw/src/rvw/uvm/README.md)
+and [the protocol agents](../rvw/src/rvw/vip/README.md).
+
+For an SV bench, list sources in dependency order in `bench.json`. Add the
+project's tests and required checks. Use a fresh build and run directory:
+
+```sh
+rvw uvm build bench.json --out /tmp/project-uvm-build --timeout 1800
+rvw uvm regress --build /tmp/project-uvm-build --seeds 1 3 --out /tmp/project-uvm-runs
+rvw uvm gate-config --build /tmp/project-uvm-build --source-repo "$PWD" --out /tmp/project-uvm-core.toml --seeds 1 3
+rvw regress gate --core /tmp/project-uvm-core.toml --tier quick --base-rev COMMIT --cand-rev COMMIT --no-cache --json
+```
+
+Commit the source before the gate. Use that revision for COMMIT.
+Rebuild after a source change. Keep project sources in the selected repository.
+Declare external SV support sources as frozen dependencies. Declare
+`native_dependencies` for DPI headers, runtime libraries, generated images
+and other native inputs. The project must declare the complete native set.
+The flow hashes those files and captures them with the executable and source.
+It refuses changed declared inputs. `gate-config` stages a runtime bundle
+beside its TOML. It omits compiler intermediates and keeps the capture limits.
+A native dependency declaration alone does not qualify its ABI or behavior.
+
+The following matrix records the measured profiles on 2026-11-13. It does
+not transfer qualification to a new core, bus configuration or simulator.
+
+| Profile | Measured result | Evidence boundary |
+|---|---|---|
+| SV protocol agents, Verilator 5.052 | 20 compiled. 13 passed all three normal good-DUT and corrupt-DUT seeds. | AXI, TileLink and UART good fixtures failed. DRAM, Ethernet, PCIe and RNM have inert SV model stubs. AHB's malformed-manager assertion diagnostic remains unqualified. |
+| Live VexRiscv SV CPU environment | Seeds 1 and 3 each checked 13 retirements. Next-PC corruption was detected. Same-revision C4 returned `accept` at `b17abae9`. | Fixed generated CPU image and one arithmetic/load/store/branch program. Fifteen declared native files participate in identity. No changed-core or full-ISA acceptance. |
+| Live VexRiscv pyuvm RV32IM ISA | 50 attempted, 49 passed, 1 failed. Passing programs checked 17,735 retirements and 196 traps. | `rv32ui-p-ma_data` failed with tohost 1337. This is the built RV32UI/RV32UM machine-mode set, not a complete upstream ISA matrix. |
+| Native VexiiRiscv ISA captures through pyuvm | 50 native programs attempted. 49 complete passing captures checked 17,637 retirements and 245 traps. | Offline C2 replay. The native `ma_data` failure remains explicit. No live cocotb VexiiRiscv binding or full suite pass. |
+| Composed SpinalSoc scenarios | Two pyuvm tests passed. Each checked 32 IRQ pulses, bus-error injection and reset during a stalled write. | Peripheral and fabric checks. Scenario seeds 1 and 7; simulator seed 1. CPU checks: zero. |
+| Python PCIe, Ethernet, DRAM and coherent agents | Four native good/bad campaigns passed at seed 17 on Icarus 14.0 devel. | Seeded semantic RTL endpoints. No physical link, vendor model, JEDEC timing, MAC/PHY implementation or complete coherent protocol qualification. |
+
+Use the detailed records for exact checks and limits:
+
+- [SV protocol matrix](../Uvm/vip/qualification/native-2026-11-13.md).
+- [Live SV CPU and DPI/C4 result](../Uvm/examples/vexriscv/sv/README.md).
+- [Live VexRiscv ISA campaign](../Uvm/examples/vexriscv/ISA.md).
+- [VexiiRiscv native capture replay](../Uvm/examples/vexiiriscv/README.md).
+- [Composed SoC scenario project](../Uvm/examples/composed/README.md).
+- [Python semantic endpoint matrix](../Uvm/vip/rtl/CONTRACT_RESULTS.md).
+
+The SV campaign uses pinned Accellera UVM 2020.3.1 with `UVM_NO_DPI`.
+The CPU example links a separate matched ABI 6 Spike DPI bridge. This does
+not enable or qualify Accellera HDL backdoors. Standalone C3 source identity
+remains incomplete. Only the recorded committed CPU bench gate earns the
+stated C4 acceptance. Keep failed, unsupported and unmeasured profiles open.
