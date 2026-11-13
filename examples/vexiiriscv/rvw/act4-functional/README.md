@@ -51,3 +51,8 @@ mhpmevent3 bootstrap write. None reaches `rvtest_code_begin` or retires an
 instruction in the symbol-delimited test body. Coverage from those
 prefixes does not qualify supervisor behavior. See `../act4-supervisor`
 for the complete failures and strict first-difference comparisons.
+
+See [the new supervisor coverage review](review/README.md). It adds a
+stable 270-case ACT4 rerun, four generated privilege programs and 394
+generated PMP programs. It has 717 observed and 447 qualified traces.
+The historical corpora above remain unchanged.
