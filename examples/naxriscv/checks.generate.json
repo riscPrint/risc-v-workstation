@@ -1,0 +1,5 @@
+{
+  "schema": "rvw.check-generation/1",
+  "buses": {"database": "rvw/out/nax.db"},
+  "queues": "rvw/micro-checks.json"
+}

@@ -217,12 +217,55 @@ bound: a flush retires many ROB IDs at once, which the stage/flush probe kinds
 do not express. No TLB probe: the benchmarks run in M-mode without
 translation. The `gshare` study is unqualified.
 
+## Generated checks
+
+`checks.generate.json` selects the design database (bus checks) and
+`rvw/micro-checks.json` (`rvw.micro-checks/1`), which binds the generic
+microarchitecture templates to NaxRiscv signal names:
+
+| Rule | Template | NaxRiscv signals |
+|---|---|---|
+| `lq_free_bound`, `sq_free_bound` | `counter_bounds` (16) | `Lsu2Plugin_logic_{lq,sq}_tracker_free` |
+| `branch_context_bound` | `counter_bounds` (16) | `BranchContextPlugin_logic_ptr_occupancy` |
+| `fetch_refill_cmd`, `dcache_refill_cmd`, `peripheral_cmd` | `pipeline` (valid/payload stable while stalled) | the refill and peripheral command streams |
+
+```sh
+rvw checks generate --all --project . --out rvw/out/checks
+RVW_NAX_CHECKS=$PWD/rvw/out/checks/queues rvw regress run --suite isa --rvfi-trace --out rvw/out/isa-checks --no-index
+```
+
+`RVW_NAX_CHECKS` selects a check model: the adapter compiles the generated
+monitors and binds into the Verilator model, with each `assert(e);` turned into
+one firing line, and writes `checks-run.json` (`rvw.checks-run/1`) per run. A
+pass with any firing becomes `fail`; a run whose output was not captured is an
+error, never a pass. `TapPlugin` adds the constant `rvw_checks_active` wire for
+the counter-bound enables.
+
+Measured on 2026-11-13: `rvw checks generate --all` bound all six rules
+(`complete: false` overall: no stream contracts, no CSR model, and the bus
+generator has no checker for NaxRiscv's FetchL1/DataMem/peripheral bus types;
+each instance is listed with that reason). The ISA suite with the check model:
+59 pass, 59 reports captured, 0 firings. Negative control
+(`rvw/micro-checks-control.json`, load-queue free count at most 8):
+`rv32ui-p-add` fails with 1,004 firings of `control_lq_free_le_8`.
+
+Not bound: free-list and ROB conservation. The `allocation_pool` and
+`freelist_conservation` templates compare against a live-tag mask; NaxRiscv
+keeps its free list in a RAM (`AllocatorMultiPortMem`) and has no such mask.
+The `rob` template accepts one push and one pop per cycle; NaxRiscv's ROB
+moves two. Store-queue forwarding and age-matrix rules need per-entry signals
+that Lsu2 does not expose under stable names. The probe counters give a weak
+conservation check instead: `freelist_free - freelist_alloc` ends at the reset
+fill less the registers in flight (31 or 32) on every benchmark. SpinalChecks
+(the Scala inserted checks behind `streams` and CSR models) does not compile on
+the legacy SpinalHDL axis yet (about 37 errors).
+
 ## Limits
 
 - One configuration. No RVC, FPU, interrupt schedules, devices, Konata or
   riscv-formal monitor (`--irq-schedule`, `--konata`, `--rvfi-check` and
   `--soc-map` are refused).
-- Generated checks need SpinalChecks on the source axis; not available yet.
+- SpinalChecks (Scala inserted checks) does not compile on the legacy axis yet.
 - `rvw query build` sets `NAXRISCV` to the project root. Keep the project files in
   the NaxRiscv checkout, or call `rvw/build-db.sh rv32imasu rvw/out/nax.db` with
   `NAXRISCV` set.
