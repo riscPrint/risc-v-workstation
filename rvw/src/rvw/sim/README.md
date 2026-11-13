@@ -11,6 +11,9 @@ concurrent SVA or coverage. Foreign interfaces listed in the profile describe
 native support. This adapter uses VPI only. Other native backends are refused
 until they have a profile and conformance tests.
 
+See [architectural injection](INJECTION.md) for project state maps, readback,
+raw FP values and the RV32IM bootstrap API. This API is separate from live snapshots.
+
 ## Cocotb component suites
 
 Install the optional dependency with `cd rvw && uv pip install -e '.[cocotb]'`.
