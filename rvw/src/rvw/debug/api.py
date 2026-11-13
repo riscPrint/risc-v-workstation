@@ -146,3 +146,4 @@ def trace_adapter(path):
     adapter = ntrace_check.load_adapter(path)
     return {'name': adapter['name'], 'vendor': adapter['vendor'], 'verified': adapter['verified'],
             'vectors': adapter['vectors'], 'sha256': adapter['sha256'], 'specification': adapter['specification']}
+

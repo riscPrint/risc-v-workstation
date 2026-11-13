@@ -1,0 +1,46 @@
+# Debug profile for the example's rv32im_dmi configuration: SpinalHDL DebugModule 1.15.0 on VexRiscv.
+# Values come from spinal.lib.cpu.riscv.debug.DebugModule and the CsrPlugin trigger subset.
+# They declare this example's options. They are not a VexRiscv default.
+schema = "rvw.debug-profile/1"
+name = "vexriscv-rv32im_dmi"
+version = "0.13.2"
+xlen = 32
+harts = 1
+hartsellen = 20          # hartsello and hartselhi are both implemented
+progbufsize = 2
+impebreak = true
+datacount = 1
+abstract = ["gpr"]          # Access Register for GPRs only; CSRs go through the program buffer
+aarsizes = [2]
+postincrement = false       # aarpostincrement gives cmderr 2
+hartreset = false
+resethaltreq = false
+modes = "M"
+reset_vector = 0x80000000
+scratch = 0x80010000
+memory = [{ base = 0x80000000, size = 0x1000000 }]
+
+[triggers]
+count = 2
+types = [2]                 # mcontrol, execute address match only
+accesses = ["execute"]      # tdata1 keeps only execute, m/s/u, dmode and action
+matches = [0]
+actions = [1]
+timing = [0]
+chain = false
+tcontrol = false
+unsupported_type = 2        # tdata1.type is read-only 2
+store_data_timing = "none"
+load_data_timing = "none"
+
+[skip]
+"dm.ndmreset" = "the example exports ndmreset but does not connect it to the core reset"
+
+# rvw starts the simulation and speaks the C1 DMI line protocol. Build ../out/programs/debug-loop first (build.sh).
+[transport]
+kind = "dmi_process"
+command = ["./../run.sh", "run", "--config", "rv32im_dmi", "--elf", "./../out/programs/debug-loop",
+  "--out", "./../out/debug-dmi", "--seed", "1", "--mem-latency", "0", "--max-cycles", "200000000",
+  "--debug", "dmi", "--debug-binding", "./binding.json"]
+startup_timeout = 1800
+timeout = 60

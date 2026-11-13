@@ -47,9 +47,11 @@ def main():
     first = int.from_bytes(bytes.fromhex(os.environ['RVW_FIRST_WORD']), 'little')
     mark('load', val('*(unsigned int *)&_start') == first, 'first word differs after load')
     run('set $pc = _start')
-    run('set $s1 = 0x123456789')
+    # A value that uses every bit an RV32 register has, and more on RV64.
+    value = 0x123456789 if gdb.parse_and_eval('$s1').type.sizeof == 8 else 0x12345678
+    run(f'set $s1 = {value:#x}')
     fresh()
-    mark('register_write', val('$s1') == 0x123456789 and val('$pc') == val('&_start'), 'readback differs')
+    mark('register_write', val('$s1') == value and val('$pc') == val('&_start'), 'readback differs')
     run('set var *(unsigned int *)&counter = 5')
     fresh()
     mark('memory_write', counter() == 5, 'counter readback differs')

@@ -826,3 +826,52 @@ Stream gate and registered-flush assignments. Three custom equations have
 exact project cancellation bindings with source and wave evidence. See
 [the triage](checks-evidence/README.md) and [the current counts](checks-qualification.json).
 This rerun did not run formal. It does not qualify other designs or inputs.
+
+## Debug Module configurations
+
+Two additive configurations sit beside `rv32im`. They use the same adapter.
+
+| Config | Adds |
+|---|---|
+| `rv32im_dmi` | CSR plugin official debug support and the SpinalHDL `DebugModule`, with its DMI bus on top-level `dmi_*` ports |
+| `rv32im_jtag` | The same Debug Module behind the upstream `EmbeddedRiscvJtag` DTM, on top-level `jtag_*` pins |
+
+Build the loop program, then run the compliance suite. rvw starts the simulation
+through the profile's `dmi_process` command:
+
+```sh
+examples/vexriscv/rvw/debug/build.sh
+rvw debug suite --profile examples/vexriscv/rvw/debug/profile-dmi.toml --out /tmp/vex-debug
+```
+
+For JTAG, start the simulation, then point the TAP checks, the suite or OpenOCD and
+GDB at its port. The session serves one client at a time and ends after 300 s
+without a client:
+
+```sh
+examples/vexriscv/rvw/run.sh run --config rv32im_jtag --elf examples/vexriscv/rvw/out/programs/debug-loop \
+  --out /tmp/vex-jtag --mem-latency 0 --max-cycles 2000000000 \
+  --debug jtag:0 --debug-binding examples/vexriscv/rvw/debug/binding.json &
+port=$(cat /tmp/vex-jtag/debug-port)
+rvw debug tap --port "$port" --out /tmp/vex-tap
+rvw debug suite --profile examples/vexriscv/rvw/debug/profile-jtag.toml --port "$port" --out /tmp/vex-jtag-suite
+rvw debug interop --port "$port" --elf examples/vexriscv/rvw/out/programs/debug-loop --out /tmp/vex-interop
+```
+
+Measured on 2026-11-13 (VexRiscv `a62c145a`, SpinalHDL 1.15.0, Verilator 5.049,
+OpenOCD 0.12.0+dev-00519, GDB 18.1):
+
+| Campaign | Result |
+|---|---|
+| `debug suite`, `rv32im_dmi` | 34 pass, 5 fail, 45 unsupported or skipped |
+| `debug tap`, `rv32im_jtag` | 9 of 9 pass |
+| `debug suite`, `rv32im_jtag` | 33 pass, 5 fail, 1 inconclusive (`abs.busy_collision`: JTAG is too slow to see busy) |
+| `debug interop`, `rv32im_jtag` | load, register and memory writes, `stepi` and `stepi` over a jump pass; software and hardware breakpoints stop at `target + 4`; the watchpoint is refused (execute-only triggers) |
+
+The five failures are the same over DMI and JTAG. See the debug README, "Core hooks".
+The late breakpoint stop is not explained yet: the suite's dpc checks pass, and
+OpenOCD logs failed program-buffer memory reads at low addresses.
+
+These configurations change the RTL. Their results do not qualify `rv32im`.
+The debug configurations keep `TrapProbePlugin`, so a debug entry or `dret` can
+appear as a trap event in C2. Use them for debug sessions, not for C2 regression.

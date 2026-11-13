@@ -12,7 +12,7 @@ object VexAdapter extends CoreAdapter {
   type Model = SimCompiled[VexTop]
   override def irqInputMask: BigInt = 0x888
   def core = "vexriscv"
-  val configs = Seq("rv32im")
+  val configs = Seq("rv32im") ++ VexDebug.configs
   def xlen = 32
   def isa(config: String) = "rv32im_zicsr_zifencei"
   def sourceDir = new File(sys.env("VEXRISCV")).getCanonicalFile
@@ -25,7 +25,7 @@ object VexAdapter extends CoreAdapter {
     require(!key.konata, "VexRiscv adapter does not support Konata")
     spinalprobes.Probe.enabled(key.probes) {
       RiscvSimConfig.elaborate(key, work, VexTop.spinalConfig,
-        sourceRoots = Seq(new File(sourceDir, "src/main/scala")))(new VexTop)
+        sourceRoots = Seq(new File(sourceDir, "src/main/scala")))(new VexTop(VexDebug.configuration(key.config)))
     }
   }
   override def elaborate(key: ModelKey, work: File): Seq[File] =

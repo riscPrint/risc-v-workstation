@@ -407,7 +407,8 @@ def open_target(profile, *, log=None):
         return model_driver(profile, jtag_level=True)[0]
     if kind == 'remote_bitbang':
         return dmimod.RemoteDMI(transport['host'], transport['port'], irlen=transport.get('irlen', 5))
-    return dmimod.BusDMI(dmimod.ProcessBus(transport['command'], log=log))
+    return dmimod.BusDMI(dmimod.ProcessBus(transport['command'], log=log, timeout=transport.get('timeout', 10),
+                                           startup_timeout=transport.get('startup_timeout')))
 
 
 def run_one(item, profile, driver):

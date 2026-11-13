@@ -223,6 +223,7 @@ class Driver(val adapter: CoreAdapter) {
       job.socMap.toSeq.flatMap(s => Seq("--soc-map", s.file.getPath)) ++
       job.irqSchedule.toSeq.flatMap(s => Seq("--irq-schedule", s.text)) ++
       job.fault.toSeq.flatMap(f => Seq("--fault", f.file.getPath)) ++
+      job.debug.toSeq.flatMap(m => Seq("--debug", m.text, "--debug-binding", m.binding.file.getPath)) ++
       job.memLatency.toSeq.flatMap(l => Seq("--mem-latency", l.toString)) ++
       job.wallTimeoutS.toSeq.flatMap(s => Seq("--wall-timeout", s.toString)) ++
       (if (job.rvfiTrace) Seq("--rvfi-trace") else Nil) ++
@@ -392,6 +393,8 @@ class Driver(val adapter: CoreAdapter) {
     }
     val details = outcome.details
     FaultInjector.finish(job).foreach(f => details("fault") = f.details(outcome.cycles))
+    if (job.debug.nonEmpty) details("debug") = DebugPort.finish(job).map(_.details)
+      .getOrElse(ujson.Obj("mode" -> job.debug.get.text, "attached" -> false))
     Option(capturedHartImages.get(job)).foreach(h => details("hart_images") = h.identity)
     Option(capturedBootImages.get(job)).foreach { image =>
       details("boot_loads") = ujson.Arr.from(image.layout.map { case (address, size) =>
