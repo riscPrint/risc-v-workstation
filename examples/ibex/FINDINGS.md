@@ -10,6 +10,7 @@
 | Misaligned scalar RAM | `rv32ui-p-ma_data` first differs at `lh t2,1(s0)` under the default trap policy. Ibex completes the access. | Platform setting. `misaligned: emulate` and `scalar_split_ram: true` give a complete strict match. |
 | Standard riscv-tests bootstrap | Writes arbitrary continuation addresses to mtvec. Ibex requires 256-byte alignment. Traps restart the boot region. | Platform bootstrap mismatch. Instruction profile uses an explicit reduced bootstrap. |
 | RVFI masks | Non-memory records can have read mask 15. | Transport convention. Exporter gates inactive masks and retains the raw values. |
+| Memory fault trace field | The exporter writes `mem_fault=false`; it has no retirement-bound memory-error probe. | Transport limit. Faulting memory traces are not qualified. The ACT4 strict batch stops before it reaches such cases. |
 | RVFI order | First valid retirement has order 1. | Transport origin. Exporter validates the sequence and subtracts 1. |
 | Lint automatic local | `is_mml_m_exec_cfg.pmp_cfg` has no standalone hardware load or driver. | Import/lint bug. Slang automatic-lifetime metadata now prevents the false undriven error. Loaded and static signals still require drivers. |
 | Functional trace binding | The C2 header lacked the captured ELF hash. | Adapter gap. The header now binds the same bytes as C1. A fresh 51-ELF run has eight qualified M-mode class bins. |

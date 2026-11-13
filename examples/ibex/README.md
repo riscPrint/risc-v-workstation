@@ -50,7 +50,10 @@ sequence and subtracts 1 for C2. Ibex leaves memory masks active on instructions
 without a memory effect. The exporter gates read and write masks by the
 instruction type. It retains `ibex_raw_mem_rmask` and `ibex_raw_mem_wmask`.
 It does not change active mask or data values. It ends the trace when the
-`tohost` store retires. It exports no CSR snapshots or trap-cause events.
+`tohost` store retires. It exports no CSR snapshots or trap-cause events. The current exporter writes
+`mem_fault=false`. It has no retirement-bound memory-error probe. Faulting
+memory traces therefore need more transport evidence before strict comparison
+can qualify them. The 51 instruction-profile matches do not exercise that limit.
 
 The riscv-tests instruction profile uses `rvw/riscv_test.h`. It keeps upstream
 test bodies and replaces the privileged bootstrap. It does not qualify Sm.
