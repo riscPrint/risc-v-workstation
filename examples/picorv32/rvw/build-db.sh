@@ -5,4 +5,4 @@ set -euo pipefail
 here="$(cd "$(dirname "$0")" && pwd)"
 : "${RVW_HOME:?Set RVW_HOME to the installed workstation}"
 exec nice -n 10 "${RVW_PYTHON:-$RVW_HOME/rvw/.venv/bin/python}" -m rvw query build-hdl \
-  --top picorv32 --out "$2" --frontend slang --define RISCV_FORMAL --param PROGADDR_RESET=2147483648 --param PROGADDR_IRQ=2147483664 --param ENABLE_MUL=1 --param ENABLE_DIV=1 "$here/../picorv32.v"
+  --top picorv32 --out "$2" --frontend slang --define RISCV_FORMAL --param "PROGADDR_RESET=32'h80000000" --param "PROGADDR_IRQ=32'h80000010" --param ENABLE_MUL=1 --param ENABLE_DIV=1 "$here/../picorv32.v"

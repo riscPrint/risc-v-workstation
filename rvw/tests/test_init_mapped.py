@@ -141,3 +141,10 @@ def test_query_preserves_external_source_and_simulation_options(verilog_core, tm
     assert "--frontend slang --define RISCV_FORMAL --param WIDTH=32" in script
     assert str(source) in script
     assert '"$here/"' + str(source) not in script
+
+
+def test_query_sizes_unsigned_parameter(verilog_core):
+    import shlex
+    result = make(verilog_core, params=['RESET_PC=0x80000000'])
+    script = result['files']['rvw/build-db.sh'].replace('\\\n', ' ')
+    assert "RESET_PC=32'h80000000" in shlex.split(script)

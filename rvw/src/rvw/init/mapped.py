@@ -428,7 +428,15 @@ exec "$RVW_HOME/scripts/with-lock.sh" {name} \\
         for value in defines:
             query_options += ['--define', value]
         for key, value in top_entry['parameters'].items():
-            query_options += ['--param', f'{key}={value}']
+            # Slang's CLI rejects unsized decimal values above signed 32-bit range.
+            # Match the sized bit-vector generic used by the simulator.
+            literal = str(value)
+            if value >= (1 << 31):
+                literal = f"{max(32, value.bit_length())}'h{value:x}"
+            elif value < 0:
+                width = max(32, (~value).bit_length() + 1)
+                literal = f"{width}'sh{value & ((1 << width) - 1):x}"
+            query_options += ['--param', f'{key}={literal}']
         query_flags = shlex.join(query_options)
         db = f'''#!/usr/bin/env bash
 # C6 navigation entry for the Verilog top (Yosys front end; see rvw query build-hdl).
