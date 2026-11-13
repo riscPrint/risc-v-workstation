@@ -109,3 +109,21 @@ required. Only unconditional formal equivalence earns proved equivalence.
 changed or inconclusive. A passing unmutated control and every expected killer
 are required. This is a slow execution tier. Saved detection results cannot
 pass it without rerunning the campaign.
+
+## Scalar FP crosses
+
+`rvw cov fp` and MCP `cov_fp` write `rvw.fp-coverage/2`. They require C2/2
+state on a complete passing DUT trace bound to a conclusive C1 pass. They
+reuse the functional coverage qualifier. Reference-only traces get no hits.
+
+A full bin is instruction mnemonic, RM, source position, operand class and
+raised-flag mask. The report covers scalar F/D/C forms with the shared ISA
+decoder. Each trace starts a fresh FP register history. Integer-to-FP source
+class is `not_fp`. Loads classify loaded data. Unrounded forms use prior frm
+as context. Computational S operands obey NaN boxing when FLEN is 64.
+
+Prior nonzero fflags cannot establish all flags raised by the next operation.
+Those operations get no full cross hit. Unknown inputs and RM also get no hit.
+The class projection removes the flag dimension. All 32 flag masks remain in
+the domain. No unreachable mask or operand tuple coverage is implied.
+Bin hits establish execution, not arithmetic correctness or whole-FPU closure.

@@ -591,7 +591,7 @@ Optional tool set: 58 tools. Load MCP profile `debug` with `rvw_tools_load`. Rea
 
 Tests pass, and the next question is what they do not exercise.
 
-Optional tool set: 83 tools. Load MCP profile `verification` with `rvw_tools_load`. Read the tool names in `rvw agent guide --json`. Use `rvw_tools_describe` before a call.
+Optional tool set: 84 tools. Load MCP profile `verification` with `rvw_tools_load`. Read the tool names in `rvw agent guide --json`. Use `rvw_tools_describe` before a call.
 
 1. **run**: Run the suite with coverage collection. `rvw regress run --tier full --rvfi-trace --out <RUN> --json` / MCP `regress_run`
    - If runs complete: go to `functional`.
