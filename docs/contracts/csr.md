@@ -156,3 +156,11 @@ an instrumentation bound. Coherent B supports probes only. Negotiated
 address regions, operation capabilities, cache permissions, data state and
 forward progress are outside the profile. Zero-width source and sink fields
 require exact library options from a matching type inventory.
+
+## Native CSR example run reports
+
+The VexRiscv optional CSR/HPM execution example uses `rvw.checks-run/1`.
+It adds `elf`, `elf_sha256`, `observation_fault`, `cycles` and `retired` metadata.
+`observation_fault` is `none`, `csr` or `hpm`. Seeded observation failures keep
+run status `fail`. The fixture process can exit successfully only after the
+expected firing is observed. This is test-fixture completion, not a core pass.

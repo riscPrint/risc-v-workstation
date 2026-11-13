@@ -6,7 +6,7 @@ import vexriscv.plugin._
 import spinalchecks._
 
 /** Project-owned bindings for this M-only, no-debug configuration. */
-class HpmChecksPlugin extends Plugin[VexRiscv] {
+class HpmChecksPlugin(observationFault: Boolean = false) extends Plugin[VexRiscv] {
   override def build(pipeline: VexRiscv): Unit = {
     val csr = pipeline.config.get(classOf[CsrPlugin])
     require(csr.config.mcycleAccess == CsrAccess.READ_WRITE && csr.config.minstretAccess == CsrAccess.READ_WRITE,
@@ -26,7 +26,8 @@ class HpmChecksPlugin extends Plugin[VexRiscv] {
       val writeHigh = csr.isWriting(high)
       val data = Mux(writeHigh, csr.writeData() ## B(0, 32 bits), B(0, 32 bits) ## csr.writeData()).asUInt
       val mask = Mux(writeHigh, B(BigInt("ffffffff00000000", 16), 64 bits), B(BigInt("ffffffff", 16), 64 bits)).asUInt
-      HpmChecks.bind(name, HpmModel(1, 64, 0, meaning), observed, event, False, True,
+      val checked = if (observationFault) observed ^ U(1, 64 bits) else observed
+      HpmChecks.bind(name, HpmModel(1, 64, 0, meaning), checked, event, False, True,
         writeLow || writeHigh, data, mask)
     }
     counter("mcycle", 0xb00, 0xb80, U(1, 1 bits), "one active core clock sample; debug is disabled")
