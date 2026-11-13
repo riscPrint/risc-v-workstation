@@ -57,6 +57,7 @@ values use unknown reset values where a generic reset read is unsafe.
 
 | Kind | Profile |
 |---|---|
+| `uart16550-full` | Full register profile with selectable 1/16-byte FIFOs, interrupt priority, modem pins, divisor, framing, errors, DMA requests and loopback. |
 | `uart16550` | 16550 register subset, reg-shift 2, fixed 8N1, one holding slot per direction. Spinal UartCtrl implements serial timing. |
 | `clint` | One hart, MSIP, 64-bit MTIMECMP and MTIME. MTIME counts input clocks. |
 | `plic` | Seven level sources, one machine context, priorities 0/1, claim/complete. |
@@ -72,9 +73,9 @@ map interrupt name to a device IO member. For CLINT, select `softwareIrq` for
 MSIP and `irq` for MTIP. PLIC sources must be exported or bound by a project
 wrapper. There is no automatic inference of PLIC source IDs.
 
-These are bounded verification profiles. UART has no modem control, FIFO
-trigger levels, DMA, break or parity support. TEMT is not reported. It is not
-a complete 16550 implementation. SPI/I2C register descriptions cover register
+These are bounded verification profiles. The original `uart16550` subset
+has no modem control, FIFO trigger levels, DMA, break or parity support.
+It does not report TEMT. Select `uart16550-full` for the added behavior below. SPI/I2C register descriptions cover register
 addresses, not all bit fields and dynamic side effects. Generic register
 checks cannot establish those protocols. VIP pin bindings and behavioral
 scoreboards still need project configuration.
@@ -314,3 +315,18 @@ All four connection rows proved with activation witnesses. The decode target
 proved seven assertions. The multi-domain inventory retains 2,507 findings
 and recognizes BufferCC and FlowCCUnsafeByToggle. Temporal CDC/RDC rules
 remain unproved. See [the evidence scopes](examples/vex/VERIFICATION.md).
+
+## Full-register UART
+
+The additive `uart16550-full` profile exposes `Uart16550Full`. The original
+subset remains available. The new profile has word-spaced RBR/THR/DLL,
+IER/DLM, IIR/FCR, LCR, MCR, LSR, MSR and scratch registers. It supports FIFO
+thresholds, four-character receive timeout, line/modem errors, THRE/TEMT,
+DMA request modes, serial/modem loopback and programmable framing.
+See [the UART example](examples/uart16550/README.md) for exact semantics.
+
+On 2026-11-13 the native directed bench passed 240 checks at seed 31. The
+independent UART VIP checked 28 transmitted frames. The same bench passed
+through the elaborated Spinal wrapper. It measured 361 clock cycles between
+two queued 5N1.5 frames at a 48-clock bit period, including the engine's
+one-clock inter-frame gap. No hardware or complete compliance result is claimed.

@@ -456,3 +456,13 @@ When every scoped consumer finishes, the aggregate result can be `findings`
 if structural CDC/RDC findings remain. This is distinct from a missing or
 unrun consumer (`inconclusive`) and from an executable check failure (`fail`).
 It is not an acceptance result. The CLI retains a nonzero exit for findings.
+
+## Full-register UART profile
+
+`uart16550-full` selects `rvwsoc.Uart16550Full`. It preserves the existing
+`uart16550` subset profile. Its APB map has register shift 2 and includes MCR
+and MSR. Serial/modem pins are explicit exports. Optional active-low DMA
+request outputs are available. Register aliases and autonomous status retain
+unknown reset values in generic map consumers. The native directed bench
+checks their behavior with the UART agent. The exact register, FIFO and
+interrupt semantics are in SpinalSoc/examples/uart16550/README.md.

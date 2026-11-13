@@ -1,0 +1,7 @@
+{
+ "schema":"rvw.cocotb/1", "name":"uart16550_full", "backend":"verilator",
+ "top":"rvw_uart16550", "sources":["../../src/main/resources/rvwsoc/uart16550.sv"],
+ "test_module":"test_uart", "python_paths":["."], "requires":["timer"],
+ "clock":{"signal":"clk","period_ns":10},
+ "reset":{"signal":"reset","active":1,"cycles":5}
+}
