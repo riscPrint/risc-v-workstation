@@ -10,7 +10,7 @@ import spinalprobes.Probe
   * The instruction payload is only a tag and a store byte. */
 class TinyOoo(bug: String = "clean") extends Component {
   val io = new Bundle {
-    val dispatch, wake, commit, mispredict, load = in Bool()
+    val dispatch, wake, commit, mispredict, load, fence = in Bool()
     val destination = in UInt(1 bits)
     val store = in Bool()
     val data = in Bits(8 bits)
@@ -20,7 +20,7 @@ class TinyOoo(bug: String = "clean") extends Component {
     val loadData = out Bits(8 bits)
   }
   val count = Reg(UInt(3 bits)).init(0)
-  val head = Reg(UInt(2 bits)).init(0)
+  val head = Reg(UInt(2 bits)).init(0).simPublic()
   val tail = Reg(UInt(2 bits)).init(0)
   val free = Reg(Bits(8 bits)).init(0xfc)
   val map = Vec(Reg(UInt(3 bits)).init(0), Reg(UInt(3 bits)).init(1))
@@ -41,7 +41,12 @@ class TinyOoo(bug: String = "clean") extends Component {
     allocation := 0
     for(i <- 7 to 0 by -1) when(free(i)) { allocation := i }
   }
-  val push = io.dispatch && count < 4 && free.orR && !io.mispredict
+  val fenceActive = RegInit(False)
+  val fenceStart = io.fence && !fenceActive
+  val fenceDone = fenceActive && count === 0
+  when(fenceStart) { fenceActive := True }
+  when(fenceDone) { fenceActive := False }
+  val push = !fenceActive && !io.fence && io.dispatch && count < 4 && free.orR && !io.mispredict
   val retirementSlot = if(bug == "commit_order") head + 1 else head
   val pop = io.commit && count =/= 0 && done(head) && !io.mispredict
   val selectedIssue = Bits(4 bits)
@@ -138,6 +143,30 @@ class TinyOoo(bug: String = "clean") extends Component {
   QueueChecks.arbiter("issue", Cat((0 until 4).map(i => valid(i) && ready(i) && !done(i))),selectedIssue)
   DeclaredChecks.rule("freelist.conservation","rename","free tags plus current committed and speculative owners", trigger=True)(
     (bound[Bits]("rename.free") & bound[Bits]("rename.live")).orR || (bound[Bits]("rename.free") | bound[Bits]("rename.live")) =/= B(255,8 bits))
+  // Each helper is asserted in the same clock domain as conservation.
+  DeclaredChecks.rule("rename.occupancy", "rename", "ROB occupancy equals live slots and stays within capacity", trigger=True)(
+    count > 4 || count =/= CountOne(Cat(valid)))
+  val mapMask = (B(1,8 bits) |<< map(0)) | (B(1,8 bits) |<< map(1))
+  DeclaredChecks.rule("rename.disjoint", "rename", "mapped and committed tags are distinct and not free", trigger=True)(
+    map(0) === map(1) || committed(0) === committed(1) || (free & (mapMask | committedMask)).orR)
+  DeclaredChecks.rule("rename.capacity", "rename", "free tags plus speculative occupancy equals six", trigger=True)(
+    CountOne(free).resize(5) + count.resize(5) =/= 6)
+  val ownerErrors = (0 until 4).map(i => valid(i) && (
+    free(physical(i)) || committedMask(physical(i)) ||
+    (0 until 4).filter(_ != i).map(j => valid(j) && physical(i) === physical(j)).reduce(_ || _)))
+  DeclaredChecks.rule("rename.owners", "rename", "each speculative physical tag has one owner and is not free", trigger=True)(ownerErrors.reduce(_ || _))
+  var expectedMap: Seq[UInt] = committed.toSeq
+  val chainErrors = scala.collection.mutable.ArrayBuffer[Bool]()
+  chainErrors += (tail =/= head + count.resize(2))
+  for(offset <- 0 until 4) {
+    val slot = head + U(offset, 2 bits)
+    chainErrors += (valid(slot) =/= (count > offset))
+    val expectedPrevious = Mux(destination(slot) === 0, expectedMap(0), expectedMap(1))
+    chainErrors += (valid(slot) && previous(slot) =/= expectedPrevious)
+    expectedMap = (0 until 2).map(r => Mux(valid(slot) && destination(slot) === r, physical(slot), expectedMap(r)))
+  }
+  chainErrors ++= (0 until 2).map(r => map(r) =/= expectedMap(r))
+  DeclaredChecks.rule("rename.chain", "rename", "rename previous-tag chains follow ROB age and end at the map", trigger=True)(chainErrors.reduce(_ || _))
   DeclaredChecks.rule("freelist.allocate","rename","two accepted allocation ports have distinct tags", trigger=push)(
     push && !free(allocation))
   DeclaredChecks.rule("execution.operands","iq","all operands ready before selection", trigger=selectedIssue.orR)(
@@ -149,6 +178,32 @@ class TinyOoo(bug: String = "clean") extends Component {
     afterFlush && (map(0) =/= committed(0) || map(1) =/= committed(1)))
   DeclaredChecks.rule("recovery.flush","rob","flush clears speculative occupancy", trigger=afterFlush)(
     afterFlush && count =/= 0)
+  // Per-slot references accept the broadcast wake and multi-slot flush.
+  for(i <- 0 until 4) {
+    val allocated = push && tail === i
+    val retired = pop && retirementSlot === i
+    ExecutionChecks.bind("iq_" + i, 1, 1,
+      allocated, U(0,1 bits), B(0,1 bits),
+      io.wake && valid(i) && !flush, U(0,1 bits), B(1,1 bits),
+      selectedIssue(i) && !flush, U(0,1 bits),
+      False, U(0,1 bits), retired, U(0,1 bits), flush.asBits)
+    RecoveryChecks.bind("rob_" + i, 1,
+      allocated, U(0,1 bits), nextSerial,
+      retired || (flush && valid(i)), U(0,1 bits), serial(i),
+      retired, U(0,1 bits), serial(i),
+      False, U(0,1 bits), serial(i),
+      flush.asBits, fenceStart, fenceDone, valid(i).asBits)
+  }
+  Probe.stage("Rn", push, nextSerial)
+  for(i <- 0 until 4) {
+    Probe.stageAt("issue_" + i, "Is", selectedIssue(i) && !flush, serial(i))
+    Probe.flush("kill_" + i, flush && valid(i), serial(i))
+  }
+  Probe.retire("Cm", pop, serial(retirementSlot))
+  // The fixture command denotes addi x(destination+1), x0, data.
+  val retiredSerial = out(serial(retirementSlot)).setName("retiredSerial")
+  val retiredDestination = out(destination(retirementSlot)).setName("retiredDestination")
+  val retiredValue = out(values(retirementSlot)).setName("retiredValue")
   Probe.counter("rename_occupancy",CountOne(speculativeMask))
   Probe.counter("rob_occupancy",count)
   Probe.counter("iq_occupancy",CountOne(Cat((0 until 4).map(i => valid(i) && !done(i)))))

@@ -1,0 +1,961 @@
+{
+  "schema": "rvw.ooo-fixture-followup/1",
+  "native": [
+    {
+      "variant": "clean",
+      "inserted": 68,
+      "firings": []
+    },
+    {
+      "variant": "commit_order",
+      "inserted": 68,
+      "firings": [
+        {
+          "id": "queue.order:rob",
+          "kind": "queue.order",
+          "count": 81,
+          "count_saturated": false,
+          "first_cycle": 7,
+          "fail_signal": "chk_queue_order_rob",
+          "source": null
+        },
+        {
+          "id": "execution.writeback:iq_1",
+          "kind": "execution.writeback",
+          "count": 19,
+          "count_saturated": false,
+          "first_cycle": 7,
+          "fail_signal": "chk_execution_writeback_iq_1",
+          "source": null
+        },
+        {
+          "id": "rename.chain:rename",
+          "kind": "rename.chain",
+          "count": 849,
+          "count_saturated": false,
+          "first_cycle": 8,
+          "fail_signal": "chk_rename_chain_rename",
+          "source": null
+        },
+        {
+          "id": "execution.allocate:iq_0",
+          "kind": "execution.allocate",
+          "count": 21,
+          "count_saturated": false,
+          "first_cycle": 11,
+          "fail_signal": "chk_execution_allocate_iq_0",
+          "source": null
+        },
+        {
+          "id": "recovery.allocate:rob_0",
+          "kind": "recovery.allocate",
+          "count": 21,
+          "count_saturated": false,
+          "first_cycle": 11,
+          "fail_signal": "chk_recovery_allocate_rob_0",
+          "source": null
+        },
+        {
+          "id": "freelist.conservation:rename",
+          "kind": "freelist.conservation",
+          "count": 814,
+          "count_saturated": false,
+          "first_cycle": 12,
+          "fail_signal": "chk_freelist_conservation_rename",
+          "source": null
+        },
+        {
+          "id": "rename.occupancy:rename",
+          "kind": "rename.occupancy",
+          "count": 699,
+          "count_saturated": false,
+          "first_cycle": 12,
+          "fail_signal": "chk_rename_occupancy_rename",
+          "source": null
+        },
+        {
+          "id": "execution.issue:iq_0",
+          "kind": "execution.issue",
+          "count": 19,
+          "count_saturated": false,
+          "first_cycle": 14,
+          "fail_signal": "chk_execution_issue_iq_0",
+          "source": null
+        },
+        {
+          "id": "rename.owners:rename",
+          "kind": "rename.owners",
+          "count": 160,
+          "count_saturated": false,
+          "first_cycle": 46,
+          "fail_signal": "chk_rename_owners_rename",
+          "source": null
+        },
+        {
+          "id": "execution.writeback:iq_2",
+          "kind": "execution.writeback",
+          "count": 11,
+          "count_saturated": false,
+          "first_cycle": 135,
+          "fail_signal": "chk_execution_writeback_iq_2",
+          "source": null
+        },
+        {
+          "id": "recovery.release:rob_2",
+          "kind": "recovery.release",
+          "count": 7,
+          "count_saturated": false,
+          "first_cycle": 161,
+          "fail_signal": "chk_recovery_release_rob_2",
+          "source": null
+        },
+        {
+          "id": "recovery.retire:rob_2",
+          "kind": "recovery.retire",
+          "count": 7,
+          "count_saturated": false,
+          "first_cycle": 161,
+          "fail_signal": "chk_recovery_retire_rob_2",
+          "source": null
+        },
+        {
+          "id": "rename.capacity:rename",
+          "kind": "rename.capacity",
+          "count": 233,
+          "count_saturated": false,
+          "first_cycle": 162,
+          "fail_signal": "chk_rename_capacity_rename",
+          "source": null
+        },
+        {
+          "id": "recovery.fence_drained:rob_0",
+          "kind": "recovery.fence_drained",
+          "count": 8,
+          "count_saturated": false,
+          "first_cycle": 162,
+          "fail_signal": "chk_recovery_fence_drained_rob_0",
+          "source": null
+        },
+        {
+          "id": "rename.disjoint:rename",
+          "kind": "rename.disjoint",
+          "count": 66,
+          "count_saturated": false,
+          "first_cycle": 177,
+          "fail_signal": "chk_rename_disjoint_rename",
+          "source": null
+        },
+        {
+          "id": "execution.writeback:iq_3",
+          "kind": "execution.writeback",
+          "count": 4,
+          "count_saturated": false,
+          "first_cycle": 200,
+          "fail_signal": "chk_execution_writeback_iq_3",
+          "source": null
+        },
+        {
+          "id": "execution.allocate:iq_2",
+          "kind": "execution.allocate",
+          "count": 5,
+          "count_saturated": false,
+          "first_cycle": 204,
+          "fail_signal": "chk_execution_allocate_iq_2",
+          "source": null
+        },
+        {
+          "id": "recovery.allocate:rob_2",
+          "kind": "recovery.allocate",
+          "count": 5,
+          "count_saturated": false,
+          "first_cycle": 204,
+          "fail_signal": "chk_recovery_allocate_rob_2",
+          "source": null
+        },
+        {
+          "id": "execution.issue:iq_2",
+          "kind": "execution.issue",
+          "count": 3,
+          "count_saturated": false,
+          "first_cycle": 205,
+          "fail_signal": "chk_execution_issue_iq_2",
+          "source": null
+        },
+        {
+          "id": "recovery.release:rob_1",
+          "kind": "recovery.release",
+          "count": 4,
+          "count_saturated": false,
+          "first_cycle": 246,
+          "fail_signal": "chk_recovery_release_rob_1",
+          "source": null
+        },
+        {
+          "id": "recovery.retire:rob_1",
+          "kind": "recovery.retire",
+          "count": 4,
+          "count_saturated": false,
+          "first_cycle": 246,
+          "fail_signal": "chk_recovery_retire_rob_1",
+          "source": null
+        },
+        {
+          "id": "recovery.allocate:rob_1",
+          "kind": "recovery.allocate",
+          "count": 1,
+          "count_saturated": false,
+          "first_cycle": 284,
+          "fail_signal": "chk_recovery_allocate_rob_1",
+          "source": null
+        },
+        {
+          "id": "execution.writeback:iq_0",
+          "kind": "execution.writeback",
+          "count": 1,
+          "count_saturated": false,
+          "first_cycle": 661,
+          "fail_signal": "chk_execution_writeback_iq_0",
+          "source": null
+        },
+        {
+          "id": "recovery.release:rob_3",
+          "kind": "recovery.release",
+          "count": 1,
+          "count_saturated": false,
+          "first_cycle": 861,
+          "fail_signal": "chk_recovery_release_rob_3",
+          "source": null
+        },
+        {
+          "id": "recovery.retire:rob_3",
+          "kind": "recovery.retire",
+          "count": 1,
+          "count_saturated": false,
+          "first_cycle": 861,
+          "fail_signal": "chk_recovery_retire_rob_3",
+          "source": null
+        },
+        {
+          "id": "recovery.fence_drained:rob_2",
+          "kind": "recovery.fence_drained",
+          "count": 1,
+          "count_saturated": false,
+          "first_cycle": 862,
+          "fail_signal": "chk_recovery_fence_drained_rob_2",
+          "source": null
+        }
+      ]
+    },
+    {
+      "variant": "double_allocate",
+      "inserted": 68,
+      "firings": [
+        {
+          "id": "freelist.allocate:rename",
+          "kind": "freelist.allocate",
+          "count": 248,
+          "count_saturated": false,
+          "first_cycle": 4,
+          "fail_signal": "chk_freelist_allocate_rename",
+          "source": null
+        },
+        {
+          "id": "rename.capacity:rename",
+          "kind": "rename.capacity",
+          "count": 1087,
+          "count_saturated": false,
+          "first_cycle": 5,
+          "fail_signal": "chk_rename_capacity_rename",
+          "source": null
+        },
+        {
+          "id": "rename.owners:rename",
+          "kind": "rename.owners",
+          "count": 1010,
+          "count_saturated": false,
+          "first_cycle": 5,
+          "fail_signal": "chk_rename_owners_rename",
+          "source": null
+        },
+        {
+          "id": "freelist.conservation:rename",
+          "kind": "freelist.conservation",
+          "count": 630,
+          "count_saturated": false,
+          "first_cycle": 8,
+          "fail_signal": "chk_freelist_conservation_rename",
+          "source": null
+        },
+        {
+          "id": "rename.disjoint:rename",
+          "kind": "rename.disjoint",
+          "count": 630,
+          "count_saturated": false,
+          "first_cycle": 8,
+          "fail_signal": "chk_rename_disjoint_rename",
+          "source": null
+        }
+      ]
+    },
+    {
+      "variant": "leak",
+      "inserted": 68,
+      "firings": [
+        {
+          "id": "freelist.conservation:rename",
+          "kind": "freelist.conservation",
+          "count": 852,
+          "count_saturated": false,
+          "first_cycle": 8,
+          "fail_signal": "chk_freelist_conservation_rename",
+          "source": null
+        },
+        {
+          "id": "rename.capacity:rename",
+          "kind": "rename.capacity",
+          "count": 852,
+          "count_saturated": false,
+          "first_cycle": 8,
+          "fail_signal": "chk_rename_capacity_rename",
+          "source": null
+        }
+      ]
+    },
+    {
+      "variant": "lost_flush",
+      "inserted": 68,
+      "firings": [
+        {
+          "id": "queue.occupancy:rob",
+          "kind": "queue.occupancy",
+          "count": 1084,
+          "count_saturated": false,
+          "first_cycle": 32,
+          "fail_signal": "chk_queue_occupancy_rob",
+          "source": null
+        },
+        {
+          "id": "rename.occupancy:rename",
+          "kind": "rename.occupancy",
+          "count": 1161,
+          "count_saturated": false,
+          "first_cycle": 32,
+          "fail_signal": "chk_rename_occupancy_rename",
+          "source": null
+        },
+        {
+          "id": "rename.capacity:rename",
+          "kind": "rename.capacity",
+          "count": 1127,
+          "count_saturated": false,
+          "first_cycle": 32,
+          "fail_signal": "chk_rename_capacity_rename",
+          "source": null
+        },
+        {
+          "id": "rename.chain:rename",
+          "kind": "rename.chain",
+          "count": 1172,
+          "count_saturated": false,
+          "first_cycle": 32,
+          "fail_signal": "chk_rename_chain_rename",
+          "source": null
+        },
+        {
+          "id": "recovery.flush:rob",
+          "kind": "recovery.flush",
+          "count": 47,
+          "count_saturated": false,
+          "first_cycle": 32,
+          "fail_signal": "chk_recovery_flush_rob",
+          "source": null
+        },
+        {
+          "id": "queue.capacity:rob",
+          "kind": "queue.capacity",
+          "count": 4,
+          "count_saturated": false,
+          "first_cycle": 70,
+          "fail_signal": "chk_queue_capacity_rob",
+          "source": null
+        },
+        {
+          "id": "execution.writeback:iq_0",
+          "kind": "execution.writeback",
+          "count": 1,
+          "count_saturated": false,
+          "first_cycle": 70,
+          "fail_signal": "chk_execution_writeback_iq_0",
+          "source": null
+        },
+        {
+          "id": "recovery.release:rob_0",
+          "kind": "recovery.release",
+          "count": 1,
+          "count_saturated": false,
+          "first_cycle": 70,
+          "fail_signal": "chk_recovery_release_rob_0",
+          "source": null
+        },
+        {
+          "id": "recovery.retire:rob_0",
+          "kind": "recovery.retire",
+          "count": 1,
+          "count_saturated": false,
+          "first_cycle": 70,
+          "fail_signal": "chk_recovery_retire_rob_0",
+          "source": null
+        },
+        {
+          "id": "freelist.conservation:rename",
+          "kind": "freelist.conservation",
+          "count": 32,
+          "count_saturated": false,
+          "first_cycle": 71,
+          "fail_signal": "chk_freelist_conservation_rename",
+          "source": null
+        },
+        {
+          "id": "execution.writeback:iq_1",
+          "kind": "execution.writeback",
+          "count": 1,
+          "count_saturated": false,
+          "first_cycle": 72,
+          "fail_signal": "chk_execution_writeback_iq_1",
+          "source": null
+        },
+        {
+          "id": "recovery.release:rob_1",
+          "kind": "recovery.release",
+          "count": 1,
+          "count_saturated": false,
+          "first_cycle": 72,
+          "fail_signal": "chk_recovery_release_rob_1",
+          "source": null
+        },
+        {
+          "id": "recovery.retire:rob_1",
+          "kind": "recovery.retire",
+          "count": 1,
+          "count_saturated": false,
+          "first_cycle": 72,
+          "fail_signal": "chk_recovery_retire_rob_1",
+          "source": null
+        },
+        {
+          "id": "rename.disjoint:rename",
+          "kind": "rename.disjoint",
+          "count": 5,
+          "count_saturated": false,
+          "first_cycle": 73,
+          "fail_signal": "chk_rename_disjoint_rename",
+          "source": null
+        },
+        {
+          "id": "execution.writeback:iq_2",
+          "kind": "execution.writeback",
+          "count": 1,
+          "count_saturated": false,
+          "first_cycle": 73,
+          "fail_signal": "chk_execution_writeback_iq_2",
+          "source": null
+        },
+        {
+          "id": "recovery.release:rob_2",
+          "kind": "recovery.release",
+          "count": 1,
+          "count_saturated": false,
+          "first_cycle": 73,
+          "fail_signal": "chk_recovery_release_rob_2",
+          "source": null
+        },
+        {
+          "id": "recovery.retire:rob_2",
+          "kind": "recovery.retire",
+          "count": 1,
+          "count_saturated": false,
+          "first_cycle": 73,
+          "fail_signal": "chk_recovery_retire_rob_2",
+          "source": null
+        },
+        {
+          "id": "execution.writeback:iq_3",
+          "kind": "execution.writeback",
+          "count": 1,
+          "count_saturated": false,
+          "first_cycle": 75,
+          "fail_signal": "chk_execution_writeback_iq_3",
+          "source": null
+        },
+        {
+          "id": "recovery.release:rob_3",
+          "kind": "recovery.release",
+          "count": 1,
+          "count_saturated": false,
+          "first_cycle": 75,
+          "fail_signal": "chk_recovery_release_rob_3",
+          "source": null
+        },
+        {
+          "id": "recovery.retire:rob_3",
+          "kind": "recovery.retire",
+          "count": 1,
+          "count_saturated": false,
+          "first_cycle": 75,
+          "fail_signal": "chk_recovery_retire_rob_3",
+          "source": null
+        },
+        {
+          "id": "rename.owners:rename",
+          "kind": "rename.owners",
+          "count": 9,
+          "count_saturated": false,
+          "first_cycle": 76,
+          "fail_signal": "chk_rename_owners_rename",
+          "source": null
+        },
+        {
+          "id": "execution.allocate:iq_0",
+          "kind": "execution.allocate",
+          "count": 1,
+          "count_saturated": false,
+          "first_cycle": 81,
+          "fail_signal": "chk_execution_allocate_iq_0",
+          "source": null
+        },
+        {
+          "id": "recovery.allocate:rob_0",
+          "kind": "recovery.allocate",
+          "count": 1,
+          "count_saturated": false,
+          "first_cycle": 81,
+          "fail_signal": "chk_recovery_allocate_rob_0",
+          "source": null
+        },
+        {
+          "id": "execution.allocate:iq_1",
+          "kind": "execution.allocate",
+          "count": 1,
+          "count_saturated": false,
+          "first_cycle": 82,
+          "fail_signal": "chk_execution_allocate_iq_1",
+          "source": null
+        },
+        {
+          "id": "recovery.allocate:rob_1",
+          "kind": "recovery.allocate",
+          "count": 1,
+          "count_saturated": false,
+          "first_cycle": 82,
+          "fail_signal": "chk_recovery_allocate_rob_1",
+          "source": null
+        },
+        {
+          "id": "execution.issue:iq_1",
+          "kind": "execution.issue",
+          "count": 1,
+          "count_saturated": false,
+          "first_cycle": 86,
+          "fail_signal": "chk_execution_issue_iq_1",
+          "source": null
+        },
+        {
+          "id": "queue.order:rob",
+          "kind": "queue.order",
+          "count": 7,
+          "count_saturated": false,
+          "first_cycle": 89,
+          "fail_signal": "chk_queue_order_rob",
+          "source": null
+        },
+        {
+          "id": "execution.allocate:iq_2",
+          "kind": "execution.allocate",
+          "count": 1,
+          "count_saturated": false,
+          "first_cycle": 91,
+          "fail_signal": "chk_execution_allocate_iq_2",
+          "source": null
+        },
+        {
+          "id": "recovery.allocate:rob_2",
+          "kind": "recovery.allocate",
+          "count": 1,
+          "count_saturated": false,
+          "first_cycle": 91,
+          "fail_signal": "chk_recovery_allocate_rob_2",
+          "source": null
+        },
+        {
+          "id": "execution.issue:iq_2",
+          "kind": "execution.issue",
+          "count": 1,
+          "count_saturated": false,
+          "first_cycle": 92,
+          "fail_signal": "chk_execution_issue_iq_2",
+          "source": null
+        },
+        {
+          "id": "execution.allocate:iq_3",
+          "kind": "execution.allocate",
+          "count": 1,
+          "count_saturated": false,
+          "first_cycle": 97,
+          "fail_signal": "chk_execution_allocate_iq_3",
+          "source": null
+        },
+        {
+          "id": "recovery.allocate:rob_3",
+          "kind": "recovery.allocate",
+          "count": 1,
+          "count_saturated": false,
+          "first_cycle": 97,
+          "fail_signal": "chk_recovery_allocate_rob_3",
+          "source": null
+        },
+        {
+          "id": "execution.issue:iq_3",
+          "kind": "execution.issue",
+          "count": 1,
+          "count_saturated": false,
+          "first_cycle": 99,
+          "fail_signal": "chk_execution_issue_iq_3",
+          "source": null
+        }
+      ]
+    },
+    {
+      "variant": "not_ready",
+      "inserted": 68,
+      "firings": [
+        {
+          "id": "arbiter.requested:issue",
+          "kind": "arbiter.requested",
+          "count": 196,
+          "count_saturated": false,
+          "first_cycle": 5,
+          "fail_signal": "chk_arbiter_requested_issue",
+          "source": null
+        },
+        {
+          "id": "execution.operands:iq",
+          "kind": "execution.operands",
+          "count": 196,
+          "count_saturated": false,
+          "first_cycle": 5,
+          "fail_signal": "chk_execution_operands_iq",
+          "source": null
+        },
+        {
+          "id": "execution.operands:iq_0",
+          "kind": "execution.operands",
+          "count": 68,
+          "count_saturated": false,
+          "first_cycle": 5,
+          "fail_signal": "chk_execution_operands_iq_0",
+          "source": null
+        },
+        {
+          "id": "execution.operands:iq_1",
+          "kind": "execution.operands",
+          "count": 48,
+          "count_saturated": false,
+          "first_cycle": 8,
+          "fail_signal": "chk_execution_operands_iq_1",
+          "source": null
+        },
+        {
+          "id": "execution.operands:iq_3",
+          "kind": "execution.operands",
+          "count": 28,
+          "count_saturated": false,
+          "first_cycle": 12,
+          "fail_signal": "chk_execution_operands_iq_3",
+          "source": null
+        },
+        {
+          "id": "execution.operands:iq_2",
+          "kind": "execution.operands",
+          "count": 40,
+          "count_saturated": false,
+          "first_cycle": 18,
+          "fail_signal": "chk_execution_operands_iq_2",
+          "source": null
+        }
+      ]
+    },
+    {
+      "variant": "stale_map",
+      "inserted": 68,
+      "firings": [
+        {
+          "id": "rename.disjoint:rename",
+          "kind": "rename.disjoint",
+          "count": 288,
+          "count_saturated": false,
+          "first_cycle": 32,
+          "fail_signal": "chk_rename_disjoint_rename",
+          "source": null
+        },
+        {
+          "id": "rename.chain:rename",
+          "kind": "rename.chain",
+          "count": 454,
+          "count_saturated": false,
+          "first_cycle": 32,
+          "fail_signal": "chk_rename_chain_rename",
+          "source": null
+        },
+        {
+          "id": "recovery.map:rename",
+          "kind": "recovery.map",
+          "count": 44,
+          "count_saturated": false,
+          "first_cycle": 32,
+          "fail_signal": "chk_recovery_map_rename",
+          "source": null
+        },
+        {
+          "id": "freelist.conservation:rename",
+          "kind": "freelist.conservation",
+          "count": 647,
+          "count_saturated": false,
+          "first_cycle": 50,
+          "fail_signal": "chk_freelist_conservation_rename",
+          "source": null
+        },
+        {
+          "id": "rename.capacity:rename",
+          "kind": "rename.capacity",
+          "count": 515,
+          "count_saturated": false,
+          "first_cycle": 50,
+          "fail_signal": "chk_rename_capacity_rename",
+          "source": null
+        },
+        {
+          "id": "rename.owners:rename",
+          "kind": "rename.owners",
+          "count": 86,
+          "count_saturated": false,
+          "first_cycle": 224,
+          "fail_signal": "chk_rename_owners_rename",
+          "source": null
+        }
+      ]
+    },
+    {
+      "variant": "young_store",
+      "inserted": 68,
+      "firings": [
+        {
+          "id": "store.forward_age:sq",
+          "kind": "store.forward_age",
+          "count": 250,
+          "count_saturated": false,
+          "first_cycle": 5,
+          "fail_signal": "chk_store_forward_age_sq",
+          "source": null
+        }
+      ]
+    }
+  ],
+  "conservation": {
+    "primary": "freelist.conservation:rename",
+    "helpers": [
+      "rename.occupancy:rename",
+      "rename.disjoint:rename",
+      "rename.capacity:rename",
+      "rename.owners:rename",
+      "rename.chain:rename"
+    ],
+    "all_asserted": true,
+    "inventory_sha256": "1caebd8ec30d30d702bf73d37ae095d68d1df615ddee26b9780d77f7abf40183",
+    "proofs": [
+      {
+        "job": "proof",
+        "status": "timeout",
+        "log_sha256": "bf9348758f5e246a5f4e96affc8fab440239ec029cd38b35a8ecc6fabd25d340",
+        "summary": [
+          "engine_0.basecase: Status returned by engine for basecase: pass"
+        ]
+      },
+      {
+        "job": "short",
+        "status": "timeout",
+        "log_sha256": "df1cc3b2e344826f2db4c7727d3b03f7936caa24db4e03843a50f3630302bd0f",
+        "summary": [
+          "engine_0.basecase: Status returned by engine for basecase: pass"
+        ]
+      },
+      {
+        "job": "pdr",
+        "status": "timeout",
+        "log_sha256": "c213eaa1b0077eceda9c742f502a46d6605f2b02e6c3690f965a700121662a4a",
+        "summary": []
+      },
+      {
+        "job": "depth12",
+        "status": "PASS",
+        "log_sha256": "d2dad30decd5c4f45f082ff6b1f57011336a2926846337eb780225fa33f4602b",
+        "summary": [
+          "engine_0: Status returned by engine: PASS",
+          "DONE (PASS, rc=0)"
+        ]
+      },
+      {
+        "job": "depth16",
+        "status": "PASS",
+        "log_sha256": "1191a5fb51b4e71f28e982738f3edf91e715657a3579606fd0962a34a85ac1e6",
+        "summary": [
+          "engine_0: Status returned by engine: PASS",
+          "DONE (PASS, rc=0)"
+        ]
+      }
+    ],
+    "activation_status": "PASS",
+    "bounded_depth": 16
+  },
+  "consumers": {
+    "probes_to_perf": {
+      "conversion": {
+        "status": "written",
+        "format": "Kanata 0004",
+        "instructions": 404,
+        "retired": 257,
+        "flushed": 144,
+        "stall_samples": 0,
+        "predictions": 0,
+        "open": 3
+      },
+      "summary": {
+        "start": 0,
+        "end_exclusive": 1201,
+        "cycles": 1201,
+        "fetched": 404,
+        "instret": 257,
+        "flushed": 144,
+        "open": 3,
+        "ipc": 0.21398834304746045,
+        "flush_fraction": 0.3564356435643564,
+        "dependencies": 0
+      },
+      "warnings": []
+    },
+    "ooo_timing": {
+      "schema": "rvw.ooo-run/1",
+      "backend": "python",
+      "cycles": 260,
+      "instret": 257,
+      "ipc": 0.9884615384615385,
+      "events": {
+        "dependency_blocked": 0,
+        "issued": 257
+      },
+      "max_occupancy": {
+        "rob_entries": 2,
+        "issue_entries": 1,
+        "load_entries": 0,
+        "store_entries": 0,
+        "fetch_entries": 1,
+        "decode_entries": 0
+      },
+      "topdown": {
+        "unit": "commit_slots",
+        "total_slots": 260,
+        "slots": {
+          "retiring": 257,
+          "frontend_bound": 2,
+          "bad_speculation": 0,
+          "backend_bound": 1
+        },
+        "fractions": {
+          "retiring": 0.9884615384615385,
+          "frontend_bound": 0.007692307692307693,
+          "bad_speculation": 0.0,
+          "backend_bound": 0.0038461538461538464
+        },
+        "method": "retired slots, then recovery, then ROB occupancy, then front end"
+      },
+      "trace_reader": "python-c2",
+      "c2_decoder": "python",
+      "config": {
+        "fetch_width": 1,
+        "fetch_entries": 2,
+        "rename_width": 1,
+        "rob_entries": 4,
+        "issue_width": 1,
+        "issue_entries": 4,
+        "load_entries": 4,
+        "store_entries": 4,
+        "commit_width": 1,
+        "latencies": {
+          "alu": 1,
+          "multiply": 3,
+          "divide": 12,
+          "load": 4,
+          "store": 2
+        },
+        "ports": {},
+        "physical_registers": 0,
+        "physical_float_registers": 0,
+        "branch_penalty": 0,
+        "branch_speculation": false,
+        "branch_prediction": "sequential",
+        "issue_order": "out_of_order",
+        "memory_policy": "ordered",
+        "store_policy": "ordered",
+        "dependence_entries": 1024,
+        "replay_penalty": 5,
+        "forwarding_latency": 1,
+        "frontend": {},
+        "execution": {},
+        "translation": {},
+        "rename": {},
+        "custom_instructions": [],
+        "components": {},
+        "memory_rename": {}
+      },
+      "config_sha256": "73f975a90eadbe35dd3bedf9f3e9f70025fe8a6722e5a935b3f9351fdfe081b2",
+      "trace_sha256": "c3d2db1d67859a2bf3f288c4584c3686a4217bb649641943cac1f011beb232df",
+      "engine_sha256": "fbf461b8f561fd345765f0d8261260755abe93430da1501fa83ce684fcb91b09",
+      "wall_s": 0.016923957969993353,
+      "accuracy_status": "inconclusive",
+      "configuration_status": "unchecked",
+      "configuration_evidence": null,
+      "limits": [
+        "fixed latency",
+        "committed path only; no wrong-path resource use",
+        "branch prediction at issue; no speculative predictor history",
+        "cache timing needs a component service; no replay or translation faults",
+        "topdown is an approximate commit-slot partition",
+        "disambiguation uses traced addresses after store issue"
+      ],
+      "cycle_order": [
+        "commit",
+        "issue",
+        "rename",
+        "fetch"
+      ]
+    },
+    "fault": {
+      "status": "complete",
+      "counts": {
+        "detected": 1,
+        "silent_corruption": 0,
+        "safe": 0,
+        "timeout": 0,
+        "not_injected": 0,
+        "inconclusive": 0
+      },
+      "injected": 1,
+      "golden_instructions": 257
+    }
+  },
+  "limits": [
+    "Command fixture. The C2 projection encodes accepted destination/data commands as addi from x0. This is not a RISC-V decoder or memory-access trace.",
+    "The fixed-latency OoO timing result is a consumer smoke test, not timing correlation or accuracy proof.",
+    "Conservation closure requires a passing proof. Timeouts remain inconclusive.",
+    "Unused replay and device-effect inputs are tied inactive. Their activation is not established."
+  ]
+}
