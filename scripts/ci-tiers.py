@@ -26,6 +26,9 @@ def emit(text):
 
 
 def tool_status(tier):
+    if not TIERS[tier]['tools']:
+        emit('- Optional native tools: none.')
+        return []
     from rvw.doctor.inventory import report
     records = {r['name']: r for r in report()}
     missing = []
@@ -74,7 +77,11 @@ def main():
     parser.add_argument('--tier', choices=TIERS, required=True)
     parser.add_argument('--component', default='python', choices=['python', 'scala', 'rust', 'javascript', 'components', 'vip'])
     parser.add_argument('--plan', action='store_true')
+    parser.add_argument('--tools-only', action='store_true')
     args = parser.parse_args()
+    if args.tools_only:
+        tool_status(args.tier)
+        return 0
     if args.tier == 'examples':
         plan = [('examples', ROOT, [sys.executable, 'scripts/ci-examples.py'])]
     else:
@@ -104,12 +111,27 @@ def main():
         print(result.stderr, end='', file=sys.stderr)
         failed |= result.returncode != 0 or result.timed_out
         emit(f'{name}: exit {result.returncode}; timeout={result.timed_out}.')
+        if args.component != 'python' and args.tier == 'nightly':
+            import runpy
+            summary = runpy.run_path(str(ROOT / 'scripts/ci-test-summary.py'))
+            reports = list(cwd.glob('**/target/test-reports/*.xml')) if args.component == 'scala' else [ROOT / ('component-results.xml' if args.component == 'components' else 'vip-results.xml')] if args.component in ('components', 'vip') else []
+            for report in reports:
+                if not report.is_file():
+                    emit(f'{name}: test report missing; counts unavailable.')
+                    failed = True
+                    continue
+                text, code = summary['summarize'](report)
+                emit(text + '\n' + summary['details'](report))
+                failed |= bool(code)
+            if not reports:
+                emit(summary['language_details'](result.stdout, name))
         if args.tier in ('fast', 'native-light') or args.component == 'python':
             report = ROOT / 'ci-results.xml'
             if report.exists():
                 import runpy
-                summarize = runpy.run_path(str(ROOT / 'scripts/ci-test-summary.py'))['summarize']
-                text, code = summarize(report)
+                summary = runpy.run_path(str(ROOT / 'scripts/ci-test-summary.py'))
+                text, code = summary['summarize'](report)
+                text += '\n' + summary['details'](report)
                 emit(text)
                 failed |= bool(code)
             else:

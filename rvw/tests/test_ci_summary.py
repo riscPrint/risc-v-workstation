@@ -24,3 +24,25 @@ def test_nightly_counts_keep_failures(tmp_path):
     assert code == 1
     assert '6 passed, 3 skipped, 1 failed, 2 errors; 900.00 s' in text
     assert 'target' not in text
+
+
+def test_package_counts_slowest_and_skip_reasons(tmp_path):
+    report = tmp_path / 'x.xml'
+    report.write_text('<testsuite><testcase classname="tests.formal.test_x" name="a" time="3"/><testcase classname="tests.formal.test_x" name="b" time="1"><skipped message="Yosys absent"/></testcase><testcase classname="tests.test_debug_x" name="c" time="2"><failure/></testcase></testsuite>')
+    text = summary.details(report)
+    assert '| formal | 1 | 0 | 1 |' in text
+    assert '| debug | 0 | 1 | 0 |' in text
+    assert text.index('test_x.a:') < text.index('test_debug_x.c:')
+    assert 'Yosys absent' in text
+
+
+@pytest.mark.parametrize('text,package,counts', [
+    ('test result: ok. 28 passed; 0 failed; 2 ignored; 0 measured; 0 filtered out', 'rust', '| rust | 28 | 0 | 2 |'),
+    ('# pass 14\n# fail 1\n# skipped 3', 'javascript', '| javascript | 14 | 1 | 3 |'),
+])
+def test_language_counts(text, package, counts):
+    assert counts in summary.language_details(text, package)
+
+
+def test_missing_language_counts_are_not_a_pass():
+    assert 'unavailable' in summary.language_details('build started', 'rust')

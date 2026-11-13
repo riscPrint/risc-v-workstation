@@ -91,6 +91,7 @@ pytest_report() {
 }
 case "$mode" in
   fast)
+    python scripts/ci-tiers.py --tier fast --tools-only
     if [ "${CI_HYGIENE_ONLY:-false}" = true ]; then
       pytest_report fast-results.xml 300 rvw/tests/test_release_hygiene.py rvw/tests/test_command_reference.py -m fast --strict-markers -q -ra --durations=10
     else
@@ -98,10 +99,10 @@ case "$mode" in
     fi
     ;;
   javascript)
-    (cd vscode; "$RVW_CI_WORK/scripts/with-lock.sh" suite nice -n 10 bash -e -c 'npm ci; npm run typecheck; npm run build; npm test')
+    python scripts/ci-tiers.py --tier nightly --component javascript
     ;;
   rust)
-    (cd SpinalTrace; "$RVW_CI_WORK/scripts/with-lock.sh" suite nice -n 10 cargo test --locked -p spinaltrace-rs)
+    python scripts/ci-tiers.py --tier nightly --component rust
     ;;
   native-light|examples|nightly)
     if [ "$mode" = nightly ] && [ -z "${CI_COMPONENT:-}" ]; then
