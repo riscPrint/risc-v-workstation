@@ -46,7 +46,10 @@ def tree_hash(path):
 
 
 def command(argv, **kw):
+    log = kw.pop("log", None)
     r = run_group(argv, capture=True, timeout=kw.pop("timeout", 120), **kw)
+    if log is not None:
+        Path(log).write_text(str(r.stdout or "") + str(r.stderr or ""))
     if r.timed_out or r.returncode:
         raise ValueError(f"command failed ({r.returncode}): {argv[0]}: {str(r.stderr)[-1000:]}")
     return r.stdout
@@ -154,18 +157,18 @@ def build(manifest, source, out, cc, bench=None, target=None, keep_going=False):
                    "assets": str(out / "assets"), **{k: str(v) for k, v in target.items()}}
         argv = [a.format_map(mapping) for a in w["build"]]
         try:
-            command(argv, cwd=captured)
+            command(argv, cwd=captured, log=dest / "build.log")
             elf = dest / "workload.elf"
             # Refuse a successful command that produced no target or the wrong target.
             header = elf.read_bytes()[:64]
             if len(header) < 64 or header[:4] != b"\x7fELF" or header[4] != (1 if target.get("march", "rv64").startswith("rv32") else 2) or header[5] != 1 or header[18:20] != b"\xf3\x00":
                 raise ValueError("build output must be a little-endian " + ("RV32 ELF" if target.get("march", "rv64").startswith("rv32") else "RV64 ELF"))
-            records.append({**w, "argv": argv, "elf": str(elf), "elf_sha256": digest(elf),
+            records.append({**w, "build_log": str(dest / "build.log"), "argv": argv, "elf": str(elf), "elf_sha256": digest(elf),
                             "elf_bytes": elf.stat().st_size})
         except (ValueError, OSError) as exc:
             if not keep_going:
                 raise
-            records.append({**w, "build_error": str(exc)})
+            records.append({**w, "build_log": str(dest / "build.log"), "build_error": str(exc)})
     if tree_hash(captured) != source_hash:
         raise ValueError("build modified captured sources; put generated files under {out}")
     if digest(compiler["path"]) != compiler["sha256"]:

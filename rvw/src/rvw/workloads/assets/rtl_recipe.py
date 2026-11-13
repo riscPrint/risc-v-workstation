@@ -41,7 +41,7 @@ def prepare(source, out, bench, options):
     shutil.copytree(source / 'env', root / 'env')
     for name in ('common', bench):
         shutil.copytree(source / 'benchmarks' / name, src / name)
-    if options.get('RUNTIME') == 'user-counters':
+    if options.get('RUNTIME') in ('user-counters', 'no-counters'):
         (src / 'common/crt.S').write_text(START)
     if bench in ('qsort', 'rsort') and 'SORT_SIZE' in options:
         size = int(options['SORT_SIZE'])
@@ -77,4 +77,23 @@ def prepare(source, out, bench, options):
         if runs < 1:
             raise ValueError('Dhrystone runs must be positive')
         header.write_text(re.sub(r'#define NUMBER_OF_RUNS\s+500', '#define NUMBER_OF_RUNS ' + str(runs), header.read_text()))
+    if options.get('RUNTIME') == 'user-counters':
+        # Direct counter reads can also occur in a benchmark's timer header.
+        for path in src.rglob('*'):
+            if path.suffix in ('.h', '.c', '.S'):
+                text = path.read_text()
+                text = re.sub(r'\bmcycleh?\b', lambda m: m[0][1:], text)
+                text = re.sub(r'\bminstreth?\b', lambda m: m[0][1:], text)
+                path.write_text(text)
+    if options.get('RUNTIME') == 'no-counters':
+        # C1 supplies timing. Do not require optional architectural counters.
+        for path in src.rglob('*'):
+            if path.suffix in ('.h', '.c'):
+                text = re.sub(r'\bread_csr\(\s*m?(?:cycle|instret)h?\s*\)', '0', path.read_text())
+                if path.name == 'dhrystone_main.c':
+                    prefixes = ('Microseconds =', 'Dhrystones_Per_Second =',
+                                'printf("Microseconds for one run through Dhrystone:',
+                                'printf("Dhrystones per Second:')
+                    text = '\n'.join(line for line in text.splitlines() if not line.strip().startswith(prefixes)) + '\n'
+                path.write_text(text)
     return src

@@ -2363,3 +2363,268 @@ adapter. Use detailed RTL warm-up. Cached VexRiscv and VexiiRiscv need qualified
 bootstrap adapters and native bias measurements. The current capture path
 rejects FP, virtual memory, devices, interrupts and trap state. It does not
 replace the separate live native checkpoint/restore flow.
+
+## Checked RTL benchmark snapshot, 2026-11-13
+
+| Item | Selection or limit |
+|---|---|
+| Machine and date | MacBookPro, macOS arm64, 2026-11-13 UTC; heavily loaded host |
+| Measurement | Native RTL through C1; program self-check required; no BOOM |
+| Workload source | riscv-tests d7e86f701b929b5d801f8cda1a4871ab05f452bb; env 6de71edb142be36319e380ce782c3d1830c65d68 |
+| Compiler | riscv64-unknown-elf-gcc (g1b306039a) 15.1.0 |
+| Inputs | Pinned upstream inputs; sort prefix 128, SpMV first 8 rows, Dhrystone 10 iterations |
+| Run policy | Seed 1; added memory latency 0; 2000000 cycle cap; 110 s simulation wall limit; nice -n 15 |
+| Window | Full run includes startup, warmup and checker. Runtime ports differ. These are measured snapshots, not core rankings or release qualification. |
+| Checks | HTIF self-checks; exact repeated cycle/instruction counts on Vex default and cached; no benchmark Spike or C2 validation |
+| Attribution | Project slot partitions, checked against C1 instructions. They do not isolate causal penalties. Nax has two slots; the other probed cores have one. |
+| Runtime ports | Vex/Nax/Mini use machine-counter runtime; Pico uses CSR-free startup and user counters; Vexii uses CSR-free startup without guest counters. |
+| Guest timing | No guest timing result is used for Vexii. CoreMark/MHz is not measured: the available short driver omits official timing. |
+| Raw output | Keep RUN_ROOT outside Git. No instruction traces or waves are retained. The full result tables, C1 JSON and logs remain local. |
+
+| Case | Config | C1 pass | Samples/program | Core revision | Tools revision | RTL hash prefix |
+|---|---|---|---|---|---|---|
+| Vex32 | rv32im | 9/9 | 2 | baf7dc82f855 | 6bffe3a297d7 + edits | 0c2d53cb02b6 |
+| Vex32 L1 | rv32im_cached | 9/9 | 2 | baf7dc82f855 | 0a31a93a12e3 | 27ef9bcc2b8c |
+| Vex32 MMU L1 | rv32ima_linux | 9/9 | 1 | baf7dc82f855 | 05bfb323d22b + edits | ea11465056f2 |
+| Vexii32 | rv32im | 9/9 | 1 | 9b63f47fe559 | 05bfb323d22b + edits | 07478d7be19f |
+| Vexii32 L1/BP | rv32im_cached | 9/9 | 1 | 9b63f47fe559 | 05bfb323d22b + edits | a42528f202f8 |
+| Vexii32 MMU | rv32imasu | 9/9 | 1 | 9b63f47fe559 | 05bfb323d22b + edits | db2f8d9f72eb |
+| Vexii64 MMU | rv64imasu | 8/9 | 1 | 9b63f47fe559 | 05bfb323d22b + edits | c52b62a5b02b |
+| Vexii64 MMU C | rv64imacsu | 9/9 | 1 | 9b63f47fe559 | 05bfb323d22b + edits | 683fa775dad5 |
+| Nax32 | rv32imasu | 9/9 | 1 | 9f452d50560d | e78ce9b1a31f + edits | 000c56696874 |
+| OoO Mini32 | default | 9/9 | 1 | e78ce9b1a31f | e78ce9b1a31f + edits | c84cc1b7053a |
+| Pico32 | default | 9/9 | 1 | 42b78238a0eb | 2ba8c19d4ad2 + edits | 09ef12a31c39 |
+
+### Default cores: IPC
+
+| Program | Vex32 | Vexii32 | Nax32 | OoO Mini32 | Pico32 |
+|---|---|---|---|---|---|
+| median | 0.26708 | 0.43188 | 0.58983 | 0.82505 | 0.17633 |
+| qsort | 0.25738 | 0.39717 | 0.61828 | 0.86342 | 0.18106 |
+| rsort | 0.30188 | 0.34220 | 1.45837 | 0.99285 | 0.17289 |
+| towers | 0.31746 | 0.51825 | 0.81903 | 0.94112 | 0.15935 |
+| vvadd | 0.29738 | 0.49125 | 1.24330 | 0.98888 | 0.18232 |
+| memcpy | 0.30378 | 0.57272 | 1.22897 | 0.99779 | 0.17142 |
+| multiply | 0.29390 | 0.37042 | 1.42110 | 0.98048 | 0.14266 |
+| dhrystone | 0.27690 | 0.47457 | 0.97127 | 0.74944 | 0.17191 |
+| spmv | 0.31115 | 0.45198 | 1.26155 | 0.81214 | 0.13099 |
+
+### Additional configurations: IPC
+
+| Program | Vex32 L1 | Vex32 MMU L1 | Vexii32 L1/BP | Vexii32 MMU | Vexii64 MMU | Vexii64 MMU C |
+|---|---|---|---|---|---|---|
+| median | 0.59524 | 0.59524 | 0.45634 | 0.43187 | 0.44444 | 0.43490 |
+| qsort | 0.57919 | 0.57919 | 0.41668 | 0.39715 | 0.39948 | 0.38529 |
+| rsort | 0.71748 | 0.71748 | 0.38552 | 0.34220 | 0.34283 | 0.34156 |
+| towers | 0.51035 | 0.51035 | 0.47757 | 0.51821 | 0.51962 | 0.51118 |
+| vvadd | 0.42816 | 0.42816 | 0.48146 | 0.49121 | 0.49141 | 0.48045 |
+| memcpy | 0.22784 | 0.22784 | 0.45724 | 0.57270 | 0.57141 | 0.57134 |
+| multiply | 0.70033 | 0.70033 | 0.38709 | 0.37042 | 0.37051 | 0.35497 |
+| dhrystone | 0.55771 | 0.55771 | 0.48560 | 0.47454 | 0.42060 | 0.40460 |
+| spmv | 0.58146 | 0.58146 | 0.44802 | 0.45197 | BUILD FAIL | 0.42482 |
+
+### Slot attribution
+
+| Case | Program | IPC | Retiring (%) | Bad speculation (%) | Front-end (%) | Back-end (%) |
+|---|---|---|---|---|---|---|
+| Vex32 | median | 0.26708 | 26.71 | 12.90 | 5.60 | 54.80 |
+| Vex32 | qsort | 0.25738 | 25.74 | 11.04 | 8.22 | 55.00 |
+| Vex32 | rsort | 0.30188 | 30.19 | 0.34 | 6.11 | 63.37 |
+| Vex32 | towers | 0.31746 | 31.75 | 3.47 | 1.41 | 63.38 |
+| Vex32 | vvadd | 0.29738 | 29.74 | 0.43 | 6.96 | 62.87 |
+| Vex32 | memcpy | 0.30378 | 30.38 | 0.08 | 5.87 | 63.67 |
+| Vex32 | multiply | 0.29390 | 29.39 | 1.24 | 7.21 | 62.16 |
+| Vex32 | dhrystone | 0.27690 | 27.69 | 7.08 | 3.65 | 61.58 |
+| Vex32 | spmv | 0.31115 | 31.11 | 6.62 | 1.01 | 61.26 |
+| Vex32 L1 | median | 0.59524 | 59.52 | 9.02 | 4.05 | 27.41 |
+| Vex32 L1 | qsort | 0.57919 | 57.92 | 8.58 | 3.48 | 30.02 |
+| Vex32 L1 | rsort | 0.71748 | 71.75 | 0.46 | 3.25 | 24.54 |
+| Vex32 L1 | towers | 0.51035 | 51.04 | 2.77 | 10.76 | 35.43 |
+| Vex32 L1 | vvadd | 0.42816 | 42.82 | 0.76 | 10.79 | 45.64 |
+| Vex32 L1 | memcpy | 0.22784 | 22.78 | 0.07 | 12.74 | 64.41 |
+| Vex32 L1 | multiply | 0.70033 | 70.03 | 0.94 | 0.98 | 28.05 |
+| Vex32 L1 | dhrystone | 0.55771 | 55.77 | 8.43 | 7.86 | 27.95 |
+| Vex32 L1 | spmv | 0.58146 | 58.15 | 10.67 | 14.07 | 17.11 |
+| Vex32 MMU L1 | median | 0.59524 | 59.52 | 9.02 | 4.05 | 27.41 |
+| Vex32 MMU L1 | qsort | 0.57919 | 57.92 | 8.58 | 3.48 | 30.02 |
+| Vex32 MMU L1 | rsort | 0.71748 | 71.75 | 0.46 | 3.25 | 24.54 |
+| Vex32 MMU L1 | towers | 0.51035 | 51.04 | 2.77 | 10.76 | 35.43 |
+| Vex32 MMU L1 | vvadd | 0.42816 | 42.82 | 0.76 | 10.79 | 45.64 |
+| Vex32 MMU L1 | memcpy | 0.22784 | 22.78 | 0.07 | 12.74 | 64.41 |
+| Vex32 MMU L1 | multiply | 0.70033 | 70.03 | 0.94 | 0.98 | 28.05 |
+| Vex32 MMU L1 | dhrystone | 0.55771 | 55.77 | 8.43 | 7.86 | 27.95 |
+| Vex32 MMU L1 | spmv | 0.58146 | 58.15 | 10.67 | 14.07 | 17.11 |
+| Vexii32 | median | 0.43188 | 43.19 | 12.62 | 0.14 | 44.05 |
+| Vexii32 | qsort | 0.39717 | 39.72 | 11.38 | 0.15 | 48.75 |
+| Vexii32 | rsort | 0.34220 | 34.22 | 5.43 | 0.03 | 60.31 |
+| Vexii32 | towers | 0.51825 | 51.82 | 2.26 | 0.25 | 45.66 |
+| Vexii32 | vvadd | 0.49125 | 49.12 | 1.31 | 0.27 | 49.29 |
+| Vexii32 | memcpy | 0.57272 | 57.27 | 5.57 | 0.06 | 37.10 |
+| Vexii32 | multiply | 0.37042 | 37.04 | 0.05 | 0.02 | 62.89 |
+| Vexii32 | dhrystone | 0.47457 | 47.46 | 2.88 | 0.28 | 49.39 |
+| Vexii32 | spmv | 0.45198 | 45.20 | 3.49 | 0.07 | 51.24 |
+| Vexii32 L1/BP | median | 0.45634 | 45.63 | 2.87 | 2.07 | 49.42 |
+| Vexii32 L1/BP | qsort | 0.41668 | 41.67 | 5.90 | 1.63 | 50.80 |
+| Vexii32 L1/BP | rsort | 0.38552 | 38.55 | 0.17 | 0.41 | 60.87 |
+| Vexii32 L1/BP | towers | 0.47757 | 47.76 | 1.14 | 4.53 | 46.57 |
+| Vexii32 L1/BP | vvadd | 0.48146 | 48.15 | 0.26 | 4.08 | 47.51 |
+| Vexii32 L1/BP | memcpy | 0.45724 | 45.72 | 0.06 | 6.15 | 48.07 |
+| Vexii32 L1/BP | multiply | 0.38709 | 38.71 | 0.03 | 0.21 | 61.05 |
+| Vexii32 L1/BP | dhrystone | 0.48560 | 48.56 | 1.17 | 4.18 | 46.08 |
+| Vexii32 L1/BP | spmv | 0.44802 | 44.80 | 1.25 | 2.18 | 51.77 |
+| Vexii32 MMU | median | 0.43187 | 43.19 | 12.62 | 0.15 | 44.05 |
+| Vexii32 MMU | qsort | 0.39715 | 39.72 | 11.38 | 0.15 | 48.75 |
+| Vexii32 MMU | rsort | 0.34220 | 34.22 | 5.43 | 0.03 | 60.31 |
+| Vexii32 MMU | towers | 0.51821 | 51.82 | 2.26 | 0.26 | 45.66 |
+| Vexii32 MMU | vvadd | 0.49121 | 49.12 | 1.31 | 0.28 | 49.29 |
+| Vexii32 MMU | memcpy | 0.57270 | 57.27 | 5.57 | 0.07 | 37.10 |
+| Vexii32 MMU | multiply | 0.37042 | 37.04 | 0.05 | 0.02 | 62.88 |
+| Vexii32 MMU | dhrystone | 0.47454 | 47.45 | 2.88 | 0.29 | 49.38 |
+| Vexii32 MMU | spmv | 0.45197 | 45.20 | 3.49 | 0.07 | 51.24 |
+| Vexii64 MMU | median | 0.44444 | 44.44 | 11.86 | 0.14 | 43.56 |
+| Vexii64 MMU | qsort | 0.39948 | 39.95 | 11.34 | 0.15 | 48.56 |
+| Vexii64 MMU | rsort | 0.34283 | 34.28 | 5.42 | 0.03 | 60.26 |
+| Vexii64 MMU | towers | 0.51962 | 51.96 | 2.27 | 0.26 | 45.50 |
+| Vexii64 MMU | vvadd | 0.49141 | 49.14 | 1.29 | 0.27 | 49.30 |
+| Vexii64 MMU | memcpy | 0.57141 | 57.14 | 5.23 | 0.07 | 37.56 |
+| Vexii64 MMU | multiply | 0.37051 | 37.05 | 0.05 | 0.02 | 62.88 |
+| Vexii64 MMU | dhrystone | 0.42060 | 42.06 | 7.24 | 0.26 | 50.44 |
+| Vexii64 MMU C | median | 0.43490 | 43.49 | 11.61 | 0.14 | 44.77 |
+| Vexii64 MMU C | qsort | 0.38529 | 38.53 | 10.94 | 0.15 | 50.38 |
+| Vexii64 MMU C | rsort | 0.34156 | 34.16 | 5.40 | 0.03 | 60.41 |
+| Vexii64 MMU C | towers | 0.51118 | 51.12 | 2.24 | 0.26 | 46.39 |
+| Vexii64 MMU C | vvadd | 0.48045 | 48.04 | 1.26 | 0.26 | 50.43 |
+| Vexii64 MMU C | memcpy | 0.57134 | 57.13 | 5.23 | 0.07 | 37.57 |
+| Vexii64 MMU C | multiply | 0.35497 | 35.50 | 0.05 | 0.02 | 64.43 |
+| Vexii64 MMU C | dhrystone | 0.40460 | 40.46 | 6.96 | 0.25 | 52.33 |
+| Vexii64 MMU C | spmv | 0.42482 | 42.48 | 4.51 | 0.10 | 52.90 |
+| Nax32 | median | 0.58983 | 29.49 | 20.15 | 0.89 | 49.47 |
+| Nax32 | qsort | 0.61828 | 30.91 | 18.44 | 1.36 | 49.29 |
+| Nax32 | rsort | 1.45837 | 72.92 | 3.70 | 0.72 | 22.67 |
+| Nax32 | towers | 0.81903 | 40.95 | 9.68 | 2.36 | 47.00 |
+| Nax32 | vvadd | 1.24330 | 62.16 | 6.26 | 3.35 | 28.22 |
+| Nax32 | memcpy | 1.22897 | 61.45 | 1.53 | 0.72 | 36.30 |
+| Nax32 | multiply | 1.42110 | 71.06 | 2.78 | 0.46 | 25.71 |
+| Nax32 | dhrystone | 0.97127 | 48.56 | 9.46 | 3.16 | 38.81 |
+| Nax32 | spmv | 1.26155 | 63.08 | 7.58 | 1.55 | 27.79 |
+| OoO Mini32 | median | 0.82505 | 82.50 | 0.00 | 8.70 | 8.80 |
+| OoO Mini32 | qsort | 0.86342 | 86.34 | 0.00 | 6.77 | 6.89 |
+| OoO Mini32 | rsort | 0.99285 | 99.28 | 0.00 | 0.34 | 0.38 |
+| OoO Mini32 | towers | 0.94112 | 94.11 | 0.00 | 2.86 | 3.03 |
+| OoO Mini32 | vvadd | 0.98888 | 98.89 | 0.00 | 0.46 | 0.66 |
+| OoO Mini32 | memcpy | 0.99779 | 99.78 | 0.00 | 0.09 | 0.13 |
+| OoO Mini32 | multiply | 0.98048 | 98.05 | 0.00 | 0.96 | 0.99 |
+| OoO Mini32 | dhrystone | 0.74944 | 74.94 | 0.00 | 4.60 | 20.45 |
+| OoO Mini32 | spmv | 0.81214 | 81.21 | 0.00 | 4.91 | 13.88 |
+
+### Three lowest IPC programs per configuration
+
+| Case | Program | Attribution |
+|---|---|---|
+| Vex32 | qsort | backend bound slots account for 55.00% of this project's commit-slot partition. |
+| Vex32 | median | backend bound slots account for 54.80% of this project's commit-slot partition. |
+| Vex32 | dhrystone | backend bound slots account for 61.58% of this project's commit-slot partition. |
+| Vex32 L1 | memcpy | backend bound slots account for 64.41% of this project's commit-slot partition. |
+| Vex32 L1 | vvadd | backend bound slots account for 45.64% of this project's commit-slot partition. |
+| Vex32 L1 | towers | backend bound slots account for 35.43% of this project's commit-slot partition. |
+| Vex32 MMU L1 | memcpy | backend bound slots account for 64.41% of this project's commit-slot partition. |
+| Vex32 MMU L1 | vvadd | backend bound slots account for 45.64% of this project's commit-slot partition. |
+| Vex32 MMU L1 | towers | backend bound slots account for 35.43% of this project's commit-slot partition. |
+| Vexii32 | rsort | backend bound slots account for 60.31% of this project's commit-slot partition. |
+| Vexii32 | multiply | backend bound slots account for 62.89% of this project's commit-slot partition. |
+| Vexii32 | qsort | backend bound slots account for 48.75% of this project's commit-slot partition. |
+| Vexii32 L1/BP | rsort | backend bound slots account for 60.87% of this project's commit-slot partition. |
+| Vexii32 L1/BP | multiply | backend bound slots account for 61.05% of this project's commit-slot partition. |
+| Vexii32 L1/BP | qsort | backend bound slots account for 50.80% of this project's commit-slot partition. |
+| Vexii32 MMU | rsort | backend bound slots account for 60.31% of this project's commit-slot partition. |
+| Vexii32 MMU | multiply | backend bound slots account for 62.88% of this project's commit-slot partition. |
+| Vexii32 MMU | qsort | backend bound slots account for 48.75% of this project's commit-slot partition. |
+| Vexii64 MMU | rsort | backend bound slots account for 60.26% of this project's commit-slot partition. |
+| Vexii64 MMU | multiply | backend bound slots account for 62.88% of this project's commit-slot partition. |
+| Vexii64 MMU | qsort | backend bound slots account for 48.56% of this project's commit-slot partition. |
+| Vexii64 MMU C | rsort | backend bound slots account for 60.41% of this project's commit-slot partition. |
+| Vexii64 MMU C | multiply | backend bound slots account for 64.43% of this project's commit-slot partition. |
+| Vexii64 MMU C | qsort | backend bound slots account for 50.38% of this project's commit-slot partition. |
+| Nax32 | median | backend bound slots account for 49.47% of this project's commit-slot partition. |
+| Nax32 | qsort | backend bound slots account for 49.29% of this project's commit-slot partition. |
+| Nax32 | towers | backend bound slots account for 47.00% of this project's commit-slot partition. |
+| OoO Mini32 | dhrystone | backend bound slots account for 20.45% of this project's commit-slot partition. |
+| OoO Mini32 | spmv | backend bound slots account for 13.88% of this project's commit-slot partition. |
+| OoO Mini32 | median | backend bound slots account for 8.80% of this project's commit-slot partition. |
+
+### Normalized Dhrystone loop observations
+
+| Case | ROI cycles | Iterations per million ROI cycles |
+|---|---|---|
+| Vex32 | 14462 | 691.467 |
+| Vex32 L1 | 6271 | 1594.642 |
+| Vex32 MMU L1 | 6271 | 1594.642 |
+| Vexii32 | not recorded | not measured |
+| Vexii32 L1/BP | not recorded | not measured |
+| Vexii32 MMU | not recorded | not measured |
+| Vexii64 MMU | not recorded | not measured |
+| Vexii64 MMU C | not recorded | not measured |
+| Nax32 | 3696 | 2705.628 |
+| OoO Mini32 | not recorded | not measured |
+| Pico32 | not recorded | not measured |
+
+| Interpretation | Limit |
+|---|---|
+| Dhrystone figures | Ten loops only; includes counter-read overhead. This is not an official Dhrystone or DMIPS score. |
+| CoreMark/MHz | Not measured; no official CoreMark timing flow ran. |
+
+### Vex32 default to cached comparison
+
+| Program | IPC delta (%) | Noise check | Retiring delta (pp) | Bad speculation delta (pp) | Front-end delta (pp) | Back-end delta (pp) |
+|---|---|---|---|---|---|---|
+| dhrystone | 101.408 | deterministic | 28.080 | 1.349 | 4.204 | -33.634 |
+| median | 122.870 | deterministic | 32.816 | -3.875 | -1.550 | -27.390 |
+| memcpy | -25.000 | deterministic | -7.595 | -0.011 | 6.870 | 0.736 |
+| multiply | 138.288 | deterministic | 40.643 | -0.301 | -6.230 | -34.112 |
+| qsort | 125.031 | deterministic | 32.181 | -2.459 | -4.736 | -24.986 |
+| rsort | 137.671 | deterministic | 41.560 | 0.126 | -2.855 | -38.831 |
+| spmv | 86.875 | deterministic | 27.031 | 4.047 | 13.064 | -44.141 |
+| towers | 60.761 | deterministic | 19.289 | -0.694 | 9.354 | -27.949 |
+| vvadd | 43.977 | deterministic | 13.078 | 0.333 | 3.822 | -17.232 |
+
+| Comparison control | Result |
+|---|---|
+| Executable identity | All nine ELF headers, program headers and loadable bytes match between the measured default/cached builds; six non-load bytes differ. |
+| Noise policy | Each table has two passing samples with exactly equal cycles and instructions. Host runtime is not the performance metric. |
+| Memcpy | Cached IPC is lower in this zero-added-latency adapter setup. The regression is reported, not waived. |
+
+### Triage record
+
+| Finding | Resolution or remaining limit |
+|---|---|
+| Cold Scala compile exceeded a per-launch wall cap | Warm compile, then reuse C1 run-many; each program keeps its own wall cap. |
+| Full qsort and SpMV inputs exceeded 110 seconds | Use pinned sort prefix 128 and SpMV row prefix 8 with matching expected output. Both programs remain selected. |
+| Dhrystone always returned success upstream | The bounded driver checks every printed expected final scalar, record and string value. |
+| Pico Dhrystone trapped on a machine counter read in its timer header | The user-counter runtime now updates benchmark-local timer headers, not only common runtime code. All nine pass. |
+| Vexii programs trapped with exit 1337 | Selected configs omit optional architectural counters. The no-counters runtime contains no CSR instructions and uses C1 timing; all nine RV32 programs pass. |
+| Vexii trapAt totals ended short of C1 by one or two retirements | Freeze the completion-qualified C1 instruction boundary at tohost, then wait for matching physical commits. Count those drain cycles. No counter correction or waived mismatch is used. |
+| RV64IM SpMV cannot link the installed library | Installed soft-float RV64 multilib is IMAC. Keep the RV64IM build failure. The C-enabled existing configuration runs all nine. |
+| Vexii private setup initially omitted rvls | Populate the pinned rvls 847ce99fd2b28a5c0ccb1ec2683311cf97a9fefc before compilation; no core source patch. |
+| Early full-event probe capture was expensive | Benchmark C1 capture samples only the five counters. Full event capture remains available outside this benchmark flow. |
+
+### Regeneration
+
+| Case | Command after native setup and private source/lock selection |
+|---|---|
+| Vex32 | nice -n 15 rvw workloads run --project examples/vexriscv --config rv32im --source "$RISCV_TESTS" --out "$RUN_ROOT/vex-summary-rv32im" --repeats 2 |
+| Vex32 L1 | nice -n 15 rvw workloads run --project examples/vexriscv --config rv32im_cached --source "$RISCV_TESTS" --out "$RUN_ROOT/vex-summary-rv32im_cached" --repeats 2 |
+| Vex32 MMU L1 | nice -n 15 rvw workloads run --project examples/vexriscv --config rv32ima_linux --source "$RISCV_TESTS" --out "$RUN_ROOT/vex-summary-rv32ima_linux" --repeats 1 |
+| Vexii32 | nice -n 15 rvw workloads run --project examples/vexiiriscv --config rv32im --source "$RISCV_TESTS" --out "$RUN_ROOT/vexii-committed-rv32im" --repeats 1 |
+| Vexii32 L1/BP | nice -n 15 rvw workloads run --project examples/vexiiriscv --config rv32im_cached --source "$RISCV_TESTS" --out "$RUN_ROOT/vexii-committed-rv32im_cached" --repeats 1 |
+| Vexii32 MMU | nice -n 15 rvw workloads run --project examples/vexiiriscv --config rv32imasu --source "$RISCV_TESTS" --out "$RUN_ROOT/vexii-committed-rv32imasu" --repeats 1 |
+| Vexii64 MMU | nice -n 15 rvw workloads run --project examples/vexiiriscv/rvw64.toml --config rv64imasu --source "$RISCV_TESTS" --out "$RUN_ROOT/vexii-committed-rv64imasu" --repeats 1 |
+| Vexii64 MMU C | nice -n 15 rvw workloads run --project examples/vexiiriscv/rvw64.toml --config rv64imacsu --source "$RISCV_TESTS" --out "$RUN_ROOT/vexii-committed-rv64imacsu" --repeats 1 |
+| Nax32 | nice -n 15 rvw workloads run --project examples/naxriscv --config rv32imasu --source "$RISCV_TESTS" --out "$RUN_ROOT/nax-final-default" --repeats 1 |
+| OoO Mini32 | nice -n 15 rvw workloads run --project examples/ooo-mini --config default --source "$RISCV_TESTS" --out "$RUN_ROOT/mini-final-default" --repeats 1 |
+| Pico32 | nice -n 15 rvw workloads run --project examples/picorv32 --config default --source "$RISCV_TESTS" --out "$RUN_ROOT/pico-counter-fix" --repeats 1 |
+
+| Other command | Purpose |
+|---|---|
+| `rvw workloads compare "$RUN_ROOT/vex-summary-rv32im/report.json" "$RUN_ROOT/vex-summary-rv32im_cached/report.json"` | Regenerate IPC and top-down deltas with repeatability checks |
+| `rvw workloads run ... --resume` | Resume only with matching campaign identity and unchanged ELFs |
+| `rvw perf topdown EVENTS --result RESULT_JSON` | Recheck counter totals before transient probe files are removed |

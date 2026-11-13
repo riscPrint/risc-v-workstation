@@ -8,7 +8,7 @@ import vexiiriscv.VexiiRiscv
 import vexiiriscv.execute.lsu.{LsuCachelessPlugin, LsuPlugin}
 import vexiiriscv.fetch.FetchCachelessPlugin
 import vexiiriscv.misc.PrivilegedPlugin
-import vexiiriscv.test.{VexiiRiscvProbe, konata}
+import vexiiriscv.test.{VexiiRiscvProbe, WhiteboxerPlugin, konata}
 import scala.collection.mutable
 
 class VexiiAdapter(val xlen: Int) extends CoreAdapter {
@@ -89,6 +89,9 @@ class VexiiAdapter(val xlen: Int) extends CoreAdapter {
     var lastRetiredMode = Option.empty[Int]
     val retiredByMode = Array.fill(4)(0L)
     var probes = Option.empty[ProbeCollector]
+    var physicalRetired = 0L
+    var finishTarget = Option.empty[Long]
+    var finishAt = Option.empty[Long]
     val loadAddresses = mutable.LongMap.empty[(Long, Long)]
     val storeAddresses = mutable.LongMap.empty[(Long, Long)]
     val translatedAddresses = mutable.ArrayBuffer.empty[ujson.Value]
@@ -153,6 +156,7 @@ class VexiiAdapter(val xlen: Int) extends CoreAdapter {
             "capabilities" -> ujson.Arr("state", "csr"), "csr_snapshot" -> ujson.Arr("0x300")) else Nil) ++ externalEvidence.toSeq.map(e => "external_interrupts" -> e) ++ (if (resetEvents.nonEmpty) Seq("reset_events" -> ujson.Obj("schema" -> "rvw.reset-events/1", "events" -> ujson.Arr.from(resetEvents))) else Nil)), observe = dpi.filter(_ => sys.env.contains("RVW_COSIM_PORT"))
             .map(m => (line: String) => m.observe(line)))) else None
         probes = ProbeCollector.open(spinalprobes.Probe.of(dut), job, ctx.rvfiHeader)
+        val physicalCommits = dut.host[WhiteboxerPlugin].logic.commits.ports
         val priv = dut.host[PrivilegedPlugin].logic.harts(0)
         val tap = dut.host[TrapTapPlugin].logic
         val ibusOpt = dut.host.get[FetchCachelessPlugin].map(_.logic.bus)
@@ -188,6 +192,7 @@ class VexiiAdapter(val xlen: Int) extends CoreAdapter {
           val cycle = ctl.cycle
           if (!reset.exists(_.active)) {
           currentCycle = cycle
+          physicalRetired += physicalCommits.count(_.valid.toBoolean)
           probes.foreach(_.sample(cycle))
           dut.host[PrivilegedPlugin].logic.rdtime #= cycle
           val deviceLevels = live.map(_.tick(cycle)).orElse(devices.map(_.tick(cycle))).getOrElse(BigInt(0))
@@ -358,12 +363,19 @@ class VexiiAdapter(val xlen: Int) extends CoreAdapter {
                 writer.foreach(_.resetEvent(ctl.cycle, resetStep, samples))
               }
             }
-            if (finish.nonEmpty) backend.drain()
+            if (finish.nonEmpty && finishTarget.isEmpty) {
+              backend.drain()
+              // Completion-qualified C1 can observe tohost before trapAt. Keep
+              // the instruction boundary fixed and wait for physical retirement.
+              finishTarget = Some(backend.retired)
+              finishAt = Some(ctl.cycle)
+              probe.enabled = false
+            }
             val watermark = backend.pendingCycle.getOrElse(Long.MaxValue)
             val ready = events.filter(_._1 <= watermark).sortBy(_._1).toVector
             events.filterInPlace(_._1 > watermark)
             ready.foreach(_._2())
-            finish.foreach { case (s, c, m) =>
+            finish.filter(_ => finishTarget.contains(physicalRetired)).foreach { case (s, c, m) =>
               writer.foreach(_.end(ctl.cycle, s.name)); traceEnded = true
               ctl.finish(s, c, m)
             }
@@ -405,7 +417,8 @@ class VexiiAdapter(val xlen: Int) extends CoreAdapter {
         "last_retired_pc" -> lastRetiredPc.map(v => ujson.Str(Hex(v))).getOrElse(ujson.Null),
         "last_retired_mode" -> lastRetiredMode.map(v => ujson.Num(v)).getOrElse(ujson.Null),
         "device_output" -> live.map(_.outputs).getOrElse(ujson.Obj()),
-        "commit_source" -> "VexiiRiscvProbe", "translated_addresses" -> ujson.Arr.from(translatedAddresses),
+        "commit_source" -> "VexiiRiscvProbe", "physical_retirements" -> RvwJson.num(physicalRetired),
+        "commit_drain_cycles" -> RvwJson.num(finishAt.map(c => cycles-c).getOrElse(0L)), "translated_addresses" -> ujson.Arr.from(translatedAddresses),
         "mmu_walks" -> RvwJson.num(walkCapture.map(_.walks.toLong).getOrElse(0L)),
         "mmu_walks_unattached" -> RvwJson.num(walkCapture.map(_.undelivered.toLong).getOrElse(0L)),
         "reset_observations" -> resetObservations,

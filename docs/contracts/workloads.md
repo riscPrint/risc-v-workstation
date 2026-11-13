@@ -21,6 +21,8 @@ See [the workload README](../rvw/src/rvw/workloads/README.md) for fields.
 `rvw.workload-build/1` records the manifest, captured source/runtime hashes,
 compiler identity and per-workload commands, ELF hashes and sizes.
 It means build completion, not output correctness.
+Each build row can include `build_log`, the path to compiler stdout and stderr.
+Failed rows retain that log and `build_error` when the caller selects keep-going.
 `rvw.workload-verify/1` binds the build report SHA-256, oracle identity,
 executed commands, ELF hashes, exits, timeout flags and stdout/stderr hashes.
 `pass` requires a nonempty set, exit 0, no timeout and exact expected stdout

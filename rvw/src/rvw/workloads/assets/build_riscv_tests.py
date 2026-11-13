@@ -23,7 +23,8 @@ if 'RAM_BASE' in options:
     extra = [v for v in extra if not v.startswith(('RAM_BASE=', 'RAM_SIZE='))]
     if options.get('RUNTIME') == 'user-counters':
         extra += ['COUNTER_MODE=user']
-    extra += [f'BARE_FLAGS=-static -nostdlib -nostartfiles -T {linker}']
+    counter_flag = ' -DRVW_NO_COUNTERS' if options.get('RUNTIME') == 'no-counters' else ''
+    extra += [f'BARE_FLAGS=-static -nostdlib -nostartfiles -T {linker}{counter_flag}']
 subprocess.run(['make', '-C', str(assets / 'workstation/Arch/bench'),
                 f'SRC={bench_source}', f'BUILD={out}',
                 f'BARE_CC={cc}', f'BENCHES={bench}', *extra, 'bare'], check=True)
