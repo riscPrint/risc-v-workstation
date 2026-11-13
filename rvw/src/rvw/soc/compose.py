@@ -117,6 +117,17 @@ def compose(source, out, elf=None):
         generate(source.parent / spec['map'], tmp)
     target.mkdir(parents=True)
     files = generate(source.parent / spec['map'], target)
+    from .software import board_dts, linker
+    (target / 'board.dts').write_text(board_dts(obj, spec))
+    files.append('board.dts')
+    script = linker(obj)
+    if script is not None:
+        (target / 'link.ld').write_text(script)
+        files.append('link.ld')
+    if any(r['registers'] for r in obj['regions']):
+        from .exports import ipxact
+        (target / 'registers.ipxact.xml').write_text(ipxact(obj))
+        files.append('registers.ipxact.xml')
     (target / 'ComposedSoc.scala').write_text('\n'.join(lines) + '\n')
     manifest = dict(schema='rvw.soc-composed/1', profile='apb3-rv32-word',
                     clock_hz=spec['clock_hz'], reset=spec['reset'], memories=memories,

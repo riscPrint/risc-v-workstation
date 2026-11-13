@@ -343,3 +343,25 @@ The generated manifest records every fragment hash and the effective config.
 
 See [the Chipyard study](../../../../docs/design/chipyard-study.md) for the
 source of this small config/harness separation and deferred integration work.
+
+## Register export and project scaffold
+
+`rvw soc export-ipxact MAP --out NEW_XML` exports the strict 1685-2014
+register memoryMap subset accepted by `import-ipxact`. MCP:
+`soc_export_ipxact`. It preserves access, known resets and the supported whole
+register side effects. It does not export CPU models, bus interfaces, fields,
+arrays or a complete IP-XACT component. `rvw soc generate` already writes
+CMSIS-SVD. Composition now emits both register formats when registers exist.
+
+Composition also writes `board.dts` with the CPU, memory, known peripheral
+profiles and declared CPU interrupt wires. The UART subset has a custom
+compatible string. No complete 16550 driver compatibility is claimed. PLIC
+source IDs and device drivers remain project data. `link.ld` supplies a basic
+section layout when executable and writable memory exist. Invoke ld from the
+export directory so it can find `memory.ld`. Startup code remains project-owned.
+
+`rvw soc new NAME --out NEW_DIR` creates an editable SoC project. MCP:
+`soc_new`. It has a map, composition file, sbt build, idle wrapper and project
+file. The build points to SpinalSoc sources in `RVW_HOME` at creation time.
+Replace the idle wrapper and add a C1 adapter before running programs.
+Scaffold creation is not simulation evidence.

@@ -95,3 +95,15 @@ Fabric assertions run on every APB endpoint and decode output. On 2026-11-13
 the PLIC interrupt example passed with Verilator `--assert` at seed 23
 (224 measured loop cycles, 74 retired instructions). Formal decode and
 interrupt value-transfer proofs were NOT RUN.
+
+Composition exports `registers.ipxact.xml` for the strict IP-XACT register
+subset and `registers.svd` for CMSIS-SVD. `board.dts` includes the CPU and
+known peripheral descriptions. `link.ld` supplies a basic section layout.
+The profiles use custom compatible strings where no standard driver binding
+is established. The device tree is not a Linux boot qualification result.
+
+`rvw soc new NAME --out NEW_DIR` creates an editable idle-core project.
+On 2026-11-13 the scaffold compiled and elaborated in 13 seconds after it
+acquired the sbt lock. `dtc` accepted the composed board description. RISC-V
+GCC linked hello-world with the generated linker script. Startup code, drivers
+and a production core remain project work.
