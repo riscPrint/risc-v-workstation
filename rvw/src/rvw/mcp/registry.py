@@ -153,11 +153,24 @@ class Registry:
             raise ToolError(f"unknown resource {uri!r}")
         return self.resources[uri][2]()
 
-    def call(self, name: str, arguments: dict | None) -> Any:
+    def call(self, name: str, arguments: dict | None, *, dry_run: bool = False) -> Any:
         """Runs a tool. Long tools return a job record at once. Raises ToolError for bad calls."""
         spec = self.tools.get(name)
         if spec is None:
             raise ToolError(f"unknown tool {name!r}")
+        if dry_run:
+            from .profiles import describe
+            # Help-level calls never execute, schedule jobs or require native tools.
+            args = {} if arguments is None else arguments
+            check = dict(spec.input_schema)
+            check["required"] = []
+            try:
+                json.dumps(args, allow_nan=False)
+                validator_for(check)(check).validate(args)
+            except (ValidationError, TypeError, ValueError) as exc:
+                raise ToolError(f"bad arguments for {name}: {exc}") from None
+            return {**describe(spec), "status": "ok", "dry_run": True,
+                    "summary": "Schema help only; handler NOT RUN."}
         args = {} if arguments is None else arguments
         try:
             # Reject non-JSON numbers too: NaN can evade numeric bounds. Never coerce values
@@ -218,10 +231,10 @@ class Registry:
             raise job.exception
         raise ToolError(f"{spec.name} {job.status}", {"log_tail": job.tail(20)})
 
-    def call_json(self, name: str, arguments: dict | None) -> tuple[str, Any, bool]:
+    def call_json(self, name: str, arguments: dict | None, *, dry_run: bool = False) -> tuple[str, Any, bool]:
         """(text, structured, is_error) for the MCP result."""
         try:
-            result = self.call(name, arguments)
+            result = self.call(name, arguments, dry_run=True) if dry_run else self.call(name, arguments)
             is_error = False
         except Exception as e:
             from .errors import error_result

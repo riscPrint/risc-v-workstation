@@ -204,3 +204,16 @@ Existing JSON handlers keep their contracts. Commands without a JSON handler
 return their text in `output` with the common envelope. Exit codes remain
 those of the command. Unhandled JSON-mode exceptions return a common error
 and exit 2. Exit 0 alone never creates a pass verdict.
+
+## Schema smoke without native inputs
+
+```sh
+rvw mcp describe formal_bmc --json
+rvw mcp call formal_bmc --dry-run --arguments '{}' --json
+rvw mcp smoke --json
+```
+
+Dry calls return schema help. They validate supplied values and omit required
+input checks. They never execute handlers or submit jobs. The output says
+`handler NOT RUN`. Fast tests check every tool through list, describe and dry
+call. These tests establish discovery and schema help, not native behavior.

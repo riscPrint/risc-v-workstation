@@ -9,11 +9,11 @@ READ_ONLY = {'query_drivers', 'query_loads', 'query_path', 'query_where', 'evide
 
 
 class ClientRegistry(Registry):
-    def call(self, name, arguments):
+    def call(self, name, arguments, *, dry_run=False):
         if self.project and arguments and (arguments.get('project', self.project) != self.project or arguments.get('core')):
             from .spec import ToolError
             raise ToolError('project is fixed by the client policy')
-        return super().call(name, arguments)
+        return super().call(name, arguments, dry_run=dry_run)
 
 
 def remote_tool(spec):

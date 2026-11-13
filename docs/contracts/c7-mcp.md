@@ -110,3 +110,12 @@ stays inconclusive. Exceptions use the common error object and exit 2.
 Exit 0 means command completion; it does not create a verification pass.
 rvw mcp command-map --json generates command paths and workflow steps from
 the actual parsers and agent playbook. It is not a second command registry.
+
+## Schema help and discovery smoke
+
+rvw mcp describe NAME returns a tool's full schema and declarations.
+rvw mcp call NAME --dry-run --arguments '{}' validates supplied values but
+does not require missing arguments. It returns help data and dry_run: true.
+It never calls a handler or starts a job. This is not verification evidence.
+rvw mcp smoke checks every loaded tool through that path. Discovery problems
+or schema-help errors return exit 2. Fast tests forbid handler and job dispatch.
