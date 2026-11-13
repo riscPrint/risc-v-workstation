@@ -134,3 +134,41 @@ run was made. Fast-set failures outside these changes are retained in PR bodies.
 Final documentation fast check: 1560 passed, 1 skipped, 8048 deselected.
 One unrelated test failed: `test_mcp_coherence.py::test_discovery_audit_baseline`.
 The last code-fix fast check was clean at 1548 passed and 1 skipped.
+
+## Second pass
+
+The second worker used the same external scratch core. No core source was added
+to the workstation. The pinned PicoRV32 RTL is unchanged. Scratch commit
+`1350919` records the project changes. The planted fault was reverted.
+`JOURNAL.md` records the native commands and log names.
+
+| Area | Second-pass result | Remaining limit |
+|---|---|---|
+| Plain HDL identity | PR #911 adds a Verilator build manifest and C1 capture. PR #963 prevents stale native objects after compiler flag changes. A committed smoke gate accepts good revision `df68dcf`. A gate against planted revision `9bbaa3b` rejects `fail:1`, with no inconclusive evidence. | The scaffold still requires project bus and completion mapping. The planted change is an instruction-response harness fault, not a discovered core bug. |
+| Native full regression | 46 passes, zero inconclusive C1 results in the final full regression. | One config and zero-latency memory only. This is not the full upstream ISA suite. |
+| Scalar cosim | PR #922 adds a declared full-word read convention. All 46 original native traces match Spike. All 46 newly captured final-generation traces also match after their ELF hashes are checked against C1. | The RTL reports all read lanes for subword loads. The checker validates raw address/strobes before deriving instruction byte lanes. Stores and destination values remain strict. MMIO, misaligned, compressed and trapping loads are refused by this convention. |
+| Declared protocol bindings | PR #927 generates checks, VIP and pyuvm skeletons from `port-map.json`, with no Spinal types. Native bound assertions run on the real core and observe 3 stalls and 3 transfers. | Initial declared protocol is ready_valid. The monitor checks stalled request stability. It does not check memory response contents. The UVM scenario remains project work. |
+| Core RVFI ISA kit | Existing main runs `rvw formal isa` with the reviewed core wrapper. Add and cover rows report bounded results at depth 8. Overall result is inconclusive. | No unbounded ISA proof, machine-state bindings or adapter conformance certification. |
+| Hand-written SVA | Three engine passes at depth 8. | The rerun marks all three inconclusive because input closure, attribution and non-vacuity are not certified. Do not count these as closed proofs. |
+| Architecture without gem5 | PR #933 removes gem5 from benchmark compilation. The scratch median ELF builds. The Python OoO model consumes the real 15-retirement smoke trace. | The supplied model is hypothetical and uncalibrated. gem5 run/calibrate still require the supported binary. |
+| HDL doctor | PR #942 adds `[project] hdl`. JVM probes are not_applicable for SV/VHDL. The final smoke check reports build/run, C2 mapping, wave and coverage ready. Only the workstation checkout gate remains inconclusive for the pre-existing untracked `out/`. | Applicable native checks remain active. Version probes are not qualification. |
+
+The first full second-pass regression completed 46 programs but retained an
+inconclusive marker because the temporary scratch adapter omitted the requested
+`rvfi_trace` C1 field. That run is not conclusive evidence. The scratch adapter
+now records that option and uses saved ELF bytes for symbol lookup.
+
+Native logs in the scratch parent include `identity-good-gate2.log`,
+`identity-bad-gate.log`, `second-pass-cosim.log`, `second-pass-bind-run.log`,
+`second-pass-isa.log`, `second-pass-sva.log`, `second-pass-arch-build.log`, and
+`second-pass-ooo.log`. Final rerun log names are recorded in the journal.
+No full Python suite, BOOM run, long formal proof, native UVM scenario
+qualification, gem5 calibration or physical hardware run was made.
+
+A native compiler-flag check found that incremental make retained a binary built
+with `ID_FLAG=1` after a requested rebuild with `ID_FLAG=2`. PR #963 forces
+make to recompile before it saves new identity claims. The same fixture then
+prints 2. The full 46-program regression and final 46 Spike matches above ran
+at workstation `9fa90545`, with unchanged compiler flags. A later PicoRV32
+smoke at `c6b7effc` checks the forced-rebuild path: one conclusive pass,
+55 cycles and 15 retirements.
