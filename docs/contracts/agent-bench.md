@@ -184,3 +184,16 @@ without a claimed fix sets `preserved_inconclusive`. Reports retain
 reasons also accept `unsupported_fields`, `coverage` and `completion`.
 Public evidence declares unsupported fields, observed and required coverage,
 or `complete: false`. These are fixture claims, not native artifact checks.
+
+## External fixture trials
+
+`rvw.agent-external-trial/1` extends the fixture report with `client` command and
+model label, `machine`, `budget_s`, `max_calls`, requested repetition count and
+`attempts`. Each attempt retains exit code, timeout, wall time, admitted request
+count, budget rejection count, request transcript and completion. The hidden
+oracle stays in the parent evaluator. Client requests cannot query scores.
+A token-authenticated loopback MCP connection exposes only fixture and job tools.
+The CLI receives only its URL and token. The client must disable other tools.
+No OS sandbox is claimed. A wall timeout stops the whole client process group.
+Partial attempts remain scored as incomplete, with censored root causes. The
+fixture report's native validation field remains `NOT RUN`.
