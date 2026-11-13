@@ -87,6 +87,18 @@ Principles (from `ROADMAP.md`):
   and a replay command.
 
 
+## Internal RTL path observations
+
+`rvw.internal-path/1` records directed bit dependencies in captured RTL after
+Yosys flattening and memory mapping. It reports `no_path`, `path_found` or
+`incomplete`. Cell inputs conservatively influence all cell outputs. Clock,
+reset and control inputs remain in that graph. Black boxes and unknown port
+directions cannot establish absence. A node bound also makes absence incomplete.
+The report records source and flattened-netlist hashes. A witness is a sequence
+of bit IDs and cells. It is not a Boolean sensitization or transfer proof.
+Exit 0 means no path in this captured conservative graph. Exit 1 means a path
+was found. Exit 3 means incomplete evidence. No design acceptance is granted.
+
 ## Generated ISA monitors
 
 ### Sail binary bit-manipulation generation

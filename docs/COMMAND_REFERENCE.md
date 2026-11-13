@@ -853,7 +853,7 @@ usage: rvw fault report [-h] [--project PROJECT] directory
 
 ```text
 usage: rvw formal [-h] [--project PROJECT]
-    {device-events,upf,power,buses,csr,bug-hunt,model-live,rtl-grid,rtl-refine,relation-strengthen,doctor,engines,engine-race,engine-bench,model-grid,security,regress,properties,simulate,liveness,scenario,sva-lower,template,contracts,strengthen,testplan,shortest,proof-core,apps,autocheck,bench,recheck,cex,app-live,app-deadlock,sby-history,sby-regress,prove,depth-search,state-generate,rvfi-generate,sail-bitmanip,sail-zicond,custom-isa,profiles,riscv,connectivity,datapath,equiv,bmc,from-sim,swarm,xprop,x-context,x-sweep}
+    {device-events,upf,power,buses,csr,bug-hunt,model-live,rtl-grid,rtl-refine,relation-strengthen,doctor,engines,engine-race,engine-bench,model-grid,security,regress,properties,simulate,liveness,scenario,sva-lower,template,contracts,strengthen,testplan,shortest,proof-core,apps,autocheck,bench,recheck,cex,app-live,app-deadlock,sby-history,sby-regress,prove,depth-search,state-generate,rvfi-generate,sail-bitmanip,sail-zicond,custom-isa,profiles,riscv,connectivity,internal-path,datapath,equiv,bmc,from-sim,swarm,xprop,x-context,x-sweep}
     ...
 ```
 
@@ -1241,6 +1241,14 @@ usage: rvw formal connectivity [-h] --db DB --out OUT [--max-nodes MAX_NODES]
     [--json] [--run] [--proof-mode {bmc,prove}] [--clock CLOCK] [--reset
     RESET] [--depth DEPTH] [--engine ENGINE] [--timeout TIMEOUT] [--project
     PROJECT] manifest
+```
+
+### `rvw formal internal-path`
+
+```text
+usage: rvw formal internal-path [-h] --verilog VERILOG [VERILOG ...] --top TOP
+    --out OUT [--timeout TIMEOUT] [--max-nodes MAX_NODES] [--json] [--project
+    PROJECT] source destination
 ```
 
 ### `rvw formal datapath`
@@ -3103,6 +3111,14 @@ Starts a background job: yes.
 Bounded model check starting from cycle N (or time T) of a Verilator FST/VCD of the same Verilog: finds bugs too deep for BMC from reset. Memories come from the trace by default. Runs as a job.
 
 Arguments: `project`, `verilog`, `top`, `out` (required), `clock`, `reset`, `reset_active`, `checks`, `depth`, `engine`, `timeout`, `tie`, `trace` (required), `cycle`, `time`, `scope`, `memories`, `first_failure`.
+
+Starts a background job: yes.
+
+### `formal_internal_path`
+
+Check conservative internal RTL paths. No Boolean influence or design acceptance verdict.
+
+Arguments: `source` (required), `destination` (required), `top` (required), `out` (required), `verilog` (required), `timeout`, `max_nodes`.
 
 Starts a background job: yes.
 

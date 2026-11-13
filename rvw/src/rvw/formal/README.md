@@ -12,6 +12,22 @@ reset/load/set/clear controls and latches are refused. A result applies only to 
 input ties, assumptions, and reset settings. Missing replay state starts free and can cause
 spurious failures. Exit 0 means `pass`. Other written results exit 1. Invalid input exits 2.
 
+
+## Internal forbidden paths
+
+Use `rvw formal internal-path SECRET PUBLIC --verilog dut.sv --top Unit --out OUT`.
+MCP tool `formal_internal_path` runs the same check. Endpoints can name internal
+hierarchical wires. Source files must be self-contained SystemVerilog files.
+
+The tool captures the RTL, flattens it and maps memories. It does not cut any
+driver. It walks a conservative bit dependency graph. Every cell input can
+influence every cell output. This includes clock, reset and control inputs.
+`no_path` establishes graph absence for the captured RTL. `path_found` provides
+a witness, but does not establish Boolean influence. Black boxes, missing port
+directions and node limits prevent an absence result. A path can be spurious
+because the graph does not solve Boolean conditions. This is a structural check,
+not a two-copy noninterference proof or a design acceptance verdict.
+
 ## Decisions
 
 - Xprop validates `--filter` before elaboration. A malformed regex exits 2 with
