@@ -1,0 +1,270 @@
+{
+  "schema": "ooo-mini.qualification/1",
+  "fault": {
+    "status": "complete",
+    "counts": {
+      "detected": 2,
+      "silent_corruption": 0,
+      "safe": 2,
+      "timeout": 0,
+      "not_injected": 0,
+      "inconclusive": 0
+    },
+    "planned": 4,
+    "injected": 4,
+    "population_total": 260,
+    "sampled_fraction": 0.01538462,
+    "per_site": {
+      "map_1": {
+        "detected": 1,
+        "silent_corruption": 0,
+        "safe": 2,
+        "timeout": 0,
+        "not_injected": 0,
+        "inconclusive": 0
+      },
+      "count": {
+        "detected": 1,
+        "silent_corruption": 0,
+        "safe": 0,
+        "timeout": 0,
+        "not_injected": 0,
+        "inconclusive": 0
+      }
+    },
+    "plan_seed": 17
+  },
+  "fault_runs": [
+    {
+      "id": "f00000",
+      "status": "pass",
+      "fault": {
+        "site": "map_1",
+        "bit": 2,
+        "cycle": 29,
+        "applied": true,
+        "applied_cycle": 29
+      },
+      "source_fingerprint": "bd42b84328a91522855307dcf3cea3c4269995eb8bca6013ca786c4968c095e7"
+    },
+    {
+      "id": "f00001",
+      "status": "pass",
+      "fault": {
+        "site": "map_1",
+        "bit": 5,
+        "cycle": 37,
+        "applied": true,
+        "applied_cycle": 37
+      },
+      "source_fingerprint": "bd42b84328a91522855307dcf3cea3c4269995eb8bca6013ca786c4968c095e7"
+    },
+    {
+      "id": "f00002",
+      "status": "assert",
+      "fault": {
+        "site": "count",
+        "bit": 0,
+        "cycle": 27,
+        "applied": true,
+        "applied_cycle": 27
+      },
+      "source_fingerprint": "bd42b84328a91522855307dcf3cea3c4269995eb8bca6013ca786c4968c095e7"
+    },
+    {
+      "id": "f00003",
+      "status": "fail",
+      "fault": {
+        "site": "map_1",
+        "bit": 3,
+        "cycle": 28,
+        "applied": true,
+        "applied_cycle": 28
+      },
+      "source_fingerprint": "bd42b84328a91522855307dcf3cea3c4269995eb8bca6013ca786c4968c095e7"
+    }
+  ],
+  "lint": {
+    "status": "findings",
+    "active_findings": 100,
+    "by_rule": {
+      "verilator.DECLFILENAME": 2,
+      "verilator.UNUSEDSIGNAL": 66,
+      "verilator.PROCASSINIT": 3,
+      "verilator.CMPCONST": 16,
+      "lint.width_extension": 12,
+      "lint.width_truncation": 1
+    },
+    "unresolved": 159,
+    "registers": 501,
+    "clocks": 1,
+    "cdc_crossings": 0,
+    "rdc_crossings": 0
+  },
+  "code_coverage": {
+    "scope": "smoke and illegal-instruction programs; eight SV binds enabled",
+    "summary": {
+      "total": 5121,
+      "excluded": 0,
+      "eligible": 5121,
+      "hit": 3436,
+      "never_hit": 1685,
+      "percent": 67.0962702597149
+    },
+    "types": {
+      "branch": {
+        "total": 3154,
+        "excluded": 0,
+        "eligible": 3154,
+        "hit": 2251,
+        "never_hit": 903,
+        "percent": 71.36968928344959
+      },
+      "line": {
+        "total": 1967,
+        "excluded": 0,
+        "eligible": 1967,
+        "hit": 1185,
+        "never_hit": 782,
+        "percent": 60.24402643619725
+      }
+    }
+  },
+  "functional_coverage": {
+    "instruction_records": 18354,
+    "count_includes_trapping_instruction_records": true,
+    "groups": {
+      "class_mode": {
+        "expected_bins": 36,
+        "observed_bins": 10,
+        "expected_hit": 10
+      },
+      "mnemonic_mode": {
+        "expected_bins": 0,
+        "observed_bins": 52,
+        "expected_hit": 0
+      },
+      "trap_cause_mode": {
+        "expected_bins": 0,
+        "observed_bins": 0,
+        "expected_hit": 0
+      },
+      "interrupt_cause_mode": {
+        "expected_bins": 0,
+        "observed_bins": 0,
+        "expected_hit": 0
+      },
+      "handler_entry": {
+        "expected_bins": 3,
+        "observed_bins": 1,
+        "expected_hit": 1
+      },
+      "memory": {
+        "expected_bins": 16,
+        "observed_bins": 10,
+        "expected_hit": 10
+      },
+      "csr": {
+        "expected_bins": 0,
+        "observed_bins": 11,
+        "expected_hit": 0
+      },
+      "branch": {
+        "expected_bins": 6,
+        "observed_bins": 2,
+        "expected_hit": 2
+      },
+      "rd_x0": {
+        "expected_bins": 0,
+        "observed_bins": 14,
+        "expected_hit": 0
+      },
+      "dependency": {
+        "expected_bins": 0,
+        "observed_bins": 17,
+        "expected_hit": 0
+      }
+    }
+  },
+  "gate": {
+    "scope": "three directed programs, seed 17; committed source; no waivers",
+    "revisions": {
+      "good": "0bc133858f8e52c6af20f8c1c52091c1631a1ff6",
+      "bug": "8f79ef05cea632657bb2ec122196ecf8d85ca639",
+      "fix": "bae3df57c9ddafc6c7ddb2dfb43b5571ee0700b3"
+    },
+    "control_branch": "test/ooo-mini-gate-controls-20261113-mem",
+    "planted_bug": {
+      "verdict": "reject",
+      "tests": "fail",
+      "reasons": [
+        "1 new failure"
+      ],
+      "inconclusive": [],
+      "not_accepted_reason": null
+    },
+    "repair": {
+      "verdict": "accept",
+      "tests": "pass",
+      "reasons": [],
+      "inconclusive": [],
+      "not_accepted_reason": null
+    }
+  },
+  "native_sv_bindings": {
+    "config": "default",
+    "isa_programs": 50,
+    "bindings_per_program": 8,
+    "verilator_assertions_enabled": true,
+    "status": "50 pass, zero assertion exits"
+  },
+  "limits": [
+    "ROB16 does not load the eight-entry SV bindings.",
+    "Lint remains findings; structural CDC/RDC is not signoff.",
+    "Formal ISA and unbounded proof remain open."
+  ],
+  "directed_strict": [
+    {
+      "status": "match",
+      "instructions": 17,
+      "synchronized": 0,
+      "message": null,
+      "test": "smoke"
+    },
+    {
+      "status": "match",
+      "instructions": 17,
+      "synchronized": 0,
+      "message": null,
+      "test": "fence-selfmod"
+    },
+    {
+      "status": "match",
+      "instructions": 52,
+      "synchronized": 0,
+      "message": null,
+      "test": "illegal"
+    }
+  ],
+  "core_regressions": {
+    "fence_i_before": {
+      "rtl_status": "fail",
+      "strict": {
+        "status": "mismatch",
+        "differences": {
+          "insn": {
+            "expected": "0x100513",
+            "actual": "0x513"
+          },
+          "rd_wdata": {
+            "expected": "0x1",
+            "actual": "0x0"
+          }
+        }
+      }
+    },
+    "fence_i_after": "pass and strict match",
+    "minstret_before": "fail: trapping instructions counted",
+    "minstret_after": "pass and strict match; 34 retired instructions across three handlers"
+  }
+}
