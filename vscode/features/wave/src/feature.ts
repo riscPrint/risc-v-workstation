@@ -4,8 +4,8 @@ import { dirname, join } from 'node:path';
 import { tmpdir } from 'node:os';
 import type { Feature, FeatureContext } from '../../../src/api';
 import { queryArgs, sourceMatches, sourceTargets } from '../../../src/results/model';
-import { children, cutArgv, headline, KINDS, label, object, parseQuery, queryArgv, rowLocation, rowSignal, rowTime,
-  type QueryKind, type Row, type WaveQuery } from './model';
+import { children, cutArgv, headline, KINDS, label, object, parseQuery, queryArgv, rowLocation, rowQuery, rowSignal, rowTime,
+  sessionHeadline, type QueryKind, type Row, type WaveQuery } from './model';
 
 /** Saved `rvw wave` queries (find, why, seq, txn, diff ...) and their results, with jumps to
  * the source line, the driver's database location and a wave window in Surfer. */
@@ -13,12 +13,17 @@ const feature: Feature = {id: 'wave', activate(context: FeatureContext) {
   let query: WaveQuery | undefined;
   let queryFile: vscode.Uri | undefined;
   let result: unknown;
+  let session: {file: string; result: unknown} | undefined;
   const changed = new vscode.EventEmitter<Row | undefined>();
   const config = () => vscode.workspace.getConfiguration('wave');
   const base = () => queryFile ? dirname(queryFile.fsPath) : vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
   const provider: vscode.TreeDataProvider<Row> = {
     onDidChangeTreeData: changed.event,
-    getChildren: row => row ? children(row.value) : result && query ? [
+    // Cursor entries get a time key, so they can open a wave window.
+    getChildren: row => row ? children(row.value).map(c => row.key === 'cursors' ? {...c, key: `cursor_at`} : c) : session ? [
+      {key: sessionHeadline(object(session.result)), value: null, heading: true},
+      {key: 'Session', value: session.result},
+    ] : result && query ? [
       {key: headline(query.kind, object(result)), value: null, heading: true},
       {key: `rvw ${queryArgv(query).join(' ')}`, value: null, heading: true},
       {key: 'Result', value: result},
@@ -26,7 +31,8 @@ const feature: Feature = {id: 'wave', activate(context: FeatureContext) {
     getTreeItem: row => {
       const text = label(row);
       const item = new vscode.TreeItem(text, children(row.value).length ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.None);
-      const ctx = [rowSignal(row) && 'signal', rowTime(row) !== undefined && 'time', rowLocation(row) && 'loc'].filter(Boolean);
+      const ctx = [rowSignal(row) && 'signal', rowTime(row) !== undefined && 'time', rowLocation(row) && 'loc',
+        rowQuery(row) && 'query'].filter(Boolean);
       item.contextValue = ctx.length ? `rvw.wave.${ctx.join('.')}` : undefined;
       item.tooltip = row.heading ? row.key : JSON.stringify(row.value, null, 2);
       if (/ambiguous|unknown|unresolved|error|inconclusive|diverged|issue|fail/i.test(text)) {
@@ -54,7 +60,7 @@ const feature: Feature = {id: 'wave', activate(context: FeatureContext) {
     }));
   }
   async function run(q: WaveQuery): Promise<void> {
-    query = q; result = undefined; view.message = q.title ?? q.kind; changed.fire(undefined);
+    query = q; result = undefined; session = undefined; view.message = q.title ?? q.kind; changed.fire(undefined);
     result = await vscode.window.withProgress({location: {viewId: 'wave.results'}, title: `rvw wave ${q.kind}`},
       () => rvw(queryArgv(q, base()), base()));
     changed.fire(undefined);
@@ -96,6 +102,18 @@ const feature: Feature = {id: 'wave', activate(context: FeatureContext) {
     await run(parseQuery(Buffer.from(await vscode.workspace.fs.readFile(uri)).toString('utf8')));
   });
   register('rerun', async () => { if (query) await run(query); });
+  register('openSession', async () => {
+    const uri = (await vscode.window.showOpenDialog({title: 'Debug session (rvw.debug-session/1)', canSelectMany: false, filters: {'Session': ['json']}}))?.[0];
+    if (!uri) return;
+    queryFile = uri; query = undefined; result = undefined;
+    session = {file: uri.fsPath, result: await rvw(['wave', 'session', 'open', uri.fsPath, '--json'], dirname(uri.fsPath))};
+    view.message = uri.fsPath; changed.fire(undefined);
+  });
+  register('runSaved', async row => {
+    const q = rowQuery(row);
+    if (!q) throw new Error('This row is not a saved query.');
+    await run(q);
+  });
   register('save', async () => {
     if (!query) throw new Error('Run a query first.');
     const uri = await vscode.window.showSaveDialog({title: 'Save wave query', filters: {'Wave query': ['rvwq.json']}});
@@ -130,10 +148,12 @@ const feature: Feature = {id: 'wave', activate(context: FeatureContext) {
   });
   register('openWindow', async row => {
     const time = rowTime(row);
-    if (time === undefined || !query) throw new Error('This row has no time.');
+    const sessionWave = session && object(object(object(session.result).artifacts).wave).path;
+    const wave = query?.wave ?? (typeof sessionWave === 'string' ? sessionWave : undefined);
+    if (time === undefined || !wave) throw new Error('This row has no time or no wave.');
     const span = config().get<number>('windowSpan', 1000);
     const out = join(tmpdir(), `rvw-wave-${process.pid}-${Date.now()}.vcd`);
-    await rvw(cutArgv(query.wave, time, span, out), base());
+    await rvw(cutArgv(wave, time, span, out), base());
     const task = new vscode.Task({type: 'wave'}, vscode.TaskScope.Workspace, 'Surfer', 'wave',
       new vscode.ProcessExecution(config().get('surferExecutable', 'surfer'), [out]));
     await vscode.tasks.executeTask(task);

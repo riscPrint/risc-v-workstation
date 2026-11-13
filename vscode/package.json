@@ -32,7 +32,8 @@
     "workspaceContains:**/*.spinalblocks.json",
     "onCommand:wave.new",
     "onCommand:wave.open",
-    "onView:wave.results"
+    "onView:wave.results",
+    "onCommand:wave.openSession"
   ],
   "contributes": {
     "commands": [
@@ -188,6 +189,14 @@
       {
         "command": "wave.openWindow",
         "title": "Wave: Open Window in Surfer"
+      },
+      {
+        "command": "wave.openSession",
+        "title": "Wave: Open Debug Session"
+      },
+      {
+        "command": "wave.runSaved",
+        "title": "Wave: Run Saved Query"
       }
     ],
     "views": {
@@ -318,6 +327,11 @@
           "group": "navigation"
         },
         {
+          "command": "wave.openSession",
+          "when": "view == wave.results",
+          "group": "navigation"
+        },
+        {
           "command": "wave.rerun",
           "when": "view == wave.results",
           "group": "results"
@@ -387,6 +401,11 @@
         {
           "command": "wave.openWindow",
           "when": "view == wave.results && viewItem =~ /time/",
+          "group": "navigation"
+        },
+        {
+          "command": "wave.runSaved",
+          "when": "view == wave.results && viewItem =~ /query/",
           "group": "navigation"
         }
       ],
