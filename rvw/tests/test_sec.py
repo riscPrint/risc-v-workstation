@@ -22,3 +22,18 @@ def test_native_ift(tmp_path, leak):
     if leak:
         assert result['findings'][0]['cycle'] == 1
         assert result['findings'][0]['candidate_path'][0] == 'secret'
+
+
+@pytest.mark.slow
+@pytest.mark.parametrize('leak',[True,False])
+def test_native_pair_runner(tmp_path,leak):
+    import sys
+    from pathlib import Path
+    from rvw.sec.pairs import run as pairs
+    if not shutil.which('verilator'): pytest.skip('Verilator required')
+    manifest=tmp_path/'pairs.json'
+    manifest.write_text(json.dumps(dict(contract='constant-time',clauses=['pc'],observations=['cycles'],
+        public={'leak':leak},secrets=[0,1],program=['nop'],minimize_runs=0,
+        adapter_command=[sys.executable,str(Path(__file__).parent/'fixtures/sec/adapter.py'),'{request}','{out}'])))
+    result=pairs(manifest,tmp_path/'pairs')
+    assert result['status']==('violation' if leak else 'no_leak_observed'),result
