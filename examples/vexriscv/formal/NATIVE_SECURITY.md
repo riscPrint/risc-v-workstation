@@ -79,3 +79,31 @@ An asynchronous-reset assertion fixture returns `unsupported` before a solver
 starts. The diagnostic gives the sampled-reset assertion fix and the shared
 SYNC elaboration fix for IFT. It does not remove a property to obtain a pass.
 See `pmp-bound-results.json` for compact receipts.
+
+## Closed-core PMP isolation observations
+
+`pmp-isolation.py` now runs the static isolation policy on actual emitted
+data commands from the fresh PMP export. Project bindings add output aliases
+for bus commands, pre-PMP access attempts and the privilege state used by
+`PmpPluginNapot`. They retain every original cell and input. No internal
+signal is cut or tied. The policy checks the starting byte of each emitted
+data command. It denies U-mode access to the example keystore at
+`0x80008000..0x800080ff`. Public instruction and bus responses stay arbitrary.
+
+```sh
+rvw/.venv/bin/python examples/vexriscv/formal/pmp-isolation.py \
+  --rtl /path/to/rv32imu-pmp/VexTop.v --out /path/to/new-isolation --depth 8
+```
+
+| Bound | Data-command isolation | U-mode keystore attempt before PMP |
+| --- | --- | --- |
+| 8 | Pass within bound | Not reached within bound |
+| 16 | Pass within bound | Inconclusive, 60-second reach query timeout |
+
+The attempted-access check uses the pre-PMP request, not the emitted grant.
+It is a separate negated reach predicate. Neither isolation pass demonstrates
+that the protected U-mode path was exercised. These results therefore do not
+qualify CSR-programmed PMP isolation. Fetch isolation, full access extents,
+initialization independence and software setup remain outside this policy.
+The two-copy cycle-5 counterexamples above remain valid separate results.
+See `pmp-isolation-results.json` for both bounded receipts.

@@ -1,0 +1,13 @@
+{
+  "kind": "isolation", "mode": "bmc", "depth": 8,
+  "clock": "clk", "reset": "reset", "memory_map": true,
+  "observed_access": true,
+  "signals": {"request": "obs_request", "grant": "obs_grant", "address": "obs_address", "write": "obs_write", "execute": "obs_execute", "privilege": "obs_privilege", "master": "obs_master"},
+  "access_bytes": 1,
+  "regions": [
+    {"start": 2147516416, "end": 2147516672, "permissions": [{"master": 0, "privilege": 3, "read": true, "write": true, "execute": true}]},
+    {"start": 0, "end": 4294967296, "permissions": [{"master": 0, "privilege": 0, "read": true, "write": true, "execute": true}, {"master": 0, "privilege": 3, "read": true, "write": true, "execute": true}]}
+  ],
+  "adversary": "arbitrary public instruction and bus responses; actual emitted data commands observed without cuts",
+  "unmodeled_channels": ["analog", "power", "instruction fetch isolation", "configured CSR policy agreement", "access bytes beyond the observed starting byte", "initialization independence"]
+}
