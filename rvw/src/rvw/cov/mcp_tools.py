@@ -33,6 +33,9 @@ LOCK = {"lock": {**S, "description": "machine lock to hold (default $RVW_HEAVY_L
 
 def mcp_tools():
     return [
+        ToolSpec("cov_block_check", "Check declared block evidence against exact integration sources, tested parameters and assumptions. Reuse never covers new integration wiring.",
+                 schema({"evidence":S,"integration":S},["evidence","integration"]),
+                 handler("rvw.cov.block_evidence","block-check"),long=True),
         ToolSpec("cov_exchange", "Export/import the declared UCIS counter profile, or export native DAT/LCOV with metadata. Native metric kinds and exclusions are transported, never promoted to proof exclusions.",
                  schema({"database":S,"destination":S,"format":{"type":"string","enum":["ucis","import-ucis","dat","lcov"]}},["database","destination"]),
                  handler("rvw.cov.exchange_cli","exchange"),long=True),

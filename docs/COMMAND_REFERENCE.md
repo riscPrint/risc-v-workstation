@@ -331,7 +331,7 @@ usage: rvw cosim live [-h] --elf ELF [--core CORE] [--platform PLATFORM]
 
 ```text
 usage: rvw cov [-h] [--project PROJECT]
-    {campaign,actions,exchange,generate,merge,report,rank,select,closure,isa-diff,isa-check,functional,rtl,prove,mutate}
+    {campaign,actions,exchange,block-check,generate,merge,report,rank,select,closure,isa-diff,isa-check,functional,rtl,prove,mutate}
     ...
 ```
 
@@ -355,6 +355,13 @@ usage: rvw cov actions [-h] --goal GOAL --work-dir WORK_DIR --registers
 ```text
 usage: rvw cov exchange [-h] --destination DESTINATION [--format
     {ucis,import-ucis,dat,lcov}] [--json] [--project PROJECT] database
+```
+
+### `rvw cov block-check`
+
+```text
+usage: rvw cov block-check [-h] --evidence EVIDENCE --integration INTEGRATION
+    [--json] [--project PROJECT]
 ```
 
 ### `rvw cov generate`
@@ -2131,6 +2138,14 @@ Starts a background job: yes.
 Generate bounded retirement sequence candidates with action graphs. Memory needs a declared writable data resource. Generation earns no hits or pipeline hazard evidence.
 
 Arguments: `goal` (required), `work_dir` (required), `registers` (required), `distances`, `memory`.
+
+Starts a background job: yes.
+
+### `cov_block_check`
+
+Check declared block evidence against exact integration sources, tested parameters and assumptions. Reuse never covers new integration wiring.
+
+Arguments: `evidence` (required), `integration` (required).
 
 Starts a background job: yes.
 
