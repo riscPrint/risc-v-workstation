@@ -1,5 +1,6 @@
 """Authenticated MCP SSE transport with one registry and job store per client."""
 import hmac
+from importlib import import_module
 from dataclasses import replace
 from .registry import Registry, discover
 from .jobs import JobManager
@@ -28,7 +29,7 @@ def remote_tool(spec):
     if spec.wants_job:
         return replace(spec, long=True)
     module, name = spec.handler.__module__, spec.handler.__qualname__
-    if not name.isidentifier():
+    if not name.isidentifier() or getattr(import_module(module), name, None) is not spec.handler:
         if not module.startswith("rvw."):
             raise ValueError('remote tool needs an importable handler: ' + spec.name)
         def discovered(job, **arguments):
