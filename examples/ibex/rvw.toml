@@ -49,8 +49,8 @@ build = ["./rvw/build-db.sh"]
 db = "${IBEX_WORK}/design.db"
 
 [suites.act4]
-dir = "${IBEX_WORK}/act4-final/work/rvw-act4/elfs"
-act4_manifest = "${IBEX_WORK}/act4-final/manifest.json"
+dir = "${IBEX_WORK}/act4/work/rvw-act4/elfs"
+act4_manifest = "${IBEX_WORK}/act4/manifest.json"
 glob = "**/*.elf"
 strip_suffix = ".elf"
 max_cycles = 500000
