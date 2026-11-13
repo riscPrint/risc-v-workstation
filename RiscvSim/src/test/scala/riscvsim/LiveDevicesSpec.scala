@@ -43,4 +43,23 @@ class LiveDevicesSpec extends AnyFunSuite {
     intercept[IllegalArgumentException](d.write(0xc200004L, 4, 1))
     intercept[IllegalArgumentException](d.read(0x90000000L, 4))
   }
+  test("snapshot resumes pending UART, claimed PLIC and timer state") {
+    val d = fresh()
+    d.write(0x10000002L, 1, 1); d.write(0x10000001L, 1, 1)
+    d.write(0xc000004L, 4, 1); d.write(0xc002000L, 4, 2)
+    d.write(0x2004000L, 4, 301); d.write(0x2004004L, 4, 0)
+    assert(d.tick(3000) == 0x800)
+    assert(d.read(0xc200004L, 4) == 1)
+    val saved = d.snapshot()
+    val restored = fresh(); restored.restore(saved)
+    assert(restored.snapshot() == saved)
+    for (device <- Seq(d, restored)) {
+      assert(device.tick(3001) == 0)
+      device.write(0xc200004L, 4, 1)
+      assert(device.tick(3010) == 0x880)
+      assert(device.read(0x10000000L, 1) == 'e'.toInt)
+    }
+    assert(restored.snapshot() == d.snapshot())
+    intercept[IllegalArgumentException](fresh().restore(ujson.Obj("schema" -> "bad")))
+  }
 }

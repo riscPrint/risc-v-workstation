@@ -19,6 +19,8 @@ final class LiveDevices(map: SimMap) {
     }
   }
   private trait Device {
+    def save: ujson.Value
+    def restore(v: ujson.Value): Unit
     def read(offset: Long): Long
     def write(offset: Long, value: Long): Unit
     def tick(cycle: Long): Unit = ()
@@ -42,6 +44,16 @@ final class LiveDevices(map: SimMap) {
         if (rx.size < (if (fifo) 16 else 1)) rx.enqueue(b) else overrun = true
         position += 1
       }
+    }
+    def save: ujson.Value = ujson.Obj("rx" -> ujson.Arr.from(rx), "tx" -> tx.toString,
+      "position" -> position, "ier" -> ier, "dl" -> divisorLow, "dh" -> divisorHigh,
+      "lcr" -> lcr, "scratch" -> scratch, "fifo" -> fifo, "overrun" -> overrun)
+    def restore(v: ujson.Value): Unit = {
+      rx.clear(); v("rx").arr.foreach(b => rx.enqueue(b.num.toInt))
+      tx.clear(); tx.append(v("tx").str); position = v("position").num.toInt
+      ier = SimMap.number(v("ier")).toLong; divisorLow = SimMap.number(v("dl")).toLong; divisorHigh = SimMap.number(v("dh")).toLong
+      lcr = SimMap.number(v("lcr")).toLong; scratch = SimMap.number(v("scratch")).toLong
+      fifo = v("fifo").bool; overrun = v("overrun").bool
     }
     override def irq = (ier & 1) != 0 && rx.nonEmpty || (ier & 2) != 0
     override def output = tx.toString
@@ -73,6 +85,10 @@ final class LiveDevices(map: SimMap) {
     var time = BigInt(0)
     var compare = (BigInt(1) << 64) - 1
     var software = 0L
+    def save: ujson.Value = ujson.Obj("time" -> time.toString, "compare" -> compare.toString, "software" -> software)
+    def restore(v: ujson.Value): Unit = {
+      time = BigInt(v("time").str); compare = BigInt(v("compare").str); software = SimMap.number(v("software")).toLong
+    }
     override def tick(cycle: Long): Unit = { time = BigInt(cycle / period) }
     def levels: BigInt = (if (software != 0) BigInt(1) << SimMap.number(c("software_bit")).toInt else BigInt(0)) |
       (if (time >= compare) BigInt(1) << SimMap.number(c("timer_bit")).toInt else BigInt(0))
@@ -97,6 +113,15 @@ final class LiveDevices(map: SimMap) {
     val claimed = mutable.Set.empty[Int]
     var enable, threshold = 0L
     var active = Set.empty[Int]
+    def save: ujson.Value = ujson.Obj("priority" -> ujson.Obj.from(priority.toSeq.map { case (k, v) => k.toString -> ujson.Num(v) }),
+      "claimed" -> ujson.Arr.from(claimed.toSeq.sorted), "enable" -> enable, "threshold" -> threshold,
+      "active" -> ujson.Arr.from(active.toSeq.sorted))
+    def restore(v: ujson.Value): Unit = {
+      priority.clear(); v("priority").obj.foreach { case (k, value) => priority(k.toInt) = SimMap.number(value).toLong }
+      claimed.clear(); v("claimed").arr.foreach(n => claimed += n.num.toInt)
+      enable = SimMap.number(v("enable")).toLong; threshold = SimMap.number(v("threshold")).toLong
+      active = v("active").arr.map(_.num.toInt).toSet
+    }
     def winner: Int = active.filter(s => !claimed(s) && (enable & (1L << s)) != 0 && priority(s) > threshold)
       .toSeq.sortBy(s => (-priority(s), s)).headOption.getOrElse(0)
     override def irq = winner != 0
@@ -163,6 +188,14 @@ final class LiveDevices(map: SimMap) {
       case p: Plic if p.irq => BigInt(1) << SimMap.number(c("interrupt_bit")).toInt
       case _ => BigInt(0)
     }) }
+  }
+  def snapshot(): ujson.Value = ujson.Obj("schema" -> "rvw.live-devices/1", "map_sha256" -> map.sha256,
+    "state" -> ujson.Obj.from(entries.map { case (r, _, d) => r.name -> d.save }))
+  /** Trusted same-build state. Discard the instance if restore fails. */
+  def restore(v: ujson.Value): Unit = {
+    require(v("schema").str == "rvw.live-devices/1" && v("map_sha256").str == map.sha256, "device snapshot identity mismatch")
+    require(v("state").obj.keySet == byName.keySet, "device snapshot inventory mismatch")
+    entries.foreach { case (r, _, d) => d.restore(v("state")(r.name)) }
   }
   def outputs: ujson.Value = ujson.Obj.from(entries.collect { case (r, _, u: Uart) => r.name -> ujson.Str(u.output) })
 }
