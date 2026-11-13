@@ -34,7 +34,7 @@ class ToolSession:
         from rvw.query.mcp_tools import mcp_tools as query
         from rvw.wave.mcp_tools import mcp_tools as wave
         tools = [t for factory in (regress, cosim, bundle, query, wave)
-                 for t in factory() if t.name in WORKFLOW]
+                 for t in factory() if t.name in (*WORKFLOW, 'wave_find', 'wave_info')]
         tools += [ToolSpec('bench_inspect', 'Read public evidence workflow inputs. No evaluator truth is returned.',
                            schema({}), self.inspect),
                   ToolSpec('bench_finish', 'Finish the evidence trial. No source repair or independent check is granted.',

@@ -293,3 +293,17 @@ The previous report is archived before the next result replaces the main report.
 Reports retain the attempt number and `previous_pack_sha256`. A changed task pack
 is recorded as a new attempt with its own digest and fresh checks. It does not
 change the pinned source requirement or combine scores across task packs.
+
+## Observed mismatch wave time
+
+Evidence steps can declare `mismatch_signals`, a project-owned mapping from
+C2 difference fields to observable wave/database signals. The client selects
+the first mapped field present in the live `cosim_check` response. A wave step
+can declare `wave_time` with `order_signal` and `valid_signal`. The client calls
+MCP `wave_find` for the mismatching retirement order and valid state. It uses
+the first matching wave time. An absent retirement makes the step inconclusive.
+Without a mismatch, it calls `wave_info` and labels the explanation as the run
+end. It does not invent a divergent instruction. These calls share the existing
+wall and call limits. The external evidence registry also exposes these two
+read-only wave tools. The step transcript retains the time query and its basis.
+No source cause, repair credit or wave/database identity proof is added.

@@ -59,3 +59,61 @@ def test_real_stdio_workflow_preserves_missing_native_inputs(tmp_path):
     assert result['status'] == 'inconclusive'
     assert result['candidates'] == []
     assert len(result['transcript']) == 5
+
+def test_mismatch_order_selects_live_wave_time_and_observed_field():
+    calls = []
+    async def call(tool, arguments):
+        calls.append((tool, dict(arguments)))
+        if tool == 'cosim_check':
+            return {'status': 'mismatch', 'mismatch': {'order': 7, 'differences': {'pc_next': {}}}}
+        if tool == 'wave_find':
+            assert arguments['expr'] == '(retire_order == 7) && (retire_valid == 1)'
+            return {'first': 1234}
+        if tool in ('query_drivers', 'wave_why'):
+            assert arguments['signal'] == 'next_pc'
+        if tool == 'wave_why':
+            assert arguments['at'] == '1234'
+        return {}
+    steps = [{'tool': t, 'arguments': {}} for t in WORKFLOW]
+    for step in steps[-2:]:
+        step['mismatch_signals'] = {'pc_next': 'next_pc'}
+    steps[-1]['arguments'] = {'wave': 'dut.fst', 'signal': 'default', 'at': '0'}
+    steps[-1]['wave_time'] = {'order_signal': 'retire_order', 'valid_signal': 'retire_valid'}
+    result = anyio.run(lambda: solve(call, steps))
+    assert result['status'] == 'observed' and result['calls'] == 6
+    assert result['transcript'][-1]['time_query']['result'] == {'first': 1234}
+    assert calls[-2][0] == 'wave_find' and calls[-1][0] == 'wave_why'
+
+
+def test_matching_prefix_uses_actual_wave_end_without_claiming_divergence():
+    async def call(tool, arguments):
+        if tool == 'cosim_check':
+            return {'status': 'match', 'end_status': 'timeout', 'mismatch': None}
+        if tool == 'wave_info':
+            return {'end': 999}
+        if tool == 'wave_why':
+            assert arguments['at'] == '999'
+        return {}
+    steps = [{'tool': t, 'arguments': {}} for t in WORKFLOW]
+    steps[-1].update(arguments={'wave': 'dut.fst'}, wave_time={'order_signal': 'order', 'valid_signal': 'valid'})
+    result = anyio.run(lambda: solve(call, steps))
+    assert result['status'] == 'observed'
+    assert 'no architectural mismatch' in result['transcript'][-1]['time_basis']
+    assert result['repair'] == 'NOT CLAIMED'
+
+
+def test_missing_retirement_prevents_query_at_a_guessed_time():
+    calls = []
+    async def call(tool, arguments):
+        calls.append(tool)
+        if tool == 'cosim_check':
+            return {'mismatch': {'order': 0}}
+        if tool == 'wave_find':
+            return {'first': None}
+        return {}
+    steps = [{'tool': t, 'arguments': {}} for t in WORKFLOW]
+    steps[-1].update(arguments={'wave': 'dut.fst'}, wave_time={'order_signal': 'order', 'valid_signal': 'valid'})
+    result = anyio.run(lambda: solve(call, steps))
+    assert 'wave_why' not in calls
+    assert result['status'] == 'inconclusive'
+    assert 'absent' in result['transcript'][-1]['error']

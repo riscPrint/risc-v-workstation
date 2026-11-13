@@ -36,3 +36,17 @@ outside the repository. `observed` means all five tool requests returned.
 repair verdict. The solver does not edit sources or claim a fixed core.
 Native localisation measurements still require a qualified failing run, a
 matching database and a waveform for each task.
+
+A driver or wave step can add `mismatch_signals`. This maps fields such as
+`rd_wdata` or `pc_next` to project-owned observable signal names. The client
+selects a field from the live strict cosim result. A wave step can also add:
+
+```json
+"wave_time": {"order_signal": "retire_order", "valid_signal": "retire_valid"}
+```
+
+The client finds this retirement in the actual wave with MCP `wave_find`.
+This avoids a guessed reset offset. Missing retirement evidence is an error.
+With no architectural mismatch, it uses the actual `wave_info` end time and
+labels the explanation as the run end. The extra request counts against the
+same budget. It does not turn a matching prefix into a failing instruction.
