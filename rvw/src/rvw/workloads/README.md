@@ -205,3 +205,31 @@ Evaluation models with the same custom instruction definitions now share one
 complete C2 validation and decoded sample windows. Each model gets fresh timing
 and component state. A raw source hash check precedes reuse. Different custom
 instruction definitions get separate validation. Report formats stay unchanged.
+
+## Checked RTL benchmark table
+
+`rvw workloads run --project CORE --source RISCV_TESTS --out RUN_ROOT`
+builds the pinned riscv-tests recipe for the project. Put project settings in
+`rvw/bench.json`, or use `--settings FILE`. Settings use schema
+`rvw.rtl-bench-settings/1`, `programs` (recipe IDs), and `target` with `march`,
+`abi`, `ram_base` and `ram_size`. Optional fields are `cc`, `source`,
+`max_cycles` and `probes`. RAM values are linker integer expressions.
+The linker checks program size plus 128 KiB for runtime stacks.
+
+The command runs one C1 adapter at a time. It requires a C1 pass from the
+program self-check and matching C1 input fields. Dhrystone is `no_checks`
+until its printed expected values have an executable checker.
+The table includes failed programs and diagnostics. IPC covers startup,
+program work and the checker. It is not an official benchmark score.
+`--repeats 2` checks exact instruction and cycle repeatability.
+`--resume` reuses completed rows only with the same settings, tracked
+revision and edits, declared environment, options and unchanged ELF hashes.
+Untracked core inputs are outside this resume identity. Keep them fixed.
+Interrupted builds need a fresh output directory. Completed builds and rows
+resume after interruption. Each adapter has a wall limit below 120 seconds.
+Builds can need a separate warm compile before the campaign on a loaded host.
+
+Keep RUN_ROOT outside Git. `report.json` and `report.md` are the result tables.
+No waves or instruction traces are requested. Optional probe events are
+summarized with the existing top-down reader, then removed. Missing top-down
+bindings remain explicit. MCP tool: `workloads_run`.
