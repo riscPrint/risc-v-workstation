@@ -196,8 +196,9 @@ def _profiles(job, **args):
 
 
 def mcp_tools():
+    from .apps_mcp import mcp_tools as apps_tools
     from .deep_cli import mcp_tools as deep_tools
-    return [*deep_tools(),
+    return [*deep_tools(), *apps_tools(),
 
         ToolSpec("formal_simulate", "Replay timed multi-clock input events and collect SVA counts and four-state observations as C1.",
                  schema({"verilog": {"type": "array", "items": S}, "top": S, "events": S,
@@ -223,26 +224,9 @@ def mcp_tools():
                  schema({"intent": S, "out": S, "db": S}, ["intent", "out"]), _power, long=True),
         ToolSpec("formal_buses", "Generate typed simple-bus monitors and instance binds from SpinalDB. No proof run.",
                  schema({"db": S, "out": S}, ["db", "out"]), _buses, long=True),
-        ToolSpec("formal_recheck", "Bounded solver what-if over a captured model with pinned signals and full-depth feasibility.",
-                 schema({"result": S, "pin": {"type": "array", "items": S, "minItems": 1},
-                         "out": S, "depth": I, "engine": S,
-                         "timeout": {"type": "number", "exclusiveMinimum": 0}}, ["result", "pin", "out"]),
-                 _runner("recheck"), long=True),
         ToolSpec("formal_template", "Generate a project-bound safety monitor. No verification run.",
                  schema({"kind": S, "out": S, "entries": I, "width": I}, ["kind", "out"]),
                  _template, long=True),
-        ToolSpec("formal_autocheck", "Check per-bit constants, declared dead code and FSM coverage. Optional output X propagation.",
-                 schema({"manifest": S, "out": S, "db": S, "kind": {"type": "array", "items": S}, "max_properties": I, "depth": I,
-                         "engine": S, "timeout": {"type": "number", "exclusiveMinimum": 0},
-                         "mode": {**S, "enum": ["bmc", "prove"]}, "xprop": B}, ["manifest", "out"]),
-                 _runner("autocheck"), long=True),
-        ToolSpec("formal_apps", "Run reviewed connectivity, CSR, bounded progress, UNR and FSM monitor contracts.",
-                 schema({"manifest": S, "out": S, "depth": I, "engine": S,
-                         "timeout": {"type": "number", "exclusiveMinimum": 0},
-                         "mode": {**S, "enum": ["bmc", "prove"]}, "event_model": B, "async_reset": B},
-                        ["manifest", "out"]), _runner("apps"), long=True),
-
-
         ToolSpec("formal_properties", "Generate SVA for common intents and typed Stream/Flow channels. Does not run a proof.",
                  schema({"spec": S, "channels": S, "db": S, "out": S}, ["spec", "out"]), _properties, long=True),
         ToolSpec("formal_security_pair", "Prove declared digital two-copy observation contracts or initial-state independence.",
@@ -257,19 +241,10 @@ def mcp_tools():
                          "reference_include": {"type": "array", "items": S},
                          "timeout": {"type": "number", "exclusiveMinimum": 0}}, ["rtl", "model", "width", "out"]),
                  _runner("datapath"), long=True),
-        ToolSpec("formal_testplan", "Join a formal inventory with captured proof, core, activation and mutation evidence. JSON and HTML.",
-                 schema({"manifest": S, "out": S}, ["manifest", "out"]), _runner("testplan"), long=True),
-
         ToolSpec("formal_riscv", "Run selected project riscv-formal checks through SBY. Return C3 outcomes and a C4 verdict. Bounded passes cannot accept a core.",
                  schema({"project": S, "out": S, "timeout": {"type": "number", "exclusiveMinimum": 0}}, ["out"]), _riscv, long=True),
         ToolSpec("formal_rvfi_generate", "Generate an RVFI wrapper and project configuration from a core-owned port binding. No proof is run.",
                  schema({"manifest": S, "out": S}, ["manifest", "out"]), _rvfi_generate, long=True),
-        ToolSpec("formal_shortest", "Search increasing BMC depths for the sole captured assertion. Unknown depths cannot certify minimality.",
-                 schema({"result": S, "out": S, "max_depth": I, "timeout": {"type": "number", "exclusiveMinimum": 0}, "engine": S}, ["result", "out"]), _runner("shortest"), long=True),
-        ToolSpec("formal_proof_core", "Extract a deletion-minimal solver core for one named SMT query. Not an RTL proof.",
-                 schema({"smt2": S, "mapping": S, "result": S, "depth": I, "property": S, "db": S, "solver": S,
-                         "timeout": {"type": "number", "exclusiveMinimum": 0}, "out": S},
-                        ["out"]), _runner("proof-core"), long=True),
         ToolSpec("formal_csr", "Generate CSR monitors, directed assembly and coverage. Does not run verification.",
                  schema({"model": S, "out": S}, ["model", "out"]), _csr, long=True),
 
@@ -286,13 +261,6 @@ def mcp_tools():
                          "clock": S, "reset": S, "depth": I, "max_nodes": I,
                          "engine": S, "timeout": {"type": "number", "exclusiveMinimum": 0}},
                         ["manifest", "db", "out"]), _connectivity, long=True),
-        ToolSpec("formal_cex", "Replay a captured failing BMC witness with edited inputs through Yosys sim. Not a proof.",
-                 schema({"result": S, "out": S, "trace_index": I,
-                         "edit": {"type": "array", "items": S},
-                         "hgldd": S, "pdg": S, "criterion": S, "at_time": I, "open": B,
-                         "minimize": B, "max_checks": I, "emit_testbench": B, "db": S, "signal": S,
-                         "timeout": {"type": "number", "exclusiveMinimum": 0}}, ["result", "out"]),
-                 _runner("cex"), long=True),
         ToolSpec("formal_bmc", "Bounded model check of a design's assertions from reset (SymbiYosys). Use for shallow "
                  "bugs; failures are named by SpinalChecks id and Scala line when `checks` is given. Runs as a job.",
                  schema({**COMMON, "reset_cycles": I, "free_reset": B, "first_failure": B,
