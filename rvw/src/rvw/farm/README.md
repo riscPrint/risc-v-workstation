@@ -285,3 +285,21 @@ It disables reruns and SpinalTrace execution. Missing run paths and bundle error
 stay explicit. `--baseline` reuses the identity-aware C3/C4 comparison for new
 failures, fixes, missing tests and changed inputs. MCP exposes `farm_triage`.
 This report does not infer a root cause or accept a change from cluster counts.
+
+## Time-budgeted impact suites
+
+`rvw farm select --db design.sqlite --changed '["src/Unit.scala"]'
+--catalogue observations.json --seconds 600` proposes tests for ten minutes.
+The catalogue supplies `database_sha256` and `tests`. Each test has a unique
+`id`, measured positive `wall_seconds`, observed signal paths in `signals`, and
+optional `mandatory: true`. The source paths must match the database's files.
+The selector follows downstream design-database edges from changed components
+and signals. It ranks tests by new impacted signals per second.
+
+Use the existing `rvw cov select` for line-coverage impact selection. Its result
+can be included as `coverage_selection`; `fallback_all: true` stays mandatory.
+Missing signal observations, unknown files, empty impact maps or a changed
+database hash retain all affected unknown tests, even beyond the time budget.
+The report shows omitted tests, uncovered signals and any budget overrun.
+This is an advisory scheduling plan. It does not replace a regression gate.
+Held-out regression validation has NOT RUN. MCP exposes `farm_select`.
