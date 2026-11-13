@@ -369,7 +369,7 @@ class _Writer:
         self.c.execute('''INSERT INTO components
             (id,parent_id,path,name,module,depth,file_id,line,tags) VALUES (?,?,?,?,?,?,?,?,?)''',
             (cid,parent,path,cell or name,name,
-             _dotted(path).count('.')+1 if path else 0,fid,line,'$incomplete:hdl-navigation-only' + (' hdl:automatic-local' if path in self.automatic else '')))
+             _dotted(path).count('.')+1 if path else 0,fid,line,'$incomplete:hdl-navigation-only'))
         prefix = path + '.' if path else ''
         bits = sorted({b for n in m['netnames'].values() for b in n['bits'] if isinstance(b,int)})
         named = {}
