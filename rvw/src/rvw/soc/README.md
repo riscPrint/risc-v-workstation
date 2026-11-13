@@ -540,3 +540,13 @@ RV32 Spinal req/rsp memory bus gets a real `SimpleCoreWrapper`, core build
 dependency and RVFI exports. The default map contains RAM at the declared
 address and size. Other protocols need a project wrapper. The unselected
 project path still creates an explicitly labelled idle scaffold.
+
+Composition also writes `verify.json`, `connections.json` and
+`register-checks.json`. Use the generated verify manifest with `soc verify`.
+It names `runtime-classpath.txt`, `soc.db` and `apb.jsonl` in its directory.
+These are native inputs to supply, not generated evidence. The protocol
+consumer can run a bounded fabric proof with the classpath. Decode uses an
+unbounded fabric proof. CPU ingress and peripheral state are outside those
+proofs. Direct scalar interrupt transfers and selected device clock/reset
+connections are listed. Aggregated or crossed interrupts need a project
+contract. A RAM-only map has no MMIO register checks to execute.

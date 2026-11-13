@@ -216,5 +216,10 @@ def compose(source, out, elf=None):
         if binder.get('domain'):
             bindings.append(dict(path=name+'_crossing',protocol='apb3',domain='default',checks='APB phase and stability'))
     manifest['protocol_bindings'] = bindings
+    from .verification_bindings import files as verification_files
+    import os
+    for name, text in verification_files(obj, spec, os.path.relpath(source, target.resolve())).items():
+        (target/name).write_text(text)
+        files.append(name)
     (target / 'composition.json').write_text(dumps(manifest))
     return dict(status='generated', files=sorted(files + ['ComposedSoc.scala', 'composition.json']), profile=manifest['profile'])

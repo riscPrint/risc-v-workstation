@@ -26,4 +26,4 @@ def prove(source, out, classpath, timeout=30):
     status = 'pass' if valid and process.returncode==0 and report.get('status')=='pass' else (
         'fail' if valid and report.get('status')=='fail' else 'inconclusive')
     return dict(status=status,checks=report.get('assertions',0),depth=8,
-                scope='Bounded APB fabric protocol safety with legal master assumptions; CPU AXI is checked in simulation.',formal_result=str(path))
+                scope='Bounded APB fabric protocol safety with legal master assumptions; CPU ingress and device state are outside this proof.',formal_result=str(path))
