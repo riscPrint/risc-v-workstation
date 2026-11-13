@@ -130,10 +130,28 @@ struct Machine : simif_t {
       }
       uint64_t addr=(s->XPR[rs]+offset) & (cpu->get_xlen()==32 ? 0xffffffffULL : ~0ULL);
       if(width && addr%(cpu->get_xlen()/8)+width>cpu->get_xlen()/8) {
-        // Only completed ordinary accesses to inert bare RAM can be aggregated.
-        // No translation, PMP checks, page split, device access or partial fault.
+        // Only completed ordinary accesses to bare RAM can be aggregated: no
+        // translation, page split, device access or partial fault. M-mode, or
+        // U-mode on a core without S-mode (no satp), with MPRV applied. PMP must
+        // decide every byte the same way: Spike's rule, one entry for all bytes.
+        reg_t mstatus=s->mstatus->read();
+        reg_t effective=(s->prv==3 && (mstatus & (1ULL<<17))) ? (mstatus>>11)&3 : s->prv;
+        bool bare=effective==3 || (effective==0 && !cpu->extension_enabled('S'));
+        bool pmp_uniform=!s->mseccfg || !s->mseccfg->read();
+        if(pmp_uniform) {
+          bool decided=false;
+          for(unsigned i=0;i<cfg.pmpregions && i<(unsigned)state_t::max_pmp && !decided;i++) {
+            bool any=false, all=true;
+            for(unsigned b=0;b<width;b++) { bool m=s->pmpaddr[i]->match4(addr+b); any|=m; all&=m; }
+            if(any) {
+              decided=true;
+              pmp_uniform=all && s->pmpaddr[i]->access_ok(op==0x23 ? STORE : LOAD, effective, false);
+            }
+          }
+          if(!decided) pmp_uniform=effective==3;
+        }
         bool safe=scalar_split_ram && (op==3 || op==0x23) && width<=cpu->get_xlen()/8 &&
-          s->prv==3 && !s->v && !cfg.pmpregions && !(s->mstatus->read() & (1ULL<<17)) &&
+          !s->v && bare && pmp_uniform &&
           addr/4096==(addr+width-1)/4096;
         bool in_ram=false;
         for(auto r:ram) if(contains(r,addr,width)) in_ram=true;
