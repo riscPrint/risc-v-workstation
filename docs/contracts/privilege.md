@@ -304,3 +304,13 @@ an integer from 1 to 256. Each manifest row records `transition_plan` with the
 selected mode, operation, cause, delegation and retained-register cookie.
 The plan is reproducible from project inputs. It is not DUT evidence.
 Existing strict architectural groups apply without a model-subset substitute.
+
+## RV32 state-enable input
+
+`kind = "stateen-rv32"` requires RV32 Smstateen, Zfinx and the pinned
+`spec_version = "Smstateen-1.0"`. `stateen.probes` selects distinct entries
+from `stateen`, `envcfg`, `csrind` and `zfinx`. `writable_bits` declares each
+selected gate, plus bits 1 and 63 used for low/high retention checks. Indirect
+CSR probes also require Sscsrind. H in the reference ISA adds VS/VU cases.
+The compiler ISA may omit extension names when all instructions use numeric
+CSR encodings. Functional CSR domains include the RV32 M/H high-half banks.

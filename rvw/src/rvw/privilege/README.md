@@ -681,3 +681,23 @@ origin mode, operation and destination handler. Native Spike runs the actual
 self-checking programs. DUT use follows the existing C1 suite and strict
 reference path. This bounded generator does not cover interrupts, guest modes,
 nested handlers, page translation or arbitrary CSR writes.
+
+## RV32 state-enable banks
+
+`kind = "stateen-rv32"` pins `Smstateen-1.0`. The two examples select RV32
+with and without H. They generate 48 and 160 programs. Probes cover SE at
+all four bank indices, ENVCFG, indirect CSR access and the Zfinx FCSR gate.
+Project `stateen.writable_bits` declares the selected gates. Bit 1 and bit 63
+must also be writable for split-bank retention checks. Zfinx must be present.
+
+Programs write low and high halves separately. They check selected-bit readback
+in M, the higher-level mask on H readback, the retained opposite half and an
+independent SE bank. Guest entry uses `mstatush.MPV`. Access checks require the
+expected cause and exact fault or ECALL PC. U and VU access restrictions remain
+part of the matrix. RV32 uses a two-word tohost store.
+
+The compiler ISA uses only the assembler features needed by these numeric CSR
+instructions. The reference ISA retains Smstateen, Sscsrind, Zfinx and H where
+selected. Native Spike checks actual programs. This suite does not establish
+DUT coverage. Ssstateen-only implementations and other extension-state gates
+remain open.
