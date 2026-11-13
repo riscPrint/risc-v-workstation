@@ -78,7 +78,9 @@
         "source": "Temurin 21 fallback in scripts/install.sh",
         "linux_status": "untested"
       },
-      "legacy": true
+      "legacy": true,
+      "observed_version": "21.0.13",
+      "version_evidence": "Historical docs/TOOL_VERSIONS.md; not requalified in this change"
     },
     {
       "name": "sbt",
@@ -101,7 +103,9 @@
         "source": "Pinned archive in scripts/install.sh",
         "linux_status": "untested"
       },
-      "legacy": true
+      "legacy": true,
+      "observed_version": "1.11.7",
+      "version_evidence": "Historical docs/TOOL_VERSIONS.md; not requalified in this change"
     },
     {
       "name": "Verilator",
@@ -124,7 +128,9 @@
         "source": "",
         "linux_status": "untested"
       },
-      "legacy": true
+      "legacy": true,
+      "observed_version": "5.052",
+      "version_evidence": "Historical docs/TOOL_VERSIONS.md; not requalified in this change"
     },
     {
       "name": "RISC-V GCC",
@@ -150,7 +156,9 @@
         "source": "Pinned source build in scripts/install.sh",
         "linux_status": "untested"
       },
-      "legacy": true
+      "legacy": true,
+      "observed_version": "15.1.0",
+      "version_evidence": "Historical docs/TOOL_VERSIONS.md; not requalified in this change"
     },
     {
       "name": "Spike",
@@ -176,7 +184,9 @@
         "source": "Pinned source build and Cosim/build.sh",
         "linux_status": "untested"
       },
-      "legacy": true
+      "legacy": true,
+      "observed_version": "1.1.1-dev",
+      "version_evidence": "Historical docs/TOOL_VERSIONS.md; not requalified in this change"
     },
     {
       "name": "Sail",
@@ -201,7 +211,9 @@
         "source": "scripts/install-sail.sh; main flag needs --from-bundle",
         "linux_status": "untested"
       },
-      "legacy": true
+      "legacy": true,
+      "observed_version": "0.15",
+      "version_evidence": "Historical docs/TOOL_VERSIONS.md; not requalified in this change"
     },
     {
       "name": "Yosys",
@@ -224,7 +236,9 @@
         "source": "Checksum-pinned OSS CAD Suite in scripts/install.sh; engine availability varies",
         "linux_status": "untested"
       },
-      "legacy": true
+      "legacy": true,
+      "observed_version": "0.70",
+      "version_evidence": "Historical docs/TOOL_VERSIONS.md; not requalified in this change"
     },
     {
       "name": "SymbiYosys",
@@ -247,7 +261,9 @@
         "source": "Checksum-pinned OSS CAD Suite in scripts/install.sh; engine availability varies",
         "linux_status": "untested"
       },
-      "legacy": true
+      "legacy": true,
+      "observed_version": "0.70",
+      "version_evidence": "Historical docs/TOOL_VERSIONS.md; not requalified in this change"
     },
     {
       "name": "Yices",
@@ -270,7 +286,9 @@
         "source": "Checksum-pinned OSS CAD Suite in scripts/install.sh; engine availability varies",
         "linux_status": "untested"
       },
-      "legacy": true
+      "legacy": true,
+      "observed_version": "2.7.0",
+      "version_evidence": "Historical docs/TOOL_VERSIONS.md; not requalified in this change"
     },
     {
       "name": "Z3",
@@ -293,7 +311,9 @@
         "source": "Checksum-pinned OSS CAD Suite in scripts/install.sh; engine availability varies",
         "linux_status": "untested"
       },
-      "legacy": true
+      "legacy": true,
+      "observed_version": "not verified",
+      "version_evidence": "No measured version in this inventory"
     },
     {
       "name": "Boolector",
@@ -316,7 +336,9 @@
         "source": "Checksum-pinned OSS CAD Suite in scripts/install.sh; engine availability varies",
         "linux_status": "untested"
       },
-      "legacy": true
+      "legacy": true,
+      "observed_version": "not verified",
+      "version_evidence": "No measured version in this inventory"
     },
     {
       "name": "ABC",
@@ -339,7 +361,9 @@
         "source": "Checksum-pinned OSS CAD Suite in scripts/install.sh; engine availability varies",
         "linux_status": "untested"
       },
-      "legacy": true
+      "legacy": true,
+      "observed_version": "not verified",
+      "version_evidence": "No measured version in this inventory"
     },
     {
       "name": "Avy",
@@ -362,7 +386,9 @@
         "source": "Checksum-pinned OSS CAD Suite in scripts/install.sh; engine availability varies",
         "linux_status": "untested"
       },
-      "legacy": true
+      "legacy": true,
+      "observed_version": "not verified",
+      "version_evidence": "No measured version in this inventory"
     },
     {
       "name": "btorsim",
@@ -385,7 +411,9 @@
         "source": "Checksum-pinned OSS CAD Suite in scripts/install.sh; engine availability varies",
         "linux_status": "untested"
       },
-      "legacy": true
+      "legacy": true,
+      "observed_version": "not verified",
+      "version_evidence": "No measured version in this inventory"
     },
     {
       "name": "suprove",
@@ -408,7 +436,9 @@
         "source": "Checksum-pinned OSS CAD Suite in scripts/install.sh; engine availability varies",
         "linux_status": "untested"
       },
-      "legacy": true
+      "legacy": true,
+      "observed_version": "not verified",
+      "version_evidence": "No measured version in this inventory"
     },
     {
       "name": "yosys-slang",
@@ -433,7 +463,9 @@
         "source": "scripts/build-yosys-slang.py",
         "linux_status": "untested"
       },
-      "legacy": true
+      "legacy": true,
+      "observed_version": "not verified",
+      "version_evidence": "No measured version in this inventory"
     },
     {
       "name": "rIC3",
@@ -456,7 +488,9 @@
         "source": "scripts/install-formal-engine.py ric3",
         "linux_status": "untested"
       },
-      "legacy": true
+      "legacy": true,
+      "observed_version": "not verified",
+      "version_evidence": "No measured version in this inventory"
     },
     {
       "name": "EBMC",
@@ -479,7 +513,9 @@
         "source": "scripts/install-formal-engine.py ebmc",
         "linux_status": "untested"
       },
-      "legacy": true
+      "legacy": true,
+      "observed_version": "not verified",
+      "version_evidence": "No measured version in this inventory"
     },
     {
       "name": "CBMC",
@@ -502,7 +538,9 @@
         "source": "https://github.com/diffblue/cbmc; source build required if package unavailable",
         "linux_status": "untested"
       },
-      "legacy": false
+      "legacy": false,
+      "observed_version": "not verified",
+      "version_evidence": "No measured version in this inventory"
     },
     {
       "name": "pono",
@@ -525,7 +563,9 @@
         "source": "https://github.com/stanford-centaur/pono; follow upstream build instructions",
         "linux_status": "untested"
       },
-      "legacy": false
+      "legacy": false,
+      "observed_version": "not verified",
+      "version_evidence": "No measured version in this inventory"
     },
     {
       "name": "GHDL",
@@ -551,7 +591,9 @@
         "source": "https://github.com/ghdl/ghdl-yosys-plugin; build plugin against selected Yosys",
         "linux_status": "untested"
       },
-      "legacy": false
+      "legacy": false,
+      "observed_version": "not verified",
+      "version_evidence": "No measured version in this inventory"
     },
     {
       "name": "CIRCT/arcilator",
@@ -577,7 +619,9 @@
         "source": "python -m rvw.sim.arcilator_install",
         "linux_status": "untested"
       },
-      "legacy": true
+      "legacy": true,
+      "observed_version": "not verified",
+      "version_evidence": "No measured version in this inventory"
     },
     {
       "name": "riscv-dv",
@@ -602,7 +646,9 @@
         "source": "scripts/install-riscv-dv.py",
         "linux_status": "untested"
       },
-      "legacy": true
+      "legacy": true,
+      "observed_version": "not verified",
+      "version_evidence": "No measured version in this inventory"
     },
     {
       "name": "cocotb",
@@ -623,7 +669,9 @@
         "source": "uv sync --locked --extra cocotb --project rvw",
         "linux_status": "untested"
       },
-      "legacy": false
+      "legacy": false,
+      "observed_version": "not verified",
+      "version_evidence": "No measured version in this inventory"
     },
     {
       "name": "pyuvm",
@@ -644,7 +692,9 @@
         "source": "uv sync --locked --extra pyuvm --project rvw",
         "linux_status": "untested"
       },
-      "legacy": false
+      "legacy": false,
+      "observed_version": "not verified",
+      "version_evidence": "No measured version in this inventory"
     },
     {
       "name": "wellen",
@@ -667,7 +717,9 @@
         "source": "uv sync --locked --extra waves --project rvw",
         "linux_status": "untested"
       },
-      "legacy": false
+      "legacy": false,
+      "observed_version": "not verified",
+      "version_evidence": "No measured version in this inventory"
     },
     {
       "name": "gem5",
@@ -692,7 +744,9 @@
         "source": "Pinned source build in scripts/install.sh",
         "linux_status": "untested"
       },
-      "legacy": true
+      "legacy": true,
+      "observed_version": "25.1.0.1",
+      "version_evidence": "Historical docs/TOOL_VERSIONS.md; not requalified in this change"
     },
     {
       "name": "native csim",
@@ -719,7 +773,9 @@
         "source": "Built on first rvw csim engine use; requires C++ compiler",
         "linux_status": "untested"
       },
-      "legacy": false
+      "legacy": false,
+      "observed_version": "not verified",
+      "version_evidence": "No measured version in this inventory"
     },
     {
       "name": "native OoO",
@@ -742,7 +798,9 @@
         "source": "python -m rvw.ooo.native",
         "linux_status": "untested"
       },
-      "legacy": true
+      "legacy": true,
+      "observed_version": "not verified",
+      "version_evidence": "No measured version in this inventory"
     },
     {
       "name": "QEMU",
@@ -765,7 +823,9 @@
         "source": "",
         "linux_status": "untested"
       },
-      "legacy": false
+      "legacy": false,
+      "observed_version": "not verified",
+      "version_evidence": "No measured version in this inventory"
     },
     {
       "name": "herd7",
@@ -788,7 +848,9 @@
         "source": "opam install herdtools7; initialize opam and use eval $(opam env)",
         "linux_status": "untested"
       },
-      "legacy": false
+      "legacy": false,
+      "observed_version": "not verified",
+      "version_evidence": "No measured version in this inventory"
     },
     {
       "name": "OpenOCD",
@@ -811,7 +873,9 @@
         "source": "",
         "linux_status": "untested"
       },
-      "legacy": false
+      "legacy": false,
+      "observed_version": "not verified",
+      "version_evidence": "No measured version in this inventory"
     },
     {
       "name": "GDB",
@@ -836,7 +900,9 @@
         "source": "Select GDB executable in project debug configuration",
         "linux_status": "untested"
       },
-      "legacy": false
+      "legacy": false,
+      "observed_version": "not verified",
+      "version_evidence": "No measured version in this inventory"
     },
     {
       "name": "Verible",
@@ -860,7 +926,9 @@
         "source": "scripts/install-verible.py",
         "linux_status": "untested"
       },
-      "legacy": true
+      "legacy": true,
+      "observed_version": "not verified",
+      "version_evidence": "No measured version in this inventory"
     },
     {
       "name": "Icarus",
@@ -884,7 +952,9 @@
         "source": "",
         "linux_status": "untested"
       },
-      "legacy": false
+      "legacy": false,
+      "observed_version": "not verified",
+      "version_evidence": "No measured version in this inventory"
     },
     {
       "name": "typed waves",
@@ -908,7 +978,9 @@
         "source": "Existing Cargo build in scripts/install.sh",
         "linux_status": "untested"
       },
-      "legacy": true
+      "legacy": true,
+      "observed_version": "not verified",
+      "version_evidence": "No measured version in this inventory"
     },
     {
       "name": "SpinalTrace",
@@ -934,7 +1006,9 @@
         "source": "See SpinalTrace/README.md; cargo build --locked",
         "linux_status": "untested"
       },
-      "legacy": false
+      "legacy": false,
+      "observed_version": "not verified",
+      "version_evidence": "No measured version in this inventory"
     },
     {
       "name": "Surfer",
@@ -957,7 +1031,9 @@
         "source": "https://surfer-project.org; GUI session untested",
         "linux_status": "untested"
       },
-      "legacy": false
+      "legacy": false,
+      "observed_version": "not verified",
+      "version_evidence": "No measured version in this inventory"
     },
     {
       "name": "GTKWave tools",
@@ -981,7 +1057,9 @@
         "source": "",
         "linux_status": "untested"
       },
-      "legacy": false
+      "legacy": false,
+      "observed_version": "not verified",
+      "version_evidence": "No measured version in this inventory"
     },
     {
       "name": "VS Code",
@@ -1004,7 +1082,186 @@
         "source": "Install VS Code and build extension from vscode/README.md",
         "linux_status": "untested"
       },
-      "legacy": false
+      "legacy": false,
+      "observed_version": "not verified",
+      "version_evidence": "No measured version in this inventory"
+    },
+    {
+      "name": "Bitwuzla",
+      "area": "formal",
+      "executables": [
+        "bitwuzla"
+      ],
+      "flag": "formal",
+      "purpose": "Formal synthesis or portfolio engine",
+      "commands": [
+        "rvw formal"
+      ],
+      "env": [],
+      "pin": "unverified; optional OSS CAD Suite engine",
+      "qualification": "unverified; presence only",
+      "install": {
+        "macos": "",
+        "apt": "",
+        "dnf": "",
+        "source": "Checksum-pinned OSS CAD Suite in scripts/install.sh; engine availability varies",
+        "linux_status": "untested"
+      },
+      "legacy": true,
+      "observed_version": "not verified",
+      "version_evidence": "No measured version in this inventory"
+    },
+    {
+      "name": "CVC4",
+      "area": "formal",
+      "executables": [
+        "cvc4"
+      ],
+      "flag": "formal",
+      "purpose": "Formal synthesis or portfolio engine",
+      "commands": [
+        "rvw formal"
+      ],
+      "env": [],
+      "pin": "unverified; optional OSS CAD Suite engine",
+      "qualification": "unverified; presence only",
+      "install": {
+        "macos": "",
+        "apt": "",
+        "dnf": "",
+        "source": "Checksum-pinned OSS CAD Suite in scripts/install.sh; engine availability varies",
+        "linux_status": "untested"
+      },
+      "legacy": true,
+      "observed_version": "not verified",
+      "version_evidence": "No measured version in this inventory"
+    },
+    {
+      "name": "CVC5",
+      "area": "formal",
+      "executables": [
+        "cvc5"
+      ],
+      "flag": "formal",
+      "purpose": "Formal synthesis or portfolio engine",
+      "commands": [
+        "rvw formal"
+      ],
+      "env": [],
+      "pin": "unverified; optional OSS CAD Suite engine",
+      "qualification": "unverified; presence only",
+      "install": {
+        "macos": "",
+        "apt": "",
+        "dnf": "",
+        "source": "Checksum-pinned OSS CAD Suite in scripts/install.sh; engine availability varies",
+        "linux_status": "untested"
+      },
+      "legacy": true,
+      "observed_version": "not verified",
+      "version_evidence": "No measured version in this inventory"
+    },
+    {
+      "name": "MathSAT",
+      "area": "formal",
+      "executables": [
+        "mathsat"
+      ],
+      "flag": "formal",
+      "purpose": "Formal synthesis or portfolio engine",
+      "commands": [
+        "rvw formal"
+      ],
+      "env": [],
+      "pin": "unverified; optional OSS CAD Suite engine",
+      "qualification": "unverified; presence only",
+      "install": {
+        "macos": "",
+        "apt": "",
+        "dnf": "",
+        "source": "Checksum-pinned OSS CAD Suite in scripts/install.sh; engine availability varies",
+        "linux_status": "untested"
+      },
+      "legacy": true,
+      "observed_version": "not verified",
+      "version_evidence": "No measured version in this inventory"
+    },
+    {
+      "name": "btormc",
+      "area": "formal",
+      "executables": [
+        "btormc"
+      ],
+      "flag": "formal",
+      "purpose": "Formal synthesis or portfolio engine",
+      "commands": [
+        "rvw formal"
+      ],
+      "env": [],
+      "pin": "unverified; optional OSS CAD Suite engine",
+      "qualification": "unverified; presence only",
+      "install": {
+        "macos": "",
+        "apt": "",
+        "dnf": "",
+        "source": "Checksum-pinned OSS CAD Suite in scripts/install.sh; engine availability varies",
+        "linux_status": "untested"
+      },
+      "legacy": true,
+      "observed_version": "not verified",
+      "version_evidence": "No measured version in this inventory"
+    },
+    {
+      "name": "yosys-smtbmc",
+      "area": "formal",
+      "executables": [
+        "yosys-smtbmc"
+      ],
+      "flag": "formal",
+      "purpose": "Formal synthesis or portfolio engine",
+      "commands": [
+        "rvw formal"
+      ],
+      "env": [],
+      "pin": "unverified; optional OSS CAD Suite engine",
+      "qualification": "unverified; presence only",
+      "install": {
+        "macos": "",
+        "apt": "",
+        "dnf": "",
+        "source": "Checksum-pinned OSS CAD Suite in scripts/install.sh; engine availability varies",
+        "linux_status": "untested"
+      },
+      "legacy": true,
+      "observed_version": "not verified",
+      "version_evidence": "No measured version in this inventory"
+    },
+    {
+      "name": "firtool",
+      "area": "query",
+      "executables": [
+        "firtool"
+      ],
+      "flag": "arcilator",
+      "purpose": "Cycle simulation",
+      "commands": [
+        "rvw query build-hdl"
+      ],
+      "env": [
+        "RVW_FIRTOOL"
+      ],
+      "pin": "firtool-1.163.0",
+      "qualification": "unverified; presence only",
+      "install": {
+        "macos": "",
+        "apt": "",
+        "dnf": "",
+        "source": "python -m rvw.sim.arcilator_install",
+        "linux_status": "untested"
+      },
+      "legacy": true,
+      "observed_version": "not verified",
+      "version_evidence": "No measured version in this inventory"
     }
   ],
   "discovery": [
