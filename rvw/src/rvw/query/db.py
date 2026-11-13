@@ -354,6 +354,10 @@ class DesignDB:
     def component_by_path(self, path: str) -> dict | None:
         p = self.normalize(path) if path else ""
         r = self.conn.execute("SELECT id FROM components WHERE path = ?", (p,)).fetchone()
+        if not r and "[" not in p:
+            # HDL paths keep generate indexes (`g[1].u`); the normal form is `g.1.u`.
+            r = next(((cid,) for cid, cp in self.conn.execute("SELECT id, path FROM components WHERE path LIKE '%[%'")
+                      if self.normalize(cp) == p), None)
         return self.component(r[0]) if r else None
 
     def resolve_component(self, path: str | None) -> dict:

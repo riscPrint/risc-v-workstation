@@ -1454,13 +1454,29 @@ bit-exact functional cones. `data` edges represent value reads. `sel` edges
 represent selects and enable/reset inputs. Flip-flop and latch outputs have
 kind `reg`; clock inputs are excluded from value edges. Register stage counts
 can include multiple aliases of the same state. Clock domains and reset
-values are unknown. Empty memory and artifact tables do not imply completeness.
+values are unknown. Empty artifact tables do not imply completeness.
 
 Sources and executable identity use C8 capture. Include directives, file input,
 source remapping and token concatenation are refused. Source locations bind to
 captured HDL files in `input_files`. Input errors do not publish a partial DB.
 Semantic keys and emission configuration are `$incomplete:`. Diff must remain
 inconclusive. This subset adds no C1 runtime or formal model claim.
+
+### C6 HDL front ends: slang and memories
+
+`build-hdl --frontend slang` writes the same tables with `meta.frontend=yosys-slang`,
+`meta.hdl_options` (JSON: `include_dirs`, `defines`, `parameters`, `std`) and
+`meta.slang_plugin_sha256`. C8 capture covers the whole directory of each source
+and each include directory before elaboration; `input_files` lists those files.
+Artifact `hdl/parameters.json` maps each component path (root `""`) to its
+non-local parameter values as slang prints them. `signals.type` holds the declared
+SV type when the AST names one, else `Bits`. Component paths can hold generate
+indexes (`g[1].u`); `spinal_path` is the dotted form (`g.1.u.q`), which the
+reader's name normalization matches. Every HDL front end now imports memories:
+kind `mem` signals, `memories` rows with `key=$incomplete:hdl-memory`, `mem_ports`
+rows with `key=$incomplete:hdl-memory-port`, and `mem_write` assignments.
+Hidden `$cell$N` hub signals carry whole-cell dependencies. All `yosys-*`
+frontends share the graph semantics of the native subset above.
 
 ### C6 debug metadata export
 

@@ -142,7 +142,10 @@ The launcher does not elaborate or build the design.
 
 
 `rvw query build-hdl --top MODULE --out DB FILE...` builds a C6 navigation
-database from Verilog and the native Yosys SV subset. `--yosys PATH` selects the
+database from Verilog and the native Yosys SV subset. `--frontend slang` takes
+full SystemVerilog through yosys-slang (`-I`, `-D`, `-G`, `--std`) and adds
+per-instance parameters (shown by `component`) and declared SV types. MCP:
+`query_build_hdl`. `--yosys PATH` selects the
 native tool. `--timeout SECONDS` bounds elaboration. Drivers, loads and paths use
 the same reader. HDL graphs are conservative and semantic diff is inconclusive.
 See [the frontend limits](../../../../../SpinalDB/README.md#verilog-and-systemverilog-navigation).

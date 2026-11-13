@@ -395,7 +395,16 @@ these rows for non-Spinal designs.
 Assignment text describes the lowered cell or net alias. Process source ranges
 can cover several statements. These results are navigation evidence.
 
-The importer refuses memories, blackboxes, unresolved modules, inouts, unknown
+Memories get a `mem` signal and a `memories` row (width, depth, initial words).
+Write ports drive the memory node (`data` from the data, `sel` from address and
+enable). Read ports depend on the memory and on their address. A clocked read
+port output is a register. Port expressions and memory keys stay unknown.
+A cell with several outputs and several inputs gets one hidden `$cell$N` hub, so
+the edge count stays linear in its ports. `$buf` cells connect bit to bit.
+A bit node that no single visible net holds is named after one owner,
+`q_o[3]` (query name `q_o.3`).
+
+The native frontend refuses blackboxes, unresolved modules, inouts, unknown
 cells, include directives, source remapping and file-reading tasks. Supply all
 self-contained translation units explicitly. It captures source bytes and the
 Yosys executable identity before compilation. It publishes the database with
@@ -413,7 +422,45 @@ git clone https://github.com/olofk/serv.git ref/serv
 git -C ref/serv checkout f200eb2ed7b69ac1c6b8eddd47654522aeee5ce8
 git clone https://github.com/lowRISC/ibex.git ref/ibex
 git -C ref/ibex checkout 2c72091c12187b5c7caf925aa911c94b806aab54
-RVW_HDL_REF="$PWD/ref" rvw/.venv/bin/python -m pytest rvw/tests/test_query_hdl.py -q
+RVW_HDL_REF="$PWD/ref" rvw/.venv/bin/python -m pytest rvw/tests/test_query_hdl.py rvw/tests/test_query_slang.py -q
 ```
 
-See [the design](../docs/design/hdl-frontends.md) for slang, Chisel and VHDL phases.
+### Full SystemVerilog with slang
+
+`--frontend slang` elaborates through the yosys-slang plugin (`read_slang
+--keep-hierarchy`). It accepts packages, interfaces, generate blocks, enums,
+structs and include files. Pass `-I DIR`, `-D NAME[=VALUE]`, `-G NAME=VALUE`
+(top parameters) and `--std`. The plugin is `--slang PATH`, then `$RVW_SLANG`
+(`scripts/install.sh --with-formal` builds a pinned one), then the plugin that
+OSS CAD Suite ships beside Yosys.
+
+```sh
+P=ref/ibex/vendor/lowrisc_ip
+rvw query build-hdl --frontend slang --top ibex_core --out ibex.db \
+  -I $P/ip/prim/rtl -I $P/dv/sv/dv_utils $P/ip/prim/rtl/prim_util_pkg.sv \
+  ref/ibex/rtl/ibex_pkg.sv ref/ibex/rtl/ibex_*.sv   # the core files of ibex_core.f
+rvw query component cs_registers_i.u_mepc_csr --db ibex.db   # parameters: Width=32'd32, ...
+```
+
+Before elaboration, the whole directory of each source and each include
+directory is captured. slang reads only these copies, so local and `-I`
+includes resolve inside the capture. `input_files` lists every captured file.
+File-reading tasks and source remapping are refused. Assertions and initial
+blocks are ignored (`--ignore-assertions --ignore-initial`).
+
+A second slang pass dumps the JSON AST (`--dump-ast --ast-compilation-only`).
+It gives the value of each non-local parameter per instance (artifact
+`hdl/parameters.json`, shown by `rvw query component`) and the declared SV type
+of each variable, net and port (`signals.type`, e.g. `p::state_e`,
+`logic[31:0]`). Component paths keep generate names (`g[1].u`); query them as
+`g[1].u` or `g.1.u`. `meta.hdl_options` records include directories, defines,
+parameters and the standard. `meta.slang_plugin_sha256` records the plugin.
+`$aldff` cells with a constant load value are async resets.
+
+Ibex `ibex_core` at the pinned revision below (all core files, `ibex_csr`
+instances, ROM memories) builds in about 7 s: 32 components, 49k signals, 179k
+edges. Use the same graph limits as the native frontend. The register file
+and the instruction cache are outside `ibex_core`; `ibex_top` also needs the
+`prim` generic cells.
+
+See [the design](../docs/design/hdl-frontends.md) for Chisel and VHDL phases.

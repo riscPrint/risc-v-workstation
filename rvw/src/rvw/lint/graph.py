@@ -31,7 +31,7 @@ class Design:
             self.kinds[(src, dst)].add(kind)
         meta = dict(conn.execute('SELECT key, value FROM meta')) if 'meta' in self.tables else {}
         self.frontend = meta.get('frontend')
-        if self.frontend == 'yosys-verilog':
+        if (self.frontend or '').startswith('yosys-'):
             self._merge_hdl_aliases()
         self.members = getattr(self, 'members', {})
         self.alias_edges = getattr(self, 'alias_edges', set())

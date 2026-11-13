@@ -65,7 +65,6 @@ def test_hierarchy_queries(tmp_path, capsys):
     'module top(inout a); endmodule',
     'module top(input a, output b); missing u(a,b); endmodule',
     '`include "missing.sv"\nmodule top; endmodule',
-    'module top(input [3:0] a, input clk, output reg [3:0] q); reg [3:0] m[0:7]; always @(posedge clk) begin m[a] <= a; q <= m[a]; end endmodule',
 ])
 def test_refusal_preserves_database(tmp_path, body):
     source = tmp_path / 'bad.sv'
@@ -204,3 +203,23 @@ def test_clock_domains_for_lint(tmp_path):
     assert kinds['q1'] == 'sync_2ff'
     rules = {f['rule'] for f in r['findings']}
     assert 'rdc.reset_as_data' not in rules and 'rdc.async_release_unsynchronized' in rules
+
+
+@pytest.mark.skipif(not YOSYS, reason='native Yosys required')
+def test_memory_ports(tmp_path):
+    source = tmp_path / 'mem.sv'
+    source.write_text('module top(input [2:0] a, input [3:0] d, input we, clk, output reg [3:0] q);\n'
+                      'reg [3:0] m[0:7];\n'
+                      'always @(posedge clk) begin if (we) m[a] <= d; q <= m[a]; end\nendmodule\n')
+    out = tmp_path / 'mem.db'
+    build_hdl([source], 'top', out, yosys=YOSYS)
+    db = DesignDB(out)
+    try:
+        r = ops.drivers(db, 'm')
+        assert r['signal']['kind'] == 'mem' and r['memory']['depth'] == 8
+        assert {p['kind'] for p in r['memory']['ports']} == {'write', 'read_async'}
+        assert ops.path(db, 'd', 'q')['found'] and ops.path(db, 'a', 'q')['found']
+        assert not ops.path(db, 'q', 'd')['found']
+        assert ops.path(db, 'd', 'q', comb_only=True)['found'] is False  # through the memory state
+    finally:
+        db.close()
