@@ -90,3 +90,13 @@ The reader finds `result.json` beside the trace. Library callers can give
 Other observations appear in `unqualified` and never close bins.
 Each trace records its qualification and end status. Merge refuses reports
 without the qualification policy. Closure uses only qualified `groups`.
+
+
+## Exported RTL mutation campaigns
+
+`rvw.core-mutation/1` stores the hashed plan, baseline, mutant outcomes and first
+killer. The project manifest and test receipts use
+`rvw.core-mutation-project/1` and `rvw.mutation-test/1`.
+See [the campaign contract](../../rvw/src/rvw/cov/CORE_MUTATION.md).
+Build failures are invalid. They never earn kills. Strict passing controls are
+required. Only unconditional formal equivalence earns proved equivalence.
