@@ -58,6 +58,7 @@ class Project:
     @property
     def inputs(self):
         return [value for section, keys in {
+            "stimulus": ("random_settings",),
             "cosim": ("platform",), "debug": ("config",),
             "checks": ("settings", "waivers"),
         }.items() for key in keys if (value := self.get(section, key)) is not None]
@@ -68,6 +69,7 @@ def parse_project(raw, path, environment):
     from rvw.regress.config import _path, _cmd, _check_keys
     base = path.parent
     tables = {
+        "stimulus": {"random_settings"},
         "project": {"schema", "root", "rvw_version"}, "cosim": {"platform"},
         "debug": {"config"}, "checks": {"settings", "waivers"},
         "query": {"build", "db"},

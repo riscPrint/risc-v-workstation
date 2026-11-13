@@ -29,6 +29,11 @@ def _call(action):
 
 def mcp_tools():
     return [
+        ToolSpec("regress_random", "Generate pinned riscv-dv programs, compile project runtime, run C1 and compare complete C2 with Spike. Only qualified runs earn functional coverage. Generator, compiler, adapter and comparison errors remain separate.",
+                 schema({**CORE, "settings": S, "out": S, "config": S,
+                         "seeds": {**I, "minimum": 1, "default": 1},
+                         "seed_base": {**I, "default": 1}}, ["out"]),
+                 handler("rvw.regress.random_stream"), long=True),
         ToolSpec("regress_list", "Discover a core's suites, tiers and configurations before running; pass suite to list test IDs.",
                  schema({**CORE, "suite": S}), _call("list"), annotations=RO),
         ToolSpec("regress_run", "Run suites or a tier through the core adapter, resume/cache results, or preview with dry_run. "

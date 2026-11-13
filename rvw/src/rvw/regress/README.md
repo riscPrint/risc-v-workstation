@@ -758,3 +758,78 @@ full vector suite inconclusive. They must not be converted to passes.
 `rvw regress uvm-cpu` checks completed C1 captures through a UVM analysis
 subscriber and the native Spike DPI bridge. See [the UVM guide](../../../../../Uvm/README.md)
 for the strict profile and the offline replay boundary.
+
+## Seeded riscv-dv campaigns
+
+Install the pinned open pygen outside the repository:
+
+```sh
+scripts/install.sh --with-riscv-dv
+scripts/install.sh --with-riscv-dv --check
+```
+
+`RVW_RISCV_DV` selects the external checkout. The default is
+`~/.cache/rvw/riscv-dv`. The Python 3.11 environment is beside it in
+`riscv-dv-venv`. Existing source checkouts must be clean at the pinned revision.
+The installer never resets an existing checkout.
+
+Put `random.toml` in the core project. Paths are relative to that file:
+
+```toml
+checkout = "/opt/rvw-tools/riscv-dv"
+python = "/opt/rvw-tools/riscv-dv-venv/bin/python"
+target = "rv32imc"
+isa = "rv32im_zicsr"
+abi = "ilp32"
+compiler = "riscv64-unknown-elf-gcc"
+linker = "runtime/link.ld"
+runtime = "runtime/riscv-dv"
+platform = "spike-platform.json"
+instructions = 50
+max_cycles = 1000000
+timeout_s = 120
+# coverage_plan = "coverage.json"
+```
+
+Use the register initialization runtime described in
+[`scripts/riscv-dv/README.md`](../../../../../scripts/riscv-dv/README.md).
+The linker script defines the project's memory map. The platform must describe
+the same ISA, memory map and termination protocol. Use `rv64imc` and the
+project's RV64 ISA and ABI for RV64. The upstream target name includes C, but
+the bounded profile disables compressed instructions, branches and memory
+streams. It does not cover the full ISA or privilege matrix.
+
+```sh
+rvw --project /path/to/core regress random --settings /path/to/core/random.toml \
+  --seed-base 48 --seeds 2 --out /tmp/random-48 --json
+```
+
+The MCP equivalent is `regress_random`. Both use the C1 regression runner,
+its lock, its replay ELF capture and its source identity records. Each seed
+has generation and compiler logs, command arguments, assembly hash, ELF hash,
+C1 artifacts, Spike result and qualified functional coverage. The report is
+`campaign.json`. A new directory is required. Reuse the settings and seed in
+a new directory to replay generation. The pinned launcher checks upstream and
+solver versions. Replay determinism on a different host is not qualified.
+A failing C1 run remains available to `rvw reduce`; campaign-level reduction
+of compiler or generator errors is not implemented.
+
+Generator, compiler, adapter, trace and cosim errors are distinct outcomes.
+A C1 failure or Spike mismatch fails the campaign. Missing evidence makes the
+campaign inconclusive. A matching prefix earns no coverage. Only a complete,
+nonempty Spike comparison with passing termination and the same retired count
+as C1 earns functional coverage. This report includes setup and termination
+instructions. It must not be used as payload-only ISA closure evidence.
+
+Native BOOM and VexRiscv campaigns are not part of the fixture tests. ACT4
+signature provenance and core TestRIG injection hooks retain the limits in
+[`docs/TEST_SOURCES.md`](../../../../../docs/TEST_SOURCES.md).
+
+The project can select its settings in `rvw.toml`:
+
+```toml
+[stimulus]
+random_settings = "random.toml"
+```
+
+With this setting, omit `--settings` on the CLI or `settings` in MCP.
