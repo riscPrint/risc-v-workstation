@@ -208,3 +208,19 @@ Unsupported goals and missing backends do not create an output directory.
 UNSAT applies only to the declared instruction template and register resources.
 It cannot exclude a bin from coverage. A candidate report grants no C1 pass,
 reference match, gate acceptance or measured closure result.
+
+## Mapped core description (`rvw.core-map/1`)
+
+A project file, by convention `rvw/core-map.json`, that the generic RiscvSim
+`MappedAdapter` reads through `RVW_CORE_MAP`. `rvw init --spinal-top` or
+`--verilog-top` writes it. Fields: `schema`, `core`, `config`, `isa`, `xlen`,
+`top` (`kind` `spinal` with `class`, or `verilog` with `module`, `files`
+relative to the map, `defines`, `parameters`, `ports` of `name`/`dir`/`width`,
+`clock`, `reset`, `reset_active`), `reset_pc`, `ram` (`base`, `size`),
+`buses` (`name`, `protocol` `req-rsp` or `valid-ready`, `signals`,
+`write_response`), `rvfi` (`{"prefix": P}` or null), `irq` (`mip` bit to port)
+and `constants` (port to value). Numbers are integers or `0x` strings. Unknown
+fields, unknown protocols and unknown or missing bus signals are errors. A
+missing named port is a run error. The C1 `rtl_sha256` of a Verilog top covers
+the generated wrapper, the defines and every source file. See
+`RiscvSim/README.md`, "Mapped adapter".

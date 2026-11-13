@@ -8,6 +8,8 @@ def register(subparsers):
     parser.add_argument('--smoke-elf', help='Explicitly build and run this ELF for C1 conformance')
     parser.add_argument('--smoke-options', default='', help='Comma-separated rvfi,wave,coverage,konata,spinaltrace')
     parser.add_argument('--smoke-platform', help='Reviewed platform JSON for an independent Spike C2 mapping check')
+    parser.add_argument('--conformance', action='store_true',
+                        help='With --smoke-elf: run the C1 option checks (configs, latency, determinism, limits, run-many, replay, refusals)')
     parser.add_argument('--install', metavar='FEATURES', help='Explicitly run scripts/install.sh for these features')
     parser.add_argument('--yes', action='store_true')
     parser.add_argument('--dry-run', action='store_true')
@@ -17,7 +19,8 @@ def register(subparsers):
 
 def run(args):
     result = diagnose(project=getattr(args, 'project', None), features=args.features,
-                      install=args.install, yes=args.yes, dry_run=args.dry_run, smoke_elf=args.smoke_elf, smoke_flags=args.smoke_options, smoke_platform=args.smoke_platform)
+                      install=args.install, yes=args.yes, dry_run=args.dry_run, smoke_elf=args.smoke_elf, smoke_flags=args.smoke_options, smoke_platform=args.smoke_platform,
+                      conformance=args.conformance)
     if args.json:
         print(json.dumps(result, indent=2))
     else:

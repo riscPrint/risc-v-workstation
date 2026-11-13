@@ -1092,3 +1092,37 @@ workspace deletion after forced cancellation. The existing watchdog refuses
 to run another server request after an abandoned simulation worker. The
 unit tests check that refusal. No forced native thread abandonment was
 injected in this campaign.
+## Mapped adapter
+
+`MappedAdapter` is a generic C1 adapter for a core described by a project file,
+`rvw/core-map.json` (`rvw.core-map/1`). `rvw init --spinal-top CLASS` or
+`rvw init --verilog-top MODULE` writes the file, a launcher that runs
+`riscvsim.MappedMain` with `RVW_CORE_MAP`, and an sbt build. The adapter names no
+core signals. All names come from the map.
+
+| Field | Meaning |
+|---|---|
+| `core`, `config`, `isa`, `xlen` | C1 identity. One config. |
+| `top` | `{"kind": "spinal", "class": C}` for a no-argument Component, or `{"kind": "verilog", "module", "files", "defines", "parameters", "ports", "clock", "reset", "reset_active"}`. Verilog files are relative to the map. The Verilog top is a BlackBox in a Spinal wrapper with the same port names. |
+| `reset_pc`, `ram` | ELF entry check and the one RAM region (`base`, `size`). |
+| `buses` | Memory ports: `name`, `protocol`, `signals`, `write_response`. |
+| `rvfi` | `{"prefix": "rvfi_"}`: riscv-formal ports, NRET 1, or null. |
+| `irq` | `mip` bit (3, 7, 9 or 11) to input port, for `--irq-schedule`. |
+| `constants` | Input ports held at a fixed value. |
+
+Protocols:
+
+- `req-rsp`: `cmd_valid`, optional `cmd_ready`, `address`, optional `write`,
+  `wdata`, `mask`; `rsp_valid`, `rdata`, optional `error` and `rsp_ready`.
+  Responses come in request order. Writes get a response only with `write_response`.
+- `valid-ready`: one handshake per access (PicoRV32 `mem_*`). The model raises
+  `ready` with `rdata` for one cycle. A nonzero `mask` is a write.
+
+Latency is `--mem-latency`, or zero to three seeded wait cycles. Addresses outside
+RAM get `error` (req-rsp) or read zero (valid-ready). With RVFI, completion is the
+retired store to `tohost`. Without RVFI, completion is a bus store to `tohost`, and
+`--rvfi-trace` is refused. The adapter asserts reset for 16 clocked cycles after
+Spinal's initial unclocked reset, so a synchronous reset works. It reads no RVFI
+and answers no bus request until that reset ends. Trap events are not written: C2 has trap records only, so
+cosim checks trap redirection but not `cause`/`tval`. Konata, SpinalTrace models,
+`--rvfi-check` and `--soc-map` are refused.

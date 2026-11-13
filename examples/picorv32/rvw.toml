@@ -1,0 +1,78 @@
+[project]
+schema = "rvw.project/1"
+rvw_version = "0.1.0"
+root = "."
+
+[core]
+name = "picorv32"
+adapter = "./rvw/run.sh"
+configs = ["default"]
+default_config = "default"
+source_repo = "."
+source_env = "RVW_CORE_SOURCE"
+lock = "picorv32"
+# The generic mapped adapter's inputs: the map, the launcher and build, RiscvSim and the native tools.
+cache_paths = ["rvw/core-map.json", "rvw/run.sh", "rvw/build.sbt", "rvw/project/build.properties", "${RVW_HOME}/RiscvSim/build.sbt", "${RVW_HOME}/RiscvSim/project/build.properties", "${RVW_HOME}/RiscvSim/src", "${RVW_HOME}/RiscvSim/scripts", "${RVW_HOME}/scripts/with-lock.sh", "${RVW_HOME}/rvw/src/rvw/sim"]
+identity = true
+input_complete = true
+identity_capture = true
+identity_timeout_s = 1200
+input_tools = ["git", "bash", "java", "verilator", "make"]
+input_verilator_toolchain = true
+input_commands = [
+  "ar", "awk", "basename", "cat", "chmod", "cmp", "cp", "cut", "date", "dirname", "du", "env",
+  "expr", "find", "getconf", "grep", "head", "hostname", "ld", "ln", "mkdir", "mktemp", "mv", "nice",
+  "perl", "ps", "readlink", "realpath", "rm", "rmdir", "sbt", "sed", "sh", "shasum", "sleep",
+  "sort", "stat", "tail", "tee", "touch", "tr", "uname", "unzip", "wc", "which", "xargs",
+  "zip",
+]
+input_commands_by_platform = { darwin = ["xcode-select", "xcrun"] }
+input_env = [
+  "AR", "BASH_ENV", "CC", "CCACHE_CONFIGPATH", "CCACHE_PATH", "CCACHE_PREFIX",
+  "CCC_OVERRIDE_OPTIONS", "CFLAGS", "COMPILER_PATH", "COURSIER_CACHE", "COURSIER_REPOSITORIES",
+  "CPATH", "CPLUS_INCLUDE_PATH", "CPP", "CPPFLAGS", "CXX", "CXXFLAGS", "C_INCLUDE_PATH",
+  "DEVELOPER_DIR", "DYLD_INSERT_LIBRARIES", "DYLD_LIBRARY_PATH", "ENV", "GCC_EXEC_PREFIX",
+  "GNUMAKEFLAGS", "HOME", "IVY_HOME", "JAVA_HOME", "JAVA_OPTS", "JAVA_TOOL_OPTIONS", "JDK_HOME",
+  "JDK_JAVA_OPTIONS", "JVM_OPTS", "LDFLAGS", "LDLIBS", "LD_LIBRARY_PATH", "LD_PRELOAD",
+  "LIBRARY_PATH", "LINK", "MACOSX_DEPLOYMENT_TARGET", "MAKE", "MAKEFILES", "MAKEFLAGS",
+  "MAKEOVERRIDES", "MFLAGS", "OBJCACHE", "OBJC_INCLUDE_PATH", "OPT", "OPT_FAST", "OPT_GLOBAL",
+  "OPT_SLOW", "PATH", "PERL5LIB", "PERL5OPT", "PYTHONHOME", "PYTHONPATH", "RISCVSIM_COVERAGE", "RISCVSIM_REQUIRES",
+  "RISCVSIM_CP_CACHE", "RISCVSIM_EXTRA_INPUTS", "RISCVSIM_MAKE", "RISCVSIM_MAKE_JOBS",
+  "RISCVSIM_WORK", "RISCVSIM_XMX", "SBT_BOOT_DIRECTORY", "SBT_GLOBAL_BASE", "SBT_IVY_HOME",
+  "SBT_JAVA_OPTS", "SBT_OPTS", "SDKROOT", "RVW_HOME", "RVW_CORE_SOURCE", "RVW_CORE_MAP", "SPINAL_MAKE_CMD",
+  "SPINAL_VERILATOR_FLAGS", "USER_CPPFLAGS", "USER_LDFLAGS", "USER_LDLIBS", "VERILATOR_BIN",
+  "VERILATOR_FLAGS", "VERILATOR_GDB", "VERILATOR_GDBBT", "VERILATOR_NO_OPT", "VERILATOR_ROOT",
+  "VFLAGS", "_JAVA_OPTIONS",
+]
+wall_timeout = true
+jobs = 2
+build_timeout_s = 3600
+startup_s = 300
+
+[suites.smoke]
+dir = "rvw/out/programs"
+include = ['^smoke$']
+max_cycles = 20000
+timeout_s = 120
+mem_latency = 0
+
+[tiers.quick]
+runs = [{ suite = "smoke" }]
+
+[cosim]
+platform = "rvw/cosim.json"
+
+[query]
+build = ["./rvw/build-db.sh"]
+db = "rvw/out/design.db"
+
+[suites.isa]
+description = "PicoRV32 copies of the riscv-tests RV32IM tests (tohost environment)"
+dir = "rvw/out/isa"
+include = ['^[a-z]+$']
+max_cycles = 200000
+timeout_s = 120
+mem_latency = 0
+
+[tiers.full]
+runs = [{ suite = "isa" }, { suite = "smoke" }]

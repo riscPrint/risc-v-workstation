@@ -110,6 +110,46 @@ that the selected class elaborates.
 All optional files participate in the same dry-run and overwrite preflight.
 The tests check generated files, project loading, launcher arguments and refusal
 paths. They do not establish Scala compilation, DUT runtime or C2 mapping.
-Builds outside Spinal/sbt, automatic bus mapping and a complete native C1 launcher
-remain outside this supported path. This command makes no integration-model
-decision under #34.
+This command makes no integration-model decision under #34.
+
+## Mapped adapter: a working C1 adapter from one command
+
+`--spinal-top CLASS` (a no-argument Spinal Component) or `--verilog-top MODULE` with
+`--verilog FILE` selects the mapped mode. It writes a project that runs: the
+generic RiscvSim `MappedAdapter` reads `rvw/core-map.json` (`rvw.core-map/1`).
+
+```sh
+# Verilog core (ports read with Yosys; one valid-ready bus found by name):
+rvw init --isa rv32im --verilog-top picorv32 --verilog picorv32.v \
+  --define RISCV_FORMAL --param PROGADDR_RESET=0x80000000 --param ENABLE_MUL=1 \
+  --param ENABLE_DIV=1 --clock clk --reset resetn --reset-active low \
+  --reset-pc 0x80000000 --accept-platform-defaults
+# Spinal core (ports are known only after elaboration, so name the buses):
+rvw init --isa rv32i --spinal-top demo.Top --sbt-project cpu --reset-pc 0x80000000 \
+  --bus 'i:req-rsp:cmd_valid=iBus_cmd_valid,cmd_ready=iBus_cmd_ready,address=iBus_cmd_payload_pc,rsp_valid=iBus_rsp_valid,rdata=iBus_rsp_payload_inst' \
+  --bus 'd:req-rsp:cmd_valid=dBus_cmd_valid,cmd_ready=dBus_cmd_ready,address=dBus_cmd_payload_address,write=dBus_cmd_payload_wr,wdata=dBus_cmd_payload_data,mask=dBus_cmd_payload_mask,rsp_valid=dBus_rsp_ready,rdata=dBus_rsp_data'
+```
+
+Files: `rvw.toml` (complete adapter input declarations, a smoke suite, `[cosim]`
+and `[query]`), `rvw/core-map.json`, `rvw/run.sh` (supervised launcher with
+native and source identity), `rvw/build.sbt`, `rvw/build-smoke.sh`,
+`rvw/programs/{smoke.S,link.ld}`, `rvw/cosim.json`, `rvw/build-db.sh` (SpinalDB
+for `--spinal-top`, `rvw query build-hdl` for `--verilog-top`), `rvw/README.md`, and
+for `--spinal-top` the RVFI wiring template `rvw/templates/RvfiPort.scala`.
+
+`--bus NAME:PROTOCOL:key=port,...` maps a memory port (`req-rsp` or
+`valid-ready`; keys in RiscvSim/README.md). For a Verilog top, buses can be found
+by name (`<p>valid`, `<p>ready`, `<p>addr`, `<p>rdata`, optional `<p>wdata`,
+`<p>wstrb`). `rvfi_` ports are used when present (`--rvfi-prefix` selects
+another prefix). Every RVFI field must exist. `--irq BIT=PORT` maps MSIP, MTIP,
+SEIP or MEIP. `--const PORT=VALUE` holds an input. A Verilog input that nothing
+maps is tied to 0 and listed in `unmapped_inputs`. `--ram BASE:SIZE` (default
+`0x80000000:0x100000`) and `--reset-pc` are required inputs from the core
+specification. The cosim platform keeps `review_required` unless
+`--accept-platform-defaults` is set. The defaults are machine mode only, aligned
+RVFI memory words, alignment traps, absent-PMP traps and ECALL `tval` 0.
+
+Checked on PicoRV32 `ef203c2b` (see `examples/picorv32/`): smoke and 45
+PicoRV32 RV32IM test programs pass in `rvw regress`. 40 of 46 traces match
+Spike. The `--spinal-top` path has unit tests only; no Spinal core was run through it.
+
