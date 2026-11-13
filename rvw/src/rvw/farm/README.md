@@ -501,3 +501,38 @@ including reject or inconclusive. The public gate CLI retains C4 exit codes.
 Queue attempts retain the recorded C4 value and hash. Live history shows that
 value separately from execution completion and C3 pass counts. Mixed recorded
 verdicts remain mixed. No acceptance is inferred from queue completion.
+
+## Persistent shared plans and offline Kubernetes validation
+
+Add `--persistent --jobs 1 --python /absolute/worker/python` to `farm plan` to
+use the persistent C1 server and collect C3 for each shard. All cells must use
+one configuration. The worker Python needs `rvw` installed. ELF copies retain
+content hashes. Test IDs retain the original manifest names. Local and cluster
+executors use the same command and expected result arrays. C3 collection checks
+its planned test identities and corresponding C1 outcomes. Collection complete
+can contain DUT failures. This check does not publish C4.
+
+```sh
+rvw farm batch --plan /shared/campaign/plan.json --action validate \
+  --openapi kubernetes-openapi-v2.json
+```
+
+MCP `farm_plan` accepts `persistent` and `python`. MCP `farm_batch` accepts
+`action: validate` and `openapi`. Validation reads a local official OpenAPI v2
+file and checks each rendered `batch/v1` Job. It checks the enclosing `v1` List
+separately. It returns the schema and manifest hashes. It makes no API calls.
+It does not check admission, quotas, image availability or node execution.
+
+`examples/regression-scale/k8s-example/` contains two rendered Jobs and the
+relocated plan from a real local 49-test run. Only paths changed. The 25/24 test
+membership, ELF hashes, options and expected C1/C3 cells are the same. The local
+run took 54.016 seconds with one simulation at a time. All 49 C1 cells passed.
+Both C3 suites were complete. The pinned official schema accepted both Jobs.
+A negative control with no `containers` field failed validation.
+
+Use `examples/regression-scale/render_k8s.py` for explicit path relocation and
+offline validation. It writes shard manifests but does not copy ELF bytes.
+Its example image is an unbuilt placeholder. Do not submit it as a working
+image. This native run used macOS tools. It does not establish Linux or cluster
+parity. Persistent shared-plan output paths are fixed. Use a new root for every
+rerun or retry. The queue-owned submit example instead uses fresh attempt paths.

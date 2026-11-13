@@ -29,6 +29,32 @@ def render(plan):
     return dict(apiVersion='v1', kind='List', items=jobs)
 
 
+def check_identity(raw, expected):
+    for key, value in expected.items():
+        actual = raw
+        for part in key.split('.'):
+            actual = actual[part]
+        if actual != value:
+            raise ValueError('result identity differs: ' + key)
+
+
+def check_suite(suite, expected, root):
+    if len(suite.tests) != len(expected):
+        raise ValueError('C3 test count differs from shard plan')
+    for test, claim in zip(suite.tests, expected):
+        check_identity(test.to_dict(), claim)
+        relative = Path(test.run)
+        if relative.is_absolute() or '..' in relative.parts:
+            raise ValueError('C3 cell path must be relative to its shard')
+        run = load_run(root / relative)
+        source = dict(suite.source)
+        if source.get('identity_complete') is False:
+            source.pop('identity_complete')
+            source.pop('identity_incomplete_reasons', None)
+        check_identity(run.to_dict(), dict(status=test.status, seed=test.seed,
+            elf_sha256=test.extra['elf_sha256'], core=suite.core, config=suite.config, source=source))
+
+
 def collect(plan, root):
     if not plan.get('shards') or any(not shard.get('results') for shard in plan['shards']):
         raise ValueError('collection requires explicit nonempty expected cells')
@@ -47,16 +73,13 @@ def collect(plan, root):
                 if item['contract'] == 'C1':
                     result = load_run(path)
                     raw = result.to_dict()
-                    # Expected identities come from the caller's shard plan.
-                    for key, value in item.get('identity', {}).items():
-                        actual = raw
-                        for part in key.split('.'):
-                            actual = actual[part]
-                        if actual != value:
-                            raise ValueError('result identity differs: ' + key)
+                    check_identity(raw, item.get('identity', {}))
                     evidence.append(dict(path=str(path), status=result.status, inconclusive=result.why_inconclusive))
                 elif item['contract'] == 'C3':
                     result = load_results(path)
+                    check_identity(result.to_dict(), item.get('identity', {}))
+                    if 'tests' in item:
+                        check_suite(result, item['tests'], path.parent)
                     evidence.append(dict(path=str(path), tests=len(result.tests), inconclusive=any(not t.conclusive for t in result.tests)))
                 else:
                     raise ValueError('expected C1 or C3')
@@ -109,7 +132,10 @@ class KubernetesExecutor:
         return dict(status='cancelled', jobs=ids)
 
 
-def batch(plan, action='render', executor='local', root='.', ids=None, kubectl='kubectl'):
+def batch(plan, action='render', executor='local', root='.', ids=None, kubectl='kubectl', openapi=None):
+    if action == 'validate':
+        from .k8s_validate import validate
+        return validate(render(plan), openapi)
     if action == 'render':
         return render(plan)
     if action == 'collect':

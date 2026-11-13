@@ -160,3 +160,20 @@ contains requested execution options; `native_options` retains C1 model options.
 recorded C4 verdict. It does not imply accept. Queue attempts retain C4 verdict
 values and report hashes. Live history keeps those values separate from C3
 outcomes. The underlying C4 comparison and requested-plan checks are unchanged.
+
+## Persistent shared-plan collection and offline validation
+
+`farm_plan` accepts `persistent` and worker `python`. Persistent mode requires
+one configuration and one adapter server per shard. Expected C1 paths use
+`shards/N/cells/M/result.json`. Each shard also expects C3 `results.json` and
+an ordered list of test IDs, seeds, ELF hashes and relative C1 paths. Collection
+checks these claims and C1/C3 core, configuration, source and status agreement.
+An incomplete-source marker records missing identity without changing source
+comparison. These checks establish collection only. They do not earn C4 accept.
+
+`farm_batch` action `validate` requires a local OpenAPI v2 `openapi` path.
+`rvw.k8s-offline-validation/1` records `valid` or `invalid`, Job count, errors,
+OpenAPI SHA-256 and canonical rendered manifest SHA-256. Cluster execution and
+admission remain `not_run`. The enclosing document must be a nonempty `v1`
+List. Each item must be a `batch/v1` Job and satisfy its schema definition.
+This is structural validation. It is not Kubernetes admission or runtime proof.

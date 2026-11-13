@@ -169,3 +169,48 @@ one caller unit per core-hour, cost was 0.088844 units per recorded C4 report.
 The separate manual CLI checks are outside that queue scope. This is a cost
 per report, not per unique proof. Acceptance covers these 49 ISA self-checks.
 It does not qualify the whole core, formal behavior or fresh Spike parity.
+
+## Same native shard plan and Kubernetes Jobs
+
+`k8s-results.json` records a fresh local persistent run using `farm plan` and
+`LocalExecutor`. The two shards contain 25 and 24 ISA tests. All 49 passed.
+The queue ran one simulation at a time and completed in 54.016 seconds.
+Collection checked 49 C1 results and two C3 suites. The inputs, core revision,
+harness revision, result hashes and times are retained in the report.
+
+`k8s-example/` is that plan with explicit path relocation to `/work/results`,
+`/work/core` and `/opt/rvw`. Its test IDs, ELF hashes, options and shard members
+are unchanged. `render_k8s.py` performs this relocation from a local plan with
+repeated `--replace OLD=NEW` arguments. It renders both Jobs and validates
+them against a supplied official Kubernetes OpenAPI v2 file. The stored report
+uses the v1.34.1 URL and records the schema hash. Removing `containers` caused
+the expected validation failure. The example image is unbuilt.
+
+A real cluster run still needs all of these steps:
+
+1. Build and pin a Linux worker image by digest. Install matching native tools,
+   dependencies, the committed SDK and committed core project. Test the C1
+   adapter and its persistent server in that image. macOS build hashes cannot
+   establish Linux identity. Replace the placeholder image in the plan.
+2. Stage every hashed ELF and shard manifest on storage mounted at
+   `/work/results`. Verify the recorded input hashes. The export does not carry
+   ELF bytes. Use an RWX PVC, or another reviewed placement and storage policy
+   that gives both pods their expected files. Provision the named PVC first.
+3. Provide private writable build directories, dependency caches and lock
+   namespaces for each worker. Set `RVW_HOME`, `RVW_PYTHON`, `VEXRISCV`,
+   `RVW_VEX_LOCK` and `RVW_SBT_LOCK` for that layout. The explicit adapter array
+   shows the intended paths. Pin JVM and Verilator worker counts in the image.
+4. Select a real kubeconfig, context and namespace. Check RBAC, image pull
+   access, node architecture, resource requests, limits, quotas and Job API
+   support. Offline schema checks cannot establish these facts. Local queue
+   cumulative budgets do not enforce Kubernetes quota or provider charges.
+5. Submit the rendered plan through the Kubernetes executor. Save every Job
+   ID. Check pod logs and Job completion. Collect with `--executor k8s --ids`
+   and validate the returned C1/C3 evidence. Use native gate intake with clean
+   source identities before requesting C4 accept.
+6. Exercise foreground cancellation and process cleanup in the cluster.
+   Keep `backoffLimit: 0`. Use new output roots for explicit retries. Measure
+   cluster queue time, runtime, charges and throughput before claiming scale.
+
+Cluster submission, admission, PVC binding, container builds, cancellation and
+pod execution were NOT RUN. No cluster capacity or Linux parity is claimed.
