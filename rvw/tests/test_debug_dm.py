@@ -306,6 +306,21 @@ def test_process_bus_bad_adapter(tmp_path):
         bus.close()
 
 
+def test_process_bus_skips_launcher_output_before_ready(tmp_path):
+    script = tmp_path / 'slow.py'
+    script.write_text('import sys, time\nprint("[Progress] Verilator compilation started", flush=True)\n'
+                      'time.sleep(0.3)\nprint("ready 7", flush=True)\nfor line in sys.stdin:\n'
+                      '    print("ok 0x5" if line[0] in "rw" else "ok 0x0", flush=True)\n')
+    log = tmp_path / 'adapter.log'
+    bus = dmi.ProcessBus([sys.executable, str(script)], timeout=0.2, startup_timeout=5, log=log)
+    try:
+        assert bus.abits == 7 and bus.skipped == ['[Progress] Verilator compilation started']
+        assert bus.dmi(1, 0x11, 0) == (0, 5)
+    finally:
+        bus.close()
+    assert b'[stdout before ready] [Progress]' in log.read_bytes()
+
+
 def test_serve_process_protocol():
     stdin = io.StringIO('r 0x11\nw 0x10 0x1\nt 2\nr 0x10\nx\nq\n')
     stdout = io.StringIO()
@@ -374,3 +389,27 @@ def test_interop_config_and_entry_word(tmp_path):
     assert 'remote_bitbang port 1234' in text and 'gdb_port pipe' in text and '-expected-id 0xdeadbeef' in text
     with pytest.raises(ValueError):
         interop.first_word(__file__)
+
+
+def test_interop_entry_word_reads_elf32(tmp_path):
+    import struct
+    from rvw.debug import interop
+    header = bytearray(52)
+    header[:5] = b'\x7fELF\x01'
+    struct.pack_into('<II', header, 0x18, 0x80000000, 52)
+    struct.pack_into('<HH', header, 0x2a, 32, 1)
+    phdr = struct.pack('<IIIIIIII', 1, 84, 0x80000000, 0x80000000, 4, 4, 5, 4)
+    path = tmp_path / 'rv32.elf'
+    path.write_bytes(bytes(header) + phdr + bytes.fromhex('17150000'))
+    assert interop.first_word(path) == '17150000'
+
+
+def test_execute_only_triggers_make_access_checks_unsupported():
+    prof = profile.normalize({'scratch': 0x80010000, 'triggers': {'count': 2, 'accesses': ['execute']}})
+    ids = ['trig.load_address', 'trig.store_address', 'trig.debug_mode_silent', 'trig.execute_matches']
+    entries = suite.run(prof, ids=ids)
+    got = statuses(entries)
+    assert got['trig.execute_matches'] == 'pass'
+    assert {got[i] for i in ids[:3]} == {'unsupported'}
+    with pytest.raises(profile.ProfileError):
+        profile.normalize({'triggers': {'accesses': ['load']}})

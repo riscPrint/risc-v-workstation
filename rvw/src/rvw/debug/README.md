@@ -22,7 +22,7 @@ reason; a skipped check is listed with its reason and is not a test.
 | `abstract`, `aarsizes`, `csr_missing_cmderr` | command kinds (`gpr`, `csr`, `fpr`, `memory`, `quick`); sizes; cmderr for a missing CSR (2) |
 | `hartreset`, `resethaltreq`, `reset_vector` | reset options and the reset PC |
 | `modes`, `scratch`, `memory` | privilege modes; RAM the campaign may overwrite (code at +0, handler at +0x400, data at +0x800, U code at +0xc00); memory regions with `kind` ram/readonly/error/off and `sberror` |
-| `[triggers]` | `count`, `types` (2 mcontrol, 3 icount, 4 itrigger, 5 etrigger, 6 mcontrol6, 15), `matches`, `actions`, `timing`, `chain`, `unsupported_type`, `tcontrol`, `store_data_timing`, `load_data_timing`, `sizes` (access-size match values; default `[0]`, any size) |
+| `[triggers]` | `count`, `accesses` (`execute`, `load`, `store`; default all), `types` (2 mcontrol, 3 icount, 4 itrigger, 5 etrigger, 6 mcontrol6, 15), `matches`, `actions`, `timing`, `chain`, `unsupported_type`, `tcontrol`, `store_data_timing`, `load_data_timing`, `sizes` (access-size match values; default `[0]`, any size) |
 | `sba` | `sizes`, `asize`, `misaligned_error` (3), `size_error` (4) |
 | `[transport]` | `kind` = `model`, `jtag-model`, `remote_bitbang` (`host`, `port`, `irlen`) or `dmi_process` (`command`) |
 | model only | `abstract_latency`, `sba.latency`, `ticks_per_access`, `ips`, `elf` |
@@ -322,12 +322,36 @@ trace-loss status. These are reference streams, not RTL encoder captures.
 
 A core adapter exposes either a JTAG DTM through remote_bitbang or a DMI bus
 through the `dmi_process` line protocol. It declares its options in a debug
-profile. No core adapter in this repository implements either hook yet.
+profile. The generic RiscvSim driver implements both endpoints from project data
+(`--debug dmi|jtag:PORT --debug-binding FILE`, see "RiscvSim harness hooks" in
+`docs/contracts/c2-rvfi-trace.md`). `ProcessBus` skips launcher output before
+`ready`; set `[transport] startup_timeout` for a simulator that builds first.
+
+The VexRiscv example has two debug configurations (`examples/vexriscv/rvw/debug/`):
+`rv32im_dmi` (SpinalHDL `DebugModule` with its DMI bus on top-level ports) and
+`rv32im_jtag` (the upstream `EmbeddedRiscvJtag` DTM). Profiles, bindings and the
+loop program builder are in that folder.
+
+Measured on 2026-11-13 against `rv32im_dmi` RTL (SpinalHDL 1.15.0, VexRiscv
+`a62c145a`, Verilator 5.049), full suite: see the example README for the counts.
+Failures that are real target deviations from Debug 0.13.2 or Sdtrig:
+
+- `dm.dmactive_reset`: data0 keeps its value when dmactive is cleared.
+- `dm.hart_enumeration`: with only a nonexistent hart selected, `allhalted` and
+  `allrunning` read 1.
+- `abs.transfer_none`: transfer=0 with an invalid aarsize gives cmderr 2; the
+  specification says aarsize is ignored without a transfer.
+- `trig.warl_action`: tdata1 keeps action=1 with dmode=0.
+- `trig.dmode_protect`: M-mode code can change a trigger with dmode=1.
+
+The profile declares execute-only triggers (`[triggers] accesses = ["execute"]`):
+load and store trigger checks, and the Debug Mode silence check that needs a load
+trigger, are unsupported there, not passed.
 
 Open items:
 
 - #127: the independent observer uses memory effects only; a C2-trace observer is not added.
-- #133: no RTL DMI adapter exists yet; physical transports are out of scope.
+- #133: the RTL DMI and JTAG endpoints are simulation only; physical transports are out of scope.
 - #144: virtualization (vs/vu with H), textra/tdata3, execute size matching and NMI itrigger are not tested. Spike keeps only size 0.
 - #153: relaxedpriv is not tested. The model keeps FPRs as raw bits only.
 - #156: concurrent-traffic ordering beyond visibility is not tested.

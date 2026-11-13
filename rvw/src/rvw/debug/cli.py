@@ -60,7 +60,7 @@ def register(subparsers):
     interop = sub.add_parser('interop', help='OpenOCD and GDB functional campaign against a JTAG target (C3)')
     interop.add_argument('--port', type=int, help='remote_bitbang port of a running target')
     interop.add_argument('--profile', type=Path, help='serve the reference model for this profile instead')
-    interop.add_argument('--elf', type=Path, required=True, help='64-bit program with _start, loop, target, counter')
+    interop.add_argument('--elf', type=Path, required=True, help='RV32 or RV64 program with _start, loop, target, counter')
     interop.add_argument('--reset-pc', type=lambda v: int(v, 0), help='expected pc after monitor reset halt')
     interop.add_argument('--idcode', type=lambda v: int(v, 0))
     interop.add_argument('--openocd', default='openocd')

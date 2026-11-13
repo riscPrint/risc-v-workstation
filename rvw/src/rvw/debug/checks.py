@@ -873,6 +873,7 @@ def trig_hit(ctx):
 @check('trig.load_address')
 def trig_load_address(ctx):
     """A load-address trigger fires before the load: dpc is the load and rd is unchanged."""
+    ctx.require('load' in ctx.p['triggers']['accesses'], 'profile declares no load triggers')
     kind = _addr_type(ctx)
     data = ctx.scratch + DATA
     ctx.mem_write(data, 0x55)
@@ -886,6 +887,7 @@ def trig_load_address(ctx):
 @check('trig.store_address')
 def trig_store_address(ctx):
     """A store-address trigger fires before the store: memory is unchanged."""
+    ctx.require('store' in ctx.p['triggers']['accesses'], 'profile declares no store triggers')
     kind = _addr_type(ctx)
     data = ctx.scratch + DATA
     ctx.mem_write(data, 0x55)
@@ -897,6 +899,8 @@ def trig_store_address(ctx):
 
 
 def _data_trigger(ctx, store):
+    ctx.require(('store' if store else 'load') in ctx.p['triggers']['accesses'],
+                'profile declares no trigger of this access kind')
     kind = _addr_type(ctx)
     timing = ctx.p['triggers']['store_data_timing' if store else 'load_data_timing']
     ctx.require(timing is not None, 'profile declares no data-match trigger of this kind')
@@ -937,6 +941,7 @@ def trig_load_data(ctx):
 @check('trig.size_match')
 def trig_size_match(ctx):
     """A store trigger with size=16-bit ignores a 32-bit store to the same address and fires on a 16-bit store."""
+    ctx.require('store' in ctx.p['triggers']['accesses'], 'profile declares no store triggers')
     kind = _addr_type(ctx)
     ctx.require(2 in ctx.p['triggers']['sizes'], 'profile declares no 16-bit size matching')
     data = ctx.scratch + DATA
@@ -1089,6 +1094,7 @@ def trig_mte_gating(ctx):
 @check('trig.debug_mode_silent')
 def trig_debug_mode_silent(ctx):
     """Triggers do not fire for program-buffer accesses in Debug Mode."""
+    ctx.require('load' in ctx.p['triggers']['accesses'], 'needs a load trigger; silence alone is not evidence')
     kind = _addr_type(ctx)
     ctx.require(ctx.p['progbufsize'] + int(ctx.p['impebreak']) >= 2, 'needs a program buffer')
     data = ctx.scratch + DATA

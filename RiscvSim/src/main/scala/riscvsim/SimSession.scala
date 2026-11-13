@@ -189,6 +189,7 @@ object SimSession {
         compiled.doSim(name, job.seed) { dut =>
           ctl.start()
           FaultInjector.forJob(job).foreach(_.attach(dut, ctl))
+          DebugPort.forRun(job, ctx).foreach(_.attach(dut, ctl))
           body(dut, ctl)
         }
         None

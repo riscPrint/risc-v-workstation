@@ -53,13 +53,20 @@ def first_word(elf):
     """First four bytes at the ELF entry, from the file (an oracle independent of the target)."""
     import struct
     data = Path(elf).read_bytes()
-    if data[:4] != b'\x7fELF' or data[4] != 2:
-        raise ValueError('interop needs a 64-bit ELF')
-    entry, = struct.unpack_from('<Q', data, 0x18)
-    phoff, = struct.unpack_from('<Q', data, 0x20)
-    phentsize, phnum = struct.unpack_from('<HH', data, 0x36)
+    if data[:4] != b'\x7fELF' or data[4] not in (1, 2):
+        raise ValueError('interop needs a 32-bit or 64-bit ELF')
+    if data[4] == 2:
+        entry, = struct.unpack_from('<Q', data, 0x18)
+        phoff, = struct.unpack_from('<Q', data, 0x20)
+        phentsize, phnum = struct.unpack_from('<HH', data, 0x36)
+    else:
+        entry, phoff = struct.unpack_from('<II', data, 0x18)
+        phentsize, phnum = struct.unpack_from('<HH', data, 0x2a)
     for i in range(phnum):
-        kind, _, offset, vaddr, _, filesz, _ = struct.unpack_from('<IIQQQQQ', data, phoff + i * phentsize)
+        if data[4] == 2:
+            kind, _, offset, vaddr, _, filesz, _ = struct.unpack_from('<IIQQQQQ', data, phoff + i * phentsize)
+        else:
+            kind, offset, vaddr, _, filesz = struct.unpack_from('<IIIII', data, phoff + i * phentsize)
         if kind == 1 and vaddr <= entry < vaddr + filesz:
             at = offset + entry - vaddr
             return data[at:at + 4].hex()

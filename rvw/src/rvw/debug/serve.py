@@ -21,7 +21,9 @@ class Endpoint:
             bus = dmmod.ModelBus(self.module)
             abits = 7
         elif kind == 'dmi_process':
-            bus = dmimod.ProcessBus(profile['transport']['command'], log=log)
+            transport = profile['transport']
+            bus = dmimod.ProcessBus(transport['command'], log=log, timeout=transport.get('timeout', 10),
+                                    startup_timeout=transport.get('startup_timeout'))
             abits = bus.abits
         else:
             raise ValueError('serve needs a model or dmi_process transport; remote_bitbang targets already speak JTAG')

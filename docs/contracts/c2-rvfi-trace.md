@@ -219,6 +219,19 @@ its simulation through `SimSession`. No adapter code names a signal.
   bits outside the register, runs that end first and read-back mismatches give
   `applied: false` with a reason. A file with several faults gives `applied` for
   all of them and a `faults` list.
+- `--debug dmi --debug-binding FILE` serves the C1 debug transport line protocol
+  on stdin and stdout. `--debug jtag:PORT` serves remote_bitbang on 127.0.0.1
+  (`0` picks a port; the run directory gets `debug-port`). `FILE` is
+  `rvw.debug-binding/1`: `dmi` maps `cmd_valid`, `cmd_ready` (optional),
+  `cmd_write`, `cmd_address`, `cmd_data`, `rsp_valid`, `rsp_error` (optional) and
+  `rsp_data` to top-level ports, with `abits` (7) and `timeout_cycles` (10000);
+  `jtag` maps `tck`, `tms`, `tdi`, `tdo`, `trst` (optional, active high) with
+  `cycles_per_byte` (1) and `idle_timeout_s` (300). Simulation time advances only
+  inside requests. A DMI client ends the run with `q` or by closing stdin. JTAG
+  clients connect one at a time; `Q` or a closed connection ends a client, and the
+  run ends when no client connects within `idle_timeout_s`. The run ends with status
+  `timeout` and message `debug session ended: ...`; it is never a pass.
+  `details.debug` has `mode`, `requests`, `clients`, `ended` and `port`.
 
 ### Optional multi-hart extension (C1 and C2)
 

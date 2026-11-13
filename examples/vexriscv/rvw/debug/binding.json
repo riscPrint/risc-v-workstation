@@ -1,0 +1,10 @@
+{
+  "schema": "rvw.debug-binding/1",
+  "dmi": {
+    "cmd_valid": "dmi_cmd_valid", "cmd_ready": "dmi_cmd_ready", "cmd_write": "dmi_cmd_payload_write",
+    "cmd_address": "dmi_cmd_payload_address", "cmd_data": "dmi_cmd_payload_data",
+    "rsp_valid": "dmi_rsp_valid", "rsp_error": "dmi_rsp_payload_error", "rsp_data": "dmi_rsp_payload_data",
+    "abits": 7
+  },
+  "jtag": {"tck": "jtag_tck", "tms": "jtag_tms", "tdi": "jtag_tdi", "tdo": "jtag_tdo", "cycles_per_byte": 1}
+}

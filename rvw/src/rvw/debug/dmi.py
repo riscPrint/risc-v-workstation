@@ -210,21 +210,36 @@ class ProcessBus:
     """
     LINE = re.compile(r'^(ok|busy|fail)(?: (0x[0-9a-fA-F]+))?$')
 
-    def __init__(self, command, *, cwd=None, env=None, timeout=10, log=None):
+    def __init__(self, command, *, cwd=None, env=None, timeout=10, startup_timeout=None, log=None):
         self.timeout = timeout
         self.log = open(log, 'ab') if log else subprocess.DEVNULL
         self.process = subprocess.Popen(command, cwd=cwd, env=env, stdin=subprocess.PIPE,
                                         stdout=subprocess.PIPE, stderr=self.log, start_new_session=True)
-        ready = self._line()
-        match = re.match(r'^ready (\d+)$', ready)
-        if not match:
-            self.close()
-            raise DMIError(f'adapter did not announce ready: {ready!r}')
+        # A simulator launcher may print build progress before `ready`; skip and log those lines.
+        deadline = time.monotonic() + (startup_timeout or timeout)
+        skipped = []
+        while True:
+            try:
+                ready = self._line(deadline=deadline)
+            except (TimeoutError, DMIError):
+                self.close()
+                raise
+            match = re.match(r'^ready (\d+)$', ready)
+            if match:
+                break
+            skipped.append(ready)
+            if self.log is not subprocess.DEVNULL:
+                self.log.write(b'[stdout before ready] ' + ready.encode() + b'\n')
+                self.log.flush()
+            if len(skipped) > 10000:
+                self.close()
+                raise DMIError(f'adapter did not announce ready: {ready!r}')
+        self.skipped = skipped
         self.abits = int(match.group(1))
 
-    def _line(self):
+    def _line(self, deadline=None):
         stream = self.process.stdout
-        deadline = time.monotonic() + self.timeout
+        deadline = deadline or time.monotonic() + self.timeout
         data = b''
         while not data.endswith(b'\n'):
             left = deadline - time.monotonic()

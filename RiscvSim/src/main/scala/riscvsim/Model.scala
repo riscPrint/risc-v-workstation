@@ -33,7 +33,7 @@ case class RunJob(elf: File, out: File, config: String, seed: Int, seedPicked: B
                   memLatency: Option[Int], rvfiTrace: Boolean, rvfiCheck: Boolean, wave: Boolean,
                   waveFrom: Option[Long], waveTo: Option[Long], konata: Boolean, coverage: Boolean,
                   wallTimeoutS: Option[Double] = None, spinaltrace: Boolean = false, irqSchedule: Option[InterruptSchedule] = None, elfLoadBias: Long = 0L, bootPayloads: Option[File] = None, socMap: Option[SimMap] = None, hartImages: Option[File] = None, probes: Boolean = false,
-                  fault: Option[FaultFile] = None) {
+                  fault: Option[FaultFile] = None, debug: Option[DebugMode] = None) {
   def model: ModelKey = ModelKey(config, rvfi = rvfiTrace || rvfiCheck || hartImages.nonEmpty, wave = wave, coverage = coverage, konata = konata, spinaltrace = spinaltrace, probes = probes, faults = fault.nonEmpty)
 }
 

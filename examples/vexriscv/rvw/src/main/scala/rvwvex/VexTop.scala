@@ -22,24 +22,26 @@ object VexTop {
       pessimisticAddressMatch = false),
     new MulSimplePlugin,
     new DivPlugin,
-    new CsrPlugin(CsrPluginConfig.all2(0x80000000L).copy(userGen = false, supervisorGen = false,
-      misaExtensionsInit = 0x1100, misaAccess = CsrAccess.READ_ONLY, ebreakGen = true,
-      // all2 enables these independently of supervisorGen. M-only must trap on access.
-      sscratchGen = false, stvecAccess = CsrAccess.NONE, sepcAccess = CsrAccess.NONE,
-      scauseAccess = CsrAccess.NONE, sbadaddrAccess = CsrAccess.NONE,
-      scycleAccess = CsrAccess.NONE, sinstretAccess = CsrAccess.NONE,
-      satpAccess = CsrAccess.NONE, medelegAccess = CsrAccess.NONE,
-      midelegAccess = CsrAccess.NONE)),
+    new CsrPlugin(csrConfig),
     new BranchPlugin(earlyBranch = false, catchAddressMisaligned = true),
     new FormalPlugin,
     new TrapProbePlugin,
     new ProbePlugin))
 
+  def csrConfig: CsrPluginConfig = CsrPluginConfig.all2(0x80000000L).copy(userGen = false, supervisorGen = false,
+    misaExtensionsInit = 0x1100, misaAccess = CsrAccess.READ_ONLY, ebreakGen = true,
+    // all2 enables these independently of supervisorGen. M-only must trap on access.
+    sscratchGen = false, stvecAccess = CsrAccess.NONE, sepcAccess = CsrAccess.NONE,
+    scauseAccess = CsrAccess.NONE, sbadaddrAccess = CsrAccess.NONE,
+    scycleAccess = CsrAccess.NONE, sinstretAccess = CsrAccess.NONE,
+    satpAccess = CsrAccess.NONE, medelegAccess = CsrAccess.NONE,
+    midelegAccess = CsrAccess.NONE)
+
   def spinalConfig: SpinalConfig = SpinalConfig(defaultConfigForClockDomains =
     ClockDomainConfig(resetKind = spinal.core.SYNC, resetActiveLevel = HIGH))
 }
 
-class VexTop extends VexRiscv(VexTop.configuration()) {
+class VexTop(cfg: VexRiscvConfig = VexTop.configuration()) extends VexRiscv(cfg) {
   val lockstepDpi = if (sys.env.get("RVW_COSIM_DPI").contains("1")) {
     val mailbox = new riscvsim.LockstepDpi
     mailbox.io.simPublic()
