@@ -125,7 +125,7 @@ if [ "$cmd" = build ]; then
   mkdir -p rvw/out/obj_dir
   {rtl.strip().replace(chr(10), chr(10) + '  ')}
   verilator --cc --exe --build -O2 -Wno-fatal --top-module {top} -Mdir rvw/out/obj_dir \\
-    "${{incs[@]}}" "${{rtl[@]}}" "$PWD/rvw/sim/harness.cpp" -o sim >&2
+    ${{incs[@]+"${{incs[@]}}"}} "${{rtl[@]}}" "$PWD/rvw/sim/harness.cpp" -o sim >&2
   printf '%s\\n' '{{"schema":"rvw.build/1","status":"built","model":"rvw/out/obj_dir/sim"}}'
   exit 0
 fi
