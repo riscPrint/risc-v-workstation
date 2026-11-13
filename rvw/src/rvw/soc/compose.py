@@ -156,7 +156,9 @@ def compose(source, out, elf=None):
                 if spec['devices'][i['region']].get('domain') is not None:
                     signal = f'BufferCC({signal}, init = False)'
                 sources.append(signal)
-        irq += [f'  core.interrupts({cause}) := ' + (' || '.join(sources) or 'False')]
+        irq += [f'  val interrupt_{cause} = Bool().setName("interrupt_{cause}")',
+                f'  interrupt_{cause} := ' + (' || '.join(sources) or 'False'),
+                f'  core.interrupts({cause}) := interrupt_{cause}']
     lines += irq + ['  Fabric.connect(' + ('fabricBus' if byte_writes else 'core.bus') + ', Seq(' + ','.join(targets) + '))', '}',
                     'object Generate extends App {',
                     f'  SpinalConfig(targetDirectory = args.headOption.getOrElse("rtl"), defaultClockDomainFrequency = FixedFrequency({spec["clock_hz"]} Hz), defaultConfigForClockDomains = ClockDomainConfig(resetKind = {"SYNC" if spec["reset"] == "sync_high" else "ASYNC"})).generateVerilog(new ComposedSoc)', '}']

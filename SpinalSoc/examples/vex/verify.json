@@ -1,18 +1,5 @@
 {
   "schema": "rvw.soc-verify/1",
-  "prepare": [
-    "bash",
-    "run.sh",
-    "run",
-    "--elf",
-    "../../programs/vex/verify",
-    "--out",
-    "{out}/native",
-    "--seed",
-    "31",
-    "--max-cycles",
-    "40000"
-  ],
   "checks": {
     "protocol": {
       "capture": "{out}/native/apb.jsonl",
@@ -37,6 +24,40 @@
         "uart_serial_rxd": 1,
         "plic_sources": 0
       }
+    },
+    "connectivity": {
+      "database": "{out}/single/soc.db",
+      "manifest": "connections.json"
+    },
+    "cdc_rdc": {
+      "database": "{out}/multi/soc.db"
     }
-  }
+  },
+  "prepare_steps": [
+    [
+      "../../../rvw/.venv/bin/python",
+      "prepare-verify.py",
+      "{out}",
+      "single"
+    ],
+    [
+      "../../../rvw/.venv/bin/python",
+      "prepare-verify.py",
+      "{out}",
+      "multi"
+    ],
+    [
+      "bash",
+      "run.sh",
+      "run",
+      "--elf",
+      "../../programs/vex/verify",
+      "--out",
+      "{out}/native",
+      "--seed",
+      "31",
+      "--max-cycles",
+      "40000"
+    ]
+  ]
 }

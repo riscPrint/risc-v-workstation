@@ -8,7 +8,7 @@ import spinaldb.{Main, SpinalDB}
 object Database {
   def main(args: Array[String]): Unit = {
     val (options, rtl, values) = Main.parse(args.toSeq)
-    require(values.length == 3, "database path, clock Hz and reset kind required")
+    require(values.length == 3 || values.length == 4, "database path, clock Hz, reset kind and optional component class required")
     val reset = values(2) match {
       case "sync_high" => SYNC
       case "async_high" => ASYNC
@@ -17,6 +17,7 @@ object Database {
     val config = SpinalConfig(inlineRom = true, targetDirectory = rtl.getOrElse("rtl-db"),
       defaultClockDomainFrequency = FixedFrequency(values(1).toLong Hz),
       defaultConfigForClockDomains = ClockDomainConfig(resetKind = reset))
-    SpinalDB.generate(config, new File(values(0)), options)(new generated.ComposedSoc)
+    val cls = Class.forName(if (values.length == 4) values(3) else "generated.ComposedSoc")
+    SpinalDB.generate(config, new File(values(0)), options)(cls.getDeclaredConstructor().newInstance().asInstanceOf[Component])
   }
 }

@@ -389,3 +389,22 @@ map equality and emits the native composition with its full protocol binding
 inventory. This path preserves declared clock domains. The database-backed
 SV generator remains available. Standalone map-only SV binds still require
 project review of instance paths and clocks before use.
+
+## SoC verification connectivity consumer
+
+A `rvw.soc-verify/1` connectivity entry with `database` and `manifest` runs
+`rvw formal connectivity --run --proof-mode prove`. Paths resolve relative
+to the verification manifest. Optional `engine` and `depth` select the formal
+backend and activation bound. The outer per-consumer timeout still applies.
+A `proven` row requires a nonempty set of declared connections, an unbounded
+transfer proof for each connection and a failed activation assertion which
+witnesses a reachable guard. Missing results and timeouts stay inconclusive.
+Reverse influence gaps remain in the nested report. This verdict covers the
+declared contracts and does not establish complete SoC connectivity.
+
+Optional `prepare_steps` is a list of argument lists. Each step has the same
+substitutions, working directory and timeout as `prepare`. Steps run in order
+after the optional legacy `prepare` command. A failed or timed-out step stops
+consumer execution and records its log name. This permits separate bounded
+extraction and simulation commands without increasing one process timeout.
+Database paths can contain `{out}` so preparation can create fresh evidence.

@@ -64,3 +64,34 @@ held request address failed the native channel-stability assertion.
 These results establish sampled assertion execution. The table's protocol
 row remains inconclusive for complete protocol qualification. No AXI stress,
 coherence, liveness or multi-domain protocol proof is claimed here.
+
+## Fresh typed consumers
+
+The resumed worker rebuilt the typed extractor against main and ran the Vex
+verification command with fresh single-clock and multi-domain databases.
+The CPU register program passed at seed 31 in 248 cycles and 36 retired
+instructions. The composed pyuvm bench checked 17 known-reset reads.
+
+| kind | generated | ran | result |
+|---|---|---|---|
+| protocol | yes | yes | inconclusive |
+| registers | yes | yes | inconclusive |
+| vip | yes | yes | inconclusive |
+| uvm | yes | yes | pass |
+| connectivity | yes | yes | inconclusive |
+| decode | yes | yes | proven |
+| cdc_rdc | yes | yes | inconclusive |
+
+The connectivity consumer ran in unbounded mode with a separate activation
+obligation. Yosys could not finish the internal binding work within the short
+consumer limit. No connectivity proof is claimed. The manifest declares
+timer and combined external interrupt transfers, core reset and fabric clock
+connections. The latter two are sampled contracts under the formal backend's
+reset guard, not clock or reset sequencing qualification.
+
+The multi-domain example places CLINT behind the existing clock bridge at
+10 MHz. Its database contains 35 components and 2,334 signals. The existing
+CDC/RDC consumer ran on this database. Its detailed report retains structural
+findings and unrun metastability, pulse-loss, reconvergence and reset-release
+obligations. The table does not claim CDC/RDC signoff. Databases, captured RTL
+and command logs remain local development artifacts under `SpinalSoc/out/`.
