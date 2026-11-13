@@ -2308,9 +2308,9 @@ usage: rvw regress cocotb [-h] --out OUT [--seed SEED] [--timeout TIMEOUT]
 ### `rvw regress random`
 
 ```text
-usage: rvw regress random [-h] [--settings SETTINGS] --out OUT [--seeds SEEDS]
-    [--seed-base SEED_BASE] [--core CORE] [--config CONFIG] [--json]
-    [--project PROJECT]
+usage: rvw regress random [-h] [--settings SETTINGS] --out OUT [--resume]
+    [--jobs JOBS] [--seeds SEEDS] [--seed-base SEED_BASE] [--core CORE]
+    [--config CONFIG] [--json] [--project PROJECT]
 ```
 
 ### `rvw regress sail-tests`
@@ -5233,7 +5233,7 @@ Starts a background job: no.
 
 Generate pinned riscv-dv programs, compile project runtime, run C1 and compare complete C2 with Spike. Only qualified runs earn functional coverage. Generator, compiler, adapter and comparison errors remain separate.
 
-Arguments: `project`, `core`, `settings`, `out` (required), `config`, `seeds`, `seed_base`.
+Arguments: `project`, `core`, `settings`, `out` (required), `config`, `seeds`, `seed_base`, `resume`, `jobs`.
 
 Starts a background job: yes.
 
