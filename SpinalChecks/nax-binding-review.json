@@ -1,0 +1,90 @@
+{
+  "schema": "rvw.nax-check-binding-review/1",
+  "source": "examples/naxriscv/rvw/micro-checks.json",
+  "source_sha256": "3121acb8645f5f3e918ddeb7f2d19c5cfd32a1285a41c58de78ebe7bef13748a",
+  "generation": {
+    "schema": "rvw.micro-generation/1",
+    "status": "generated",
+    "rules": [
+      {
+        "id": "lq_free_bound",
+        "kind": "counter_bounds",
+        "status": "generated",
+        "ports": {
+          "clk": "clk",
+          "reset": "reset",
+          "active": "rvw_checks_active",
+          "value": "Lsu2Plugin_logic_lq_tracker_free"
+        }
+      },
+      {
+        "id": "sq_free_bound",
+        "kind": "counter_bounds",
+        "status": "generated",
+        "ports": {
+          "clk": "clk",
+          "reset": "reset",
+          "active": "rvw_checks_active",
+          "value": "Lsu2Plugin_logic_sq_tracker_free"
+        }
+      },
+      {
+        "id": "branch_context_bound",
+        "kind": "counter_bounds",
+        "status": "generated",
+        "ports": {
+          "clk": "clk",
+          "reset": "reset",
+          "active": "rvw_checks_active",
+          "value": "BranchContextPlugin_logic_ptr_occupancy"
+        }
+      },
+      {
+        "id": "fetch_refill_cmd",
+        "kind": "pipeline",
+        "status": "generated",
+        "ports": {
+          "clk": "clk",
+          "reset": "reset",
+          "valid": "FetchCachePlugin_mem_cmd_valid",
+          "ready": "FetchCachePlugin_mem_cmd_ready",
+          "payload": "FetchCachePlugin_mem_cmd_payload_address"
+        }
+      },
+      {
+        "id": "dcache_refill_cmd",
+        "kind": "pipeline",
+        "status": "generated",
+        "ports": {
+          "clk": "clk",
+          "reset": "reset",
+          "valid": "DataCachePlugin_mem_read_cmd_valid",
+          "ready": "DataCachePlugin_mem_read_cmd_ready",
+          "payload": "DataCachePlugin_mem_read_cmd_payload_address"
+        }
+      },
+      {
+        "id": "peripheral_cmd",
+        "kind": "pipeline",
+        "status": "generated",
+        "ports": {
+          "clk": "clk",
+          "reset": "reset",
+          "valid": "LsuPlugin_peripheralBus_cmd_valid",
+          "ready": "LsuPlugin_peripheralBus_cmd_ready",
+          "payload": "LsuPlugin_peripheralBus_cmd_payload_address"
+        }
+      }
+    ],
+    "complete": true,
+    "limitations": [
+      "Project signal bindings are declared, not extracted or compiled.",
+      "No proof or simulator was run."
+    ]
+  },
+  "limits": [
+    "Generation only. No new NaxRiscv native run.",
+    "Existing main records 59 ISA passes and zero firings for these six rules. Activation was not measured.",
+    "Free-list mask, multi-lane ROB events, forwarding age/data and full recovery remain unbound."
+  ]
+}

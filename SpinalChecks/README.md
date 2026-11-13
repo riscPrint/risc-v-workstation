@@ -1221,3 +1221,15 @@ ready/select issue, store forwarding and mispredict recovery. Its native
 seed-17 run has zero clean firings. Seven executable bug variants each fire
 an expected rule. It has 11 inserted rules and named project bindings.
 The fixture README lists the missing template and consumer bindings.
+
+### NaxRiscv on main
+
+The out-of-order NaxRiscv example is present. Its project already declares six
+rules: three counter bounds and three command-channel pipeline checks.
+The [binding review](nax-binding-review.json) regenerated all six successfully.
+This review did not run a new native core campaign. The example's existing
+record has 59 ISA passes and zero firings. Activation is unmeasured.
+Free-list masks, two-lane ROB conservation, store forwarding age/data and full
+recovery remain unbound. The RAM allocator and multi-lane ROB cannot be bound
+to a single-lane template by renaming signals. See the example README for
+its source-interface limits.
