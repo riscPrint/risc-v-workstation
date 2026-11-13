@@ -796,7 +796,15 @@ It keeps a nonzero exit code. Read the [measured record](../SpinalSoc/examples/v
 for the exact scopes. A new core, peripheral or clock configuration needs
 fresh evidence.
 
-The UART profile is still a subset. Full 16550 behavior, boot-from-flash,
+The original UART profile remains a subset. The additive `uart16550-full`
+profile passed 240 directed checks and 28 UART VIP transmit frames at seed 31,
+both as native RTL and through its Spinal wrapper. It covers the register
+surface, FIFOs, interrupts, modem status, divisor, framing, DMA requests and
+loopback. This is a directed development result, not complete compliance.
+The combined Vex table still uses the original subset. The full-register
+profile has this separate UART campaign. See [the UART example](../SpinalSoc/examples/uart16550/README.md).
+
+Boot-from-flash,
 native AXI4/TileLink crossbars, AXI width conversion, composer-hosted SMP,
 external-IP import and composed debug-module integration remain separate work.
 The existing standalone SMP example is unchanged.

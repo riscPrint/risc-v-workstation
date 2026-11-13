@@ -47,6 +47,11 @@ def peripheral(kind, name, base):
         regs = [register('data_divisor_low',0,reset=None), register('ier_divisor_high',4),
                 register('iir_fcr',8,reset=None), register('lcr',12,reset=3),
                 register('lsr',20,'r',None), register('scratch',28)]
+    elif kind == 'uart16550-full':
+        size, cls = 0x100, 'Uart16550Full'
+        regs = [register('data_divisor_low',0,reset=None), register('ier_divisor_high',4,reset=None),
+                register('iir_fcr',8,reset=None), register('lcr',12), register('mcr',16),
+                register('lsr',20,'r',None), register('msr',24,'r',None), register('scratch',28)]
     elif kind == 'spi':
         size, cls = 0x100, 'Spi'
         regs = [register('data',0,reset=None), register('status',4,reset=None),
@@ -60,5 +65,8 @@ def peripheral(kind, name, base):
         raise ValueError('unknown peripheral profile')
     if base % size or base + size > 1 << 32:
         raise ValueError('base must align the device window within 32 bits')
+    binder = dict(type='project', **{'class':'rvwsoc.'+cls})
+    if kind == 'uart16550-full':
+        binder['exports'] = ['serial','modem']
     return dict(region=dict(name=name, kind='mmio', base=base, size=size, permissions='rw', cacheable=False, registers=regs),
-                binder=dict(type='project', **{'class':'rvwsoc.'+cls}))
+                binder=binder)
