@@ -161,7 +161,7 @@ require exact library options from a matching type inventory.
 
 The VexRiscv optional CSR/HPM execution example uses `rvw.checks-run/1`.
 It adds `elf`, `elf_sha256`, `observation_fault`, `cycles` and `retired` metadata.
-`observation_fault` is `none`, `csr` or `hpm`. Seeded observation failures keep
+`observation_fault` is `none`, `csr`, `hpm` or `hpm_read`. Seeded observation failures keep
 run status `fail`. The fixture process can exit successfully only after the
 expected firing is observed. This is test-fixture completion, not a core pass.
 
@@ -179,3 +179,12 @@ update expected live ownership. Recovery events remain project declarations.
 instance/check and reason. Per-instance `unbound_checks` prevent `complete`,
 even when the instance's channel monitor was generated. This is binding
 completeness, not a verification verdict.
+
+## Independent HPM read expectations
+
+`HpmChecks.track` supplies the independent expected counter used by `bind`.
+It returns that state for separate response checks. Existing `bind` calls
+retain their Unit result. The optional Vex binding compares accepted machine
+and user-alias half reads against this expected state. Read observations do
+not initialize or update expected state. Native example clean runs require
+nine inserted monitors. Seeded `hpm_read` runs retain fail status.

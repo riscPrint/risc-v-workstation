@@ -38,7 +38,7 @@ def programs(tmp_path_factory):
     return root,out/'generated/model.json',elfs
 
 
-@pytest.mark.parametrize('fault',['none','csr','hpm'])
+@pytest.mark.parametrize('fault',['none','csr','hpm','hpm_read'])
 def test_vex_native_checks(tmp_path,programs,fault):
     root,model,elfs=programs
     out=tmp_path/'run'
@@ -52,7 +52,7 @@ def test_vex_native_checks(tmp_path,programs,fault):
     assert 'CSR_CHECKS_RUNTIME_OK fault='+fault in r.stdout
     reports=[json.loads((out/f'run_{i}.json').read_text()) for i in range(3)]
     for report in reports:
-        assert report['inserted']==5 and report['retired']>0
+        assert report['inserted']==9 and report['retired']>0
         assert report['observation_fault']==fault
     if fault=='none':
         assert all(p['status']=='pass' and p['fired']==0 for p in reports)
@@ -61,3 +61,8 @@ def test_vex_native_checks(tmp_path,programs,fault):
         assert any(f['kind']=='csr.state' for f in reports[0]['firings'])
     if fault=='hpm':
         assert all(p['status']=='fail' and any(f['kind']=='hpm.count' for f in p['firings']) for p in reports)
+
+    if fault=='hpm_read':
+        assert reports[2]['status']=='fail'
+        assert {f['id'] for f in reports[2]['firings']}=={
+            'hpm.read:mcycle_machine','hpm.read:minstret_machine','hpm.read:mcycle_user','hpm.read:minstret_user'}

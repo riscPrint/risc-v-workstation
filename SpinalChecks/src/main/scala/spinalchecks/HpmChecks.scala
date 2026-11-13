@@ -11,6 +11,12 @@ object HpmChecks {
     */
   def bind(name: String, model: HpmModel, observed: UInt, eventCount: UInt, inhibit: Bool,
            permitted: Bool, write: Bool, data: UInt, writeMask: UInt = null): Unit = {
+    track(name, model, observed, eventCount, inhibit, permitted, write, data, writeMask)
+    ()
+  }
+  /** Return independent expected state for a separate read-response binding. */
+  def track(name: String, model: HpmModel, observed: UInt, eventCount: UInt, inhibit: Bool,
+            permitted: Bool, write: Bool, data: UInt, writeMask: UInt = null): UInt = {
     require(observed.getWidth == model.width && data.getWidth == model.width)
     val expected = Reg(UInt(model.width bits)).init(model.reset)
     val mask = if (writeMask == null) U((BigInt(1) << model.width) - 1, model.width bits) else writeMask
@@ -20,6 +26,7 @@ object HpmChecks {
     when(!inhibit && permitted) { incremented := (expected + eventCount.resized).resized }
     expected := Mux(write, (incremented & ~mask) | (data & mask), incremented)
     DeclaredChecks.rule("hpm.count", name, "v1 independent events: " + model.eventMeaning)(observed =/= expected)
+    expected
   }
   /** Requests include denied attempts. Counter-enable bits are independent project observations.
     * Machine access bypasses counter enables; supervisor access needs mcounteren;

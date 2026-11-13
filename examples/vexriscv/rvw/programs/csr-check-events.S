@@ -18,6 +18,10 @@ _start:
   csrr t1, minstret
   csrr t2, cycle
   csrr t3, instret
+  csrr t4, mcycleh
+  csrr t5, minstreth
+  csrr t4, cycleh
+  csrr t5, instreth
   li t0, 1
   la t1, tohost
   sw t0, 0(t1)

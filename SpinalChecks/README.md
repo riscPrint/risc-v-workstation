@@ -935,3 +935,11 @@ can share a source. The native tracker has 16 pending-pair slots. The
 not define a TileLink protocol limit. Cache data and permission state need
 an independent project model. The procedural database generator exposes
 its separate probe capacity with `formal buses --depth`.
+
+### HPM read expectations
+
+`HpmChecks.track` returns the independent expected counter for separate
+`bindHalfRead` checks. It uses the same event, inhibit, permission and write
+model as `bind`. The expected state does not come from DUT storage or read
+data. The optional Vex example binds both machine and user-alias RV32 halves.
+Its native runtime tests cover clean reads and seeded read-observation faults.
