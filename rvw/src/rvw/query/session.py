@@ -8,6 +8,7 @@ from __future__ import annotations
 import argparse
 import gzip
 import json
+import os
 from pathlib import Path
 import sys
 import signal
@@ -173,7 +174,8 @@ class Session:
             root = Path(temp)
             extract(self.db, root / 'metadata')
             out = root / 'trace.json'
-            command = ['spinaltrace-cli', 'dyn-pdg', '--pdg-path', str(root / 'metadata/pdg.json'),
+            pdg = str(self.db.capture.file(a['pdg']).copy) if a.get('pdg') else str(root / 'metadata/pdg.json')
+            command = [os.environ.get('SPINALTRACE_CLI', 'spinaltrace-cli'), 'dyn-pdg', '--pdg-path', pdg,
                        '--hgldd-path', str(root / 'metadata/hgldd'), '--vcd-path', str(path),
                        '--top-module', self.db.top, '--extra-scopes', *self.db.meta.get('extra_scopes', f'TOP {self.db.top}').split(),
                        '--at-time', str(int(a['time'])), '-s', 'signal:' + sig.path, '-o', str(out)]

@@ -48,6 +48,9 @@ def wave_clock(run, core_cfg: dict, wave=None) -> WaveClock:
         src = "clock detected in the wave"
     per = int(per or 10)
     t1 = d.get("wave_time_of_cycle_1")
+    # C1 producers serialize exact Long values as decimal strings too.
+    if isinstance(t1, str) and t1.isascii() and t1.isdecimal():
+        t1 = int(t1)
     if isinstance(t1, (int, float)) and t1 >= 0:
         return WaveClock(per, int(t1), True, f"period from {src}; time of cycle 1 from run details")
     return WaveClock(per, per, False, f"period from {src}; time of cycle 1 unknown (assumed cycle N at N x period)")

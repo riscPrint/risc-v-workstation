@@ -72,10 +72,11 @@ def _conds(db, cid):
 
 
 class Tracer:
-    def __init__(self, db, wave, max_nodes=64):
+    def __init__(self, db, wave, max_nodes=64, include_control=False):
         self.db = db
         self.wave = wave
         self.max_nodes = max_nodes
+        self.include_control = include_control
         self.nodes = 0
         self.seen = set()
         self.truncated = False
@@ -195,17 +196,24 @@ class Tracer:
             node['active'] = active['id']
             reads = self.db.q('SELECT DISTINCT signal_id, kind FROM assign_reads WHERE assignment_id=? ORDER BY signal_id',
                               (active['id'],))
+            if self.include_control:
+                reads = list(reads)
+                cid = next(row[4] for row in rows if row[0] == active['id'])
+                reads.extend((c['signal_id'], 'cond') for c in _conds(self.db, cid)
+                             if c['signal_id'] is not None and (c['signal_id'], 'cond') not in reads)
             node['reads'] = []
             children = []
             for sid, kind in reads:
                 r = self.db.signal_by_id(sid)
                 _, val = self.value(r, at)
                 node['reads'].append({'signal': r.path, 'kind': kind, 'value': val})
-                if depth > 0 and kind == 'data':
+                if depth > 0 and (kind == 'data' or self.include_control):
                     if self.nodes >= self.max_nodes:
                         self.truncated = True
                         continue
-                    children.append(self.explain(r, at, depth - 1))
+                    child = self.explain(r, at, depth - 1)
+                    child['dependency_kind'] = kind
+                    children.append(child)
             if children:
                 node['children'] = children
         return node
@@ -237,7 +245,7 @@ class Tracer:
                 'kind': cd.get('reset_kind')}
 
 
-def why(database: str, wave: str, signal: str, t: int, depth: int = 2, max_nodes: int = 64) -> dict:
+def why(database: str, wave: str, signal: str, t: int, depth: int = 2, max_nodes: int = 64, *, include_control: bool = False) -> dict:
     """Explain `signal`'s value at `t` from database drivers and wave values."""
     from ..query.db import DesignDB
     if t < 0 or depth < 0 or max_nodes < 1:
@@ -246,7 +254,7 @@ def why(database: str, wave: str, signal: str, t: int, depth: int = 2, max_nodes
     w = _Wave(wave)
     try:
         s = db.resolve_one(signal)
-        tracer = Tracer(db, w, max_nodes)
+        tracer = Tracer(db, w, max_nodes, include_control)
         root = tracer.explain(s, t, depth)
         return {'signal': s.path, 'time': t, 'trace': root, 'nodes': tracer.nodes,
                 'truncated': tracer.truncated, 'wave': w.identity, 'database': db.capture.record(),

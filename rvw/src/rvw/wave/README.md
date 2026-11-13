@@ -295,3 +295,29 @@ SQLite insertion dominates both; wellen removes the converter and its temporary
 VCD, not the insert cost. On that index, `find 'sig3 == sig4 || sig7[3:0] == 5'`
 took 1.6 s and 48 MB RSS (the streamed VCD: 13.8 s, same 175 intervals);
 `edges 'sig1$'` took 0.6 s.
+
+## First mismatch to source
+
+```sh
+rvw wave why-run RUN --project CORE/rvw.toml --db DESIGN.db \
+  --binding CORE/formal.toml --out NEW_REPLAY --window 20 --json
+```
+
+MCP exposes `wave_why_run` as a long job. The command checks C2 with Spike
+in strict mode. It maps mismatching register or memory fields through the
+project's `riscv_formal.ports` or `rvw.rvfi-binding/1` JSON. It uses C1 cycle
+metadata to find the wave time. An uncovered retirement triggers a replay
+from reset with a short wave window. The replay must reproduce the same
+order, cycle, actual record and differences. `--no-rerun` disables replay.
+Checkpoint restore is not used. The caller must supply the ELF, Spike platform
+and an adapter replay that still works.
+
+An instrumented VCD with a database PDG uses SpinalTrace. Its graph retains
+the engine accuracy record. Otherwise the command walks database drivers,
+including condition signals, with observed wave values. This fallback is
+inferred. It can stop at memories, missing probes and window boundaries.
+`status=explained` means candidate chains were returned. It does not prove
+a root cause. Database, binding and wave association remains caller-selected.
+The selected binding must describe the simulation RTL, rather than a different
+formal wrapper. A multi-lane packed RVFI binding needs a lane-specific signal;
+a packed port alone does not identify the failing lane.

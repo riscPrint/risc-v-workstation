@@ -32,3 +32,19 @@ path under `RVW_WAVE_INDEX_DIR` (default `~/.cache/rvw/wave-index`). An entry
 whose `source_stat` differs from the source is stale and is rebuilt before the
 query. `rvw wave verify INDEX [--source WAVE]` compares full SHA-256 and returns
 `fresh` true only on an exact match (exit 1 when stale).
+
+## Failure-cause report
+
+`rvw wave why-run` and MCP `wave_why_run` return `rvw.failure-cause/1`.
+`cosim` is the strict Spike result. `cycle`, `time` and `clock` identify the
+retirement in the selected wave. `chains` has one entry per bound mismatching
+field. Each entry includes a navigation record, the method and accuracy.
+`dynamic.graph` retains the SpinalTrace engine accuracy fields.
+`driver_walk` is the existing active-driver report with control reads enabled.
+The fallback is inferred, including when assignment conditions select a driver.
+`status=inconclusive` means a required comparison, replay or wave mapping is
+missing. `status=explained` means candidate chains exist, not a proven cause.
+A replay must match order, cycle, actual retirement and differences before its
+wave is used. It starts from reset. The wave window starts at most `window`
+cycles before the mismatch and ends just after its sampling edge.
+The binding, database and waveform association remains unverified.
