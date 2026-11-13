@@ -131,7 +131,8 @@ def race(plan, root, out, *, timeout=30, cross_check=False, yosys_executable=Non
                     if cell['type'] == '$assert' or (cell['type'] == '$check' and flavor == 'assert'):
                         checks += 1
                     if cell['type'] == '$assume' or (cell['type'] == '$check' and flavor == 'assume'):
-                        assumptions.append({'module': module, 'cell': name, 'source': cell.get('attributes', {}).get('src')})
+                        from .proof_conditions import condition
+                        assumptions.append(condition(module, name, cell, out))
         if not checks:
             report = {'schema': 'rvw.formal-portfolio/1', 'status': 'inconclusive',
                       'reason': 'no_checks' if design.exists() and check.returncode == 0 else 'preparation_failed',
@@ -253,7 +254,8 @@ def race(plan, root, out, *, timeout=30, cross_check=False, yosys_executable=Non
               'environment_check': 'activation_not_checked' if assumptions else 'no_source_assumptions',
               'winner': winner, 'cross_check': 'disagree' if disagreement else 'agree' if len(decisive) > 1 else 'inconclusive',
               'proof_kind': 'unbounded' if winner and winner['status'] == 'pass' and not disagreement and not uncertified_environment else 'none',
-              'rows': rows, 'assumptions': assumptions, 'source_transforms': transforms, 'source_sha256': hashes, 'mode': mode, 'depth': depth,
+              'rows': rows, 'assumptions': assumptions,
+              'condition_model': {'path': 'design.json', 'sha256': sha256((out / 'design.json').read_bytes()).hexdigest()} if (out / 'design.json').exists() else None, 'source_transforms': transforms, 'source_sha256': hashes, 'mode': mode, 'depth': depth,
               'limits': 'Source assertions and assumptions define the problem. No reset, clock, or vacuity guards are added. '
                         'Proofs are conditional on source assumptions. Cancelled or absent answers cannot be cross-checked.'}
     (out / 'result.json').write_text(json.dumps(report, indent=2) + '\n')

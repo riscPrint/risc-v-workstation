@@ -22,6 +22,7 @@ def benchmark(plan, root, out, timeout):
             report = race({**case, 'engines': [engine]}, root, out / name / engine.replace(':', '_'), timeout=timeout)
             rows.append({'case': name, 'engine': engine, 'total_wall_s': time.monotonic() - began, **(report['rows'][0] if report['rows'] else {'status': report['status'], 'reason': report.get('reason'), 'wall_s': None}),
                          'problem_status': report['status'], 'environment_check': report.get('environment_check', 'unknown'),
+                         'assumptions': report.get('assumptions', []), 'condition_model': report.get('condition_model'),
                          'source_sha256': report['source_sha256'], 'mode': report['mode'], 'depth': report['depth']})
     agreement = {}
     for case in seen:
