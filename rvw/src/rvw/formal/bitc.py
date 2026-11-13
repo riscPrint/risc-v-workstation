@@ -135,7 +135,10 @@ def translate(design, width, latency, *, definedness=False):
     if definedness:
         lines += [f'{u(q)} = next_unknown{i};' for i, (q,d) in enumerate(registers)]
     lines += ['eval();', '}']
-    lines += ['static void init(void) {'] + [f'{v(q)} = nondet_bool();' for q,d in registers] + ['}']
+    lines += ['static void init(void) {'] + [f'{v(q)} = nondet_bool();' for q,d in registers]
+    if definedness:
+        lines += [f'{u(q)} = 1;' for q,d in registers]
+    lines += ['}']
     def put(name, expr):
         return [f'{v(b)} = (({expr}) >> {i}) & 1;' for i,b in enumerate(ports[name]['bits'])]
     def get(name):
