@@ -1,0 +1,55 @@
+{
+  "schema": "rvw.soc/1",
+  "name": "custom_bus_fixture",
+  "address_bits": 32,
+  "platform": {},
+  "regions": [
+    {
+      "name": "words",
+      "kind": "mmio",
+      "base": 0,
+      "size": 16,
+      "permissions": "rw",
+      "cacheable": false,
+      "registers": [
+        {
+          "name": "word0",
+          "offset": 0,
+          "width": 32,
+          "access": "rw",
+          "reset": 0,
+          "read_action": "none",
+          "write_action": "normal"
+        },
+        {
+          "name": "word1",
+          "offset": 4,
+          "width": 32,
+          "access": "rw",
+          "reset": 0,
+          "read_action": "none",
+          "write_action": "normal"
+        },
+        {
+          "name": "word2",
+          "offset": 8,
+          "width": 32,
+          "access": "rw",
+          "reset": 0,
+          "read_action": "none",
+          "write_action": "normal"
+        },
+        {
+          "name": "word3",
+          "offset": 12,
+          "width": 32,
+          "access": "rw",
+          "reset": 0,
+          "read_action": "none",
+          "write_action": "normal"
+        }
+      ]
+    }
+  ],
+  "interrupts": []
+}

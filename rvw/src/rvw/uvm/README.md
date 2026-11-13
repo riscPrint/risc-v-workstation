@@ -138,6 +138,12 @@ For example: `{"schema":"rvw.uvm-adapter/1","bus":"top.io.mem","profile":"cpu",
 "bindings":{"address":"io_address"},"scenario":"scenario.py"}`.
 Generation does not establish protocol or CPU qualification.
 
+The [custom-pin RTL example](../../../../Uvm/examples/custom_bus/README.md)
+qualifies this adapter path with an explicit APB4 binding. Its good run
+checks 82 transfers. Its corrupt-read control must fail with `APB_DATA`.
+The database is a declared fixture. This does not qualify automatic bus
+discovery, a new protocol, CPU execution or C4 acceptance.
+
 Gate configuration stages a runtime bundle beside the output TOML. It keeps
 build metadata, the executable and UVM library sources. Compiler-generated
 C++ and object intermediates stay outside that bundle. Declared source and
