@@ -2435,3 +2435,38 @@ for stuck progress and input progress with no fairness. K-liveness at `k=4`
 proved the two good cases and kept the two reached bounds inconclusive. Both
 methods kept impossible fairness inconclusive. Results are under
 `/tmp/deep-aiger-native4/`. These small models do not establish RTL capacity.
+
+## PDR invariant libraries
+
+Run `rvw formal ic3-lemmas --manifest PLAN.json --out EXPORT --timeout 12`
+to export ABC PDR invariant cubes. The manifest uses the pinned `top` and
+`sources` fields from `engine-race`. The command maps cubes to named RTL bits.
+It skips auxiliary SBY state and unmapped or inverted latches. Mapped cubes
+are candidates. A separate unbounded proof checks their conjunction on the
+flattened source with the original properties removed. Only a pass writes
+`EXPORT/library.json`. Source assumptions are refused.
+
+Run `rvw formal ic3-lemmas --manifest NEW_PLAN.json --library EXPORT/library.json
+--out REUSE` to select cached predicates for related properties or revisions.
+The `formal_ic3_lemmas` MCP tool exposes both forms. `engines` in the new plan
+selects the fresh target portfolio, with SMTBMC/Yices as the default.
+
+Each library entry contains its literals and a complete transition-cone hash.
+The cone includes next-state inputs, clocks, reset/enable controls, cell
+parameters and initial values. Numeric wire ids and generated cell names do
+not define the identity. Unrelated logic can change without a cache miss.
+A changed dependency rejects that entry. Unknown drivers, unnamed state,
+memories and nonzero-based or ascending signal ranges are not reusable.
+
+Helpers remain assertions. They are never added as assumptions. The target
+always needs a fresh native proof. If a job with cached helpers fails, the
+report stays inconclusive because the failure can come from the target or
+a damaged library. A job with no selected helpers can report the original
+target's failure. No proof-time reduction is claimed.
+
+Native macOS ARM64 checks on 2026-11-13 exported and separately proved one
+invariant of a modulo-three counter. The entry matched a related property
+and a revision with an unrelated output counter. A faulty transition changed
+the cone, excluded the entry, and failed the fresh target proof. A source
+assumption was refused. Each stage used a 12 s timeout. Raw results are under
+`/tmp/deep-ic3-native-tests/`. This is small-design reuse evidence.

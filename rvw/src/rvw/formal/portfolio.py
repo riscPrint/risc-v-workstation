@@ -70,7 +70,7 @@ def parse_status(backend, text, returncode, mode):
 
 
 
-def race(plan, root, out, *, timeout=30, cross_check=False, yosys_executable=None, smtbmc_logic=None):
+def race(plan, root, out, *, timeout=30, cross_check=False, yosys_executable=None, smtbmc_logic=None, abc_invariants=False):
     if not math.isfinite(timeout) or timeout <= 0:
         raise ValueError('timeout must be finite and positive')
     if smtbmc_logic is not None and not re.fullmatch(r'[A-Z0-9_]+', smtbmc_logic):
@@ -170,6 +170,9 @@ def race(plan, root, out, *, timeout=30, cross_check=False, yosys_executable=Non
         if backend == 'sby':
             config = directory / 'problem.sby'
             engine_line = name.replace(':', ' ')
+            if name == 'abc:pdr' and abc_invariants:
+                engine_line += ' -d'
+                row['invariant_export'] = True
             if name.startswith('smtbmc:') and smtbmc_logic is not None:
                 engine_line += ' -- --logic ' + smtbmc_logic
                 row['smtbmc_logic'] = smtbmc_logic

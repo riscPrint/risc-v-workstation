@@ -12,6 +12,8 @@ def diagnose():
             features.append('uninterpreted_datapath')
         if name == 'aiger:rIC3':
             features.extend(['aiger_liveness_to_safety', 'aiger_k_liveness', 'experimental_aiger_rlive'])
+        if name == 'abc:pdr':
+            features.append('ic3_lemma_export')
         row.update(backend=backend, features=features,
                    enabled_features=features if row['status'] == 'installed' else [],
                    executables={d: shutil.which(d) for d in deps},
