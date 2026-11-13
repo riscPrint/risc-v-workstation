@@ -11,6 +11,7 @@ export type ToWebview =
   | { type: 'showFsm'; module: string; fsm: string }
   | { type: 'exportImage'; format: 'svg' | 'png' };
 export type FromWebview =
+  | { type: 'dependencies'; kind: 'drivers' | 'loads'; file: string; line: number }
   | { type: 'ready' }
   | { type: 'save'; saved: SavedView }
   | { type: 'openSource'; loc: Loc }
@@ -49,6 +50,7 @@ function savedView(v: unknown): v is SavedView {
 export function isFromWebview(v: unknown): v is FromWebview {
   if (!record(v)) return false;
   switch (v.type) {
+    case 'dependencies': return (v.kind === 'drivers' || v.kind === 'loads') && typeof v.file === 'string' && Number.isSafeInteger(v.line) && Number(v.line) > 0;
     case 'ready': case 'find': return true;
     case 'save': return savedView(v.saved);
     case 'openSource': return record(v.loc) && typeof v.loc.file === 'string' && Number.isSafeInteger(v.loc.line) && Number(v.loc.line) > 0;

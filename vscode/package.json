@@ -25,6 +25,11 @@
     "onCommand:lint.run",
     "onCommand:lint.open",
     "onCommand:lsp.start",
+    "onCommand:navigation.signals",
+    "onCommand:navigation.blocks",
+    "onCommand:navigation.wave",
+    "onCommand:navigation.drivers",
+    "onCommand:navigation.loads",
     "onCommand:perf.open",
     "onView:perf.results",
     "onCommand:regress.open",
@@ -95,6 +100,26 @@
       {
         "command": "lsp.start",
         "title": "RVW: Start Design Database Language Server"
+      },
+      {
+        "command": "navigation.signals",
+        "title": "RVW: Show Generated Signals at Line"
+      },
+      {
+        "command": "navigation.blocks",
+        "title": "RVW: Focus Block Diagram at Line"
+      },
+      {
+        "command": "navigation.wave",
+        "title": "RVW: Query Wave Signal at Line"
+      },
+      {
+        "command": "navigation.drivers",
+        "title": "RVW: Show Drivers at Line"
+      },
+      {
+        "command": "navigation.loads",
+        "title": "RVW: Show Loads at Line"
       },
       {
         "command": "perf.open",
@@ -442,6 +467,43 @@
           "when": "false"
         }
       ],
+      "editor/context": [
+        {
+          "command": "navigation.signals",
+          "when": "resourceExtname == .scala",
+          "group": "rvw"
+        },
+        {
+          "command": "navigation.blocks",
+          "when": "resourceExtname == .scala",
+          "group": "rvw"
+        },
+        {
+          "command": "navigation.wave",
+          "when": "resourceExtname == .scala",
+          "group": "rvw"
+        },
+        {
+          "command": "navigation.drivers",
+          "when": "resourceExtname == .scala",
+          "group": "rvw"
+        },
+        {
+          "command": "navigation.loads",
+          "when": "resourceExtname == .scala",
+          "group": "rvw"
+        },
+        {
+          "command": "spinalblocks.showLocation",
+          "when": "resourceExtname == .scala",
+          "group": "navigation@10"
+        },
+        {
+          "command": "spinalblocks.showFsmLocation",
+          "when": "resourceExtname == .scala",
+          "group": "navigation@10"
+        }
+      ],
       "explorer/context": [
         {
           "command": "spinalblocks.open",
@@ -454,18 +516,6 @@
           "command": "spinalblocks.open",
           "when": "resourceExtname == .scala",
           "group": "navigation"
-        }
-      ],
-      "editor/context": [
-        {
-          "command": "spinalblocks.showLocation",
-          "when": "resourceExtname == .scala",
-          "group": "navigation@10"
-        },
-        {
-          "command": "spinalblocks.showFsmLocation",
-          "when": "resourceExtname == .scala",
-          "group": "navigation@10"
         }
       ]
     },
