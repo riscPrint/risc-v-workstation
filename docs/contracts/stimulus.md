@@ -52,3 +52,14 @@ control settings and implementation. The curve exporter requires equal common
 context and qualified execution identity. Its `rvw.paired-curves/1` output
 contains credited-bin histories by attempt wall time. It retains failed-attempt
 cost and excludes initial-suite and publication cost.
+
+## Source coverage navigation
+
+`rvw.source-bindings/1` declares `point_universe`,
+`functional_config_sha256`, and `links`. Each link has `file`, `line`, and
+`groups`. A link must name an existing native source line and fixed functional
+groups. `rvw cov source-report` emits `rvw.source-coverage/1`. It retains native
+metric counts and functional denominators separately. It lists unmapped points
+and groups. `code_targets` names unhit native points for code-goal plans.
+`functional_targets` names unhit generator goals. Source links are project
+claims. They do not establish measured Scala statement coverage.

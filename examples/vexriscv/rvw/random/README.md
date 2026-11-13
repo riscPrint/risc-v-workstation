@@ -61,3 +61,6 @@ set. See the measurement record for archived replay availability.
 
 For new private runs, set `RVW_SBT_LOCK=sbt-dv` as well as the private core
 lock. The launcher uses that lock for build output in this worktree.
+
+See [the native source coverage sample](source-coverage/README.md) for line/toggle
+counts, functional source links, native holes and measured suite guidance.

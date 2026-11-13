@@ -186,6 +186,8 @@ def execute(args):
 def register(subparsers):
     parser = subparsers.add_parser('cov', help='code, RVFI functional, formal and mutation coverage')
     sub = parser.add_subparsers(dest='cov_command', required=True)
+    from rvw.common.subcommands import register_commands
+    register_commands('rvw.cov', sub)
     from .campaign_cli import register as register_campaign
     register_campaign(sub)
     from .action_cli import register as register_actions

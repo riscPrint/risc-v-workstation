@@ -1,0 +1,147 @@
+{
+  "schema": "rvw.native-source-sample/1",
+  "core": "vexiiriscv",
+  "config": "rv32im",
+  "comparisons": [
+    {
+      "test": "add",
+      "instructions": 503,
+      "status": "match",
+      "trace_complete": true,
+      "synchronized": 0,
+      "applied_masks": [],
+      "c1_sha256": "2e25a839d3bd3334691360514e6f09b53944d63617b8409bc80dc2cccdbdc01e",
+      "trace_sha256": "1fa99700697d15eee74be6580699e86a151ae1c5fa01d30a80e56eebc8a525e2"
+    },
+    {
+      "test": "beq",
+      "instructions": 329,
+      "status": "match",
+      "trace_complete": true,
+      "synchronized": 0,
+      "applied_masks": [],
+      "c1_sha256": "335cd897a38399c86afac1ac6277e56718e87a4d1fe512049eaa9e013e9ef43f",
+      "trace_sha256": "5ba8b77a7ed4a5c658142ec5121218bab44773aed6cf76a4e33bbc28c9039d3a"
+    },
+    {
+      "test": "lw",
+      "instructions": 321,
+      "status": "match",
+      "trace_complete": true,
+      "synchronized": 0,
+      "applied_masks": [],
+      "c1_sha256": "0ad0ab8544a909257b45fdf836cb8c9baaceedc959c83fe1dfeb99991648c495",
+      "trace_sha256": "3471ee3047ce5df5f7dee4ccdc3f9f32ccb10229ae5e4ff0b722f8190cc3629b"
+    },
+    {
+      "test": "sw",
+      "instructions": 552,
+      "status": "match",
+      "trace_complete": true,
+      "synchronized": 0,
+      "applied_masks": [],
+      "c1_sha256": "ab7d3c71d98ebed4fa8ef1a7c4f772cbd7a43e29c70609cc7fdd5f2a09b663d0",
+      "trace_sha256": "035a8ca39ff955f2bad398742602e5f22cd3aeb5d02a42fff19f2c3df9bc4eb2"
+    }
+  ],
+  "point_universe": "46ff39b8fe06141c5ac512acfe278769a49f5e825086e5a7a2cda6b1348ce7b6",
+  "initial": {
+    "total": 32703,
+    "excluded": 0,
+    "eligible": 32703,
+    "hit": 27074,
+    "never_hit": 5629,
+    "percent": 82.78751184906584
+  },
+  "final": {
+    "total": 32703,
+    "excluded": 0,
+    "eligible": 32703,
+    "hit": 27645,
+    "never_hit": 5058,
+    "percent": 84.53352903403358
+  },
+  "types": {
+    "branch": {
+      "total": 774,
+      "excluded": 0,
+      "eligible": 774,
+      "hit": 615,
+      "never_hit": 159,
+      "percent": 79.45736434108527
+    },
+    "line": {
+      "total": 831,
+      "excluded": 0,
+      "eligible": 831,
+      "hit": 701,
+      "never_hit": 130,
+      "percent": 84.35619735258724
+    },
+    "toggle": {
+      "total": 31098,
+      "excluded": 0,
+      "eligible": 31098,
+      "hit": 26329,
+      "never_hit": 4769,
+      "percent": 84.66460865650524
+    }
+  },
+  "scala_mapping": {
+    "denominator": 32703,
+    "mapped": 586,
+    "methods": {
+      "covered-span-comments": 585,
+      "same-line-comment": 1
+    },
+    "statement_hit_status": "undetermined",
+    "note": "Source links navigate to declarations or assignments. Point hits do not establish individual Scala statement hits.",
+    "unit": "instrumented points; a point can link to several Scala lines"
+  },
+  "closed_points": 571,
+  "closed_source_linked_points": [
+    "48d23ee9ade143e2e1b1098cc6b8cf4e0b7d3f3b2224cef1a6eb103e5d70fcaf",
+    "6f0b45caa6ba13740cd237677c36d820689a10eeef562bd0cef343c4c5a48e34",
+    "a3addb55a177d841d1d15ec68da95798d6bf573cc037a1a3ebfc183624b363cb",
+    "1ceea56d4c70fbf64f53445669ec1dbe34584f8d61cc7277e6837f4c9642c35c",
+    "83e4d909ba9f5151f19a062c3a595eb81764964d1b74878de77e04ba6bf3be6d",
+    "25a27a49f06aef593be3185a60ea213e14e3ae931528f12f7d01e3ec87a77f95"
+  ],
+  "declared_functional_source_links": [
+    {
+      "file": "~/fun/saviour/wt/.vex/dv/vexiiriscv/src/main/scala/vexiiriscv/fetch/FetchCachelessPlugin.scala",
+      "line": 211,
+      "groups": [
+        "sem_add_rs1",
+        "sem_add_rs2"
+      ]
+    }
+  ],
+  "source_report_sha256": "67024fc9a391f35939d8ce4752327be2fb2540bd6db97f3bd6760e999d6d993b",
+  "raw": "rvw/out/dv/source-vexiiriscv",
+  "notes": [
+    "The initial workload is add. The final workload set adds beq, lw and sw.",
+    "These are measured workload additions, not a qualified adaptive code-feedback campaign.",
+    "Source links and functional associations do not prove Scala statement hits.",
+    "Unmapped points remain in the full denominator. No C4 acceptance."
+  ],
+  "guidance": {
+    "mode": "measured-suite-signatures",
+    "selected": "rv32ui-p-lw",
+    "targeted_initial_holes": 546,
+    "notes": [
+      "Candidate signatures come from the same characterization set. No held-out prediction claim.",
+      "The initial native hole list drives selection through rvw cov closure."
+    ],
+    "replay": {
+      "status": "match",
+      "instructions": 321,
+      "trace_complete": true,
+      "synchronized": 0,
+      "applied_masks": [],
+      "closed_initial_holes": 546,
+      "c1_sha256": "34997517bf0340e1a7d6a6f51edeb6f1e68b986c258ffc0f501aad795b7aae19",
+      "trace_sha256": "3471ee3047ce5df5f7dee4ccdc3f9f32ccb10229ae5e4ff0b722f8190cc3629b"
+    }
+  }
+}
