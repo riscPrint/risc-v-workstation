@@ -6,6 +6,7 @@ No cocotb dependency is needed to import the cycle models.
 
 | Module | Profile | SV agent and fixture |
 |---|---|---|
+| `rvw.vip.uart` | UART, 5–9 data bits, parity, 1–2 stop bits, receive FIFO reference | `Uvm/vip/uart/` |
 | `rvw.vip.tilelink` | TileLink-UL/UH A/D, 32-bit, bursts, atomics and hints | `Uvm/vip/tilelink/` |
 | `rvw.vip.axi` | AXI4 and AXI4-Lite, 32-bit, aligned bursts and exclusive access | `Uvm/vip/axi/` |
 | `rvw.vip.axis` | AXI4-Stream, 32-bit, byte qualifiers and sidebands | `Uvm/vip/axis/` |
