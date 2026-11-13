@@ -276,3 +276,12 @@ the configured policy without claiming that comparison ran.
 text. The default file-backed path remains available. The same current-step
 trap parser and C2 effects apply. The workload evaluation report records this
 choice as `spike_diagnostic_log: memory`. This mode is not a state checkpoint.
+
+## Functional replay checkpoints
+
+The additive `rvw_redirect` API changes PC in a single-hart Spike session.
+The optional replay add-on receives the captured primary API by pointer.
+Its ABI is 1. Checkpoints save initial inputs and an action-history prefix.
+Restore creates a fresh machine, replays the prefix and checks effect hashes.
+A mismatch returns an error. Checkpoints restore functional state by replay.
+They do not copy Spike internals. Restore cost grows with history length.

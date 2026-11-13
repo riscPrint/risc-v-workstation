@@ -347,6 +347,15 @@ int rvw_write(void* m,uint64_t addr,const uint8_t* data,size_t n) {
     if(!p) { error="ELF segment lies outside configured RAM"; return -1; } *p=data[i]; }
   return 0;
 }
+// Redirect one single-hart functional replay session. This changes no memory.
+int rvw_redirect(void* m,uint64_t pc) {
+  try {
+    auto* machine=static_cast<Machine*>(m);
+    if(!machine->parked.empty()) throw std::runtime_error("redirect requires a single-hart session");
+    machine->cpu->get_state()->pc=pc;
+    return 0;
+  } catch(const std::exception& e) { error=e.what();return -1; }
+}
 int rvw_step(void* m,Effect* out,uint64_t cause,uint64_t io_addr,uint64_t io_value,int inject) {
   try { auto& machine=*static_cast<Machine*>(m); machine.io_addr=io_addr;
     machine.io_value=io_value; machine.inject=inject; machine.step(*out,cause); return 0; }

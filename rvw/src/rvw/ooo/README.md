@@ -720,12 +720,10 @@ misprediction. It is an optimistic instruction-prefetch experiment. The
 existing issue-time branch miss and recovery model remains active. A speed
 change does not establish a hardware benefit.
 
-Wrong-path error bounds are **NOT MEASURED**. The current Spike adapter has
-no PC redirect or architectural checkpoint/restore API. Its debug snapshot
-contains debug registers, not a restorable processor and memory snapshot.
-A replay producer needs that interface before it can supply independent
-wrong-path instruction and memory traffic. The integration does not label
-synthetic traffic or committed-path comparisons as Spike replay evidence.
+Wrong-path error bounds for FDIP are **NOT MEASURED**. The optional replay
+experiment below adds functional PC redirect and restore for bounded sequential
+prediction. It does not repair FDIP targets or dynamic predictor history.
+The default FDIP run still uses committed targets and supplies no replay evidence.
 
 ## In-order RTL correlation
 
@@ -784,3 +782,12 @@ now selects `static_btfn`. Decoded targets give 1, 1, 1, 1, 1 and 101 misses
 on the six saved RTL programs, equal to their RTL counters. Fitted held-out
 IPC errors are +2.62%, +31.35% and -2.46%. Accuracy remains inconclusive.
 See [the corrected experiment](../../../../Arch/ooo/correlation/README.md#static-predictor-correction).
+
+## Bounded Spike wrong paths
+
+`rvw arch ooo-wrong-path` compares the committed-path policy with bounded
+real Spike paths and shared speculative resources. MCP: `arch_ooo_wrong_path`.
+The native controls restore PC, registers, memory, mscratch and minstret.
+The two small samples give baseline IPC gaps +19.34% and -13.41%. These are
+model-policy gaps, not error against RTL. Dynamic prediction stays unsupported.
+See [the experiment and native results](../../../../Arch/ooo/WRONG_PATH.md).

@@ -906,3 +906,10 @@ Set `RVW_SPIKE_MEMORY_LOG=1` to keep per-instruction diagnostic text in an
 `open_memstream` buffer. The default uses a temporary file. Both modes parse
 the current step for trap detection. Rebuild the shim after source changes.
 The native control compares complete C2 bytes with an actual ECALL trap.
+
+## Functional replay
+
+Build the optional add-on with `Cosim/replay-build.sh` after `Cosim/build.sh`.
+It supplies single-hart functional checkpoints and restore by action replay.
+The primary shim adds PC redirect. Each replayed effect must match its saved
+hash. See [the wrong-path experiment](../Arch/ooo/WRONG_PATH.md) for limits.

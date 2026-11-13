@@ -484,3 +484,12 @@ convert the mask's first set bit to a byte offset from `mem_addr`, then use
 the contiguous byte count as the access size. Sparse masks with holes remain
 unsupported. A byte access with mask `0x20` at base `0x1000` therefore reaches
 `0x1005`. This applies to Python window decoding and native C2 packing.
+
+## Bounded wrong-path timing
+
+`rvw arch ooo-wrong-path` and `arch_ooo_wrong_path` check committed C2 effects
+with Spike and capture bounded sequential-prediction wrong paths. The new
+output directory holds `rvw.ooo-wrong-path/1`. It records input hashes, native
+source and library hashes, capture coverage, both timing runs and their gap.
+The gap compares model policies. It is not an RTL error bound. Dynamic branch
+predictors, entropy, custom extensions and multi-hart replay are refused.
