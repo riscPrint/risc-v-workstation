@@ -126,6 +126,9 @@ def register(subparsers) -> None:
     c.add_argument("--limit", type=int, default=200, help="maximum entries per category")
     c.add_argument("--no-connections", action="store_true", help="skip the (slower) connection graph comparison")
 
+    from rvw.common.subcommands import register_commands
+    register_commands("rvw.query", sub)
+
 
 def _explain(_db, a):
     from .explain import explain
@@ -179,6 +182,8 @@ def _sig_line(s: dict) -> str:
 
 
 def render(command: str, r: dict) -> str:
+    if command in {"definition", "references", "parameters", "explain-module", "type", "hierarchy-diff", "port-status"}:
+        return json.dumps(r, indent=2)
     out: list[str] = []
     w = out.append
     if command == "explain":

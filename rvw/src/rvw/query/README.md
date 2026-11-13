@@ -175,3 +175,20 @@ The slang native tests also cover SERV `serv_top` at revision
 `f200eb2ed7b69ac1c6b8eddd47654522aeee5ce8`. They compare 16 cross-instance
 path queries with an independent traversal of the native netlist. Set
 `RVW_HDL_REF` to a directory with the external `serv` checkout to run this test.
+
+## Agent semantic queries
+
+`definition SIGNAL` returns the captured declaration. `references SIGNAL`
+returns assignments, readers and condition uses across hierarchy.
+`parameters [PATH]` returns per-instance values when the front end captured them.
+`explain-module [PATH]` returns `rvw.module-explanation/1` with ports, children,
+registers, memories and clock domains. It does not infer module intent.
+`hierarchy-diff OLD NEW` compares instance paths, modules and captured parameters.
+It can compare HDL databases without claiming semantic logic equivalence.
+`type EXPRESSION` returns the captured signal type and width. Constant bit and
+part selects use normalized zero-based positions. Other expressions return an
+error because the database has no HDL expression type checker.
+`port-status [PATH]` reads captured native instance connections: connected,
+tied to known bits, unconnected, or unknown. Old databases return unavailable.
+All commands accept `--json`. MCP names use the `query_` prefix and underscores.
+Source locations describe the captured database. Rebuild after source edits.

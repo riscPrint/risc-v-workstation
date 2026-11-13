@@ -46,3 +46,15 @@ instance in path order defines the diagram and `instanceCount` counts all instan
 named registers (`sig:<name>`) and memories (`mem:<name>`); there are no areas or FSMs. A net's
 `control` is true when every hop into its sinks is a `sel` or `cond` edge; `clock` marks a
 driver with a `clock_role`.
+
+## Agent semantic navigation
+
+`query definition`, `references`, `parameters`, `explain-module`, `type`,
+`port-status` and `hierarchy-diff` expose captured structural data. Each has a
+matching `query_*` MCP tool. Module summaries use `rvw.module-explanation/1`.
+Hierarchy comparisons use `rvw.hierarchy-diff/1` and do not assert equivalence.
+HDL builders store `hdl/port-connections.json`: instance path to native port
+bindings with direction, width, status and LSB-first constant bits. Integer net
+IDs become null. Only all-known binary constants earn `tied`. Missing bindings
+in older databases are unavailable. Unknown bits do not prove an open port.
+Expression types cover captured signals and normalized constant selects only.
