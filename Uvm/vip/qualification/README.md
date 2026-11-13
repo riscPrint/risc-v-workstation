@@ -57,3 +57,6 @@ DPI, HDL backdoors and physical models remain outside this `UVM_NO_DPI` run.
 
 Local logs are under `$VEXRISCV/uvm-runs/sv-vip-qualification/` and
 `$VEXRISCV/uvm-runs/sv-vip-recheck/` in the private `uvm` core copy.
+
+Paths in `native-2026-11-13.json` use `$CHECKOUT` for the workstation checkout and
+`$RUN_ROOT` for the local run directory, so the file holds no personal paths.

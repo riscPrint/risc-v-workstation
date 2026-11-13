@@ -21,7 +21,7 @@
           "returncode": 0,
           "timed_out": false,
           "log": "1-good.log",
-          "evidence_directory": "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/ahb"
+          "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/ahb"
         },
         {
           "seed": 1,
@@ -32,7 +32,7 @@
           "returncode": 1,
           "timed_out": false,
           "log": "1-buggy.log",
-          "evidence_directory": "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/ahb"
+          "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/ahb"
         },
         {
           "seed": 1,
@@ -43,8 +43,8 @@
           "returncode": 1,
           "timed_out": false,
           "log": "1-bad_manager.log",
-          "observed_diagnostic": "UVM_FATAL /Users/mahir/fun/saviour/wt/uvm/Uvm/vip/ahb/ahb_pkg.sv(144) @ 55: uvm_test_top.a.m [AHB_BURST_ADDRESS] wrong next address\n%Error: /Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src/base/uvm_report_server.svh:792: Verilog $stop",
-          "evidence_directory": "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/ahb"
+          "observed_diagnostic": "UVM_FATAL $CHECKOUT/Uvm/vip/ahb/ahb_pkg.sv(144) @ 55: uvm_test_top.a.m [AHB_BURST_ADDRESS] wrong next address\n%Error: $RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src/base/uvm_report_server.svh:792: Verilog $stop",
+          "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/ahb"
         },
         {
           "seed": 2,
@@ -55,7 +55,7 @@
           "returncode": 0,
           "timed_out": false,
           "log": "2-good.log",
-          "evidence_directory": "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/ahb"
+          "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/ahb"
         },
         {
           "seed": 2,
@@ -66,7 +66,7 @@
           "returncode": 1,
           "timed_out": false,
           "log": "2-buggy.log",
-          "evidence_directory": "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/ahb"
+          "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/ahb"
         },
         {
           "seed": 2,
@@ -77,8 +77,8 @@
           "returncode": 1,
           "timed_out": false,
           "log": "2-bad_manager.log",
-          "observed_diagnostic": "UVM_FATAL /Users/mahir/fun/saviour/wt/uvm/Uvm/vip/ahb/ahb_pkg.sv(144) @ 55: uvm_test_top.a.m [AHB_BURST_ADDRESS] wrong next address\n%Error: /Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src/base/uvm_report_server.svh:792: Verilog $stop",
-          "evidence_directory": "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/ahb"
+          "observed_diagnostic": "UVM_FATAL $CHECKOUT/Uvm/vip/ahb/ahb_pkg.sv(144) @ 55: uvm_test_top.a.m [AHB_BURST_ADDRESS] wrong next address\n%Error: $RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src/base/uvm_report_server.svh:792: Verilog $stop",
+          "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/ahb"
         },
         {
           "seed": 3,
@@ -89,7 +89,7 @@
           "returncode": 0,
           "timed_out": false,
           "log": "3-good.log",
-          "evidence_directory": "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/ahb"
+          "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/ahb"
         },
         {
           "seed": 3,
@@ -100,7 +100,7 @@
           "returncode": 1,
           "timed_out": false,
           "log": "3-buggy.log",
-          "evidence_directory": "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/ahb"
+          "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/ahb"
         },
         {
           "seed": 3,
@@ -111,8 +111,8 @@
           "returncode": 1,
           "timed_out": false,
           "log": "3-bad_manager.log",
-          "observed_diagnostic": "UVM_FATAL /Users/mahir/fun/saviour/wt/uvm/Uvm/vip/ahb/ahb_pkg.sv(144) @ 55: uvm_test_top.a.m [AHB_BURST_ADDRESS] wrong next address\n%Error: /Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src/base/uvm_report_server.svh:792: Verilog $stop",
-          "evidence_directory": "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/ahb"
+          "observed_diagnostic": "UVM_FATAL $CHECKOUT/Uvm/vip/ahb/ahb_pkg.sv(144) @ 55: uvm_test_top.a.m [AHB_BURST_ADDRESS] wrong next address\n%Error: $RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src/base/uvm_report_server.svh:792: Verilog $stop",
+          "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/ahb"
         }
       ],
       "build_command": [
@@ -127,14 +127,14 @@
         "--top-module",
         "top",
         "+define+UVM_NO_DPI",
-        "+incdir+/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src",
-        "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src/uvm_pkg.sv",
-        "/Users/mahir/fun/saviour/wt/uvm/Uvm/vip/ahb/ahb_if.sv",
-        "/Users/mahir/fun/saviour/wt/uvm/Uvm/vip/ahb/ahb_pkg.sv",
-        "/Users/mahir/fun/saviour/wt/uvm/Uvm/vip/ahb/fixture.sv",
-        "/Users/mahir/fun/saviour/wt/uvm/Uvm/vip/ahb/test.sv",
+        "+incdir+$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src",
+        "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src/uvm_pkg.sv",
+        "$CHECKOUT/Uvm/vip/ahb/ahb_if.sv",
+        "$CHECKOUT/Uvm/vip/ahb/ahb_pkg.sv",
+        "$CHECKOUT/Uvm/vip/ahb/fixture.sv",
+        "$CHECKOUT/Uvm/vip/ahb/test.sv",
         "--Mdir",
-        "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/ahb/build",
+        "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/ahb/build",
         "-MAKEFLAGS",
         "OPT_FAST=-O0 OPT_SLOW=-O0"
       ],
@@ -163,7 +163,7 @@
           "returncode": 0,
           "timed_out": false,
           "log": "1-good.log",
-          "evidence_directory": "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-recheck/apb"
+          "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-recheck/apb"
         },
         {
           "seed": 1,
@@ -174,7 +174,7 @@
           "returncode": 0,
           "timed_out": false,
           "log": "1-reset_abort.log",
-          "evidence_directory": "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-recheck/apb"
+          "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-recheck/apb"
         },
         {
           "seed": 1,
@@ -185,7 +185,7 @@
           "returncode": 1,
           "timed_out": false,
           "log": "1-buggy.log",
-          "evidence_directory": "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-recheck/apb"
+          "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-recheck/apb"
         },
         {
           "seed": 1,
@@ -196,7 +196,7 @@
           "returncode": 1,
           "timed_out": false,
           "log": "1-bad_manager.log",
-          "evidence_directory": "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-recheck/apb"
+          "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-recheck/apb"
         },
         {
           "seed": 2,
@@ -207,7 +207,7 @@
           "returncode": 0,
           "timed_out": false,
           "log": "2-good.log",
-          "evidence_directory": "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-recheck/apb"
+          "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-recheck/apb"
         },
         {
           "seed": 2,
@@ -218,7 +218,7 @@
           "returncode": 0,
           "timed_out": false,
           "log": "2-reset_abort.log",
-          "evidence_directory": "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-recheck/apb"
+          "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-recheck/apb"
         },
         {
           "seed": 2,
@@ -229,7 +229,7 @@
           "returncode": 1,
           "timed_out": false,
           "log": "2-buggy.log",
-          "evidence_directory": "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-recheck/apb"
+          "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-recheck/apb"
         },
         {
           "seed": 2,
@@ -240,7 +240,7 @@
           "returncode": 1,
           "timed_out": false,
           "log": "2-bad_manager.log",
-          "evidence_directory": "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-recheck/apb"
+          "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-recheck/apb"
         },
         {
           "seed": 3,
@@ -251,7 +251,7 @@
           "returncode": 0,
           "timed_out": false,
           "log": "3-good.log",
-          "evidence_directory": "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-recheck/apb"
+          "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-recheck/apb"
         },
         {
           "seed": 3,
@@ -262,7 +262,7 @@
           "returncode": 0,
           "timed_out": false,
           "log": "3-reset_abort.log",
-          "evidence_directory": "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-recheck/apb"
+          "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-recheck/apb"
         },
         {
           "seed": 3,
@@ -273,7 +273,7 @@
           "returncode": 1,
           "timed_out": false,
           "log": "3-buggy.log",
-          "evidence_directory": "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-recheck/apb"
+          "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-recheck/apb"
         },
         {
           "seed": 3,
@@ -284,7 +284,7 @@
           "returncode": 1,
           "timed_out": false,
           "log": "3-bad_manager.log",
-          "evidence_directory": "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-recheck/apb"
+          "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-recheck/apb"
         }
       ],
       "build_command": [
@@ -299,14 +299,14 @@
         "--top-module",
         "top",
         "+define+UVM_NO_DPI",
-        "+incdir+/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-recheck/library/accellera-official-uvm-core-78c0654/src",
-        "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-recheck/library/accellera-official-uvm-core-78c0654/src/uvm_pkg.sv",
-        "/Users/mahir/fun/saviour/wt/uvm/Uvm/vip/apb/apb_if.sv",
-        "/Users/mahir/fun/saviour/wt/uvm/Uvm/vip/apb/apb_pkg.sv",
-        "/Users/mahir/fun/saviour/wt/uvm/Uvm/vip/apb/fixture.sv",
-        "/Users/mahir/fun/saviour/wt/uvm/Uvm/vip/apb/test.sv",
+        "+incdir+$RUN_ROOT/uvm/uvm-runs/sv-vip-recheck/library/accellera-official-uvm-core-78c0654/src",
+        "$RUN_ROOT/uvm/uvm-runs/sv-vip-recheck/library/accellera-official-uvm-core-78c0654/src/uvm_pkg.sv",
+        "$CHECKOUT/Uvm/vip/apb/apb_if.sv",
+        "$CHECKOUT/Uvm/vip/apb/apb_pkg.sv",
+        "$CHECKOUT/Uvm/vip/apb/fixture.sv",
+        "$CHECKOUT/Uvm/vip/apb/test.sv",
         "--Mdir",
-        "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-recheck/apb/build",
+        "$RUN_ROOT/uvm/uvm-runs/sv-vip-recheck/apb/build",
         "-MAKEFLAGS",
         "OPT_FAST=-O0 OPT_SLOW=-O0"
       ],
@@ -335,8 +335,8 @@
           "returncode": 1,
           "timed_out": false,
           "log": "1-good.log",
-          "observed_diagnostic": "UVM_FATAL /Users/mahir/fun/saviour/wt/uvm/Uvm/vip/axi/axi_pkg.sv(155) @ 95: uvm_test_top.source.m [AXI_B_WITHOUT_WRITE] unknown BID\n%Error: /Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-recheck/library/accellera-official-uvm-core-78c0654/src/base/uvm_report_server.svh:792: Verilog $stop",
-          "evidence_directory": "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-recheck/axi"
+          "observed_diagnostic": "UVM_FATAL $CHECKOUT/Uvm/vip/axi/axi_pkg.sv(155) @ 95: uvm_test_top.source.m [AXI_B_WITHOUT_WRITE] unknown BID\n%Error: $RUN_ROOT/uvm/uvm-runs/sv-vip-recheck/library/accellera-official-uvm-core-78c0654/src/base/uvm_report_server.svh:792: Verilog $stop",
+          "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-recheck/axi"
         },
         {
           "seed": 1,
@@ -347,8 +347,8 @@
           "returncode": 1,
           "timed_out": false,
           "log": "1-buggy.log",
-          "observed_diagnostic": "UVM_FATAL /Users/mahir/fun/saviour/wt/uvm/Uvm/vip/axi/axi_pkg.sv(155) @ 95: uvm_test_top.source.m [AXI_B_WITHOUT_WRITE] unknown BID\n%Error: /Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-recheck/library/accellera-official-uvm-core-78c0654/src/base/uvm_report_server.svh:792: Verilog $stop",
-          "evidence_directory": "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-recheck/axi"
+          "observed_diagnostic": "UVM_FATAL $CHECKOUT/Uvm/vip/axi/axi_pkg.sv(155) @ 95: uvm_test_top.source.m [AXI_B_WITHOUT_WRITE] unknown BID\n%Error: $RUN_ROOT/uvm/uvm-runs/sv-vip-recheck/library/accellera-official-uvm-core-78c0654/src/base/uvm_report_server.svh:792: Verilog $stop",
+          "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-recheck/axi"
         },
         {
           "seed": 1,
@@ -359,7 +359,7 @@
           "returncode": 1,
           "timed_out": false,
           "log": "1-bad_manager.log",
-          "evidence_directory": "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-recheck/axi"
+          "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-recheck/axi"
         },
         {
           "seed": 2,
@@ -370,8 +370,8 @@
           "returncode": 1,
           "timed_out": false,
           "log": "2-good.log",
-          "observed_diagnostic": "UVM_FATAL /Users/mahir/fun/saviour/wt/uvm/Uvm/vip/axi/axi_pkg.sv(155) @ 105: uvm_test_top.source.m [AXI_B_WITHOUT_WRITE] unknown BID\n%Error: /Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-recheck/library/accellera-official-uvm-core-78c0654/src/base/uvm_report_server.svh:792: Verilog $stop",
-          "evidence_directory": "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-recheck/axi"
+          "observed_diagnostic": "UVM_FATAL $CHECKOUT/Uvm/vip/axi/axi_pkg.sv(155) @ 105: uvm_test_top.source.m [AXI_B_WITHOUT_WRITE] unknown BID\n%Error: $RUN_ROOT/uvm/uvm-runs/sv-vip-recheck/library/accellera-official-uvm-core-78c0654/src/base/uvm_report_server.svh:792: Verilog $stop",
+          "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-recheck/axi"
         },
         {
           "seed": 2,
@@ -382,8 +382,8 @@
           "returncode": 1,
           "timed_out": false,
           "log": "2-buggy.log",
-          "observed_diagnostic": "UVM_FATAL /Users/mahir/fun/saviour/wt/uvm/Uvm/vip/axi/axi_pkg.sv(155) @ 105: uvm_test_top.source.m [AXI_B_WITHOUT_WRITE] unknown BID\n%Error: /Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-recheck/library/accellera-official-uvm-core-78c0654/src/base/uvm_report_server.svh:792: Verilog $stop",
-          "evidence_directory": "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-recheck/axi"
+          "observed_diagnostic": "UVM_FATAL $CHECKOUT/Uvm/vip/axi/axi_pkg.sv(155) @ 105: uvm_test_top.source.m [AXI_B_WITHOUT_WRITE] unknown BID\n%Error: $RUN_ROOT/uvm/uvm-runs/sv-vip-recheck/library/accellera-official-uvm-core-78c0654/src/base/uvm_report_server.svh:792: Verilog $stop",
+          "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-recheck/axi"
         },
         {
           "seed": 2,
@@ -394,7 +394,7 @@
           "returncode": 1,
           "timed_out": false,
           "log": "2-bad_manager.log",
-          "evidence_directory": "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-recheck/axi"
+          "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-recheck/axi"
         },
         {
           "seed": 3,
@@ -405,8 +405,8 @@
           "returncode": 1,
           "timed_out": false,
           "log": "3-good.log",
-          "observed_diagnostic": "UVM_FATAL /Users/mahir/fun/saviour/wt/uvm/Uvm/vip/axi/axi_pkg.sv(155) @ 95: uvm_test_top.source.m [AXI_B_WITHOUT_WRITE] unknown BID\n%Error: /Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-recheck/library/accellera-official-uvm-core-78c0654/src/base/uvm_report_server.svh:792: Verilog $stop",
-          "evidence_directory": "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-recheck/axi"
+          "observed_diagnostic": "UVM_FATAL $CHECKOUT/Uvm/vip/axi/axi_pkg.sv(155) @ 95: uvm_test_top.source.m [AXI_B_WITHOUT_WRITE] unknown BID\n%Error: $RUN_ROOT/uvm/uvm-runs/sv-vip-recheck/library/accellera-official-uvm-core-78c0654/src/base/uvm_report_server.svh:792: Verilog $stop",
+          "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-recheck/axi"
         },
         {
           "seed": 3,
@@ -417,8 +417,8 @@
           "returncode": 1,
           "timed_out": false,
           "log": "3-buggy.log",
-          "observed_diagnostic": "UVM_FATAL /Users/mahir/fun/saviour/wt/uvm/Uvm/vip/axi/axi_pkg.sv(155) @ 95: uvm_test_top.source.m [AXI_B_WITHOUT_WRITE] unknown BID\n%Error: /Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-recheck/library/accellera-official-uvm-core-78c0654/src/base/uvm_report_server.svh:792: Verilog $stop",
-          "evidence_directory": "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-recheck/axi"
+          "observed_diagnostic": "UVM_FATAL $CHECKOUT/Uvm/vip/axi/axi_pkg.sv(155) @ 95: uvm_test_top.source.m [AXI_B_WITHOUT_WRITE] unknown BID\n%Error: $RUN_ROOT/uvm/uvm-runs/sv-vip-recheck/library/accellera-official-uvm-core-78c0654/src/base/uvm_report_server.svh:792: Verilog $stop",
+          "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-recheck/axi"
         },
         {
           "seed": 3,
@@ -429,7 +429,7 @@
           "returncode": 1,
           "timed_out": false,
           "log": "3-bad_manager.log",
-          "evidence_directory": "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-recheck/axi"
+          "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-recheck/axi"
         }
       ],
       "build_command": [
@@ -444,14 +444,14 @@
         "--top-module",
         "top",
         "+define+UVM_NO_DPI",
-        "+incdir+/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-recheck/library/accellera-official-uvm-core-78c0654/src",
-        "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-recheck/library/accellera-official-uvm-core-78c0654/src/uvm_pkg.sv",
-        "/Users/mahir/fun/saviour/wt/uvm/Uvm/vip/axi/axi_if.sv",
-        "/Users/mahir/fun/saviour/wt/uvm/Uvm/vip/axi/axi_pkg.sv",
-        "/Users/mahir/fun/saviour/wt/uvm/Uvm/vip/axi/fixture.sv",
-        "/Users/mahir/fun/saviour/wt/uvm/Uvm/vip/axi/test.sv",
+        "+incdir+$RUN_ROOT/uvm/uvm-runs/sv-vip-recheck/library/accellera-official-uvm-core-78c0654/src",
+        "$RUN_ROOT/uvm/uvm-runs/sv-vip-recheck/library/accellera-official-uvm-core-78c0654/src/uvm_pkg.sv",
+        "$CHECKOUT/Uvm/vip/axi/axi_if.sv",
+        "$CHECKOUT/Uvm/vip/axi/axi_pkg.sv",
+        "$CHECKOUT/Uvm/vip/axi/fixture.sv",
+        "$CHECKOUT/Uvm/vip/axi/test.sv",
         "--Mdir",
-        "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-recheck/axi/build",
+        "$RUN_ROOT/uvm/uvm-runs/sv-vip-recheck/axi/build",
         "-MAKEFLAGS",
         "OPT_FAST=-O0 OPT_SLOW=-O0"
       ],
@@ -480,7 +480,7 @@
           "returncode": 0,
           "timed_out": false,
           "log": "1-good.log",
-          "evidence_directory": "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/axis"
+          "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/axis"
         },
         {
           "seed": 1,
@@ -491,7 +491,7 @@
           "returncode": 1,
           "timed_out": false,
           "log": "1-buggy.log",
-          "evidence_directory": "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/axis"
+          "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/axis"
         },
         {
           "seed": 1,
@@ -502,7 +502,7 @@
           "returncode": 1,
           "timed_out": false,
           "log": "1-bad_manager.log",
-          "evidence_directory": "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/axis"
+          "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/axis"
         },
         {
           "seed": 2,
@@ -513,7 +513,7 @@
           "returncode": 0,
           "timed_out": false,
           "log": "2-good.log",
-          "evidence_directory": "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/axis"
+          "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/axis"
         },
         {
           "seed": 2,
@@ -524,7 +524,7 @@
           "returncode": 1,
           "timed_out": false,
           "log": "2-buggy.log",
-          "evidence_directory": "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/axis"
+          "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/axis"
         },
         {
           "seed": 2,
@@ -535,7 +535,7 @@
           "returncode": 1,
           "timed_out": false,
           "log": "2-bad_manager.log",
-          "evidence_directory": "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/axis"
+          "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/axis"
         },
         {
           "seed": 3,
@@ -546,7 +546,7 @@
           "returncode": 0,
           "timed_out": false,
           "log": "3-good.log",
-          "evidence_directory": "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/axis"
+          "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/axis"
         },
         {
           "seed": 3,
@@ -557,7 +557,7 @@
           "returncode": 1,
           "timed_out": false,
           "log": "3-buggy.log",
-          "evidence_directory": "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/axis"
+          "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/axis"
         },
         {
           "seed": 3,
@@ -568,7 +568,7 @@
           "returncode": 1,
           "timed_out": false,
           "log": "3-bad_manager.log",
-          "evidence_directory": "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/axis"
+          "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/axis"
         }
       ],
       "build_command": [
@@ -583,14 +583,14 @@
         "--top-module",
         "top",
         "+define+UVM_NO_DPI",
-        "+incdir+/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src",
-        "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src/uvm_pkg.sv",
-        "/Users/mahir/fun/saviour/wt/uvm/Uvm/vip/axis/axis_if.sv",
-        "/Users/mahir/fun/saviour/wt/uvm/Uvm/vip/axis/axis_pkg.sv",
-        "/Users/mahir/fun/saviour/wt/uvm/Uvm/vip/axis/fixture.sv",
-        "/Users/mahir/fun/saviour/wt/uvm/Uvm/vip/axis/test.sv",
+        "+incdir+$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src",
+        "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src/uvm_pkg.sv",
+        "$CHECKOUT/Uvm/vip/axis/axis_if.sv",
+        "$CHECKOUT/Uvm/vip/axis/axis_pkg.sv",
+        "$CHECKOUT/Uvm/vip/axis/fixture.sv",
+        "$CHECKOUT/Uvm/vip/axis/test.sv",
         "--Mdir",
-        "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/axis/build",
+        "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/axis/build",
         "-MAKEFLAGS",
         "OPT_FAST=-O0 OPT_SLOW=-O0"
       ],
@@ -619,7 +619,7 @@
           "returncode": 0,
           "timed_out": false,
           "log": "1-good.log",
-          "evidence_directory": "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/clock_reset"
+          "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/clock_reset"
         },
         {
           "seed": 1,
@@ -630,7 +630,7 @@
           "returncode": 1,
           "timed_out": false,
           "log": "1-buggy.log",
-          "evidence_directory": "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/clock_reset"
+          "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/clock_reset"
         },
         {
           "seed": 2,
@@ -641,7 +641,7 @@
           "returncode": 0,
           "timed_out": false,
           "log": "2-good.log",
-          "evidence_directory": "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/clock_reset"
+          "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/clock_reset"
         },
         {
           "seed": 2,
@@ -652,7 +652,7 @@
           "returncode": 1,
           "timed_out": false,
           "log": "2-buggy.log",
-          "evidence_directory": "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/clock_reset"
+          "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/clock_reset"
         },
         {
           "seed": 3,
@@ -663,7 +663,7 @@
           "returncode": 0,
           "timed_out": false,
           "log": "3-good.log",
-          "evidence_directory": "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/clock_reset"
+          "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/clock_reset"
         },
         {
           "seed": 3,
@@ -674,7 +674,7 @@
           "returncode": 1,
           "timed_out": false,
           "log": "3-buggy.log",
-          "evidence_directory": "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/clock_reset"
+          "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/clock_reset"
         }
       ],
       "build_command": [
@@ -689,14 +689,14 @@
         "--top-module",
         "top",
         "+define+UVM_NO_DPI",
-        "+incdir+/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src",
-        "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src/uvm_pkg.sv",
-        "/Users/mahir/fun/saviour/wt/uvm/Uvm/vip/clock_reset/clock_reset_if.sv",
-        "/Users/mahir/fun/saviour/wt/uvm/Uvm/vip/clock_reset/clock_reset_pkg.sv",
-        "/Users/mahir/fun/saviour/wt/uvm/Uvm/vip/clock_reset/fixture.sv",
-        "/Users/mahir/fun/saviour/wt/uvm/Uvm/vip/clock_reset/test.sv",
+        "+incdir+$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src",
+        "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src/uvm_pkg.sv",
+        "$CHECKOUT/Uvm/vip/clock_reset/clock_reset_if.sv",
+        "$CHECKOUT/Uvm/vip/clock_reset/clock_reset_pkg.sv",
+        "$CHECKOUT/Uvm/vip/clock_reset/fixture.sv",
+        "$CHECKOUT/Uvm/vip/clock_reset/test.sv",
         "--Mdir",
-        "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/clock_reset/build",
+        "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/clock_reset/build",
         "-MAKEFLAGS",
         "OPT_FAST=-O0 OPT_SLOW=-O0"
       ],
@@ -725,7 +725,7 @@
           "returncode": 0,
           "timed_out": false,
           "log": "1-good.log",
-          "evidence_directory": "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/coherent"
+          "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/coherent"
         },
         {
           "seed": 1,
@@ -736,7 +736,7 @@
           "returncode": 1,
           "timed_out": false,
           "log": "1-buggy.log",
-          "evidence_directory": "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/coherent"
+          "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/coherent"
         },
         {
           "seed": 2,
@@ -747,7 +747,7 @@
           "returncode": 0,
           "timed_out": false,
           "log": "2-good.log",
-          "evidence_directory": "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/coherent"
+          "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/coherent"
         },
         {
           "seed": 2,
@@ -758,7 +758,7 @@
           "returncode": 1,
           "timed_out": false,
           "log": "2-buggy.log",
-          "evidence_directory": "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/coherent"
+          "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/coherent"
         },
         {
           "seed": 3,
@@ -769,7 +769,7 @@
           "returncode": 0,
           "timed_out": false,
           "log": "3-good.log",
-          "evidence_directory": "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/coherent"
+          "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/coherent"
         },
         {
           "seed": 3,
@@ -780,7 +780,7 @@
           "returncode": 1,
           "timed_out": false,
           "log": "3-buggy.log",
-          "evidence_directory": "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/coherent"
+          "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/coherent"
         }
       ],
       "build_command": [
@@ -795,14 +795,14 @@
         "--top-module",
         "top",
         "+define+UVM_NO_DPI",
-        "+incdir+/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src",
-        "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src/uvm_pkg.sv",
-        "/Users/mahir/fun/saviour/wt/uvm/Uvm/vip/coherent/coherent_if.sv",
-        "/Users/mahir/fun/saviour/wt/uvm/Uvm/vip/coherent/coherent_pkg.sv",
-        "/Users/mahir/fun/saviour/wt/uvm/Uvm/vip/coherent/fixture.sv",
-        "/Users/mahir/fun/saviour/wt/uvm/Uvm/vip/coherent/test.sv",
+        "+incdir+$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src",
+        "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src/uvm_pkg.sv",
+        "$CHECKOUT/Uvm/vip/coherent/coherent_if.sv",
+        "$CHECKOUT/Uvm/vip/coherent/coherent_pkg.sv",
+        "$CHECKOUT/Uvm/vip/coherent/fixture.sv",
+        "$CHECKOUT/Uvm/vip/coherent/test.sv",
         "--Mdir",
-        "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/coherent/build",
+        "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/coherent/build",
         "-MAKEFLAGS",
         "OPT_FAST=-O0 OPT_SLOW=-O0"
       ],
@@ -834,14 +834,14 @@
         "--top-module",
         "top",
         "+define+UVM_NO_DPI",
-        "+incdir+/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src",
-        "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src/uvm_pkg.sv",
-        "/Users/mahir/fun/saviour/wt/uvm/Uvm/vip/dram/dram_if.sv",
-        "/Users/mahir/fun/saviour/wt/uvm/Uvm/vip/dram/dram_pkg.sv",
-        "/Users/mahir/fun/saviour/wt/uvm/Uvm/vip/dram/fixture.sv",
-        "/Users/mahir/fun/saviour/wt/uvm/Uvm/vip/dram/test.sv",
+        "+incdir+$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src",
+        "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src/uvm_pkg.sv",
+        "$CHECKOUT/Uvm/vip/dram/dram_if.sv",
+        "$CHECKOUT/Uvm/vip/dram/dram_pkg.sv",
+        "$CHECKOUT/Uvm/vip/dram/fixture.sv",
+        "$CHECKOUT/Uvm/vip/dram/test.sv",
         "--Mdir",
-        "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/dram/build",
+        "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/dram/build",
         "-MAKEFLAGS",
         "OPT_FAST=-O0 OPT_SLOW=-O0"
       ],
@@ -874,14 +874,14 @@
         "--top-module",
         "top",
         "+define+UVM_NO_DPI",
-        "+incdir+/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src",
-        "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src/uvm_pkg.sv",
-        "/Users/mahir/fun/saviour/wt/uvm/Uvm/vip/ethernet/ethernet_if.sv",
-        "/Users/mahir/fun/saviour/wt/uvm/Uvm/vip/ethernet/ethernet_pkg.sv",
-        "/Users/mahir/fun/saviour/wt/uvm/Uvm/vip/ethernet/fixture.sv",
-        "/Users/mahir/fun/saviour/wt/uvm/Uvm/vip/ethernet/test.sv",
+        "+incdir+$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src",
+        "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src/uvm_pkg.sv",
+        "$CHECKOUT/Uvm/vip/ethernet/ethernet_if.sv",
+        "$CHECKOUT/Uvm/vip/ethernet/ethernet_pkg.sv",
+        "$CHECKOUT/Uvm/vip/ethernet/fixture.sv",
+        "$CHECKOUT/Uvm/vip/ethernet/test.sv",
         "--Mdir",
-        "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/ethernet/build",
+        "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/ethernet/build",
         "-MAKEFLAGS",
         "OPT_FAST=-O0 OPT_SLOW=-O0"
       ],
@@ -911,7 +911,7 @@
           "returncode": 0,
           "timed_out": false,
           "log": "1-good.log",
-          "evidence_directory": "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/gpio"
+          "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/gpio"
         },
         {
           "seed": 1,
@@ -922,7 +922,7 @@
           "returncode": 1,
           "timed_out": false,
           "log": "1-buggy.log",
-          "evidence_directory": "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/gpio"
+          "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/gpio"
         },
         {
           "seed": 2,
@@ -933,7 +933,7 @@
           "returncode": 0,
           "timed_out": false,
           "log": "2-good.log",
-          "evidence_directory": "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/gpio"
+          "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/gpio"
         },
         {
           "seed": 2,
@@ -944,7 +944,7 @@
           "returncode": 1,
           "timed_out": false,
           "log": "2-buggy.log",
-          "evidence_directory": "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/gpio"
+          "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/gpio"
         },
         {
           "seed": 3,
@@ -955,7 +955,7 @@
           "returncode": 0,
           "timed_out": false,
           "log": "3-good.log",
-          "evidence_directory": "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/gpio"
+          "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/gpio"
         },
         {
           "seed": 3,
@@ -966,7 +966,7 @@
           "returncode": 1,
           "timed_out": false,
           "log": "3-buggy.log",
-          "evidence_directory": "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/gpio"
+          "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/gpio"
         }
       ],
       "build_command": [
@@ -981,14 +981,14 @@
         "--top-module",
         "top",
         "+define+UVM_NO_DPI",
-        "+incdir+/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src",
-        "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src/uvm_pkg.sv",
-        "/Users/mahir/fun/saviour/wt/uvm/Uvm/vip/gpio/gpio_if.sv",
-        "/Users/mahir/fun/saviour/wt/uvm/Uvm/vip/gpio/gpio_pkg.sv",
-        "/Users/mahir/fun/saviour/wt/uvm/Uvm/vip/gpio/fixture.sv",
-        "/Users/mahir/fun/saviour/wt/uvm/Uvm/vip/gpio/test.sv",
+        "+incdir+$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src",
+        "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src/uvm_pkg.sv",
+        "$CHECKOUT/Uvm/vip/gpio/gpio_if.sv",
+        "$CHECKOUT/Uvm/vip/gpio/gpio_pkg.sv",
+        "$CHECKOUT/Uvm/vip/gpio/fixture.sv",
+        "$CHECKOUT/Uvm/vip/gpio/test.sv",
         "--Mdir",
-        "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/gpio/build",
+        "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/gpio/build",
         "-MAKEFLAGS",
         "OPT_FAST=-O0 OPT_SLOW=-O0"
       ],
@@ -1017,7 +1017,7 @@
           "returncode": 0,
           "timed_out": false,
           "log": "1-good.log",
-          "evidence_directory": "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/i2c"
+          "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/i2c"
         },
         {
           "seed": 1,
@@ -1028,7 +1028,7 @@
           "returncode": 1,
           "timed_out": false,
           "log": "1-buggy.log",
-          "evidence_directory": "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/i2c"
+          "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/i2c"
         },
         {
           "seed": 2,
@@ -1039,7 +1039,7 @@
           "returncode": 0,
           "timed_out": false,
           "log": "2-good.log",
-          "evidence_directory": "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/i2c"
+          "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/i2c"
         },
         {
           "seed": 2,
@@ -1050,7 +1050,7 @@
           "returncode": 1,
           "timed_out": false,
           "log": "2-buggy.log",
-          "evidence_directory": "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/i2c"
+          "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/i2c"
         },
         {
           "seed": 3,
@@ -1061,7 +1061,7 @@
           "returncode": 0,
           "timed_out": false,
           "log": "3-good.log",
-          "evidence_directory": "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/i2c"
+          "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/i2c"
         },
         {
           "seed": 3,
@@ -1072,7 +1072,7 @@
           "returncode": 1,
           "timed_out": false,
           "log": "3-buggy.log",
-          "evidence_directory": "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/i2c"
+          "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/i2c"
         }
       ],
       "build_command": [
@@ -1087,14 +1087,14 @@
         "--top-module",
         "top",
         "+define+UVM_NO_DPI",
-        "+incdir+/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src",
-        "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src/uvm_pkg.sv",
-        "/Users/mahir/fun/saviour/wt/uvm/Uvm/vip/i2c/i2c_if.sv",
-        "/Users/mahir/fun/saviour/wt/uvm/Uvm/vip/i2c/i2c_pkg.sv",
-        "/Users/mahir/fun/saviour/wt/uvm/Uvm/vip/i2c/fixture.sv",
-        "/Users/mahir/fun/saviour/wt/uvm/Uvm/vip/i2c/test.sv",
+        "+incdir+$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src",
+        "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src/uvm_pkg.sv",
+        "$CHECKOUT/Uvm/vip/i2c/i2c_if.sv",
+        "$CHECKOUT/Uvm/vip/i2c/i2c_pkg.sv",
+        "$CHECKOUT/Uvm/vip/i2c/fixture.sv",
+        "$CHECKOUT/Uvm/vip/i2c/test.sv",
         "--Mdir",
-        "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/i2c/build",
+        "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/i2c/build",
         "-MAKEFLAGS",
         "OPT_FAST=-O0 OPT_SLOW=-O0"
       ],
@@ -1123,7 +1123,7 @@
           "returncode": 0,
           "timed_out": false,
           "log": "1-good.log",
-          "evidence_directory": "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/interrupt"
+          "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/interrupt"
         },
         {
           "seed": 1,
@@ -1134,7 +1134,7 @@
           "returncode": 1,
           "timed_out": false,
           "log": "1-buggy.log",
-          "evidence_directory": "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/interrupt"
+          "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/interrupt"
         },
         {
           "seed": 2,
@@ -1145,7 +1145,7 @@
           "returncode": 0,
           "timed_out": false,
           "log": "2-good.log",
-          "evidence_directory": "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/interrupt"
+          "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/interrupt"
         },
         {
           "seed": 2,
@@ -1156,7 +1156,7 @@
           "returncode": 1,
           "timed_out": false,
           "log": "2-buggy.log",
-          "evidence_directory": "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/interrupt"
+          "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/interrupt"
         },
         {
           "seed": 3,
@@ -1167,7 +1167,7 @@
           "returncode": 0,
           "timed_out": false,
           "log": "3-good.log",
-          "evidence_directory": "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/interrupt"
+          "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/interrupt"
         },
         {
           "seed": 3,
@@ -1178,7 +1178,7 @@
           "returncode": 1,
           "timed_out": false,
           "log": "3-buggy.log",
-          "evidence_directory": "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/interrupt"
+          "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/interrupt"
         }
       ],
       "build_command": [
@@ -1193,14 +1193,14 @@
         "--top-module",
         "top",
         "+define+UVM_NO_DPI",
-        "+incdir+/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src",
-        "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src/uvm_pkg.sv",
-        "/Users/mahir/fun/saviour/wt/uvm/Uvm/vip/interrupt/interrupt_if.sv",
-        "/Users/mahir/fun/saviour/wt/uvm/Uvm/vip/interrupt/interrupt_pkg.sv",
-        "/Users/mahir/fun/saviour/wt/uvm/Uvm/vip/interrupt/fixture.sv",
-        "/Users/mahir/fun/saviour/wt/uvm/Uvm/vip/interrupt/test.sv",
+        "+incdir+$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src",
+        "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src/uvm_pkg.sv",
+        "$CHECKOUT/Uvm/vip/interrupt/interrupt_if.sv",
+        "$CHECKOUT/Uvm/vip/interrupt/interrupt_pkg.sv",
+        "$CHECKOUT/Uvm/vip/interrupt/fixture.sv",
+        "$CHECKOUT/Uvm/vip/interrupt/test.sv",
         "--Mdir",
-        "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/interrupt/build",
+        "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/interrupt/build",
         "-MAKEFLAGS",
         "OPT_FAST=-O0 OPT_SLOW=-O0"
       ],
@@ -1229,7 +1229,7 @@
           "returncode": 0,
           "timed_out": false,
           "log": "1-good.log",
-          "evidence_directory": "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/jtag"
+          "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/jtag"
         },
         {
           "seed": 1,
@@ -1240,7 +1240,7 @@
           "returncode": 1,
           "timed_out": false,
           "log": "1-buggy.log",
-          "evidence_directory": "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/jtag"
+          "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/jtag"
         },
         {
           "seed": 2,
@@ -1251,7 +1251,7 @@
           "returncode": 0,
           "timed_out": false,
           "log": "2-good.log",
-          "evidence_directory": "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/jtag"
+          "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/jtag"
         },
         {
           "seed": 2,
@@ -1262,7 +1262,7 @@
           "returncode": 1,
           "timed_out": false,
           "log": "2-buggy.log",
-          "evidence_directory": "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/jtag"
+          "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/jtag"
         },
         {
           "seed": 3,
@@ -1273,7 +1273,7 @@
           "returncode": 0,
           "timed_out": false,
           "log": "3-good.log",
-          "evidence_directory": "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/jtag"
+          "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/jtag"
         },
         {
           "seed": 3,
@@ -1284,7 +1284,7 @@
           "returncode": 1,
           "timed_out": false,
           "log": "3-buggy.log",
-          "evidence_directory": "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/jtag"
+          "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/jtag"
         }
       ],
       "build_command": [
@@ -1299,14 +1299,14 @@
         "--top-module",
         "top",
         "+define+UVM_NO_DPI",
-        "+incdir+/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src",
-        "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src/uvm_pkg.sv",
-        "/Users/mahir/fun/saviour/wt/uvm/Uvm/vip/jtag/jtag_if.sv",
-        "/Users/mahir/fun/saviour/wt/uvm/Uvm/vip/jtag/jtag_pkg.sv",
-        "/Users/mahir/fun/saviour/wt/uvm/Uvm/vip/jtag/fixture.sv",
-        "/Users/mahir/fun/saviour/wt/uvm/Uvm/vip/jtag/test.sv",
+        "+incdir+$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src",
+        "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src/uvm_pkg.sv",
+        "$CHECKOUT/Uvm/vip/jtag/jtag_if.sv",
+        "$CHECKOUT/Uvm/vip/jtag/jtag_pkg.sv",
+        "$CHECKOUT/Uvm/vip/jtag/fixture.sv",
+        "$CHECKOUT/Uvm/vip/jtag/test.sv",
         "--Mdir",
-        "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/jtag/build",
+        "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/jtag/build",
         "-MAKEFLAGS",
         "OPT_FAST=-O0 OPT_SLOW=-O0"
       ],
@@ -1338,14 +1338,14 @@
         "--top-module",
         "top",
         "+define+UVM_NO_DPI",
-        "+incdir+/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src",
-        "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src/uvm_pkg.sv",
-        "/Users/mahir/fun/saviour/wt/uvm/Uvm/vip/pcie/pcie_if.sv",
-        "/Users/mahir/fun/saviour/wt/uvm/Uvm/vip/pcie/pcie_pkg.sv",
-        "/Users/mahir/fun/saviour/wt/uvm/Uvm/vip/pcie/fixture.sv",
-        "/Users/mahir/fun/saviour/wt/uvm/Uvm/vip/pcie/test.sv",
+        "+incdir+$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src",
+        "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src/uvm_pkg.sv",
+        "$CHECKOUT/Uvm/vip/pcie/pcie_if.sv",
+        "$CHECKOUT/Uvm/vip/pcie/pcie_pkg.sv",
+        "$CHECKOUT/Uvm/vip/pcie/fixture.sv",
+        "$CHECKOUT/Uvm/vip/pcie/test.sv",
         "--Mdir",
-        "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/pcie/build",
+        "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/pcie/build",
         "-MAKEFLAGS",
         "OPT_FAST=-O0 OPT_SLOW=-O0"
       ],
@@ -1378,14 +1378,14 @@
         "--top-module",
         "top",
         "+define+UVM_NO_DPI",
-        "+incdir+/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src",
-        "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src/uvm_pkg.sv",
-        "/Users/mahir/fun/saviour/wt/uvm/Uvm/vip/rnm/rnm_if.sv",
-        "/Users/mahir/fun/saviour/wt/uvm/Uvm/vip/rnm/rnm_pkg.sv",
-        "/Users/mahir/fun/saviour/wt/uvm/Uvm/vip/rnm/fixture.sv",
-        "/Users/mahir/fun/saviour/wt/uvm/Uvm/vip/rnm/test.sv",
+        "+incdir+$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src",
+        "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src/uvm_pkg.sv",
+        "$CHECKOUT/Uvm/vip/rnm/rnm_if.sv",
+        "$CHECKOUT/Uvm/vip/rnm/rnm_pkg.sv",
+        "$CHECKOUT/Uvm/vip/rnm/fixture.sv",
+        "$CHECKOUT/Uvm/vip/rnm/test.sv",
         "--Mdir",
-        "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/rnm/build",
+        "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/rnm/build",
         "-MAKEFLAGS",
         "OPT_FAST=-O0 OPT_SLOW=-O0"
       ],
@@ -1415,7 +1415,7 @@
           "returncode": 0,
           "timed_out": false,
           "log": "1-good.log",
-          "evidence_directory": "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/spi"
+          "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/spi"
         },
         {
           "seed": 1,
@@ -1426,7 +1426,7 @@
           "returncode": 1,
           "timed_out": false,
           "log": "1-buggy.log",
-          "evidence_directory": "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/spi"
+          "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/spi"
         },
         {
           "seed": 1,
@@ -1437,7 +1437,7 @@
           "returncode": 1,
           "timed_out": false,
           "log": "1-bad_manager.log",
-          "evidence_directory": "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/spi"
+          "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/spi"
         },
         {
           "seed": 2,
@@ -1448,7 +1448,7 @@
           "returncode": 0,
           "timed_out": false,
           "log": "2-good.log",
-          "evidence_directory": "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/spi"
+          "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/spi"
         },
         {
           "seed": 2,
@@ -1459,7 +1459,7 @@
           "returncode": 1,
           "timed_out": false,
           "log": "2-buggy.log",
-          "evidence_directory": "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/spi"
+          "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/spi"
         },
         {
           "seed": 2,
@@ -1470,7 +1470,7 @@
           "returncode": 1,
           "timed_out": false,
           "log": "2-bad_manager.log",
-          "evidence_directory": "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/spi"
+          "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/spi"
         },
         {
           "seed": 3,
@@ -1481,7 +1481,7 @@
           "returncode": 0,
           "timed_out": false,
           "log": "3-good.log",
-          "evidence_directory": "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/spi"
+          "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/spi"
         },
         {
           "seed": 3,
@@ -1492,7 +1492,7 @@
           "returncode": 1,
           "timed_out": false,
           "log": "3-buggy.log",
-          "evidence_directory": "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/spi"
+          "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/spi"
         },
         {
           "seed": 3,
@@ -1503,7 +1503,7 @@
           "returncode": 1,
           "timed_out": false,
           "log": "3-bad_manager.log",
-          "evidence_directory": "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/spi"
+          "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/spi"
         }
       ],
       "build_command": [
@@ -1518,14 +1518,14 @@
         "--top-module",
         "top",
         "+define+UVM_NO_DPI",
-        "+incdir+/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src",
-        "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src/uvm_pkg.sv",
-        "/Users/mahir/fun/saviour/wt/uvm/Uvm/vip/spi/spi_if.sv",
-        "/Users/mahir/fun/saviour/wt/uvm/Uvm/vip/spi/spi_pkg.sv",
-        "/Users/mahir/fun/saviour/wt/uvm/Uvm/vip/spi/fixture.sv",
-        "/Users/mahir/fun/saviour/wt/uvm/Uvm/vip/spi/test.sv",
+        "+incdir+$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src",
+        "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src/uvm_pkg.sv",
+        "$CHECKOUT/Uvm/vip/spi/spi_if.sv",
+        "$CHECKOUT/Uvm/vip/spi/spi_pkg.sv",
+        "$CHECKOUT/Uvm/vip/spi/fixture.sv",
+        "$CHECKOUT/Uvm/vip/spi/test.sv",
         "--Mdir",
-        "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/spi/build",
+        "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/spi/build",
         "-MAKEFLAGS",
         "OPT_FAST=-O0 OPT_SLOW=-O0"
       ],
@@ -1554,7 +1554,7 @@
           "returncode": 0,
           "timed_out": false,
           "log": "1-good.log",
-          "evidence_directory": "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/sram"
+          "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/sram"
         },
         {
           "seed": 1,
@@ -1565,7 +1565,7 @@
           "returncode": 1,
           "timed_out": false,
           "log": "1-buggy.log",
-          "evidence_directory": "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/sram"
+          "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/sram"
         },
         {
           "seed": 2,
@@ -1576,7 +1576,7 @@
           "returncode": 0,
           "timed_out": false,
           "log": "2-good.log",
-          "evidence_directory": "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/sram"
+          "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/sram"
         },
         {
           "seed": 2,
@@ -1587,7 +1587,7 @@
           "returncode": 1,
           "timed_out": false,
           "log": "2-buggy.log",
-          "evidence_directory": "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/sram"
+          "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/sram"
         },
         {
           "seed": 3,
@@ -1598,7 +1598,7 @@
           "returncode": 0,
           "timed_out": false,
           "log": "3-good.log",
-          "evidence_directory": "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/sram"
+          "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/sram"
         },
         {
           "seed": 3,
@@ -1609,7 +1609,7 @@
           "returncode": 1,
           "timed_out": false,
           "log": "3-buggy.log",
-          "evidence_directory": "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/sram"
+          "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/sram"
         }
       ],
       "build_command": [
@@ -1624,14 +1624,14 @@
         "--top-module",
         "top",
         "+define+UVM_NO_DPI",
-        "+incdir+/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src",
-        "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src/uvm_pkg.sv",
-        "/Users/mahir/fun/saviour/wt/uvm/Uvm/vip/sram/sram_if.sv",
-        "/Users/mahir/fun/saviour/wt/uvm/Uvm/vip/sram/sram_pkg.sv",
-        "/Users/mahir/fun/saviour/wt/uvm/Uvm/vip/sram/fixture.sv",
-        "/Users/mahir/fun/saviour/wt/uvm/Uvm/vip/sram/test.sv",
+        "+incdir+$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src",
+        "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src/uvm_pkg.sv",
+        "$CHECKOUT/Uvm/vip/sram/sram_if.sv",
+        "$CHECKOUT/Uvm/vip/sram/sram_pkg.sv",
+        "$CHECKOUT/Uvm/vip/sram/fixture.sv",
+        "$CHECKOUT/Uvm/vip/sram/test.sv",
         "--Mdir",
-        "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/sram/build",
+        "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/sram/build",
         "-MAKEFLAGS",
         "OPT_FAST=-O0 OPT_SLOW=-O0"
       ],
@@ -1660,7 +1660,7 @@
           "returncode": 0,
           "timed_out": false,
           "log": "1-good.log",
-          "evidence_directory": "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/stress"
+          "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/stress"
         },
         {
           "seed": 1,
@@ -1671,7 +1671,7 @@
           "returncode": 1,
           "timed_out": false,
           "log": "1-buggy.log",
-          "evidence_directory": "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/stress"
+          "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/stress"
         },
         {
           "seed": 2,
@@ -1682,7 +1682,7 @@
           "returncode": 0,
           "timed_out": false,
           "log": "2-good.log",
-          "evidence_directory": "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/stress"
+          "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/stress"
         },
         {
           "seed": 2,
@@ -1693,7 +1693,7 @@
           "returncode": 1,
           "timed_out": false,
           "log": "2-buggy.log",
-          "evidence_directory": "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/stress"
+          "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/stress"
         },
         {
           "seed": 3,
@@ -1704,7 +1704,7 @@
           "returncode": 0,
           "timed_out": false,
           "log": "3-good.log",
-          "evidence_directory": "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/stress"
+          "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/stress"
         },
         {
           "seed": 3,
@@ -1715,7 +1715,7 @@
           "returncode": 1,
           "timed_out": false,
           "log": "3-buggy.log",
-          "evidence_directory": "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/stress"
+          "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/stress"
         }
       ],
       "build_command": [
@@ -1730,14 +1730,14 @@
         "--top-module",
         "top",
         "+define+UVM_NO_DPI",
-        "+incdir+/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src",
-        "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src/uvm_pkg.sv",
-        "/Users/mahir/fun/saviour/wt/uvm/Uvm/vip/stress/stress_if.sv",
-        "/Users/mahir/fun/saviour/wt/uvm/Uvm/vip/stress/stress_pkg.sv",
-        "/Users/mahir/fun/saviour/wt/uvm/Uvm/vip/stress/fixture.sv",
-        "/Users/mahir/fun/saviour/wt/uvm/Uvm/vip/stress/test.sv",
+        "+incdir+$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src",
+        "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src/uvm_pkg.sv",
+        "$CHECKOUT/Uvm/vip/stress/stress_if.sv",
+        "$CHECKOUT/Uvm/vip/stress/stress_pkg.sv",
+        "$CHECKOUT/Uvm/vip/stress/fixture.sv",
+        "$CHECKOUT/Uvm/vip/stress/test.sv",
         "--Mdir",
-        "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/stress/build",
+        "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/stress/build",
         "-MAKEFLAGS",
         "OPT_FAST=-O0 OPT_SLOW=-O0"
       ],
@@ -1766,8 +1766,8 @@
           "returncode": 1,
           "timed_out": false,
           "log": "1-good.log",
-          "observed_diagnostic": "UVM_FATAL /Users/mahir/fun/saviour/wt/uvm/Uvm/vip/tilelink/tilelink_pkg.sv(287) @ 355: uvm_test_top.sc [TL_MEMORY_DATA] unexpected response\n%Error: /Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src/base/uvm_report_server.svh:792: Verilog $stop",
-          "evidence_directory": "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/tilelink"
+          "observed_diagnostic": "UVM_FATAL $CHECKOUT/Uvm/vip/tilelink/tilelink_pkg.sv(287) @ 355: uvm_test_top.sc [TL_MEMORY_DATA] unexpected response\n%Error: $RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src/base/uvm_report_server.svh:792: Verilog $stop",
+          "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/tilelink"
         },
         {
           "seed": 1,
@@ -1778,7 +1778,7 @@
           "returncode": 1,
           "timed_out": false,
           "log": "1-buggy.log",
-          "evidence_directory": "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/tilelink"
+          "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/tilelink"
         },
         {
           "seed": 1,
@@ -1789,8 +1789,8 @@
           "returncode": 0,
           "timed_out": false,
           "log": "1-bad_manager.log",
-          "observed_diagnostic": "UVM_FATAL /Users/mahir/fun/saviour/wt/uvm/Uvm/vip/tilelink/tilelink_pkg.sv(21) @ 35: reporter@@item [TL_MASK] invalid lanes\nUVM_FATAL :    1",
-          "evidence_directory": "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/tilelink"
+          "observed_diagnostic": "UVM_FATAL $CHECKOUT/Uvm/vip/tilelink/tilelink_pkg.sv(21) @ 35: reporter@@item [TL_MASK] invalid lanes\nUVM_FATAL :    1",
+          "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/tilelink"
         },
         {
           "seed": 2,
@@ -1801,8 +1801,8 @@
           "returncode": 1,
           "timed_out": false,
           "log": "2-good.log",
-          "observed_diagnostic": "UVM_FATAL /Users/mahir/fun/saviour/wt/uvm/Uvm/vip/tilelink/tilelink_pkg.sv(287) @ 325: uvm_test_top.sc [TL_MEMORY_DATA] unexpected response\n%Error: /Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src/base/uvm_report_server.svh:792: Verilog $stop",
-          "evidence_directory": "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/tilelink"
+          "observed_diagnostic": "UVM_FATAL $CHECKOUT/Uvm/vip/tilelink/tilelink_pkg.sv(287) @ 325: uvm_test_top.sc [TL_MEMORY_DATA] unexpected response\n%Error: $RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src/base/uvm_report_server.svh:792: Verilog $stop",
+          "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/tilelink"
         },
         {
           "seed": 2,
@@ -1813,7 +1813,7 @@
           "returncode": 1,
           "timed_out": false,
           "log": "2-buggy.log",
-          "evidence_directory": "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/tilelink"
+          "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/tilelink"
         },
         {
           "seed": 2,
@@ -1824,8 +1824,8 @@
           "returncode": 0,
           "timed_out": false,
           "log": "2-bad_manager.log",
-          "observed_diagnostic": "UVM_FATAL /Users/mahir/fun/saviour/wt/uvm/Uvm/vip/tilelink/tilelink_pkg.sv(21) @ 35: reporter@@item [TL_MASK] invalid lanes\nUVM_FATAL :    1",
-          "evidence_directory": "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/tilelink"
+          "observed_diagnostic": "UVM_FATAL $CHECKOUT/Uvm/vip/tilelink/tilelink_pkg.sv(21) @ 35: reporter@@item [TL_MASK] invalid lanes\nUVM_FATAL :    1",
+          "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/tilelink"
         },
         {
           "seed": 3,
@@ -1836,8 +1836,8 @@
           "returncode": 1,
           "timed_out": false,
           "log": "3-good.log",
-          "observed_diagnostic": "UVM_FATAL /Users/mahir/fun/saviour/wt/uvm/Uvm/vip/tilelink/tilelink_pkg.sv(287) @ 335: uvm_test_top.sc [TL_MEMORY_DATA] unexpected response\n%Error: /Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src/base/uvm_report_server.svh:792: Verilog $stop",
-          "evidence_directory": "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/tilelink"
+          "observed_diagnostic": "UVM_FATAL $CHECKOUT/Uvm/vip/tilelink/tilelink_pkg.sv(287) @ 335: uvm_test_top.sc [TL_MEMORY_DATA] unexpected response\n%Error: $RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src/base/uvm_report_server.svh:792: Verilog $stop",
+          "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/tilelink"
         },
         {
           "seed": 3,
@@ -1848,7 +1848,7 @@
           "returncode": 1,
           "timed_out": false,
           "log": "3-buggy.log",
-          "evidence_directory": "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/tilelink"
+          "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/tilelink"
         },
         {
           "seed": 3,
@@ -1859,8 +1859,8 @@
           "returncode": 0,
           "timed_out": false,
           "log": "3-bad_manager.log",
-          "observed_diagnostic": "UVM_FATAL /Users/mahir/fun/saviour/wt/uvm/Uvm/vip/tilelink/tilelink_pkg.sv(21) @ 35: reporter@@item [TL_MASK] invalid lanes\nUVM_FATAL :    1",
-          "evidence_directory": "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/tilelink"
+          "observed_diagnostic": "UVM_FATAL $CHECKOUT/Uvm/vip/tilelink/tilelink_pkg.sv(21) @ 35: reporter@@item [TL_MASK] invalid lanes\nUVM_FATAL :    1",
+          "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/tilelink"
         }
       ],
       "build_command": [
@@ -1875,14 +1875,14 @@
         "--top-module",
         "top",
         "+define+UVM_NO_DPI",
-        "+incdir+/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src",
-        "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src/uvm_pkg.sv",
-        "/Users/mahir/fun/saviour/wt/uvm/Uvm/vip/tilelink/tilelink_if.sv",
-        "/Users/mahir/fun/saviour/wt/uvm/Uvm/vip/tilelink/tilelink_pkg.sv",
-        "/Users/mahir/fun/saviour/wt/uvm/Uvm/vip/tilelink/fixture.sv",
-        "/Users/mahir/fun/saviour/wt/uvm/Uvm/vip/tilelink/test.sv",
+        "+incdir+$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src",
+        "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src/uvm_pkg.sv",
+        "$CHECKOUT/Uvm/vip/tilelink/tilelink_if.sv",
+        "$CHECKOUT/Uvm/vip/tilelink/tilelink_pkg.sv",
+        "$CHECKOUT/Uvm/vip/tilelink/fixture.sv",
+        "$CHECKOUT/Uvm/vip/tilelink/test.sv",
         "--Mdir",
-        "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/tilelink/build",
+        "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/tilelink/build",
         "-MAKEFLAGS",
         "OPT_FAST=-O0 OPT_SLOW=-O0"
       ],
@@ -1911,8 +1911,8 @@
           "returncode": 1,
           "timed_out": false,
           "log": "1-good.log",
-          "observed_diagnostic": "UVM_FATAL /Users/mahir/fun/saviour/wt/uvm/Uvm/vip/uart/uart_pkg.sv(145) @ 1265: uvm_test_top.sc [UART_BYTE_STREAM] frame mismatch\n%Error: /Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src/base/uvm_report_server.svh:792: Verilog $stop",
-          "evidence_directory": "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/uart"
+          "observed_diagnostic": "UVM_FATAL $CHECKOUT/Uvm/vip/uart/uart_pkg.sv(145) @ 1265: uvm_test_top.sc [UART_BYTE_STREAM] frame mismatch\n%Error: $RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src/base/uvm_report_server.svh:792: Verilog $stop",
+          "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/uart"
         },
         {
           "seed": 1,
@@ -1923,7 +1923,7 @@
           "returncode": 1,
           "timed_out": false,
           "log": "1-buggy.log",
-          "evidence_directory": "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/uart"
+          "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/uart"
         },
         {
           "seed": 1,
@@ -1934,8 +1934,8 @@
           "returncode": 1,
           "timed_out": false,
           "log": "1-errors.log",
-          "observed_diagnostic": "UVM_FATAL /Users/mahir/fun/saviour/wt/uvm/Uvm/vip/uart/uart_pkg.sv(145) @ 1265: uvm_test_top.sc [UART_BYTE_STREAM] frame mismatch\n%Error: /Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src/base/uvm_report_server.svh:792: Verilog $stop",
-          "evidence_directory": "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/uart"
+          "observed_diagnostic": "UVM_FATAL $CHECKOUT/Uvm/vip/uart/uart_pkg.sv(145) @ 1265: uvm_test_top.sc [UART_BYTE_STREAM] frame mismatch\n%Error: $RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src/base/uvm_report_server.svh:792: Verilog $stop",
+          "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/uart"
         },
         {
           "seed": 2,
@@ -1946,8 +1946,8 @@
           "returncode": 1,
           "timed_out": false,
           "log": "2-good.log",
-          "observed_diagnostic": "UVM_FATAL /Users/mahir/fun/saviour/wt/uvm/Uvm/vip/uart/uart_pkg.sv(145) @ 1185: uvm_test_top.sc [UART_BYTE_STREAM] frame mismatch\n%Error: /Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src/base/uvm_report_server.svh:792: Verilog $stop",
-          "evidence_directory": "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/uart"
+          "observed_diagnostic": "UVM_FATAL $CHECKOUT/Uvm/vip/uart/uart_pkg.sv(145) @ 1185: uvm_test_top.sc [UART_BYTE_STREAM] frame mismatch\n%Error: $RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src/base/uvm_report_server.svh:792: Verilog $stop",
+          "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/uart"
         },
         {
           "seed": 2,
@@ -1958,7 +1958,7 @@
           "returncode": 1,
           "timed_out": false,
           "log": "2-buggy.log",
-          "evidence_directory": "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/uart"
+          "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/uart"
         },
         {
           "seed": 2,
@@ -1969,8 +1969,8 @@
           "returncode": 1,
           "timed_out": false,
           "log": "2-errors.log",
-          "observed_diagnostic": "UVM_FATAL /Users/mahir/fun/saviour/wt/uvm/Uvm/vip/uart/uart_pkg.sv(145) @ 1185: uvm_test_top.sc [UART_BYTE_STREAM] frame mismatch\n%Error: /Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src/base/uvm_report_server.svh:792: Verilog $stop",
-          "evidence_directory": "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/uart"
+          "observed_diagnostic": "UVM_FATAL $CHECKOUT/Uvm/vip/uart/uart_pkg.sv(145) @ 1185: uvm_test_top.sc [UART_BYTE_STREAM] frame mismatch\n%Error: $RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src/base/uvm_report_server.svh:792: Verilog $stop",
+          "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/uart"
         },
         {
           "seed": 3,
@@ -1981,8 +1981,8 @@
           "returncode": 1,
           "timed_out": false,
           "log": "3-good.log",
-          "observed_diagnostic": "UVM_FATAL /Users/mahir/fun/saviour/wt/uvm/Uvm/vip/uart/uart_pkg.sv(145) @ 1265: uvm_test_top.sc [UART_BYTE_STREAM] frame mismatch\n%Error: /Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src/base/uvm_report_server.svh:792: Verilog $stop",
-          "evidence_directory": "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/uart"
+          "observed_diagnostic": "UVM_FATAL $CHECKOUT/Uvm/vip/uart/uart_pkg.sv(145) @ 1265: uvm_test_top.sc [UART_BYTE_STREAM] frame mismatch\n%Error: $RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src/base/uvm_report_server.svh:792: Verilog $stop",
+          "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/uart"
         },
         {
           "seed": 3,
@@ -1993,7 +1993,7 @@
           "returncode": 1,
           "timed_out": false,
           "log": "3-buggy.log",
-          "evidence_directory": "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/uart"
+          "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/uart"
         },
         {
           "seed": 3,
@@ -2004,8 +2004,8 @@
           "returncode": 1,
           "timed_out": false,
           "log": "3-errors.log",
-          "observed_diagnostic": "UVM_FATAL /Users/mahir/fun/saviour/wt/uvm/Uvm/vip/uart/uart_pkg.sv(145) @ 1265: uvm_test_top.sc [UART_BYTE_STREAM] frame mismatch\n%Error: /Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src/base/uvm_report_server.svh:792: Verilog $stop",
-          "evidence_directory": "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/uart"
+          "observed_diagnostic": "UVM_FATAL $CHECKOUT/Uvm/vip/uart/uart_pkg.sv(145) @ 1265: uvm_test_top.sc [UART_BYTE_STREAM] frame mismatch\n%Error: $RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src/base/uvm_report_server.svh:792: Verilog $stop",
+          "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/uart"
         }
       ],
       "build_command": [
@@ -2020,14 +2020,14 @@
         "--top-module",
         "top",
         "+define+UVM_NO_DPI",
-        "+incdir+/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src",
-        "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src/uvm_pkg.sv",
-        "/Users/mahir/fun/saviour/wt/uvm/Uvm/vip/uart/uart_if.sv",
-        "/Users/mahir/fun/saviour/wt/uvm/Uvm/vip/uart/uart_pkg.sv",
-        "/Users/mahir/fun/saviour/wt/uvm/Uvm/vip/uart/fixture.sv",
-        "/Users/mahir/fun/saviour/wt/uvm/Uvm/vip/uart/test.sv",
+        "+incdir+$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src",
+        "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src/uvm_pkg.sv",
+        "$CHECKOUT/Uvm/vip/uart/uart_if.sv",
+        "$CHECKOUT/Uvm/vip/uart/uart_pkg.sv",
+        "$CHECKOUT/Uvm/vip/uart/fixture.sv",
+        "$CHECKOUT/Uvm/vip/uart/test.sv",
         "--Mdir",
-        "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/uart/build",
+        "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/uart/build",
         "-MAKEFLAGS",
         "OPT_FAST=-O0 OPT_SLOW=-O0"
       ],
@@ -2056,7 +2056,7 @@
           "returncode": 0,
           "timed_out": false,
           "log": "1-good.log",
-          "evidence_directory": "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/wishbone"
+          "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/wishbone"
         },
         {
           "seed": 1,
@@ -2067,7 +2067,7 @@
           "returncode": 1,
           "timed_out": false,
           "log": "1-buggy.log",
-          "evidence_directory": "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/wishbone"
+          "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/wishbone"
         },
         {
           "seed": 2,
@@ -2078,7 +2078,7 @@
           "returncode": 0,
           "timed_out": false,
           "log": "2-good.log",
-          "evidence_directory": "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/wishbone"
+          "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/wishbone"
         },
         {
           "seed": 2,
@@ -2089,7 +2089,7 @@
           "returncode": 1,
           "timed_out": false,
           "log": "2-buggy.log",
-          "evidence_directory": "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/wishbone"
+          "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/wishbone"
         },
         {
           "seed": 3,
@@ -2100,7 +2100,7 @@
           "returncode": 0,
           "timed_out": false,
           "log": "3-good.log",
-          "evidence_directory": "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/wishbone"
+          "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/wishbone"
         },
         {
           "seed": 3,
@@ -2111,7 +2111,7 @@
           "returncode": 1,
           "timed_out": false,
           "log": "3-buggy.log",
-          "evidence_directory": "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/wishbone"
+          "evidence_directory": "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/wishbone"
         }
       ],
       "build_command": [
@@ -2126,14 +2126,14 @@
         "--top-module",
         "top",
         "+define+UVM_NO_DPI",
-        "+incdir+/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src",
-        "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src/uvm_pkg.sv",
-        "/Users/mahir/fun/saviour/wt/uvm/Uvm/vip/wishbone/wishbone_if.sv",
-        "/Users/mahir/fun/saviour/wt/uvm/Uvm/vip/wishbone/wishbone_pkg.sv",
-        "/Users/mahir/fun/saviour/wt/uvm/Uvm/vip/wishbone/fixture.sv",
-        "/Users/mahir/fun/saviour/wt/uvm/Uvm/vip/wishbone/test.sv",
+        "+incdir+$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src",
+        "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/library/accellera-official-uvm-core-78c0654/src/uvm_pkg.sv",
+        "$CHECKOUT/Uvm/vip/wishbone/wishbone_if.sv",
+        "$CHECKOUT/Uvm/vip/wishbone/wishbone_pkg.sv",
+        "$CHECKOUT/Uvm/vip/wishbone/fixture.sv",
+        "$CHECKOUT/Uvm/vip/wishbone/test.sv",
         "--Mdir",
-        "/Users/mahir/fun/saviour/wt/.vex/uvm/uvm-runs/sv-vip-qualification/wishbone/build",
+        "$RUN_ROOT/uvm/uvm-runs/sv-vip-qualification/wishbone/build",
         "-MAKEFLAGS",
         "OPT_FAST=-O0 OPT_SLOW=-O0"
       ],
