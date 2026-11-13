@@ -6,6 +6,7 @@ No cocotb dependency is needed to import the cycle models.
 
 | Module | Profile | SV agent and fixture |
 |---|---|---|
+| `rvw.vip.stress` | Abstract memory/NoC latency, bandwidth, refresh pauses and QoS | `Uvm/vip/stress/` |
 | `rvw.vip.coherent` | Reduced coherent event bridge, credits, snoops and ownership | `Uvm/vip/coherent/` |
 | `rvw.vip.jtag` | Generic TAP scans and declared chain topology | `Uvm/vip/jtag/` |
 | `rvw.vip.clock_reset` | Integer-time clock and reset pulse/release checks | `Uvm/vip/clock_reset/` |
