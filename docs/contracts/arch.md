@@ -421,3 +421,17 @@ Native scheduling does not yet support this mode.
 The `rvw.ooo-calibration-plan/1` event map can be an empty object for IPC-only
 scoring. Such a result has no event correlation and insufficient event
 coverage. It does not treat unavailable RTL probes as zero counts.
+
+## Designer reports
+
+`rvw.ooo-designer-plan/1` selects a configuration, uniquely named workloads
+with trace and optional ELF paths, sensitivity parameters, search choices,
+and optional budget and cycle limit. Paths resolve beside the plan.
+`rvw arch ooo-designer` and `arch_ooo_designer` write a new directory with
+`report.json`, `report.md`, sensitivity evidence, search evidence and SQLite
+points. `rvw.ooo-designer/1` contains instruction-pooled IPC, per-workload
+function slot attribution, ranked local sensitivities and up to three DSE
+points that improve aggregate cycles. Fewer improvements remain explicit.
+All evidence is model-only. Function attribution uses the supplied ELF
+symbols. It is not hardware top-down measurement or a physical feasibility
+claim. Report creation supplies no fidelity verdict.
