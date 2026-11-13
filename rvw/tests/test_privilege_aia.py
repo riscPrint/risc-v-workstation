@@ -29,3 +29,23 @@ def test_selected_interrupt_files(file,isa,csr):
     assert all(f'csrrw t0, {csr}, zero' in r['assembly'] for r in rows)
     assert all('csrr t0, 0x35c' in r['assembly'] for r in rows)
     assert all(reference(r)['status']=='pass' for r in rows)
+
+
+def test_wait_for_all_injected_messages_before_priority_claim():
+    from rvw.privilege.controllers import Imsic
+    m=Imsic();m.enabled={1,2};m.inject(2)
+    assert m.top()==2  # A first arrival alone cannot establish final priority.
+    m.inject(1);assert m.top()==1
+    rows=programs(dict(kind='imsic',spec_version='AIA-1.0',imsic=dict(msi_address=0x24000000,peer_identities=127,poll_iterations=37)))
+    for r in rows:
+        text=r['assembly']
+        assert text.index('imsic_pending_read_wait:')<text.index('imsic_claim_0:')
+        assert 'li s0, 37' in text and 'li t0, 194\n csrw 0x150' in text
+        assert r['reference_mode']=='model-observations'
+        assert r['model_bindings'][0]['mask']=='0x6'
+        assert r['spec_revision']=='20318d1b03f0ac8253458b82f8244d0d0db074e9'
+
+
+def test_unsupported_document_revision_rejected():
+    with pytest.raises(ValueError,match='document revision'):
+        programs(dict(kind='imsic',spec_version='AIA-1.0',spec_revision='unknown'))

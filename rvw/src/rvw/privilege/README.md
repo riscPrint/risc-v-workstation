@@ -334,8 +334,9 @@ These rules differ from level direct-delivery pending, which follows the wire.
 Programs wait for MSI arrival with a finite instruction bound. Source events
 use the existing mailbox contract and include the controller base and source.
 No RTL source driver or DUT result is implied by compilation. Reference output
-is model-based. The AIA source revision is
-`f24dd483d50e6a1448116dcf88b8b08e0863512c`.
+is model-based. AIA profiles pin `AIA-1.0` and the revised 20250312 document
+source `20318d1b03f0ac8253458b82f8244d0d0db074e9` in `spec_revision`.
+The original ratified 2023 source revision remains supported for this subset.
 
 Smnip has one previous-threshold field. Nested handlers must save and restore
 that field in software. The Python model does not create an implicit hardware
@@ -756,3 +757,30 @@ result is claimed. The sampled pause is a project feature check. WFI may legally
 return early. Without an observed stop, this campaign remains inconclusive and
 does not drive the wake input. The ordinary WFI suites impose no minimum sleep.
 NMI/reset wake and guest-mode stop scenarios remain open.
+
+
+## AIA named claim observations
+
+IMSIC M/S/VS and APLIC direct/MSI campaigns use named C2 observations.
+IMSIC checks the two injected pending bits, the selected IRQ bit, an empty peer
+file and three combined TOPEI read/write claims. APLIC direct delivery checks
+the pending bitmap and claim loads. APLIC MSI checks five combined TOPEI claims
+for each source-mode sequence. Expected values come from the pinned Python
+controller models. Model bindings require the proper CSR instruction or MMIO
+address, privilege, count and values. Read-only CSR instructions cannot stand
+in for a claim operation.
+
+MSI stores may reach an interrupt file later. Programs poll for all injected
+pending bits before checking priority. They also poll the expected IRQ state.
+`imsic.poll_iterations` selects the instruction bound. `peer_identities` declares
+the peer file size; it defaults to `identities`. Programs initialize every
+declared peer bank. APLIC direct programs poll their pending bitmap first.
+`aplic.poll_iterations` selects direct/MSI wait bounds. These project bounds
+do not assert an architectural maximum delivery delay. APLIC MSI currently
+requires an M interrupt file and clears all its declared pending/enable banks.
+
+The selected AIA document revisions are the 20250312 source above and the
+original 2023 source `f24dd483d50e6a1448116dcf88b8b08e0863512c`. Other
+revision strings fail closed. Model subset groups remain separate from full
+architectural groups. Compilation and Python reference checks do not establish
+DUT execution, full interrupt-file state, bus delivery or whole-ISA comparison.

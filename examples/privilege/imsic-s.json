@@ -2,13 +2,15 @@
   "schema": "rvw.privilege/1",
   "kind": "imsic",
   "spec_version": "AIA-1.0",
-  "spec_revision": "f24dd483d50e6a1448116dcf88b8b08e0863512c",
+  "spec_revision": "20318d1b03f0ac8253458b82f8244d0d0db074e9",
   "reference_backend": "python",
   "isa": "rv64im_zicsr_zifencei_smaia_ssaia",
   "imsic": {
     "file": "S",
     "msi_address": 671088640,
     "guest_index": 1,
-    "identities": 63
+    "identities": 63,
+    "peer_identities": 63,
+    "poll_iterations": 1000
   }
 }
