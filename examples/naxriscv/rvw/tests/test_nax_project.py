@@ -54,3 +54,15 @@ def test_micro_checks_bind_every_rule(tmp_path):
     assert binds.count('bind NaxRiscv ') == 6
     control = generate(json.loads((EXAMPLE / 'rvw/micro-checks-control.json').read_text()), tmp_path / 'control')
     assert control['complete'] and control['rules'][0]['id'] == 'control_lq_free_le_8'
+
+
+def test_matrix_changes_one_structure():
+    import runpy
+    study = runpy.run_path(str(EXAMPLE / "rvw/arch/matrix.py"))
+    variants = study["VARIANTS"]
+    assert len(variants) == 5
+    assert variants["base"][1] == {}
+    assert all(len(changes) == 1 for key, (_, changes) in variants.items() if key != "base")
+    assert len(study["PROGRAMS"]) == 6
+    top = (EXAMPLE / "rvw/src/main/scala/rvwnax/NaxTop.scala").read_text()
+    assert all(config in top for config, _ in variants.values())
