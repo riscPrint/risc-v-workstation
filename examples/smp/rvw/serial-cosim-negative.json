@@ -1,0 +1,217 @@
+{
+  "schema": "rvw.cosim/1",
+  "status": "mismatch",
+  "hart": 0,
+  "harts": {
+    "0": {
+      "schema": "rvw.cosim/1",
+      "status": "mismatch",
+      "model": "spike",
+      "instructions": 0,
+      "trap_events": 0,
+      "reference_limits": [],
+      "state_coverage": {
+        "trace_schema": "rvw.rvfi/1",
+        "fp": false,
+        "vector": null,
+        "hypervisor": false,
+        "two_stage_translations": 0,
+        "csr_snapshot": [],
+        "csr_snapshot_steps": 0,
+        "vector_memory_steps": 0,
+        "vector_memory_accesses": 0,
+        "fault_access_steps": 0
+      },
+      "platform_policy": {
+        "privilege_modes": "M",
+        "misaligned": {
+          "load": "trap",
+          "store": "trap",
+          "atomic": "trap",
+          "split_page": "refuse",
+          "split_bus": "refuse"
+        },
+        "endianness": {
+          "instruction": "little",
+          "data": "little",
+          "page_table": "little",
+          "device": "little"
+        },
+        "absent_pmp_csrs": "trap",
+        "ecall_tval": "zero",
+        "pmp_granularity": 4
+      },
+      "applied_masks": [],
+      "synchronized": 0,
+      "recent_synchronizations": [],
+      "trace_complete": false,
+      "end_status": null,
+      "last_order": 0,
+      "last_cycle": 42,
+      "pending_handler": false,
+      "recent_quirks": [],
+      "sync_enabled": [
+        "counter",
+        "csr",
+        "irq",
+        "mmio"
+      ],
+      "mismatch": {
+        "instruction_index": 0,
+        "order": 0,
+        "cycle": 42,
+        "pc": "0x80000000",
+        "disassembly": "csrr    a0, mhartid",
+        "differences": {
+          "rd_wdata": {
+            "expected": "0x0",
+            "actual": "0x1"
+          }
+        },
+        "actual": {
+          "order": 0,
+          "cycle": 42,
+          "pc": "0x80000000",
+          "pc_next": "0x80000004",
+          "insn": "0xf1402573",
+          "mode": 3,
+          "trap": false,
+          "intr": false,
+          "halt": false,
+          "rs1": 0,
+          "rs1_rdata": "0x0",
+          "rs2": 0,
+          "rs2_rdata": "0x0",
+          "rd": 10,
+          "rd_wdata": "0x1",
+          "mem_addr": "0x0",
+          "mem_rmask": 0,
+          "mem_wmask": 0,
+          "mem_rdata": "0x0",
+          "mem_wdata": "0x0",
+          "mem_fault": false,
+          "csr_state": {}
+        },
+        "expected": {
+          "pc": "0x80000000",
+          "pc_next": "0x80000004",
+          "insn": "0xf1402573",
+          "mode": 3,
+          "rd": 10,
+          "rd_wdata": "0x0",
+          "mem_addr": "0x0",
+          "mem_rmask": 0,
+          "mem_wmask": 0,
+          "mem_rdata": "0x0",
+          "mem_wdata": "0x0",
+          "trap": 0,
+          "intr": 0,
+          "cause": "0x0",
+          "tval": "0x0",
+          "mem_fault": 0,
+          "halted": 0,
+          "fd_valid": 0,
+          "fd": 0,
+          "fd_wdata": "0x0",
+          "fflags": "0x0",
+          "fcsr": "0x0",
+          "disasm": "csrr    a0, mhartid",
+          "debug": {
+            "mode": false,
+            "dpc": "0x0",
+            "dcsr": "0x40000000",
+            "step": false
+          }
+        },
+        "last_matching": [],
+        "register_diff": [
+          {
+            "reg": "x10",
+            "expected": "0x0",
+            "actual": "0x1"
+          }
+        ]
+      },
+      "mode": "lockstep",
+      "reproduction": {},
+      "event_order": "before affected retirement"
+    }
+  },
+  "mismatch": {
+    "instruction_index": 0,
+    "order": 0,
+    "cycle": 42,
+    "pc": "0x80000000",
+    "disassembly": "csrr    a0, mhartid",
+    "differences": {
+      "rd_wdata": {
+        "expected": "0x0",
+        "actual": "0x1"
+      }
+    },
+    "actual": {
+      "order": 0,
+      "cycle": 42,
+      "pc": "0x80000000",
+      "pc_next": "0x80000004",
+      "insn": "0xf1402573",
+      "mode": 3,
+      "trap": false,
+      "intr": false,
+      "halt": false,
+      "rs1": 0,
+      "rs1_rdata": "0x0",
+      "rs2": 0,
+      "rs2_rdata": "0x0",
+      "rd": 10,
+      "rd_wdata": "0x1",
+      "mem_addr": "0x0",
+      "mem_rmask": 0,
+      "mem_wmask": 0,
+      "mem_rdata": "0x0",
+      "mem_wdata": "0x0",
+      "mem_fault": false,
+      "csr_state": {}
+    },
+    "expected": {
+      "pc": "0x80000000",
+      "pc_next": "0x80000004",
+      "insn": "0xf1402573",
+      "mode": 3,
+      "rd": 10,
+      "rd_wdata": "0x0",
+      "mem_addr": "0x0",
+      "mem_rmask": 0,
+      "mem_wmask": 0,
+      "mem_rdata": "0x0",
+      "mem_wdata": "0x0",
+      "trap": 0,
+      "intr": 0,
+      "cause": "0x0",
+      "tval": "0x0",
+      "mem_fault": 0,
+      "halted": 0,
+      "fd_valid": 0,
+      "fd": 0,
+      "fd_wdata": "0x0",
+      "fflags": "0x0",
+      "fcsr": "0x0",
+      "disasm": "csrr    a0, mhartid",
+      "debug": {
+        "mode": false,
+        "dpc": "0x0",
+        "dcsr": "0x40000000",
+        "step": false
+      }
+    },
+    "last_matching": [],
+    "register_diff": [
+      {
+        "reg": "x10",
+        "expected": "0x0",
+        "actual": "0x1"
+      }
+    ]
+  },
+  "memory_profile": "serialized-retirement"
+}

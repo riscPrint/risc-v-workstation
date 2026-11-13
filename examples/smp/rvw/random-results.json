@@ -1,0 +1,398 @@
+[
+  {
+    "seed": 7,
+    "checker": {
+      "schema": "rvw.axiomatic/1",
+      "status": "allowed",
+      "model": "rvwmo",
+      "candidates": 6,
+      "exhaustive_proof": false,
+      "scope": "scalar execution under declared complete dependencies",
+      "witness": {
+        "co": [
+          [
+            "h0e0o9",
+            "h1e0o9"
+          ],
+          [
+            "h1e0o5",
+            "h1e0o11"
+          ],
+          [
+            "initial:2147483776:8",
+            "h0e0o15"
+          ],
+          [
+            "initial:2147614848:8",
+            "h1e0o21"
+          ],
+          [
+            "initial:2164260864:8",
+            "h1e0o11"
+          ],
+          [
+            "initial:2164260864:8",
+            "h1e0o5"
+          ],
+          [
+            "initial:2164260872:8",
+            "h0e0o9"
+          ],
+          [
+            "initial:2164260872:8",
+            "h1e0o9"
+          ],
+          [
+            "initial:2164260888:8",
+            "h0e0o5"
+          ]
+        ],
+        "rf": [
+          [
+            "initial:2164260864:8",
+            "h1e0o3"
+          ],
+          [
+            "initial:2164260872:8",
+            "h0e0o6"
+          ],
+          [
+            "initial:2164260872:8",
+            "h0e0o9"
+          ],
+          [
+            "initial:2164260872:8",
+            "h1e0o7"
+          ],
+          [
+            "initial:2164260880:8",
+            "h0e0o10"
+          ],
+          [
+            "initial:2164260880:8",
+            "h1e0o14"
+          ],
+          [
+            "initial:2164260896:8",
+            "h1e0o12"
+          ],
+          [
+            "initial:2164260896:8",
+            "h1e0o16"
+          ]
+        ],
+        "ppo": [
+          [
+            "h0e0o6",
+            "h0e0o9"
+          ],
+          [
+            "h1e0o3",
+            "h1e0o11"
+          ],
+          [
+            "h1e0o3",
+            "h1e0o12"
+          ],
+          [
+            "h1e0o3",
+            "h1e0o14"
+          ],
+          [
+            "h1e0o3",
+            "h1e0o16"
+          ],
+          [
+            "h1e0o3",
+            "h1e0o21"
+          ],
+          [
+            "h1e0o3",
+            "h1e0o5"
+          ],
+          [
+            "h1e0o3",
+            "h1e0o7"
+          ],
+          [
+            "h1e0o3",
+            "h1e0o9"
+          ],
+          [
+            "h1e0o5",
+            "h1e0o11"
+          ],
+          [
+            "h1e0o5",
+            "h1e0o21"
+          ],
+          [
+            "h1e0o5",
+            "h1e0o9"
+          ],
+          [
+            "h1e0o7",
+            "h1e0o11"
+          ],
+          [
+            "h1e0o7",
+            "h1e0o21"
+          ],
+          [
+            "h1e0o7",
+            "h1e0o9"
+          ],
+          [
+            "h1e0o9",
+            "h1e0o11"
+          ],
+          [
+            "h1e0o9",
+            "h1e0o21"
+          ]
+        ]
+      }
+    },
+    "trace_sha256": "0425c9359d316528886ec4a4fa096408f383f96503b74cc6ac8a090c39c6a108",
+    "binding_sha256": "b7a7c37918b5caab2d1ea270118727a7649bdb10bc575558c765c63990e92a9b"
+  },
+  {
+    "seed": 17,
+    "checker": {
+      "schema": "rvw.axiomatic/1",
+      "status": "allowed",
+      "model": "rvwmo",
+      "candidates": 1,
+      "exhaustive_proof": false,
+      "scope": "scalar execution under declared complete dependencies",
+      "witness": {
+        "co": [
+          [
+            "initial:2147483712:8",
+            "h0e0o11"
+          ],
+          [
+            "initial:2147614784:8",
+            "h1e0o11"
+          ],
+          [
+            "initial:2164260872:8",
+            "h1e0o7"
+          ],
+          [
+            "initial:2164260888:8",
+            "h0e0o7"
+          ],
+          [
+            "initial:2164260896:8",
+            "h0e0o4"
+          ]
+        ],
+        "rf": [
+          [
+            "initial:2164260888:8",
+            "h1e0o3"
+          ],
+          [
+            "initial:2164260896:8",
+            "h0e0o4"
+          ]
+        ],
+        "ppo": []
+      }
+    },
+    "trace_sha256": "672b5fb817bc162ef608000a49c5aa6ebe25c1f87228a4502cd102640db873bb",
+    "binding_sha256": "b7a7c37918b5caab2d1ea270118727a7649bdb10bc575558c765c63990e92a9b"
+  },
+  {
+    "seed": 23,
+    "checker": {
+      "schema": "rvw.axiomatic/1",
+      "status": "allowed",
+      "model": "rvwmo",
+      "candidates": 8,
+      "exhaustive_proof": false,
+      "scope": "scalar execution under declared complete dependencies",
+      "witness": {
+        "co": [
+          [
+            "h0e0o8",
+            "h0e0o14"
+          ],
+          [
+            "h1e0o5",
+            "h0e0o12"
+          ],
+          [
+            "initial:2147483776:8",
+            "h0e0o19"
+          ],
+          [
+            "initial:2147614848:8",
+            "h1e0o16"
+          ],
+          [
+            "initial:2164260864:8",
+            "h0e0o14"
+          ],
+          [
+            "initial:2164260864:8",
+            "h0e0o8"
+          ],
+          [
+            "initial:2164260872:8",
+            "h1e0o10"
+          ],
+          [
+            "initial:2164260880:8",
+            "h1e0o7"
+          ],
+          [
+            "initial:2164260888:8",
+            "h0e0o12"
+          ],
+          [
+            "initial:2164260888:8",
+            "h1e0o5"
+          ]
+        ],
+        "rf": [
+          [
+            "h1e0o5",
+            "h0e0o10"
+          ],
+          [
+            "initial:2164260864:8",
+            "h0e0o6"
+          ],
+          [
+            "initial:2164260880:8",
+            "h1e0o7"
+          ],
+          [
+            "initial:2164260888:8",
+            "h0e0o3"
+          ],
+          [
+            "initial:2164260896:8",
+            "h1e0o11"
+          ]
+        ],
+        "ppo": [
+          [
+            "h0e0o10",
+            "h0e0o12"
+          ],
+          [
+            "h0e0o10",
+            "h0e0o14"
+          ],
+          [
+            "h0e0o10",
+            "h0e0o19"
+          ],
+          [
+            "h0e0o12",
+            "h0e0o14"
+          ],
+          [
+            "h0e0o12",
+            "h0e0o19"
+          ],
+          [
+            "h0e0o14",
+            "h0e0o19"
+          ],
+          [
+            "h0e0o3",
+            "h0e0o10"
+          ],
+          [
+            "h0e0o3",
+            "h0e0o12"
+          ],
+          [
+            "h0e0o3",
+            "h0e0o14"
+          ],
+          [
+            "h0e0o3",
+            "h0e0o19"
+          ],
+          [
+            "h0e0o3",
+            "h0e0o6"
+          ],
+          [
+            "h0e0o3",
+            "h0e0o8"
+          ],
+          [
+            "h0e0o6",
+            "h0e0o10"
+          ],
+          [
+            "h0e0o6",
+            "h0e0o12"
+          ],
+          [
+            "h0e0o6",
+            "h0e0o14"
+          ],
+          [
+            "h0e0o6",
+            "h0e0o19"
+          ],
+          [
+            "h0e0o6",
+            "h0e0o8"
+          ],
+          [
+            "h0e0o8",
+            "h0e0o12"
+          ],
+          [
+            "h0e0o8",
+            "h0e0o14"
+          ],
+          [
+            "h0e0o8",
+            "h0e0o19"
+          ],
+          [
+            "h1e0o5",
+            "h1e0o7"
+          ],
+          [
+            "h1e0o7",
+            "h1e0o10"
+          ],
+          [
+            "h1e0o7",
+            "h1e0o11"
+          ],
+          [
+            "h1e0o7",
+            "h1e0o16"
+          ]
+        ]
+      }
+    },
+    "trace_sha256": "2bc1afc065064287052cebfb7266c243a2620b69cde516cc02c90130e7316f96",
+    "binding_sha256": "b7a7c37918b5caab2d1ea270118727a7649bdb10bc575558c765c63990e92a9b"
+  },
+  {
+    "seed": 1,
+    "checker": {
+      "schema": "rvw.axiomatic/1",
+      "status": "inconclusive",
+      "model": "rvwmo",
+      "candidates": 100000,
+      "exhaustive_proof": false,
+      "scope": "scalar execution under declared complete dependencies",
+      "reason": "candidate limit reached"
+    },
+    "trace_sha256": "fd941cd87641d9b1511641e8f2c73ba05422f61ea2f03b198bc0f80dc2afdb4c",
+    "binding_sha256": "b7a7c37918b5caab2d1ea270118727a7649bdb10bc575558c765c63990e92a9b"
+  }
+]

@@ -1,0 +1,162 @@
+[
+  {
+    "run": "fence-i-cross-run",
+    "status": "pass",
+    "c1_inconclusive": null,
+    "seed": 17,
+    "cycles": 191,
+    "instret": 62,
+    "core_rev": "9f70315deb3390b283995c5b8f1bd38215ecf52b",
+    "rtl_sha256": "42e261f8de2ca0f7c9cd74f3e505481294c9fb41096ff90923136786ea58c12e",
+    "ordering": "not_checked",
+    "per_hart_retirements": {
+      "0": 34,
+      "1": 28
+    },
+    "hart_status": {
+      "0": "pass",
+      "1": "pass"
+    },
+    "trace_sha256": "96f699cbd21657f056aee19743fd29aafb369b4f283e02df23a9a7f268de8cbd"
+  },
+  {
+    "run": "LB+fence.rw.rws-run",
+    "status": "pass",
+    "c1_inconclusive": null,
+    "seed": 17,
+    "cycles": 82,
+    "instret": 28,
+    "core_rev": "9f70315deb3390b283995c5b8f1bd38215ecf52b",
+    "rtl_sha256": "42e261f8de2ca0f7c9cd74f3e505481294c9fb41096ff90923136786ea58c12e",
+    "ordering": "not_checked",
+    "per_hart_retirements": {
+      "0": 14,
+      "1": 14
+    },
+    "hart_status": {
+      "0": "pass",
+      "1": "pass"
+    },
+    "trace_sha256": "3c8a9f7d91993f3b00c0dc5ca62f89a84bb5563019583fbce79a311a9ed4c8c5"
+  },
+  {
+    "run": "LB-run",
+    "status": "pass",
+    "c1_inconclusive": null,
+    "seed": 17,
+    "cycles": 82,
+    "instret": 26,
+    "core_rev": "9f70315deb3390b283995c5b8f1bd38215ecf52b",
+    "rtl_sha256": "42e261f8de2ca0f7c9cd74f3e505481294c9fb41096ff90923136786ea58c12e",
+    "ordering": "not_checked",
+    "per_hart_retirements": {
+      "0": 13,
+      "1": 13
+    },
+    "hart_status": {
+      "0": "pass",
+      "1": "pass"
+    },
+    "trace_sha256": "293f5e3bf68691c176f4f3eb1f6c10f50f14896411aebfd28f872c828945ffd1"
+  },
+  {
+    "run": "MP+fence.rw.rws-run",
+    "status": "pass",
+    "c1_inconclusive": null,
+    "seed": 17,
+    "cycles": 81,
+    "instret": 27,
+    "core_rev": "9f70315deb3390b283995c5b8f1bd38215ecf52b",
+    "rtl_sha256": "42e261f8de2ca0f7c9cd74f3e505481294c9fb41096ff90923136786ea58c12e",
+    "ordering": "not_checked",
+    "per_hart_retirements": {
+      "0": 14,
+      "1": 13
+    },
+    "hart_status": {
+      "0": "pass",
+      "1": "pass"
+    },
+    "trace_sha256": "cea97899b5d04be952a1f6254e78f95d90c4ac327d563385d4a78dfbdbdc9540"
+  },
+  {
+    "run": "MP-run",
+    "status": "pass",
+    "c1_inconclusive": null,
+    "seed": 17,
+    "cycles": 82,
+    "instret": 25,
+    "core_rev": "9f70315deb3390b283995c5b8f1bd38215ecf52b",
+    "rtl_sha256": "42e261f8de2ca0f7c9cd74f3e505481294c9fb41096ff90923136786ea58c12e",
+    "ordering": "not_checked",
+    "per_hart_retirements": {
+      "0": 13,
+      "1": 12
+    },
+    "hart_status": {
+      "0": "pass",
+      "1": "pass"
+    },
+    "trace_sha256": "2262489dc105043f3cc33abd63f3a23c1db4bfb7ad8166fc3b47d60b9ddd3be3"
+  },
+  {
+    "run": "SB+fence.rw.rws-run",
+    "status": "pass",
+    "c1_inconclusive": null,
+    "seed": 17,
+    "cycles": 82,
+    "instret": 28,
+    "core_rev": "9f70315deb3390b283995c5b8f1bd38215ecf52b",
+    "rtl_sha256": "42e261f8de2ca0f7c9cd74f3e505481294c9fb41096ff90923136786ea58c12e",
+    "ordering": "not_checked",
+    "per_hart_retirements": {
+      "0": 14,
+      "1": 14
+    },
+    "hart_status": {
+      "0": "pass",
+      "1": "pass"
+    },
+    "trace_sha256": "b08052312d230d20c7641c1e3d90c050e1448c5c207a33c434876c61b6659515"
+  },
+  {
+    "run": "SB-run",
+    "status": "pass",
+    "c1_inconclusive": null,
+    "seed": 17,
+    "cycles": 82,
+    "instret": 26,
+    "core_rev": "9f70315deb3390b283995c5b8f1bd38215ecf52b",
+    "rtl_sha256": "42e261f8de2ca0f7c9cd74f3e505481294c9fb41096ff90923136786ea58c12e",
+    "ordering": "not_checked",
+    "per_hart_retirements": {
+      "0": 13,
+      "1": 13
+    },
+    "hart_status": {
+      "0": "pass",
+      "1": "pass"
+    },
+    "trace_sha256": "f058653ecd5ff163e7a62370d1e0b40e9753fd3c57edc86f91ede362673ada75"
+  },
+  {
+    "run": "serialized-run",
+    "status": "pass",
+    "c1_inconclusive": null,
+    "seed": 17,
+    "cycles": 122,
+    "instret": 38,
+    "core_rev": "9f70315deb3390b283995c5b8f1bd38215ecf52b",
+    "rtl_sha256": "9dd62c4886ad635220d32f941520c16cf0ecdd2d5225694a69eb6ef59b96c680",
+    "ordering": "not_checked",
+    "per_hart_retirements": {
+      "0": 18,
+      "1": 20
+    },
+    "hart_status": {
+      "0": "pass",
+      "1": "pass"
+    },
+    "trace_sha256": "be13d5a01ecddc654c184863c91b504583821638add047a7ad7fff6339e80d65"
+  }
+]

@@ -14,7 +14,7 @@ spec.loader.exec_module(programs)
 
 def test_smp_project_loads_with_all_harts():
     data = tomllib.loads((EXAMPLE/'rvw.toml').read_text())
-    assert data['core']['configs'] == [f'smp{n}' for n in range(2, 9)]
+    assert data['core']['configs'] == [f'smp{n}' for n in range(2, 9)]+['serial2','hsm2']
     assert data['core']['default_config'] == 'smp2'
     assert data['core']['lock'] == 'vex-mem'
     assert not data['core']['input_complete']

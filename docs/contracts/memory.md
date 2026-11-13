@@ -141,3 +141,24 @@ The C2/2 writer can emit `irq` and `trap` events for an active hart.
 Each event has that hart's current reset epoch and the common capture sequence.
 The event payload uses the existing C2 IRQ or trap fields. File order remains
 capture order. It does not establish cross-hart memory order.
+
+## Project scalar dependency observations
+
+The SMP example writes a separate derived C2/2 file. It sets
+`memory_dependencies` to `complete` only after every captured instruction
+matches its supported scalar dependency profile. The header's
+`dependency_binding` gives the profile, original trace SHA-256 and binding
+source SHA-256. The original capture stays unchanged. Unsupported instructions,
+traps, faults, later resets and device accesses refuse this binding.
+
+The profile uses RVWMO's syntactic source/destination rules. Loads and AMOs do
+not carry source dependencies to their result register. Successful SC is a
+memory event and defines its destination register. Failed SC creates no memory
+event and has no syntactic destination register. It consumes the LR pairing.
+A finite allowed execution is not a core compliance proof.
+
+The example's `serial2` profile allows one accepted LSU transaction at a time.
+It releases service at that memory instruction's retirement. Its common ELF
+and per-hart tohost slots support shared-RAM Spike comparison. WFI and interrupt
+programs are outside its qualified scope. The HSM profile uses concurrent
+memory service and does not declare serialized-retirement ordering.
