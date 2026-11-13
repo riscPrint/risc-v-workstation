@@ -107,6 +107,12 @@ def command(a):
 def register(sub):
     sim = sub.add_parser('sim', help='native simulation checkpoint control')
     commands = sim.add_subparsers(dest='snapshot_action', required=True)
+    p = commands.add_parser('profile', help='report recorded C1 native build and run costs')
+    p.add_argument('--result', action='append', type=Path, default=[])
+    p.add_argument('--build-profile', choices=('default', 'threads-2', 'threads-4', 'split-10000'), default='default')
+    p.add_argument('--out', type=Path)
+    from .profile import command as profile_command
+    p.set_defaults(func=profile_command)
     p = commands.add_parser('checkpoint', help='capture a project native snapshot port')
     p.add_argument('manifest', type=Path)
     group = p.add_mutually_exclusive_group(required=True)

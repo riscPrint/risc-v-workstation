@@ -1194,7 +1194,14 @@ usage: rvw regress [-h] [--project PROJECT]
 
 ```text
 usage: rvw regress sim [-h] [--project PROJECT]
-    {checkpoint,resume,reverse-step,suffix-check} ...
+    {profile,checkpoint,resume,reverse-step,suffix-check} ...
+```
+
+### `rvw regress sim profile`
+
+```text
+usage: rvw regress sim profile [-h] [--result RESULT] [--build-profile
+    {default,threads-2,threads-4,split-10000}] [--out OUT] [--project PROJECT]
 ```
 
 ### `rvw regress sim checkpoint`
@@ -1455,7 +1462,14 @@ usage: rvw regress list [-h] [--core CORE] [--suite SUITE] [--json] [--project
 
 ```text
 usage: rvw sim [-h] [--project PROJECT]
-    {checkpoint,resume,reverse-step,suffix-check} ...
+    {profile,checkpoint,resume,reverse-step,suffix-check} ...
+```
+
+### `rvw sim profile`
+
+```text
+usage: rvw sim profile [-h] [--result RESULT] [--build-profile
+    {default,threads-2,threads-4,split-10000}] [--out OUT] [--project PROJECT]
 ```
 
 ### `rvw sim checkpoint`
@@ -2766,6 +2780,14 @@ Starts a background job: no.
 Save a stopped project native model and harness. Requires a snapshot port; from-reset replay is separate.
 
 Arguments: `manifest` (required), `out` (required), `cycle`, `instruction`.
+
+Starts a background job: no.
+
+### `sim_profile`
+
+Report recorded C1 native build/run costs, missing measurements and PATH tool availability. Proposed flag profiles are not applied. No speed qualification.
+
+Arguments: `results`, `build_profile`.
 
 Starts a background job: no.
 

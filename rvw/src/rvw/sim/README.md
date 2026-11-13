@@ -19,6 +19,25 @@ Use `rvw sim reverse-step adapter.json --snapshot A.json --snapshot B.json
 replay. MCP: `sim_reverse_step`. See [reverse execution](REVERSE.md) for port
 requirements, history limits and the current native qualification limit.
 
+## Profile recorded build and run costs
+
+Use `rvw sim profile --result RUN/result.json --result OTHER/result.json
+--build-profile threads-4 --out NEW_REPORT.json`. MCP: `sim_profile`.
+The command reads C1 and reports elaboration, combined native/setup, aggregate
+model compile and execution time. It derives kHz and instructions/s from
+recorded counters and execution time. Missing Scala-only compilation and peak
+RSS measurements remain null. Failed and inconclusive run status is retained.
+The report does not qualify correctness or compare treatments.
+
+`--build-profile` prints a proposed `SPINAL_VERILATOR_FLAGS` setting. It does
+not apply it or classify recorded runs under it. Profiles cover default,
+two/four threads and output splitting. Existing native identity validation
+still applies to any later run. Use `speed-sweep` and `speed-compare` for
+execution and qualified paired comparisons. Hierarchy bridge access, captured
+PGO reuse and an Arcilator C1 engine remain unsupported. The report lists PATH
+discovery as `installed` or `not_installed`. This does not validate tool
+versions, lowering or runtime behavior. No installer or backend is supplied.
+
 ## Cocotb component suites
 
 Install the optional dependency with `cd rvw && uv pip install -e '.[cocotb]'`.

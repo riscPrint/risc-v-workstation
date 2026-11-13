@@ -2,12 +2,17 @@
 from rvw.mcp.spec import ToolSpec, schema
 from .live import capture, resume, suffix_check
 from .reverse import reverse_step
+from .profile import report
 
 
 def mcp_tools():
     s = {'type': 'string'}
     n = {'type': 'integer', 'minimum': 1}
     return [
+        ToolSpec('sim_profile', 'Report recorded C1 native build/run costs, missing measurements and PATH tool availability. Proposed flag profiles are not applied. No speed qualification.',
+                 schema({'results': {'type': 'array', 'items': s}, 'build_profile':
+                         {'type': 'string', 'enum': ['default', 'threads-2', 'threads-4', 'split-10000']}}), report,
+                 annotations={'readOnlyHint': True}),
         ToolSpec('sim_reverse_step', 'Restore the nearest valid native checkpoint and execute forward to an earlier instruction. Requires a time-bounded replay port. Reports available history.',
                  schema({'manifest': s, 'snapshots': {'type': 'array', 'items': s, 'minItems': 1},
                          'out': s, 'current': n, 'target': {'type': 'integer', 'minimum': 0},

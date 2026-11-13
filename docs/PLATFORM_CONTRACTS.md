@@ -110,6 +110,16 @@ DPI-C wrappers never propagate C++ exceptions. Null handles and nonzero status
 must stop the run. Device maps, Linux behavior and TLM timing are not inferred.
 See `RiscvSim/src/main/cpp/DEVICES.md` for exact ABI and DPI declarations.
 
+### Simulation cost report
+
+`rvw.sim-profile/1` reports C1 file hashes, native identities, terminal status,
+recorded elaboration/native-setup/model-compile/execution times, counters and
+derived throughput. Missing measurements are null. It does not infer separate
+Scala compile time or process-tree RSS. `status: reported` is not qualification.
+`profile_applied: false` states that proposed flag profiles were not executed
+and do not classify the recorded runs. Tool statuses reflect PATH lookup only.
+Unimplemented hierarchy/PGO/Arcilator paths remain explicit unsupported entries.
+
 ## Layout
 
 | Path | What | Language |
