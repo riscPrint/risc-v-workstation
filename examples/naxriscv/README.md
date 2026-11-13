@@ -392,3 +392,32 @@ results and limits. Apply `rvw/plants/planted-bugs.patch` only to a private
 pinned NaxRiscv checkout. `RVW_NAX_PLANT=rob|freelist|forward` selects one bug.
 Use the private `nax-dbg` and `sbt-dbg` locks. These are simulation controls,
 not formal proofs or core qualification.
+
+## Kanata pipeline follow-up (2026-11-13)
+
+The probe stream now exports instruction lifetimes with reused ROB IDs.
+`Rn` marks ROB allocation, `Ds` dispatch, `Is` issue, `Ex` operand read one
+cycle after issue, and `Wb` completion. Commit and flush are terminal Kanata
+records. A reschedule flushes each younger live entry in entry order. Numeric
+ROB indices do not define age across wraparound.
+
+```sh
+rvw/run.sh run --elf rvw/out/isa/rv32ui-p-add --out rvw/out/pipeline --seed 1 --mem-latency 0 --probes --rvfi-trace --json
+rvw probes convert rvw/out/pipeline/probe-events.jsonl --to kanata --out rvw/out/pipeline/pipeline.log
+rvw perf rvw/out/pipeline/pipeline.log --result rvw/out/pipeline/result.json --queue-stage Ds --issue-stage Is --head-stage Wb --in-order-retirement
+```
+
+Open the log in Konata, or drag it into the Konata viewer. The native C1
+`--konata` option remains refused; this path converts the probe stream.
+[`rvw/probes/add.kanata`](rvw/probes/add.kanata) is a measured sample.
+It contains 718 instruction lifetimes, 501 retirements and 210 flushed
+instructions. All 501 retired PCs and cycles match C2. Spike matches the 501
+instructions and 3 trap events. Seven instructions remain open at `tohost`.
+There are 32 orphan events for IDs that are not live, zero stale-ID closures
+and no unknown flush anchor. The warnings remain visible in `rvw probes check`.
+
+RiscvSim now records inclusive sampling bounds. With these bounds, `rvw perf`
+uses all 1,003 cycles and reports the same 501 retirements as C1. Old streams
+without bounds keep their observed event window. `Ex` is an operand-read
+marker, not a measured execution latency for every functional unit. See
+[`rvw/probes/pipeline-results.json`](rvw/probes/pipeline-results.json).

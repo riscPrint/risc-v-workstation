@@ -20,6 +20,7 @@ final class ProbeCollector(sites: Seq[ProbeSite], file: File, identity: ujson.Ob
   private val counters = sites.filter(_.kind == "counter").toArray
   private val totals = Array.fill(counters.length)(BigInt(0))
   private val events = Array.fill(sites.length)(0L)
+  private var first = -1L
   private var last = -1L
   private var closed = false
 
@@ -34,6 +35,7 @@ final class ProbeCollector(sites: Seq[ProbeSite], file: File, identity: ujson.Ob
 
   def sample(cycle: Long): Unit = {
     require(!closed && cycle > last, "probe cycles must increase")
+    if (first < 0) first = cycle
     last = cycle
     var i = 0
     while (i < sampled.length) {
@@ -62,9 +64,11 @@ final class ProbeCollector(sites: Seq[ProbeSite], file: File, identity: ujson.Ob
   /** Write the end record. `cycles` is the total cycle count of the run. */
   def close(cycles: Long): Unit = if (!closed) {
     closed = true
-    out.write(ujson.write(ujson.Obj("end" -> true, "cycles" -> RvwJson.num(cycles),
+    val end = ujson.Obj("end" -> true, "cycles" -> RvwJson.num(cycles),
       "counters" -> ujson.Obj.from(counters.indices.map(i => counters(i).name -> ujson.Num(totals(i).toDouble))),
-      "events" -> ujson.Obj.from(sites.filter(_.kind != "fault").map(s => s.index.toString -> RvwJson.num(events(s.index)))))))
+      "events" -> ujson.Obj.from(sites.filter(_.kind != "fault").map(s => s.index.toString -> RvwJson.num(events(s.index)))))
+    if (first >= 0) { end("first_cycle") = RvwJson.num(first); end("last_cycle") = RvwJson.num(last) }
+    out.write(ujson.write(end))
     out.write('\n')
     out.close()
   }
