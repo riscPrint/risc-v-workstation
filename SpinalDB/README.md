@@ -424,7 +424,7 @@ git clone https://github.com/lowRISC/ibex.git ref/ibex
 git -C ref/ibex checkout 2c72091c12187b5c7caf925aa911c94b806aab54
 git clone https://github.com/stnolting/neorv32.git ref/neorv32
 git -C ref/neorv32 checkout 7bd0858
-RVW_HDL_REF="$PWD/ref" rvw/.venv/bin/python -m pytest rvw/tests/test_query_hdl.py rvw/tests/test_query_slang.py rvw/tests/test_query_ghdl.py -q
+RVW_HDL_REF="$PWD/ref" rvw/.venv/bin/python -m pytest rvw/tests/test_query_hdl.py rvw/tests/test_query_slang.py rvw/tests/test_query_ghdl.py rvw/tests/test_query_chisel.py -q
 ```
 
 ### Full SystemVerilog with slang
@@ -505,4 +505,34 @@ in about 5 s of CPU. `meta.hdl_options` records the standard, library and
 generics; `meta.ghdl_version` and `meta.ghdl_plugin_sha256` the tools.
 Mixed-language designs and foreign VHDL attributes are not supported.
 
-See [the design](../docs/design/hdl-frontends.md) for the Chisel phase.
+### Chisel through FIRRTL and firtool
+
+`--frontend chisel` takes one FIRRTL file (`ChiselStage.emitCHIRRTL`). firtool
+(`--firtool PATH`, then `$RVW_FIRTOOL`, then `PATH`; Chisel caches its own copy
+under `org.chipsalliance.llvm-firtool`) lowers it to split Verilog and HGLDD
+with `-g --emit-hgldd --disable-all-randomization` and plain location comments.
+The native reader imports the Verilog with `-DSYNTHESIS`, then `opt_dff` folds
+Chisel's synchronous resets into `$sdff` cells, so registers get `SYNC` reset
+domains and reset values.
+
+```sh
+rvw query build-hdl --frontend chisel --top Top --out top.db Top.fir --source-root .
+rvw query where io.a.valid --db top.db            # Chisel name; Gen.scala:21
+rvw query drivers units_0.acc --db top.db         # Gen.scala:13, SYNC reset to 00000000
+rvw query export hgldd/Top.dd Top.dd --db top.db  # for SpinalWaves/Surfer
+```
+
+firtool writes `// Gen.scala:13:20, :15:16` after each Verilog line. Each
+database location on an emitted line is rebound to Scala: declarations take
+the first location of the line, assignments the last. A Scala path binds only
+when the file exists under a `--source-root` (default: the FIRRTL file's
+directory); it is then captured in `input_files`. Locations left on emitted
+Verilog are cleared, since that Verilog is not a captured source. The emitted
+files are artifacts `rtl/*.sv`; `hdl/source-map.json` maps each of their lines
+to its Scala locations; `hgldd/*.dd` is firtool's HGLDD. HGLDD names become the
+second spelling of each signal (`spinal_path`, `io.a.valid` for `io_a_valid`);
+firtool temporaries (`_*`) keep their Verilog name. firtool fuses locations,
+so a connect can show the register or operator line instead of its own.
+`meta.firtool_version` and `meta.firtool_options` record the compiler.
+
+See [the design](../docs/design/hdl-frontends.md) for the remaining phases.

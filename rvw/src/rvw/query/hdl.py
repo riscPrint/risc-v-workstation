@@ -29,7 +29,7 @@ def _quote(value):
     return '"' + str(value).replace('\\', '\\\\').replace('"', '\\"') + '"'
 
 
-FRONTENDS = {'yosys': 'yosys-verilog', 'slang': 'yosys-slang', 'ghdl': 'yosys-ghdl'}
+FRONTENDS = {'yosys': 'yosys-verilog', 'slang': 'yosys-slang', 'ghdl': 'yosys-ghdl', 'chisel': 'yosys-firtool'}
 SOURCE_REMAP = r'\$(?:readmem\w*|fopen)\b|`line\b|``'
 
 
@@ -46,12 +46,15 @@ def _slang_plugin(tool, plugin):
 
 
 def build_hdl(sources, top, out, *, yosys='yosys', timeout=120, frontend='yosys', include_dirs=(),
-              defines=(), parameters=(), std=None, slang=None, ghdl_plugin=None, library='work'):
+              defines=(), parameters=(), std=None, slang=None, ghdl_plugin=None, library='work',
+              firtool=None, source_roots=()):
     """Capture, elaborate, translate and atomically publish. Errors keep old output.
 
     `frontend` is `yosys` (native read_verilog -sv subset, self-contained files), `slang`
     (yosys-slang: full SystemVerilog with include directories, defines and top parameters) or
-    `ghdl` (VHDL through the GHDL Yosys plugin; `parameters` are top generics, `std` 93/08)."""
+    `ghdl` (VHDL through the GHDL Yosys plugin; `parameters` are top generics, `std` 93/08) or
+    `chisel` (FIRRTL files through firtool, then the native reader; `source_roots` hold the
+    Scala sources that firtool's locations name)."""
     if frontend not in FRONTENDS:
         raise ValueError(f'unknown frontend {frontend!r}')
     if not re.fullmatch(r'[A-Za-z_][A-Za-z_0-9$]*', top):
@@ -61,6 +64,8 @@ def build_hdl(sources, top, out, *, yosys='yosys', timeout=120, frontend='yosys'
             raise ValueError(f'unsupported define or parameter: {value!r}')
     if frontend == 'yosys' and (include_dirs or defines or parameters or std):
         raise ValueError('include directories, defines, parameters and --std need --frontend slang')
+    if frontend == 'chisel' and (include_dirs or defines or parameters or std):
+        raise ValueError('a FIRRTL circuit is elaborated: no include directories, defines, parameters or --std')
     if frontend == 'ghdl' and (include_dirs or defines):
         raise ValueError('VHDL has no include directories or defines')
     if not re.fullmatch(r'[A-Za-z][A-Za-z_0-9]*', library):
@@ -78,7 +83,33 @@ def build_hdl(sources, top, out, *, yosys='yosys', timeout=120, frontend='yosys'
         private = Path(private).resolve()
         capture = Capture(private / 'inputs')
         tool = capture.tool(yosys)
-        if frontend in ('yosys', 'ghdl'):
+        rtl = {}
+        if frontend == 'chisel':
+            from . import hdl_chisel
+            if len(sources) != 1:
+                raise ValueError('pass one FIRRTL file (one circuit)')
+            inputs = [capture.file(p) for p in sources]
+            fir_tool = capture.tool(firtool or os.environ.get('RVW_FIRTOOL') or 'firtool')
+            rtldir = private / 'rtl'
+            rtldir.mkdir()
+            process = run_group(hdl_chisel.firtool_argv(fir_tool.path, inputs[0].copy, rtldir),
+                                cwd=private, capture=True, timeout=timeout)
+            if process.returncode:
+                raise ValueError('firtool failed: ' + process.stderr[-3000:])
+            copies, includes = hdl_chisel.emitted(rtldir), []
+            for c in copies:
+                if re.search(r'`include\b|' + SOURCE_REMAP, c.read_text()):
+                    raise ValueError('unsupported include, file input or source remapping in firtool output')
+            rtl = {f'rtl/{c.name}': c.read_text() for c in copies}
+            # Capture each Scala file that a location names, under the source roots.
+            roots = [Path(r).absolute() for r in source_roots] or [Path(sources[0]).parent]
+            scala = {}
+            for rel in sorted(hdl_chisel.scala_paths(rtl.values())):
+                found = hdl_chisel.resolve_scala(rel, roots)
+                if found is not None:
+                    scala[rel] = capture.file(found)
+            used = [*inputs, *scala.values()]
+        elif frontend in ('yosys', 'ghdl'):
             inputs = [capture.file(p) for p in sources]
             copies, includes, used = [i.copy for i in inputs], [], inputs
             # Refuse file access whose dependency set this subset cannot capture.
@@ -105,6 +136,8 @@ def build_hdl(sources, top, out, *, yosys='yosys', timeout=120, frontend='yosys'
                     raise ValueError('unsupported file input or source remapping')
             plugin = capture.file(_slang_plugin(tool, slang))
         paths = {os.path.realpath(i.copy): i.source for i in used}
+        for c in (copies if frontend == 'chisel' else ()):
+            paths[os.path.realpath(c)] = f'rtl/{c.name}'
         netlist = private / 'design.json'
         script = private / 'build.ys'
         ast = locs = None
@@ -125,9 +158,14 @@ def build_hdl(sources, top, out, *, yosys='yosys', timeout=120, frontend='yosys'
             script.write_text('ghdl ' + ' '.join(options) + ' ' + ' '.join(str(c) for c in copies)
                               + f' -e {top}\nwrite_json {_quote(netlist)}\n')
             argv = [tool.path, '-Q', '-T', '-m', str(plugin.resolved), '-s', str(script)]
-        elif frontend == 'yosys':
-            script.write_text('read_verilog -sv ' + ' '.join(_quote(c) for c in copies)
-                              + f'\nhierarchy -check -top {top}\nproc\nwrite_json {_quote(netlist)}\n')
+        elif frontend in ('yosys', 'chisel'):
+            # firtool guards simulation-only initializers with SYNTHESIS.
+            define = '-DSYNTHESIS ' if frontend == 'chisel' else ''
+            script.write_text(f'read_verilog -sv {define}' + ' '.join(_quote(c) for c in copies)
+                              + f'\nhierarchy -check -top {top}\nproc\n'
+                              # Chisel resets are synchronous mux logic; opt_dff folds them into $sdff.
+                              + ('opt_dff -nodffe -nosdff\nopt_dff -nodffe\n' if frontend == 'chisel' else '')
+                              + f'write_json {_quote(netlist)}\n')
             argv = [tool.path, '-Q', '-T', '-s', str(script)]
         else:
             # read_slang takes words without quote removal; the private copies have plain paths.
@@ -168,12 +206,29 @@ def build_hdl(sources, top, out, *, yosys='yosys', timeout=120, frontend='yosys'
                 writer.domains()
                 if locs:
                     hdl_ghdl.apply(conn, locs, paths)
+                if frontend == 'chisel':
+                    names, hgldd = hdl_chisel.load_hgldd(private / 'rtl')
+                    bound = hdl_chisel.apply(conn, rtl, {k: v.source for k, v in scala.items()}, names)
+                    for name, text in rtl.items():
+                        data = text.encode()
+                        conn.execute('INSERT INTO artifacts VALUES (?,?,?,?,?)',
+                                     (name, 'text/x-systemverilog', 'identity', len(data), data))
+                    for name, data in hgldd.items():
+                        conn.execute('INSERT INTO artifacts VALUES (?,?,?,?,?)',
+                                     (name, 'application/json', 'identity', len(data), data))
+                    _artifact(conn, 'hdl/source-map.json',
+                              {n: {str(k): [f'{f}:{l}' for f, l in v] for k, v in hdl_chisel.line_map(t).items()}
+                               for n, t in rtl.items()})
                 meta = {'schema': 'rvw.designdb/20', 'toplevel': top,
                         'frontend': FRONTENDS[frontend], 'extra_scopes': f'TOP {top}',
                         'emission_config': '$incomplete:hdl-navigation-only',
                         'input_capture': json.dumps(capture.record()),
                         'graph_semantics': 'conservative signal and whole-cell dependencies; register stage counts can include state aliases',
                         'yosys_version': tool.version.strip()}
+                if frontend == 'chisel':
+                    meta.update({'firtool_version': fir_tool.version.strip(),
+                                 'firtool_options': json.dumps(hdl_chisel.FIRTOOL_OPTIONS),
+                                 'hdl_options': json.dumps({'source_roots': [str(r) for r in roots]})})
                 if frontend == 'ghdl':
                     meta.update({'ghdl_plugin_sha256': plugin.sha256, 'ghdl_version': ghdl_tool.version.strip(),
                                  'hdl_options': json.dumps({'std': std, 'library': library,
