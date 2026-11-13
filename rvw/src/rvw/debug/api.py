@@ -51,3 +51,11 @@ def tap_run(port, out, host='127.0.0.1', irlen=5, idcode=None, busy_probe=True):
 def list_checks():
     from . import suite, checks as _registered  # noqa: F401
     return [{'id': c.id, 'group': c.group, 'rule': c.doc} for c in suite.CHECKS.values()]
+
+
+def interop_run(out, elf, port=None, profile=None, reset_pc=None, idcode=None, openocd='openocd', gdb=None,
+                timeout=120):
+    from . import interop
+    prof = profiles.load(profile) if profile else None
+    return interop.run(port=port, profile=prof, elf=elf, openocd=openocd, gdb=gdb, out=out, timeout=timeout,
+                       reset_pc=reset_pc, idcode=idcode)
