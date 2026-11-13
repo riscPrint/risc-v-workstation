@@ -1,0 +1,100 @@
+{
+  "schema": "ooo-mini.timing/1",
+  "rows": [
+    {
+      "config": "default",
+      "program": "window",
+      "rtl_cycles": 4024,
+      "rtl_instret": 1308,
+      "rtl_ipc": 0.3250497017892644,
+      "model_cycles": 4213,
+      "model_ipc": 0.31046760028483267,
+      "accuracy_status": "inconclusive",
+      "configuration_status": "unchecked",
+      "rtl_sha256": "8deba839bcf7e10e9ebc0ff51f7745db0aa4afb17acf6137be1831c1839e3a33"
+    },
+    {
+      "config": "default",
+      "program": "dependent",
+      "rtl_cycles": 618,
+      "rtl_instret": 507,
+      "rtl_ipc": 0.8203883495145631,
+      "model_cycles": 909,
+      "model_ipc": 0.5577557755775577,
+      "accuracy_status": "inconclusive",
+      "configuration_status": "unchecked",
+      "rtl_sha256": "8deba839bcf7e10e9ebc0ff51f7745db0aa4afb17acf6137be1831c1839e3a33"
+    },
+    {
+      "config": "default",
+      "program": "forward",
+      "rtl_cycles": 514,
+      "rtl_instret": 508,
+      "rtl_ipc": 0.9883268482490273,
+      "model_cycles": 908,
+      "model_ipc": 0.5594713656387665,
+      "accuracy_status": "inconclusive",
+      "configuration_status": "unchecked",
+      "rtl_sha256": "8deba839bcf7e10e9ebc0ff51f7745db0aa4afb17acf6137be1831c1839e3a33"
+    },
+    {
+      "config": "rob16",
+      "program": "window",
+      "rtl_cycles": 3338,
+      "rtl_instret": 1308,
+      "rtl_ipc": 0.39185140802875973,
+      "model_cycles": 2375,
+      "model_ipc": 0.5507368421052632,
+      "accuracy_status": "inconclusive",
+      "configuration_status": "unchecked",
+      "rtl_sha256": "01b29f7e3abf482a93adba8a037dfdc23c462475d8d27679a06d478f745672c7"
+    },
+    {
+      "config": "rob16",
+      "program": "dependent",
+      "rtl_cycles": 618,
+      "rtl_instret": 507,
+      "rtl_ipc": 0.8203883495145631,
+      "model_cycles": 909,
+      "model_ipc": 0.5577557755775577,
+      "accuracy_status": "inconclusive",
+      "configuration_status": "unchecked",
+      "rtl_sha256": "01b29f7e3abf482a93adba8a037dfdc23c462475d8d27679a06d478f745672c7"
+    },
+    {
+      "config": "rob16",
+      "program": "forward",
+      "rtl_cycles": 514,
+      "rtl_instret": 508,
+      "rtl_ipc": 0.9883268482490273,
+      "model_cycles": 908,
+      "model_ipc": 0.5594713656387665,
+      "accuracy_status": "inconclusive",
+      "configuration_status": "unchecked",
+      "rtl_sha256": "01b29f7e3abf482a93adba8a037dfdc23c462475d8d27679a06d478f745672c7"
+    }
+  ],
+  "structural_change": "entries: 8 to 16; the ROB slots also hold IQ and LSQ state",
+  "changes": [
+    {
+      "program": "window",
+      "predicted_ipc_ratio": 1.7738947368421054,
+      "measured_ipc_ratio": 1.2055122828040743
+    },
+    {
+      "program": "dependent",
+      "predicted_ipc_ratio": 1.0,
+      "measured_ipc_ratio": 1.0
+    },
+    {
+      "program": "forward",
+      "predicted_ipc_ratio": 1.0,
+      "measured_ipc_ratio": 1.0
+    }
+  ],
+  "limits": [
+    "Model uses retirement traces and does not execute wrong-path instructions.",
+    "Model branch timing and shared multiply/divide occupancy differ from RTL.",
+    "No parameter extraction or held-out accuracy qualification is claimed."
+  ]
+}

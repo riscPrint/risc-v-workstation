@@ -1,0 +1,24 @@
+{
+  "fetch_width": 1,
+  "fetch_entries": 1,
+  "rename_width": 1,
+  "rob_entries": 16,
+  "issue_width": 1,
+  "issue_entries": 16,
+  "load_entries": 16,
+  "store_entries": 16,
+  "commit_width": 1,
+  "physical_registers": 48,
+  "memory_policy": "disambiguate",
+  "forwarding_latency": 1,
+  "branch_penalty": 3,
+  "latencies": {
+    "alu": 1,
+    "multiply": 3,
+    "divide": 32,
+    "load": 1,
+    "store": 1,
+    "branch": 1,
+    "jump": 1
+  }
+}

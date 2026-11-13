@@ -96,3 +96,23 @@ Set `RISCV_FORMAL` to a pinned riscv-formal checkout for `rvw formal isa`.
 The example wrapper exposes RTL retirement directly and leaves RAM data arbitrary.
 ADD, LUI and the retirement cover timed out after 15 seconds at depth 8.
 No ISA property closed. See [formal results](formal-results.json).
+
+## OoO timing model
+
+The core owns `rvw/timing.json` and `rvw/timing-rob16.json`.
+Three assembly programs isolate an independent instruction window behind divide,
+a dependent multiply chain, and store forwarding. Six native runs passed.
+The one structural parameter changes the unified ROB/IQ/LSQ from 8 to 16 slots.
+
+| Program | RTL cycles, 8 slots | RTL cycles, 16 slots | Model cycles, 8 slots | Model cycles, 16 slots |
+|---|---:|---:|---:|---:|
+| window | 4024 | 3338 | 4213 | 2375 |
+| dependent | 618 | 618 | 909 | 909 |
+| forward | 514 | 514 | 908 | 908 |
+
+For window, the model predicts a 1.774 IPC ratio. RTL measures 1.206.
+Both ratios are 1.0 on the other two programs. The model overpredicts the
+window benefit. It lacks wrong-path execution and differs in branch timing
+and shared multiply/divide occupancy. Parameters are project declarations,
+not an elaborated parameter export. No accuracy qualification is claimed.
+See [timing results](timing-results.json).
