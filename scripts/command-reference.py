@@ -42,6 +42,8 @@ def render():
 
         def visit(parser):
             parser.format_help()  # Load lazy providers before reading their command tree.
+            if hasattr(parser, "load"):
+                parser.load()
             # argparse otherwise wraps usage at the caller's terminal width.
             parser.formatter_class = partial(parser.formatter_class, width=78)
             lines.extend(['### `' + parser.prog + '`', '', '```text',

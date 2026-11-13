@@ -151,3 +151,41 @@ print(json.dumps({'cpu': time.process_time()-start, 'load': os.getloadavg(),
         for prefix in ('jsonschema', 'sqlite3', 'rvw.query.ops', 'rvw.query.diff'):
             assert not any(m == prefix or m.startswith(prefix + '.')
                            for m in result['modules']), (prefix, result)
+
+
+
+def test_query_help_keeps_the_semantic_type_summary(capsys):
+    from rvw.cli import main
+    with pytest.raises(SystemExit) as exc:
+        main(['query', '--help'])
+    assert exc.value.code == 0
+    assert 'Use elaborated signal types.' in capsys.readouterr().out
+
+
+
+def test_core_cli_does_not_import_other_profiles():
+    code = """
+import json, os, sys, time, contextlib, io
+start = time.process_time()
+from rvw.cli import main
+with contextlib.redirect_stdout(io.StringIO()):
+    assert main(['mcp', '--list', '--profile', 'core']) == 0
+from rvw.mcp.profiles import PROFILES
+outside = set.union(*(v for k, v in PROFILES.items() if k != 'core'))
+loaded = {name.split('.')[1] for name in sys.modules if name.startswith('rvw.')}
+print(json.dumps({'cpu': time.process_time()-start, 'load': os.getloadavg(),
+                  'outside': sorted(outside & loaded)}))
+"""
+    for _ in range(2):
+        result = json.loads(subprocess.check_output([sys.executable, '-c', code], text=True))
+        assert not result['outside'], result
+        assert result['cpu'] < 0.4, result
+
+
+@pytest.mark.parametrize('argv', [
+    ['mcp', '--list'], ['--json', 'mcp', '--list'],
+    ['--project', 'a.toml', 'mcp', '--list'], ['--project=a.toml', 'mcp', '--list'],
+])
+def test_mcp_selection_accepts_root_options(argv):
+    from rvw.cli import _mcp_invocation
+    assert _mcp_invocation(argv)

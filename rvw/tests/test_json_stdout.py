@@ -39,6 +39,8 @@ def assert_one_document_or_empty(stdout: str, what: str):
 
 def json_commands(parser: argparse.ArgumentParser, path=()):
     """(command path, parser) for every leaf of the rvw argparse tree that has a --json option."""
+    if hasattr(parser, "load"):
+        parser.load()
     seen = set()
     for action in parser._actions:
         if isinstance(action, argparse._SubParsersAction):
@@ -108,6 +110,7 @@ def test_probe_arguments_reach_handlers():
         parser.parse_args(probe_argv(path, command, Path("missing-inputs")) + EXTRA.get(path, []))
 
 
+@pytest.mark.fast
 def test_the_probe_sees_the_known_json_commands():
     names = {" ".join(p) for p, _ in COMMANDS}
     for expected in ("bundle", "reduce", "bisect", "wave sample", "cov report", "regress run",

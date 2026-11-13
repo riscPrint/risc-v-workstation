@@ -12,7 +12,10 @@ def use_background(tool):
 
 
 
-def run_discovered(tool_name, arguments):
+def run_discovered(tool_name, arguments, provider=None):
+    if provider is not None:
+        from .lazy import resolve
+        return resolve(provider, tool_name).handler(**arguments)
     # Resolve closures in the worker from the provider rather than pickling them.
     from .registry import discover
     tools, problems = discover()
@@ -28,5 +31,6 @@ def prepare(tool):
     def execute(job, **arguments):
         from .worker import run_function
         return run_function(job, __name__, "run_discovered",
-                            {"tool_name": tool.name, "arguments": arguments})
+                            {"tool_name": tool.name, "arguments": arguments,
+                             "provider": getattr(tool, "_rvw_provider", None)})
     return replace(tool, handler=execute, long=True)

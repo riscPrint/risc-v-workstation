@@ -2,6 +2,7 @@
 import json
 from rvw.mcp.lazy import functions
 semantic = functions("rvw.query.semantic")
+semantic.expression_type.__doc__ = "Use elaborated signal types. Do not infer HDL sizing rules from text."
 from rvw.query.mcp_tools import DB, RO, _wrap
 from rvw.mcp.spec import ToolSpec, schema
 

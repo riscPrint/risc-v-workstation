@@ -155,3 +155,26 @@ options and built-in tool arguments. The reference is checked against the code.
 `rvw sample STUDY.json --out RUN_ROOT --interval 10000 --max-k 8 --warmup 1000`
 joins Spike BBVs, checkpoints, project bootstrap adapters and checked RTL intervals.
 See [the sampled flow](src/rvw/sample/README.md). Native sampling error is unmeasured.
+
+## Start-up cost
+
+Measured on Python 3.13.5 with MCP SDK 2.3.0, 2026-11-13. Each row uses the median CPU sample from three fresh processes. Load is the 1/5/15-minute load average for that sample. CPU time excludes waiting on this heavily loaded host. Import counts include the standard library.
+
+| Command | Before CPU s | Before imports | Before load | After CPU s | After imports | After load | Factor |
+|---|---:|---:|---|---:|---:|---|---:|
+| rvw --help | 0.3155 | 759 | 221.0, 246.1, 242.4 | 0.0523 | 227 | 200.7, 229.8, 236.5 | 6.03x |
+| rvw query --help | 0.2926 | 759 | 221.0, 248.3, 243.1 | 0.0564 | 235 | 202.2, 231.1, 237.1 | 5.19x |
+| rvw probes --help | 0.2859 | 759 | 220.9, 247.9, 242.9 | 0.0612 | 244 | 202.2, 231.1, 237.1 | 4.67x |
+| rvw mcp --list | 0.6059 | 815 | 223.6, 246.3, 242.5 | 0.0930 | 384 | 201.1, 230.4, 236.8 | 6.51x |
+| rvw mcp --list --profile core | 0.3107 | 815 | 220.9, 247.9, 242.9 | 0.0450 | 174 | 201.1, 230.4, 236.8 | 6.90x |
+| MCP core, first tools/list response | 0.6850 | 1177 | 223.7, 245.9, 242.4 | 0.4121 | 635 | 200.7, 229.8, 236.5 | 1.66x |
+| MCP all, first tools/list response | 0.9079 | 1177 | 224.7, 245.7, 242.4 | 0.4847 | 840 | 202.2, 231.1, 237.1 | 1.87x |
+
+The MCP rows send real `initialize` and `tools/list` requests over stdio. The server records CPU after it flushes the first tool-list response. SDK imports account for much of the remaining server cost. The baseline uses revision `67423943`. The all-profile count grew from 338 to 343 tools during parallel development. These measurements do not use a frozen source tree across variants.
+
+Keep these two rules:
+
+1. Keep `cli` and `mcp_tools` declarations light. Import heavy implementations inside handlers. Update `cli_declarations.py` when a provider adds a top-level command. A drift test checks this metadata. The core workflow's cross-package declarations also have a drift test.
+2. Read large data files on first use. Cache immutable catalogs after that read. Do not read JSON catalogs or schemas at module import time.
+
+Repeat start-up measurements with `rvw/.venv/bin/python scripts/profile-startup.py > "$RUN_ROOT/startup.jsonl"`. Use `python -X importtime -m rvw mcp --list` for import elapsed-time attribution. Use `rvw/.venv/bin/python scripts/profile-startup.py --cpu-profile "$RUN_ROOT/startup.prof" mcp --list` for CPU attribution. Profile tests and fixtures with `rvw/.venv/bin/python scripts/profile-fast.py "$RUN_ROOT/fast.json"`. Add `--collect-only` to measure collection. Profile call overhead with `rvw/.venv/bin/python scripts/profile-mcp-calls.py`. Its `--control` flag restores the previous empty-argument and signature work. Keep reports outside the repository.

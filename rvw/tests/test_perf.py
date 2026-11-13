@@ -211,6 +211,7 @@ def test_explicit_mnemonic_classes(mnemonic, cls):
     assert identify({'0': f'80000000: {mnemonic}'}, 'riscv') == ('0x80000000', cls)
 
 
+@pytest.mark.slow
 def test_every_decoder_mnemonic_has_a_deliberate_perf_class():
     from rvw.common.riscv import decode
     from rvw.perf.classify import identify

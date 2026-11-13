@@ -50,17 +50,21 @@ class _LazyParser(argparse.ArgumentParser):
         self.load()
         return super().parse_known_args(args, namespace)
 
+    def format_usage(self):
+        self.load()
+        return super().format_usage()
+
     def format_help(self):
         self.load()
         return super().format_help()
 
 
-def build_parser() -> argparse.ArgumentParser:
+def build_parser(*, only=None) -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="rvw", description=rvw.__doc__)
     parser.add_argument("--version", action="version", version=rvw.__version__)
     sub = parser.add_subparsers(dest="command", required=True, parser_class=_LazyParser)
     for mod in sorted(pkgutil.iter_modules(rvw.__path__), key=lambda m: m.name):
-        if not mod.ispkg:
+        if not mod.ispkg or (only is not None and mod.name != only):
             continue
         package = f"rvw.{mod.name}"
         try:
@@ -94,6 +98,20 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
+def _mcp_invocation(argv):
+    """Skip unrelated CLI declarations when the root command is MCP."""
+    index = 0
+    while index < len(argv):
+        token = argv[index]
+        if token == '--project':
+            index += 2
+        elif token.startswith('--project=') or token == '--json':
+            index += 1
+        else:
+            return token == 'mcp'
+    return False
+
+
 class _SignalStop(KeyboardInterrupt):
     def __init__(self, signum: int):
         self.signum = signum
@@ -111,7 +129,9 @@ def main(argv=None) -> int:
         for sig in (signal.SIGTERM, signal.SIGHUP):
             old[sig] = signal.signal(sig, _stop)
     try:
-        args = build_parser().parse_args(argv)
+        argv = sys.argv[1:] if argv is None else list(argv)
+        parser = build_parser(only="mcp") if _mcp_invocation(argv) else build_parser()
+        args = parser.parse_args(argv)
         # Handlers resolve projects per invocation. Do not mutate process environment:
         # the same handlers also serve concurrent MCP calls.
         native_json = vars(args).pop("_rvw_native_json", True)

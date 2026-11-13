@@ -15,7 +15,7 @@ from rvw.csim.traces import branch_kind
 from rvw.csim.lib import KINDS as BRANCH_KINDS
 from test_ooo import cfg,trace
 
-pytestmark=pytest.mark.fast
+pytestmark=pytest.mark.slow
 
 
 @pytest.fixture(scope='module')

@@ -35,8 +35,12 @@ def functions(module):
     """
     class Functions:
         def __getattr__(self, name):
+            target = None
             def call(*args, **kwargs):
-                return getattr(import_module(module), name)(*args, **kwargs)
+                nonlocal target
+                if target is None:
+                    target = getattr(import_module(module), name)
+                return target(*args, **kwargs)
             call.__module__ = module
             call.__name__ = name
             setattr(self, name, call)
