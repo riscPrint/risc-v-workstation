@@ -6,8 +6,48 @@
 #include <cstdlib>
 #include <cstring>
 #include <string>
-#include <regex>
+#include <cctype>
 #include <cstdio>
+// Read one top-level scalar from the Python server's JSON object. Nested
+// per-hart reports and reproduction data do not control this connection.
+static std::string top_value(const std::string& json, const std::string& key) {
+  unsigned depth = 0;
+  auto skip_space = [&](size_t p) {
+    while (p < json.size() && std::isspace(static_cast<unsigned char>(json[p]))) ++p;
+    return p;
+  };
+  auto string_end = [&](size_t p) {
+    for (++p; p < json.size(); ++p) {
+      if (json[p] == '\\') ++p;
+      else if (json[p] == '"') return p;
+    }
+    return json.size();
+  };
+  for (size_t p = 0; p < json.size(); ++p) {
+    if (json[p] == '{' || json[p] == '[') ++depth;
+    else if (json[p] == '}' || json[p] == ']') { if (depth) --depth; }
+    else if (json[p] == '"') {
+      size_t end = string_end(p);
+      if (end == json.size()) return "";
+      size_t colon = skip_space(end + 1);
+      if (depth == 1 && json.substr(p, end-p+1) == "\"" + key + "\"" &&
+          colon < json.size() && json[colon] == ':') {
+        size_t start = skip_space(colon + 1), stop = start;
+        if (start < json.size() && json[start] == '"') {
+          stop = string_end(start);
+          if (stop == json.size()) return "";
+          ++stop;
+        } else {
+          while (stop < json.size() && json[stop] != ',' && json[stop] != '}' &&
+                 !std::isspace(static_cast<unsigned char>(json[stop]))) ++stop;
+        }
+        return json.substr(start, stop-start);
+      }
+      p = end;
+    }
+  }
+  return "";
+}
 static int rvw_socket = -1;
 extern "C" void rvw_cosim_close() {
   if (rvw_socket >= 0) close(rvw_socket);
@@ -39,11 +79,11 @@ extern "C" int rvw_cosim_observe(const char* c2) {
   char c;
   while (recv(rvw_socket, &c, 1, 0) == 1) {
     if (c == '\n') {
-      if (std::regex_search(response, std::regex(R"rx("status"\s*:\s*"continue")rx"))) return 0;
+      const auto status = top_value(response, "status");
+      if (status == "\"continue\"") return 0;
       std::fprintf(stderr, "%s\n", response.c_str());
       rvw_cosim_close();
-      if (std::regex_search(response, std::regex(R"rx("status"\s*:\s*"match")rx")) &&
-          std::regex_search(response, std::regex(R"rx("trace_complete"\s*:\s*true)rx"))) return 1;
+      if (status == "\"match\"" && top_value(response, "trace_complete") == "true") return 1;
       return 2;
     }
     response += c;
