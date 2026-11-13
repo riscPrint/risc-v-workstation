@@ -13,4 +13,16 @@ class HpmChecksSpec extends AnyFunSuite with ApplicationTest {
     exercise("hpm_ref", Set("hpm.count"))(new Ref)
   }
   test("reject unsupported or ambiguous project intent") { intercept[IllegalArgumentException](HpmModel(1, 4, 0, "")) }
+  class Masked extends ApplicationRef {
+    val count = Reg(UInt(4 bits)).init(0)
+    val inc = (count + 1).resized
+    count := inc
+    for(i <- 0 until 4) when(write && strobes(i)) { count(i) := data(i) }
+    HpmChecks.bind("halves", HpmModel(1, 4, 0, "one event per cycle with masked software writes"),
+      count ^ Mux(corrupt, U(1, 4 bits), U(0, 4 bits)), U(1, 1 bits), False, True,
+      write, data.asUInt, strobes.asUInt)
+  }
+  test("masked counter writes preserve unselected increment and carry bits") {
+    exercise("hpm_masked", Set("hpm.count"))(new Masked)
+  }
 }
