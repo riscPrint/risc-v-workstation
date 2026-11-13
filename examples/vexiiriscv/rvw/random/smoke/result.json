@@ -1,0 +1,112 @@
+{
+  "schema": "rvw.coverage-smoke/1",
+  "status": "pass",
+  "database_sha256": "f74435036307f477a39e2a610fb71691bb6190d6e9f95045e6fb2f99dbf5d57b",
+  "point_universe": "46ff39b8fe06141c5ac512acfe278769a49f5e825086e5a7a2cda6b1348ce7b6",
+  "budget_s": 180.0,
+  "startup_s": 120.0,
+  "selected": [
+    "rv32ui-p-lw",
+    "rv32ui-p-sw",
+    "rv32ui-p-beq"
+  ],
+  "estimated_test_s": 5.4799999999999995,
+  "estimated_total_s": 125.48,
+  "unknown_costs": [],
+  "notes": [
+    "Costs are recorded C1 wall seconds plus the declared startup allowance.",
+    "Selection is greedy. It does not prove the best coverage under the time budget.",
+    "The estimate is not a runtime guarantee."
+  ],
+  "minimisation": {
+    "schema": "rvw.coverage-rank/1",
+    "algorithm": "exact-set-cover",
+    "optimal": true,
+    "inclusion_minimal": true,
+    "selected": [
+      "rv32ui-p-add",
+      "rv32ui-p-beq",
+      "rv32ui-p-lw",
+      "rv32ui-p-sw"
+    ],
+    "ranking": [
+      {
+        "test": "rv32ui-p-lw",
+        "new_points": 27591,
+        "covered_points": 27591,
+        "unique_points": 45
+      },
+      {
+        "test": "rv32ui-p-sw",
+        "new_points": 35,
+        "covered_points": 27578,
+        "unique_points": 7
+      },
+      {
+        "test": "rv32ui-p-beq",
+        "new_points": 18,
+        "covered_points": 27085,
+        "unique_points": 18
+      },
+      {
+        "test": "rv32ui-p-add",
+        "new_points": 1,
+        "covered_points": 27074,
+        "unique_points": 1
+      }
+    ],
+    "redundant": [],
+    "contribution": {
+      "rv32ui-p-add": {
+        "covered_points": 27074,
+        "unique_points": 1
+      },
+      "rv32ui-p-beq": {
+        "covered_points": 27085,
+        "unique_points": 18
+      },
+      "rv32ui-p-lw": {
+        "covered_points": 27591,
+        "unique_points": 45
+      },
+      "rv32ui-p-sw": {
+        "covered_points": 27578,
+        "unique_points": 7
+      }
+    }
+  },
+  "measured_target_points": 27645,
+  "new_execution_coverage_credit": false,
+  "covered_points": 27644,
+  "covered_sha256": "a0dcf92418e9e48ff2907815208125f914f70ea9f4beec2267012e1d4963a2a9",
+  "native_point_denominator": 32703,
+  "execution": {
+    "elapsed_s": 150.62634354201145,
+    "timed_out": false,
+    "returncode": 0,
+    "observations": [
+      {
+        "test": "rv32ui-p-lw",
+        "status": "pass",
+        "inconclusive": null,
+        "sha256": "e1592e2feff94fbf7b1740ec23f0b0630f314b1d60324a53f1890b61437e75b7",
+        "rtl_sha256": "39ef3a7d10617b94a6c698b0b2194ebc71398ed7340e033aee910f63a7ee52b9"
+      },
+      {
+        "test": "rv32ui-p-sw",
+        "status": "pass",
+        "inconclusive": null,
+        "sha256": "bb023ad2d83b53361320675af3e5e57286e134a886604a86d3019836ecc59231",
+        "rtl_sha256": "39ef3a7d10617b94a6c698b0b2194ebc71398ed7340e033aee910f63a7ee52b9"
+      },
+      {
+        "test": "rv32ui-p-beq",
+        "status": "pass",
+        "inconclusive": null,
+        "sha256": "6fd5926a9e455519999652357df09a2cba29c64965c59a529c826f184d450200",
+        "rtl_sha256": "39ef3a7d10617b94a6c698b0b2194ebc71398ed7340e033aee910f63a7ee52b9"
+      }
+    ],
+    "scope": "C1 only; no new Spike comparison or coverage credit"
+  }
+}
