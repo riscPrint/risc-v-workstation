@@ -25,6 +25,10 @@ def register(sub):
     recovery = commands.add_parser("recover")
     recovery.add_argument("--out", required=True)
     recovery.set_defaults(func=recover_command)
+    live = commands.add_parser("live")
+    live.add_argument("--root", required=True)
+    live.add_argument("--owner", required=True)
+    live.set_defaults(func=live_command)
     workflow = commands.add_parser("workflow")
     workflow.add_argument("--root", required=True)
     workflow.add_argument("--action", choices=("create", "status", "advance", "capabilities"), default="status")
@@ -145,3 +149,9 @@ def selection_command(args):
 def workflow_command(args):
     from .workflows import workflow
     print(json.dumps(workflow(args.root, args.action, json.loads(Path(args.plan).read_text()) if args.plan else None, args.workflow_id, args.owner)))
+
+
+def live_command(args):
+    from .live import snapshot
+    from .service import Queue
+    print(json.dumps(snapshot(Queue(args.root), args.owner)))

@@ -50,7 +50,7 @@ def workflow(root, action='status', plan=None, workflow_id=None, owner='local'):
         nodes.append(dict(id=node['id'], needs=node.get('needs', []), job_id=job['id'] if job else None,
                           state=job['state'] if job else ('ready' if ready else 'blocked')))
     states = {n['state'] for n in nodes}
-    state = 'complete' if states == {'complete'} else ('failed' if states & {'error', 'timeout', 'inconclusive', 'cancelled', 'budget_exhausted', 'cleanup_required', 'infrastructure_error'} else 'pending')
+    state = 'complete' if states == {'complete'} else ('failed' if states & {'dut_failure', 'error', 'timeout', 'inconclusive', 'cancelled', 'budget_exhausted', 'cleanup_required', 'infrastructure_error'} else 'pending')
     if state != record['state']:
         with queue.connect() as db:
             record['state'] = state

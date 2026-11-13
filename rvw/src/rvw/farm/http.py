@@ -6,12 +6,25 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from .service import Queue
 
 PAGE = '''<!doctype html><meta charset="utf-8"><title>Regression service</title>
-<h1>Regression service</h1><p>Collection complete does not mean DUT pass.</p>
-<label>Token <input id="token" type="password"></label><button id="load">Refresh</button>
-<pre id="runs"></pre><script>
-load.onclick=async()=>{let r=await fetch('/runs',{headers:{Authorization:'Bearer '+token.value}});
-runs.textContent=JSON.stringify(await r.json(),null,2)};
+<style>body{font:15px system-ui;max-width:1100px;margin:30px auto}table{border-collapse:collapse;width:100%}td,th{padding:8px;border-bottom:1px solid #ddd;text-align:left}button{margin:5px}pre{white-space:pre-wrap}svg{width:100%;height:150px}</style>
+<h1>Regression service</h1><p>Execution complete does not mean DUT pass. Missing samples stay absent.</p>
+<label>Token <input id="token" type="password"></label><button id="refresh">Refresh</button>
+<h2>Runs</h2><div id="runs"></div><h2>Recorded pass rate</h2><svg id="chart" viewBox="0 0 1000 100" role="img" aria-label="Recorded pass rate by run"></svg>
+<h2>Failure clusters</h2><div id="clusters"></div><h2>Per-test history</h2><div id="history"></div><pre id="detail"></pre>
+<script>
+const byId=id=>document.getElementById(id);
+async function get(path){let r=await fetch(path,{headers:{Authorization:'Bearer '+byId('token').value}});if(!r.ok)throw Error(await r.text());return r.json()}
+function table(target,heads,rows){target.replaceChildren();let t=document.createElement('table');for(let row of [heads,...rows]){let tr=t.insertRow();for(let text of row)tr.insertCell().textContent=text}target.append(t)}
+byId('refresh').onclick=async()=>{try{let d=await get('/snapshot');
+table(byId('runs'),['Run','State','Tests','Passes','Evidence'],d.runs.map(r=>[r.id,r.state,r.tests,r.passes,r.evidence]));
+let chart=byId('chart');chart.replaceChildren();let prev=null;d.trends.forEach((r,i)=>{if(r.pass_rate===null){prev=null;return}let x=10+i*980/Math.max(1,d.trends.length-1),y=90-r.pass_rate*80;
+if(prev){let l=document.createElementNS('http://www.w3.org/2000/svg','line');for(let [k,v]of Object.entries({x1:prev[0],y1:prev[1],x2:x,y2:y,stroke:'steelblue'}))l.setAttribute(k,v);chart.append(l)}
+let c=document.createElementNS('http://www.w3.org/2000/svg','circle');c.setAttribute('cx',x);c.setAttribute('cy',y);c.setAttribute('r',3);chart.append(c);prev=[x,y]});
+let clusters=byId('clusters');clusters.replaceChildren();for(let c of d.failure_clusters){let p=document.createElement('p');p.textContent=c.category+' / '+c.signature+' / '+c.members.length+' observations';clusters.append(p);for(let path of c.bundles){let b=document.createElement('button');b.textContent='Open C5 bundle';b.onclick=async()=>byId('detail').textContent=JSON.stringify(await get('/bundle/'+c.job_id+'?path='+encodeURIComponent(path)),null,2);clusters.append(b)}}
+table(byId('history'),['Test / seed','Outcomes'],Object.entries(d.test_history).map(([k,v])=>[JSON.parse(k).join(' / '),v.map(x=>x.status+(x.conclusive?'':' (inconclusive)')).join(' → ')]));
+}catch(e){byId('detail').textContent=e.message}};
 </script>'''
+
 
 
 def server(root, tokens, host='127.0.0.1', port=8765):
@@ -41,6 +54,16 @@ def server(root, tokens, host='127.0.0.1', port=8765):
             if not owner:
                 return self.respond(401, {'error': 'authentication required'})
             path = urlsplit(self.path)
+            if path.path == '/snapshot':
+                from .live import snapshot
+                return self.respond(200, snapshot(queue, owner))
+            if path.path.startswith('/bundle/'):
+                from .live import bundle
+                try:
+                    relative = parse_qs(path.query).get('path', [''])[0]
+                    return self.respond(200, bundle(queue, owner, path.path.split('/')[-1], relative))
+                except (ValueError, OSError) as exc:
+                    return self.respond(400, {'error': str(exc)})
             if path.path == '/runs':
                 return self.respond(200, queue.jobs(owner))
             if path.path == '/events':

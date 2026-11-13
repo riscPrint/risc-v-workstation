@@ -34,6 +34,9 @@ class Queue:
             raise ValueError('owner and command argument array are required')
         if not 0 <= retries <= 10 or timeout <= 0:
             raise ValueError('invalid retry count or timeout')
+        retry_on = metadata.get('retry_on', ['error', 'timeout', 'infrastructure_error'])
+        if not isinstance(retry_on, list) or set(retry_on) - {'error', 'timeout', 'infrastructure_error', 'dut_failure'}:
+            raise ValueError('invalid retry policy')
         job = dict(id=uuid.uuid4().hex, owner=owner, command=command, priority=int(priority),
                    retries=retries, timeout=timeout, state='queued', created=time.time(), attempts=[], metadata=metadata)
         with self.connect() as db:
@@ -121,6 +124,8 @@ class Queue:
             return None
         folder = self.root / job['id']
         folder.mkdir(exist_ok=True)
+        attempt_dir = folder / f"attempt-{len(job['attempts'])}"
+        attempt_dir.mkdir(exist_ok=False)
         stopped = threading.Event()
         def monitor():
             while not stopped.wait(.1):
@@ -137,7 +142,7 @@ class Queue:
         status = 'infrastructure_error'
         try:
             with (folder / f"attempt-{len(job['attempts'])}.log").open('w') as log:
-                result = run_group(job['command'], cwd=folder, timeout=job.get('effective_timeout', job['timeout']), stdout=log, stderr=log,
+                result = run_group([a.replace('{attempt_dir}', str(attempt_dir)) for a in job['command']], cwd=attempt_dir, timeout=job.get('effective_timeout', job['timeout']), stdout=log, stderr=log,
                                    on_start=lambda pid: self.update(job['id'], pgid=pid, process_stamp=process_stamp(pid)))
             status = 'timeout' if result.timed_out else ('complete' if result.returncode == 0 else 'error')
         except OSError as exc:
@@ -148,11 +153,34 @@ class Queue:
         current = next(j for j in self.jobs() if j['id'] == job['id'])
         status = ('budget_exhausted' if status == 'timeout' and job.get('effective_timeout', job['timeout']) < job['timeout'] else status)
         status = 'cancelled' if current['state'] == 'cancel_requested' else status
-        job['attempts'][-1].update(status=status, end=time.time())
-        outcomes = {a['status'] for a in job['attempts']}
-        state = 'queued' if status in ('error', 'timeout', 'infrastructure_error') and len(job['attempts']) <= job['retries'] else status
+        attempt = job['attempts'][-1]
+        attempt.update(status=status, end=time.time(), directory=str(attempt_dir))
+        if (attempt_dir / 'result.json').exists():
+            from rvw.results import load_run
+            import hashlib
+            try:
+                run = load_run(attempt_dir)
+                attempt.update(dut_status=run.status, inconclusive=run.why_inconclusive)
+                raw = run.to_dict()
+                native = raw.get('tools', {}).get('native_build', {})
+                if run.elf_sha256 and raw.get('rtl_sha256') and native.get('sha256'):
+                    identity = {k: raw.get(k) for k in ('elf_sha256', 'rtl_sha256', 'config', 'seed', 'max_cycles', 'mem_latency', 'source', 'tools')}
+                    attempt['identity'] = hashlib.sha256(json.dumps(identity, sort_keys=True).encode()).hexdigest()
+                if not run.why_inconclusive and run.status != 'pass':
+                    status = 'dut_failure' if status not in ('cancelled', 'budget_exhausted') else status
+                    attempt['status'] = status
+            except (ValueError, OSError) as exc:
+                attempt['evidence_error'] = str(exc)
+        retry_on = job['metadata'].get('retry_on', ['error', 'timeout', 'infrastructure_error'])
+        state = 'queued' if status in retry_on and len(job['attempts']) <= job['retries'] else status
+        observed_failure = any(a.get('dut_status') not in (None, 'pass') and not a.get('inconclusive') for a in job['attempts'])
+        if state == 'complete' and observed_failure:
+            state = 'dut_failure'
+        identities = {a.get('identity') for a in job['attempts'] if a.get('identity')}
+        unstable = any({a.get('dut_status') == 'pass' for a in job['attempts'] if a.get('identity') == identity and not a.get('inconclusive')} == {True, False} for identity in identities)
         return self.update(job['id'], state=state, pgid=None, attempts=job['attempts'],
-                           unstable='complete' in outcomes and bool(outcomes & {'error', 'timeout'}))
+                           unstable=unstable, observed_dut_failure=observed_failure)
+
 
 
 def manage(root, operation='list', **options):

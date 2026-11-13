@@ -713,7 +713,7 @@ usage: rvw evidence query [-h] --db DB [--text TEXT] [--schema SCHEMA]
 
 ```text
 usage: rvw farm [-h] [--project PROJECT]
-    {run,cancel,notifications,classify,recover,workflow,select,triage,budget,batch,queue,serve,dashboard}
+    {run,cancel,notifications,classify,recover,live,workflow,select,triage,budget,batch,queue,serve,dashboard}
     ...
 ```
 
@@ -747,6 +747,12 @@ usage: rvw farm classify [-h] [--project PROJECT] reports [reports ...]
 
 ```text
 usage: rvw farm recover [-h] --out OUT [--project PROJECT]
+```
+
+### `rvw farm live`
+
+```text
+usage: rvw farm live [-h] --root ROOT --owner OWNER [--project PROJECT]
 ```
 
 ### `rvw farm workflow`
@@ -2848,6 +2854,14 @@ Starts a background job: yes.
 Write filtered C3/C4 history. Missing evidence remains visible.
 
 Arguments: `root` (required), `out` (required), `core`, `suite`, `config`, `gate`, `run`.
+
+Starts a background job: yes.
+
+### `farm_live`
+
+Read owner-scoped runs, trends, test history and failure clusters.
+
+Arguments: `root` (required), `owner` (required).
 
 Starts a background job: yes.
 

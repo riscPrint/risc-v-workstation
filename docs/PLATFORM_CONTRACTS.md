@@ -1,5 +1,14 @@
 # Platform contracts
 
+### Live farm views and checked crash cleanup
+
+The owner-scoped live view reads validated C3 observations from owned job
+folders. C5 reads stay within that job. Trends retain absent samples. Queue
+attempt directories separate retry evidence. Explicit C1 DUT retries retain
+all failures; identity-matched mixed outcomes can mark instability but cannot
+waive a failure. SSH crash cleanup requires checked process start identities
+and no live owned groups before releasing the dead worker's reservations.
+
 ### Authenticated remote MCP transport
 
 MCP SSE requires bearer authentication on both session and message endpoints.
