@@ -8,10 +8,10 @@ from .rtl import identity, validate
 
 class Guide:
     def __init__(self, plan, recipes, history=(), database=None):
-        self.kind='code' if plan.get('schema')=='rvw.code-goals/1' else 'rtl'
+        self.kind='code' if plan.get('schema')=='rvw.code-goals/1' else 'probe' if plan.get('schema')=='rvw.probe-goals/1' else 'rtl'
         self.database=database
-        if self.kind=='rtl':
-            validate(plan)
+        if self.kind in ('rtl','probe'):
+            if self.kind=='rtl':validate(plan)
             ids={b['id'] for b in plan['bins']} | {s['id'] for s in plan.get('sequences',[])}
             self.sequence_ids={s['id'] for s in plan.get('sequences',[])}
             self.full_ids=set(ids)
@@ -61,7 +61,17 @@ class Guide:
         if not qualified:
             raise ValueError('coverage feedback requires a completely qualified execution')
         pending={}
-        if self.kind=='rtl':
+        if self.kind=='probe':
+            if (rtl_sha256!=self.design or report.get('design')!=self.design
+                    or report.get('plan_id')!=self.plan_id or report.get('schema')!='rvw.probe-coverage/1'
+                    or report.get('status')!='qualified'):
+                raise ValueError('missing or incompatible qualified probe identity')
+            samples=[report.get('events_sha256')]
+            if not samples[0]:raise ValueError('missing probe sample hash')
+            observed={b['id'] for b in report['bins'] if b['count']>0}
+            observed|={s['id'] for s in report.get('sequences',[]) if s['completed']>0}
+            pending={s['id']:s['pending'] for s in report.get('sequences',[])}
+        elif self.kind=='rtl':
             if (rtl_sha256 != self.design or report.get('design') != self.design
                     or report.get('plan_id') != self.plan_id or report.get('schema') != 'rvw.rtl-coverage/1'
                     or report.get('status') != 'ok' or report.get('sampling_complete') is not True):

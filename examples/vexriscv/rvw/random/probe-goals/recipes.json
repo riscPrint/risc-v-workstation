@@ -1,0 +1,21 @@
+{
+  "schema": "rvw.event-recipes/1",
+  "plan_id": "7077d65bca311d169511f5efd2263d30648c0c4ea78f40af8766b17353ce2fad",
+  "design": "5be0aa8676c1533ce008c4ce4bcbdf913474e862caf0d97ce0a6ec05efce0e58",
+  "recipes": [
+    {
+      "goal": "sequence:[\"RAW\",1]",
+      "targets": [
+        "data-write-offer"
+      ]
+    },
+    {
+      "goal": "sequence:[\"branch-after-branch\",1]",
+      "targets": [
+        "branch-probe-taken",
+        "branch-probe-not-taken",
+        "taken-then-not-taken"
+      ]
+    }
+  ]
+}

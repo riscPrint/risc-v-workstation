@@ -1171,6 +1171,7 @@ adapter creates a fresh device instance for every request instead. Its native
 poison/reset fixture leaves UART state, CLINT interrupts and an incomplete PLIC
 claim before checking the next request. C1 records the initial device-state
 hash. The checks apply to these models; adapters own other device lifetimes.
+
 ### Coverage source locations
 
 Coverage elaboration uses the existing SpinalWaves location capture and emits
@@ -1178,3 +1179,7 @@ Spinal line comments. The coverage reader can link exact emitted spans to Scala
 locations. Other builds retain their current location settings. Native point
 hits remain distinct from individual Scala statement hits. Unmapped points
 stay in the coverage denominator.
+
+C1 records selected model and observation flags under `options`. Regression
+requires matching receipts for requested coverage and probe capture. Missing
+flags remain inconclusive. Artifact presence alone does not satisfy that check.

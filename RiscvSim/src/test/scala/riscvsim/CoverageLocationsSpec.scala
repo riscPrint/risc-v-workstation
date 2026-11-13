@@ -18,4 +18,16 @@ class CoverageLocationsSpec extends AnyFunSuite {
     val rtl = Files.readString(new java.io.File(report.generatedSourcesPaths.head).toPath)
     assert(rtl.contains("CoverageLocationsSpec.scala"))
   }
+  test("C1 records requested coverage and probe model flags") {
+    val job = RunJob(elf = new java.io.File("program"), out = new java.io.File("out"),
+      config = "flags", seed = 1, seedPicked = false, maxCycles = 100, memLatency = Some(0),
+      rvfiTrace = true, rvfiCheck = false, wave = false, waveFrom = None, waveTo = None,
+      konata = false, coverage = true, probes = true)
+    val options = job.recordedOptions
+    assert(options("coverage").bool)
+    assert(options("probes").bool)
+    assert(options("rvfi_trace").bool)
+    assert(!options("rvfi_check").bool)
+  }
+
 }

@@ -23,6 +23,13 @@ from .stimulus import generate, profile
 from .campaign_artifacts import implementation_id,execution_identity,seal_attempt,verify_attempt,seal_inputs,verify_inputs
 
 
+def execution_options(data):
+    options={}
+    if data.get('coverage') or data.get('code_plan'):options['coverage']=True
+    if data.get('probe_plan'):options['probes']=True
+    return options
+
+
 def identifiers(report):
     return {name+':'+json.dumps(hit['bin'], separators=(',', ':'))
             for name, group in report['groups'].items() for hit in group['hits'] if hit['count'] > 0}
@@ -85,7 +92,7 @@ def campaign(settings, work_dir, resume=False, replay=None):
     data = json.loads(captured.read_text(settings))
     required = {'schema', 'manifest', 'source_root', 'project', 'config', 'registers',
                 'runtime', 'linker', 'platform', 'compiler', 'isa', 'abi', 'attempts', 'seed'}
-    optional = {'timeout_s', 'max_cycles', 'timeout_ms', 'sequences', 'memory', 'rtl_plan', 'code_plan', 'recipes', 'strategy', 'initial_results'}
+    optional = {'timeout_s', 'max_cycles', 'timeout_ms', 'sequences', 'memory', 'rtl_plan', 'code_plan', 'probe_plan', 'coverage', 'recipes', 'strategy', 'initial_results'}
     if data.keys()-required-optional or required-data.keys() or data['schema'] != 'rvw.stimulus-loop/1':
         raise ValueError('expected rvw.stimulus-loop/1 with declared fields')
     if type(data['attempts']) is not int or not 1 <= data['attempts'] <= 1000:
@@ -118,9 +125,11 @@ def campaign(settings, work_dir, resume=False, replay=None):
         raise ValueError('compiler is not installed: '+data['compiler'])
     inputs = {'compiler': captured.sha256(compiler)}
     inputs.update({key: captured.sha256(path(key)) for key in ('manifest','runtime','linker','platform','project')})
-    guidance_key='rtl_plan' if data.get('rtl_plan') else 'code_plan' if data.get('code_plan') else None
-    if data.get('rtl_plan') and data.get('code_plan'):
-        raise ValueError('select one RTL or code guidance plan')
+    guidance_keys=[key for key in ('rtl_plan','code_plan','probe_plan') if data.get(key)]
+    if len(guidance_keys)>1:raise ValueError('select one RTL, code or probe guidance plan')
+    guidance_key=next(iter(guidance_keys),None)
+    if 'coverage' in data and type(data['coverage']) is not bool:
+        raise ValueError('coverage must be boolean')
     if bool(guidance_key)!=bool(data.get('recipes')):
         raise ValueError('guidance plan and recipes must be declared together')
     guide=None
@@ -158,7 +167,7 @@ def campaign(settings, work_dir, resume=False, replay=None):
         report['hits'] = sorted(identifiers(initial['coverage']) & supported)
         report['execution_identity'] = initial['execution_identity']
     pair_settings = {k:data.get(k) for k in ('config','registers','isa','abi','attempts','seed',
-                                             'timeout_s','max_cycles','timeout_ms','sequences','memory')}
+                                             'timeout_s','max_cycles','timeout_ms','sequences','memory','coverage')}
     report['pair_context'] = sha256(json.dumps([inputs,pinned,pair_settings,implementation],
                                                sort_keys=True).encode()).hexdigest()
     report['initial_hits'] = list(report['hits'])
@@ -244,7 +253,8 @@ def campaign(settings, work_dir, resume=False, replay=None):
                     attempt['status'] = 'compile_error'
                 else:
                     suite = Suite('closure', dir=elf_dir, glob='program.elf', strip_suffix='.elf',
-                                  timeout_s=data.get('timeout_s',60), max_cycles=data.get('max_cycles',100000))
+                                  timeout_s=data.get('timeout_s',60), max_cycles=data.get('max_cycles',100000),
+                                  options=execution_options(data))
                     run_plan(selected, [PlanItem(suite, data['config'])], directory/'run', source_for(selected,None),
                              RunOptions(seeds=1,seed_base=attempt['seed'],rvfi_trace=True,use_cache=False,
                                         jobs=1,index=False,tier='closure'))
@@ -264,7 +274,8 @@ def campaign(settings, work_dir, resume=False, replay=None):
                     if guide is not None:
                         from .feedback_campaign import collect
                         attempt['feedback'] = collect(guide,goal,elf,directory/'run',path(guidance_key),
-                                                      evidence['status']=='qualified')
+                                                      evidence['status']=='qualified',
+                            **({'platform':path('platform')} if guidance_key=='probe_plan' else {}))
                     if evidence['status'] == 'qualified':
                         measured = identifiers(evidence['coverage']) & supported
                         attempt['new_hits'] = sorted(measured-hits)

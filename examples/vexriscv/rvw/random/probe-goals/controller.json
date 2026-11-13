@@ -1,0 +1,121 @@
+{
+  "status": "inconclusive",
+  "identity": "e7dfd1a0029dc9d8f2fe279de7aef08295eb441b42a888b05a78a775edbf6530",
+  "implementation_sha256": "841a8388538d5b7c10a8adc51f567da9b06badb4d25c3bd533acebbddc439060",
+  "execution_identity": "28e2f837496d081c1e5104900d6dcaf1a2e5f3fce8a386072daca63d8afc6f0c",
+  "supported_bins": 172,
+  "full_plan_bins": 4546,
+  "attempt_budget": 2,
+  "guidance_coverage": {
+    "kind": "probe",
+    "plan_id": "7077d65bca311d169511f5efd2263d30648c0c4ea78f40af8766b17353ce2fad",
+    "design": "5be0aa8676c1533ce008c4ce4bcbdf913474e862caf0d97ce0a6ec05efce0e58",
+    "declared_bins": 6,
+    "full_input_bins": 6,
+    "observed": [
+      "branch-probe-taken",
+      "data-write-offer"
+    ],
+    "unobserved": [
+      "branch-probe-not-taken",
+      "data-read-offer",
+      "read-then-write-offer",
+      "taken-then-not-taken"
+    ],
+    "uncompleted_sequences": [
+      "read-then-write-offer",
+      "taken-then-not-taken"
+    ],
+    "last_sample_pending": {
+      "taken-then-not-taken": 1,
+      "read-then-write-offer": 0
+    },
+    "unsupported_targets": [
+      "data-read-offer",
+      "read-then-write-offer"
+    ]
+  },
+  "schema": "rvw.native-probe-controller/1",
+  "core": "vexriscv",
+  "state_generation": "e254b6989a5041be9b5f3d279c659a3f",
+  "attempts": [
+    {
+      "goal": "sequence:[\"RAW\",1]",
+      "seed": 71,
+      "status": "hit",
+      "new_hits": [
+        "sem_add_rs1:[\"one\"]",
+        "sem_add_rs2:[\"zero\"]",
+        "sem_addi_imm12:[\"positive\"]",
+        "sem_addi_rs1:[\"zero\"]",
+        "sequence:[\"RAW\",1]"
+      ],
+      "elapsed_s": 246.6422606249107,
+      "controller_cpu_s": 3.9099999999999997,
+      "reaped_child_cpu_s": 13.080000000000002,
+      "trace_sha256": "9a4bc04326512a73b61ca8767ef9a3db06b499f0edca2838a281e7d8464187a6",
+      "c1_sha256": "430fc9b595711d126f63c01167be04d585e46cff5d901311587f96c00a32cafe",
+      "comparison": {
+        "status": "match",
+        "instructions": 9,
+        "trace_complete": true,
+        "synchronized": 0,
+        "applied_masks": []
+      },
+      "feedback": {
+        "status": "observed",
+        "new_events": [
+          "data-write-offer"
+        ],
+        "samples": [
+          "2e0c2c975ad4b4dfe158abe53ae3940de486e3a676e0bc2ddd6a169dc098536f"
+        ],
+        "pending_sequences": {
+          "taken-then-not-taken": 0,
+          "read-then-write-offer": 0
+        },
+        "reason": null
+      }
+    },
+    {
+      "goal": "sequence:[\"branch-after-branch\",1]",
+      "seed": 72,
+      "status": "hit",
+      "new_hits": [
+        "sequence:[\"branch-after-branch\",1]"
+      ],
+      "elapsed_s": 180.22551175008994,
+      "controller_cpu_s": 3.5,
+      "reaped_child_cpu_s": 12.209999999999997,
+      "trace_sha256": "045f7fcb710ed587941be03280fba5a713058b40c8e867b406dada026b24a57d",
+      "c1_sha256": "412012b01b202262be3fbe9f4f39bbac63031479694102f9ed44abe17c80a68d",
+      "comparison": {
+        "status": "match",
+        "instructions": 9,
+        "trace_complete": true,
+        "synchronized": 0,
+        "applied_masks": []
+      },
+      "feedback": {
+        "status": "observed",
+        "new_events": [
+          "branch-probe-taken"
+        ],
+        "samples": [
+          "2284d3080986be1910ecf0fac0fbaf31217fa6489c574cd04e1f5574599d2f49"
+        ],
+        "pending_sequences": {
+          "taken-then-not-taken": 1,
+          "read-then-write-offer": 0
+        },
+        "reason": null
+      }
+    }
+  ],
+  "notes": [
+    "Two attempts and one seed base. No closure-rate gain or C4 acceptance is claimed.",
+    "ISA credit uses payload words. Probe credit covers the full program, including setup and termination.",
+    "CPU descendant completeness and CPU-hour rates remain unqualified.",
+    "The initial preflight rejected missing C1 coverage option receipts. It earned no feedback credit."
+  ]
+}

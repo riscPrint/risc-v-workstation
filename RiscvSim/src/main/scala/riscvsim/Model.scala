@@ -38,6 +38,15 @@ case class RunJob(elf: File, out: File, config: String, seed: Int, seedPicked: B
                   traceIngress: Option[IngressBinding] = None, simThreads: Option[Int] = None,
                   stimulus: Option[StimulusFile] = None) {
   def model: ModelKey = ModelKey(config, rvfi = rvfiTrace || rvfiCheck || hartImages.nonEmpty, wave = wave, coverage = coverage, konata = konata, spinaltrace = spinaltrace, probes = probes, faults = fault.nonEmpty, simThreads = simThreads)
+  /** C1 records the selected model and observation flags for regression identity checks. */
+  def recordedOptions: ujson.Obj = {
+    val options = model.toJson
+    options("rvfi_trace") = ujson.Bool(rvfiTrace)
+    options("rvfi_check") = ujson.Bool(rvfiCheck)
+    options("wave_from") = waveFrom.map(RvwJson.num).getOrElse(ujson.Null)
+    options("wave_to") = waveTo.map(RvwJson.num).getOrElse(ujson.Null)
+    options
+  }
 }
 
 /** What an adapter's run loop reports back. `metrics` (optional, C1) holds named numbers such as roi_cycles. */

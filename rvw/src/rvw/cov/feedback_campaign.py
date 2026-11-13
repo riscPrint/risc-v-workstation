@@ -6,7 +6,7 @@ from rvw.regress.random_stream import digest
 from .rtl import sample
 
 
-def collect(guide, goal, elf, run_dir, plan_path, qualified):
+def collect(guide, goal, elf, run_dir, plan_path, qualified, platform=None):
     if not qualified:
         reason = 'execution did not pass complete reference qualification'
     else:
@@ -15,7 +15,7 @@ def collect(guide, goal, elf, run_dir, plan_path, qualified):
             reason = 'no unique C1 execution for coverage feedback'
         else:
             run = runs[0]
-            artifact_name='coverage' if guide.kind=='code' else 'rtl_samples'
+            artifact_name='coverage' if guide.kind=='code' else 'probe_events' if guide.kind=='probe' else 'rtl_samples'
             artifact = run.artifact(artifact_name)
             if run.why_inconclusive or run.status!='pass':
                 reason = 'C1 execution is not a conclusive pass'
@@ -23,6 +23,11 @@ def collect(guide, goal, elf, run_dir, plan_path, qualified):
                 reason = 'core adapter has no '+artifact_name+' hook'
             else:
                 try:
+                    if guide.kind=='probe':
+                        from .probe_goals import probe_goals
+                        report=probe_goals(run.path/'result.json',plan_path,platform)
+                        return guide.observe(goal,report,qualified=True,rtl_sha256=run.extra.get('rtl_sha256')) | {
+                            'status':'observed','report':report,'c1_sha256':digest(run.path/'result.json')}
                     trace = run.artifact('rvfi_trace')
                     receipt = run.extra.get('details',{}).get('coverage_goals' if guide.kind=='code' else 'rtl_samples')
                     expected = {'elf_sha256':digest(elf),'rvfi_sha256':digest(trace) if trace else None,
