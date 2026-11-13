@@ -85,6 +85,21 @@ def register(sub) -> None:
     security_register(s)
 
 
+    from . import regression
+    regress = s.add_parser("regress", help="run declared SBY properties with a CPU worker cap")
+    regress.add_argument("manifest", nargs="?")
+    regress.add_argument("--out", required=True)
+    regress.add_argument("--jobs", type=int, default=1)
+    regress.add_argument("--timeout", type=float, default=60)
+    regress.add_argument("--json", action="store_true")
+    regress.set_defaults(func=regression.run)
+
+    from . import temporal
+    lowering = s.add_parser("sva-lower", help="lower finite temporal SVA to native Yosys assertions")
+    lowering.add_argument("source")
+    lowering.add_argument("--out", required=True)
+    lowering.set_defaults(func=temporal.run)
+
     template = s.add_parser("template", help="write a reusable out-of-order safety monitor")
     from . import invariants, contracts
     template.add_argument("kind", choices=invariants.NAMES)
@@ -219,7 +234,7 @@ def register(sub) -> None:
     _common(b, 20)
     b.add_argument("--memory-model", choices=["auto", "array", "map"], default="auto")
     b.add_argument("--proof-cache", help="shared directory for exact proof input reuse")
-    b.add_argument("--frontend", choices=["verilog", "slang"], default="verilog",
+    b.add_argument("--frontend", choices=["verilog", "slang", "temporal"], default="verilog",
                    help="slang: restricted clocked SVA subset; needs RVW_SLANG plugin")
     b.add_argument("--abstraction", help="JSON unconstrained abstraction plan")
     b.add_argument("--cut", action="append", help="unconstrained abstraction SIGNAL:WIDTH")

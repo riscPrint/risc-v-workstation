@@ -115,6 +115,13 @@ def mcp_tools():
                         ["smt2", "mapping", "out"]), _runner("proof-core"), long=True),
         ToolSpec("formal_csr", "Generate CSR monitors, directed assembly and coverage. Does not run verification.",
                  schema({"model": S, "out": S}, ["model", "out"]), _csr, long=True),
+
+        ToolSpec("formal_regress", "Run declared SBY property tasks with a CPU worker cap. Return conditional C3 and JUnit observations.",
+                 schema({"manifest": S, "project": S, "out": S, "jobs": {"type": "integer", "minimum": 1},
+                         "timeout": {"type": "number", "exclusiveMinimum": 0}}, ["out"]),
+                 _regress, long=True),
+        ToolSpec("formal_sva_lower", "Lower finite clocked SVA to native Yosys assertions. Unsupported constructs give named errors.",
+                 schema({"source": S, "out": S}, ["source", "out"]), _lower, long=True),
         ToolSpec("formal_cex", "Replay a captured failing BMC witness with edited inputs through Yosys sim. Not a proof.",
                  schema({"result": S, "out": S, "trace_index": I,
                          "edit": {"type": "array", "items": S},
@@ -148,3 +155,25 @@ def mcp_tools():
                         ["out"]),
                  _runner("xprop"), long=True),
     ]
+
+
+def _regress(job, **args):
+    manifest = args.pop("manifest", None)
+    argv = _argv("regress", args)
+    if manifest:
+        argv.append(manifest)
+    code = job.run(argv)
+    path = Path(args["out"]) / "result.json"
+    if code != 1 or not path.is_file():
+        raise ToolError("formal regress failed", {"exit_code": code, "log_tail": job.tail(30)})
+    data = json.loads(path.read_text())
+    if data.get("schema") != "rvw.formal-regress/1" or data.get("status") != "unknown":
+        raise ToolError("formal regress wrote an invalid result")
+    return data
+
+
+def _lower(job, **args):
+    code = job.run([sys.executable, "-m", "rvw", "formal", "sva-lower", args["source"], "--out", args["out"]])
+    if code:
+        raise ToolError("SVA lowering failed", {"exit_code": code, "log_tail": job.tail(30)})
+    return {"output": args["out"]}

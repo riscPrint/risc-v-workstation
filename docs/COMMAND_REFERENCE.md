@@ -408,7 +408,7 @@ usage: rvw farm dashboard [-h] --root ROOT --out OUT [--core CORE] [--suite
 
 ```text
 usage: rvw formal [-h] [--project PROJECT]
-    {csr,security,template,contracts,strengthen,proof-core,apps,autocheck,bench,cex,sby-history,sby-regress,prove,depth-search,riscv,connectivity,equiv,bmc,from-sim,swarm,xprop,x-context,x-sweep}
+    {csr,security,regress,sva-lower,template,contracts,strengthen,proof-core,apps,autocheck,bench,cex,sby-history,sby-regress,prove,depth-search,riscv,connectivity,equiv,bmc,from-sim,swarm,xprop,x-context,x-sweep}
     ...
 ```
 
@@ -436,6 +436,19 @@ usage: rvw formal security ift [-h] --top TOP --out OUT [--project PROJECT]
 ```text
 usage: rvw formal security contract [-h] --out OUT [--project PROJECT]
     manifest
+```
+
+### `rvw formal regress`
+
+```text
+usage: rvw formal regress [-h] --out OUT [--jobs JOBS] [--timeout TIMEOUT]
+    [--json] [--project PROJECT] [manifest]
+```
+
+### `rvw formal sva-lower`
+
+```text
+usage: rvw formal sva-lower [-h] --out OUT [--project PROJECT] source
 ```
 
 ### `rvw formal template`
@@ -570,10 +583,11 @@ usage: rvw formal bmc [-h] [--verilog VERILOG [VERILOG ...]] [--top TOP]
     [--clock CLOCK] [--reset RESET] [--reset-active {high,low}] [--checks
     CHECKS] [--depth DEPTH] [--engine ENGINE] [--timeout TIMEOUT] --out OUT
     [--json] [--tie PORT=VALUE] [--memory-model {auto,array,map}]
-    [--proof-cache PROOF_CACHE] [--frontend {verilog,slang}] [--abstraction
-    ABSTRACTION] [--cut CUT] [--event-clock PORT] [--event-model]
-    [--clock-schedule PORT=BITS] [--async-reset] [--reset-cycles RESET_CYCLES]
-    [--free-reset] [--first-failure] [--project PROJECT]
+    [--proof-cache PROOF_CACHE] [--frontend {verilog,slang,temporal}]
+    [--abstraction ABSTRACTION] [--cut CUT] [--event-clock PORT]
+    [--event-model] [--clock-schedule PORT=BITS] [--async-reset]
+    [--reset-cycles RESET_CYCLES] [--free-reset] [--first-failure] [--project
+    PROJECT]
 ```
 
 ### `rvw formal from-sim`
@@ -1243,7 +1257,7 @@ usage: rvw workloads verify [-h] [--json] --build BUILD --out OUT [--oracle
 
 ## MCP tools
 
-The default server exposes 87 built-in tools, including the four job tools.
+The default server exposes 89 built-in tools, including the four job tools.
 `--only` filters packages. `RVW_MCP_PLUGINS` can add tools.
 `rvw mcp --list --json` returns full input schemas.
 CLI commands without an MCP entry are CLI-only.
@@ -1567,6 +1581,22 @@ Starts a background job: yes.
 Extract a deletion-minimal solver core for one named SMT query. Not an RTL proof.
 
 Arguments: `smt2` (required), `mapping` (required), `db`, `solver`, `timeout`, `out` (required).
+
+Starts a background job: yes.
+
+### `formal_regress`
+
+Run declared SBY property tasks with a CPU worker cap. Return conditional C3 and JUnit observations.
+
+Arguments: `manifest`, `project`, `out` (required), `jobs`, `timeout`.
+
+Starts a background job: yes.
+
+### `formal_sva_lower`
+
+Lower finite clocked SVA to native Yosys assertions. Unsupported constructs give named errors.
+
+Arguments: `source` (required), `out` (required).
 
 Starts a background job: yes.
 

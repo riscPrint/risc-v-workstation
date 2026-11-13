@@ -1281,3 +1281,74 @@ structural fan-in graph from the `rvw query` reader. `--pdg`, `--criterion`, and
 use the existing typed SpinalWaves and Surfer flow. The `formal_cex` MCP tool
 accepts the same options. Native viewer navigation still needs a captured Spinal
 design and the viewer tools. These additions do not establish that integration.
+
+
+## Finite temporal SVA and task regression
+
+Use open Yosys for RTL and immediate formal statements. The `temporal` frontend
+adds finite sequences that the installed slang plugin cannot lower:
+
+```sh
+rvw formal sva-lower properties.sv --out lowered.sv
+rvw formal bmc --frontend temporal --verilog properties.sv --top Top --out proof
+rvw formal regress suite.toml --jobs 2 --timeout 60 --out campaign
+```
+
+The frontend supports module-local named sequences without arguments, Boolean
+atoms, `##N`, `##[M:N]`, consecutive `[*N]` and `[*M:N]`, sequence `or`,
+`|->`, `|=>`, `disable iff`, and inline `assert`, `assume`, `cover property`.
+Each implication has one sequence on each side. Overlapping starts and all
+antecedent matches create separate obligations. Checks wait for the latest
+finite consequent deadline. Bounds are at most 64 samples, with at most 512
+expanded paths. Zero-length repetitions are refused. There is no implicit
+fairness assumption. Unbounded liveness, sampled functions in this frontend,
+nonconsecutive repetition, nested implication, clocking blocks, macros, named
+properties, and action blocks give `unsupported:CONSTRUCT` diagnostics.
+Use the existing slang frontend for its qualified sampled-value functions.
+No licensed tool is required. sv2v does not supply temporal assertion lowering.
+
+Sampling is the value before each rising edge in the Yosys formal event model.
+This does not implement all SystemVerilog simulator scheduling regions.
+`disable iff` clears the validity history asynchronously. With delayed properties,
+use `--event-model --async-reset` for the generated asynchronous state. A reset
+pulse sampled between clock edges cancels pending checks. Pulses wholly between
+global samples remain outside the model. Separate property statements can use
+separate clocks. A sequence cannot change clocks. General async-triggered SVA
+remains unsupported. BMC needs enough samples after a start to reach its deadline;
+a bounded pass does not discharge later obligations.
+
+Native semantic tests exercise each finite construct with a legal design and a
+seeded fault on SMTBMC/Yices. ABC BMC3 also runs these fixtures. Four legal
+fixtures optimize to combinational logic, which ABC BMC3 refuses. Those native
+errors are checked as errors; they are not proof results.
+
+A regression manifest declares one assertion per task:
+
+```toml
+[[property]]
+id = "response_bound"
+sby = "checks.sby"
+task = "response"
+top = "Top"
+requirements = ["REQ-1"]
+assumptions = ["reset starts active"]
+config = "small"
+```
+
+SBY `[tasks]`, task tags and negative task tags select one resolved job per row.
+Python configuration blocks and engine portfolios are refused. One SBY engine
+process runs per worker. `--jobs` is capped by the detected CPU count. This is a
+worker cap, not an OS limit on threads inside a solver. Listed sources, jobs and
+tool bindings are captured before execution. Transitive input closure and full
+property attribution remain uncertified. To select the manifest from project
+data, set `[formal] regress = "suite.toml"` in `rvw.toml` and omit the argument.
+
+`results.json` uses C3. Each row retains the task, requested BMC depth, trace
+paths, and `formal_status`: `proven` (conditional unbounded engine result),
+`bounded-pass`, `failed`, `unknown`, `timeout`, `unsupported`, `vacuous`, or
+`error`. An explicit solver PREUNSAT result is `vacuous`. Other activation and
+non-vacuity evidence remains `not_measured`. A bounded pass is never `proven`.
+The suite remains inconclusive and exits 1. JUnit records conditional observations
+as errors, so CI cannot treat them as accepted design proofs. `result.json`
+is the summary returned by the `formal_regress` MCP tool. `formal_sva_lower`
+provides the lowering command through MCP.
