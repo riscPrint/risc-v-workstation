@@ -1,0 +1,19 @@
+# Protocol verification agents
+
+The agents work without UVM. Pure Python cycle models use immutable pin
+samples. Optional cocotb adapters drive and observe RTL interfaces.
+No cocotb dependency is needed to import the cycle models.
+
+| Module | Profile | SV agent and fixture |
+|---|---|---|
+| `rvw.vip.apb` | APB4, 32-bit, one peripheral select | `Uvm/vip/apb/` |
+
+See each SV agent's README for its sequence library, scoreboard policy,
+coverage, pin names, native smoke command and conformance limits.
+
+## Decisions and limits
+
+Each protocol owns its pin and transaction types. A callback connects
+observed transactions to a project scoreboard. There is no inferred SoC
+pass and no simulator dependency at package import. Native smoke results
+apply only to their declared profile and fixture.
