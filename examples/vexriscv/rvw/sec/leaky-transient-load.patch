@@ -1,0 +1,13 @@
+diff --git a/src/main/scala/vexriscv/plugin/DBusSimplePlugin.scala b/src/main/scala/vexriscv/plugin/DBusSimplePlugin.scala
+index 7ad3e03d..5d1990f9 100644
+--- a/src/main/scala/vexriscv/plugin/DBusSimplePlugin.scala
++++ b/src/main/scala/vexriscv/plugin/DBusSimplePlugin.scala
+@@ -424,7 +424,7 @@ class DBusSimplePlugin(catchAddressMisaligned : Boolean = false,
+       val skipCmd = False
+       skipCmd setWhen(input(ALIGNEMENT_FAULT))
+ 
+-      dBus.cmd.valid := arbitration.isValid && input(MEMORY_ENABLE) && !arbitration.isStuckByOthers && !arbitration.isFlushed && !skipCmd && !cmdSent
++      dBus.cmd.valid := arbitration.isValid && input(MEMORY_ENABLE) && !arbitration.isStuckByOthers && (!arbitration.isFlushed || !input(MEMORY_STORE)) && !skipCmd && !cmdSent
+       dBus.cmd.wr := input(MEMORY_STORE)
+       dBus.cmd.size := input(INSTRUCTION)(13 downto 12).asUInt
+       dBus.cmd.payload.data := dBus.cmd.size.mux (

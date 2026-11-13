@@ -1,0 +1,10 @@
+{
+  "memory_regions": [{"symbol": "secret_key", "size": 16}],
+  "sources": [],
+  "sinks": [
+    {"signal": "dBus_cmd_payload_address", "when": "dBus_cmd_valid"},
+    {"signal": "dBus_cmd_valid"},
+    {"signal": "iBus_cmd_payload_pc", "when": "iBus_cmd_valid"},
+    {"signal": "iBus_cmd_valid"}
+  ]
+}

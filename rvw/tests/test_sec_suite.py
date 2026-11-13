@@ -42,6 +42,6 @@ def test_cli_and_mcp_surface():
     from rvw.mcp.registry import discover
     tools,problems=discover({'sec'})
     assert not problems
-    assert {t.name for t in tools}=={'sec_ift','sec_contract','sec_gadgets','sec_latency','sec_isolation','sec_fault','sec_suite'}
+    assert {t.name for t in tools}=={'sec_ift','sec_contract','sec_gadgets','sec_latency','sec_isolation','sec_fault','sec_suite','sec_ift_core','sec_spec_suite'}
     args=build_parser().parse_args(['sec','suite','--report','run/report.json','--out','summary'])
     assert args.sec_command=='suite'
