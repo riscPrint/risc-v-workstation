@@ -431,12 +431,15 @@ class Hart:
             return (sa * b) >> bits
         if f3 == 3:
             return (a * b) >> bits
+        quotient = abs(sa) // abs(sb) if sb else 0
+        if (sa < 0) != (sb < 0):
+            quotient = -quotient
         if f3 == 4:
-            return mask if b == 0 else (sa if sa == -(1 << (bits - 1)) and sb == -1 else int(sa / sb))
+            return mask if b == 0 else quotient
         if f3 == 5:
             return mask if b == 0 else a // b
         if f3 == 6:
-            return sa if b == 0 else (0 if sb == -1 else sa - sb * int(sa / sb))
+            return sa if b == 0 else (0 if sb == -1 else sa - sb * quotient)
         return a if b == 0 else a % b
 
     def system(self, insn, f3, rd, rs1, a):
