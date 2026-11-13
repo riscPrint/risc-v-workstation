@@ -1557,6 +1557,21 @@ auto-prediction must be disabled when that predictor is connected.
 backdoor. The caller resets hardware before the standard reset sequence.
 This register fixture evidence does not establish peripheral or CPU behavior.
 
+## Live scalar UVM CPU observations
+
+`Uvm/cpu/rvw_cpu_if.sv` carries one scalar retirement per cycle. Its 19 values
+use the captured UVM replay field order. `rvfi_order` must start at zero and
+increase without gaps. The live subscriber steps a separately initialized
+Spike instance once per retirement. The bridge requires shim ABI 6 and the
+platform PMP granularity. Missing or inconsistent observations cannot count
+as checked retirements. The bounded ADDI fixture writes C1/C3 with incomplete
+source identity; it does not earn C4 acceptance.
+
+`rvw regress uvm --require-feature` checks the runner profile before tool
+startup. Unqualified requirements have `unsupported:uvm_*` diagnostics and
+named workarounds in `Uvm/FEATURES.md`. Unknown names are refused. These
+profile limits do not claim universal simulator language limitations.
+
 ## C9. Native architecture models
 
 These reports measure model performance. They do not produce C4 gate verdicts

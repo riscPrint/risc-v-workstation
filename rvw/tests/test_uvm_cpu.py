@@ -135,3 +135,12 @@ def test_inconclusive_c1_cannot_earn_replay_pass(capture, tmp_path, extra):
     inputs.core_run.update(extra)
     with pytest.raises(ValueError, match='passing C1'):
         uvm_cpu.prepare(inputs, tmp_path)
+
+
+def test_dpi_passes_nondefault_pmp_granularity(capture, tmp_path):
+    inputs,_,_,_,_ = capture
+    inputs.platform.pmp_granularity = 64
+    uvm_cpu.prepare(inputs, tmp_path)
+    top = (tmp_path/'cpu_top.svh').read_text()
+    assert 'input longint unsigned grain' in top
+    assert ',64)!=0)' in top

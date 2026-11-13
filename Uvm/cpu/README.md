@@ -1,0 +1,87 @@
+# Live scalar CPU environment
+
+`rvw_cpu_if.sv` is the project wrapper boundary. The project maps its scalar
+RVFI signals to the 19 values listed in that interface. The monitor samples
+at falling edges. The scoreboard checks contiguous order, then calls the
+same independent Spike DPI step comparator used by captured replay. It
+counts a check only after the comparator succeeds.
+
+Compile the interface before `rvw_cpu_pkg.sv`. Link `Uvm/spike_bridge.cpp`.
+Generate `spike_effect.h` from the current shim fields. Initialize Spike
+before `run_test`. Supply a matched, captured ABI 6 shim and the same ELF
+image as the DUT. See `../examples/cpu/run.py` for the setup. Set `vif` in
+`uvm_config_db` for the environment and monitor. The project owns core pins,
+clock generation, reset polarity conversion, bus handshakes and test end.
+
+`cpu_env` contains the live RVFI monitor, Spike subscriber, instruction/CSR/
+interrupt/exception observation bins, and shared byte memory. Both memory
+ports use one `cpu_memory` object. Project protocol adapters call `access`
+after accepting a transfer. The task supplies bounded random response delay,
+byte enables, range checks and an optional fetch-error address. This is a
+normalized service. It is not an AXI, OBI or TileLink wire implementation.
+Protocol wire agents remain under `Uvm/vip/`.
+
+`cpu_control_sequence` supplies reset, interrupt-level pulses and debug-request
+pulses. Project virtual sequences can call these tasks. The clock comes from
+the project wrapper. The strict Spike profile rejects handler-entry and halt
+retirements. Pin stimulus does not establish interrupt or debug architectural
+correctness. CSR instructions step through Spike. Set `state_valid` to check all 32
+architectural GPRs after retirement. Set `csr_count` and the CSR address/value
+arrays to check up to eight CSR snapshots through Spike. An unavailable CSR
+is an explicit error. Project wrappers must supply committed state. Native
+qualification covers GPR snapshots. CSR snapshots have Python unit checks;
+native CPU CSR behavior remains unqualified. These limits must remain explicit in test plans.
+
+The Python equivalents are `rvw.sim.cpu_env.CpuMemory`, `CpuScoreboard`,
+`CpuCoverage` and `monitor`. They use the same memory/error policy and scalar
+observation fields. Supply a captured `rvw.cosim.spike.Spike` instance as the
+reference. It steps independently. Project cocotb agents own the memory bus
+pins. `monitor` takes a project binding map with `clock`, `reset_n`, `valid`,
+and a `fields` dictionary from observation names to DUT signal names. The
+optional pyuvm environment can use these services without SV class support.
+
+## Bounded fixture
+
+Run from the checkout with the optional UVM dependencies installed:
+
+```sh
+nice -n 10 rvw/.venv/bin/python Uvm/examples/cpu/run.py \
+ --shim rvw/out/uvm-cpu-shim/librvw_spike.so \
+ --archive /path/to/pinned-uvm.tar.gz --out /tmp/live-cpu-new
+```
+
+Build the matched shim first with `Cosim/build.sh`. The fixture builds a
+four-instruction RV32I ELF, loads its bytes into memory, inserts seeded fetch
+response delays, and compares all four live retirements through Spike DPI.
+It runs seeds 1 and 3. Separate runs corrupt destination data and a GPR snapshot. Each must stop
+on `SPIKE_MISMATCH`. The fixture supports ADDI only. It is not VexRiscv,
+full ISA qualification, interrupt/debug qualification or C4 gate acceptance.
+The runner writes the existing C1/C3 formats. Their source identity
+remains incomplete. The existing VexRiscv captured-replay path is unchanged.
+
+## Cocotb fixture
+
+After the native example has built its ELF, set `RVW_CPU_ELF` to that ELF.
+Set `RVW_CPU_SHIM` to the matched shim. Set `RVW_CPU_PLATFORM` to
+`Uvm/examples/cpu/platform.json`. Use absolute paths. Then run:
+
+```sh
+nice -n 10 rvw/.venv/bin/rvw regress cocotb \
+ Uvm/examples/cpu/cocotb.json --out /tmp/cpu-python-new --timeout 90 --json
+```
+
+The wrapper exposes the same small ADDI core without SV UVM classes. The
+Python scoreboard compares four live retirements against Spike. The optional
+`Uvm/pyuvm/cpu_env.py` wraps these services as a pyuvm environment. Its project
+configuration supplies the DUT bindings, reference, ELF and expected count.
+
+Normal native runs also emit complete scalar C2 traces. Merge their observed
+instruction, CSR and trap bins with the existing coverage command:
+
+```sh
+rvw cov functional /tmp/live-cpu-new/seed-1/rvfi.jsonl \
+ /tmp/live-cpu-new/seed-3/rvfi.jsonl --out /tmp/cpu-coverage.json --json
+```
+
+Coverage counts describe the four ADDI instructions. Unhit CSR, interrupt and
+exception bins remain unhit. No coverage closure is claimed.

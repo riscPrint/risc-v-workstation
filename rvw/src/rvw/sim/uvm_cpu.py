@@ -76,12 +76,12 @@ def prepare(inputs, out):
             sv_string(shim['manifest_data']['build_id']), sv_string(p.reference_isa or p.isa),
             sv_string(p.privilege_modes), str(p.xlen), str(p.pmp_regions),
             str(int(p.absent_pmp_csrs != 'trap')), str(int(p.aligned_mem)),
-            f"64'h{base:x}", f"64'h{size:x}", f"64'h{p.reset_pc:x}", sv_string(out / 'image.txt')]
+            f"64'h{base:x}", f"64'h{size:x}", f"64'h{p.reset_pc:x}", sv_string(out / 'image.txt'), str(p.pmp_granularity)]
     (out / 'cpu_top.svh').write_text('''module top;
  import uvm_pkg::*; import cpu_vip::*;
  import "DPI-C" function int rvw_uvm_init(input string lib, source_hash, build_hash,
  input string isa, modes, input int unsigned bits, pmp, input int absent_zero, align,
- input longint unsigned base, size, pc, input string image);
+ input longint unsigned base, size, pc, input string image, input longint unsigned grain);
  import "DPI-C" function void rvw_uvm_close();
  initial begin
   if(rvw_uvm_init(''' + ','.join(init) + ''')!=0) $fatal(1,"Spike init: %s",rvw_uvm_error());
@@ -90,7 +90,7 @@ def prepare(inputs, out):
  initial begin #10000000; $fatal(1,"watchdog"); end
 endmodule
 ''')
-    if SHIM_VERSION != 5:
+    if SHIM_VERSION != 6:
         raise ValueError('update the native DPI ABI profile')
     (out / 'spike_effect.h').write_text('#include <cstdint>\nstruct Effect {\n' + ''.join(
         f' uint64_t {name};\n' for name in FIELDS) + ' uint64_t regs[32]; char disasm[256];\n};\n')
