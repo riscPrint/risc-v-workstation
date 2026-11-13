@@ -232,3 +232,7 @@ compiler replaces with a synthetic wire may still appear connected.
 
 Repeat `-G NAME=VALUE` for each slang top parameter. The launcher joins each
 option and value before it calls slang. Values use SystemVerilog constant syntax.
+
+Slang captures self-contained source files without their parent trees. Build
+output beside the source does not consume the capture limit. Sources with
+include directives still use conservative directory snapshots and their size limits.

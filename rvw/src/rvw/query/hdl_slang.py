@@ -53,3 +53,20 @@ def instances(ast: dict) -> tuple[dict, dict]:
                           if p.get('kind') == 'Parameter' and not p.get('isLocal')}
             body(b.get('members'), '', '')
     return params, types
+
+
+def capture_sources(capture, sources, include_dirs):
+    """Avoid capturing unrelated build output for self-contained translation units."""
+    inputs = [capture.file(p) for p in sources]
+    if not any(re.search(r'`include\b', item.copy.read_text(errors='replace')) for item in inputs):
+        return [item.copy for item in inputs], [], inputs
+    # Includes can use macros. Keep the conservative directory snapshot for them.
+    from pathlib import Path
+    trees = {}
+    for directory in [*dict.fromkeys(p.parent for p in sources), *map(Path, include_dirs)]:
+        directory = Path(directory).absolute()
+        if directory not in trees:
+            trees[directory] = capture.tree(directory, git=False)
+    return ([trees[p.parent].copy / p.name for p in sources],
+            [trees[Path(d).absolute()].copy for d in include_dirs],
+            [f for tree in trees.values() for f in tree.files])
