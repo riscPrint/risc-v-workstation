@@ -3,6 +3,8 @@ from pathlib import Path
 
 import pytest
 
+pytestmark = pytest.mark.fast
+
 spec = importlib.util.spec_from_file_location('ci_summary', Path(__file__).resolve().parents[2] / 'scripts/ci-test-summary.py')
 summary = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(summary)

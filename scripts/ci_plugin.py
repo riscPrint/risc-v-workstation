@@ -1,7 +1,6 @@
 """CI-only selection. Ordinary pytest runs keep their existing selection."""
 import hashlib
 import os
-from pathlib import Path
 import pytest
 
 
