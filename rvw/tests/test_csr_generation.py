@@ -107,3 +107,33 @@ endmodule'''
     assert built.returncode == 0, built.stderr
     run = subprocess.run(['vvp', str(tmp_path/'sim')], capture_output=True, text=True, timeout=15)
     assert ('ERROR:' in run.stdout) == (mutation != 'none'), run.stdout + run.stderr
+
+
+def test_assembly_accounts_for_read_clear():
+    from rvw.formal.csr import assembly
+    c = model()['csrs'][0]
+    c['fields'][0].update(access=dict(U='RO', S='RO', M='RO'), effect='read_clear')
+    text = assembly(c, 32)
+    assert 'li t0, 5\nbne s2, t0, fail' in text
+    assert text.count('csrr t1, 0x340\nli t0, 0\nbne t1, t0, fail') == 3
+
+
+def test_native_assembly_build(tmp_path):
+    import shutil
+    from pathlib import Path
+    from rvw.formal.csr import assembly
+    from rvw.common.proc import run_group
+    compiler = shutil.which('riscv64-unknown-elf-gcc')
+    if not compiler:
+        path = Path('/opt/homebrew/opt/riscv-gnu-toolchain/bin/riscv64-unknown-elf-gcc')
+        compiler = str(path) if path.is_file() else None
+    if not compiler:
+        pytest.skip('RISC-V GCC is not installed')
+    c = model()['csrs'][0]
+    c['fields'][1]['width'] = 60
+    source = tmp_path/'csr.S'
+    source.write_text(assembly(c, 64))
+    result = run_group([compiler, '-march=rv64im_zicsr', '-mabi=lp64', '-nostdlib',
+                        '-nostartfiles', '-Wl,-Ttext=0x80000000', str(source), '-o', str(tmp_path/'csr.elf')],
+                       capture=True, timeout=20)
+    assert result.returncode == 0, result.stdout + result.stderr
