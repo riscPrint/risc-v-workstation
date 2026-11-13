@@ -59,6 +59,9 @@ inconclusive. The tool does not infer a safe harness from the HDL.
 Implement `rvw/run.sh` and `rvw/src/main/scala/rvwcore/CoreAdapter.scala`.
 For non-Spinal cores, implement the generated `rvw/sim/harness.cpp` instead.
 Map clock, reset, memory transactions, completion and committed RVFI fields.
+For RiscvSim, implement both `elaborate` and `generatedVerilog(model)`. The
+latter must return the RTL files used by the compiled model. Omitting it leaves
+C1 without the hash required to match the adapter identity.
 Declare the real ISA, memory map, configs, test suites and identity inputs in
 `rvw.toml`. Keep probes optional. Follow [C1](contracts/c1-run.md),
 [C2](contracts/c2-rvfi-trace.md) and [project selection](contracts/project.md).
@@ -87,6 +90,14 @@ complete. Check the ELF hash, config and ISA. A timeout or an empty trace is not
 a pass. Doctor checks one config and ELF. It does not qualify all options.
 
 ## 5. Add regression and gate inputs
+
+The initial `input_complete = false` also prevents `regress run` from starting
+simulations. Use the adapter's direct `run` command while developing the
+integration. Audit its sources, build products, scripts, tools and environment.
+Declare `cache_paths`, `input_env`, `input_tools` and the required command/toolchain
+inputs before setting `input_complete = true`. Do not set the flag only to bypass
+the refusal. See [input declarations](BRING_YOUR_OWN_CORE.md#declare-enough-inputs-for-a-gate).
+Gate acceptance also needs clean committed revisions and complete identities.
 
 ```sh
 rvw regress run --tier quick
@@ -161,7 +172,10 @@ CBMC and language front ends have separate inventory entries. Read
 ## 10. Check lint and CDC
 
 Install `--with-lint` and the required query front end. Build a design database
-with the project's extraction command. Write project-owned lint settings.
+with the project's extraction command. Write project-owned lint settings. Use the same clock/reset configuration for
+database extraction and simulation. A no-argument top class passed to
+`spinaldb.Main` uses the default SpinalConfig. If the adapter changes that
+configuration, supply a project-owned extraction entry with the same settings.
 
 ```sh
 rvw query build --config default
@@ -223,6 +237,8 @@ evidence. Full imported VIP, native debug and HDL DPI/VPI backdoor support
 remain unqualified. DRAM, PCIe and Ethernet optional model contracts have mock
 callback tests; projects still supply their native models and bridges.
 See [UVM](../Uvm/README.md) and [VIP](../rvw/src/rvw/vip/README.md).
+There is no standalone `rvw vip` command. VIP agents are library APIs and
+SV/cocotb assets. Bind a supported protocol before using them on a custom bus.
 
 ## 14. Scale to a farm
 
@@ -325,3 +341,17 @@ decision points. Select `bring-up`, `test-fails`, `add-coverage`,
 A repair needs a reproduced failure, matching artifact identities, passing
 repair workloads and an independent gate result. Missing evidence stays
 inconclusive.
+
+## Fresh-core dry-run evidence
+
+[The independent RV32I dry run](DRY_RUN_2026-11-13.md) records native results,
+refusals and open integration work. It does not transfer whole-core support.
+
+| New-core flow | Measured status | Limit |
+|---|---|---|
+| Smoke and scalar cosim | Ran on independent RTL | Final smoke and Spike cosim passed, 19 instructions and 29 cycles, with a C1 RTL hash. |
+| Query and diagrams | Database and export worked | A shared project config resolved the reset mismatch; viewer rendering was not checked. |
+| Probes, perf, waves and coverage | Native capture and C1-based coverage worked | One short program; missing probe events remain explicit. No coverage closure. |
+| Regression, formal, security | Four ISA passes; bounded formal; IFT blocked | Final four-test regression exited 0. One formal property passed to depth 6 with overall inconclusive. IFT refused X/Z constants. |
+| UVM, VIP, SoC and architecture | Partial or unsupported | Custom bus bridge required; no VIP CLI; RV32I model selection refused. |
+| MCP | Twenty stdio calls exercised | Successful results and the architecture/UVM/security refusals are recorded in the report; job completion is not a DUT pass. |
