@@ -786,7 +786,7 @@ usage: rvw fault report [-h] [--project PROJECT] directory
 
 ```text
 usage: rvw formal [-h] [--project PROJECT]
-    {device-events,upf,power,buses,csr,bug-hunt,model-live,rtl-grid,rtl-refine,relation-strengthen,doctor,engines,engine-race,engine-bench,model-grid,security,regress,properties,simulate,liveness,sva-lower,template,contracts,strengthen,testplan,proof-core,apps,autocheck,bench,cex,sby-history,sby-regress,prove,depth-search,rvfi-generate,sail-zicond,custom-isa,profiles,riscv,connectivity,datapath,equiv,bmc,from-sim,swarm,xprop,x-context,x-sweep}
+    {device-events,upf,power,buses,csr,bug-hunt,model-live,rtl-grid,rtl-refine,relation-strengthen,doctor,engines,engine-race,engine-bench,model-grid,security,regress,properties,simulate,liveness,sva-lower,template,contracts,strengthen,testplan,proof-core,apps,autocheck,bench,recheck,cex,sby-history,sby-regress,prove,depth-search,rvfi-generate,sail-zicond,custom-isa,profiles,riscv,connectivity,datapath,equiv,bmc,from-sim,swarm,xprop,x-context,x-sweep}
     ...
 ```
 
@@ -1018,6 +1018,14 @@ usage: rvw formal autocheck [-h] --out OUT [--db DB] [--kind
 ```text
 usage: rvw formal bench [-h] --out OUT [--timeout TIMEOUT] [--json] [--project
     PROJECT] manifest
+```
+
+### `rvw formal recheck`
+
+```text
+usage: rvw formal recheck [-h] --result RESULT --pin PIN [--depth DEPTH]
+    [--engine ENGINE] [--timeout TIMEOUT] --out OUT [--json] [--project
+    PROJECT]
 ```
 
 ### `rvw formal cex`
@@ -2857,6 +2865,14 @@ Starts a background job: yes.
 Generate SVA for common intents and typed Stream/Flow channels. Does not run a proof.
 
 Arguments: `spec` (required), `channels`, `db`, `out` (required).
+
+Starts a background job: yes.
+
+### `formal_recheck`
+
+Bounded solver what-if over a captured model with pinned signals and full-depth feasibility.
+
+Arguments: `result` (required), `pin` (required), `out` (required), `depth`, `engine`, `timeout`.
 
 Starts a background job: yes.
 
