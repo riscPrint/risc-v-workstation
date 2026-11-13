@@ -1,0 +1,21 @@
+{
+  "schema": "rvw.mmu/1",
+  "pointer_matrix": {
+    "modes": [
+      "sv39",
+      "sv48",
+      "sv57"
+    ],
+    "extensions": [
+      "smnpm",
+      "ssnpm",
+      "smmpm",
+      "sspm",
+      "supm"
+    ],
+    "controllers": {
+      "sspm": "smnpm",
+      "supm": "ssnpm"
+    }
+  }
+}

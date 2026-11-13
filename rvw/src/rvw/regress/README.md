@@ -860,6 +860,12 @@ pointer cases. See `examples/mmu/pointer.json`. These run through the same
 build, reference, C1 suite and coverage paths. Keep each extension campaign
 outside default tiers until the selected project declares it supported.
 
+The `examples/mmu/pointer-privileges.json` campaign selects Ssnpm U-mode and
+Smmpm M-mode data tests. Sspm/Supm use explicit project controller declarations.
+It also checks that enabled data masking does not mask tagged fetch addresses.
+Use the existing build/reference/C1 suite commands. Guest and debug masking
+interactions remain unsupported. Spike must implement each selected extension.
+
 The `examples/mmu/hypervisor-matrix.json` campaign crosses VS Sv39/48/57 and
 G Sv39x4/48x4/57x4. It checks HLV.D, HLVX.WU and HSV.D, VS/G permission faults,
 VS-stage A/D, HS guest faults, virtual-instruction controls and same-VMID G-root

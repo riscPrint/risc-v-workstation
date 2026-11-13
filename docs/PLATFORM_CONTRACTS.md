@@ -3266,6 +3266,21 @@ level-zero RV64 mapping. The Spike reference uses `-p2`. The C1 project must
 select an adapter configuration with two harts. Request, acknowledgement and
 completion use RAM mailboxes and explicit memory fences. No IPI is implied.
 Neither option supports the independent immutable-walk checker yet.
+### Pointer-masking privilege matrices
+
+`rvw.mmu/1` may contain `pointer_matrix` with `modes`, `extensions` and
+`controllers`. Supported modes are sv39, sv48 and sv57. Extensions are smnpm,
+ssnpm, smmpm, sspm and supm. Sspm/Supm require explicit controller declarations
+in the project: `sspm = "smnpm"` and `supm = "ssnpm"` for this backend.
+These capability names do not define separate CSRs. Scenarios may declare
+`pointer_extension` and `pointer_controller`. Ssnpm selects senvcfg.PMM with
+MPRV effective U privilege. Smmpm selects mseccfg.PMM for Bare M-mode data.
+Smnpm selects menvcfg.PMM with effective S privilege. Tagged instruction fetch
+under Ssnpm/Smnpm must fault even when data masking is enabled. The programs
+check PMM readback, exact trap cause/tval/PC and successful data values.
+Guest/debug interactions and nonstandard execution-environment controls remain
+unsupported. The backend refuses inconsistent controller declarations.
+
 ### Hypervisor MMU matrices
 
 `rvw.mmu/1` may contain `guest_matrix = {"modes": [...]}` instead of scenarios.
