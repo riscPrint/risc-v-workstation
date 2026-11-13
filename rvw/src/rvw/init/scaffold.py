@@ -141,6 +141,8 @@ Optional cosim platform and SpinalDB files need explicit memory and elaboration
 inputs. Use --linker-script and --db-top only after the minimum setup checks.
 No integration-model policy is selected.
 '''}
+    from .mapped import PROBE_TEMPLATE
+    files['rvw/templates/CoreProbes.scala'] = PROBE_TEMPLATE
     if sbt_project or db_top:
         wire_build = True
     if wire_build:

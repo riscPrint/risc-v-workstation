@@ -190,3 +190,9 @@ Later launches use Java directly while the sources, build settings and runtime
 files match. Source, class or JAR edits trigger compilation. Compilation failures
 refuse the launch. The lock is `sbt-<project-name>`; choose distinct project names
 for separate builds. Native identity still captures every runtime entry.
+
+The project probe binding stub is `rvw/templates/CoreProbes.scala`. It shows
+fetch and decode flushes on redirect and separate measured fetch/data stalls.
+Bind actual slot-valid bits and IDs. Adapt the stages for the actual pipeline.
+Use `rvw probes check --require flush/fetch --require flush/decode --require stall`
+with `--events` after an instrumented run to name missing declarations.

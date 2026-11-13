@@ -89,3 +89,5 @@ Principles (from `ROADMAP.md`):
 | `scripts/with-lock.sh` | Machine-wide lock for heavy jobs (see Resources); a wrapper around `rvw/src/rvw/common/lock.py`. | shell |
 
 - [Generated-suite selection](contracts/regress.md)
+
+- [Probe declaration checks](contracts/probes.md)

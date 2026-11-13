@@ -23,7 +23,11 @@ def _convert(events, to, out, c2=None, c1=None, probe=None, roi_start=None, roi_
 
 
 def mcp_tools():
+    from .check import check
     return [
+        ToolSpec('probes_check', 'Name missing required probe kinds or kind/name bindings. Presence is not runtime correctness.',
+                 schema({'db': S, 'events': S, 'require': {'type':'array','items':S}}, []), check,
+                 annotations={'readOnlyHint': True}, side_effects='read-only', native_tools=()),
         ToolSpec('probes_list', 'List simulation probes from a design database (db) or a probe event stream '
                  '(events), and for each consumer tool whether the probes enable it or which events are missing.',
                  schema({'db': S, 'events': S}, []), _list, annotations={'readOnlyHint': True}),
