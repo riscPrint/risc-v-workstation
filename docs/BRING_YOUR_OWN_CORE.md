@@ -104,6 +104,11 @@ No adjacent core checkout is needed to set up the workstation.
 
 ## Put the project files in your core repository
 
+A SystemVerilog, VHDL or Chisel core starts with `rvw init --hdl sv|vhdl|chisel
+--top TOP --isa ISA`. It writes the project file, a design-database build
+through slang, GHDL or firtool, and a Verilator C1 launcher scaffold. See
+[`rvw init`](../rvw/src/rvw/init/README.md#non-spinal-cores---hdl).
+
 A useful layout is:
 
 ```text
