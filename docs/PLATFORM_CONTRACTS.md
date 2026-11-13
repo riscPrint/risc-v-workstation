@@ -3818,6 +3818,18 @@ proof, physical-power, scan-coverage or ATPG evidence. UPF import is unsupported
 
 ### Project CSR generation
 
+#### Project check generation
+
+`rvw.check-generation/1` selects relative input files for streams, buses, csrs,
+queues and power. `rvw checks generate --all` writes
+`rvw.check-generation-summary/1`, with per-kind status, reasons, instance rows
+and output paths. Status `generated` means at least one bound generator result.
+`complete` requires every kind and instance to be generated. Unbound emitted
+sources do not count. This is generation evidence, not a proof verdict.
+`rvw.micro-checks/1` declares a top target and rules with id, kind, width, entries,
+ports and optional bounded arbiter fairness. `rvw.micro-generation/1` retains
+per-rule generated/unsupported status. Port mappings remain project declarations.
+
 #### CSR storage without a reset initializer
 
 A CSR row can set `reset_known=false`. The default is true. Unknown reset

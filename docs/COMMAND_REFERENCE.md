@@ -14,7 +14,7 @@ An entry here states availability. It does not qualify a native flow.
 
 ```text
 usage: rvw [-h] [--version] [--project PROJECT]
-    {agent-bench,arch,bisect,bugmem,bundle,cosim,cov,csim,debug,doctor,farm,fault,formal,init,lint,mcp,memory,ooo,perf,plan,privilege,query,reduce,regress,sim,speed-compare,speed-sweep,backends,uvm-ral,uvm-cpu,hdl,cocotb,soc,uvm,verification-plan,wave,workloads}
+    {agent-bench,arch,bisect,bugmem,bundle,checks,cosim,cov,csim,debug,doctor,farm,fault,formal,init,lint,mcp,memory,ooo,perf,plan,privilege,query,reduce,regress,sim,speed-compare,speed-sweep,backends,uvm-ral,uvm-cpu,hdl,cocotb,soc,uvm,verification-plan,wave,workloads}
     ...
 ```
 
@@ -264,6 +264,19 @@ usage: rvw bundle [-h] [--out OUT] [-n RETIRED] [--cut-cycles CUT_CYCLES]
     CORE_CONFIG] [--pdg PDG] [--trace-wave TRACE_WAVE] [--trace-cycles
     TRACE_CYCLES] [--no-spinaltrace] [--timeout TIMEOUT] [--json] [--project
     PROJECT] run_dir
+```
+
+### `rvw checks`
+
+```text
+usage: rvw checks [-h] [--project PROJECT] {generate} ...
+```
+
+### `rvw checks generate`
+
+```text
+usage: rvw checks generate [-h] --all [--manifest MANIFEST] [--out OUT]
+    [--project PROJECT]
 ```
 
 ### `rvw cosim`
@@ -977,7 +990,7 @@ usage: rvw formal sva-lower [-h] --out OUT [--project PROJECT] source
 ```text
 usage: rvw formal template [-h] [--entries ENTRIES] [--width WIDTH] --out OUT
     [--project PROJECT]
-    {rob,freelist,rename,issue,lsq,credit,hpm,initialized_read,axi_lite,allocation_pool,cam_match,counter_bounds,axis,apb,ahb_lite}
+    {rob,freelist,rename,issue,lsq,credit,hpm,initialized_read,axi_lite,allocation_pool,cam_match,counter_bounds,fifo_order,pipeline,mutex,arbiter,age_matrix,store_forward,axis,apb,ahb_lite}
 ```
 
 ### `rvw formal contracts`
@@ -2383,6 +2396,14 @@ Starts a background job: no.
 Build a failure bundle with retirement history, waveform window and suspected unit. May re-run the adapter and invoke SpinalTrace. Returns a job; re-runs take the core lock.
 
 Arguments: `run_dir` (required), `out`, `retired`, `cut_cycles`, `no_rerun`, `rerun_window`, `konata`, `core_config`, `project`, `pdg`, `trace_wave`, `trace_cycles`, `no_spinaltrace`, `timeout`.
+
+Starts a background job: yes.
+
+### `checks_generate`
+
+Emit project checks and explicit missing-binding reasons. No proof run.
+
+Arguments: `project` (required), `out` (required), `manifest`.
 
 Starts a background job: yes.
 
