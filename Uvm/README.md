@@ -305,3 +305,6 @@ The [map-driven Python environment](examples/soc/README.md) connects the
 merged APB, AXI4-Lite and UART monitors to the CPU services and map-derived
 RAL. Project callbacks supply live wire sampling and active frontdoors.
 Its unit tests do not establish a connected RTL SoC run.
+
+`rvw uvm new --db design.db --soc map.json --out DIR` generates the first
+runnable pyuvm register-reset scaffold. See [its profile and limits](../rvw/src/rvw/uvm/README.md#generate-a-register-bench).
