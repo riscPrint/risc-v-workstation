@@ -408,3 +408,10 @@ after the optional legacy `prepare` command. A failed or timed-out step stops
 consumer execution and records its log name. This permits separate bounded
 extraction and simulation commands without increasing one process timeout.
 Database paths can contain `{out}` so preparation can create fresh evidence.
+
+## Watchdog profile
+
+The `watchdog` register map uses the existing `rvw.soc/1` register format.
+Autonomous count and expiry status have unknown reset values for generic
+readback checking. Expiry status has W1C semantics. Service is write-only.
+The key, counter precedence and reset-request binding are in SpinalSoc's README.

@@ -246,3 +246,20 @@ fresh RTL and a typed database. The default class is `generated.ComposedSoc`.
 The Vex verification helper also builds `generated.MultiDomainSoc` from the
 separate two-clock composition. Use the `sbt-soc` lock for these private outputs.
 See the Vex example for its build helper and combined verification manifest.
+
+## Watchdog
+
+`rvw soc peripheral watchdog --name wdt --base 0x10000000 --out wdt.json`
+exports the watchdog map and binder. The independent profile has five words:
+control at 0, reload at 4, remaining count at 8, service at 12 and status at 16.
+Control bit 0 enables counting and IRQ. Control bit 1 enables the reset request.
+Write `0x51f15e` to service to reload the counter and clear expiry. Other keys
+have no effect. The counter saturates at zero. Zero reload expires on the next
+enabled clock. Expiry is sticky. Status bit 0 is W1C; expiry wins on a concurrent
+clear. Service wins on a concurrent expiry. Disable counting before clearing an
+expired zero counter. Reload changes apply at the next service operation.
+
+The reset request is a level output. Export `resetRequest` and bind it to the
+project reset controller. The composer does not connect it to its own reset.
+The profile uses the peripheral clock. It is not an independent safety clock.
+See [the composed test](examples/watchdog/README.md).
