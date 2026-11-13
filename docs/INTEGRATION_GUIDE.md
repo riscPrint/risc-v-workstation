@@ -604,6 +604,8 @@ and checks. Full core ISA signoff remains incomplete.
 | VexRiscv FormalSimple, current writeback flush slot | bounded PASS | Depth 20; SMT retry; no instruction-ID kill history |
 | VexRiscv FormalSimple, CSR and interrupt transitions | not applicable | This snapshot has no corresponding controllers |
 | VexRiscv FormalSimple, instruction-memory pairing and trap PC chain | unsupported | Project observations are missing |
+| VexRiscv RV32IM, exception and interrupt entry | bounded PASS | Depth 25; both controller triggers reached |
+| VexRiscv RV32IM, machine return | FAIL | Step 15; second return has captured MPP zero and current privilege 3 |
 | PicoRV32 architectural monitor, three simulation programs | matched sampled streams | 30 retirements per program |
 | PicoRV32 base-RVFI bounded stream comparison | FAIL | Depth 35; misaligned JAL trap/write difference at step 10 |
 | PicoRV32 fourth-retirement cover | reached | Step 18 |
@@ -617,9 +619,11 @@ and checks. Full core ISA signoff remains incomplete.
 | VexRiscv ADD, AND and LUI, word zero retained | timeout | 180 seconds per PDR job; concrete covers reached |
 
 The older FormalSimple profile is RV32IC. The new M profile is RV32IM with a
-CSR controller. Its complete-machine checks were not run. The eight generated
+CSR controller. Three controller checks were run. Full machine checks remain
+incomplete. See [the controller results](../examples/vexriscv/formal/MACHINE_M.md).
+The eight generated
 machine transition rules have native Yosys preparation evidence. Their current
-VexRiscv binding covers only x0 values and the writeback slot check.
+FormalSimple binding covers only x0 values and the writeback slot check.
 
 The PicoRV32 comparison failure remains unresolved. The VexiiRiscv observer
 needs completion, memory and trap alignment before qualification. The Sail M
