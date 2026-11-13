@@ -87,3 +87,5 @@ Principles (from `ROADMAP.md`):
 | `SpinalKonata/` | Generic Konata pipeline-trace library for Spinal designs. | Scala |
 | `SpinalDB/` | One extraction pass over an elaborated Spinal design: the design database. | Scala |
 | `scripts/with-lock.sh` | Machine-wide lock for heavy jobs (see Resources); a wrapper around `rvw/src/rvw/common/lock.py`. | shell |
+
+- [Generated-suite selection](contracts/regress.md)

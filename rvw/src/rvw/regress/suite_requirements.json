@@ -118,7 +118,8 @@
     "requires": [
       "xlen:64",
       "mode:U",
-      "pmp"
+      "pmp",
+      "pmp:8"
     ]
   },
   {
@@ -167,8 +168,7 @@
     "name": "fence-rv32",
     "source": "RiscvSim/tests/ordering/suite.py",
     "requires": [
-      "xlen:32",
-      "ext:a"
+      "xlen:32"
     ]
   },
   {
@@ -176,7 +176,7 @@
     "source": "RiscvSim/tests/ordering/suite.py",
     "requires": [
       "xlen:32",
-      "ext:a"
+      "ext:zifencei"
     ]
   },
   {
@@ -208,8 +208,7 @@
     "name": "fence-rv64",
     "source": "RiscvSim/tests/ordering/suite.py",
     "requires": [
-      "xlen:64",
-      "ext:a"
+      "xlen:64"
     ]
   },
   {
@@ -217,7 +216,47 @@
     "source": "RiscvSim/tests/ordering/suite.py",
     "requires": [
       "xlen:64",
-      "ext:a"
+      "ext:zifencei"
+    ]
+  },
+  {
+    "name": "zacas-rv32",
+    "source": "RiscvSim/tests/ordering/suite.py",
+    "requires": [
+      "xlen:32",
+      "ext:a",
+      "ext:zacas"
+    ]
+  },
+  {
+    "name": "cache-block-rv32",
+    "source": "RiscvSim/tests/ordering/suite.py",
+    "requires": [
+      "xlen:32",
+      "ext:zicbom",
+      "ext:zicboz",
+      "ext:zicbop",
+      "cache-block-size"
+    ]
+  },
+  {
+    "name": "zacas-rv64",
+    "source": "RiscvSim/tests/ordering/suite.py",
+    "requires": [
+      "xlen:64",
+      "ext:a",
+      "ext:zacas"
+    ]
+  },
+  {
+    "name": "cache-block-rv64",
+    "source": "RiscvSim/tests/ordering/suite.py",
+    "requires": [
+      "xlen:64",
+      "ext:zicbom",
+      "ext:zicboz",
+      "ext:zicbop",
+      "cache-block-size"
     ]
   }
 ]
