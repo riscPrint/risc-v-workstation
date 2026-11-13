@@ -266,6 +266,8 @@ def register(sub) -> None:
     r.set_defaults(func=riscv_main)
     from .connectivity import register as register_connectivity
     register_connectivity(s)
+    from .internal_paths import register as register_internal_paths
+    register_internal_paths(s)
     from .datapath import register as register_datapath
     register_datapath(s)
     from .equiv import register as register_equiv

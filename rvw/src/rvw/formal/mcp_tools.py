@@ -214,7 +214,8 @@ def _profiles(job, **args):
 def mcp_tools():
     from .apps_mcp import mcp_tools as apps_tools
     from .deep_cli import mcp_tools as deep_tools
-    return [*deep_tools(), *apps_tools(),
+    from .internal_paths import mcp_tools as path_tools
+    return [*deep_tools(), *apps_tools(), *path_tools(),
 
         ToolSpec("formal_simulate", "Replay timed multi-clock input events and collect SVA counts and four-state observations as C1.",
                  schema({"verilog": {"type": "array", "items": S}, "top": S, "events": S,

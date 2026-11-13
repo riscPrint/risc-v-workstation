@@ -92,3 +92,13 @@ def test_native_no_rvfi_add(tmp_path,wrong):
     assert rows['insn_add_ch0']==('fail' if wrong else 'pass')
     assert rows['cover']=='pass'
     assert verdict.verdict==('reject' if wrong else 'inconclusive')
+
+
+def test_uncaptured_include_refused(tmp_path):
+    _,widths,_=monitor(32)
+    (tmp_path/'unit.sv').write_text('`include "outside.sv"\n')
+    plan=dict(schema='rvw.architectural-state/1',xlen=32,top='Unit',clock='clk',reset='rst',
+              verilog=['unit.sv'],signals={key:'state_'+key for key in widths})
+    path=tmp_path/'state.json';path.write_text(json.dumps(plan))
+    with pytest.raises(ValueError,match='includes are not captured'):
+        generate(path,tmp_path/'generated')

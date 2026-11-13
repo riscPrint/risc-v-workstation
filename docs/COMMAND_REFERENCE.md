@@ -847,7 +847,7 @@ usage: rvw fault report [-h] [--project PROJECT] directory
 
 ```text
 usage: rvw formal [-h] [--project PROJECT]
-    {device-events,upf,power,buses,csr,bug-hunt,model-live,rtl-grid,rtl-refine,relation-strengthen,doctor,engines,engine-race,engine-bench,model-grid,security,regress,properties,simulate,liveness,scenario,sva-lower,template,contracts,strengthen,testplan,shortest,proof-core,apps,autocheck,bench,recheck,cex,app-live,app-deadlock,sby-history,sby-regress,prove,depth-search,state-generate,rvfi-generate,sail-bitmanip,sail-zicond,custom-isa,profiles,riscv,connectivity,datapath,equiv,bmc,from-sim,swarm,xprop,x-context,x-sweep}
+    {device-events,upf,power,buses,csr,bug-hunt,model-live,rtl-grid,rtl-refine,relation-strengthen,doctor,engines,engine-race,engine-bench,model-grid,security,regress,properties,simulate,liveness,scenario,sva-lower,template,contracts,strengthen,testplan,shortest,proof-core,apps,autocheck,bench,recheck,cex,app-live,app-deadlock,sby-history,sby-regress,prove,depth-search,state-generate,rvfi-generate,sail-bitmanip,sail-zicond,custom-isa,profiles,riscv,connectivity,internal-path,datapath,equiv,bmc,from-sim,swarm,xprop,x-context,x-sweep}
     ...
 ```
 
@@ -1237,6 +1237,14 @@ usage: rvw formal connectivity [-h] --db DB --out OUT [--max-nodes MAX_NODES]
     PROJECT] manifest
 ```
 
+### `rvw formal internal-path`
+
+```text
+usage: rvw formal internal-path [-h] --verilog VERILOG [VERILOG ...] --top TOP
+    --out OUT [--timeout TIMEOUT] [--max-nodes MAX_NODES] [--json] [--project
+    PROJECT] source destination
+```
+
 ### `rvw formal datapath`
 
 ```text
@@ -1517,8 +1525,9 @@ usage: rvw query build [-h] [--config CONFIG] [--out OUT] [--json] [--project
 ### `rvw query build-hdl`
 
 ```text
-usage: rvw query build-hdl [-h] --top TOP --out OUT [--frontend {yosys,slang}]
-    [-I INCLUDE_DIRS] [-D DEFINES] [-G PARAMETERS] [--std STD] [--slang SLANG]
+usage: rvw query build-hdl [-h] --top TOP --out OUT [--frontend
+    {yosys,slang,ghdl}] [-I INCLUDE_DIRS] [-D DEFINES] [-G PARAMETERS] [--std
+    STD] [--slang SLANG] [--ghdl-plugin GHDL_PLUGIN] [--library LIBRARY]
     [--yosys YOSYS] [--timeout TIMEOUT] [--json] [--project PROJECT] sources
     [sources ...]
 ```
@@ -3091,6 +3100,14 @@ Arguments: `project`, `verilog`, `top`, `out` (required), `clock`, `reset`, `res
 
 Starts a background job: yes.
 
+### `formal_internal_path`
+
+Check conservative internal RTL paths. No Boolean influence or design acceptance verdict.
+
+Arguments: `source` (required), `destination` (required), `top` (required), `out` (required), `verilog` (required), `timeout`, `max_nodes`.
+
+Starts a background job: yes.
+
 ### `formal_liveness`
 
 Lower eventual response properties to SBY live jobs. Engine passes remain inconclusive.
@@ -3517,9 +3534,9 @@ Starts a background job: yes.
 
 ### `query_build_hdl`
 
-Build a navigation design database from Verilog/SystemVerilog sources so every query_* and lint tool works on a non-Spinal core. frontend 'yosys' takes the native read_verilog -sv subset (self-contained files); 'slang' elaborates full SystemVerilog through yosys-slang with include directories, defines and top parameters, and records per-instance parameters (artifact hdl/parameters.json) and declared SV types.
+Build a navigation design database from Verilog/SystemVerilog sources so every query_* and lint tool works on a non-Spinal core. frontend 'yosys' takes the native read_verilog -sv subset (self-contained files); 'slang' elaborates full SystemVerilog through yosys-slang with include directories, defines and top parameters, and records per-instance parameters (artifact hdl/parameters.json) and declared SV types; 'ghdl' elaborates VHDL through the GHDL Yosys plugin (parameters are top generics, std 93/08, library the work library) with VHDL declaration and assignment lines.
 
-Arguments: `sources` (required), `top` (required), `out` (required), `frontend`, `include_dirs`, `defines`, `parameters`, `std`, `timeout`.
+Arguments: `sources` (required), `top` (required), `out` (required), `frontend`, `include_dirs`, `defines`, `parameters`, `std`, `library`, `timeout`.
 
 Starts a background job: no.
 

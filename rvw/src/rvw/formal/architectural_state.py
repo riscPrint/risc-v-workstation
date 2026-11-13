@@ -71,6 +71,8 @@ def generate(manifest, out):
     files, hashes = [], {}
     for i,path in enumerate(plan['verilog']):
         raw = (root/path).read_bytes()
+        if re.search(rb'(?m)^\s*`include\b',raw):
+            raise ValueError('use self-contained RTL; includes are not captured')
         target = out/f'input_{i}.sv';target.write_bytes(raw)
         files.append(target)
         hashes[path] = hashlib.sha256(raw).hexdigest()
