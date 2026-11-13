@@ -735,6 +735,10 @@ The first BTFN comparison found one disagreement at the loop exit. The C2 trace 
 wrote the fall-through as the target of a not-taken branch, so the model's BTFN rule saw
 a forward branch. The converter now writes the decoded target (see `docs/contracts/csim.md`).
 
+Synthesis safety: run `rvwvex.ProbeSafety` from the adapter classpath. It elaborates the
+core with and without `ProbePlugin` (probes off) and compares the Verilog SHA-256; it exits 1 when
+they differ. Measured identical on 2026-11-13.
+
 ## Live UART, CLINT and PLIC
 
 `live-devices.json` supplies uncached MMIO regions, UART input bytes and the

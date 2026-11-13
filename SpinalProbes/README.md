@@ -98,7 +98,16 @@ cd ../RiscvSim && ../scripts/with-lock.sh sbt nice -n 10 sbt -batch -Dsbt.offlin
 ```
 
 The library test elaborates a small component with probes off (no `rvwprobe` text in the
-Verilog) and on (named wires, registered sites). The RiscvSim test runs Verilator and checks
+Verilog) and on (named wires, registered sites). `ProbeSafetySpec` is the synthesis-safety
+test: a seeded three-stage pipeline (register file, TLB tag, cache tag, branch unit, CSR) that
+calls every probe kind gives Verilog byte-identical to the same design without the calls when
+probes are disabled, and different Verilog with every kind's wires when they are enabled.
+
+The example cores repeat the check on real designs: `rvwvex.ProbeSafety` (VexRiscv, with and
+without `ProbePlugin`) and `rvwvexii.ProbeSafety` (VexiiRiscv `rv32im` and `rv32imasu`, with
+and without `ProbeTapPlugin`). Each prints both Verilog SHA-256 values and exits 1 when they
+differ. Measured on 2026-11-13: identical for all three (`1ba7bb07…`, `af58b6d9…`,
+`eee00998…`). The RiscvSim test runs Verilator and checks
 the event rows, the counter totals and the end record.
 
 ## Decisions

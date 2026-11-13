@@ -150,6 +150,10 @@ programs (`rv32imasu`):
 Limit: the `retired` counter of `branches` is 35658; C2 has 35660. The last two commits share
 the end cycle and are not counted. The cause in the sampling order is not established.
 
+Synthesis safety: run `rvwvexii.ProbeSafety` from the adapter classpath. It elaborates the
+core with and without `ProbeTapPlugin` (probes off) and compares the Verilog SHA-256; it exits 1 when
+they differ. Measured identical on 2026-11-13.
+
 ## Limits
 
 - Compressed, FPU and cached configurations have no validated trace mapping.
