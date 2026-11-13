@@ -395,7 +395,9 @@ class Spike:
         self.lib.rvw_set_trap_tval(self.handle, value)
 
     def set_reg(self, rd, value):
-        self.lib.rvw_set_reg(self.handle, rd, value)
+        # Spike stores RV32 GPRs sign-extended in its 64-bit register file.
+        native_value = C.c_int32(value).value if self.platform.xlen == 32 else value
+        self.lib.rvw_set_reg(self.handle, rd, native_value)
         if rd:
             self.regs[rd] = value
 
