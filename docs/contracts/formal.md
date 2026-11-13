@@ -882,3 +882,16 @@ puts that location in each regression manifest row. C3 retains it on failures
 and other outcomes. File names are source basenames. This identifies the DSL
 call site. It is not a complete transitive source or input-closure certificate.
 Helper functions can pass `sourceDepth` to skip their own Scala stack frames.
+
+## Simple property defaults
+
+Finite temporal lowering and named-property expansion accept module-local
+`default clocking [NAME] @(EVENT); endclocking` with an empty body and
+`default disable iff (EXPRESSION);`. They replace omitted controls with explicit
+ones. Explicit controls take priority. A named alias inherits controls at its
+resolved definition. Defaults stay inside the declaring module.
+
+Only one inline clock declaration and one disable declaration are accepted per
+module. Nested defaults, skews, clocking IO declarations and separate named
+clocking selection remain unsupported. This normalization does not add an event
+model or reset semantics to an engine that previously refused those controls.

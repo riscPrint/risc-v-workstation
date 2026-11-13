@@ -43,4 +43,5 @@ def expand(source):
         source = source[:start] + replacement + source[end:]
     if re.search(r'\b(checker|endchecker|bind)\b', re.sub(r'//[^\n]*|/\*.*?\*/', '', source, flags=re.S)):
         raise Unsupported('checker_or_bind', 'only explicit module-target named-port bindings supported')
-    return source
+    from .sva_defaults import expand as expand_defaults
+    return expand_defaults(source)
