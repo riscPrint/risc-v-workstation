@@ -26,6 +26,7 @@ class Config:
     latencies: dict[str, int]
     ports: dict[str, int] = field(default_factory=dict)
     physical_registers: int = 0
+    physical_float_registers: int = 0
     branch_penalty: int = 0
     memory_policy: str = "ordered"
     dependence_entries: int = 1024
@@ -68,7 +69,7 @@ class Config:
         if not isinstance(self.latencies, dict) or not self.latencies:
             raise ValueError("latencies must be a nonempty object")
         for key, value in self.latencies.items():
-            if key not in ("alu", "multiply", "divide", "load", "store", "branch", "jump", "csr", "fence", "system") and not re.fullmatch("custom_[a-zA-Z0-9_]+", key):
+            if key not in ("alu", "multiply", "divide", "load", "store", "branch", "jump", "csr", "fence", "system") and not re.fullmatch("(?:custom|fp)_[a-zA-Z0-9_]+", key):
                 raise ValueError(f"unsupported latency class: {key}")
             if type(value) is not int or value < 1:
                 raise ValueError(f"invalid latency for {key}")
@@ -80,6 +81,8 @@ class Config:
                 raise ValueError("ports must map modeled classes to positive counts")
         if type(self.physical_registers) is not int or (self.physical_registers != 0 and self.physical_registers < 33):
             raise ValueError("physical_registers must be zero (unbounded) or at least 33")
+        if type(self.physical_float_registers) is not int or (self.physical_float_registers != 0 and self.physical_float_registers < 33):
+            raise ValueError("physical_float_registers must be zero (unbounded) or at least 33")
         if type(self.branch_penalty) is not int or self.branch_penalty < 0:
             raise ValueError("branch_penalty must be nonnegative")
         if self.memory_policy not in ("ordered", "disambiguate", "speculate"):
@@ -146,7 +149,7 @@ def _simulate(instructions, config, max_cycles=1_000_000, predictor=None, memory
     for op in instructions:
         if op.kind not in config.latencies:
             raise ValueError(f"unsupported instruction class: {op.kind}")
-        if any(type(r) is not int or not 0 <= r < 32 for r in op.sources):
+        if any(type(r) is not int or not 0 <= r < 64 or (r >= 32 and not (op.kind.startswith("fp_") or op.kind == "store")) for r in op.sources):
             raise ValueError("invalid source register")
         if (config.memory_policy in ("disambiguate", "speculate") or config.translation or memory is not None) and op.kind in ("load", "store"):
             if type(op.address) is not int or op.address < 0 or type(op.size) is not int or op.size < 1:
@@ -155,7 +158,7 @@ def _simulate(instructions, config, max_cycles=1_000_000, predictor=None, memory
             raise ValueError("fence.i requires instruction-cache invalidation not exposed by the component interface")
         if op.kind == "csr" and op.encoding >> 20 == 0x180 and ((op.encoding >> 12 & 7) in (1, 5) or (op.encoding >> 15 & 31)) and config.components.get("memory", {}).get("tlb"):
             raise ValueError("satp changes require translation context handling not exposed by the component interface")
-        if op.dest is not None and (type(op.dest) is not int or not 0 <= op.dest < 32):
+        if op.dest is not None and (type(op.dest) is not int or not 0 <= op.dest < 64 or (op.dest >= 32 and not (op.kind.startswith("fp_") or op.kind == "load"))):
             raise ValueError("invalid destination register")
     if backend not in ("auto", "python", "native"):
         raise ValueError("backend must be auto, python or native")
@@ -176,7 +179,7 @@ def _simulate(instructions, config, max_cycles=1_000_000, predictor=None, memory
     attribution = Attribution(config.commit_width)
     rob, fetched, waiting = deque(), deque(), []
     writers, events, peaks = {}, Counter(), Counter()
-    pc = retired = loads = stores = allocated = 0
+    pc = retired = loads = stores = allocated = allocated_float = 0
     blocked_until = 0
     unresolved_branch = None
     # Predictors implement predict(pc, fallthrough) and update(pc, actual_next).
@@ -198,7 +201,11 @@ def _simulate(instructions, config, max_cycles=1_000_000, predictor=None, memory
             entry = rob.popleft()
             retired += 1
             committed += 1
-            allocated -= entry.register and bool(entry.insn.dest)
+            if entry.register and entry.insn.dest:
+                if entry.insn.dest < 32:
+                    allocated -= 1
+                else:
+                    allocated_float -= 1
             loads -= entry.insn.kind == "load"
             stores -= entry.insn.kind == "store"
         attribution.observe(committed, cycle < blocked_until, bool(rob))
@@ -357,7 +364,8 @@ def _simulate(instructions, config, max_cycles=1_000_000, predictor=None, memory
                        "distributed_issue_full" if not bypass and execution.queue_full(op.kind, waiting) else
                        "load_full" if op.kind == "load" and loads >= config.load_entries else
                        "store_full" if op.kind == "store" and stores >= config.store_entries else
-                       "register_full" if not bypass and op.dest and config.physical_registers and allocated >= config.physical_registers - 32 else None)
+                       "register_full" if not bypass and op.dest and op.dest < 32 and config.physical_registers and allocated >= config.physical_registers - 32 else
+                       "float_register_full" if not bypass and op.dest is not None and op.dest >= 32 and config.physical_float_registers and allocated_float >= config.physical_float_registers - 32 else None)
             if blocked:
                 events[blocked] += 1
                 break
@@ -371,7 +379,11 @@ def _simulate(instructions, config, max_cycles=1_000_000, predictor=None, memory
             if fused:
                 deps = (rob[-1],)
             entry = Entry(op, deps, bypass_ready=cycle + 1 if bypass else 0, register=not bypass)
-            allocated += not bypass and bool(op.dest)
+            if not bypass and op.dest:
+                if op.dest < 32:
+                    allocated += 1
+                else:
+                    allocated_float += 1
             if op.dest:
                 writers[op.dest] = entry
             rob.append(entry)
@@ -423,12 +435,14 @@ def _instructions(data, custom_instructions=()):
             from .control import supported
             if not supported(decoded):
                 raise ValueError(f"unsupported control instruction: {decoded.mnemonic}")
-            if decoded.cls not in ("alu", "multiply", "divide", "load", "store", "branch", "jump", "csr", "fence", "system") or decoded.dest_bank != "x" or any(bank != "x" for bank, _ in decoded.sources):
+            if decoded.cls not in ("alu", "multiply", "divide", "load", "store", "branch", "jump", "csr", "fence", "system", "float"):
                 raise ValueError(f"unsupported instruction: {decoded.mnemonic}")
             mask = row["mem_rmask"] or row["mem_wmask"]
             if mask and mask != (1 << mask.bit_length()) - 1:
                 raise ValueError("noncontiguous memory mask is unsupported")
-            ops.append(Instruction(decoded.cls, tuple(r for _, r in decoded.sources), row["rd"],
+            from .floating import operands
+            kind, sources, destination = operands(decoded, row)
+            ops.append(Instruction(kind, sources, destination,
                                    row["pc"], row["pc_next"], decoded.length,
                                    row["mem_addr"], mask.bit_length(), row["insn"], decoded.mnemonic))
         if not ended:
@@ -458,7 +472,7 @@ def run(config_path, trace_path, max_cycles=1_000_000, effective_config=None):
     import rvw.common.riscv as decoder
     import rvw.cosim.trace as parser
     engine = b"".join(Path(p).read_bytes() for p in (__file__, str(Path(__file__).with_name("structures.py")), decoder.__file__, parser.__file__))
-    engine += b"".join(Path(__file__).with_name(name + ".py").read_bytes() for name in ("frontend", "execution", "translation", "attribution", "native", "rename", "dependence", "custom", "project", "components", "control"))
+    engine += b"".join(Path(__file__).with_name(name + ".py").read_bytes() for name in ("frontend", "execution", "translation", "attribution", "native", "rename", "dependence", "custom", "project", "components", "control", "floating"))
     engine += Path(__file__).with_name("native.c").read_bytes()
     if result["backend"] == "native":
         from .native import library_path

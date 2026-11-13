@@ -28,6 +28,8 @@ def parameters(description):
     if 'latencies' not in own:
         raise ValueError('ooo.latencies must declare the project execution timing')
     shared = {key: cpu[field] for key, field in CPU_FIELDS.items()}
+    if 'numPhysFloatRegs' in cpu:
+        shared['physical_float_registers'] = cpu['numPhysFloatRegs']
     shared['issue_entries'] = sum(queue['entries'] for queue in description['queues'])
     for key, value in shared.items():
         if key in own and own[key] != value:

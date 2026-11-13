@@ -17,10 +17,10 @@ Create CONFIG in your core project. This generic example is not a core preset:
 ```
 
 The fields in the example are required. Unknown fields are errors. Sizes, widths and latencies
-must be positive integers. These latency classes support decoded integer
-instructions only. Compressed integer instructions use the shared decoder.
-Atomics, trapping privileged operations, FP and vector operations are
-unsupported by the default configuration. Optional control timing is described below. Branches and jumps need explicit latency classes. The engine rejects their traces. A missing or unsuccessful end
+must be positive integers. These example latency classes cover integer instructions. Additional project
+classes enable the control and FP timing described below. Compressed integer instructions use the shared decoder.
+Atomics, trapping privileged operations and vector operations remain unsupported.
+FP timing needs explicit project latency classes. Optional control timing is described below. Branches and jumps need explicit latency classes. The engine rejects their traces. A missing or unsuccessful end
 marker is an error. An exhausted model cycle budget is an error.
 
 ## Decisions
@@ -441,3 +441,29 @@ be timed. The engine does not silently retain invalid instruction or
 translation state. `control_serialize_blocked` counts inspected control
 operations that cannot start. This remains timing evidence, not privilege or
 CSR correctness verification.
+
+## Floating-point dependency timing
+
+The shared decoder supplies integer and FP register banks. The own model
+keeps them separate. Integer x0 has no producer. FP f0 is a mutable register.
+FP loads, stores, arithmetic, conversions and FMA operations use the decoded
+bank and up to three source operands. FP destinations come from the encoding;
+C2 integer `rd` fields do not stand in for FP writeback data.
+
+Projects declare operation-family latencies such as `fp_fadd`, `fp_fsub`,
+`fp_fmul`, `fp_fdiv`, `fp_fsqrt`, `fp_fmadd` and `fp_fcvt`. The name is `fp_`
+plus the mnemonic before its first dot. The same class names select execution
+port bindings. FP loads and stores keep the `load` and `store` latency classes.
+A missing class remains an error. Fixed latency does not model operand-dependent
+iteration counts, denormal handling or rounding behavior.
+
+`physical_float_registers` is the total FP register count. Zero keeps pressure
+unbounded. A finite count must be at least 33. The model reserves 32 architectural
+FP names and counts pending destination allocations separately from integer
+allocations. `float_register_full` counts rename stalls from this limit. Shared
+project descriptions derive this count from `cpu.numPhysFloatRegs` when present.
+This remains a bounded pressure model, not a physical free-list implementation.
+
+The Python loop handles these streams. Vector operations, FP result validation,
+rounding semantics and trapping execution remain unsupported. The C2 producer
+and independent execution checks must establish architectural correctness.
