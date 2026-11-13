@@ -68,7 +68,7 @@ def parse_probe(d: dict) -> Probe:
                  dict(d.get("meta") or {}))
 
 
-def read(path) -> Stream:
+def read(path, *, retain_rows=True) -> Stream:
     """Read and check a stream. A missing end record (an interrupted run) gives `end=None`."""
     path = Path(path)
     with _open(path) as f:
@@ -99,5 +99,6 @@ def read(path) -> Stream:
             last = cycle
             if not 0 <= pid < len(probes) or len(values) != len(probes[pid].fields):
                 raise ValueError(f"{path}:{n}: row does not match its probe")
-            rows.append((cycle, pid, values))
+            if retain_rows:
+                rows.append((cycle, pid, values))
     return Stream(header, probes, rows, end)

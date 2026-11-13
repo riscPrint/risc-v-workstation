@@ -4,6 +4,8 @@ import spinal.core._
 import spinal.lib._
 import spinal.lib.misc.plugin.FiberPlugin
 import spinalprobes.Probe
+import vexiiriscv.execute.{ExecuteLaneService, ExecutePipelinePlugin}
+import vexiiriscv.decode.{Decode, DecodePipelinePlugin}
 import vexiiriscv.execute.lsu.{LsuCachelessPlugin, LsuL1Plugin, LsuPlugin}
 import vexiiriscv.fetch.{FetchCachelessPlugin, FetchL1Plugin}
 import vexiiriscv.memory.MmuPlugin
@@ -67,6 +69,21 @@ class ProbeTapPlugin extends FiberPlugin {
         Probe.stall("memory", "dcache_miss", pending, evidence = "inferred")
       }
       val retired = wb.commits.ports.map(_.valid.asUInt.resize(4 bits)).reduce(_ + _)
+      // One commit slot, partitioned by retirement, recovery and pipe occupancy.
+      // The same policy applies to both cached and cacheless configurations.
+      val executePipe = host[ExecutePipelinePlugin]
+      val executeValid = for (lane <- host.list[ExecuteLaneService]; stage <- executePipe.ids if stage >= lane.executeAt)
+        yield lane.ctrl(stage).down.isValid
+      val decodePipe = host[DecodePipelinePlugin]
+      val decodeValid = for (lane <- 0 until Decode.LANES; stage <- decodePipe.ids)
+        yield decodePipe.ctrl(stage).lane(lane).up.isValid
+      val slotWork = (executeValid ++ decodeValid).orR
+      val slotRecovery = recovery || learns.map(l => l.valid && l.payload.wasWrong).orR
+      Probe.counter("topdown_slots", True)
+      Probe.counter("topdown_retiring", commitValid)
+      Probe.counter("topdown_bad_speculation", !commitValid && slotRecovery)
+      Probe.counter("topdown_backend_bound", !commitValid && !slotRecovery && slotWork)
+      Probe.counter("topdown_frontend_bound", !commitValid && !slotRecovery && !slotWork)
       Probe.counter("cycles", True)
       Probe.counter("retired", retired)
       Probe.counter("branches", learns.map(_.valid).orR)

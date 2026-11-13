@@ -244,8 +244,8 @@ values. It runs one fixed loop count. It is not an official Dhrystone score.
 reads for cores without machine CSRs. C1 still supplies the full-run counts.
 
 The runner reuses C1 `run-many` with one worker. Each manifest entry has its
-own wall limit. The launch budget also covers adapter setup. Completed table
-rows resume; raw results from an interrupted batch are not reused.
+own wall limit. The launch budget also covers adapter setup. The runner saves campaign identity before launch. Resume validates complete
+C1 results from an interrupted batch. It reruns unfinished programs.
 
 ## Compare RTL tables
 
@@ -259,3 +259,33 @@ can still be shown with an unverified noise check. Exit 3 means inconclusive.
 Different ELF hashes are explicit, so two compiled revisions can be compared.
 Use the same program inputs and ISA. Compare top-down fractions only when the
 project uses the same slot partition. Differences are fractions, not percent.
+
+## Top-down beside IPC
+
+With `probes: true`, the result table includes retiring, bad speculation,
+front-end and back-end slot percentages. The existing `rvw perf topdown`
+reader checks the partition total and matches retirements to C1 `instret`.
+`topdown_status: c1_checked` means that C1 check passed. The embedded top-down
+report remains `unchecked` without C2. No C2 validation is implied.
+The three lowest IPC programs get one attribution line each. Failed programs
+have no IPC or top-down result. Missing bindings remain explicit diagnostics.
+
+VexRiscv and VexiiRiscv use one slot per cycle. Retirement has first priority.
+Redirect recovery has second priority. Remaining lost slots use pipeline
+occupancy: occupied is back-end, empty is front-end. VexRiscv recovery ends
+when decode becomes occupied. VexiiRiscv recovery ends at the next commit.
+NaxRiscv and OoO Mini retain their existing ROB-based partitions. These are
+project definitions. They do not isolate causal stall penalties or qualify
+hardware top-down counters. Compare deltas within a fixed project definition.
+Counter summaries validate the full event stream without retaining its rows
+in memory. Probe files and their replay copies are removed after use.
+A failed batch launch produces diagnostic rows for every selected program.
+It does not repeat a failed cold build once per program. For a run-only
+adapter, set `RVW_NO_RUN_MANY=1` to select the existing serial C1 path.
+Benchmark probe runs use C1 `--probe-mode topdown`. Only the five slot
+counters are sampled. No pipeline, branch or bus event trace is generated.
+Normal C1 `--probes` capture remains unchanged. C1 records the selected mode.
+A profile can place settings beside its TOML as `PROFILE.bench.json`.
+That file takes priority over `rvw/bench.json`. Optional `targets` entries
+map configuration names to overrides of `target`, for example an ISA or ABI.
+An explicit `--settings` still has first priority.

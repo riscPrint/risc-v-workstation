@@ -9,7 +9,7 @@ object Cli {
   /** Flags without a value, and options with one. Dashes and underscores are equivalent. */
   val flags = Set("rvfi-trace", "rvfi-check", "rvfi", "wave", "konata", "coverage", "spinaltrace", "probes", "json", "help", "persistent")
   val options = Set("elf", "out", "config", "seed", "max-cycles", "mem-latency", "sim-threads", "wave-from", "wave-to",
-    "manifest", "jobs", "summary", "wall-timeout", "irq-schedule", "elf-load-bias", "boot-payloads", "soc-map", "hart-images", "fault", "debug", "debug-binding", "trace-ingress", "stimulus-file", "instruction-port", "instruction-feed")
+    "probe-mode", "manifest", "jobs", "summary", "wall-timeout", "irq-schedule", "elf-load-bias", "boot-payloads", "soc-map", "hart-images", "fault", "debug", "debug-binding", "trace-ingress", "stimulus-file", "instruction-port", "instruction-feed")
   private val integerOptions = Set("seed", "max-cycles", "mem-latency", "sim-threads", "wave-from", "wave-to", "jobs")
 
   private def booleanValue(k: String, v: String): Boolean = v.toLowerCase(java.util.Locale.ROOT) match {
@@ -135,7 +135,11 @@ object Cli {
       throw new UsageError("instruction injection needs --instruction-port and --instruction-feed")
     if (m.contains("instruction-port") && !adapter.supportsInstructionPort(config))
       throw new UsageError("adapter/config does not support instruction injection")
+    val probeMode = m.getOrElse("probe-mode", "all")
+    if (!Set("all", "topdown")(probeMode)) throw new UsageError("--probe-mode must be all or topdown")
+    if (probeMode != "all" && !bool(m, "probes")) throw new UsageError("--probe-mode topdown needs --probes")
     RunJob(
+      probeMode = probeMode,
       elf = file(cwd, need("elf")), out = file(cwd, need("out")), config = config, seed = seed, seedPicked = picked,
       maxCycles = maxCycles, memLatency = memLatency, simThreads = simThreads(m, adapter),
       rvfiTrace = bool(m, "rvfi-trace"), rvfiCheck = bool(m, "rvfi-check") || bool(m, "rvfi"),
@@ -164,7 +168,7 @@ object Cli {
       |  run.sh build    --config NAME[,NAME...] [--rvfi] [--wave] [--coverage] [--konata] [--spinaltrace] [--probes] [--json]
       |  run.sh run      --elf PATH --out DIR [--config NAME] [--seed N] [--max-cycles N] [--mem-latency N] [--sim-threads N]
       |                  [--rvfi-trace] [--rvfi-check] [--wave [--wave-from CYCLE] [--wave-to CYCLE]]
-      |                  [--hart-images JSON] [--elf-load-bias BYTES] [--boot-payloads JSON] [--soc-map PATH] [--konata] [--coverage] [--spinaltrace] [--probes] [--wall-timeout SECONDS] [--irq-schedule CYCLE:0xLEVELS,...] [--fault rvw.fault/1 JSON]
+      |                  [--hart-images JSON] [--elf-load-bias BYTES] [--boot-payloads JSON] [--soc-map PATH] [--konata] [--coverage] [--spinaltrace] [--probes] [--probe-mode all|topdown] [--wall-timeout SECONDS] [--irq-schedule CYCLE:0xLEVELS,...] [--fault rvw.fault/1 JSON]
       |                  [--debug dmi|jtag:PORT --debug-binding rvw.debug-binding/1 JSON]
       |                  [--instruction-port BINDING --instruction-feed FEED]
       |                  [--trace-ingress rvw.trace-ingress-binding/1 JSON] [--stimulus-file rvw.stimulus/1 JSON] [--json]
