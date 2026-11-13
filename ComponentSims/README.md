@@ -221,7 +221,14 @@ section. No result is a match or fidelity verdict.
 - The BT9 reader follows the published format description; it has not been run
   on the CBP 2016 trace set here. ChampSim branch types follow the documented
   register rules.
-- No native RTL comparison has run yet: no adapter writes `rvw.bp-events/1`.
+- Native RTL comparisons now run on cached VexRiscv and VexiiRiscv.
+  BOOM small has earlier branch-probe comparisons. The event bindings and
+  measured limits are in [SpinalProbes](../SpinalProbes/README.md) and
+  [PR #1219](https://github.com/riscPrint/risc-v-workstation/pull/1219).
+  VexiiRiscv has 9,001 declared predictor events and 769 matching data-cache
+  access outcomes. Its model omits the final clean: 449 predicted writebacks
+  versus 512 observed. Target availability and instruction-tail gaps remain.
+  These component comparisons do not qualify general timing accuracy.
 - MPKI and miss counts do not give IPC or speedup.
 
 ## Tests

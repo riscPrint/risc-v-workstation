@@ -5,8 +5,10 @@ complete single-hart C2 trace. This engine does not use gem5. Spike traces
 must first be exported as C2. RTL cycle timestamps are validated but do not
 drive the prediction. The full trace is the measured region.
 
-The NaxRiscv study still has 13 wrong structure deltas out of 24.
-Only two of 15 nonzero RTL changes meet the error criterion.
+The latest NaxRiscv drain study has 10 wrong structure deltas out of 24.
+Five of 15 nonzero RTL changes meet the error criterion. The earlier
+PR #1218 result was two of 15. See [the drain stage](#resource-study-drain)
+and [PR #1231](https://github.com/riscPrint/risc-v-workstation/pull/1231).
 Structure-size choices still need RTL measurements.
 See the measured structure-delta section below.
 
@@ -912,7 +914,7 @@ different candidates. The fit report names its objective.
 
 ## Measured structure deltas
 
-The model meets the delta criterion on only two of 15 nonzero RTL changes. All nine zero changes match. Structure-size choices still need RTL measurements. Use the model to select experiments and inspect possible bottlenecks. The current results do not qualify design decisions for Apple M-series or Zen 5 class cores.
+The PR #1218 model meets the delta criterion on only two of 15 nonzero RTL changes. All nine zero changes match. The later drain stage reaches five of 15; ten deltas still fail. Structure-size choices still need RTL measurements. Use the model to select experiments and inspect possible bottlenecks. The current results do not qualify design decisions for Apple M-series or Zen 5 class cores.
 
 | Variant | Initial outside criterion | Revised outside criterion |
 |---|---:|---:|
