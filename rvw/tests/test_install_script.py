@@ -489,3 +489,19 @@ def test_profile_with_system_bash(profile, tmp_path):
     assert result.returncode == 0, result.stderr
     assert 'uv sync --locked' in result.stdout
     assert not (tmp_path / 'install').exists()
+
+
+@pytest.mark.fast
+def test_cosim_reuses_dtc_on_macos(tmp_path):
+    binaries = tmp_path / 'bin'
+    binaries.mkdir()
+    for name, body in {'uname': 'echo Darwin', 'dtc': 'exit 0'}.items():
+        path = binaries / name
+        path.write_text('#!/bin/sh\n' + body + '\n')
+        path.chmod(0o755)
+    result = invoke('--with-cosim', '--dry-run', '--prefix', tmp_path / 'install',
+                    env={**os.environ, 'PATH': str(binaries) + ':' + os.environ['PATH'],
+                         'SPIKE_PREFIX': str(tmp_path / 'new-spike')})
+    assert result.returncode == 0, result.stderr
+    assert 'brew install dtc' not in result.stdout
+    assert '--without-boost' in result.stdout

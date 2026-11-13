@@ -592,7 +592,7 @@ fi
 if [ "$cosim" = 1 ] && [ "$bundle" = 0 ]; then
   if ! spike_inputs; then
     case "$pm" in
-      brew) packages dtc ;;
+      brew) if ! command -v dtc >/dev/null 2>&1; then packages dtc; fi ;;
       apt) packages build-essential device-tree-compiler ;;
       dnf) packages make gcc-c++ dtc ;;
     esac
