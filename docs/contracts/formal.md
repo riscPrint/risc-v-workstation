@@ -1115,3 +1115,22 @@ The report retains the sample count and trace SHA-256. This is a selected bound,
 not a proof of worst-case latency. Explicit check_options.cycles still override
 individual checks. Projects can set latency_trace or an explicit depth.
 An inconclusive instruction row gives an action for timeout or activation gaps.
+
+## ISA timeout measurements
+
+The bounded riscv-formal runner records `wall_s`, `timeout_s` and
+`load_average_start` for each check. Load is the host's one-, five- and
+fifteen-minute load average. Missing host support is JSON null.
+Timeouts also record `load_average_end`, `next_setting` and
+`capacity_classification: unresolved`. The engine portfolio records the same
+fields for native engine timeouts and preparation timeouts. ISA rows retain
+bounded timing fields and per-engine `engine_attempts` for unbounded runs.
+The text table prints timeout timing, load and the suggested retry.
+Instruction activation records the same timing and load fields.
+Machine checks retain one timing record per task under `native_attempts`.
+
+The retry preserves the check and depth. It suggests at least 1800 seconds,
+or twice the current limit when larger. A starting one-minute load above 20
+also requests a lower-load retry with at most two engines. These are retry
+settings, not measured defaults. A timeout alone cannot distinguish host
+contention from a solver capacity limit. No proof or bound is added.

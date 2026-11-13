@@ -2,7 +2,9 @@
 import json
 from pathlib import Path
 import re
+import time
 from rvw.common.proc import run_group
+from .runtime import load_average, timeout_details
 
 
 def cover_source(source, solver):
@@ -28,6 +30,8 @@ def run(cfg, directory, timeout):
             file=work/(name+'-activation.sby')
             file.write_text(cover_source(original.read_text(),cfg['solver']))
             target=work/(name+'-activation')
+            began=time.monotonic()
+            load_start=load_average()
             try:
                 with (directory/(name+'-activation.log')).open('w') as log:
                     result=run_group(['sby','-f',file.name],cwd=work,stdout=log,stderr=log,timeout=timeout)
@@ -38,6 +42,10 @@ def run(cfg, directory, timeout):
                 activation=dict(status='reached' if reached else 'timeout' if result.timed_out else 'inconclusive',
                                 evidence=str(target.relative_to(directory)),
                                 reason='' if reached else 'Selected instruction cover did not close with a trace.')
+                activation.update(wall_s=time.monotonic()-began, timeout_s=timeout,
+                                  load_average_start=load_start, load_average_end=load_average())
+                if result.timed_out:
+                    activation.update(timeout_details(activation['wall_s'],timeout,load_start))
             except OSError as exc:
                 activation=dict(status='error',reason=str(exc))
         entry['instruction_activation']=activation

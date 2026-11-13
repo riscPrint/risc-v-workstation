@@ -130,16 +130,27 @@ def generate(plan, root, out):
 
 
 def run(plan, root, out, timeout):
+    import time
+    from .runtime import load_average, timeout_details
     if not math.isfinite(timeout) or timeout <= 0:
         raise ValueError('timeout must be finite and positive')
     report = generate(plan, root, out)
     for row in report['rows']:
         if row['status'] != 'generated': continue
         tokens = {}
+        row['native_attempts'] = []
         for task in ('check','cover'):
             directory = Path(out)/row['check']
+            began = time.monotonic()
+            load_start = load_average()
             with (directory/(task+'.log')).open('w') as log:
                 result = run_group(['sby','-f','check.sby',task],cwd=directory,stdout=log,stderr=log,timeout=timeout)
+            attempt = dict(task=task, wall_s=time.monotonic()-began, timeout_s=timeout,
+                           load_average_start=load_start, load_average_end=load_average(),
+                           status='timeout' if result.timed_out else 'completed')
+            if result.timed_out:
+                attempt.update(timeout_details(attempt['wall_s'],timeout,load_start))
+            row['native_attempts'].append(attempt)
             status = directory/('check_'+task)/'status'
             tokens[task] = status.read_text().split()[0] if status.is_file() and result.returncode == 0 and not result.timed_out else 'INCOMPLETE'
             if status.is_file() and status.read_text().split()[0] == 'FAIL' and task == 'check': tokens[task] = 'FAIL'
