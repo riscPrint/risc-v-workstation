@@ -77,3 +77,15 @@ def test_cli_mcp_export_parity_and_sidecars(tmp_path):
 def test_malformed_xml_is_a_reported_input_error():
     with pytest.raises(ValueError,match='invalid UCIS XML'):
         import_ucis(b'<UCIS')
+
+
+def test_assertion_peak_and_active_snapshot_merge_semantics():
+    def report(peak,active):
+        return {'schema':'rvw.assertion-counters/1','design_sha256':'a'*64,
+                'properties':[{'id':'p','counts':{'peak_active':peak,'active':active,'pass':2}}]}
+    merged=merge_exchanges([report(3,1),report(5,1)])
+    counts={row['kind']:row['count'] for row in merged['rows']}
+    assert counts['assertion:peak_active']==5
+    assert counts['assertion:active']==1 and counts['assertion:pass']==4
+    with pytest.raises(ValueError,match='active assertion snapshots'):
+        merge_exchanges([report(3,1),report(5,2)])

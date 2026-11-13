@@ -29,7 +29,8 @@ an `id`, optional source metadata and `counts`. Supported counter names are
 These are reported counters. They do not establish proof or non-vacuity.
 
 `merge_exchanges` requires equal source context, bin IDs, native kinds,
-semantics and exclusions. It sums compatible counts. Imported exclusions remain
+semantics and exclusions. It sums compatible event counts. Peak-active counters merge by maximum.
+Active snapshots must agree and do not add. Imported exclusions remain
 unverified. Import does not create a native code database or proof envelope.
 No imported report grants C4 acceptance. Native UCIS metric tags, vendor databases,
 arbitrary UCIS profiles and UCIS C API support remain outside this subset.
