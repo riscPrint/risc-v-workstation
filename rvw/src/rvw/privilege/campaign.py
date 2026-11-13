@@ -25,7 +25,7 @@ def load(path):
         raise ValueError('modes must be distinct M, S or U entries')
     if raw.get('priv', 'msu') != 'msu' and not (raw.get('kind') in ('disabled','disabled-matrix') and raw.get('priv') == 'mu'):
         raise ValueError('control campaign requires supervisor support (msu)')
-    if raw.get('kind', 'controls') not in ('epmp-matrix', 'disabled-matrix', 'reri', 'dvfs', 'controls', 'wfi', 'disabled', 'scheduled-wfi', 'plic', 'reset', 'nmi', 'pma', 'pmp', 'epmp', 'imsic', 'aplic', 'aclint', 'smnip', 'sstc', 'stateen', 'envcfg', 'landing', 'shadow'):
+    if raw.get('kind', 'controls') not in ('aplic-msi', 'epmp-matrix', 'disabled-matrix', 'reri', 'dvfs', 'controls', 'wfi', 'disabled', 'scheduled-wfi', 'plic', 'reset', 'nmi', 'pma', 'pmp', 'epmp', 'imsic', 'aplic', 'aclint', 'smnip', 'sstc', 'stateen', 'envcfg', 'landing', 'shadow'):
         raise ValueError('kind must be controls, wfi or disabled')
     if raw.get('kind') == 'wfi':
         from .wake import programs
@@ -37,7 +37,7 @@ def load(path):
 def scenarios(config):
     from importlib import import_module
     kind = config.get('kind', 'controls')
-    module = {'epmp-matrix':'epmp_matrix', 'disabled-matrix':'disabled_matrix', 'controls':'programs', 'wfi':'wake', 'scheduled-wfi':'scheduled',
+    module = {'aplic-msi':'aplic_gateway', 'epmp-matrix':'epmp_matrix', 'disabled-matrix':'disabled_matrix', 'controls':'programs', 'wfi':'wake', 'scheduled-wfi':'scheduled',
               'reset':'lifecycle', 'nmi':'lifecycle', 'imsic':'aia', 'aplic':'aia',
               'aclint':'fast_interrupts', 'smnip':'fast_interrupts',
               'sstc':'extensions', 'stateen':'extensions', 'envcfg':'extensions', 'landing':'extensions'}.get(kind, kind)
@@ -79,7 +79,7 @@ def build(description, out, gcc='riscv64-unknown-elf-gcc'):
     (out / 'manifest.json').write_text(json.dumps(manifest, indent=2) + '\n')
     (out / 'functional-groups.json').write_text(json.dumps({'replace_defaults': True, 'groups': [
         {'name': 'privilege_csr_mode', 'fields': ['csr', 'mode'], 'when': {'class': 'csr'},
-         'domains': [['0x180', '0x300', '0x341', '0x342', '0x346', '0x347', '0x350', '0x351', '0x355', '0x35c'], ['M', 'S', 'U']]},
+         'domains': [['0x180', '0x300', '0x341', '0x342', '0x346', '0x347', '0x350', '0x351', '0x355', '0x35c', '0x150', '0x151', '0x15c', '0x250', '0x251', '0x25c', '0x600'], ['M', 'S', 'U']]},
         {'name': 'privilege_trap', 'fields': ['cause', 'mode'],
          'when': {'event': 'trap', 'interrupt': False}, 'domains': [[2, 8, 9, 11], ['M']]},
         {'name': 'privilege_irq', 'fields': ['cause', 'mode'],
@@ -113,9 +113,11 @@ def reference(directory, spike='spike', timeout=2):
                 raise ValueError('no Python reference model for this scenario')
             from importlib import import_module
             model_kind = scenario['reference_model']['kind']
-            model = import_module('rvw.privilege.' + model_kind) if model_kind in ('reri','dvfs') else fast_interrupts if model_kind in ('aclint','smnip') else aia
+            model = import_module('rvw.privilege.aplic_gateway') if model_kind == 'aplic-msi' else import_module('rvw.privilege.' + model_kind) if model_kind in ('reri','dvfs') else fast_interrupts if model_kind in ('aclint','smnip') else aia
             rows.append(model.reference(scenario))
         models = [aia, fast_interrupts, controllers]
+        if manifest['config'].get('kind') == 'aplic-msi':
+            models.append(import_module('rvw.privilege.aplic_gateway'))
         if manifest['config'].get('kind') in ('reri','dvfs'):
             models.append(import_module('rvw.privilege.' + manifest['config']['kind']))
         return dict(schema='rvw.privilege-reference/1', scope='model-based Python reference; no DUT coverage',

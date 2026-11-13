@@ -4223,6 +4223,19 @@ walk and PMA checks remain inconclusive.
 
 ### Privilege campaign artifacts
 
+IMSIC project data may select `file` as M, S or VS, `guest_index` for a VS
+file and `identities` as 64*n-1. Programs bind their MSI destination page to
+that selected file and check an uninjected peer. `kind = "aplic-msi"` selects
+versioned edge/level-to-MSI programs. Mailbox payloads use `aplic-level`,
+`controller_base`, `source` and Boolean `level`. Python reference reports bind
+the gateway model source hash and retain their model-based scope.
+
+`kind = "epmp-matrix"` selects the complete 16-encoding MML permission table.
+Each scenario records `expected_allowed` and its pinned Smepmp specification
+URL. Separate bins cross L/R/W/X with actual/effective privilege and access
+kind. RLB is cleared before the access probe. Existing C1 and strict-reference
+requirements still apply.
+
 `kind = "disabled-matrix"` selects `disabled.feature` and all 64 requested
 six-control masks. Profiles cover disabled FS/VS state and absent F/V/S
 features. `requested_controls` in each scenario records the requested mstatus

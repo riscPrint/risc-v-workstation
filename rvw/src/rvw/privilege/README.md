@@ -205,10 +205,11 @@ paths. An unavailable Spike device model is not a passing result.
 The Python models cover IMSIC pending/enables/threshold/claims and file state,
 APLIC source modes, priority, direct claims, source delegation and software/edge
 MSI routing, ACLINT pending/timer state and nested priority groups. Unit tests
-are model tests. Programs currently cover machine interrupt files and one APLIC
-context. Guest files, full virtualization, level-to-MSI conversion, vector
-entry and asynchronous preemption need additional program campaigns. The model
-rejects level-to-MSI requests rather than assume a gateway rule. Old CLIC drafts
+are model tests. Programs cover machine, supervisor and selected VS guest interrupt files,
+one APLIC direct-delivery context and edge/level MSI gateways. Full guest
+context switching, multiple harts, vector entry and asynchronous preemption
+need additional program campaigns. The separate direct-delivery and MSI
+models keep their different level-pending rules. Old CLIC drafts
 are not silently mapped onto ACLIC. These limits keep #158, #165 and #186 open.
 
 ## RERI and digital DVFS
@@ -310,3 +311,32 @@ observation, all security-policy transition cases or DUT qualification.
 The MML matrix bootstrap requires `epmp.rlb_supported = true`. RLB is optional
 in Smepmp, so the generator does not treat its absence as a conformance failure.
 Programs check MML set and RLB clear before each permission probe.
+
+
+## IMSIC file isolation and APLIC MSI gateways
+
+`imsic.file` selects M, S or VS. The VS profile requires H and a positive
+`guest_index`. `identities` declares the file size as 64*n-1. Programs clear
+that file's pending/enables, inject into its project-owned MSI page and check
+the proper TOPEI CSR and pending IRQ bit. They also check that an uninjected
+peer file stays empty. The examples select supervisor and guest-file pages
+explicitly. They do not infer a project address map.
+
+`kind = "aplic-msi"` combines project APLIC and IMSIC maps. Four programs
+exercise Edge1, Edge0, Level1 and Level0 sources. Each drives an inactive
+baseline before source configuration, asserts the source, holds it asserted,
+deasserts it and rearms it. They check the delivered IMSIC identity and require
+no repeated MSI merely from a held input. The model follows the pinned AIA 1.0
+pending-bit rules. Level MSI pending clears on forwarding and rearms on a
+rectified rising edge. Software can set it only while the input is active.
+These rules differ from level direct-delivery pending, which follows the wire.
+
+Programs wait for MSI arrival with a finite instruction bound. Source events
+use the existing mailbox contract and include the controller base and source.
+No RTL source driver or DUT result is implied by compilation. Reference output
+is model-based. The AIA source revision is
+`f24dd483d50e6a1448116dcf88b8b08e0863512c`.
+
+Smnip has one previous-threshold field. Nested handlers must save and restore
+that field in software. The Python model does not create an implicit hardware
+stack. Its restore_previous method represents the explicit software restore.

@@ -1,0 +1,14 @@
+{
+  "schema": "rvw.privilege/1",
+  "kind": "imsic",
+  "spec_version": "AIA-1.0",
+  "spec_revision": "f24dd483d50e6a1448116dcf88b8b08e0863512c",
+  "reference_backend": "python",
+  "isa": "rv64imah_zicsr_zifencei_smaia_ssaia",
+  "imsic": {
+    "file": "VS",
+    "msi_address": 671092736,
+    "guest_index": 1,
+    "identities": 63
+  }
+}
