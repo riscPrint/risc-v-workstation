@@ -3302,6 +3302,40 @@ level-zero RV64 mapping. The Spike reference uses `-p2`. The C1 project must
 select an adapter configuration with two harts. Request, acknowledgement and
 completion use RAM mailboxes and explicit memory fences. No IPI is implied.
 Neither option supports the independent immutable-walk checker yet.
+### Decoded IOMMU scenarios
+
+`rvw regress mmu iommu --generate --seed N --mode MODE` emits
+`rvw.iommu-scenarios/1` data. `contexts` maps device IDs to decoded contexts.
+A context can have `valid`, `first`, `second`, `processes` and `msi` fields.
+First/second stages give `mode` (bare/sv39/sv48/sv57) and `root`. First stages
+can set `privilege`. Process IDs map to first-stage contexts. Second stages use
+x4 geometry. VS PTE reads also pass through second-stage translation.
+`memory` gives physical PTE values. MSI `mask`/`pattern` selects page addresses;
+`pages` maps selected page numbers to host page bases. These are decoded model
+inputs, not raw architectural DDT/PDT/MSI structures.
+
+`steps` contains `request`, `command`, `process_command`, `pte_write` and
+`fault_pop` records. A request gives `device`, optional `process`, `address`,
+`access` (load/store/fetch) and optional `size` (1/2/4/8). It must fit one page.
+Decoded commands are `iotinval`, `iodir` and `iofence`, with optional device,
+process and address scope. The model retains cached translations until an
+invalidation. Queues have power-of-two `queue_size` with one slot reserved.
+Full fault queues set `fault_overflow`. Faults have descriptive stage/cause
+fields; these are not the architectural binary fault record encoding.
+
+`rvw regress mmu iommu DESCRIPTION --observations FILE --result C1` compares
+independent device-agent records. `rvw.iommu-observations/1` has `records`, C1
+`identity` and `c1_sha256`. The C1 details must bind `iommu_description_sha256`.
+All identity fields must match. Missing or unbound evidence stays inconclusive.
+Mismatches remain mismatches. Reports use `rvw.iommu-check/1`. MCP exposes
+`regress_mmu_iommu_generate` and `regress_mmu_iommu`. The Python device agent
+calls a project-owned exchange callback with the same requests as the model.
+
+The report records the pinned upstream reference-model revision. That pin is
+source metadata. It does not mean that the C reference ran. Raw directory and
+register conformance, ATS, PRI, atomic A/D, MSI wire formats and DUT transport
+integration remain unsupported by this decoded model.
+
 ### Pointer-masking privilege matrices
 
 `rvw.mmu/1` may contain `pointer_matrix` with `modes`, `extensions` and

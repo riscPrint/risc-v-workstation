@@ -753,7 +753,14 @@ def register(sub):
     coverage.add_argument('--results', type=Path, required=True)
     coverage.add_argument('--checked', type=Path)
     coverage.add_argument('--protocol-config', type=Path, help='project translation probe and memory-type policy')
-    for p in (b, r, c, coverage):
+    iommu = actions.add_parser('iommu', help='check decoded IOMMU scenarios against device observations')
+    iommu.add_argument('description', type=Path, nargs='?')
+    iommu.add_argument('--generate', action='store_true')
+    iommu.add_argument('--seed', type=int, default=1)
+    iommu.add_argument('--mode', choices=('sv39', 'sv48', 'sv57'), default='sv39')
+    iommu.add_argument('--observations', type=Path)
+    iommu.add_argument('--result', type=Path, help='C1 result that binds device observations')
+    for p in (b, r, c, coverage, iommu):
         p.add_argument('--json', action='store_true')
         p.set_defaults(func=main)
 
@@ -763,7 +770,15 @@ def main(args):
     try:
         if args.mmu_action in ('reference', 'check') and (not math.isfinite(args.timeout) or args.timeout <= 0):
             raise ValueError('timeout must be finite and positive')
-        if args.mmu_action == 'build':
+        if args.mmu_action == 'iommu':
+            from .mmu_iommu import run as iommu_run, generate
+            if args.generate:
+                result = dict(generate(args.seed, args.mode), status='generated')
+            elif args.description is None:
+                raise ValueError('IOMMU comparison requires a description')
+            else:
+                result = iommu_run(args.description, args.observations, args.result)
+        elif args.mmu_action == 'build':
             result = build(args.description, args.out, args.gcc, args.pma)
         elif args.mmu_action == 'reference':
             result = reference(args.directory, args.spike, args.timeout)
@@ -772,7 +787,7 @@ def main(args):
         else:
             result = check(args.directory, args.results, args.platform, args.model, args.timeout, args.sail)
         print(json.dumps(result, allow_nan=False))
-        return 0 if result.get('status', 'pass') in ('pass', 'reported') else 3 if result.get('status') == 'inconclusive' else 1
+        return 0 if result.get('status', 'pass') in ('pass', 'reported', 'consistent', 'generated') else 3 if result.get('status') == 'inconclusive' else 1
     except (OSError, ValueError, KeyError, TypeError) as exc:
         print(json.dumps({'status': 'error', 'message': str(exc)}))
         return 2
