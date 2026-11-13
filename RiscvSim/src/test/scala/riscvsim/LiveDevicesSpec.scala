@@ -144,4 +144,50 @@ class LiveDevicesSpec extends AnyFunSuite {
     } finally java.nio.file.Files.delete(path)
   }
 
+  test("PLIC threshold masks notification but does not mask claim polling") {
+    val d = fresh()
+    d.write(0x10000001L, 1, 1)
+    d.write(0xc000004L, 4, 1)
+    d.write(0xc002000L, 4, 2)
+    d.write(0xc200000L, 4, 7)
+    assert(d.tick(3000) == 0)
+    assert(d.read(0xc001000L, 4) == 2)
+    assert(d.read(0xc200004L, 4) == 1)
+    assert(d.read(0xc200004L, 4) == 0)
+    d.write(0xc200004L, 4, 1)
+    assert(d.tick(3001) == 0)
+    assert(d.read(0xc200004L, 4) == 1)
+  }
+
+  test("PLIC pending request survives source deassertion until claim") {
+    val d = fresh()
+    d.write(0x10000002L, 1, 1)
+    d.write(0x10000001L, 1, 1)
+    d.write(0xc000004L, 4, 1)
+    d.write(0xc002000L, 4, 2)
+    assert(d.tick(3000) == 0x800)
+    for (_ <- 0 until 5) d.read(0x10000000L, 1)
+    assert(d.tick(3001) == 0x800)
+    val saved = d.snapshot()
+    val restored = fresh(); restored.restore(saved)
+    for (device <- Seq(d, restored)) {
+      assert(device.read(0xc200004L, 4) == 1)
+      device.write(0xc200004L, 4, 1)
+      assert(device.tick(3002) == 0)
+    }
+    assert(d.snapshot() == restored.snapshot())
+  }
+
+  test("UART IIR read acknowledges a pending THRE interrupt") {
+    val d = fresh()
+    d.write(0x10000001L, 1, 2)
+    assert(d.read(0x10000002L, 1) == 2)
+    assert(d.read(0x10000002L, 1) == 1)
+    d.write(0x10000000L, 1, 65)
+    assert(d.read(0x10000002L, 1) == 2)
+    val saved = d.snapshot()
+    val restored = fresh(); restored.restore(saved)
+    assert(restored.read(0x10000002L, 1) == 1)
+  }
+
 }

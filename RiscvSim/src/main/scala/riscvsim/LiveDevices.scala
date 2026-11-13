@@ -38,6 +38,7 @@ final class LiveDevices(map: SimMap) {
     var modemDelta = 0L
     var fifo = false
     var overrun = false
+    var txPending = false
     override def tick(cycle: Long): Unit = {
       while (position < input.size && SimMap.number(input(position)("cycle")) <= cycle) {
         val raw = SimMap.number(input(position)("byte"))
@@ -52,17 +53,17 @@ final class LiveDevices(map: SimMap) {
       ((mcr & 2) << 3) | ((mcr & 1) << 5) | ((mcr & 4) << 4) | ((mcr & 8) << 4)
     private def interruptId: Int = if ((ier & 4) != 0 && overrun) 6 else
       if ((ier & 1) != 0 && rx.size >= (if (fifo) trigger else 1)) 4 else
-      if ((ier & 2) != 0) 2 else if ((ier & 8) != 0 && modemDelta != 0) 0 else 1
+      if ((ier & 2) != 0 && txPending) 2 else if ((ier & 8) != 0 && modemDelta != 0) 0 else 1
     def save: ujson.Value = ujson.Obj("trigger" -> trigger, "modem_delta" -> modemDelta, "rx" -> ujson.Arr.from(rx), "tx" -> tx.toString,
       "position" -> position, "ier" -> ier, "dl" -> divisorLow, "dh" -> divisorHigh,
-      "lcr" -> lcr, "scratch" -> scratch, "mcr" -> mcr, "fifo" -> fifo, "overrun" -> overrun)
+      "lcr" -> lcr, "scratch" -> scratch, "mcr" -> mcr, "fifo" -> fifo, "overrun" -> overrun, "tx_pending" -> txPending)
     def restore(v: ujson.Value): Unit = {
       rx.clear(); v("rx").arr.foreach(b => rx.enqueue(b.num.toInt))
       tx.clear(); tx.append(v("tx").str); position = v("position").num.toInt
       ier = SimMap.number(v("ier")).toLong; divisorLow = SimMap.number(v("dl")).toLong; divisorHigh = SimMap.number(v("dh")).toLong
       mcr = v.obj.get("mcr").map(SimMap.number).getOrElse(BigInt(0)).toLong
       lcr = SimMap.number(v("lcr")).toLong; scratch = SimMap.number(v("scratch")).toLong
-      fifo = v("fifo").bool; overrun = v("overrun").bool
+      fifo = v("fifo").bool; overrun = v("overrun").bool; txPending = v("tx_pending").bool
       trigger = v("trigger").num.toInt; modemDelta = SimMap.number(v("modem_delta")).toLong
     }
     override def irq = (interruptId & 1) == 0
@@ -72,7 +73,10 @@ final class LiveDevices(map: SimMap) {
       case 1 if (lcr & 128) != 0 => divisorHigh
       case 0 => if (rx.nonEmpty) rx.dequeue().toLong else 0L
       case 1 => ier
-      case 2 => (if (fifo) 0xc0 else 0) | interruptId
+      case 2 =>
+        val id = interruptId
+        if (id == 2) txPending = false
+        (if (fifo) 0xc0 else 0) | id
       case 3 => lcr
       case 4 => mcr
       case 5 => val v = 0x60L | (if (rx.nonEmpty) 1 else 0) | (if (overrun) 2 else 0); overrun = false; v
@@ -83,8 +87,13 @@ final class LiveDevices(map: SimMap) {
     def write(o: Long, v: Long): Unit = o match {
       case 0 if (lcr & 128) != 0 => divisorLow = v & 255
       case 1 if (lcr & 128) != 0 => divisorHigh = v & 255
-      case 0 => if ((mcr & 16) != 0) receive((v & 255).toInt) else tx.append((v & 255).toChar)
-      case 1 => require((v & ~15L) == 0, "unsupported UART interrupt enable"); ier = v
+      case 0 =>
+        if ((mcr & 16) != 0) receive((v & 255).toInt) else tx.append((v & 255).toChar)
+        txPending = true // Transmission completes immediately in this model.
+      case 1 =>
+        require((v & ~15L) == 0, "unsupported UART interrupt enable")
+        if ((v & 2) != 0 && (ier & 2) == 0) txPending = true
+        ier = v
       case 2 => require((v & ~0xcfL) == 0, "unsupported UART FIFO control"); fifo = (v & 1) != 0; trigger = Seq(1,4,8,14)(((v >> 6) & 3).toInt); if ((v & 2) != 0) rx.clear()
       case 3 => lcr = v & 255
       case 4 =>
@@ -128,25 +137,27 @@ final class LiveDevices(map: SimMap) {
   private class Plic(c: ujson.Value) extends Device {
     val priority = mutable.Map.empty[Int, Long].withDefaultValue(0L)
     val claimed = mutable.Set.empty[Int]
+    val pending = mutable.Set.empty[Int]
     var enable, threshold = 0L
     var active = Set.empty[Int]
     def save: ujson.Value = ujson.Obj("priority" -> ujson.Obj.from(priority.toSeq.map { case (k, v) => k.toString -> ujson.Num(v) }),
-      "claimed" -> ujson.Arr.from(claimed.toSeq.sorted), "enable" -> enable, "threshold" -> threshold,
+      "claimed" -> ujson.Arr.from(claimed.toSeq.sorted), "pending" -> ujson.Arr.from(pending.toSeq.sorted), "enable" -> enable, "threshold" -> threshold,
       "active" -> ujson.Arr.from(active.toSeq.sorted))
     def restore(v: ujson.Value): Unit = {
       priority.clear(); v("priority").obj.foreach { case (k, value) => priority(k.toInt) = SimMap.number(value).toLong }
       claimed.clear(); v("claimed").arr.foreach(n => claimed += n.num.toInt)
+      pending.clear(); v("pending").arr.foreach(n => pending += n.num.toInt)
       enable = SimMap.number(v("enable")).toLong; threshold = SimMap.number(v("threshold")).toLong
       active = v("active").arr.map(_.num.toInt).toSet
     }
-    def winner: Int = active.filter(s => !claimed(s) && (enable & (1L << s)) != 0 && priority(s) > threshold)
+    def winner(applyThreshold: Boolean = true): Int = pending.filter(s => !claimed(s) && (enable & (1L << s)) != 0 && priority(s) > (if (applyThreshold) threshold else 0L))
       .toSeq.sortBy(s => (-priority(s), s)).headOption.getOrElse(0)
-    override def irq = winner != 0
+    override def irq = winner() != 0
     def read(o: Long): Long = o match {
-      case 0x1000 => active.filterNot(claimed).foldLeft(0L)((v, s) => v | (1L << s))
+      case 0x1000 => pending.foldLeft(0L)((v, s) => v | (1L << s))
       case 0x2000 => enable
       case 0x200000 => threshold
-      case 0x200004 => val w = winner; if (w != 0) claimed += w; w.toLong
+      case 0x200004 => val w = winner(applyThreshold = false); if (w != 0) { claimed += w; pending -= w }; w.toLong
       case n if n >= 4 && n < 128 && n % 4 == 0 => priority((n / 4).toInt)
       case _ => throw new IllegalArgumentException(s"unsupported PLIC read $o")
     }
@@ -218,7 +229,9 @@ final class LiveDevices(map: SimMap) {
   def tick(cycle: Long): BigInt = {
     entries.foreach(_._3.tick(cycle))
     entries.foreach { case (_, c, d) => d match {
-      case p: Plic => p.active = c("sources").arr.filter(s => byName(s("device").str).irq).map(s => SimMap.number(s("id")).toInt).toSet
+      case p: Plic =>
+        p.active = c("sources").arr.filter(s => byName(s("device").str).irq).map(s => SimMap.number(s("id")).toInt).toSet
+        p.pending ++= p.active.filterNot(p.claimed)
       case _ =>
     }}
     entries.foldLeft(BigInt(0)) { case (levels, (_, c, d)) => levels | (d match {
