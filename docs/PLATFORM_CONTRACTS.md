@@ -2991,6 +2991,14 @@ Plans with reachability targets have aggregate status `inconclusive` because
 reached targets are observations. No exclusion is authorized. Optional `xprop`
 records the status and path of a separate bounded output X-propagation result.
 
+### Paired register hardware updates
+
+Paired SoC register observations accept optional full-width expanded bit masks:
+`write_mask`, `hw_clear`, and `hw_set`. Their defaults are all write bits, zero,
+and zero. Hardware clear follows software effects; hardware set has final
+priority. Failed bus accesses suppress software effects, but not hardware events.
+These fields describe independently observed events over the transaction interval.
+
 ### Counterexample reduction
 
 The optional `reduction` field in `rvw.formal.cex/1` has schema

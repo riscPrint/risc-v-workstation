@@ -47,7 +47,7 @@ def compare(t, bridge, region, record, prefix):
         record(prefix + ':data', [observed.get(start + i) for i in range(size)], list(expected))
     if 'register' in t:
         state = t['register']
-        keys(state, {'before', 'after'}, {'before', 'after'})
+        keys(state, {'before', 'after', 'hw_clear', 'hw_set', 'write_mask'}, {'before', 'after'})
         address = number(t['software_address'])
         matches = [r for r in region['registers']
                    if address == region['base'] + r['offset'] and size * 8 == r['width']]
@@ -58,12 +58,17 @@ def compare(t, bridge, region, record, prefix):
         permitted = ('w' if t['write'] else 'r') in reg['access']
         record(prefix + ':register:access', permitted or t['error'], True)
         value = uint(t['data'], reg['width'])
+        bit_mask = uint(state.get('write_mask', (1 << reg['width']) - 1), reg['width'])
+        hw_clear = uint(state.get('hw_clear', 0), reg['width'])
+        hw_set = uint(state.get('hw_set', 0), reg['width'])
         target = before
         if not t['error'] and permitted:
             if t['write']:
-                target = before & ~value if reg['write_action'] == 'one_to_clear' else value
+                target = (before & ~(value & bit_mask) if reg['write_action'] == 'one_to_clear'
+                          else (before & ~bit_mask) | (value & bit_mask))
             else:
                 record(prefix + ':register:read', value, before)
                 if reg['read_action'] == 'clear':
                     target = 0
+        target = (target & ~hw_clear) | hw_set
         record(prefix + ':register:effect', after, target)
