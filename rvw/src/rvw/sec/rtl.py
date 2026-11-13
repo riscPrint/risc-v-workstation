@@ -31,6 +31,8 @@ def load(path, rtl_required=True):
     b = json.loads(path.read_text())
     if b.get('schema') != SCHEMA:
         raise ValueError(f'binding schema must be {SCHEMA}')
+    if 'rtl' not in b:
+        raise ValueError('binding needs rtl; run rvw init with the bus and RVFI mapping')
     def where(p):
         text = os.path.expandvars(p)
         if '$' in text:
@@ -47,6 +49,15 @@ def load(path, rtl_required=True):
         if b.get(k):
             b[k] = where(b[k])
     b['_dir'] = path.parent
+    for field in ('rtl', 'top', 'clock', 'reset', 'ram', 'buses', 'retire'):
+        if field not in b:
+            raise ValueError(f'binding needs {field}; run rvw init with the bus and RVFI mapping')
+    for field in ('base', 'size'):
+        if field not in b['ram']:
+            raise ValueError(f'binding needs ram.{field}')
+    for field in ('kind',):
+        if field not in b['retire']:
+            raise ValueError(f'binding needs retire.{field}')
     for k in ('top', 'clock', 'reset'):
         if not SIMPLE.fullmatch(b.get(k, '')):
             raise ValueError(f'binding needs a simple {k} name')

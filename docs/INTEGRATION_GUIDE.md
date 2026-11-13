@@ -1806,3 +1806,22 @@ and produces independent observations. A C1 launcher alone is insufficient.
 Do not pass an empty manifest or a reference-model report as DUT evidence.
 SoC and UVM also need actual wrapper, protocol and pin bindings. The sections
 above state their limits. Stop those native paths until these bindings exist.
+
+## Security for a mapped core
+
+For a freshly mapped RV32 req/rsp core with RVFI, init writes a native security
+binding under `rvw/sec`. Export fresh RTL through the shared simulation entry:
+
+```sh
+rvw/export-rtl.sh
+rvw sec contract --manifest rvw/sec/constant-time.json --out rvw/out/sec-pair --json
+rvw sec ift-core --binding rvw/sec/core.json --policy rvw/sec/flow.json --elf rvw/out/programs/smoke --out rvw/out/sec-flow --json
+```
+
+The binding declares one-cycle responses and active-high reset. Review those
+choices against the core. The pair varies two register values in a short
+arithmetic program. The flow policy watches the memory address output and
+marks `scratch` as secret. Change the policy for the intended threat model.
+CSR policies resolve storage through the existing netlist resolver. Missing
+or ambiguous storage needs an explicit `csr_signals` entry. A small native
+result does not establish complete security.
