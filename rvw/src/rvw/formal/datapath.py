@@ -12,10 +12,13 @@ from .bitc import translate
 
 def register(sub):
     p = sub.add_parser('datapath', help='symbolic C reference against mapped RTL with CBMC')
+    from .datapath_kit import UNITS
+    p.add_argument('--unit', choices=UNITS, help='propose a designer-reviewed binding from SpinalDB; no proof')
+    p.add_argument('--db', help='design database for --unit')
     p.add_argument('--binding', help='JSON with project top and canonical-to-project port names')
-    p.add_argument('--rtl', required=True)
-    p.add_argument('--model', required=True)
-    p.add_argument('--width', type=int, choices=[8, 16, 32, 64], required=True)
+    p.add_argument('--rtl')
+    p.add_argument('--model')
+    p.add_argument('--width', type=int, choices=[8, 16, 32, 64])
     p.add_argument('--max-latency', type=int, help='accept first done within this many clocks; operands stay stable')
     p.add_argument('--latency', type=int, default=0, help='fixed transaction clocks after one reset clock')
     p.add_argument('--unwind', type=int, default=130, help='C loop bound; unwinding assertions are enabled')
@@ -45,6 +48,12 @@ def case_expression(kind, width):
 
 
 def run(args):
+    if getattr(args, 'unit', None):
+        from .datapath_kit import run as propose
+        return propose(args)
+    if not args.rtl or not args.model or args.width is None:
+        print('datapath proof requires --rtl, --model and --width')
+        return 2
     out = Path(args.out).resolve()
     out.mkdir(parents=True, exist_ok=False)
     started = time.monotonic()
