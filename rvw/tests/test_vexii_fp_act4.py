@@ -18,3 +18,10 @@ def test_act4_fp_and_compressed(width):
     assert sail['extensions']['Zca']['supported']
     assert sail['extensions']['Zcf' if width == 32 else 'Zcd']['supported']
     assert profile['params']['MSTATUS_FS_LEGAL_VALUES'] == [0, 1, 2, 3]
+
+
+def test_rv32_atomic_dependencies_have_required_parameters():
+    profile = json.loads((ROOT / 'act4-32/profile.json').read_text())
+    required = {'MISALIGNED_AMO', 'LRSC_FAIL_ON_VA_SYNONYM', 'LRSC_FAIL_ON_NON_EXACT_LRSC',
+                'MUTABLE_MISA_A', 'LRSC_RESERVATION_STRATEGY', 'LRSC_MISALIGNED_BEHAVIOR'}
+    assert required <= profile['params'].keys()

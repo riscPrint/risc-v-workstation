@@ -145,7 +145,13 @@
       3
     ],
     "MUTABLE_MISA_C": false,
-    "MUTABLE_MISA_F": false
+    "MUTABLE_MISA_F": false,
+    "MISALIGNED_AMO": false,
+    "LRSC_FAIL_ON_VA_SYNONYM": false,
+    "LRSC_FAIL_ON_NON_EXACT_LRSC": false,
+    "MUTABLE_MISA_A": false,
+    "LRSC_RESERVATION_STRATEGY": "reserve exactly enough to cover the access",
+    "LRSC_MISALIGNED_BEHAVIOR": "always raise misaligned exception"
   },
   "files": {
     "sail.json": "sail.json",

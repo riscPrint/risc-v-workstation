@@ -4,6 +4,13 @@ import org.scalatest.funsuite.AnyFunSuite
 import riscvsim.{FpCommitState, RvfiFpState, RvfiRecord}
 
 class FpCommitStateSpec extends AnyFunSuite {
+  test("extra FP configs preserve the standalone integer defaults") {
+    assert(new VexiiAdapter(32).defaultConfig == "rv32im")
+    assert(new VexiiAdapter(64).defaultConfig == "rv64imasu")
+    assert(new VexiiAdapter(32).configs.contains("rv32imafc"))
+    assert(new VexiiAdapter(64).configs.contains("rv64imafdc"))
+  }
+
   private def row(order: Int, status: BigInt = 0x4000): RvfiRecord =
     RvfiRecord(BigInt(order), order.toLong, 0x53, false, false, false, 3, 2,
       0, 0, 0, 0, 0, 0, 0x80000000L + order * 4, 0, 0, 0, 0, 0, 0, false,

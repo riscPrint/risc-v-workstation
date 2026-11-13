@@ -18,7 +18,7 @@ object VexiiTop {
       .getOrElse(throw new IllegalArgumentException("set RVW_ADAPTER for database elaboration"))
     new java.io.File(directory, "live-devices.json")
   })
-  val configs = Seq("rv32imafc", "rv64imafdc", "rv32im", "rv32imasu", "rv64imasu", "rv64ima", "rv64imacsu", "rv64imacsu_linux", "rv32im_cached", "rv32im_bitpasta", "rv32im_bitpasta_ipc", "rv32im_dmi", "rv32im_jtag")
+  val configs = Seq("rv32im", "rv32imasu", "rv64imasu", "rv64ima", "rv64imacsu", "rv64imacsu_linux", "rv32im_cached", "rv32im_bitpasta", "rv32im_bitpasta_ipc", "rv32im_dmi", "rv32im_jtag", "rv32imafc", "rv64imafdc")
 
   def supervisor(config: String) = config.endsWith("asu") || config.startsWith("rv64imacsu")
   def floating(config: String) = Set("rv32imafc", "rv64imafdc")(config)
