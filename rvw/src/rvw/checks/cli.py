@@ -18,7 +18,7 @@ def run(args):
 def report_run(args):
     from .qualification import summarize
     try:
-        result=summarize(args.inventory,args.run,args.formal)
+        result=summarize(args.inventory,args.run,args.formal,getattr(args,'dispositions',None))
         Path(args.out).write_text(json.dumps(result,indent=2)+'\n')
         print(json.dumps(result,indent=2))
         return 1 if result['status']=='findings' else 3
@@ -41,5 +41,6 @@ def register(sub):
     p.add_argument('--inventory',required=True)
     p.add_argument('--run',action='append',default=[],help='C1 run with checks and inventory artifacts')
     p.add_argument('--formal',help='formal regress result with check IDs in requirements')
+    p.add_argument('--dispositions',help='reviewed exact check IDs, owner, reason and expiry')
     p.add_argument('--out',required=True)
     p.set_defaults(func=report_run)

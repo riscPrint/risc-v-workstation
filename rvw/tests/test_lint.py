@@ -308,3 +308,23 @@ def test_native_verible_style_and_syntax(tmp_path):
     result = native.run('verible', [str(style), str(broken)], 'bad', 30)
     assert result['status'] == 'inconclusive'
     assert result['findings'] and result['raw_output']
+
+
+def test_version_two_waivers_share_review_policy(tmp_path):
+    path = settings(tmp_path, fixture_db(tmp_path))
+    cfg = json.loads(path.read_text())
+    original = report(path)['backends']['structural']['findings'][0]
+    cfg['schema'] = 'rvw.lint-settings/2'
+    cfg['waivers'] = [dict(rule=original['rule'], endpoint=original['endpoint'],
+        finding_id=original['id'], config=cfg['config'], reason='Reviewed crossing',
+        owner='cdc-owner', expires='2099-12-31')]
+    path.write_text(json.dumps(cfg))
+    assert report(path)['waivers'][0]['stale'] is False
+    cfg['waivers'][0]['expires'] = '2020-01-01'
+    path.write_text(json.dumps(cfg))
+    with pytest.raises(ValueError, match='expired'):
+        report(path)
+    del cfg['waivers'][0]['expires']
+    path.write_text(json.dumps(cfg))
+    with pytest.raises(ValueError, match='metadata'):
+        report(path)

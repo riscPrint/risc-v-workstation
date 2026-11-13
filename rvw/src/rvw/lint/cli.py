@@ -6,6 +6,7 @@ import sqlite3
 import re
 
 from rvw.common.project import load_project, ProjectError
+from rvw.common.waivers import validate_review, stale_state
 from rvw.query.db import run_on, QueryError
 from . import native, structural
 
@@ -38,7 +39,7 @@ def load(path):
     data = path.read_bytes()
     cfg = json.loads(data)
     allowed = {'schema', 'config', 'top', 'files', 'db', 'backends', 'waivers', 'timeout_s', 'intent', 'rules', 'sdc'}
-    if not isinstance(cfg, dict) or set(cfg) - allowed or cfg.get('schema') != 'rvw.lint-settings/1':
+    if not isinstance(cfg, dict) or set(cfg) - allowed or cfg.get('schema') not in ('rvw.lint-settings/1', 'rvw.lint-settings/2'):
         raise ValueError('invalid lint settings schema or keys')
     for key in ('config', 'top'):
         if not isinstance(cfg.get(key), str) or not cfg[key].strip():
@@ -75,12 +76,15 @@ def load(path):
     if not isinstance(waivers, list):
         raise ValueError('waivers must be a list')
     for w in waivers:
-        if (not isinstance(w, dict) or set(w) != {'rule', 'endpoint', 'reason', 'config', 'finding_id'}
+        review_keys = {'owner', 'expires'} if cfg['schema'] == 'rvw.lint-settings/2' else set()
+        if (not isinstance(w, dict) or set(w) != {'rule', 'endpoint', 'reason', 'config', 'finding_id'} | review_keys
                 or not all(isinstance(v, str) and v.strip() for v in w.values())
                 or w['config'] != cfg['config']
                 or len(w['finding_id']) != 64
                 or any(c not in '0123456789abcdef' for c in w['finding_id'])):
-            raise ValueError('waiver needs exact rule, endpoint, finding_id, reason and matching config')
+            raise ValueError('waiver needs exact rule, endpoint, finding_id, reason, matching config and versioned review metadata')
+        if review_keys:
+            validate_review(w)
     cfg['backends'] = backends
     return cfg, dict(path=str(path), sha256=hashlib.sha256(data).hexdigest())
 
@@ -130,12 +134,8 @@ def report(path):
     stale = []
     for w in waivers:
         backend = BACKEND_OF.get(w['rule'].split('.')[0], 'structural')
-        if w['matches']:
-            w['stale'] = False
-        elif runs.get(backend, {}).get('status', 'not_run') == 'not_run':
-            w['stale'] = None
-        else:
-            w['stale'] = True
+        w['stale'] = stale_state(w['matches'], runs.get(backend, {}).get('status', 'not_run') != 'not_run')
+        if w['stale']:
             stale.append(dict(rule='lint.stale_waiver', severity='error', endpoint=w['endpoint'],
                               disposition='active', waived_rule=w['rule'], finding_id=w['finding_id'],
                               message=f"Waiver matches no {w['rule']} finding: {w['reason']}"))

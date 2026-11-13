@@ -52,3 +52,12 @@ Backend `sdc` (settings `sdc`: `clocks`, `generated`, `multicycle`, `check`,
 `--emit` also writes `constraints.sdc`. SpinalDB adds table
 `clock_frequencies(clock_domain_id, hz)` without a schema bump; a missing table
 means unknown frequencies.
+
+## Waiver review metadata
+
+`rvw.lint-settings/2` uses the version-1 settings fields. Each exact waiver also
+requires a nonempty `owner` and `expires` in YYYY-MM-DD form. Expiry is the last
+valid UTC date. Expired metadata is an error before backend execution. The
+existing exact finding hash and stale-waiver errors still apply. Shared policy
+code also validates generated check dispositions. Version 1 keeps its legacy
+waiver format and makes no owner or expiry claim.
