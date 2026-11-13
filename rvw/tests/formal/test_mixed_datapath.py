@@ -56,7 +56,7 @@ end endmodule'''.replace("flags={(!fraction[22]),4'b0}","flags=0" if mutant else
     main(['formal','datapath','--rtl',str(rtl),'--model',str(ROOT/'models/f32_to_f64.c'),'--binding',str(binding),
           '--width','64','--case-width','32','--case',kind,*dependencies,'--timeout','60','--out',str(out)])
     result=json.loads((out/'result.json').read_text())
-    assert result['status']==('counterexample' if mutant else 'proved'),result
+    assert result['status']==('counterexample' if mutant else 'proved' if kind=='all' else 'partial'),result
     assert result['case_width']==32 and result['width']==64
 
 

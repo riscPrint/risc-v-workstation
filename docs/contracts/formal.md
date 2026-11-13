@@ -1182,3 +1182,14 @@ RAM round. Referenced condition-model paths remain relative to their native
 portfolio directory. Source predicates, enable conditions and available source
 excerpts stay in the assumption records. No condition is discharged by this
 summary. The native evidence remains authoritative.
+
+## Datapath split scope
+
+A restricted datapath job records `part_status` for its own operand domain.
+A proved FP case or operand prefix has top-level `status: partial`, exit 3,
+and `open_parts` describes the complement that still needs evidence.
+`split_completeness` records the checked domain condition. The current command
+checks the unrestricted condition as literal `1` with no operand prefix.
+Only that full-domain job can return top-level `proved` with exit 0.
+The command does not combine saved part reports. A caller must not promote
+part proofs to a whole-domain proof without a checked cover of the operand space.
