@@ -64,6 +64,16 @@ interval), `matches` (intervals `{start, end}`; `end` null means true through th
 the first value is not a change), rising and falling edges for 1-bit signals, and transitions
 to or from x/z under `unknown`. Both read only the referenced signals' rows from an index.
 
+## Spinal enum names (`--db`)
+
+`changes`, `sample`, `find` and `seq` take `--db DESIGN.db` (MCP `db`). Signals whose
+database type is a Spinal enum (`State@seq[2]{idle=0,run=1}`) then show element names:
+`changes` rows get an `enum` field, `sample` adds `enums: {signal: element}`, and the text
+output prints `0x1 (run)`. In expressions an enum signal compares with a string literal:
+`find WAVE "fsm_stateReg == 'run'" --db DESIGN.db`. An unknown element name is an error.
+Values that are not an element (or have x/z bits) get no name. The wave signal is matched
+by the database's wave path; the pairing of wave and database is the caller's choice.
+
 ## Active drivers (`why`)
 
 `why` joins the wave with a SpinalDB database (`--db` or `RVW_DESIGNDB`). For the signal it

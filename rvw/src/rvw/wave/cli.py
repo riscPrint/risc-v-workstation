@@ -57,12 +57,14 @@ def register(sub: argparse._SubParsersAction) -> None:
                    help=f"stop after N changes (default {ops.DEFAULT_CHANGES_LIMIT}; 0 = no limit). "
                         "JSON output says whether the result was truncated")
     q.add_argument("--dec", action="store_true", help="decimal instead of hex")
+    q.add_argument("--db", help="SpinalDB design database: show and compare Spinal enum element names")
     q.set_defaults(func=_changes)
 
     q = w.add_parser("sample", help="value of matching signals at one time")
     common(q)
     q.add_argument("--at", required=True, help=TIME_HELP + "; 'end' for the last timestamp")
     q.add_argument("--dec", action="store_true", help="decimal instead of hex")
+    q.add_argument("--db", help="SpinalDB design database: show and compare Spinal enum element names")
     q.set_defaults(func=_sample)
 
     q = w.add_parser("cut", help="write a time window (and optionally a signal subset) to a new file")
@@ -80,6 +82,7 @@ def register(sub: argparse._SubParsersAction) -> None:
     q.add_argument("--from", dest="t0", help=TIME_HELP)
     q.add_argument("--to", dest="t1", help=TIME_HELP)
     q.add_argument("--limit", type=int, default=1000, help="intervals to list (default 1000; 0 = all)")
+    q.add_argument("--db", help="SpinalDB design database: show and compare Spinal enum element names")
     q.set_defaults(func=_find)
 
     q = w.add_parser("edges", help="value changes, rising and falling edges per signal in a window")
@@ -103,6 +106,7 @@ def register(sub: argparse._SubParsersAction) -> None:
     q.add_argument("--from", dest="t0", help=TIME_HELP)
     q.add_argument("--to", dest="t1", help=TIME_HELP)
     q.add_argument("--limit", type=int, default=100, help="matches and failures to list (default 100; 0 = all)")
+    q.add_argument("--db", help="SpinalDB design database: show and compare Spinal enum element names")
     q.set_defaults(func=_seq)
 
     q = w.add_parser("txn", help="handshake transfers, stalls and protocol issues of a Stream or Flow")
@@ -200,11 +204,14 @@ def _list(a):
 def _changes(a):
     page = ops.changes_page(a.wave, a.regex, _t(a, a.t0) or 0, _t(a, a.t1), a.limit,
                             "dec" if a.dec else "hex")
+    if a.db:
+        from .typed import annotate_changes, enums
+        annotate_changes(page, enums(a.db))
     if a.json:
         jsonout.write(page)
     else:
         for r in page["changes"]:
-            print(f"{r['time']:10d} {r['signal']} = {r['value']}")
+            print(f"{r['time']:10d} {r['signal']} = {r['value']}" + (f" ({r['enum']})" if 'enum' in r else ""))
     if page["truncated"]:
         print(f"rvw wave: truncated at {page['limit']} changes; narrow --from/--to or the regex, "
               "or raise --limit (0 = no limit)", file=sys.stderr)
@@ -216,12 +223,16 @@ def _sample(a):
     from .vcd import end_time
     t = end_time(a.wave) if a.at == "end" else _t(a, a.at)
     vals = ops.sample(a.wave, a.regex, t, "dec" if a.dec else "hex")
+    names = {}
+    if a.db:
+        from .typed import annotate_sample, enums
+        names = annotate_sample(vals, enums(a.db))
     if a.json:
-        jsonout.write({"time": t, "values": vals}, indent=1)
+        jsonout.write({"time": t, "values": vals, **({"enums": names} if a.db else {})}, indent=1)
     else:
         print(f"# t={t}")
         for k, v in vals.items():
-            print(f"{k} = {v if v is not None else '?'}")
+            print(f"{k} = {v if v is not None else '?'}" + (f" ({names[k]})" if k in names else ""))
     return 0
 
 
@@ -250,7 +261,8 @@ def _info(a):
 @_wrap
 def _find(a):
     from .search import find
-    r = find(a.wave, a.expr, _t(a, a.t0) or 0, _t(a, a.t1), a.limit)
+    from .typed import enums
+    r = find(a.wave, a.expr, _t(a, a.t0) or 0, _t(a, a.t1), a.limit, enums(a.db) if a.db else None)
     if a.json:
         jsonout.write(r)
     else:
@@ -279,7 +291,8 @@ def _edges(a):
 @_wrap
 def _seq(a):
     from .temporal import sequence
-    r = sequence(a.wave, a.sequence, _t(a, a.t0) or 0, _t(a, a.t1), a.clock, a.limit)
+    from .typed import enums
+    r = sequence(a.wave, a.sequence, _t(a, a.t0) or 0, _t(a, a.t1), a.clock, a.limit, enums(a.db) if a.db else None)
     if a.json:
         jsonout.write(r)
     else:

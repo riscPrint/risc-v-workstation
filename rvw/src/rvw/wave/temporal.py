@@ -64,7 +64,7 @@ def parse_sequence(text: str) -> list[tuple[int, int | None, str]]:
 
 
 def sequence(path: str, text: str, t0: int = 0, t1: int | None = None, clock: str = CLOCK_RX,
-             limit: int | None = 100) -> dict:
+             limit: int | None = 100, enums: dict | None = None) -> dict:
     """Match `text` (`e0 ##N e1 ##[a:b] e2 ...`) at every clock edge where e0 holds.
 
     Each start is a thread. A thread advances at the first edge inside its delay window where
@@ -75,7 +75,7 @@ def sequence(path: str, text: str, t0: int = 0, t1: int | None = None, clock: st
     steps = parse_sequence(text)
     lim = limit or None
     with open_wave(path) as src:
-        exprs = [Expr(e, src.hdr.vars) for _, _, e in steps]
+        exprs = [Expr(e, src.hdr.vars, enums) for _, _, e in steps]
         clk = pick_clock(src.hdr, clock)
         codes = set().union(*(e.codes for e in exprs))
         threads: list[list] = []      # [start time, start cycle, step index, cycle of last match]

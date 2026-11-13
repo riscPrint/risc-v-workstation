@@ -113,8 +113,9 @@ def _select(x, hi, lo, mask):
 class Expr:
     """Compiled expression. Call `bind(state, prev)` once per evaluation point, then `value()`."""
 
-    def __init__(self, text: str, vars: list[Var]):
+    def __init__(self, text: str, vars: list[Var], enums: dict[str, dict] | None = None):
         self.text = text
+        self._enums = enums or {}       # wave name -> parse_enum() info, for 'element' literals
         quoted: dict[str, str] = {}
 
         def quote(m):
@@ -169,7 +170,18 @@ class Expr:
             a, b, op = self._compile(n.left), self._compile(n.right), _BIN[type(n.op)]
             return lambda: None if (x := a()) is None or (y := b()) is None else op(x, y)
         if isinstance(n, ast.Compare):
-            terms = [self._compile(n.left)] + [self._compile(c) for c in n.comparators]
+            nodes = [n.left] + list(n.comparators)
+            # An enum signal compared with a string literal compares with the element's value.
+            enum = next((self._enums.get(self._signal(d).name) for d in map(_dotted, nodes)
+                         if d is not None and self._enums.get(self._signal(d).name)), None)
+            if enum is not None:
+                for i, x in enumerate(nodes):
+                    if isinstance(x, ast.Constant) and isinstance(x.value, str):
+                        if x.value not in enum['elements']:
+                            raise WaveError(f"{x.value!r} is not an element of enum {enum['enum']}: "
+                                            + ', '.join(enum['elements']))
+                        nodes[i] = ast.Constant(enum['elements'][x.value])
+            terms = [self._compile(x) for x in nodes]
             ops = [_CMP[type(o)] for o in n.ops if type(o) in _CMP]
             if len(ops) != len(n.ops):
                 raise WaveError(f'unsupported comparison in {self.text!r}')

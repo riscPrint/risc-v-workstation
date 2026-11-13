@@ -106,7 +106,8 @@ def _steps(events) -> Iterator[tuple[int, list[tuple[str, str]]]]:
         yield cur, batch
 
 
-def find(path: str, expression: str, t0: int = 0, t1: int | None = None, limit: int | None = 1000) -> dict:
+def find(path: str, expression: str, t0: int = 0, t1: int | None = None, limit: int | None = 1000,
+         enums: dict | None = None) -> dict:
     """Intervals where `expression` is true in [t0, t1], with first and last match.
 
     The expression is evaluated at t0 and after all changes at each time where a referenced
@@ -118,7 +119,7 @@ def find(path: str, expression: str, t0: int = 0, t1: int | None = None, limit: 
         raise WaveError('wave match limit must be non-negative')
     lim = limit or None
     with open_wave(path) as src:
-        ex = Expr(expression, src.hdr.vars)
+        ex = Expr(expression, src.hdr.vars, enums)
         before, events = src.window(ex.codes, t0, t1)
         cur, prev = dict(before), dict(before)
         intervals: list[dict] = []
