@@ -63,7 +63,8 @@ def test_search_limit_never_turns_partial_search_into_forbidden():
     es = [event('a', 0, 0, 'AMO', write=1), event('b', 1, 0, 'AMO', write=2)]
     result = search(es, {(0, 8): 0}, limit=1)
     assert result['status'] == 'inconclusive'
-    assert result['candidates'] == 1
+    assert result['candidates'] == 0
+    assert result['reason'] == 'search branch limit reached'
 
 
 def test_seeded_concurrent_programs_are_reproducible_and_not_executed():
