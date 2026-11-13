@@ -18,3 +18,10 @@ remain tied to the selected pinned inputs. The build report records these
 options and hashes the builder assets. Dhrystone's checked variant carries
 `checker: printed-final-values`. The original unchecked variant cannot pass.
 C1 `run-many` uses one worker with a separate `wall_timeout` per program.
+
+`rvw.rtl-bench-compare/1` contains the union of both program sets. Each row
+has an IPC delta and relative percent change when both IPC values are valid.
+A `compared` row requires two or more identical passing samples on each side
+and equal retired instruction counts. Otherwise it is inconclusive. The
+noise check reads samples directly. Top-down deltas subtract compatible
+commit-slot fractions. Different ELF hashes remain explicit.
