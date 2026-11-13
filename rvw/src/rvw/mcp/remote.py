@@ -9,10 +9,18 @@ READ_ONLY = {'query_drivers', 'query_loads', 'query_path', 'query_where', 'evide
 
 
 class ClientRegistry(Registry):
+    def __init__(self, *args, output=None, **kwargs):
+        self.output = output
+        super().__init__(*args, **kwargs)
+
     def call(self, name, arguments, *, dry_run=False):
         if self.project and arguments and (arguments.get('project', self.project) != self.project or arguments.get('core')):
             from .spec import ToolError
             raise ToolError('project is fixed by the client policy')
+        from .paths import confine
+        spec = self.tools.get(name)
+        if spec is not None:
+            arguments = confine(arguments, spec.input_schema, self.project, self.output)
         return super().call(name, arguments, dry_run=dry_run)
 
 
@@ -53,7 +61,12 @@ class Remote:
                 selected = [t for t in tools if t.name in allowed]
                 if allowed - {t.name for t in selected}:
                     raise ValueError('unknown allowed tool')
-                registry = ClientRegistry([remote_tool(t) for t in selected], jobs=JobManager(budget=policy.get('budget')), project=policy.get('project'), profile=profile, workflow=workflow)
+                from pathlib import Path
+                bound = policy.get('project')
+                working_directory = Path(bound).expanduser().resolve() if bound else None
+                if working_directory and (working_directory.is_file() or working_directory.suffix == '.toml'):
+                    working_directory = working_directory.parent
+                registry = ClientRegistry([remote_tool(t) for t in selected], jobs=JobManager(budget=policy.get('budget'), working_directory=working_directory), project=str(Path(bound).expanduser().resolve()) if bound else None, profile=profile, workflow=workflow, output=policy.get('output'))
             self.clients[token] = (registry, build_server(registry), SseServerTransport('/messages'))
 
     async def __call__(self, scope, receive, send):
