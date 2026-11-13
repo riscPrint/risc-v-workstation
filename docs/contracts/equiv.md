@@ -276,3 +276,19 @@ roles, ambiguous roles and unbound ports stay explicit. Width checks cover only
 the observed interface. Every candidate requires designer confirmation. No name
 or structural match establishes operation semantics, a transaction protocol or
 proof readiness. The existing datapath proof mode remains a separate action.
+
+## Closed internal state partitions
+
+`rvw formal equiv-partitions` first proves the full output interface with the
+existing `equiv` flow. It then uses that result's equal-width name and unique-leaf
+register matches as internal observation candidates. Each candidate gets a separate
+closed-cone proof. No internal equality is assumed. The combined schema is
+`rvw.equiv-partitions/1`. `equivalent` requires the output proof and all matched
+internal observations to pass. `output_equivalence` retains the output result.
+A failed internal relation makes the combined request inconclusive, even when the
+output relation is proved. Output counterexamples keep their original verdict.
+`partitions` records matched names, widths, statuses and native result paths.
+`unmatched`, `matched_count` and `omitted_count` expose coverage limits. Omitted
+candidates prevent a combined equivalence result. The time limit covers all
+exports and proofs. Projection preserves the captured state and initial values.
+This is not an assumed-cut abstraction or a cyclic dependency proof.
