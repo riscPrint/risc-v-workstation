@@ -36,6 +36,10 @@ object BoomChecks {
 
   def checksConfig(mode: Mode, report: String): ChecksConfig = {
     val base = ChecksConfig(mode = mode, reportPath = report,
+      streamCancellations = Seq("tile.frontend.f3.io_deq", "tile.frontend.f3_bpd_queue.io_deq",
+        "tile.frontend.f4.io_deq", "tile.frontend.f4_bpd_queue.io_deq", "tile.lsu.stq_execute_queue.io_deq")
+        .map(path => StreamCancelBinding(path, "io_flush", previous = true,
+          "ChiselUtil.Queue clears occupancy on the previous flush edge; retain checks otherwise")),
       progress = Seq(ProgressSpec("retire", """io_trace_insns_\d+_valid""", sys.env.getOrElse("BOOM_PROGRESS_CYCLES", "20000").toInt)))
     val withWaivers = if (defaultWaivers.exists() && !sys.env.contains("SPINALCHECKS_WAIVERS")) base.withWaiverFile(defaultWaivers.getPath) else base
     val streams = new File("streams.txt")
