@@ -433,9 +433,14 @@ for extra_tool in ${extra_tools[@]+"${extra_tools[@]}"}; do
     if ! "$python_cmd" -c "$python_supported" >/dev/null 2>&1; then
       compatible_python=''
       for candidate in python3.11 python3.12 python3.13 python3.14; do
-        if command -v "$candidate" >/dev/null 2>&1 && "$candidate" -c "$python_supported" >/dev/null 2>&1; then
-          compatible_python="$candidate"; break
-        fi
+        # A venv can retain a versioned alias after switching its base Python.
+        # Check every PATH match and pass uv the validated absolute path.
+        while IFS= read -r candidate_path; do
+          if "$candidate_path" -c "$python_supported" >/dev/null 2>&1; then
+            compatible_python="$candidate_path"; break
+          fi
+        done < <(type -aP "$candidate" 2>/dev/null || true)
+        [ -z "$compatible_python" ] || break
       done
       [ -n "$compatible_python" ] || fail 'cocotb and pyuvm need Python 3.11 through 3.14; put a compatible versioned interpreter on PATH'
       python_cmd="$compatible_python"
