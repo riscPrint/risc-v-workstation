@@ -104,3 +104,59 @@ source hashes, RTL hashes, private comparison revisions and proof restrictions
 are in `mul-config-results.json`. The public recipe produces the same Scala
 component and exporter bytes as the native run. Its provenance records the
 hash of the exact upstream source bytes, including trailing whitespace.
+
+## Real FIFO memory refinement and internal observations
+
+`prepare-fifo.py` instantiates SpinalHDL 1.15.0 `StreamFifo` with four eight-bit
+entries and asynchronous reads. The comparison revision changes `useVec` from
+false to true. Both configurations use synchronous reset. The actual library
+implementation supplies the RAM and register-vector storage paths.
+
+```sh
+rvw/.venv/bin/python examples/formal/equiv-real/prepare-fifo.py \
+  --out /path/to/fifo-cases
+rvw/.venv/bin/python examples/formal/equiv-real/run.py \
+  --cases /path/to/fifo-cases/cases.json --out /path/to/fifo-proofs \
+  --memory-map --timeout 240
+```
+
+The wrapper compares push readiness, pop validity, occupancy, availability and
+valid pop payloads. It drives the observed payload to zero when pop is invalid.
+This is an explicit stream observation rule. Inputs remain free. Flush,
+simultaneous push/pop and backpressure are not constrained. Initial storage is
+independent. No RAM word equality or internal state equality is assumed.
+
+The native revision run proved all five outputs in 32.047 seconds, including
+both exports. Exact finite-memory lowering used `memory_map -formal`.
+The captured source has 32 payload storage bits per configuration. The recorded
+mapping state counts also contain temporary and control registers. They do not
+measure RAM capacity. This check does not cover an abstract array, larger RAM,
+a banked memory, synchronous-read latency changes or an external memory model.
+
+`equiv-partitions --memory-map` also proved all four automatically matched FIFO
+control observations in 53.271 seconds. The output proof ran first. Each
+internal observation then had its own closed proof. No cut equality was assumed.
+Unmatched payload storage remains explicit in the receipt. The flow does not
+claim complete internal register correspondence.
+
+The recoded four-bit divider also passed its output proof and five matched
+register observations in 33.348 seconds. The original control bit and new
+one-hot `stateCode` remain unmatched. Five proved observations are not a proof
+of a relation for every register.
+
+See `memory-partition-results.json` for source, artifact and native result
+identities. Use the captured `gold-export/module.v` and `gate-export/module.v`
+files to reproduce the closed internal proof:
+
+```sh
+scripts/with-lock.sh vex-equiv nice -n 10 rvw formal equiv-partitions \
+  --gold /path/to/fifo-proofs/fifo/gold-export/module.v \
+  --gate /path/to/fifo-proofs/fifo/gate-export/module.v \
+  --top MemoryFifo --reset reset --memory-map --max-partitions 64 \
+  --timeout 180 --out /path/to/fifo-internal-proofs
+```
+
+A negative control flips bit zero of each valid payload in the vector revision.
+The same revision flow returned `not_equivalent` in 47.645 seconds. The other
+four interface partitions still passed. This counterexample is an intentional
+wrapper defect. It is not a fault in the library FIFO.

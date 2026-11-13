@@ -49,3 +49,30 @@ def test_internal_mismatch_does_not_relabel_output_equivalence(tmp_path):
     r=json.loads((out/'result.json').read_text())
     assert r['output_equivalence']=='equivalent' and r['status']=='inconclusive'
     assert r['partitions'][0]['status']=='not_equivalent'
+
+
+@pytest.mark.slow
+@pytest.mark.skipif(not all(shutil.which(t) for t in ('yosys','sby','eqy','yosys-abc')),reason='native equivalence tools')
+def test_memory_lowering_reaches_internal_proofs(tmp_path):
+    from rvw.cli import main
+    for side in ('a','b'):
+        (tmp_path/(side+'.v')).write_text('''module top(input clk,reset,we,a,input [3:0] d,output [3:0] q);
+reg [3:0] ram[0:1];reg seen;
+always @(posedge clk) if(reset) begin ram[0]<=0;ram[1]<=0;seen<=0;end
+else begin if(we) ram[a]<=d;seen<=we;end
+assign q=ram[a] ^ {4{seen}};endmodule
+''')
+    out=tmp_path/'proof'
+    assert main(['formal','equiv-partitions','--gold',str(tmp_path/'a.v'),'--gate',str(tmp_path/'b.v'),
+                 '--top','top','--reset','reset','--memory-map','--max-partitions','64',
+                 '--out',str(out),'--timeout','60'])==0
+    r=json.loads((out/'result.json').read_text())
+    assert r['status']=='equivalent' and r['omitted_count']==0
+    assert r['memory_mapping']['gold']['backend']=='yosys memory_map -formal'
+    assert r['matched_count']>=1
+    for row in r['partitions']:
+        child=json.loads((out/row['result']).read_text())
+        assert child['status']=='equivalent'
+        # Project the already lowered state. Do not map its exported debug
+        # aliases a second time.
+        assert 'memory_mapping' not in child

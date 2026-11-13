@@ -6,7 +6,7 @@ from pathlib import Path
 import subprocess
 
 
-def run(cases, out, timeout=180):
+def run(cases, out, timeout=180, *, memory_map=False):
     entries = json.loads(Path(cases).read_text())
     out = Path(out).resolve()
     out.mkdir(parents=True, exist_ok=False)
@@ -18,6 +18,8 @@ def run(cases, out, timeout=180):
                    'formal', 'equiv', '--gold-rev', case['gold'], '--gate-rev', case['gate'],
                    '--top', case['top'], '--reset', 'reset', '--settle', '12',
                    '--unmatched-state', 'prove', '--timeout', str(timeout), '--out', str(proof), '--json']
+        if memory_map:
+            command.append('--memory-map')
         result = subprocess.run(command, capture_output=True, text=True)
         (out/(name+'.log')).write_text(result.stdout+result.stderr)
         report = json.loads((proof/'result.json').read_text()) if (proof/'result.json').exists() else {}
@@ -33,5 +35,6 @@ if __name__ == '__main__':
     p.add_argument('--cases',required=True)
     p.add_argument('--out',required=True)
     p.add_argument('--timeout',type=float,default=180)
+    p.add_argument('--memory-map',action='store_true')
     a = p.parse_args()
-    print(json.dumps(run(a.cases,a.out,a.timeout),indent=2))
+    print(json.dumps(run(a.cases,a.out,a.timeout,memory_map=a.memory_map),indent=2))
