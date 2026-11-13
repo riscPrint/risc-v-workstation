@@ -295,13 +295,13 @@ class Registry:
                      side_effects="read-only", native_tools=()),
             ToolSpec("job_status", "Status of a background job started by a long-running tool; includes the result "
                      "when done. Pass wait_s (max 60) to block until it finishes.",
-                     schema({**jid, "wait_s": {"type": "number", "minimum": 0, "default": 0}}, ["job_id"]), status),
+                     schema({**jid, "wait_s": {"type": "number", "minimum": 0, "default": 0}}, ["job_id"]), status, side_effects='read-only; waits up to 60 seconds', native_tools=()),
             ToolSpec("job_log", "Last lines of a background job's log.",
-                     schema({**jid, "tail": {"type": "integer", "minimum": 0, "default": 100}}, ["job_id"]), log),
+                     schema({**jid, "tail": {"type": "integer", "minimum": 0, "default": 100}}, ["job_id"]), log, side_effects='read-only', native_tools=()),
             ToolSpec("job_cancel", "Cancel a background job: SIGTERM its process groups, SIGKILL after a grace "
                      "period. Returns the status (`cancelling` while a handler has not stopped yet).",
-                     schema(jid, ["job_id"]), cancel),
-            ToolSpec("job_list", "All background jobs of this server and their status.", schema({}), list_jobs),
+                     schema(jid, ["job_id"]), cancel, side_effects='cancels a running job and terminates its native process groups', native_tools=()),
+            ToolSpec("job_list", "All background jobs of this server and their status.", schema({}), list_jobs, side_effects='read-only', native_tools=()),
         ]
 
     def _job(self, job_id: str):

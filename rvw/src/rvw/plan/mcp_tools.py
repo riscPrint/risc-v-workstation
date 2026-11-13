@@ -7,4 +7,4 @@ def mcp_tools():
     s={'type':'string'}
     return [ToolSpec('plan_status','Roll up project requirements and feature evidence. Report coverage holes, test/formal/check gaps and compatible trends. Recorded closure grants no C4 accept.',
                     schema({'plan':s,'previous':s,'out':s},['plan']),
-                    handler('rvw.plan.cli','status'),long=True,annotations={'readOnlyHint':True})]
+                    handler('rvw.plan.cli','status'),long=True,annotations={'readOnlyHint':True}, side_effects='long-running; writes files to out when supplied', native_tools=())]
