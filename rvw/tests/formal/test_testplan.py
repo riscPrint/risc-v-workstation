@@ -65,3 +65,14 @@ def test_generated_app_spec_is_an_inventory(tmp_path):
     report = json.loads((out / 'result.json').read_text())
     assert report['properties'][0]['status'] == 'pass'
     assert report['source_lines'][0]['line'] == 9
+
+
+def test_explicit_core_alias_retains_native_id_and_activation():
+    data = build(plan(), [{'kind': 'core', 'property_id': 'p', 'data': {
+        'schema': 'rvw.solver-core/1', 'property_id': 'top:captured', 'status': 'pass', 'labels': ['guard'],
+        'property_activation': [{'property_id': 'top:captured', 'status': 'not_reached_bounded'}]}}])
+    row = data['properties'][0]
+    assert row['proof_core']['captured_property_id'] == 'top:captured'
+    assert row['activation']['status'] == 'not_reached_bounded'
+    page = html(data)
+    assert 'cell coverage' in page and 'unavailable' in page and 'guard' in page

@@ -4263,6 +4263,18 @@ feasibility query is UNSAT. Such a run is inconclusive. `bounded_model.feasibili
 records this separate check. `--property` selects one top-module assertion cell;
 the generated property ID is `TOP:CELL_NAME`, bound to the captured model.
 
+### Captured assertion enable measurements
+
+`rvw.solver-core/1` can contain `property_activation` records with native property
+ID, bounded depth, status, scope, blocking core and blocking assumption cells.
+Only exported Yosys assertion-enable expressions are measured. SAT means reached.
+UNSAT means not reached in this bounded model. Unknown results and infeasible
+environments stay inconclusive. Missing patterns are not measured. These fields
+do not establish full logical non-vacuity or grant coverage exclusions.
+Core evidence can declare a testplan `property_id` alias. The report preserves
+the native ID under `proof_core.captured_property_id`. The input capture binds
+this declared association. It is not a semantic-equivalence certificate.
+
 ### Formal testplan evidence joins
 
 `rvw.formal-testplan/1` lists property IDs, modules, origins, optional source

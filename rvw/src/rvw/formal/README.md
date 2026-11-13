@@ -1551,6 +1551,21 @@ properties and further core, activation and mutation evidence.
 These are bounded response contracts. They reject a `fairness` field because
 this flow cannot establish general fairness-constrained liveness.
 
+### Captured assertion enable measurements
+
+Captured-model proof cores also measure each recognized Yosys assertion enable
+guard. `property_activation` reports reached, not reached within the bounded
+model, or inconclusive. A blocked guard retains a reduced blocking core and
+its assumption cells. This can identify assumptions that prevent a procedural
+check from running. It does not analyze every logical antecedent in a property
+or establish complete non-vacuity. Environment feasibility remains separate.
+
+The testplan HTML includes module summaries, core status and labels, cell
+coverage availability, activation and source locations. A core evidence row can
+supply `property_id` as an explicit alias for an inventory ID. The report retains
+the native ID as `captured_property_id`. This mapping is declared input, not an
+automatically verified semantic equivalence.
+
 ### Formal testplan evidence
 
 `rvw formal testplan --manifest PLAN.json --out DIR` writes JSON and HTML.

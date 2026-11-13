@@ -26,7 +26,7 @@ def build(plan, evidence):
                 raise ValueError('duplicate result: ' + key)
             results[key] = data
         elif kind == 'core':
-            key = data['property_id']
+            key = item.get('property_id', data['property_id'])
             if key in cores:
                 raise ValueError('duplicate core: ' + key)
             cores[key] = data
@@ -51,13 +51,16 @@ def build(plan, evidence):
     for p in properties:
         key = p['property_id']
         result, core, cone = results.get(key, {}), cores.get(key, {}), cones.get(key, {})
-        activation = cone.get('activation', {'status': 'not_measured'})
+        measurements = core.get('property_activation', [])
+        measured = next((a for a in measurements if a['property_id'] in (key, core.get('property_id'))),
+                        measurements[0] if len(measurements) == 1 else {'status': 'not_measured'})
+        activation = cone.get('activation', measured)
         row = dict(p, status=result.get('status', p.get('status', 'not_run')), depth=result.get('depth'),
                    proof_kind=result.get('proof_kind', 'unknown'), activation=activation,
                    vacuity='not_established' if activation.get('status') != 'reached' else 'activation_reached',
                    proof_core={'status': core.get('status', 'unavailable'),
                                'labels': core.get('labels', []), 'scope': core.get('scope'),
-                               'cell_coverage': 'unavailable'},
+                               'cell_coverage': 'unavailable', 'captured_property_id': core.get('property_id')},
                    mutation=[{'id': mid, 'state': mutants[mid].get('state', 'unclassified')}
                              if mid in mutants else {'id': mid, 'state': 'missing'}
                              for mid in map(str, p.get('mutation_ids', []))],
@@ -88,12 +91,24 @@ def build(plan, evidence):
 
 def html(report):
     fields = ('module', 'property_id', 'origin', 'status', 'depth', 'proof_kind', 'vacuity')
-    rows = ''.join('<tr>' + ''.join('<td>' + escape(str(p.get(k, ''))) + '</td>' for k in fields) + '</tr>'
-                   for p in report['properties'])
+    columns = (*fields, 'activation', 'core status', 'cell coverage', 'core labels', 'source')
+    rows = []
+    for prop in report['properties']:
+        core, source = prop['proof_core'], prop.get('source') or {}
+        values = [prop.get(k, '') for k in fields] + [prop['activation']['status'], core['status'],
+                  core['cell_coverage'], ', '.join(core['labels']),
+                  f"{source.get('file', '')}:{source.get('line', '')}" if source else '']
+        rows.append('<tr>' + ''.join('<td>' + escape(str(value)) + '</td>' for value in values) + '</tr>')
+    modules = ''.join('<tr><td>' + escape(row['module']) + '</td><td>' + str(len(row['property_ids'])) +
+                      '</td><td>' + escape(json.dumps(row['status_counts'])) + '</td><td>' +
+                      str(row['core_available']) + '</td><td>' + str(row['activation_reached']) + '</td></tr>'
+                      for row in report['modules'])
     return ('<!doctype html><html lang="en"><meta charset="utf-8"><title>Formal testplan</title>'
             '<style>body{font-family:system-ui;margin:2rem}td,th{padding:.4rem;border:1px solid #bbb}table{border-collapse:collapse}</style>'
-            '<h1>Formal testplan</h1><p>' + escape(report['limits']) + '</p><table><tr>' +
-            ''.join('<th>' + escape(k) + '</th>' for k in fields) + '</tr>' + rows + '</table></html>')
+            '<h1>Formal testplan</h1><p>' + escape(report['limits']) + '</p>' +
+            '<h2>Modules</h2><table><tr><th>Module</th><th>Properties</th><th>Status counts</th><th>Cores available</th><th>Activation reached</th></tr>' +
+            modules + '</table><h2>Properties</h2><table><tr>' +
+            ''.join('<th>' + escape(k) + '</th>' for k in columns) + '</tr>' + ''.join(rows) + '</table></html>')
 
 
 def run(args):
