@@ -14,7 +14,7 @@ An entry here states availability. It does not qualify a native flow.
 
 ```text
 usage: rvw [-h] [--version] [--project PROJECT]
-    {agent-bench,arch,bisect,bugmem,bundle,cosim,cov,csim,debug,doctor,farm,formal,init,lint,mcp,memory,ooo,perf,privilege,query,reduce,regress,sim,speed-compare,speed-sweep,backends,uvm,uvm-ral,uvm-cpu,hdl,cocotb,soc,verification-plan,wave,workloads}
+    {agent-bench,arch,bisect,bugmem,bundle,cosim,cov,csim,debug,doctor,farm,fault,formal,init,lint,mcp,memory,ooo,perf,privilege,query,reduce,regress,sim,speed-compare,speed-sweep,backends,uvm,uvm-ral,uvm-cpu,hdl,cocotb,soc,verification-plan,wave,workloads}
     ...
 ```
 
@@ -707,6 +707,41 @@ usage: rvw farm recover [-h] --out OUT [--project PROJECT]
 ```text
 usage: rvw farm dashboard [-h] --root ROOT --out OUT [--core CORE] [--suite
     SUITE] [--config CONFIG] [--gate GATE] [--run RUN] [--project PROJECT]
+```
+
+### `rvw fault`
+
+```text
+usage: rvw fault [-h] [--project PROJECT] {sites,plan,run,report} ...
+```
+
+### `rvw fault sites`
+
+```text
+usage: rvw fault sites [-h] --db DB [--include INCLUDE] [--exclude EXCLUDE]
+    [--generated] [--project PROJECT]
+```
+
+### `rvw fault plan`
+
+```text
+usage: rvw fault plan [-h] --db DB [--include INCLUDE] [--exclude EXCLUDE]
+    [--generated] [--kinds KINDS] [--window WINDOW] [--samples SAMPLES]
+    [--seed SEED] [--duration DURATION] --out OUT [--project PROJECT]
+```
+
+### `rvw fault run`
+
+```text
+usage: rvw fault run [-h] --plan PLAN --adapter ADAPTER --elf ELF --out OUT
+    [--jobs JOBS] [--max-cycles MAX_CYCLES] [--timeout TIMEOUT] [--detections
+    DETECTIONS] [--watchdog] [--project PROJECT]
+```
+
+### `rvw fault report`
+
+```text
+usage: rvw fault report [-h] [--project PROJECT] directory
 ```
 
 ### `rvw formal`
@@ -2494,6 +2529,30 @@ Run native SSH shards. Complete is transport completeness, not a gate verdict.
 Arguments: `hosts` (required), `manifest` (required), `adapter` (required), `identity_command` (required), `identity` (required), `out` (required), `jobs`, `timeout`.
 
 Starts a background job: yes.
+
+### `fault_report`
+
+Recompute the report of a finished fault campaign directory.
+
+Arguments: `directory` (required).
+
+Starts a background job: no.
+
+### `fault_run`
+
+Run a fault plan through the core adapter (C1 run --fault) and classify each fault against the golden C2 trace: detected, silent_corruption, safe, timeout, not_injected, inconclusive. Reports denominators and diagnostic coverage; no ISO 26262 claim.
+
+Arguments: `plan` (required), `adapter` (required), `elf` (required), `out` (required), `jobs`, `max_cycles`, `timeout`, `detections`, `watchdog`.
+
+Starts a background job: yes.
+
+### `fault_sites`
+
+List register fault sites (path, width) from a design database.
+
+Arguments: `db` (required), `include`, `exclude`, `generated`.
+
+Starts a background job: no.
 
 ### `formal_apps`
 

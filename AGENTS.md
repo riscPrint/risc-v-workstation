@@ -47,6 +47,7 @@ keep the issue list in `TODO.md` in step with them.
 | `Uvm/` | Pinned Accellera UVM conformance suite and bounded TileLink-UL/load observation example. See its `README.md`. |
 | `Cosim/` | The C++ shim that lets `rvw cosim` drive Spike as a library. |
 | `rvw/src/rvw/debug/` | Debug Module reference model, JTAG/DMI drivers, remote_bitbang server, Debug Specification and TAP/DTM campaigns, OpenOCD reference campaign and baseline E-Trace checks. See its `README.md`. |
+| `rvw/src/rvw/fault/` | Fault injection campaigns: register sites from the design database, seeded stuck-at/flip plans, classification against C2. See its `README.md`. |
 | `rvw/src/rvw/lint/` | Native lint adapters and structural CDC/RDC inventory. See its `README.md`. |
 | `SpinalDB/` | Elaborates a Spinal design and writes a design database (SQLite, `rvw.designdb/20`). Queried with `rvw query`. |
 | `SpinalChecks/` | Assertions generated from the elaborated design, and the formal flows behind `rvw formal`. BOOM settings and waivers in `SpinalChecks/boom/`. |

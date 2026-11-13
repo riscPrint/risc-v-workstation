@@ -697,6 +697,20 @@ with `suite: "ntrace-loss"`. A trace adapter file (`rvw.trace-adapter/1`, TOML) 
 parameters and one or more `[[vectors]]` with `bytes` (hexadecimal) and `messages`.
 An adapter with a failing or missing vector is refused.
 
+### C1 fault injection (optional)
+
+`<adapter> run ... --fault FILE` applies the faults in `FILE` (`rvw.fault/1`:
+`{"schema": "rvw.fault/1", "faults": [{"id", "kind", "site", "bit", "cycle",
+"duration"}]}`). `kind` is `stuck0`, `stuck1` or `flip`. `site` is a design
+database register path. `cycle` is the first faulty cycle. Without `duration`, a
+stuck-at fault holds to the end; a flip lasts one cycle. C1 `details.fault` must
+be `{"applied": true, "site", "bit", "cycle"}` after the bit was forced, or
+`{"applied": false, "reason"}`. `details.detections` lists the names of detection
+mechanisms that fired. An adapter without `--fault` support must not claim it.
+`rvw fault run` writes `plan.json` (`rvw.fault-plan/1`), `outcomes.json`,
+`report.json` (`rvw.fault-report/1`) and C3 `results.json` with
+`suite: "fault-campaign"` (see `rvw/src/rvw/fault/README.md`).
+
 ### Optional multi-hart extension (C1 and C2)
 
 C1 stays `rvw.run/1`. An adapter can opt in with `details.multihart`.
