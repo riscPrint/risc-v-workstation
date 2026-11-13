@@ -108,3 +108,10 @@ def test_debug_declarations(registry):
     assert registry.tools['debug_checks'].side_effects == 'read-only'
     assert registry.tools['debug_interop'].native_tools == ('OpenOCD', 'GDB')
     assert 'remote JTAG/DTM state' in registry.tools['debug_tap'].side_effects
+
+
+@pytest.mark.parametrize('name', ['fault_sites', 'fault_report', 'fault_run'])
+def test_fault_effects_and_native_requirements(name, registry):
+    tool = registry.tools[name]
+    assert tool.side_effects
+    assert tool.native_tools is not None

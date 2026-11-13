@@ -24,13 +24,19 @@ def mcp_tools():
     return [
         ToolSpec('fault_sites', 'List register fault sites (path, width) from a design database.',
                  schema({'db': S, 'include': LIST, 'exclude': LIST, 'generated': {'type': 'boolean'}}, ['db']),
-                 _sites, annotations={'readOnlyHint': True}),
+                 _sites, annotations={'readOnlyHint': True},
+        side_effects='read-only', native_tools=(),
+        ),
         ToolSpec('fault_run', 'Run a fault plan through the core adapter (C1 run --fault) and classify each fault '
                  'against the golden C2 trace: detected, silent_corruption, safe, timeout, not_injected, '
                  'inconclusive. Reports denominators and diagnostic coverage; no ISO 26262 claim.',
                  schema({'plan': S, 'adapter': S, 'elf': S, 'out': S, 'jobs': {'type': 'integer'},
                          'max_cycles': {'type': 'integer'}, 'timeout': {'type': 'number'}, 'detections': S,
-                         'watchdog': {'type': 'boolean'}}, ['plan', 'adapter', 'elf', 'out']), _run, long=True),
+                         'watchdog': {'type': 'boolean'}}, ['plan', 'adapter', 'elf', 'out']), _run, long=True,
+        side_effects='long-running; launches configured native core adapter; writes campaign evidence under out', native_tools=(),
+        ),
         ToolSpec('fault_report', 'Recompute the report of a finished fault campaign directory.',
-                 schema({'directory': S}, ['directory']), _report, annotations={'readOnlyHint': True}),
+                 schema({'directory': S}, ['directory']), _report, annotations={'readOnlyHint': True},
+        side_effects='read-only', native_tools=(),
+        ),
     ]
