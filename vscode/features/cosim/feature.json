@@ -1,0 +1,26 @@
+{
+  "id": "cosim",
+  "title": "Cosim Mismatch",
+  "description": "Cosim Mismatch saved results.",
+  "activationEvents": [
+    "onCommand:cosim.open",
+    "onCommand:cosim.disassembly"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "cosim.open",
+        "title": "Cosim Mismatch: Open First Divergence"
+      },
+      {
+        "command": "cosim.disassembly",
+        "title": "Cosim Mismatch: Jump to Saved ELF Disassembly"
+      }
+    ]
+  },
+  "tests": {
+    "unit": [
+      "test/model.test.ts"
+    ]
+  }
+}

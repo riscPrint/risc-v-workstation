@@ -19,6 +19,8 @@
   ],
   "main": "./dist/extension.js",
   "activationEvents": [
+    "onCommand:cosim.open",
+    "onCommand:cosim.disassembly",
     "onCommand:coverage.open",
     "onView:coverage.results",
     "onCommand:debug.open",
@@ -48,6 +50,14 @@
   ],
   "contributes": {
     "commands": [
+      {
+        "command": "cosim.open",
+        "title": "Cosim Mismatch: Open First Divergence"
+      },
+      {
+        "command": "cosim.disassembly",
+        "title": "Cosim Mismatch: Jump to Saved ELF Disassembly"
+      },
       {
         "command": "coverage.open",
         "title": "Coverage: Open Report"

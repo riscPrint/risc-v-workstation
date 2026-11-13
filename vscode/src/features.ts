@@ -1,3 +1,4 @@
+import cosim from '../features/cosim/src/feature';
 import project from '../features/project/src/feature';
 import navigation from '../features/navigation/src/feature';
 import lsp from '../features/lsp/src/feature';
@@ -15,6 +16,7 @@ import lint from '../features/lint/src/feature';
 export const features: Feature[] = [
   navigation,
   project,
+  cosim,
   spinalblocks,
   lsp,
   regress,

@@ -1,0 +1,1 @@
+{"schema": "rvw.cosim/1", "status": "mismatch", "mismatch": {"pc": "0x80", "order": 3, "actual": {"pc": "0x80", "rd_wdata": "0x1"}, "expected": {"pc": "0x80", "rd_wdata": "0x2"}, "disassembly": "<script>"}}
