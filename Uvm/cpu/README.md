@@ -46,7 +46,7 @@ Run from the checkout with the optional UVM dependencies installed:
 
 ```sh
 nice -n 10 rvw/.venv/bin/python Uvm/examples/cpu/run.py \
- --shim rvw/out/uvm-cpu-shim/librvw_spike.so \
+ --shim Cosim/build/librvw_spike.so \
  --archive /path/to/pinned-uvm.tar.gz --out /tmp/live-cpu-new
 ```
 
