@@ -395,3 +395,9 @@ provides bounded C1/C2 evidence on real captured core RTL. The native scalar
 regression also checks reset and 40 seeded register updates against an
 independent arithmetic expectation. This is a cycle model API, with no timing,
 foreign-function, coverage, native checkpoint or BOOM qualification.
+
+The [whole-core VexRiscv reset probe](../../../../examples/vexriscv/README.md#whole-core-four-state-reset-probe)
+runs captured Verilog through Icarus with an initial X reset interval. It
+separates active retirement unknowns from inactive memory-data unknowns.
+A native injected-output-X test checks that active unknowns cannot pass.
+This is a bounded project probe. It adds no pessimistic X-propagation guarantee.
