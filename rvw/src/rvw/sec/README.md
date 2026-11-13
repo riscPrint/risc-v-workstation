@@ -395,6 +395,40 @@ data replicated across the word. Store data now compares on its written byte
 lanes, as `rvw cosim` does.
 
 
+## Model pre-check before RTL
+
+`rvw sec model-check --manifest model-precheck.json --out out/model` runs the
+contract pair on the trace-driven OoO model (`rvw/src/rvw/ooo/`) instead of
+RTL. MCP: `sec_model_check`. Each secret's program runs on Spike; its C2 trace
+drives the model description named by `model` (`rvw.arch-core/1` or a plain
+`ooo` table). `operand_latency` states the planned unit behavior per class:
+`fixed` (`latency`), `quotient_bits` (`base` + `per_bit` × quotient bit length,
+a divider that skips zero quotient bits) or `early_out` (`short` when the chosen
+operand fits in `width` bits, else `long`). Rules read the operands from the
+reference trace. Equal architectural contract traces with different predicted
+cycles are a predicted violation.
+
+Results with the example in-order model descriptions (`examples/*/rvw/arch/own.json`)
+and the constant-time divide program of `constant-time.json`:
+
+| Manifest | Planned rule | Predicted cycles (7/3 vs 0x7fffffff/1) | Prediction | RTL result |
+|---|---|---|---|---|
+| `vexiiriscv/rvw/sec/model-precheck.json` | divide `quotient_bits`, base 4 | 28 vs 57 | violation | violation (`remu`, 14 vs 38 cycles) |
+| `vexriscv/rvw/sec/model-precheck.json` | divide `fixed` 34 | 56 vs 56 | `no_leak_observed` | `no_leak_observed` (34 cycles each) |
+| `vexiiriscv/rvw/sec/model-precheck-mul.json` | multiply `early_out`, 16 bits, 1 or 4 cycles | 25 vs 33 (dependent `mul` chain) | violation | no RTL: a planned unit |
+
+The direction of both RTL results is predicted. The cycle counts are not: the
+model is a timing approximation. In the multiply case, an unrelated `mul`
+whose result is used late showed no difference (fetch-bound), so a planned
+early-out unit leaks only where its latency is on the critical path.
+
+The pre-check shows only what the model and the stated rules contain. The model
+is committed-path only: it cannot predict transient (speculative) leakage,
+cache or predictor state leaks need the component models and secret-dependent
+addresses, and a rule is a design statement, not a measurement. Confirm every
+prediction on RTL with `sec contract` when RTL exists.
+
+
 ## Remaining integration work
 
 The default pair generator is a small seeded ALU grammar. Broader instruction,

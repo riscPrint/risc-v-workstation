@@ -1,0 +1,36 @@
+{
+  "contract": "constant-time",
+  "clauses": [
+    "pc",
+    "memory",
+    "branch"
+  ],
+  "binding": "core.json",
+  "template": "case.S",
+  "model": "../arch/own.json",
+  "planned": "iterative divider with a fixed 34-cycle count",
+  "operand_latency": {
+    "divide": {
+      "rule": "fixed",
+      "latency": 34
+    }
+  },
+  "program": [
+    "div x10, x6, x7",
+    "divu x11, x6, x7",
+    "rem x12, x6, x7",
+    "remu x13, x6, x7",
+    "mul x14, x6, x7",
+    "add x17, x10, x14"
+  ],
+  "secrets": [
+    {
+      "x6": 7,
+      "x7": 3
+    },
+    {
+      "x6": 2147483647,
+      "x7": 1
+    }
+  ]
+}
