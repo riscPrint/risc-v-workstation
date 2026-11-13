@@ -65,6 +65,16 @@ interval), `matches` (intervals `{start, end}`; `end` null means true through th
 the first value is not a change), rising and falling edges for 1-bit signals, and transitions
 to or from x/z under `unknown`. Both read only the referenced signals' rows from an index.
 
+## Direct FST reads
+
+With pywellen installed (the `waves` extra), `find`, `edges`, `seq`, `txn` and `diff` read an
+FST directly through wellen: only the referenced signals are decoded, and no `fst2vcd`
+conversion runs. `RVW_WAVE_FST_READER=vcd` selects the converter path. `changes`, `sample`
+and `cut` keep the converter path. On the 9 MB, 500-signal FST above,
+`find 'sig3 == sig4 || sig7[3:0] == 5'` took 0.85 s (68 MB RSS) direct, 9.8 s through
+`fst2vcd`, with the same 175 intervals. pywellen does not expose the FST end time: an interval
+still open at the end of the wave ends, for `true_time`, at the last change of the signals read.
+
 ## Spinal enum names (`--db`)
 
 `changes`, `sample`, `find` and `seq` take `--db DESIGN.db` (MCP `db`). Signals whose

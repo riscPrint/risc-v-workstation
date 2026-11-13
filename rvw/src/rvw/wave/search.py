@@ -59,6 +59,10 @@ def open_wave(path: str) -> Iterator[Source]:
                 for merged in opened:
                     merged.close()
         return
+    if str(path).endswith('.fst') and _native_fst():
+        with wave_input(path) as saved:
+            yield _wellen_source(saved)
+        return
     with wave_input(path) as saved, vcd.open_text(saved) as f:
         hdr = vcd.read_header(f)
         used = []
@@ -91,6 +95,62 @@ def open_wave(path: str) -> Iterator[Source]:
                 yield from gen
             return snapshot, rest()
         yield Source(hdr, window, lambda: vcd.end_time(saved))
+
+
+def _native_fst() -> bool:
+    """Read FST with wellen (no fst2vcd) unless RVW_WAVE_FST_READER=vcd or pywellen is missing."""
+    import os
+    from .index import wellen_available
+    return os.environ.get('RVW_WAVE_FST_READER', 'auto') != 'vcd' and wellen_available()
+
+
+def _wellen_source(path: str) -> Source:
+    """Window reads straight from an FST: wellen decodes only the selected signals."""
+    import pywellen
+    from bisect import bisect_left
+    from .index import _raw, wellen_header
+    w = pywellen.Waveform(path, multi_threaded=False)
+    allv = w.all_vars()
+    vars, refs, timescale = wellen_header(w)
+    hdr = vcd.Header([], timescale, vars)
+    last = []
+
+    def window(codes, t0, t1):
+        before, streams = {}, []
+        hi = MAX_T if t1 is None else t1
+        for order, code in enumerate(sorted(codes)):
+            n, width, kind = refs[code]
+            sig = allv[n].signal
+            count = len(sig)
+            times = _Times(sig, count)
+            start = bisect_left(times, t0)
+            if start:
+                before[code] = _raw(sig[start - 1][1], width, kind)
+            if count:
+                last.append(sig[count - 1][0])
+
+            def rows(sig=sig, start=start, count=count, code=code, width=width, kind=kind, order=order):
+                for j in range(start, count):
+                    t, value = sig[j]
+                    if t > hi:
+                        return
+                    yield t, order, code, _raw(value, width, kind)
+            streams.append(rows())
+        return before, ((t, c, r) for t, _, c, r in heapq.merge(*streams))
+    # FST end time is not exposed by pywellen: use the last change of the signals read.
+    return Source(hdr, window, lambda: max(last) if last else None)
+
+
+class _Times:
+    """Sequence view of a wellen signal's change times, for bisect."""
+    def __init__(self, sig, count):
+        self.sig, self.count = sig, count
+
+    def __len__(self):
+        return self.count
+
+    def __getitem__(self, j):
+        return self.sig[j][0]
 
 
 def _steps(events) -> Iterator[tuple[int, list[tuple[str, str]]]]:

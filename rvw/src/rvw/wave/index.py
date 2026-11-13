@@ -131,14 +131,9 @@ WELLEN_BATCH = 256
 _CHANGE_SEQ = 1 << 40
 
 
-def _fill_wellen(db, path):
-    """Insert every signal's changes, one signal at a time, then one timestamp row per time."""
-    import pywellen
+def wellen_header(w):
+    """(vars, {code: (index in all_vars, width, kind)}, timescale text) of a pywellen Waveform."""
     import re
-
-    def open_wave():
-        return pywellen.Waveform(path, multi_threaded=False)
-    w = open_wave()
     allv = w.all_vars()
     vars, refs = [], {}
     for n, v in enumerate(allv):
@@ -148,6 +143,19 @@ def _fill_wellen(db, path):
         code = _code(ref)
         vars.append(vcd.Var(code, v.full_name, width, kind, ''))
         refs.setdefault(code, (n, width, kind))
+    scale = w.timescale
+    return vars, refs, f'{scale.factor}{str(scale.unit).split(".")[-1]}'
+
+
+def _fill_wellen(db, path):
+    """Insert every signal's changes, one signal at a time, then one timestamp row per time."""
+    import pywellen
+
+    def open_wave():
+        return pywellen.Waveform(path, multi_threaded=False)
+    w = open_wave()
+    allv = w.all_vars()
+    vars, refs, timescale = wellen_header(w)
     seq = _CHANGE_SEQ
     count = 0
     for i, (code, (n, width, kind)) in enumerate(refs.items()):
@@ -170,9 +178,7 @@ def _fill_wellen(db, path):
                'FROM (SELECT DISTINCT t FROM events)')
     db.execute('DROP INDEX tmp_t')
     count += db.execute('SELECT COUNT(*) FROM events WHERE code IS NULL').fetchone()[0]
-    scale = w.timescale
-    hdr = vcd.Header([], f'{scale.factor}{str(scale.unit).split(".")[-1]}', vars)
-    return hdr, count
+    return vcd.Header([], timescale, vars), count
 
 
 def cache_dir() -> Path:
