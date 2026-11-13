@@ -1,0 +1,162 @@
+{
+  "schema": "rvw.real-initialization-runs/1",
+  "rtl_sha256": "917ec686b4ada9df0218155e84fb9305caa38ff22f8cdf28d2f4733dc8b05f73",
+  "core_revision": "a62c145aa042a5de874344e0a7683bd7c8c8c870",
+  "generator_revision": "7023cb9686bb238fe31801c32e76d1b643999363",
+  "attempts": [
+    {
+      "schema": "rvw.formal/1",
+      "flow": "xprop",
+      "frontend": "verilog",
+      "proof_kind": "bounded",
+      "top": "VexTop",
+      "status": "fail",
+      "depth": 8,
+      "engine": "smtbmc:yices",
+      "wall_s": 29.3,
+      "assertions": 2,
+      "reset": "reset",
+      "ties": {},
+      "restrictions": [
+        "reset reset held active for steps 0..1, then inactive",
+        "inputs assumed defined (not X)"
+      ],
+      "reachability": null,
+      "solver": {
+        "exit": 2,
+        "log_rc": 2
+      },
+      "x_reaches": [
+        {
+          "assert": "rvw_x_1",
+          "label": "signal dBus_cmd_valid",
+          "signal": "dBus_cmd_valid",
+          "when_valid": null,
+          "step": 7
+        },
+        {
+          "assert": "rvw_x_0",
+          "label": "signal iBus_cmd_valid",
+          "signal": "iBus_cmd_valid",
+          "when_valid": null,
+          "step": 7
+        }
+      ],
+      "traces": [
+        "sby/engine_0/trace0.vcd",
+        "sby/engine_0/trace1.vcd"
+      ],
+      "sby_log": "sby/logfile.txt",
+      "targets": 2,
+      "missing_signals": [],
+      "unencoded_cells": [],
+      "backend": "yosys-xprop",
+      "inventory": [
+        {
+          "assert": "rvw_x_0",
+          "label": "signal iBus_cmd_valid",
+          "signal": "iBus_cmd_valid",
+          "when_valid": null,
+          "disposition": "candidate"
+        },
+        {
+          "assert": "rvw_x_1",
+          "label": "signal dBus_cmd_valid",
+          "signal": "dBus_cmd_valid",
+          "when_valid": null,
+          "disposition": "candidate"
+        }
+      ]
+    },
+    {
+      "schema": "rvw.formal/1",
+      "flow": "xprop",
+      "frontend": "verilog",
+      "proof_kind": "bounded",
+      "top": "VexTop",
+      "status": "fail",
+      "depth": 8,
+      "engine": "smtbmc:yices",
+      "wall_s": 27.7,
+      "assertions": 2,
+      "reset": "reset",
+      "ties": {},
+      "restrictions": [
+        "reset reset held active for steps 0..1, then inactive",
+        "inputs assumed defined (not X)"
+      ],
+      "reachability": null,
+      "solver": {
+        "exit": 2,
+        "log_rc": 2
+      },
+      "x_reaches": [
+        {
+          "assert": "rvw_x_1",
+          "label": "signal dBus_cmd_valid",
+          "signal": "dBus_cmd_valid",
+          "when_valid": null,
+          "step": 7
+        },
+        {
+          "assert": "rvw_x_0",
+          "label": "signal iBus_cmd_valid",
+          "signal": "iBus_cmd_valid",
+          "when_valid": null,
+          "step": 7
+        }
+      ],
+      "traces": [
+        "sby/engine_0/trace0.vcd",
+        "sby/engine_0/trace1.vcd"
+      ],
+      "sby_log": "sby/logfile.txt",
+      "targets": 2,
+      "missing_signals": [],
+      "unencoded_cells": [],
+      "backend": "yosys-xprop",
+      "inventory": [
+        {
+          "assert": "rvw_x_0",
+          "label": "signal iBus_cmd_valid",
+          "signal": "iBus_cmd_valid",
+          "when_valid": null,
+          "disposition": "inconclusive",
+          "reason": "4-state replay did not confirm this candidate"
+        },
+        {
+          "assert": "rvw_x_1",
+          "label": "signal dBus_cmd_valid",
+          "signal": "dBus_cmd_valid",
+          "when_valid": null,
+          "disposition": "inconclusive",
+          "reason": "4-state replay did not confirm this candidate"
+        }
+      ],
+      "replay": {
+        "backend": "icarus",
+        "model": "captured-source-rtl",
+        "status": "inconclusive",
+        "traces": [
+          {
+            "trace": "sby/engine_0/trace0.vcd",
+            "status": "complete",
+            "log": "replay-0.log",
+            "unknowns": []
+          },
+          {
+            "trace": "sby/engine_0/trace1.vcd",
+            "status": "complete",
+            "log": "replay-1.log",
+            "unknowns": []
+          }
+        ]
+      }
+    }
+  ],
+  "limits": [
+    "formal candidates are not confirmed by captured-source four-state replay",
+    "PMP variant has undriven translation-bypass signals",
+    "VexiiRiscv initialization NOT RUN"
+  ]
+}
