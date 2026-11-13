@@ -127,7 +127,9 @@ def test_nested_bus_uses_its_own_controls(tmp_path):
     db.done()
     report=generate(path,tmp_path/'out')
     assert report['buses'][0]['status']=='generated'
-    assert report['buses'][0]['target']=='Top.child'
+    assert report['buses'][0]['target']=='Child'
+    assert report['buses'][0]['target_instance']=='Top.child'
+    assert report['buses'][0]['bind_scope']=='unique_module'
     assert report['buses'][0]['ports']['clk']=='clk'
 
 
@@ -155,3 +157,54 @@ def test_tracker_bounds_are_explicit(tmp_path):
     for kwargs in ({'depth':0},{'max_beats':0},{'max_beats':257}):
         with pytest.raises(ValueError,match=r'1\.\.'):
             generate(tmp_path/'unused.db',tmp_path/'out',**kwargs)
+
+
+def test_explicit_clock_for_combinational_bus_ports(tmp_path):
+    path=tmp_path/'design.db';database(path,domain=False)
+    clocks=tmp_path/'clocks.json';clocks.write_text(json.dumps(dict(schema='rvw.bus-clocks/1',
+        instances={'io.bus':dict(clock='clk',reset='reset')})))
+    result=generate(path,tmp_path/'out',clocks=clocks)
+    assert result['complete'] is True
+    assert result['buses'][0]['clock_source']=='project'
+    assert '.clk(clk)' in (tmp_path/'out/binds.sv').read_text()
+
+
+def test_clock_declaration_cannot_override_recorded_domains(tmp_path):
+    import sqlite3
+    path=tmp_path/'design.db';database(path)
+    c=sqlite3.connect(path)
+    c.execute("INSERT INTO clock_domains(id,clock,reset,reset_kind,reset_active_high,clock_edge) VALUES(2,'other_clk','other_reset','SYNC','true','RISING')")
+    c.commit();c.close()
+    clocks=tmp_path/'clocks.json';clocks.write_text(json.dumps(dict(schema='rvw.bus-clocks/1',
+        instances={'io.bus':dict(clock='other_clk',reset='other_reset')})))
+    result=generate(path,tmp_path/'out',clocks=clocks)
+    assert result['status']=='no_checks'
+    assert 'contradicts' in result['buses'][0]['reason']
+
+
+def test_unknown_clock_instance_stays_incomplete(tmp_path):
+    path=tmp_path/'design.db';database(path)
+    clocks=tmp_path/'clocks.json';clocks.write_text(json.dumps(dict(schema='rvw.bus-clocks/1',
+        instances={'typo':dict(clock='clk',reset='reset')})))
+    result=generate(path,tmp_path/'out',clocks=clocks)
+    assert result['status']=='generated' and not result['complete']
+    assert result['buses'][1]['kind']=='clock_binding'
+    assert 'no matching bus instance' in result['buses'][1]['reason']
+
+
+def test_repeated_modules_keep_instance_scope(tmp_path):
+    import sqlite3
+    path=tmp_path/'design.db';database(path)
+    c=sqlite3.connect(path)
+    c.execute("INSERT INTO components(id,parent_id,name,path,module,depth) VALUES(2,1,'child','child','Top',1)")
+    c.commit();c.close()
+    result=generate(path,tmp_path/'out')
+    assert result['buses'][0]['bind_scope']=='instance'
+    assert result['buses'][0]['target']=='Top'
+
+
+def test_invalid_clock_document(tmp_path):
+    import pytest
+    clocks=tmp_path/'clocks.json';clocks.write_text('[]')
+    with pytest.raises(ValueError,match='rvw.bus-clocks/1'):
+        generate(tmp_path/'unused.db',tmp_path/'out',clocks=clocks)

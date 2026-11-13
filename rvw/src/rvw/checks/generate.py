@@ -17,13 +17,13 @@ def generate(project, out, manifest=None):
     spec=json.loads(settings.read_text())
     if not isinstance(spec,dict) or spec.get('schema')!='rvw.check-generation/1':
         raise ValueError('expected rvw.check-generation/1')
-    if set(spec)-{'schema','streams','buses','csrs','queues','power'}:
+    if set(spec)-{'schema','streams','buses','csrs','queues','power','cdc'}:
         raise ValueError('unknown check generation kind')
     out=Path(out)
     if not out.is_absolute(): out=root/out
     out.mkdir(parents=True,exist_ok=False)
     rows=[]
-    for kind in ('streams','buses','csrs','queues','power'):
+    for kind in ('streams','buses','csrs','queues','power','cdc'):
         row=dict(kind=kind,status='unbound')
         rows.append(row)
         if kind not in spec:
