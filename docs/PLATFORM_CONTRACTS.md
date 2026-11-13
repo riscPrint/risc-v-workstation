@@ -3972,6 +3972,12 @@ walk and PMA checks remain inconclusive.
 
 ### Privilege campaign artifacts
 
+`kind = "disabled-matrix"` selects `disabled.feature` and all 64 requested
+six-control masks. Profiles cover disabled FS/VS state and absent F/V/S
+features. `requested_controls` in each scenario records the requested mstatus
+word. Programs capture WARL readback and account for MRET clearing MPRV.
+Requested-bin membership never asserts that an optional WARL bit latched.
+
 Kinds `reri` and `dvfs` use the same model-based reference report and mailbox
 stimulus contract. RERI pins its revision in project data and derives expected
 record updates and signal requests from the versioned model. Its error payload
