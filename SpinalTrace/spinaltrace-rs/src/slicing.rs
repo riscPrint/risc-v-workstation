@@ -66,21 +66,15 @@ pub fn get_edge_replacement_mapping(linkable_nodes: &Vec<Rc<RefCell<LinkedPDGNod
 }
 
 /// Reduces a CFG by removing all statements that that have an index that is included in the provided list of indices to be removed
-/// Furthermore, all predicate probe vertices assaciated with any removed predicates will be removed from the PDG
+/// Predicate entries stay in place so retained CFG references keep their indexes.
 /// Returns a new PDGSpec
 pub fn reduce_cfg(pdg: PDGSpec, removed_indices: &Vec<usize>, idx_remap: &Vec<Option<u32>>) -> PDGSpec {
     let mut removed_predicates_idx: Vec<usize> = vec![];
     let reduced_cfg = remove_cfg_statements(pdg.cfg, removed_indices, idx_remap, &mut removed_predicates_idx);
-    // Since in the first removal pass, we can't remove predicate probe vertices,
-    // we can use the amount of removed indices in the first pass as an offset for this one.
-    removed_predicates_idx.sort();
-    removed_predicates_idx.reverse();
-    let mut new_preds = pdg.predicates.clone();
-    for i in removed_predicates_idx {
-        new_preds.remove(i);
-    }
+    // Keep predicate indexes stable. CFG forks can share a predicate, and a removed
+    // fork does not imply that its predicate is unused by the retained CFG.
     // No need to remove edges, they shouldn't be affected
-    PDGSpec { accuracy: pdg.accuracy, vertices: pdg.vertices, edges: pdg.edges, predicates: new_preds, cfg: reduced_cfg, spinaltrace: pdg.spinaltrace }
+    PDGSpec { accuracy: pdg.accuracy, vertices: pdg.vertices, edges: pdg.edges, predicates: pdg.predicates, cfg: reduced_cfg, spinaltrace: pdg.spinaltrace }
 }
 
 fn remove_cfg_statements(cfg: Vec<CFGSpecStatement>, remove_idx: &Vec<usize>, idx_remap: &Vec<Option<u32>>, removed_predicates: &mut Vec<usize>) -> Vec<CFGSpecStatement> {
