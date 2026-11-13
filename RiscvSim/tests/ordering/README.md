@@ -309,3 +309,29 @@ not a new run of the pinned herdtools7 7.58 model. The fixture planner checks
 their complete allowed-set hashes as before. The DUT remains `not_run` unless
 an adapter supplies complete observations. The same forbidden-outcome checker
 handles both reference sources. Do not use these RVWMO sets to qualify Ztso.
+
+## Configured cache-block byte campaigns
+
+Select `--suite cbo --cache-block-size 64` on the existing generator or runner.
+The size is mandatory and must match the target's declared CMO size. Supported
+campaign sizes are powers of two from 16 to 4096 bytes. Native Spike receives
+`--blocksz` with that size. The runner records the ISA and block size.
+The target adapter must select a matching platform configuration itself.
+
+The machine-mode program uses Zicbom, Zicboz and Zicbop. It fills three aligned
+blocks with seeded nonzero bytes. It zeros the middle block through addresses
+at its start, middle and last byte. It checks every zeroed byte and both full
+adjacent blocks. It then executes clean, flush and invalidate with explicit
+fences and checks retained data. Invalidate runs only after clean/flush with
+no later dirty store. Prefetch R/W/I hints must preserve memory. They do not
+have a required cache allocation, completion or ordering effect.
+
+The [CMO 1.0 specification](https://riscv.github.io/riscv-unified-db/manual/html/isa/isa_20240411/chapters/cmo.html)
+defines these byte and hint rules. This program does not assume block zeroing
+is one atomic store. Native fault checks remove zeroing, zero only part of a
+block or corrupt an adjacent byte. Each defect must fail the program.
+
+Limits: native Spike checks architectural byte assertions. No clean/flush
+writeback, device observation, RTL cache behavior, privilege-control matrix
+or concurrent agent campaign is established. Those require a project observer.
+The default suites are unchanged. Unsupported extensions must not be selected.

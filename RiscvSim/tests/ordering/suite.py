@@ -377,14 +377,78 @@ cas_trap:
     return program('\n'.join(body), xlen=xlen).replace('other: .dword 0', 'other: .dword 0\n.space 48').replace('.section .tohost', handler+'\n.section .tohost')
 
 
-def generate(out, xlen=64, seed=1, suites=None):
+def cache_blocks(xlen, seed, block_size):
+    """Machine-mode byte effects for an explicitly configured CMO block size."""
+    if type(block_size) is not int or block_size < 16 or block_size > 4096 or block_size & (block_size-1):
+        raise ValueError('cache block size must be a power of two in 16..4096')
+    rng = random.Random(seed)
+    body = []
+    for case, offset in enumerate([0, block_size//2, block_size-1]):
+        value = rng.randrange(1,256)
+        body.append(f"""la t0, blocks
+ li t1, {3*block_size}
+ li t2, {value}
+cbo_fill_{case}:
+ sb t2, 0(t0)
+ addi t0, t0, 1
+ addi t1, t1, -1
+ bnez t1, cbo_fill_{case}
+ la t0, blocks
+ li t1, {block_size+offset}
+ add t0, t0, t1
+ cbo.zero 0(t0)
+ fence rw,rw
+ la t0, blocks
+ li t1, {block_size}
+cbo_guard_before_{case}:
+ lbu t3, 0(t0)
+ bne t3, t2, fail
+ addi t0, t0, 1
+ addi t1, t1, -1
+ bnez t1, cbo_guard_before_{case}
+ li t1, {block_size}
+cbo_zero_check_{case}:
+ lbu t3, 0(t0)
+ bnez t3, fail
+ addi t0, t0, 1
+ addi t1, t1, -1
+ bnez t1, cbo_zero_check_{case}
+ li t1, {block_size}
+cbo_guard_after_{case}:
+ lbu t3, 0(t0)
+ bne t3, t2, fail
+ addi t0, t0, 1
+ addi t1, t1, -1
+ bnez t1, cbo_guard_after_{case}
+ la t0, blocks
+ cbo.clean 0(t0)
+ fence rw,rw
+ cbo.flush 0(t0)
+ fence rw,rw
+ cbo.inval 0(t0)
+ fence rw,rw
+ prefetch.r 0(t0)
+ prefetch.w 0(t0)
+ prefetch.i 0(t0)
+ li t1, {block_size}
+cbo_retained_{case}:
+ lbu t3, 0(t0)
+ bne t3, t2, fail
+ addi t0, t0, 1
+ addi t1, t1, -1
+ bnez t1, cbo_retained_{case}
+""")
+    return program('\n'.join(body), f'.balign {block_size}\nblocks: .space {3*block_size}', xlen=xlen)
+
+
+def generate(out, xlen=64, seed=1, suites=None, cache_block_size=None):
     out = Path(out)
     out.mkdir(parents=True, exist_ok=True)
     (out / 'link.ld').write_text(LINK)
     jobs = []
     for name in (DEFAULT_SUITES if suites is None else suites):
         source = out / f'{name}-{seed}.S'
-        source.write_text(GENERATORS[name](xlen, seed))
+        source.write_text(cache_blocks(xlen, seed, cache_block_size) if name == 'cbo' else GENERATORS[name](xlen, seed))
         jobs.append(dict(name=name, seed=seed, xlen=xlen, source=str(source.resolve()),
                          elf=str(source.with_suffix('.elf').resolve()),
                          # Omit mem_latency: the C1 adapter must randomize timing.
@@ -396,7 +460,7 @@ def generate(out, xlen=64, seed=1, suites=None):
 
 
 DEFAULT_SUITES = ('lrsc', 'amo', 'fence', 'fence-i')
-GENERATORS = {'zacas': zacas, 'zacas-fault': zacas_traps,
+GENERATORS = {'cbo': cache_blocks, 'zacas': zacas, 'zacas-fault': zacas_traps,
               'zacas-align': lambda xlen, seed: zacas_traps(xlen, seed, False), 'amo-fault': amo_fault, 'lrsc': lrsc, 'amo': amo, 'fence': fence, 'fence-i': fence_i}
 
 
@@ -406,8 +470,11 @@ def main():
     parser.add_argument('--xlen', type=int, choices=[32, 64], default=64)
     parser.add_argument('--seed', type=int, default=1)
     parser.add_argument('--suite', choices=list(GENERATORS), action='append')
+    parser.add_argument('--cache-block-size', type=int, help='required for cbo; project CMO size in bytes')
     args = parser.parse_args()
-    print(json.dumps(generate(args.out, args.xlen, args.seed, args.suite or DEFAULT_SUITES), indent=2))
+    if args.suite and 'cbo' in args.suite and args.cache_block_size is None:
+        parser.error('--cache-block-size required for cbo')
+    print(json.dumps(generate(args.out, args.xlen, args.seed, args.suite or DEFAULT_SUITES, args.cache_block_size), indent=2))
 
 
 if __name__ == '__main__':
