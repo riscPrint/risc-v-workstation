@@ -243,3 +243,22 @@ Timing summaries require one run-many worker. They read the seed and timing
 controls from every C1 result. They refuse mixed controls, missing harts or
 unequal C2 replay hashes. One warmup precedes three timing samples per N.
 Simulation wall time comes from the simulator log and excludes model builds.
+
+## Independent dependency consistency
+
+Before the axiomatic search, the C2 checker follows observed scalar integer
+register dataflow per hart. Declared address, store-data and control sets must
+include the observed dependencies. The checker also checks register value
+continuity and load results against observed memory bytes. A contradiction
+returns CLI `status: error`, exit 2. The library raises `DeclarationError`.
+Unsupported FP, vector, mutable CSR or unknown dataflow is
+`inconclusive`, even with a `memory_dependencies: complete` declaration.
+This check does not establish core compliance.
+
+A scalar memory event can add `read_from`, a store event ID, or
+`initial:ADDRESS:SIZE` with decimal address and size. The referenced location
+and value must agree with the read. A same-hart source must precede the read.
+Search honors this identity, including when two stores wrote equal values.
+Without `read_from`, search still derives candidate sources from observed
+values. All declared dependency edges must respect per-hart program order.
+These checks run before the SC witness shortcut and the general search.

@@ -86,10 +86,13 @@ def search(events, initial, model='rvwmo', limit=100000):
     by_id = {e['id']: e for e in rows}
     if any(location not in initial for location in locations):
         return report | {'reason': 'initial bytes missing for accessed location'}
+    from .dependency_consistency import validate_declarations
+    validate_declarations(rows, initial)
     # A complete SC witness is also an RVWMO and Ztso witness. Try it before
     # constructing the quadratic preserved-order relations. Failure proves nothing.
     witness = sc_witness(rows, initial)
-    if witness is not None:
+    if witness is not None and all(by_id[target].get('read_from', source) == source
+            for source, target in witness['rf']):
         return report | {'status': 'allowed', 'candidates': 1,
                          'engine': 'sc-witness', 'witness': witness}
     values = {(e['address'], e['size'], e['write']) for e in rows
@@ -173,6 +176,8 @@ def search(events, initial, model='rvwmo', limit=100000):
         candidates = sorted(w for w in value_sources.get((*loc(r), by_id[r]['read']), ()) if w != r)
         if not candidates:
             return report | {'status': 'forbidden', 'reason': f'no read-from source for {r}'}
+        if 'read_from' in by_id[r]:
+            candidates = [w for w in candidates if w == by_id[r]['read_from']]
         sources.append(candidates)
     class SearchLimit(Exception):
         pass
@@ -282,6 +287,10 @@ def check(trace, reference, model='rvwmo', limit=100000):
             return {'status': 'inconclusive', 'reason': 'complete project dependency observations required'}
         if reader.header.get('memory_addresses') != 'physical':
             return {'status': 'inconclusive', 'reason': 'physical memory address observations required'}
+        from .dependency_consistency import validate_register_dependencies
+        dependency_limit = validate_register_dependencies(records, reader.header['xlen'])
+        if dependency_limit:
+            return {'status': 'inconclusive', 'reason': dependency_limit}
         events = []
         for r in records:
             if r.get('event'):
