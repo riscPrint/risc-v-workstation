@@ -869,7 +869,7 @@ usage: rvw fault report [-h] [--project PROJECT] directory
 
 ```text
 usage: rvw formal [-h] [--project PROJECT]
-    {device-events,upf,power,buses,csr,bug-hunt,model-live,rtl-grid,rtl-refine,relation-strengthen,doctor,engines,engine-race,engine-bench,model-grid,security,regress,properties,simulate,liveness,scenario,sva-lower,template,contracts,strengthen,testplan,shortest,proof-core,apps,autocheck,bench,recheck,cex,app-live,app-deadlock,sby-history,sby-regress,prove,depth-search,state-generate,rvfi-generate,sail-bitmanip,sail-zicond,custom-isa,profiles,riscv,connectivity,internal-path,datapath,equiv,bmc,from-sim,swarm,xprop,x-context,x-sweep}
+    {device-events,upf,power,buses,csr,counter-quotient,bug-hunt,model-live,rtl-grid,rtl-refine,relation-strengthen,doctor,engines,engine-race,engine-bench,model-grid,security,regress,properties,simulate,liveness,scenario,sva-lower,template,contracts,strengthen,testplan,shortest,proof-core,apps,autocheck,bench,recheck,cex,app-live,app-deadlock,sby-history,sby-regress,prove,depth-search,state-generate,rvfi-generate,sail-bitmanip,sail-zicond,custom-isa,profiles,riscv,connectivity,internal-path,datapath,equiv,bmc,from-sim,swarm,xprop,x-context,x-sweep}
     ...
 ```
 
@@ -904,6 +904,13 @@ usage: rvw formal buses [-h] --db DB --out OUT [--project PROJECT]
 
 ```text
 usage: rvw formal csr [-h] --model MODEL --out OUT [--project PROJECT]
+```
+
+### `rvw formal counter-quotient`
+
+```text
+usage: rvw formal counter-quotient [-h] --manifest MANIFEST --out OUT [--json]
+    [--timeout TIMEOUT] [--engine ENGINE] [--depth DEPTH] [--project PROJECT]
 ```
 
 ### `rvw formal bug-hunt`
@@ -3070,6 +3077,14 @@ Starts a background job: yes.
 Resolve project connection tables, report undeclared drivers and optionally prove observed RTL contracts. Overall design acceptance remains incomplete.
 
 Arguments: `manifest` (required), `db` (required), `out` (required), `run`, `proof_mode`, `clock`, `reset`, `depth`, `max_nodes`, `engine`, `timeout`.
+
+Starts a background job: yes.
+
+### `formal_counter_quotient`
+
+Prove a reset-qualified modulo relation between a typed concrete counter and a smaller model.
+
+Arguments: `out` (required), `manifest` (required), `engine`, `depth`, `timeout`.
 
 Starts a background job: yes.
 
