@@ -35,3 +35,8 @@ def test_presence_is_not_qualification(monkeypatch):
     assert all(r['status'] == 'missing' for r in records)
     assert all('runtime NOT RUN' in r['qualification'] for r in records)
     assert all(r['install_flag'].startswith('--with-') for r in records)
+
+
+def test_generated_version_table_matches_inventory():
+    done = subprocess.run(['python3', str(ROOT / 'scripts/generate-tool-docs.py'), '--check'], capture_output=True, text=True)
+    assert done.returncode == 0
