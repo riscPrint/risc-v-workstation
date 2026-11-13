@@ -269,3 +269,10 @@ The Spike binding preserves mstatus while it writes flags and rounding mode.
 All subsequent FP writes, flags and CSR snapshots compare exactly.
 `--strict` and `--strict-sync csr` disable this alignment. Doctor reports
 the configured policy without claiming that comparison ran.
+
+## Workload diagnostic storage
+
+`RVW_SPIKE_MEMORY_LOG=1` selects an additive memory stream for Spike diagnostic
+text. The default file-backed path remains available. The same current-step
+trap parser and C2 effects apply. The workload evaluation report records this
+choice as `spike_diagnostic_log: memory`. This mode is not a state checkpoint.

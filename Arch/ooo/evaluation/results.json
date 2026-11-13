@@ -1,0 +1,802 @@
+{
+  "schema": "rvw.workload-evaluation-sample/1",
+  "evidence": "Spike output checks and sampled approximate timing",
+  "accuracy_status": "inconclusive",
+  "interval": 2000,
+  "warmup": 200,
+  "max_k": 3,
+  "seed": 1,
+  "workloads": [
+    {
+      "id": "crc32",
+      "elf_sha256": "317e509445912e731bb6dc73aff59d19f7860320b2cb89dc27dc43dff8ec12a0",
+      "output_check_sha256": "fd0b78ee6afee3c38fd0ff563f1df7c427934c638849bbc381a26555e486b0bf",
+      "source_revision": "0466a18e4f6b47e19598d7c6ba72916d54b68f65",
+      "source_sha256": "4993493a150efc2aca546becb2b7815688258263817c94368d10e01862e50d0d",
+      "instructions": 3831528,
+      "points_sha256": "dff73f54c9d6df79e825af4d12188b6a713e21e317489748cb59f547d91c673e",
+      "trace_elf_binding": "producer_path",
+      "models": {
+        "zen5-like": {
+          "sampled_ipc": 0.459495000199905,
+          "sampled_cpi": 2.176302243908957,
+          "estimated_cycles": 8338562.983999999,
+          "config_sha256": "3d54f1881abce6713a8fe4022487a0fbbc7c7e213a0067b55fe9f40ff3df25a5",
+          "trace_sha256": "e94ddd03880c8e925444ed8cf15ff982dff15d7b5b422abce322e28039941bdd",
+          "samples": [
+            {
+              "cycles": 4351,
+              "instret": 2000,
+              "ipc": 0.4596644449551827,
+              "model_cycles_including_warmup": 5149,
+              "point": {
+                "instructions": 2000,
+                "interval": 1,
+                "members": 635,
+                "start_instruction": 2000,
+                "weight": 0.3314604512873193
+              },
+              "warmup": 200
+            },
+            {
+              "cycles": 4353,
+              "instret": 2000,
+              "ipc": 0.45945325063174824,
+              "model_cycles_including_warmup": 5150,
+              "point": {
+                "instructions": 2000,
+                "interval": 3,
+                "members": 1110,
+                "start_instruction": 6000,
+                "weight": 0.5794033085494873
+              },
+              "warmup": 200
+            },
+            {
+              "cycles": 4356,
+              "instret": 2000,
+              "ipc": 0.4591368227731864,
+              "model_cycles_including_warmup": 5156,
+              "point": {
+                "instructions": 2000,
+                "interval": 11,
+                "members": 171,
+                "start_instruction": 22000,
+                "weight": 0.08913624016319338
+              },
+              "warmup": 200
+            }
+          ],
+          "model_source_sha256": "398f92c16a8328fd2d0e04076d142233086057e5c0e86c5c83b5575f75d291f5"
+        },
+        "m1-like": {
+          "sampled_ipc": 0.459495000199905,
+          "sampled_cpi": 2.176302243908957,
+          "estimated_cycles": 8338562.983999999,
+          "config_sha256": "5cfb8a10e58cc1b82515e4280bc11d3f1506cc52d6bc7b612f381c9154493b3b",
+          "trace_sha256": "e94ddd03880c8e925444ed8cf15ff982dff15d7b5b422abce322e28039941bdd",
+          "samples": [
+            {
+              "cycles": 4351,
+              "instret": 2000,
+              "ipc": 0.4596644449551827,
+              "model_cycles_including_warmup": 5149,
+              "point": {
+                "instructions": 2000,
+                "interval": 1,
+                "members": 635,
+                "start_instruction": 2000,
+                "weight": 0.3314604512873193
+              },
+              "warmup": 200
+            },
+            {
+              "cycles": 4353,
+              "instret": 2000,
+              "ipc": 0.45945325063174824,
+              "model_cycles_including_warmup": 5150,
+              "point": {
+                "instructions": 2000,
+                "interval": 3,
+                "members": 1110,
+                "start_instruction": 6000,
+                "weight": 0.5794033085494873
+              },
+              "warmup": 200
+            },
+            {
+              "cycles": 4356,
+              "instret": 2000,
+              "ipc": 0.4591368227731864,
+              "model_cycles_including_warmup": 5156,
+              "point": {
+                "instructions": 2000,
+                "interval": 11,
+                "members": 171,
+                "start_instruction": 22000,
+                "weight": 0.08913624016319338
+              },
+              "warmup": 200
+            }
+          ],
+          "model_source_sha256": "17c9c760af11cad36388b01a5b3e9af650f8359f69c508fe5d16ffb5e5236dbc"
+        }
+      }
+    },
+    {
+      "id": "matmult-int",
+      "elf_sha256": "e9b251aca29a3a3409697b90db93fe7ddd6829db87e5594951cdbf5e0802504d",
+      "output_check_sha256": "fd0b78ee6afee3c38fd0ff563f1df7c427934c638849bbc381a26555e486b0bf",
+      "source_revision": "0466a18e4f6b47e19598d7c6ba72916d54b68f65",
+      "source_sha256": "4993493a150efc2aca546becb2b7815688258263817c94368d10e01862e50d0d",
+      "instructions": 3196262,
+      "points_sha256": "9afa3f7b257bd86aee04235058d2fdd2501d521548a128417f0e8c95ab090a34",
+      "trace_elf_binding": "producer_path",
+      "models": {
+        "zen5-like": {
+          "sampled_ipc": 0.3618994599331993,
+          "sampled_cpi": 2.7631983761030856,
+          "estimated_cycles": 8831905.968,
+          "config_sha256": "3d54f1881abce6713a8fe4022487a0fbbc7c7e213a0067b55fe9f40ff3df25a5",
+          "trace_sha256": "8c2ac8933ec4fd3a21f4e70f61d559e716cd60056276d3d699349c31ee5fef82",
+          "samples": [
+            {
+              "cycles": 5548,
+              "instret": 2000,
+              "ipc": 0.3604902667627974,
+              "model_cycles_including_warmup": 6397,
+              "point": {
+                "instructions": 2000,
+                "interval": 224,
+                "members": 1515,
+                "start_instruction": 448000,
+                "weight": 0.9479823618964903
+              },
+              "warmup": 200
+            },
+            {
+              "cycles": 5328,
+              "instret": 2000,
+              "ipc": 0.37537537537537535,
+              "model_cycles_including_warmup": 5907,
+              "point": {
+                "instructions": 2000,
+                "interval": 976,
+                "members": 40,
+                "start_instruction": 1952000,
+                "weight": 0.024485477097935027
+              },
+              "warmup": 200
+            },
+            {
+              "cycles": 4959,
+              "instret": 2000,
+              "ipc": 0.40330711837063926,
+              "model_cycles_including_warmup": 5536,
+              "point": {
+                "instructions": 2000,
+                "interval": 1286,
+                "members": 44,
+                "start_instruction": 2572000,
+                "weight": 0.027532161005574637
+              },
+              "warmup": 200
+            }
+          ],
+          "model_source_sha256": "398f92c16a8328fd2d0e04076d142233086057e5c0e86c5c83b5575f75d291f5"
+        },
+        "m1-like": {
+          "sampled_ipc": 0.3618994599331993,
+          "sampled_cpi": 2.7631983761030856,
+          "estimated_cycles": 8831905.968,
+          "config_sha256": "5cfb8a10e58cc1b82515e4280bc11d3f1506cc52d6bc7b612f381c9154493b3b",
+          "trace_sha256": "8c2ac8933ec4fd3a21f4e70f61d559e716cd60056276d3d699349c31ee5fef82",
+          "samples": [
+            {
+              "cycles": 5548,
+              "instret": 2000,
+              "ipc": 0.3604902667627974,
+              "model_cycles_including_warmup": 6397,
+              "point": {
+                "instructions": 2000,
+                "interval": 224,
+                "members": 1515,
+                "start_instruction": 448000,
+                "weight": 0.9479823618964903
+              },
+              "warmup": 200
+            },
+            {
+              "cycles": 5328,
+              "instret": 2000,
+              "ipc": 0.37537537537537535,
+              "model_cycles_including_warmup": 5907,
+              "point": {
+                "instructions": 2000,
+                "interval": 976,
+                "members": 40,
+                "start_instruction": 1952000,
+                "weight": 0.024485477097935027
+              },
+              "warmup": 200
+            },
+            {
+              "cycles": 4959,
+              "instret": 2000,
+              "ipc": 0.40330711837063926,
+              "model_cycles_including_warmup": 5536,
+              "point": {
+                "instructions": 2000,
+                "interval": 1286,
+                "members": 44,
+                "start_instruction": 2572000,
+                "weight": 0.027532161005574637
+              },
+              "warmup": 200
+            }
+          ],
+          "model_source_sha256": "17c9c760af11cad36388b01a5b3e9af650f8359f69c508fe5d16ffb5e5236dbc"
+        }
+      }
+    },
+    {
+      "id": "slre",
+      "elf_sha256": "55720ac05801ae754a1ef37e59bada14df7ec55734f4b3b155067f1291ead63b",
+      "output_check_sha256": "fd0b78ee6afee3c38fd0ff563f1df7c427934c638849bbc381a26555e486b0bf",
+      "source_revision": "0466a18e4f6b47e19598d7c6ba72916d54b68f65",
+      "source_sha256": "4993493a150efc2aca546becb2b7815688258263817c94368d10e01862e50d0d",
+      "instructions": 2507947,
+      "points_sha256": "63f5205e72768afea253ed09447ba9b6ef5d57ba2154c63808ab8a30d3feac77",
+      "trace_elf_binding": "producer_path",
+      "models": {
+        "zen5-like": {
+          "sampled_ipc": 0.43336001125198464,
+          "sampled_cpi": 2.3075502446822043,
+          "estimated_cycles": 5787213.713500001,
+          "config_sha256": "3d54f1881abce6713a8fe4022487a0fbbc7c7e213a0067b55fe9f40ff3df25a5",
+          "trace_sha256": "4a100219cf4efe8934b5e88628885018d1dbfe3bf6f99889db294aca8d3898b3",
+          "samples": [
+            {
+              "cycles": 4167,
+              "instret": 2000,
+              "ipc": 0.4799616030717543,
+              "model_cycles_including_warmup": 4630,
+              "point": {
+                "instructions": 2000,
+                "interval": 185,
+                "members": 264,
+                "start_instruction": 370000,
+                "weight": 0.21053076480483837
+              },
+              "warmup": 200
+            },
+            {
+              "cycles": 4841,
+              "instret": 2000,
+              "ipc": 0.4131377814501136,
+              "model_cycles_including_warmup": 5205,
+              "point": {
+                "instructions": 2000,
+                "interval": 807,
+                "members": 836,
+                "start_instruction": 1614000,
+                "weight": 0.6666596223923392
+              },
+              "warmup": 200
+            },
+            {
+              "cycles": 4157,
+              "instret": 2000,
+              "ipc": 0.4811161895597787,
+              "model_cycles_including_warmup": 4493,
+              "point": {
+                "instructions": 2000,
+                "interval": 1220,
+                "members": 154,
+                "start_instruction": 2440000,
+                "weight": 0.12280961280282239
+              },
+              "warmup": 200
+            }
+          ],
+          "model_source_sha256": "398f92c16a8328fd2d0e04076d142233086057e5c0e86c5c83b5575f75d291f5"
+        },
+        "m1-like": {
+          "sampled_ipc": 0.43336001125198464,
+          "sampled_cpi": 2.3075502446822043,
+          "estimated_cycles": 5787213.713500001,
+          "config_sha256": "5cfb8a10e58cc1b82515e4280bc11d3f1506cc52d6bc7b612f381c9154493b3b",
+          "trace_sha256": "4a100219cf4efe8934b5e88628885018d1dbfe3bf6f99889db294aca8d3898b3",
+          "samples": [
+            {
+              "cycles": 4167,
+              "instret": 2000,
+              "ipc": 0.4799616030717543,
+              "model_cycles_including_warmup": 4630,
+              "point": {
+                "instructions": 2000,
+                "interval": 185,
+                "members": 264,
+                "start_instruction": 370000,
+                "weight": 0.21053076480483837
+              },
+              "warmup": 200
+            },
+            {
+              "cycles": 4841,
+              "instret": 2000,
+              "ipc": 0.4131377814501136,
+              "model_cycles_including_warmup": 5205,
+              "point": {
+                "instructions": 2000,
+                "interval": 807,
+                "members": 836,
+                "start_instruction": 1614000,
+                "weight": 0.6666596223923392
+              },
+              "warmup": 200
+            },
+            {
+              "cycles": 4157,
+              "instret": 2000,
+              "ipc": 0.4811161895597787,
+              "model_cycles_including_warmup": 4493,
+              "point": {
+                "instructions": 2000,
+                "interval": 1220,
+                "members": 154,
+                "start_instruction": 2440000,
+                "weight": 0.12280961280282239
+              },
+              "warmup": 200
+            }
+          ],
+          "model_source_sha256": "17c9c760af11cad36388b01a5b3e9af650f8359f69c508fe5d16ffb5e5236dbc"
+        }
+      }
+    },
+    {
+      "id": "coremark-smoke",
+      "elf_sha256": "32644d5f19797e2505d8ef85a1d47b8ff6457102871dd9ad2889c0a7b5cb485c",
+      "output_check_sha256": "0184d95374c01d3831de1ee0ee28ad46bf7fcbb3137b18f48283934bf3d95bbf",
+      "source_revision": "1f483d5b8316753a742cbf5590caf5bd0a4e4777",
+      "source_sha256": "ebc1d733af363aadbe7060b6dd6c482a9363fea55c2ca65977c098bc4235857d",
+      "instructions": 2742559,
+      "points_sha256": "915d9d83a230f8d194a53659c39472312c35c26b43cf0ced5853f1cc360a60fc",
+      "trace_elf_binding": "producer_path",
+      "models": {
+        "zen5-like": {
+          "sampled_ipc": 0.5167181844684116,
+          "sampled_cpi": 1.9352908994847515,
+          "estimated_cycles": 5307649.474,
+          "config_sha256": "3d54f1881abce6713a8fe4022487a0fbbc7c7e213a0067b55fe9f40ff3df25a5",
+          "trace_sha256": "096ff79404e10fdcfec82d4ec13afed95b7293e0d583f0dd7e4bc3f0408af447",
+          "samples": [
+            {
+              "cycles": 2642,
+              "instret": 2000,
+              "ipc": 0.757002271006813,
+              "model_cycles_including_warmup": 3090,
+              "point": {
+                "instructions": 2000,
+                "interval": 184,
+                "members": 280,
+                "start_instruction": 368000,
+                "weight": 0.20418886157052593
+              },
+              "warmup": 200
+            },
+            {
+              "cycles": 5372,
+              "instret": 2000,
+              "ipc": 0.37230081906180196,
+              "model_cycles_including_warmup": 5902,
+              "point": {
+                "instructions": 2000,
+                "interval": 265,
+                "members": 708,
+                "start_instruction": 530000,
+                "weight": 0.5157806997041814
+              },
+              "warmup": 200
+            },
+            {
+              "cycles": 2001,
+              "instret": 2000,
+              "ipc": 0.9995002498750625,
+              "model_cycles_including_warmup": 2373,
+              "point": {
+                "instructions": 2000,
+                "interval": 715,
+                "members": 384,
+                "start_instruction": 1430000,
+                "weight": 0.2800304387252927
+              },
+              "warmup": 200
+            }
+          ],
+          "model_source_sha256": "398f92c16a8328fd2d0e04076d142233086057e5c0e86c5c83b5575f75d291f5"
+        },
+        "m1-like": {
+          "sampled_ipc": 0.5209916187304438,
+          "sampled_cpi": 1.9194166739895113,
+          "estimated_cycles": 5264113.474,
+          "config_sha256": "5cfb8a10e58cc1b82515e4280bc11d3f1506cc52d6bc7b612f381c9154493b3b",
+          "trace_sha256": "096ff79404e10fdcfec82d4ec13afed95b7293e0d583f0dd7e4bc3f0408af447",
+          "samples": [
+            {
+              "cycles": 2636,
+              "instret": 2000,
+              "ipc": 0.7587253414264037,
+              "model_cycles_including_warmup": 3084,
+              "point": {
+                "instructions": 2000,
+                "interval": 184,
+                "members": 280,
+                "start_instruction": 368000,
+                "weight": 0.20418886157052593
+              },
+              "warmup": 200
+            },
+            {
+              "cycles": 5372,
+              "instret": 2000,
+              "ipc": 0.37230081906180196,
+              "model_cycles_including_warmup": 5902,
+              "point": {
+                "instructions": 2000,
+                "interval": 265,
+                "members": 708,
+                "start_instruction": 530000,
+                "weight": 0.5157806997041814
+              },
+              "warmup": 200
+            },
+            {
+              "cycles": 1892,
+              "instret": 2000,
+              "ipc": 1.0570824524312896,
+              "model_cycles_including_warmup": 2264,
+              "point": {
+                "instructions": 2000,
+                "interval": 715,
+                "members": 384,
+                "start_instruction": 1430000,
+                "weight": 0.2800304387252927
+              },
+              "warmup": 200
+            }
+          ],
+          "model_source_sha256": "17c9c760af11cad36388b01a5b3e9af650f8359f69c508fe5d16ffb5e5236dbc"
+        }
+      }
+    },
+    {
+      "id": "qsort",
+      "elf_sha256": "861514cc20cacf52d0da6c212a1c5bb34c251146cc9bdb79047e089916542e4b",
+      "output_check_sha256": "f86babf5818cc9fb7a2fc0a3666104dd471bb92f57d3b2b9622d6a3f3888eb4e",
+      "source_revision": "d7e86f701b929b5d801f8cda1a4871ab05f452bb",
+      "source_sha256": "677b8e2095540a9a8abe46a193dcfcd401bf30300c7b2fb8802ce5f93580ce65",
+      "instructions": 228696,
+      "points_sha256": "1bec181ab4c100e805d4a6220aaaf305f3a0d57165dac12f1eabb10351048005",
+      "trace_elf_binding": "producer_path",
+      "models": {
+        "zen5-like": {
+          "sampled_ipc": 0.3065799886918132,
+          "sampled_cpi": 3.2617914961346064,
+          "estimated_cycles": 745958.668,
+          "config_sha256": "3d54f1881abce6713a8fe4022487a0fbbc7c7e213a0067b55fe9f40ff3df25a5",
+          "trace_sha256": "aec882e9c79c1f32b46c3b96ff26699726bc753f0f9c61944c1acf4d34d9dfaa",
+          "samples": [
+            {
+              "cycles": 4899,
+              "instret": 2000,
+              "ipc": 0.4082465809348847,
+              "model_cycles_including_warmup": 5578,
+              "point": {
+                "instructions": 2000,
+                "interval": 40,
+                "members": 12,
+                "start_instruction": 80000,
+                "weight": 0.104942806170637
+              },
+              "warmup": 200
+            },
+            {
+              "cycles": 6393,
+              "instret": 2000,
+              "ipc": 0.3128421711246676,
+              "model_cycles_including_warmup": 6967,
+              "point": {
+                "instructions": 2000,
+                "interval": 68,
+                "members": 29,
+                "start_instruction": 136000,
+                "weight": 0.2536117815790394
+              },
+              "warmup": 200
+            },
+            {
+              "cycles": 6841,
+              "instret": 2000,
+              "ipc": 0.29235491887151,
+              "model_cycles_including_warmup": 7394,
+              "point": {
+                "instructions": 2000,
+                "interval": 93,
+                "members": 74,
+                "start_instruction": 186000,
+                "weight": 0.6414454122503236
+              },
+              "warmup": 200
+            }
+          ],
+          "model_source_sha256": "398f92c16a8328fd2d0e04076d142233086057e5c0e86c5c83b5575f75d291f5"
+        },
+        "m1-like": {
+          "sampled_ipc": 0.3065799886918132,
+          "sampled_cpi": 3.2617914961346064,
+          "estimated_cycles": 745958.668,
+          "config_sha256": "5cfb8a10e58cc1b82515e4280bc11d3f1506cc52d6bc7b612f381c9154493b3b",
+          "trace_sha256": "aec882e9c79c1f32b46c3b96ff26699726bc753f0f9c61944c1acf4d34d9dfaa",
+          "samples": [
+            {
+              "cycles": 4899,
+              "instret": 2000,
+              "ipc": 0.4082465809348847,
+              "model_cycles_including_warmup": 5578,
+              "point": {
+                "instructions": 2000,
+                "interval": 40,
+                "members": 12,
+                "start_instruction": 80000,
+                "weight": 0.104942806170637
+              },
+              "warmup": 200
+            },
+            {
+              "cycles": 6393,
+              "instret": 2000,
+              "ipc": 0.3128421711246676,
+              "model_cycles_including_warmup": 6967,
+              "point": {
+                "instructions": 2000,
+                "interval": 68,
+                "members": 29,
+                "start_instruction": 136000,
+                "weight": 0.2536117815790394
+              },
+              "warmup": 200
+            },
+            {
+              "cycles": 6841,
+              "instret": 2000,
+              "ipc": 0.29235491887151,
+              "model_cycles_including_warmup": 7394,
+              "point": {
+                "instructions": 2000,
+                "interval": 93,
+                "members": 74,
+                "start_instruction": 186000,
+                "weight": 0.6414454122503236
+              },
+              "warmup": 200
+            }
+          ],
+          "model_source_sha256": "17c9c760af11cad36388b01a5b3e9af650f8359f69c508fe5d16ffb5e5236dbc"
+        }
+      }
+    },
+    {
+      "id": "rsort",
+      "elf_sha256": "caff80952c7312601350ba353ffa778e9672f4c19c77e985d66e7629a758eae5",
+      "output_check_sha256": "f86babf5818cc9fb7a2fc0a3666104dd471bb92f57d3b2b9622d6a3f3888eb4e",
+      "source_revision": "d7e86f701b929b5d801f8cda1a4871ab05f452bb",
+      "source_sha256": "677b8e2095540a9a8abe46a193dcfcd401bf30300c7b2fb8802ce5f93580ce65",
+      "instructions": 368194,
+      "points_sha256": "ac45131f0e6d44e721299e8e253811c8fbe6250a30797ffb6c8ecc4695df0ca3",
+      "trace_elf_binding": "producer_path",
+      "models": {
+        "zen5-like": {
+          "sampled_ipc": 0.7093729772811221,
+          "sampled_cpi": 1.4096956495760387,
+          "estimated_cycles": 519041.48,
+          "config_sha256": "3d54f1881abce6713a8fe4022487a0fbbc7c7e213a0067b55fe9f40ff3df25a5",
+          "trace_sha256": "af01ceccc188901b4d89e61e0623def9f62463fcbe22364e057d39c2642176f5",
+          "samples": [
+            {
+              "cycles": 2925,
+              "instret": 2000,
+              "ipc": 0.6837606837606838,
+              "model_cycles_including_warmup": 3263,
+              "point": {
+                "instructions": 2000,
+                "interval": 51,
+                "members": 74,
+                "start_instruction": 102000,
+                "weight": 0.4019620091582155
+              },
+              "warmup": 200
+            },
+            {
+              "cycles": 4840,
+              "instret": 2000,
+              "ipc": 0.4132231404958678,
+              "model_cycles_including_warmup": 5316,
+              "point": {
+                "instructions": 2000,
+                "interval": 88,
+                "members": 14,
+                "start_instruction": 176000,
+                "weight": 0.07114184370196147
+              },
+              "warmup": 200
+            },
+            {
+              "cycles": 2466,
+              "instret": 2000,
+              "ipc": 0.8110300081103001,
+              "model_cycles_including_warmup": 2734,
+              "point": {
+                "instructions": 2000,
+                "interval": 155,
+                "members": 97,
+                "start_instruction": 310000,
+                "weight": 0.526896147139823
+              },
+              "warmup": 200
+            }
+          ],
+          "model_source_sha256": "398f92c16a8328fd2d0e04076d142233086057e5c0e86c5c83b5575f75d291f5"
+        },
+        "m1-like": {
+          "sampled_ipc": 0.7093729772811221,
+          "sampled_cpi": 1.4096956495760387,
+          "estimated_cycles": 519041.48,
+          "config_sha256": "5cfb8a10e58cc1b82515e4280bc11d3f1506cc52d6bc7b612f381c9154493b3b",
+          "trace_sha256": "af01ceccc188901b4d89e61e0623def9f62463fcbe22364e057d39c2642176f5",
+          "samples": [
+            {
+              "cycles": 2925,
+              "instret": 2000,
+              "ipc": 0.6837606837606838,
+              "model_cycles_including_warmup": 3263,
+              "point": {
+                "instructions": 2000,
+                "interval": 51,
+                "members": 74,
+                "start_instruction": 102000,
+                "weight": 0.4019620091582155
+              },
+              "warmup": 200
+            },
+            {
+              "cycles": 4840,
+              "instret": 2000,
+              "ipc": 0.4132231404958678,
+              "model_cycles_including_warmup": 5316,
+              "point": {
+                "instructions": 2000,
+                "interval": 88,
+                "members": 14,
+                "start_instruction": 176000,
+                "weight": 0.07114184370196147
+              },
+              "warmup": 200
+            },
+            {
+              "cycles": 2466,
+              "instret": 2000,
+              "ipc": 0.8110300081103001,
+              "model_cycles_including_warmup": 2734,
+              "point": {
+                "instructions": 2000,
+                "interval": 155,
+                "members": 97,
+                "start_instruction": 310000,
+                "weight": 0.526896147139823
+              },
+              "warmup": 200
+            }
+          ],
+          "model_source_sha256": "17c9c760af11cad36388b01a5b3e9af650f8359f69c508fe5d16ffb5e5236dbc"
+        }
+      }
+    },
+    {
+      "id": "zstd-roundtrip",
+      "elf_sha256": "6f4dea74fd1395999d635437716526a84464a53cdd210bc0163b126fa5e555e9",
+      "output_check_sha256": "571eadc2a70df32de3b5843792c7acab44b9a29ce404408e2207a56246dc7674",
+      "source_revision": "f8745da6ff1ad1e7bab384bd1f9d742439278e99",
+      "source_sha256": "a0659b9097bab13c0eda309b8ab80b11ddb55fd46b79d3057aa5710f6bc2eedf",
+      "instructions": 17851075,
+      "points_sha256": "820f7806a2f03e389414094f10676d1496f8777775f1a1018b6e631ee8438fb7",
+      "trace_elf_binding": "producer_path",
+      "models": {
+        "zen5-like": {
+          "sampled_ipc": 0.5660311839263664,
+          "sampled_cpi": 1.7666871161820787,
+          "estimated_cycles": 31537264.212500002,
+          "config_sha256": "3d54f1881abce6713a8fe4022487a0fbbc7c7e213a0067b55fe9f40ff3df25a5",
+          "trace_sha256": "71b1d042d70e851d7a4cfa15063521b0613e7936de911e43ef62591dd9a083ad",
+          "samples": [
+            {
+              "cycles": 1659,
+              "instret": 2000,
+              "ipc": 1.2055455093429777,
+              "model_cycles_including_warmup": 1855,
+              "point": {
+                "instructions": 2000,
+                "interval": 1321,
+                "members": 2491,
+                "start_instruction": 2642000,
+                "weight": 0.27908683370609333
+              },
+              "warmup": 200
+            },
+            {
+              "cycles": 4259,
+              "instret": 2000,
+              "ipc": 0.46959380136182205,
+              "model_cycles_including_warmup": 4696,
+              "point": {
+                "instructions": 2000,
+                "interval": 4072,
+                "members": 6435,
+                "start_instruction": 8144000,
+                "weight": 0.7209131662939067
+              },
+              "warmup": 200
+            }
+          ],
+          "model_source_sha256": "398f92c16a8328fd2d0e04076d142233086057e5c0e86c5c83b5575f75d291f5"
+        },
+        "m1-like": {
+          "sampled_ipc": 0.5660311839263664,
+          "sampled_cpi": 1.7666871161820787,
+          "estimated_cycles": 31537264.212500002,
+          "config_sha256": "5cfb8a10e58cc1b82515e4280bc11d3f1506cc52d6bc7b612f381c9154493b3b",
+          "trace_sha256": "71b1d042d70e851d7a4cfa15063521b0613e7936de911e43ef62591dd9a083ad",
+          "samples": [
+            {
+              "point": {
+                "interval": 1321,
+                "start_instruction": 2642000,
+                "instructions": 2000,
+                "weight": 0.27908683370609333,
+                "members": 2491
+              },
+              "warmup": 200,
+              "cycles": 1659,
+              "instret": 2000,
+              "ipc": 1.2055455093429777,
+              "model_cycles_including_warmup": 1855
+            },
+            {
+              "point": {
+                "interval": 4072,
+                "start_instruction": 8144000,
+                "instructions": 2000,
+                "weight": 0.7209131662939067,
+                "members": 6435
+              },
+              "warmup": 200,
+              "cycles": 4259,
+              "instret": 2000,
+              "ipc": 0.46959380136182205,
+              "model_cycles_including_warmup": 4696
+            }
+          ],
+          "model_source_sha256": "17c9c760af11cad36388b01a5b3e9af650f8359f69c508fe5d16ffb5e5236dbc"
+        }
+      }
+    }
+  ],
+  "limits": [
+    "saved native output checks; only zstd timing completed in the resumed run",
+    "six prior sampled results reused unchanged",
+    "no full-timing comparison or sampling error bound",
+    "reference CPU names do not establish product accuracy",
+    "model projection does not use gem5-only caches and predictors"
+  ]
+}

@@ -4,7 +4,7 @@
 Spike or QEMU. It does not run a core or issue a gate verdict. See
 [the comparison](../../../../docs/WORKLOADS.md) for selection and sampling limits.
 
-## Default set
+## Default build recipe
 
 The default is six Embench-IoT 1.0 kernels: crc32, matmult-int, slre,
 nettle-aes, minver and nbody. The source commit, full compiler version line,
@@ -146,3 +146,57 @@ compiler. Python and host build utilities remain local dependencies.
 
 The cancellable MCP tools are `workloads_list`, `workloads_build` and
 `workloads_verify`. They select the same recipes and checkers as the CLI.
+
+## Default evaluation set
+
+`rvw workloads evaluate` uses the default evaluation manifest in
+`assets/evaluation.json`. It selects Embench crc32, matmult-int and slre,
+CoreMark's checked algorithm driver, qsort, rsort and zstd compression and
+decompression. SLRE supplies a regular-expression interpreter-style kernel.
+The source revisions and compiler pins come from the existing recipes.
+The CoreMark driver is not a compliant CoreMark score.
+
+```sh
+nice -n 10 rvw workloads evaluate \
+  --source embench=/path/to/embench --source coremark=/path/to/coremark \
+  --source riscv-tests=/path/to/riscv-tests --source zstd=/path/to/zstd \
+  --out /path/to/evaluation --timeout 1800 --json
+```
+
+Sources stay outside this repository. The command does not download them.
+Use `--build RECIPE=BUILD_JSON` to reuse a verified recipe build. Default-set
+build manifests must match the pinned recipes. Use `--trace WORKLOAD=C2` to
+reuse a complete existing Spike capture. The C2 ELF path must match the
+verified workload. An ELF hash is also checked when the producer supplies it.
+Otherwise the report states `trace_elf_binding: producer_path`.
+
+The command checks outputs with Spike. It then captures complete C2 from the
+Spike shim. The additive `RVW_SPIKE_MEMORY_LOG=1` mode keeps diagnostic text in
+memory during these captures. The normal shim path still uses its file log.
+Both modes produced identical C2 bytes in the chain and ECALL controls.
+
+The command selects up to three SimPoint-style intervals of 2,000 instructions
+with seed 1. Each point gets up to 200 warmup instructions. Both reference
+models use those same points and weights. The sampler validates the complete
+C2 stream but decodes only selected warmup and measurement windows. It retains
+those windows in memory. It does not retain the full decoded instruction list.
+The optional raw `source_c2_sha256` binds points directly to complete C2 bytes.
+Older point files still use the normalized ComponentSims hash.
+
+`report.json` and `report.md` give sampled IPC for the Zen-5-like and M1-like
+reference descriptions. These are approximate RISC-V timing configurations.
+They do not emulate either commercial ISA or establish measured commercial
+CPU performance. Their CSR and fence latencies are explicit one-cycle
+estimates. Sampling error against full timing remains unmeasured. The MCP job
+is `workloads_evaluate`. A custom `--manifest` can select another workload set.
+Its model paths resolve beside that manifest.
+
+The own-model projection uses the shared CPU dimensions and the explicit
+`ooo` table. It does not use gem5-only cache and predictor tables. These two
+reference files currently share fixed execution latencies and the sequential
+branch policy. Their capacity differences need not change a sampled result.
+
+The [seven-workload native sample](../../../../Arch/ooo/evaluation/README.md)
+contains complete Spike traces from 2026-11-13 and sampled timing for both
+reference descriptions. Input hashes and source pins accompany the table.
+Sampling error against full timing remains unmeasured.

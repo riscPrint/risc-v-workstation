@@ -40,3 +40,6 @@ def register(subparsers):
             p.add_argument("--oracle", default="spike", help="Spike or qemu-riscv64 executable")
             p.add_argument("--trace", action="store_true", help="capture Spike instruction categories")
             p.add_argument("--timeout", type=int, default=120)
+
+    from rvw.common.subcommands import register_commands
+    register_commands("rvw.workloads", sub)

@@ -899,3 +899,10 @@ trace from reset. The first instruction must be an integer instruction
 that cannot change FCSR. The checker records the alignment. Later flags
 compare exactly. Strict mode disables it. BOOM declares this policy because
 its flags and rounding-mode registers have no reset assignment.
+
+## In-memory diagnostics for workload capture
+
+Set `RVW_SPIKE_MEMORY_LOG=1` to keep per-instruction diagnostic text in an
+`open_memstream` buffer. The default uses a temporary file. Both modes parse
+the current step for trap detection. Rebuild the shim after source changes.
+The native control compares complete C2 bytes with an actual ECALL trap.
