@@ -35,7 +35,11 @@ def generate(project, out, manifest=None):
                 row.update(status=result['status'],instances=result['buses'])
             elif kind=='csrs':
                 from rvw.formal.csr import generate as run,load
-                model=load(source)
+                if json.loads(source.read_text()).get('schema')=='rvw.csr-bank/1':
+                    from rvw.formal.csr_bank import load as load_bank
+                    model=load_bank(source)
+                else:
+                    model=load(source)
                 result=run(source,target)
                 row.update(status='generated' if 'binding' in model else 'unbound',
                            reason='review the project wrapper' if 'binding' in model else 'CSR sources emitted; no project wrapper supplied')

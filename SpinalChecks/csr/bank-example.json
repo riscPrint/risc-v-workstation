@@ -1,0 +1,152 @@
+{
+  "schema": "rvw.csr-bank/1",
+  "xlen": 32,
+  "modes": [
+    "M",
+    "S",
+    "U"
+  ],
+  "setup": [
+    "enable_fpu",
+    "open_pmp"
+  ],
+  "banks": [
+    {
+      "name": "fp",
+      "width": 8,
+      "reset": 0
+    },
+    {
+      "name": "machine",
+      "width": 32,
+      "reset": 0
+    },
+    {
+      "name": "supervisor",
+      "width": 32,
+      "reset": 0
+    }
+  ],
+  "views": [
+    {
+      "name": "fcsr",
+      "catalog": "fcsr",
+      "bank": "fp",
+      "mask": 255,
+      "write_mask": 255
+    },
+    {
+      "name": "fflags",
+      "catalog": "fflags",
+      "bank": "fp",
+      "mask": 31,
+      "write_mask": 31
+    },
+    {
+      "name": "frm",
+      "catalog": "frm",
+      "bank": "fp",
+      "shift": 5,
+      "mask": 7,
+      "write_mask": 7
+    },
+    {
+      "name": "mscratch",
+      "catalog": "mscratch",
+      "bank": "machine",
+      "mask": 4294967295,
+      "write_mask": 4294967295
+    },
+    {
+      "name": "sscratch",
+      "catalog": "sscratch",
+      "bank": "supervisor",
+      "mask": 4294967295,
+      "write_mask": 4294967295
+    }
+  ],
+  "sequences": [
+    {
+      "name": "aliases",
+      "accesses": [
+        {
+          "view": "fcsr",
+          "op": "write",
+          "data": 0
+        },
+        {
+          "view": "frm",
+          "op": "write",
+          "data": 2
+        },
+        {
+          "view": "fcsr",
+          "op": "read"
+        },
+        {
+          "view": "fflags",
+          "op": "set",
+          "data": 3
+        },
+        {
+          "view": "fcsr",
+          "op": "read"
+        },
+        {
+          "view": "fflags",
+          "op": "clear",
+          "data": 1
+        },
+        {
+          "view": "fcsr",
+          "op": "read"
+        }
+      ]
+    },
+    {
+      "name": "privilege",
+      "accesses": [
+        {
+          "view": "mscratch",
+          "op": "write",
+          "data": 37
+        },
+        {
+          "view": "mscratch",
+          "op": "read",
+          "privilege": "U"
+        },
+        {
+          "view": "mscratch",
+          "op": "read",
+          "privilege": "S"
+        },
+        {
+          "view": "sscratch",
+          "op": "write",
+          "data": 51,
+          "privilege": "S"
+        },
+        {
+          "view": "sscratch",
+          "op": "read",
+          "privilege": "U"
+        },
+        {
+          "view": "sscratch",
+          "op": "read"
+        },
+        {
+          "view": "fcsr",
+          "op": "write",
+          "data": 99,
+          "privilege": "U"
+        },
+        {
+          "view": "frm",
+          "op": "read"
+        }
+      ]
+    }
+  ]
+}
