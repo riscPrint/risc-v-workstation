@@ -913,3 +913,14 @@ Finish requires explicit event coverage and no outstanding fetch requests.
 Map accepted project events in the adapter. The tests cover event mapping,
 physical aliases, pending cross-hart publication and injected stale bytes.
 They do not establish RTL cache error injection or replacement coverage.
+
+### Live state through the Spinal bridge
+
+`BridgeState.instrument(config)` exposes synchronous registers and memories.
+`capture()` reads their current values. `restore(state)` checks the complete
+layout and widths before it writes any value. The adapter must stop with the
+clock low and settled. It must also save RAM, input values, bus transactions,
+C2 writer state and counters. It must restore these before the next edge.
+Do not use this API for latches, blackboxes or asynchronous clocks.
+The API does not save a Scala scheduler. See the VexRiscv checkpoint probe for
+an explicit cycle loop that needs no saved threads.

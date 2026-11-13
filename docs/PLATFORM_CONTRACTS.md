@@ -4362,3 +4362,19 @@ The riscv-formal runner can add project instruction models to its private base
 ISA instruction list when each added model has an explicitly requested check.
 C3 `source.formal_inputs.instruction_set_additions` records these names. This
 adds checks; it does not redefine the base ISA or establish extension compliance.
+### Spinal bridge state probe
+
+`rvw.spinal-state/1` stores an ordered register and memory layout and raw
+unsigned decimal values. Restore checks the full layout and value widths before
+it writes state through the Spinal simulation bridge. Callers must stop at a
+settled low clock. They must restore inputs and all host state before the next
+rising edge. This format does not save JVM tasks or Verilator internal state.
+It supports synchronous Spinal registers and memories. Blackboxes, latches,
+external effects and asynchronous clock domains need separate support.
+
+The project-owned VexRiscv probe uses `rvw.vex-bridge-probe/1`. It stores bridge
+state, sparse RAM, pending simple-bus responses, cycle and retirement counters,
+trap-handler state and the C2 writer snapshot. It binds the ELF and emitted RTL
+and the compiled harness classes with SHA-256. A SHA-256 envelope checks
+the saved payload before restore. Its fixed-latency, one-hart RAM harness has no devices or RNG.
+This is a native continuation probe, not the general snapshot-port envelope.
