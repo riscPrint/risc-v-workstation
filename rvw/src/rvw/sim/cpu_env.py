@@ -137,3 +137,37 @@ async def monitor(dut, bindings, scoreboard, *, retirements, max_cycles):
                 scoreboard.finish(retirements)
                 return
     raise AssertionError('CPU retirement watchdog expired')
+
+
+class CpuControls:
+    """Project callbacks drive reset, IRQ levels and debug requests."""
+    def __init__(self, wait_cycles, reset, irq, debug, *, seed=1):
+        self.wait_cycles, self.drive_reset = wait_cycles, reset
+        self.drive_irq, self.drive_debug = irq, debug
+        self.random = random.Random(seed)
+
+    async def reset(self, cycles=5):
+        if cycles < 1:
+            raise ValueError('positive reset cycles required')
+        self.drive_irq(0); self.drive_debug(0); self.drive_reset(True)
+        await self.wait_cycles(cycles)
+        self.drive_reset(False)
+
+    async def random_requests(self, count, allowed_irqs, max_gap=8):
+        if count < 1 or max_gap < 1 or not 0 < allowed_irqs < 2**32:
+            raise ValueError('positive count/gap and a 32-bit project IRQ mask required')
+        try:
+            for _ in range(count):
+                await self.wait_cycles(self.random.randint(1,max_gap))
+                cycles = self.random.randint(1,3)
+                if self.random.randrange(2):
+                    self.drive_debug(1)
+                    await self.wait_cycles(cycles)
+                    self.drive_debug(0)
+                else:
+                    levels = self.random.getrandbits(32) & allowed_irqs
+                    self.drive_irq(levels or (allowed_irqs & -allowed_irqs))
+                    await self.wait_cycles(cycles)
+                    self.drive_irq(0)
+        finally:
+            self.drive_irq(0); self.drive_debug(0)

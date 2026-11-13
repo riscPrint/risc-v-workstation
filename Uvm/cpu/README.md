@@ -85,3 +85,25 @@ rvw cov functional /tmp/live-cpu-new/seed-1/rvfi.jsonl \
 
 Coverage counts describe five ADDI instructions and one MISA read per seed. Unhit CSR, interrupt and
 exception bins remain unhit. No coverage closure is claimed.
+
+## Program and control sequences
+
+`cpu_env.vseqr` connects shared memory, the retirement scoreboard and the
+control sequence to a virtual sequencer. Start `cpu_program_sequence` on it.
+Set `byte_image` to the ELF-derived byte image. Set `retirements` to the
+expected bounded count. The sequence loads memory, resets the DUT and waits
+for that count. `max_cycles` bounds the wait. The live fixture uses this path.
+
+`cpu_random_control_sequence` generates seeded interrupt levels and debug
+request pulses. Set `allowed_irqs` from project data. Set `count` and
+`max_gap` to positive bounds. Each IRQ level stays within the declared mask.
+The Python `CpuControls` service takes project callbacks for reset, IRQ,
+debug and cycle waits. `RandomControlSequence` starts it through the pyuvm
+virtual sequencer. Supply `controls` in the Python environment configuration.
+
+The program test owns its run-phase objection. A project can run control
+sequences alongside a program. The strict bridge still refuses handler-entry
+and halt retirements. Random pin stimulus does not establish architectural
+interrupt or debug behavior. The separate control fixture checks propagated
+levels, acknowledgement and halt/resume state for six directed transfers,
+16 random transfers and one final resume.

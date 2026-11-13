@@ -31,6 +31,17 @@ package control_vip;
        t.halt_req=i==4; t.resume_req=i==5;
        finish_item(t);
      end
+     repeat(16) begin
+       int kind=$urandom_range(2,0);
+       t=new(); start_item(t);
+       case(kind)
+        0: begin t.irq=$urandom & 32'h00000a88; if(t.irq==0) t.irq=8; end
+        1: t.halt_req=1;
+        2: t.resume_req=1;
+       endcase
+       finish_item(t);
+     end
+     t=new(); start_item(t); t.resume_req=1; finish_item(t);
    endtask
  endclass
  class pin_driver extends uvm_driver#(pin_item);
@@ -67,7 +78,7 @@ package control_vip;
      end
    endtask
    function void check_phase(uvm_phase phase);
-     if(seen!=6 || expected_halt) `uvm_fatal("PINS","missing transitions")
+     if(seen!=23 || expected_halt) `uvm_fatal("PINS","missing transitions")
      $display("RVW_UVM_PASS interrupt_debug_pins");
    endfunction
  endclass

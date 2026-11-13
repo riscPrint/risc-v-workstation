@@ -132,7 +132,8 @@ qualify a physical register implementation.
 
 `tests/controls.sv` provides a sequencer, driver and monitor for interrupt
 levels and halt/resume request pins. Its sequence drives bits 3, 7, 9 and 11,
-then halt and resume. The monitor checks level propagation, acknowledgement
+then halt and resume. It adds 16 seeded random pin transfers and a final
+resume. The monitor checks level propagation, acknowledgement
 and halted state on a timed fixture. These are pin-agent conformance tests.
 They do not establish CPU interrupt acceptance, RISC-V Debug Module support,
 JTAG DMI, abstract commands or debug-mode architectural comparison.
