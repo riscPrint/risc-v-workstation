@@ -192,3 +192,11 @@ classes that Spike can execute and C2 can represent use the same comparison;
 there is no load-only or opcode allowlist. This does not establish complete
 ISA coverage. CPU interrupt/debug execution and a full ISA campaign remain
 open under #296.
+
+## Python environment path
+
+See [pyuvm](pyuvm/README.md) for the optional pyuvm 4/cocotb 2 base environment,
+ordered scoreboard, bounded CPU memory model, retirement comparator wrapper and
+RAL frontdoor/backdoor adapters. The native RTL memory fixture checks eight
+transactions and all declared operation/address bins. CPU reference connections
+and project-specific instruction, interrupt and debug agents remain required.
