@@ -2539,3 +2539,111 @@ and WFI timeout/wakeup are excluded. FCLASS calls a model/compiler helper
 outside this extracted slice. No arithmetic or full-machine proof is claimed.
 The manifest records source hashes, exact source text and lines, lowerings,
 compiler/library identities, excluded effects and generated hashes.
+
+
+## Exhaustive RTL initial-value splitting
+
+Run `rvw formal initial-split --manifest PLAN.json --out OUT --timeout 10`.
+MCP `formal_initial_split` runs the same operation. The plan uses pinned
+engine-race `top` and `sources`, plus `split_variable` and optional `max_cases`.
+The variable is a flattened Yosys net name. The default case limit is 16.
+A wider variable needs an explicit limit, up to 256 cases.
+
+The runner exports one proof problem for every bit pattern of the variable at
+the initial state. It retains the full transition relation in every problem.
+The variable can change freely after initialization. `plan.json` records the
+complete decomposition and hashes. Every case must prove unbounded before the
+original design earns a pass. Existing source assumptions keep it inconclusive.
+A subset of successful cases cannot earn success. This is not a time-invariant
+input restriction or a state-space abstraction.
+
+Native two-bit reference tests cover all four initial values. The matching
+counter pair proved in all four cases. The seeded mismatch produced a concrete
+counterexample. Evidence: `/tmp/deep-initial-split2-{safe,fault}/result.json`.
+No full-core or capacity result is implied.
+
+
+## Lazy RAM word refinement
+
+Run `rvw formal lazy-ram --manifest PLAN.json --out OUT --budget 60 --timeout 10`.
+MCP `formal_lazy_ram` exposes the same command. A plan contains pinned `top`
+and `sources`, a collected Yosys `memory` cell name, optional `engines` and
+`depth`, and optional `max_words` with a default of 64 and maximum of 4096.
+
+The runner first uses Yosys `memory_map -formal`. This keeps the source's read,
+write, initialization and collision logic. It replaces untracked word state
+with unconstrained per-step inputs. Tracked words keep their original drivers.
+Abstract failures restore a word, with priority for read addresses seen in the
+counterexample and constant read addresses. Missing address samples use a
+simple next-word fallback. This affects search order only. An abstract failure
+cannot become a design failure. A concrete failure requires all word state to
+be restored. Original source assumptions remain unqualified.
+
+Limits: lowering must retain distinct word names and one whole-word flip-flop
+driver per word. Aliased words and negative offsets are rejected. The lowering
+still contains the original combinational memory logic. Tracked RAM state bits
+are not total design-state bits. No general runtime or capacity gain is claimed.
+
+Native evidence on the 16-word, 8-bit reference RAM: an abstract failure restored
+address 3. The next unbounded proof passed with 8 concrete RAM state bits from
+an original 128. A seeded fault remained inconclusive through all abstract
+rounds. It became a concrete failure only after all 16 words were restored.
+Evidence: `/tmp/deep-lazy-ram-{proof,fault-proof}/result.json`. A separate native
+masked-write test proved after restoring its one addressed word. Five targeted
+tests cover driver preservation, initialization removal, aliases and selection.
+
+## Pinned PicoRV32 property-set measurement
+
+`examples/formal/deep/picorv32.json` pins upstream source revision
+`ef203c2b0a3fb793280f5114941416c425c5b461`. Fetch it outside the repository
+with `scripts/fetch-formal-bench.py`. The default FORMAL export has 23
+assertions and two source restrictions: reset sequencing and memory response.
+Every problem result stays inconclusive because activation is unmeasured.
+The native engine answers below are conditional on those source restrictions.
+Each job had a 12 s timeout. Wall time includes preparation.
+
+| Engine | Native answer | Problem result | Wall time (s) |
+|---|---|---|---:|
+| `abc:pdr` | pass | inconclusive | 10.763 |
+| `aiger:rIC3` | pass | inconclusive | 7.808 |
+| `smtbmc:yices` | inconclusive | inconclusive | 4.269 |
+| `ebmc` | error | inconclusive | 0.506 |
+
+EBMC receives explicit FORMAL and YOSYS defines, matching the formal read.
+It rejects this source because `$initstate` is unsupported. The previous
+no-properties result exposed the missing FORMAL define and is retained in
+the first run. A regression now checks a failing FORMAL branch. No source
+restriction was removed or replaced. This is a property-bundle measurement,
+not a whole-core qualification. Raw results:
+`/tmp/rvw-deep-picorv32-proof/result.json` and
+`/tmp/rvw-deep-picorv32-ebmc-formal/result.json`.
+
+## Counter quotient certificates
+
+Run `rvw formal counter-quotient --manifest PLAN.json --out OUT --timeout 15`.
+MCP `formal_counter_quotient` runs the same command. The plan declares pinned
+Verilog `sources`, concrete `top`, `width`, and smaller `keep_bits`. The default
+port names are `clk`, `reset`, `enable`, and `count`. A `ports` object can map
+`clock`, `reset`, `enable`, and `count` to other names. All four ports must have
+the declared directions and widths. Extra ports are refused. `reset_active`
+can be `high` or `low`.
+
+The runner generates `abstract.sv`, an enabled modulo counter of `keep_bits`
+width. It proves the relation `abstract_count = concrete_count mod 2**keep_bits`
+against the concrete RTL through the existing guarded unbounded flow. A pass
+certifies that relation under the recorded initial-reset and clock policy.
+It covers projected low bits only. It does not replace a parent design or
+certify properties of discarded upper bits. Source environment assumptions
+keep the certificate inconclusive. A failed obligation leaves the candidate
+uncertified. It does not by itself identify a DUT bug.
+
+The certificate records source, manifest and model hashes, restrictions and the
+retained native proof. A changed source needs a new proof. The proof resets the
+leaf once at startup, then holds reset inactive. It does not certify arbitrary
+future reset sequences. A concrete counter whose enabled increment is two
+refutes the candidate that increments by one.
+
+Native reference evidence: the 32-bit counter proved against the 4-bit model.
+The increment-by-two candidate failed its obligation. Native tests also check
+16-bit to 3-bit projection with an active-low reset and renamed ports. Evidence:
+`/tmp/deep-counter-{safe,bad}/result.json`. No full-core result is implied.
