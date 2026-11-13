@@ -40,3 +40,10 @@ def test_no_binding_is_unsupported(tmp_path):
     result = generate(dict(schema='rvw.machine-checks/1',xlen=32,sources=[],checks={
         'exception_entry':{'unsupported':'No aligned state observations'}}),tmp_path,tmp_path/'out')
     assert result['rows'][0]['status'] == 'unsupported'
+
+
+def test_return_checks_least_supported_mode():
+    assert "assert(previous_mode_after == 2'd0)" in monitor('trap_return')
+    assert "assert(previous_mode_after == 2'd3)" in monitor('trap_return', {'least_privileged_mode': 3})
+    with pytest.raises(ValueError, match='least_privileged_mode'):
+        monitor('trap_return', {'least_privileged_mode': 1})

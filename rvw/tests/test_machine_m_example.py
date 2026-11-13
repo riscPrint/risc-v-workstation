@@ -41,6 +41,8 @@ def test_capture_keeps_source_and_all_transition_inputs(tmp_path):
     for check, selection in plan['checks'].items():
         assert set(selection['signals']) == set(module.RULES[check][0])
         assert f'observe_{check}_event <= !reset && (' in captured
+    assert plan['checks']['trap_return']['least_privileged_mode'] == 3
+    assert 'observe_trap_return_previous_mode_after = CsrPlugin_mstatus_MPP;' in captured
     # Capture before-state. Read the actual updated core state for after-state.
     assert 'observe_trap_return_previous_mode_before <= CsrPlugin_mstatus_MPP;' in captured
     assert 'observe_trap_return_mode_after = CsrPlugin_privilege;' in captured

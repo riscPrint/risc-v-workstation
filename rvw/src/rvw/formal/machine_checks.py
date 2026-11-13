@@ -21,7 +21,7 @@ RULES = {
                             ie_before=1, pie_after=1, ie_after=1, mode_before=2, previous_mode_after=2),
                         'event', 'assert(epc_after == pc); assert(cause_after == (cause | 32\'h80000000)); assert(next_pc == ((vector & 32\'hfffffffc) + (vector[1:0] == 1 ? (cause << 2) : 0))); assert(!ie_after); assert(pie_after == ie_before); assert(previous_mode_after == mode_before);'),
     'trap_return': (dict(event=1, epc=32, next_pc=32, pie_before=1, ie_after=1, pie_after=1,
-                        previous_mode_before=2, mode_after=2),
+                        previous_mode_before=2, mode_after=2, previous_mode_after=2),
                     'event', 'assert(next_pc == epc); assert(ie_after == pie_before); assert(pie_after); assert(mode_after == previous_mode_before);'),
     'trap_pc_chain': (dict(retire=1, pc=32, next_pc=32, redirect=1, redirect_pc=32), 'retire',
                       'if(seen) assert(pc == (redirect ? redirect_pc : previous_pc));'),
@@ -34,6 +34,11 @@ def monitor(check, selection=None):
     widths, trigger, body = RULES[check]
     text = ['module rvw_machine_check(input clock, reset,' + ','.join(
         f'input [{w-1}:0] {n}' for n,w in widths.items()) + ');']
+    if check == 'trap_return':
+        least = (selection or {}).get('least_privileged_mode', 0)
+        if type(least) is not int or least not in (0, 3):
+            raise ValueError('least_privileged_mode must be 0 or 3')
+        body += f' assert(previous_mode_after == 2\'d{least});'
     if check == 'trap_pc_chain':
         text += ['reg seen = 0; reg [31:0] previous_pc;',
                  'always @(posedge clock) if(reset) seen <= 0; else if(retire) begin seen <= 1; previous_pc <= next_pc; end']

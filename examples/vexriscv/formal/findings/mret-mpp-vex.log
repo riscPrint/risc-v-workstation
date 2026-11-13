@@ -1,0 +1,14 @@
+retire pc=80000000 insn=00000297 rd= 5 data=80000000 MPP=3
+retire pc=80000004 insn=01028293 rd= 5 data=80000010 MPP=3
+retire pc=80000008 insn=34129073 rd= 0 data=00000000 MPP=3
+retire pc=8000000c insn=30200073 rd= 0 data=00000000 MPP=3
+retire pc=80000010 insn=30002373 rd= 6 data=00000080 MPP=0
+retire pc=80000014 insn=00b35313 rd= 6 data=00000000 MPP=0
+retire pc=80000018 insn=00337313 rd= 6 data=00000000 MPP=0
+retire pc=8000001c insn=00001297 rd= 5 data=8000101c MPP=0
+store addr=80001050 data=00000000
+retire pc=80000020 insn=03428293 rd= 5 data=80001050 MPP=0
+retire pc=80000024 insn=0062a023 rd= 0 data=00000000 MPP=0
+retire pc=80000028 insn=00001297 rd= 5 data=80001028 MPP=0
+retire pc=8000002c insn=01828293 rd= 5 data=80001040 MPP=0
+store addr=80001040 data=00000001

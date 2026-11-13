@@ -29,7 +29,7 @@ def prepare(rtl, out):
         'trap_return': (dict(event="when_CsrPlugin_l1456 && switch_CsrPlugin_l1460 == 2'b11",
                             epc='CsrPlugin_mepc', next_pc='CsrPlugin_jumpInterface_payload',
                             pie_before='CsrPlugin_mstatus_MPIE', previous_mode_before='CsrPlugin_mstatus_MPP'),
-                        dict(ie_after='CsrPlugin_mstatus_MIE', pie_after='CsrPlugin_mstatus_MPIE', mode_after='CsrPlugin_privilege')),
+                        dict(ie_after='CsrPlugin_mstatus_MIE', pie_after='CsrPlugin_mstatus_MPIE', mode_after='CsrPlugin_privilege', previous_mode_after='CsrPlugin_mstatus_MPP')),
     }
     observations, checks = [], {}
     for check, (before, current) in bindings.items():
@@ -50,6 +50,8 @@ def prepare(rtl, out):
             observations.append(f'{signals[name]} <= {expression};')
         observations.append('end')
         checks[check] = dict(signals=signals, engine='smtbmc bitwuzla')
+        if check == 'trap_return':
+            checks[check]['least_privileged_mode'] = 3
     captured = raw.decode().replace('endmodule', '\n'+'\n'.join(observations)+'\nendmodule', 1)
     (out/'observed.v').write_text(captured)
     plan = dict(schema='rvw.machine-checks/1', xlen=32, top='VexRiscv', clock='clk', reset='reset',
