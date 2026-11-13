@@ -10,12 +10,13 @@ class BridgeStateSpec extends AnyFunSuite {
     val directory = Files.createTempDirectory("bridge-state").toFile
     val bridge = new BridgeState
     class Fixture extends Component {
-      val io = new Bundle { val address = in UInt(2 bits); val data = in Bits(8 bits); val value = out Bits(8 bits) }
+      val io = new Bundle { val address = in UInt(2 bits); val data = in Bits(8 bits); val value = out Bits(8 bits); val synced = out Bits(8 bits) }
       val count = Reg(UInt(8 bits)) init 0
       count := count + 1
       val mem = Mem(Bits(8 bits), 4)
       mem.write(io.address, io.data)
       io.value := mem.readAsync(io.address)
+      io.synced := mem.readSync(io.address, readUnderWrite = readFirst)
     }
     try {
       val compiled = SimConfig.withConfig(bridge.instrument(SpinalConfig()))
@@ -33,6 +34,7 @@ class BridgeStateSpec extends AnyFunSuite {
         bridge.restore(state); sleep(1)
         assert(bridge.capture() == state)
         assert(dut.io.value.toBigInt == 42)
+        assert(dut.io.synced.toBigInt == 42)
         val broken = ujson.read(ujson.write(state)); broken("registers") = ujson.Arr()
         intercept[IllegalArgumentException](bridge.restore(broken))
         assert(bridge.capture() == state)

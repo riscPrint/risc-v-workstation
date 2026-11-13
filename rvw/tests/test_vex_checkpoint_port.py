@@ -47,3 +47,16 @@ def test_port_refuses_inconsistent_counters_before_restore(tmp_path):
         assert instance.position('instructions') == 8
     finally:
         instance.close()
+
+
+def test_fresh_port_is_stopped_before_restore(tmp_path):
+    instance = port(tmp_path)
+    try:
+        raw, state = instance.save()
+        instance.raw = None
+        instance.count = 0
+        assert instance.quiescent()
+        instance.restore(raw, state)
+        assert instance.position('instructions') == 8
+    finally:
+        instance.close()

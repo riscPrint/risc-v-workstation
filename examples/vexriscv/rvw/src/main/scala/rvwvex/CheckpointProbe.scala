@@ -77,6 +77,11 @@ object CheckpointProbe {
         cycle = s("cycle").str.toLong; retired = s("retired").str.toLong; handler = s("handler").bool
         ip = decode(s("ibus")); dp = decode(s("dbus"))
         bridge.restore(s("rtl")); inputs(); sleep(1)
+        val restored = bridge.capture()
+        val changed = restored("registers").arr.zip(s("rtl")("registers").arr).zipWithIndex.collect {
+          case ((a, b), i) if a != b => s"${restored("layout")("registers")(i)(0).str}: $a != $b"
+        }
+        require(restored == s("rtl"), "restore readback mismatch: " + changed.mkString(", "))
       }
       var finished = false
       while (!finished && cycle < 5000) {

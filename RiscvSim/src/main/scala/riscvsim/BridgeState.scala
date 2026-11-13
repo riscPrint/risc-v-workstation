@@ -2,7 +2,7 @@ package riscvsim
 
 import spinal.core._
 import spinal.core.sim._
-import spinal.core.internals.{PhaseContext, PhaseNetlist}
+import spinal.core.internals.{ExpressionContainer, PhaseContext, PhaseNetlist}
 import scala.collection.mutable.ArrayBuffer
 
 /** Live state transfer through Spinal's public register and memory bridge.
@@ -18,6 +18,37 @@ class BridgeState {
         pc.walkComponents {
           case b: BlackBox if b.isBlackBox => throw new IllegalArgumentException("bridge state does not support blackboxes")
             case _ =>
+        }
+        // Backend-generated synchronous read buffers are state too. Lower
+        // supported ports to explicit registers before collecting the inventory.
+        val reads = ArrayBuffer.empty[MemReadSync]
+        pc.walkDeclarations {
+          case m: Mem[_] => m.foreachStatements {
+            case r: MemReadSync => reads += r
+            case _: MemReadWrite => throw new IllegalArgumentException("bridge state does not support combined synchronous memory ports")
+            case _ =>
+          }
+          case _ =>
+        }
+        reads.zipWithIndex.foreach { case (read, index) =>
+          require(read.getWidth == read.mem.width &&
+            (read.readUnderWrite == dontCare || read.readUnderWrite == readFirst),
+            "bridge state needs full-width read-first synchronous memory ports")
+          val consumers = ArrayBuffer.empty[ExpressionContainer]
+          pc.walkBaseNodes {
+            case ec: ExpressionContainer => ec.foreachExpression(e => if (e eq read) consumers += ec)
+            case _ =>
+          }
+          read.mem.component.rework {
+            read.clockDomain {
+              val value = Reg(Bits(read.getWidth bits)).setName(s"snapshot_read_$index")
+              when(read.readEnable.asInstanceOf[Bool]) {
+                value := read.mem.asInstanceOf[Mem[Bits]].readAsync(read.address.asInstanceOf[UInt])
+              }
+              consumers.foreach(_.remapExpressions(e => if (e eq read) value else e))
+            }
+          }
+          read.removeStatement()
         }
         pc.walkDeclarations {
           case b: BaseType if b.isReg => b.simPublic(); registers += b

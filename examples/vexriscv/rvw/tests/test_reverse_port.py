@@ -40,4 +40,8 @@ def test_reverse_replay_real_core(tmp_path):
     reference = tmp_path / 'reference.json'
     capture(manifest, reference, instruction=10)
     ref_payload = json.loads(reference.read_text())['payload']
-    assert saved == json.loads(base64.b64decode(ref_payload['native']))['state']
+    reference_state = json.loads(base64.b64decode(ref_payload['native']))['state']
+    differences = [(name, a, b) for (name, width), a, b in zip(
+        saved['rtl']['layout']['registers'], saved['rtl']['registers'],
+        reference_state['rtl']['registers']) if a != b]
+    assert saved == reference_state, differences

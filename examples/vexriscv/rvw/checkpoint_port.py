@@ -42,7 +42,8 @@ class Port:
             raise ValueError('VexRiscv probe supports instruction boundaries only')
         return self.count
 
-    def quiescent(self): return self.raw is not None
+    # Native calls are synchronous. A fresh port has no active process.
+    def quiescent(self): return True
     def external_effects(self): return []
 
     def save(self):
