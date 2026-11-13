@@ -182,3 +182,17 @@ before and after inspects complete FP and CSR capture; it does not run the
 reference. The after report also shows the configured FCSR reset policy.
 The new native shim test checks that initialization preserves mstatus.
 The short batch used one native build. No regression suite or formal ran.
+
+## Retained prediction and occupancy follow-up
+
+The optional binding now retains the enqueue prediction before ROB repair.
+It also captures fetch prediction packets, execution resolution, redirects,
+full ROB validity, physical free-list levels, D-cache lookups and D-TLB misses.
+See [probe bindings](PROBE_BINDINGS.md) for exact units and limitations.
+
+The corrected small captures passed 8 capture checks across beq, fadd, the
+SFB loop and the timing loop. The SFB arithmetic check passed and observed
+7 predicated-off commits. Its probe window has one more architectural commit
+than C1/C2. This endpoint difference remains open. The approximate csim study
+reports comparisons. The two-program OoO calibration remains inconclusive.
+See [the timing report](../../examples/boom/ooo/PROBE_OBSERVATION.md).

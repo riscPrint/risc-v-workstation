@@ -60,7 +60,9 @@ object BoomAdapter extends CoreAdapter {
   private def report(key: ModelKey, work: File): SpinalReport[BoomTop] = {
     implicit val p = BoomSim.params(tile(key.config), key.rvfi)
     val formal = new File(boomDir, "formal")
-    spinalprobes.Probe.enabled(key.probes) { RiscvSimConfig.elaborate(key, work, SpinalBoomConfig(),
+    val spinal = SpinalBoomConfig()
+    if (key.probes) spinal.debugComponents += classOf[_root_.boom.exu.Rob]
+    spinalprobes.Probe.enabled(key.probes) { RiscvSimConfig.elaborate(key, work, spinal,
       Seq("src/main/scala", "src/test/scala").map(new File(sourceDir, _))) {
       val top = new BoomTop(key, if (key.rvfi) Some(formal.getPath) else None)
       if (key.rvfi) {

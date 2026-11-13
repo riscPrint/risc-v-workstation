@@ -1,0 +1,687 @@
+{
+  "schema": "rvw.boom-probe-observation/1",
+  "config": "small",
+  "seed": 1,
+  "builds_in_continuation": 2,
+  "runs": [
+    {
+      "name": "rv64ui-p-beq",
+      "status": "pass",
+      "cycles": 1844,
+      "instret": 333,
+      "rtl_ipc": 0.18058568329718006,
+      "counts": {
+        "commits": 335,
+        "architectural_commits": 335,
+        "predicated_off_commits": 0,
+        "branch_mispredict": 45,
+        "rename_occupancy": 697,
+        "rename_integer_free": 34909,
+        "rename_integer_allocated": 60979,
+        "rename_fp_free": 29504,
+        "rename_fp_allocated": 59008,
+        "rob_head_occupancy": 904,
+        "rob_occupancy": 2298,
+        "issue_memory_occupancy": 18,
+        "issue_alu_occupancy": 724,
+        "issue_unique_occupancy": 36,
+        "issue_fp_occupancy": 0,
+        "icache_responses": 740
+      },
+      "branch_comparison": {
+        "direction": {
+          "disagree": 62,
+          "events": 76,
+          "rtl_misses": 45,
+          "model_misses": 43,
+          "both_wrong": 13,
+          "rtl_only_wrong": 32,
+          "model_only_wrong": 30,
+          "rtl_mpki": 134.32835820895522,
+          "model_mpki": 128.3582089552239,
+          "agreement": 0.1842105263157895
+        },
+        "target": {
+          "events": 0
+        }
+      },
+      "stall_causes": {
+        "basis": "Explicit one-cycle producer samples. Causes may overlap. Inferred samples are separate.",
+        "by_cause": [
+          {
+            "scope": "dcache_0",
+            "cause": "nack",
+            "evidence": "measured",
+            "cycles": 19,
+            "zero_retirement_cycles": 13
+          },
+          {
+            "scope": "dispatch_0",
+            "cause": "dispatch_blocked",
+            "evidence": "measured",
+            "cycles": 300,
+            "zero_retirement_cycles": 189
+          }
+        ],
+        "measured_cycles": 318,
+        "measured_zero_retirement_cycles": 201,
+        "overlap_cycles": 1,
+        "overlaps": [
+          {
+            "causes": [
+              {
+                "scope": "dcache_0",
+                "cause": "nack"
+              },
+              {
+                "scope": "dispatch_0",
+                "cause": "dispatch_blocked"
+              }
+            ],
+            "cycles": 1
+          }
+        ],
+        "unknown_zero_retirement_cycles": 1242,
+        "longest_unknown": [
+          {
+            "start": 253,
+            "end": 306
+          },
+          {
+            "start": 1422,
+            "end": 1473
+          },
+          {
+            "start": 1054,
+            "end": 1104
+          },
+          {
+            "start": 739,
+            "end": 787
+          },
+          {
+            "start": 183,
+            "end": 228
+          },
+          {
+            "start": 68,
+            "end": 112
+          },
+          {
+            "start": 670,
+            "end": 713
+          },
+          {
+            "start": 118,
+            "end": 160
+          },
+          {
+            "start": 855,
+            "end": 897
+          },
+          {
+            "start": 1194,
+            "end": 1236
+          },
+          {
+            "start": 1553,
+            "end": 1580
+          },
+          {
+            "start": 1330,
+            "end": 1353
+          },
+          {
+            "start": 1686,
+            "end": 1706
+          },
+          {
+            "start": 321,
+            "end": 334
+          },
+          {
+            "start": 583,
+            "end": 595
+          },
+          {
+            "start": 641,
+            "end": 653
+          },
+          {
+            "start": 1820,
+            "end": 1832
+          },
+          {
+            "start": 479,
+            "end": 490
+          },
+          {
+            "start": 979,
+            "end": 990
+          },
+          {
+            "start": 172,
+            "end": 182
+          }
+        ],
+        "unknown_intervals": 152,
+        "unknown_basis": "No measured cause sample during zero R-retirement cycles; includes idle and uninstrumented time."
+      },
+      "hashes": {
+        "result.json": "39635944a316987f14dc5a7ffcf66a15ca828f601eb4000e6112d44e503ae927",
+        "rvfi.jsonl": "dd91b095d63d579090f06af07642e09bca12b7afb0313dfbd57126baafaf72b6",
+        "probe-events.jsonl": "aaeddc4622a4ac26ae7f23922063efff2781ff8b2626ab1996dc6c2e8350d7ad"
+      },
+      "model_error": "traps, interrupts and external events are unsupported"
+    },
+    {
+      "name": "rv64uf-p-fadd",
+      "status": "pass",
+      "cycles": 1790,
+      "instret": 217,
+      "rtl_ipc": 0.1212290502793296,
+      "counts": {
+        "commits": 219,
+        "architectural_commits": 219,
+        "predicated_off_commits": 0,
+        "branch_mispredict": 21,
+        "rename_occupancy": 889,
+        "rename_integer_free": 34257,
+        "rename_integer_allocated": 58823,
+        "rename_fp_free": 27522,
+        "rename_fp_allocated": 58398,
+        "rob_head_occupancy": 1026,
+        "rob_occupancy": 2691,
+        "issue_memory_occupancy": 96,
+        "issue_alu_occupancy": 258,
+        "issue_unique_occupancy": 60,
+        "issue_fp_occupancy": 450,
+        "icache_responses": 702
+      },
+      "branch_comparison": {
+        "direction": {
+          "disagree": 24,
+          "events": 25,
+          "rtl_misses": 21,
+          "model_misses": 5,
+          "both_wrong": 1,
+          "rtl_only_wrong": 20,
+          "model_only_wrong": 4,
+          "rtl_mpki": 95.89041095890411,
+          "model_mpki": 22.831050228310502,
+          "agreement": 0.040000000000000036
+        },
+        "target": {
+          "events": 0
+        }
+      },
+      "stall_causes": {
+        "basis": "Explicit one-cycle producer samples. Causes may overlap. Inferred samples are separate.",
+        "by_cause": [
+          {
+            "scope": "dcache_0",
+            "cause": "nack",
+            "evidence": "measured",
+            "cycles": 22,
+            "zero_retirement_cycles": 20
+          },
+          {
+            "scope": "dispatch_0",
+            "cause": "dispatch_blocked",
+            "evidence": "measured",
+            "cycles": 662,
+            "zero_retirement_cycles": 565
+          }
+        ],
+        "measured_cycles": 675,
+        "measured_zero_retirement_cycles": 577,
+        "overlap_cycles": 9,
+        "overlaps": [
+          {
+            "causes": [
+              {
+                "scope": "dcache_0",
+                "cause": "nack"
+              },
+              {
+                "scope": "dispatch_0",
+                "cause": "dispatch_blocked"
+              }
+            ],
+            "cycles": 9
+          }
+        ],
+        "unknown_zero_retirement_cycles": 928,
+        "longest_unknown": [
+          {
+            "start": 253,
+            "end": 306
+          },
+          {
+            "start": 1679,
+            "end": 1725
+          },
+          {
+            "start": 183,
+            "end": 228
+          },
+          {
+            "start": 973,
+            "end": 1018
+          },
+          {
+            "start": 68,
+            "end": 112
+          },
+          {
+            "start": 118,
+            "end": 160
+          },
+          {
+            "start": 1110,
+            "end": 1141
+          },
+          {
+            "start": 1244,
+            "end": 1271
+          },
+          {
+            "start": 1089,
+            "end": 1109
+          },
+          {
+            "start": 1467,
+            "end": 1487
+          },
+          {
+            "start": 672,
+            "end": 686
+          },
+          {
+            "start": 1664,
+            "end": 1678
+          },
+          {
+            "start": 321,
+            "end": 334
+          },
+          {
+            "start": 583,
+            "end": 595
+          },
+          {
+            "start": 1764,
+            "end": 1776
+          },
+          {
+            "start": 479,
+            "end": 490
+          },
+          {
+            "start": 172,
+            "end": 182
+          },
+          {
+            "start": 797,
+            "end": 807
+          },
+          {
+            "start": 824,
+            "end": 834
+          },
+          {
+            "start": 894,
+            "end": 904
+          }
+        ],
+        "unknown_intervals": 103,
+        "unknown_basis": "No measured cause sample during zero R-retirement cycles; includes idle and uninstrumented time."
+      },
+      "hashes": {
+        "result.json": "7311dd3f7fd4c7802637548851028850a88a6b2a6c26a9d6ad0342c9e48c9657",
+        "rvfi.jsonl": "50b173e9cbbd06e1bbd3a56ece1db191f43cf6cb06fafda480d65f48391d48a7",
+        "probe-events.jsonl": "e5437b3ba9be60143d95974a325b9addee61bb67b35f619b812a7da214970864"
+      },
+      "model_error": "traps, interrupts and external events are unsupported"
+    },
+    {
+      "name": "sfb",
+      "status": "pass",
+      "cycles": 314,
+      "instret": 84,
+      "rtl_ipc": 0.267515923566879,
+      "counts": {
+        "commits": 92,
+        "architectural_commits": 85,
+        "predicated_off_commits": 7,
+        "branch_mispredict": 7,
+        "rename_occupancy": 115,
+        "rename_integer_free": 5743,
+        "rename_integer_allocated": 10585,
+        "rename_fp_free": 5024,
+        "rename_fp_allocated": 10048,
+        "rob_head_occupancy": 179,
+        "rob_occupancy": 751,
+        "issue_memory_occupancy": 4,
+        "issue_alu_occupancy": 270,
+        "issue_unique_occupancy": 0,
+        "issue_fp_occupancy": 0,
+        "icache_responses": 126
+      },
+      "branch_comparison": {
+        "direction": {
+          "disagree": 9,
+          "events": 33,
+          "rtl_misses": 14,
+          "model_misses": 5,
+          "both_wrong": 5,
+          "rtl_only_wrong": 9,
+          "model_only_wrong": 0,
+          "rtl_mpki": 166.66666666666666,
+          "model_mpki": 59.523809523809526,
+          "agreement": 0.7272727272727273
+        },
+        "target": {
+          "events": 0
+        }
+      },
+      "stall_causes": {
+        "basis": "Explicit one-cycle producer samples. Causes may overlap. Inferred samples are separate.",
+        "by_cause": [
+          {
+            "scope": "dcache_0",
+            "cause": "nack",
+            "evidence": "measured",
+            "cycles": 2,
+            "zero_retirement_cycles": 2
+          },
+          {
+            "scope": "dispatch_0",
+            "cause": "dispatch_blocked",
+            "evidence": "measured",
+            "cycles": 6,
+            "zero_retirement_cycles": 6
+          }
+        ],
+        "measured_cycles": 7,
+        "measured_zero_retirement_cycles": 7,
+        "overlap_cycles": 1,
+        "overlaps": [
+          {
+            "causes": [
+              {
+                "scope": "dcache_0",
+                "cause": "nack"
+              },
+              {
+                "scope": "dispatch_0",
+                "cause": "dispatch_blocked"
+              }
+            ],
+            "cycles": 1
+          }
+        ],
+        "unknown_zero_retirement_cycles": 156,
+        "longest_unknown": [
+          {
+            "start": 68,
+            "end": 112
+          },
+          {
+            "start": 291,
+            "end": 301
+          },
+          {
+            "start": 123,
+            "end": 132
+          },
+          {
+            "start": 143,
+            "end": 152
+          },
+          {
+            "start": 163,
+            "end": 172
+          },
+          {
+            "start": 183,
+            "end": 192
+          },
+          {
+            "start": 201,
+            "end": 210
+          },
+          {
+            "start": 278,
+            "end": 287
+          },
+          {
+            "start": 307,
+            "end": 311
+          },
+          {
+            "start": 133,
+            "end": 136
+          },
+          {
+            "start": 153,
+            "end": 156
+          },
+          {
+            "start": 173,
+            "end": 176
+          },
+          {
+            "start": 213,
+            "end": 216
+          },
+          {
+            "start": 139,
+            "end": 141
+          },
+          {
+            "start": 157,
+            "end": 159
+          },
+          {
+            "start": 179,
+            "end": 181
+          },
+          {
+            "start": 226,
+            "end": 228
+          },
+          {
+            "start": 238,
+            "end": 240
+          },
+          {
+            "start": 250,
+            "end": 252
+          },
+          {
+            "start": 262,
+            "end": 264
+          }
+        ],
+        "unknown_intervals": 37,
+        "unknown_basis": "No measured cause sample during zero R-retirement cycles; includes idle and uninstrumented time."
+      },
+      "hashes": {
+        "result.json": "92808d5b3b99637b41e39fa9eaeee32168f1b489d3453e1ef5f266050e419e12",
+        "rvfi.jsonl": "219e529f4dce65cee0fcf4232eedb20e2ffeac5e676f0181221bae5a32e74c67",
+        "probe-events.jsonl": "cda011063e9a9a3478dacddf1cd951b91a628315d2d4b5abf291a605366896ed"
+      },
+      "model_cycles": 160,
+      "model_ipc": 0.525,
+      "model_to_rtl_ipc": 1.9625000000000001
+    },
+    {
+      "name": "timing",
+      "status": "pass",
+      "cycles": 258,
+      "instret": 57,
+      "rtl_ipc": 0.22093023255813954,
+      "counts": {
+        "commits": 57,
+        "architectural_commits": 57,
+        "predicated_off_commits": 0,
+        "branch_mispredict": 7,
+        "rename_occupancy": 90,
+        "rename_integer_free": 4793,
+        "rename_integer_allocated": 8623,
+        "rename_fp_free": 4128,
+        "rename_fp_allocated": 8256,
+        "rob_head_occupancy": 118,
+        "rob_occupancy": 452,
+        "issue_memory_occupancy": 9,
+        "issue_alu_occupancy": 154,
+        "issue_unique_occupancy": 0,
+        "issue_fp_occupancy": 0,
+        "icache_responses": 99
+      },
+      "branch_comparison": {
+        "direction": {
+          "disagree": 5,
+          "events": 16,
+          "rtl_misses": 7,
+          "model_misses": 2,
+          "both_wrong": 2,
+          "rtl_only_wrong": 5,
+          "model_only_wrong": 0,
+          "rtl_mpki": 122.80701754385964,
+          "model_mpki": 35.08771929824562,
+          "agreement": 0.6875
+        },
+        "target": {
+          "events": 0
+        }
+      },
+      "stall_causes": {
+        "basis": "Explicit one-cycle producer samples. Causes may overlap. Inferred samples are separate.",
+        "by_cause": [
+          {
+            "scope": "dcache_0",
+            "cause": "nack",
+            "evidence": "measured",
+            "cycles": 1,
+            "zero_retirement_cycles": 1
+          },
+          {
+            "scope": "dispatch_0",
+            "cause": "dispatch_blocked",
+            "evidence": "measured",
+            "cycles": 6,
+            "zero_retirement_cycles": 0
+          }
+        ],
+        "measured_cycles": 7,
+        "measured_zero_retirement_cycles": 1,
+        "overlap_cycles": 0,
+        "overlaps": [],
+        "unknown_zero_retirement_cycles": 134,
+        "longest_unknown": [
+          {
+            "start": 68,
+            "end": 112
+          },
+          {
+            "start": 118,
+            "end": 128
+          },
+          {
+            "start": 132,
+            "end": 142
+          },
+          {
+            "start": 146,
+            "end": 156
+          },
+          {
+            "start": 160,
+            "end": 170
+          },
+          {
+            "start": 174,
+            "end": 184
+          },
+          {
+            "start": 188,
+            "end": 198
+          },
+          {
+            "start": 238,
+            "end": 248
+          },
+          {
+            "start": 251,
+            "end": 255
+          },
+          {
+            "start": 116,
+            "end": 117
+          },
+          {
+            "start": 130,
+            "end": 131
+          },
+          {
+            "start": 144,
+            "end": 145
+          },
+          {
+            "start": 158,
+            "end": 159
+          },
+          {
+            "start": 172,
+            "end": 173
+          },
+          {
+            "start": 186,
+            "end": 187
+          },
+          {
+            "start": 201,
+            "end": 202
+          },
+          {
+            "start": 205,
+            "end": 206
+          },
+          {
+            "start": 209,
+            "end": 210
+          },
+          {
+            "start": 213,
+            "end": 214
+          },
+          {
+            "start": 217,
+            "end": 218
+          }
+        ],
+        "unknown_intervals": 25,
+        "unknown_basis": "No measured cause sample during zero R-retirement cycles; includes idle and uninstrumented time."
+      },
+      "hashes": {
+        "result.json": "99263d071ea2578e8d70b53ee0b5f9951d0ff3fc690a4ad52e97badc384427f4",
+        "rvfi.jsonl": "2f5c33b05d5df777b4aa7385b862fcb0cd7432d43e39daf5f41a1f4abb80c661",
+        "probe-events.jsonl": "5a29fa20f7229eb3746da8afad70ddbfe2f2b4f79c29eb52e2eab7df8e7b7440"
+      },
+      "model_cycles": 96,
+      "model_ipc": 0.59375,
+      "model_to_rtl_ipc": 2.6875
+    }
+  ],
+  "limits": [
+    "Raw captures remain local. Hashes identify them.",
+    "Two native build variants. The first lost prediction history and is excluded.",
+    "The second retains enqueue predictions and uses -O0.",
+    "Counter totals use the probe sampling window. The SFB architectural count exceeds C1/C2 by one; endpoint alignment remains open.",
+    "Correction pulses and committed-path model misses have different speculative scope.",
+    "One training and one held-out program do not qualify model accuracy.",
+    "ISA traces with traps are refused by the OoO model."
+  ]
+}
