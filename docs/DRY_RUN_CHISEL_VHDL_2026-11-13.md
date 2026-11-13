@@ -159,3 +159,210 @@ failure capture and gate rejection. It is not a discovered upstream CPU bug.
 Doctor does not infer that a platform was independently reviewed. Its smoke
 C2 mapping row remains inconclusive without `--smoke-platform`. The final
 reference check supplies the project platform explicitly.
+
+## Second pass
+
+The second pass keeps both scratch repositories and source pins. Commands
+use `nice -n 15`. At most two native simulations run together. No BOOM,
+full Python suite, long formal campaign or hardware run was used.
+The full scratch journal and native artifacts remain outside this repository.
+
+### Declared request and response checks
+
+[PR #1080](https://github.com/riscPrint/risc-v-workstation/pull/1080) adds two
+explicit protocols to the existing declared-port generator. `req_rsp` checks
+one outstanding pulse request and an in-order response. `req_ack` checks a
+request and payload held until acknowledgment. Idle acknowledgment is allowed.
+Both use project-declared ports and database-checked widths. The ready/valid
+VIP and UVM agents reject these new protocol names.
+
+Both Chisel memory maps use `req_ack`. Both NEORV32 memory maps use
+`req_rsp`. The public generation command emits all four monitors. Other
+check families stay unbound because no project data was supplied.
+Generated monitors pass replay of the add waveforms: 455 samples per Chisel
+bus and 987 per VHDL bus. Chisel has 447 instruction requests and one data
+request. VHDL has 462 instruction requests and one data request.
+Yosys SAT passes at 24 steps for each of the four replay windows. Data-bus
+windows include the first request, rather than idle samples only. This is bounded replay. Unconstrained whole-core proof remains NOT RUN.
+The native bound models also pass the add program with assertions enabled:
+427 retirements in 446 cycles for Chisel and 428 in 979 cycles for VHDL. No memory-data or liveness
+property is claimed. The request/response pulse monitor has native positive,
+orphan-response and overlapping-request tests.
+
+### Lint triage
+
+[PR #1085](https://github.com/riscPrint/risc-v-workstation/pull/1085) fixes
+fan-out counting through imported net aliases. Alias-bit links are not loads.
+The rule now follows those links to real loads. Exact-schema tests cover both
+false positives and real loads behind aliases.
+
+On the saved whole-core databases, Chisel rule findings fall from eight to
+six. Two alias fan-out findings are removed. Two real fan-out findings remain,
+with 992 loads each. VHDL rule findings rise from six to seven because the
+rule now sees 1,073 real loads on `u.ctrl`. These counts are for the rules
+backend. They do not replace the full lint totals above.
+
+The native findings remain visible. Chisel has 61 unused-signal warnings and
+one file/module-name warning. VHDL has 1,933 unused-signal, 58 case-overlap,
+15 width-truncation, seven missing-pin, two undriven and one file/module-name
+warning. Lowering alone does not justify waiving these findings. Case overlap
+needs an exclusivity argument from the source. Width truncation needs a
+bit-range review. Missing output pins can be intentional harness omissions.
+Both projects lack an SDC clock period. This is a project setting gap.
+Resetless state, reset release and asynchronous reset crossings remain
+structural findings. No reset waiver or clean signoff is inferred.
+
+A project waiver can select an exact finding. For example, select the saved
+`verilator.PINMISSING` finding for the unused NEORV32 `sleep_o` harness output.
+Copy its actual endpoint and ID from the lint report. Set `config` to
+`default`. Give the reason that the harness does not consume the sleep
+indication. Put that record in `waivers` and confirm `matches` is one.
+This is an example for review. No such waiver was applied to these counts.
+
+### Queries and source-line coverage
+
+Drivers, loads and path queries on Chisel `dpath.pc` return Scala locations.
+The path to `io_icache_req_bits_addr` is found. The same query family on
+NEORV32 `u.trace_o[pc_rdata]` returns VHDL locations. Its path to `t_pc_rdata`
+is found. No code fix was needed for these measured paths. Synthetic lowered
+nodes can still have no original source location.
+
+[PR #1095](https://github.com/riscPrint/risc-v-workstation/pull/1095) maps an
+exact GHDL source locator to its immediately following lowered statement.
+Blank lines and unrelated statements break the pair. The mapper does not
+search backward for nearby comments. On the NEORV32 add run, 2,777 of 57,336
+native points link to 343 VHDL source lines.
+
+The existing inline Scala mapper works on original emitted Chisel RTL. A
+separate native add run of `Core.sv` has 427 retirements in 446 cycles and
+reports tohost 1. It hits 4,955 of 9,716 points. It links 6,562 points to 121
+Scala lines. This run uses project observation ports without the generated
+architectural monitor. The monitor model `observed.v` strips source comments
+and maps zero points by the comment path. It needs an explicit map.
+
+These source groups retain native metric counts and their denominator.
+They do not establish individual original-language statement hits or full
+source coverage. The compatibility keys still use `scala` for VHDL links.
+
+### Validation and remaining limits
+
+Generator tests: 23 passed. Later request/acknowledgment and release-hygiene
+tests: 46 passed. Generator fast set: 2,254 passed, one skipped.
+Lint targeted tests: six passed. Lint fast set: 2,284 passed, one skipped.
+Coverage targeted tests and release hygiene: 59 passed. Coverage fast set:
+2,300 passed, one skipped and one unrelated failure.
+`test_mcp_workflow_coverage.py::test_each_tool_has_a_profile_and_workflow`
+reported that `cov_probe_goals` had no workflow. The worker brief permits
+this unrelated failure to remain. No CI wait was used.
+
+
+### Full RV32UI campaign and trace mapping
+
+Both selected configurations implement RV32I without M, A, C, F or D.
+The campaign includes all 42 programs from the retained RV32UI Makefrag.
+No UM or other optional arithmetic extension suite is claimed. The custom
+tohost environment remains explicit. Privileged ISA qualification is NOT RUN.
+
+The full suite found two project integration errors. The Chisel observer
+combines an effective byte address with word-lane masks and full-word data.
+Its old C2 records are not canonical aligned records. The strict full-word
+reader correctly refuses subword loads with those addresses. It also finds
+store address mismatches. [PR #1106](https://github.com/riscPrint/risc-v-workstation/pull/1106)
+adds an explicit project-adapter helper that changes only the bus address to
+the containing word. It preserves all data and mask bits. It rejects fault
+effects. The co-simulation input checks are not relaxed. The project adapter
+uses this helper before writing nontrapping C2 records. A new native lb run
+passes and matches 191 instructions. Fourteen targeted tests pass.
+
+Chisel implements FENCEI. The assembler and project ISA declaration now
+include `zifencei`. This changes the declared instruction set, not comparison
+masks. The NEORV32 trace port instead reports architectural, unshifted masks
+and data. Its project platform now selects `aligned_mem=false` and
+`memory_read_convention=architectural`. It does not use the word-bus helper.
+Corrected replays of the prior captures match Spike on 41 programs for each
+core. Chisel refuses ma_data. VHDL reports a mismatch on its fault record.
+Those replay results do not replace a native regression campaign.
+
+Initial full-suite runs executed 41 programs successfully and timed out on
+ma_data for each core. The first journal budget was too short. Later runs
+also exposed a process error: changing the installed checkout while a
+campaign ran made 29 Chisel and 30 VHDL source identity claims inconclusive.
+These are not qualification results. No identity check was disabled.
+The final campaign uses a separate installed-tool copy frozen at
+`cd42b67bd38d584c66e9921adfce910b3f58fce0`. Core project settings and adapters
+are committed before it starts. The workstation worktree can then change
+without changing the installed tool used by those runs.
+
+The ma_data program expects misaligned loads and stores to complete. Both
+selected cores trap on misaligned halfword loads. Their minimal tohost
+environment has no emulation handler. Separate minimal native programs
+confirm load-misaligned cause 4 and complete with tohost 1 when a handler is
+supplied. VHDL uses a standard mtvec handler. Chisel uses its fixed 0x1c0
+machine exception vector. Its older CSR interface does not permit a modern
+mtvec write. The first Chisel handler attempt trapped on that write; the
+fixed-vector reproduction succeeds with eight retirements in 14 cycles.
+The VHDL reproduction succeeds with 13 retirements in 45 cycles.
+
+This is a platform capability limit, not an earned pass or an ISA mask.
+The full ma_data program stays in the test list. Its trap records also expose
+an adapter limit: Chisel full-word fault reads are refused. NEORV32 reports
+an attempted read and sequential pc_next rather than the reference trap
+transition. Its current C2 fault mapping is not qualified. No field is waived
+to turn those records into matches.
+
+The helper fast set has 2,378 passes and one skip. After rebase, targeted
+checks have 53 passes and one unrelated release-hygiene failure in main's
+VexiiRiscv evidence files. The failing files are
+`examples/vexiiriscv/formal/adapter-kit-results.json` and
+`examples/vexiiriscv/formal/native-kit-results.json`. The worker brief permits
+these unrelated failures to remain. Later main changes can alter that result.
+
+
+### Emitted module binding and final counts
+
+[PR #1126](https://github.com/riscPrint/risc-v-workstation/pull/1126) adds
+optional `rtl_top` to the declared map. `top` still has to match the database.
+GHDL's database uses `drytop`, while standalone synthesis emits `DryTop`.
+The VHDL project now declares that emitted spelling. Port widths still come
+from the database. Public check generation and native compilation confirm
+the bindings for both instruction and data buses. Both complete core models
+run add with generated assertions enabled and no assertion failure. This is
+one program at the existing memory timing. It does not qualify stalled
+traffic, response data or liveness. Seven targeted tests pass.
+
+The final frozen campaigns give these results:
+
+| Core | RV32UI regression | Inconclusive identity records | Spike comparison | Matched instructions |
+| --- | --- | --- | --- | --- |
+| Chisel riscv-mini | 41 pass, one ma_data timeout | 0 | 41 match, one ma_data error/refusal | 11,807 |
+| VHDL NEORV32 | 41 pass, one ma_data timeout | 0 | 41 match, one ma_data fault-record mismatch | 12,090 |
+
+All 42 captured ELF hashes are checked for each core. All comparisons have
+zero applied masks and zero reference synchronizations. Both regression
+summaries retain `ok=false`. The timeout and fault-trace limits are not
+waived. No whole-ISA qualification or changed-core gate acceptance is claimed.
+
+The recorded core project revisions are
+`0803cdd19308ff62443942d539f858fe7ad170aa` for Chisel and
+`be526a1266e2c106bc39c1fd4838655047a637b1` for VHDL. The immutable regression
+generations are `87018bd4f39f45a58bed04273e547f9b` and
+`edb770b6b95e49018008662099813460`. The VHDL emitted-name metadata was
+committed afterward in `69e3051`. It does not change the RTL or trace adapter.
+The native bind test uses that emitted-name declaration. Full C1 identities
+remain those of the recorded campaign revisions.
+
+The scratch journal has commands, native logs, minimal misaligned-load
+reproductions, lint reports, query results, coverage reports and the final
+count audit. No core sources or native outputs are committed to the
+workstation. Full Python suite, long formal runs and hardware tests remain
+NOT RUN. Real lint findings, fault-access trace mapping, misaligned-access
+emulation, privileged ISA tests and individual source-statement coverage
+remain open.
+
+Final documentation fast set: 2,435 passed, one skipped, two unrelated
+failures and 8,327 deselected. The failures are
+`test_agent_guide.py::test_agent_setup_embeds_the_generated_block` and
+`test_release_hygiene.py::test_tracked_text_has_no_personal_paths`.
+The latter still names the two VexiiRiscv evidence files above. Neither file
+nor the generated agent setup block is changed in this work. The final docs
+diff has no whitespace errors. MCP discovery has no skipped-module warning.
