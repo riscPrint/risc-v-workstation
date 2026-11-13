@@ -232,7 +232,7 @@ class CoreConfig:
     wall_timeout: bool = False  # the adapter honours a per-job `wall_timeout` manifest key (C1)
     known_failures: Path | None = None
     jobs: int = 4
-    persistent: bool = False  # serial fresh-instance server in run-many
+    persistent: bool = False  # separate serial fresh-instance servers per worker
     build_first: bool = True
     build_timeout_s: float = 3600.0
     startup_s: float = 120.0
@@ -386,7 +386,7 @@ def load_config(core: str | None = None, *, project=None, capture=None) -> CoreC
         wall_timeout=bool(c.get("wall_timeout", False)),
         known_failures=_path(c["known_failures"], base, environment) if c.get("known_failures") else None,
         jobs=c.get("jobs", 4),
-        persistent=c.get("persistent", False),
+        persistent=c.get("persistent", c.get("backend") == "riscvsim-verilator"),
         build_first=bool(c.get("build_first", True)),
         build_timeout_s=c.get("build_timeout_s", 3600),
         startup_s=c.get("startup_s", 120),

@@ -394,6 +394,7 @@ class Driver(val adapter: CoreAdapter) {
       details("model") = job.model.toJson
       details("simulation_session") = ujson.Obj("id" -> sessionId, "run_id" -> runId,
         "model_run" -> modelRuns.computeIfAbsent(job.model, _ => new AtomicInteger()).incrementAndGet(),
+        "rtl_sha256" -> b.rtlSha256.map(ujson.Str).getOrElse(ujson.Null),
         "reset" -> (if (adapter.freshInstancePerRun) "new-native-instance" else "adapter-defined"), "verilator_cached" -> b.cached)
       details("execution_s") = st.wall.elapsedS
       RiscvSimConfig.elaborationSeconds(job.model).foreach { seconds =>

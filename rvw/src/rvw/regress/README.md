@@ -248,7 +248,7 @@ identity = false                 # true: `<adapter> identity` joins the cache ke
 wall_timeout = false             # true: manifests carry wall_timeout = timeout_s (C1, optional)
 known_failures = "mycore.known.toml"
 jobs = 4                         # run-many --jobs
-persistent = false               # opt-in serial server; skips the separate pre-build
+persistent = true                # isolated serial server per worker; skips pre-build
 
 build_first = true               # call `build` before `run-many`
 build_timeout_s = 3600
@@ -758,6 +758,16 @@ full vector suite inconclusive. They must not be converted to passes.
 `rvw regress uvm-cpu` checks completed C1 captures through a UVM analysis
 subscriber and the native Spike DPI bridge. See [the UVM guide](../../../../../Uvm/README.md)
 for the strict profile and the offline replay boundary.
+
+## Persistent workers
+
+For `backend = "riscvsim-verilator"`, `persistent` defaults to true.
+Other adapters default to false. Set `persistent = false` to use fresh processes.
+A persistent adapter must declare fresh native and harness state for each run.
+`--jobs N` starts up to N separate serial server processes. Each server compiles
+its model once. A native crash ends only that worker. Jobs without results are
+retried in fresh processes. Worker logs are under `worker-N/adapter.log`.
+These servers last for one regression batch. Source changes require a new batch.
 
 ## Seeded riscv-dv campaigns
 

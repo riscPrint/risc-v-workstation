@@ -257,3 +257,9 @@ libraries or all environment inputs. Replay is not hermetic under C8.
 `rvw regress uvm-cpu` checks completed C1 captures through a UVM analysis
 subscriber and the native Spike DPI bridge. See [the UVM guide](../../../../../Uvm/README.md)
 for the strict profile and the offline replay boundary.
+
+
+Persistent regression workers use separate process groups. See
+[the regression guide](../regress/README.md) for defaults and failure recovery.
+Each worker has a serial server and reuses its compiled model. This does not
+provide live snapshots or prove reset equivalence for an adapter.
