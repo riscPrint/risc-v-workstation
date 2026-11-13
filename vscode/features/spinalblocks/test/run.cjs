@@ -126,7 +126,7 @@ async function main() {
   await runTests({
     vscodeExecutablePath:executable, extensionDevelopmentPath:root, extensionTestsPath:path.join(root,'dist/spinalblocks/test/integration.js'),
     extensionTestsEnv:{SPINALBLOCKS_TEST_DESIGN:fixture, SPINALBLOCKS_TEST_FSM_DESIGN:fsmFixture, SPINALBLOCKS_TEST_FSM_SOURCE:fsmSource, SPINALBLOCKS_CDP_PORT:String(port)},
-    launchArgs:[workspace,'--disable-extensions','--disable-workspace-trust','--skip-welcome','--skip-release-notes',`--remote-debugging-port=${port}`,`--user-data-dir=${path.join(runDir,'u')}`,`--extensions-dir=${path.join(runDir,'e')}`],
+    launchArgs:[workspace,'--disable-gpu','--disable-extensions','--disable-workspace-trust','--skip-welcome','--skip-release-notes',`--remote-debugging-port=${port}`,`--user-data-dir=${path.join(runDir,'u')}`,`--extensions-dir=${path.join(runDir,'e')}`],
   });
 }
 main().catch(error => { console.error(error); process.exitCode = 1; });
