@@ -79,10 +79,11 @@ def mcp_tools():
                  schema({"source_format": {**S, "enum": ["c2", "spike", "bt9"]}, "source": S, "out": S, "values": {"type": "boolean", "default": False}},
                         ["source_format", "source", "out"]), _convert, isolate=True),
         ToolSpec("csim_qualify", "Compare a csim direction model with a pinned external reference predictor "
-                 "(CBP 2016 TAGE-SC-L 64 KB or 8 KB, fetched outside the repository and checked by sha256) on the same "
+                 "(CBP 2016 TAGE-SC-L 64/8 KB, multiperspective perceptron 64/8 KB/unlimited, MPP+TAGE, Pruett; fetched outside "
+                 "the repository and checked by sha256) on the same "
                  "traces: MPKI, relative tolerance and per-branch prediction agreement. Runs as a job.",
-                 schema({"traces": TRACES, "reference": {**S, "enum": ["cbp2016-tage-sc-l-64kb", "cbp2016-tage-sc-l-8kb"],
-                                                         "default": "cbp2016-tage-sc-l-64kb"},
+                 schema({"traces": TRACES, "reference": {**S, "default": "cbp2016-tage-sc-l-64kb",
+                                                         "description": "see rvw.csim.qualify.REFERENCES"},
                          "study": S, "format": FMT, "tolerance": {"type": "number", "default": 0.1}, "archive": S}, ["traces"]),
                  _qualify, long=True, annotations={"readOnlyHint": True}),
         ToolSpec("csim_simpoint", "Choose weighted simulation points of a trace (basic-block vectors per interval, random "

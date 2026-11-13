@@ -2325,7 +2325,7 @@ Starts a background job: no.
 
 ### `csim_qualify`
 
-Compare a csim direction model with a pinned external reference predictor (CBP 2016 TAGE-SC-L 64 KB or 8 KB, fetched outside the repository and checked by sha256) on the same traces: MPKI, relative tolerance and per-branch prediction agreement. Runs as a job.
+Compare a csim direction model with a pinned external reference predictor (CBP 2016 TAGE-SC-L 64/8 KB, multiperspective perceptron 64/8 KB/unlimited, MPP+TAGE, Pruett; fetched outside the repository and checked by sha256) on the same traces: MPKI, relative tolerance and per-branch prediction agreement. Runs as a job.
 
 Arguments: `traces` (required), `reference`, `study`, `format`, `tolerance`, `archive`.
 

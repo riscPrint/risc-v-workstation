@@ -208,3 +208,14 @@ def test_simpoints_find_phases_and_weight_runs(tmp_path):
     assert res["weighted"]["direction_mpki"] == pytest.approx(sum(a * b for a, b in zip(per, w)))
     assert all(r["report"]["trace"]["measured_instructions"] == 1000 for r in res["points"])
     assert all(r["report"]["trace"]["skipped_instructions"] == max(0, r["point"]["start_instruction"] - 500) for r in res["points"])
+
+
+def test_qualify_reference_table():
+    from rvw.csim import qualify
+    for name, ref in qualify.REFERENCES.items():
+        assert len(ref["sha256"]) == 64 and ref["url"].startswith("http") and ref["dir"]
+        if ref["study"]:
+            assert qualify.default_study(name).is_file()
+        else:
+            with pytest.raises(ValueError, match="no matched csim study"):
+                qualify.default_study(name)

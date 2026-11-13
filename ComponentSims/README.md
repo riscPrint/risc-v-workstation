@@ -104,8 +104,8 @@ same traces. The references are the CBP-5 (2016) TAGE-SC-L 64 KB and 8 KB
 predictors by A. Seznec (`AndreSeznecLimited.tar.gz` from jilp.org, sha256
 `5ed93324…ace181`). The archive is fetched into the csim cache and checked
 against the pinned hash. It never enters this repository. Our harness
-(`qualify/ref_harness.cc`) and type shim (`qualify/shim/`) build it. One guard
-is added to the cached copy: `if (NOSKIP[i])` becomes
+(`qualify/ref_harness.cc`) and type shim (`qualify/shim/`) build it. The harness
+allocates the predictor on the heap. One guard is added to the cached copy: `if (NOSKIP[i])` becomes
 `if (i <= NHIST && NOSKIP[i])`. The upstream allocation loop reads one entry
 past the arrays (AddressSanitizer, 8 KB predictor); in-range accesses do not
 change. The report records the patch.
@@ -135,6 +135,27 @@ within the default 10% relative MPKI tolerance.
 | 8 KB | rsort | 17601 | 0.22 | 0.22 | 0.999 |
 | 8 KB | towers | 459 | 9.50 | 10.10 | 0.917 |
 | 8 KB | spmv | 6288 | 17.25 | 18.18 | 0.894 |
+
+More pinned references from the same competition build with the harness
+(`--reference`): `cbp2016-mpp-64kb`, `cbp2016-mpp-8kb` and
+`cbp2016-mpp-unlimited` (D. A. Jiménez, multiperspective perceptron),
+`cbp2016-mpp-tage-64kb` (multiperspective perceptron with TAGE) and
+`cbp2016-pruett-64kb`. They have no matched csim study; name one with `--study`.
+Seznec's unlimited predictor stops on its own assertion with this harness and is
+not listed. Direction MPKI on the same six traces (reference / csim):
+
+| Trace | MPP 64 KB / csim hashed perceptron 64 KB | MPP unlimited / csim TAGE-SC-L 64 KB |
+|-------|------------------------------------------|--------------------------------------|
+| qsort | 40.90 / 41.75 | 40.56 / 42.08 |
+| dhrystone | 0.35 / 0.36 | 0.36 / 0.27 |
+| median | 21.27 / 20.80 | 21.40 / 23.93 |
+| rsort | 0.29 / 0.27 | 0.29 / 0.21 |
+| towers | 11.60 / 10.60 | 11.60 / 9.50 |
+| spmv | 13.02 / 12.46 | 12.57 / 16.09 |
+
+[`examples/hashed-perceptron-64kb.json`](examples/hashed-perceptron-64kb.json) is
+a budget-matched global hashed perceptron, not a structural match of the
+multiperspective predictor.
 
 These traces are short (0.2–0.23 M instructions) and small in branch
 footprint. They qualify the model shape, not long-run behaviour. The CBP 2016

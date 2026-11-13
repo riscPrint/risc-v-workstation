@@ -1,0 +1,82 @@
+{
+  "schema": "rvw.csim-study/1",
+  "name": "hashed-perceptron-64kb",
+  "description": "Budget-matched (64 KiB) global hashed perceptron with 16 tables. A baseline for the CBP-5 multiperspective perceptron references, not a structural match.",
+  "source": {
+    "fidelity": "unqualified",
+    "approximations": [
+      "global history intervals only; the multiperspective predictor adds local, path, IMLI and other features"
+    ]
+  },
+  "branch": {
+    "model": "hashed-perceptron",
+    "weight_bits": 8,
+    "intervals": "prefix",
+    "tables": [
+      {
+        "entries": 4096,
+        "history": 0
+      },
+      {
+        "entries": 4096,
+        "history": 2
+      },
+      {
+        "entries": 4096,
+        "history": 4
+      },
+      {
+        "entries": 4096,
+        "history": 6
+      },
+      {
+        "entries": 4096,
+        "history": 9
+      },
+      {
+        "entries": 4096,
+        "history": 13
+      },
+      {
+        "entries": 4096,
+        "history": 19
+      },
+      {
+        "entries": 4096,
+        "history": 27
+      },
+      {
+        "entries": 4096,
+        "history": 38
+      },
+      {
+        "entries": 4096,
+        "history": 54
+      },
+      {
+        "entries": 4096,
+        "history": 76
+      },
+      {
+        "entries": 4096,
+        "history": 107
+      },
+      {
+        "entries": 4096,
+        "history": 150
+      },
+      {
+        "entries": 4096,
+        "history": 210
+      },
+      {
+        "entries": 4096,
+        "history": 295
+      },
+      {
+        "entries": 4096,
+        "history": 414
+      }
+    ]
+  }
+}

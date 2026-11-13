@@ -14,7 +14,7 @@ int main(int argc, char** argv) {
     std::string line;
     if (!std::getline(in, line) || line != "rvw.csim-trace/1") { std::cerr << "ref-harness: bad header\n"; return 2; }
     out << "rvw.csim-predictions/1\n";
-    PREDICTOR p;
+    PREDICTOR& p = *new PREDICTOR();  // heap: unlimited predictors overflow the stack
     unsigned long long branches = 0, misses = 0;
     while (std::getline(in, line)) {
         if (line.empty() || line[0] == '#') continue;

@@ -1,6 +1,7 @@
 // Minimal type and operation-class definitions that the CBP 2016 predictor
 // sources expect from the competition framework. Owner-written shim.
 #pragma once
+#include <cassert>
 #include <cstdint>
 typedef uint64_t UINT64;
 typedef int64_t INT64;
