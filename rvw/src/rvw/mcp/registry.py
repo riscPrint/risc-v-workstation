@@ -106,6 +106,9 @@ class Registry:
         self.resources: dict[str, tuple] = {}
         self._validators = {}
         from .profiles import select_tools
+        from .execution import prepare
+        self.source_tools = {t.name: t for t in tools}
+        tools = [prepare(t) for t in tools]
         self.catalog = {t.name: t for t in tools}
         for t in select_tools(tools, profile, workflow) + self._job_tools() + self._meta_tools():
             if t.name in self.tools:
@@ -236,6 +239,11 @@ class Registry:
                 job.done.wait(min(float(wait_s), 60.0))
             d = job.to_json()
             d["log_tail"] = job.tail(10)
+            if job.exception is not None:
+                from .errors import error_result
+                details = error_result(job.tool, job.exception)
+                for key in ("code", "hint", "diagnostics", "verdict"):
+                    d[key] = details[key]
             return d
 
         def log(job_id: str, tail: int = 100) -> dict:
@@ -251,8 +259,20 @@ class Registry:
         def list_jobs() -> dict:
             return {"jobs": [j.to_json(with_result=False) for j in self.jobs.list()]}
 
+        def result(job_id: str):
+            job = self._job(job_id)
+            data = status(job_id)
+            if not job.done.is_set():
+                data["next"] = [{"tool": "job_status", "arguments": {"job_id": job_id, "wait_s": 60}}]
+            return data
+
         jid = {"job_id": {"type": "string", "description": "id returned by a long-running tool"}}
         return [
+            ToolSpec("job_result", "Fetch a completed background result or its current state.",
+                     schema(jid, ["job_id"]), result, side_effects="read-only", native_tools=()),
+            ToolSpec("job_events", "Read recent progress log events from a background job.",
+                     schema({**jid, "tail": {"type": "integer", "minimum": 0, "default": 100}}, ["job_id"]), log,
+                     side_effects="read-only", native_tools=()),
             ToolSpec("job_status", "Status of a background job started by a long-running tool; includes the result "
                      "when done. Pass wait_s (max 60) to block until it finishes.",
                      schema({**jid, "wait_s": {"type": "number", "minimum": 0, "default": 0}}, ["job_id"]), status),

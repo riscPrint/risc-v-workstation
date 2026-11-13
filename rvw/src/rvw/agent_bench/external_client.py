@@ -16,7 +16,7 @@ async def main():
             await session.initialize()
             tools = {tool.name for tool in (await session.list_tools()).tools}
             assert tools == {'bench_inspect', 'bench_diagnose', 'bench_reject', 'bench_patch', 'bench_finish', 'rvw_tools_search', 'rvw_tools_describe',
-                             'job_status', 'job_log', 'job_cancel', 'job_list'}
+                             'job_result', 'job_events', 'job_status', 'job_log', 'job_cancel', 'job_list'}
             async def call(name, arguments):
                 result = await session.call_tool(name, arguments)
                 if getattr(result, 'is_error', getattr(result, 'isError', False)):

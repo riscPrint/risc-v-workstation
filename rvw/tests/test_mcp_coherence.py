@@ -67,6 +67,7 @@ def test_envelope_list_and_explicit_failure():
     assert envelope({"verdict": "pass"})["verdict"] == "pass"
 
 
+
 def test_machine_errors_and_exact_install_flag():
     from rvw.mcp.errors import error_result
     missing = FileNotFoundError(2, "No such file", "yosys")
@@ -77,3 +78,31 @@ def test_machine_errors_and_exact_install_flag():
     registry = Registry([])
     _, result, error = registry.call_json("absent_tool", {})
     assert error and result["code"] == "unknown_tool" and result["diagnostics"]
+
+def test_blocking_tools_use_existing_job_protocol(monkeypatch):
+    from rvw.mcp import worker
+    calls = []
+    def execute(job, module, function, arguments, lock=None):
+        calls.append((module, function, arguments))
+        return {"converted": True}
+    monkeypatch.setattr(worker, "run_function", execute)
+    registry = Registry([ToolSpec("csim_convert", "Convert a large trace.", schema({}), lambda: None)])
+    try:
+        started = registry.call("csim_convert", {})
+        state = registry.call("job_status", {"job_id": started["job_id"], "wait_s": 10})
+        assert state["status"] == "done" and state["result"]["converted"]
+        assert calls[0][1] == "run_discovered"
+        assert registry.call("job_result", {"job_id": started["job_id"]})["result"]["converted"]
+        assert registry.call("job_events", {"job_id": started["job_id"]})["lines"] == []
+    finally:
+        registry.jobs.shutdown()
+
+
+def test_native_job_migration_is_bounded():
+    from rvw.mcp.execution import BACKGROUND_TOOLS
+    registry, problems = Registry.discover()
+    assert not problems
+    assert all(registry.tools[name].long for name in BACKGROUND_TOOLS)
+    assert not registry.tools["debug_checks"].long
+    assert all(t.wants_job for t in registry.tools.values() if t.long)
+

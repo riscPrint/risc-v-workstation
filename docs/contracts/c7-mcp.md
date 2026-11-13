@@ -81,6 +81,7 @@ verdict is inconclusive. This does not change C4 CLI decisions or exit codes.
 The Python Registry.call API retains raw results. Registry.call_json and MCP
 apply the envelope. Artifacts and suggested next calls are empty if unknown.
 
+
 ## Common error form
 
 Errors retain error text and add code, hint and diagnostics. Codes include
@@ -89,3 +90,13 @@ internal_error. Missing inventory executables or modules use not_installed and
 the inventory's exact scripts/install.sh flag. Missing input files are input
 errors. ToolError accepts an explicit code and native_tool in its data.
 Unidentified dependencies point to rvw doctor; no install flag is guessed.
+
+## Unified job controls
+
+Start any long tool to get a job_id. Use job_status or job_events to follow it.
+Use job_result to fetch its current state and final result. Use job_cancel to
+stop it. Existing job_log and job_list names remain valid. Job ids are scoped
+to the server session. Worker execution retains process-group cancellation.
+Previously inline sim_checkpoint, sim_resume, sim_suffix_check, csim_convert
+and soc_audit now use jobs. Small metadata tools remain inline.
+

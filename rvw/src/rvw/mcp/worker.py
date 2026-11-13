@@ -30,7 +30,7 @@ def run_function(job, module: str, function: str, arguments: dict, lock: str | N
             raise ToolError(f"worker exited {rc} without a result; see job_log")
         envelope = json.loads(output.read_text())
         if "error" in envelope:
-            raise ToolError(envelope["error"])
+            raise ToolError(envelope["error"], envelope)
         if rc:
             raise ToolError(f"worker exited {rc}; see job_log")
         return envelope["result"]
@@ -67,7 +67,8 @@ def main():
         fn = getattr(importlib.import_module(spec["module"]), spec["function"])
         result = {"result": fn(**spec["arguments"])}
     except Exception as exc:
-        result = {"error": f"{type(exc).__name__}: {exc}"}
+        from .errors import error_result
+        result = error_result(spec["function"], exc)
     try:
         text = json.dumps(result, allow_nan=False, default=list)
     except (TypeError, ValueError) as exc:

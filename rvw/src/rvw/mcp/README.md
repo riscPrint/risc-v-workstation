@@ -170,9 +170,27 @@ status. Completion is not a pass. Existing result fields remain available.
 Older verdict terms remain in `legacy_verdict` with a common verdict of
 `inconclusive`. Direct Python `Registry.call` retains its raw return value.
 
+
 ## Errors
 
 Read `code` and `hint` on errors. `not_installed` includes the exact installer
 flag when the missing tool matches the shared inventory. A missing input file
 is an input error. Providers can raise `ToolError(message, data, code=...)`.
 Set `native_tool` in data to an inventory name when reporting missing tools.
+
+## Job protocol and blocking inventory
+
+Start a tool marked `long` in `rvw mcp --list --json`. It returns `job_id`.
+Call `job_status(job_id, wait_s=60)` or `job_events(job_id)`.
+Call `job_result(job_id)` for the final result. Call `job_cancel(job_id)`
+to cancel. Existing `job_log` and `job_list` remain available.
+
+These formerly inline tools now run in owned worker processes:
+`sim_checkpoint`, `sim_resume`, `sim_suffix_check`, `csim_convert` and
+`soc_audit`. The first two can execute native operations. The others can scan
+large traces or databases. Long providers that accept no job context also use owned workers. This includes
+agent benchmark runs, security campaigns, reverse stepping, UVM native flows
+and the wave benchmark. Providers with job context retain their handlers.
+Other inline tools are file reports, generators or metadata calls. A provider
+must still set `long=True` if its runtime can grow beyond a few seconds.
+
