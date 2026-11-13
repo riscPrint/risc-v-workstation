@@ -331,3 +331,15 @@ The report distinguishes disjoint map arithmetic from unrun RTL decode proof.
 IRQ paths use `rvw formal` connectivity resolution. A sibling
 `OUT.connections.json` can be used with `rvw formal connectivity --run`.
 The audit remains inconclusive until behavioral and proof evidence exists.
+
+## Composition fragments
+
+Composition files can add `fragments`, an ordered list of JSON paths relative
+to the composition file. Each fragment can set `core`, `clock_hz`, `reset` and
+`devices`. Later fragments replace earlier values. The main file wins last.
+Device dictionaries merge by region name; each binder replaces the previous
+binder as one unit. Fragments cannot include more fragments or change the map.
+The generated manifest records every fragment hash and the effective config.
+
+See [the Chipyard study](../../../../docs/design/chipyard-study.md) for the
+source of this small config/harness separation and deferred integration work.

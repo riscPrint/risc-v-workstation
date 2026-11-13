@@ -16,7 +16,8 @@ def scala_name(value):
 
 def compose(source, out, elf=None):
     source = Path(source).resolve()
-    spec = json.loads(source.read_text())
+    from .configuration import configuration
+    spec, fragments = configuration(source)
     required = {'schema', 'map', 'core', 'clock_hz', 'reset', 'devices'}
     keys(spec, required, required)
     if spec['schema'] != 'rvw.soc-compose/1':
@@ -121,6 +122,7 @@ def compose(source, out, elf=None):
                     clock_hz=spec['clock_hz'], reset=spec['reset'], memories=memories,
                     map_sha256=hashlib.sha256((source.parent / spec['map']).read_bytes()).hexdigest(),
                     composition_sha256=hashlib.sha256(source.read_bytes()).hexdigest(), elf_sha256=elf_hash,
+                    fragments=fragments, effective_configuration=spec,
                     validation='generated_only', bus_ports=['core.bus'] + [r['name']+'.io.bus' for r in obj['regions']])
     (target / 'composition.json').write_text(dumps(manifest))
     return dict(status='generated', files=sorted(files + ['ComposedSoc.scala', 'composition.json']), profile=manifest['profile'])

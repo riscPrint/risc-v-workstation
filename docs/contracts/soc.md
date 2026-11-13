@@ -290,3 +290,11 @@ complete APB endpoint bindings, formal connectivity results and the lint
 clock/reset inventory. Map interval arithmetic is separate from RTL decode
 proof. Emitted APB/decode assertions and structural IRQ paths do not earn a
 proof result. Missing fabric endpoints are errors. The audit remains inconclusive.
+
+## Composition fragments
+
+`rvw.soc-compose/1` can include `fragments`. Each file can set core, clock,
+reset and region binders. Paths are relative to the composition file. Merge
+order is the listed order, then the main file. Device binders replace by
+region name. Nested fragments and fragment map changes are refused.
+`rvw.soc-composed/1` adds fragment hashes and the effective configuration.
