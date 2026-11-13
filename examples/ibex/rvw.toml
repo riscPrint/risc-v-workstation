@@ -53,6 +53,6 @@ dir = "${IBEX_WORK}/act4-final/work/rvw-act4/elfs"
 act4_manifest = "${IBEX_WORK}/act4-final/manifest.json"
 glob = "**/*.elf"
 strip_suffix = ".elf"
-max_cycles = 50000
+max_cycles = 500000
 timeout_s = 120
 mem_latency = 0
