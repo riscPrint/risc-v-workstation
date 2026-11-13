@@ -14,6 +14,7 @@ def _cell_runner(job, **args):
 def mcp_tools():
     from .mcp_tools import ToolSpec, schema, S, I, B, _runner
     return [
+        ToolSpec("formal_app_deadlock", "Check exact finite-graph progress possibility with explicit state justice.", schema({"manifest": S, "out": S}, ["manifest", "out"]), _runner("app-deadlock"), long=True),
         ToolSpec("formal_app_live", "Reduce fair response liveness to a full-state lasso safety check.", schema({"manifest": S, "out": S, "depth": I, "engine": S, "timeout": {"type": "number"}, "mode": S}, ["manifest", "out"]), _runner("app-live"), long=True),
         ToolSpec("formal_recheck", "Bounded solver what-if over a captured model with pinned signals and full-depth feasibility.",
                  schema({"result": S, "pin": {"type": "array", "items": S, "minItems": 1},

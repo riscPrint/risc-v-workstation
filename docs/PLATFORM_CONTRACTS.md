@@ -4959,3 +4959,11 @@ same-build state. Capture the plugin, Python library and Python source digests
 in the run identity. Host console output and host file writes are not emitted.
 The model owns the buffered console and disk state. See
 `RiscvSim/src/main/cpp/DEVICES.md` for model selection and interrupt bits.
+
+### Progress-possibility app
+
+`rvw.deadlock-app/1` reports reachable states, states with no progress path,
+terminal states and states without an admissible fair infinite continuation.
+The explicit finite graph supplies the state and edge universe. Fairness uses
+state justice. A pass establishes progress possibility in that graph only.
+Infeasible fairness remains inconclusive. No RTL translation claim is added.

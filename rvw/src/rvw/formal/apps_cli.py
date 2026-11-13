@@ -104,3 +104,9 @@ def register(s):
     live.add_argument('--mode', choices=['bmc', 'prove'], default='prove')
     live.add_argument('--json', action='store_true')
     live.set_defaults(func=liveness_app.run)
+    from . import deadlock_app
+    deadlock = s.add_parser('app-deadlock', help='check progress remains possible from every reachable finite-graph state')
+    deadlock.add_argument('--manifest', required=True)
+    deadlock.add_argument('--out', required=True)
+    deadlock.add_argument('--json', action='store_true')
+    deadlock.set_defaults(func=deadlock_app.run)
