@@ -60,4 +60,11 @@ features = ast.literal_eval(next(node.value for node in live_sim.body
                                         for t in node.targets)))
 rows += [f'| `{feature}` | positive and negative native case | finite witness, failure and pending counts; both simulators |'
          for feature in features]
+cancel = ast.parse((root / 'rvw/tests/formal/test_live_cancel.py').read_text())
+features = ast.literal_eval(next(node.value for node in cancel.body
+                                if isinstance(node, ast.Assign)
+                                and any(isinstance(t, ast.Name) and t.id == 'SUPPORT_FEATURES'
+                                        for t in node.targets)))
+rows += [f'| `{feature}` | positive and negative native case | finite native observation; stable input disable controls |'
+         for feature in features]
 (root / 'rvw/src/rvw/formal/TEMPORAL_SUPPORT.md').write_text('\n'.join(rows) + '\n')

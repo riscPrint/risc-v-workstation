@@ -38,3 +38,4 @@
 | `unbounded throughout` | positive and negative native case | infinite trace, single clock; Boolean guard |
 | `native eventual response observations` | positive and negative native case | finite witness, failure and pending counts; both simulators |
 | `native until observations` | positive and negative native case | finite witness, failure and pending counts; both simulators |
+| `native asynchronous cancellation` | positive and negative native case | finite native observation; stable input disable controls |

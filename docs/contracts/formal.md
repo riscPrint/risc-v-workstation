@@ -464,7 +464,8 @@ Missing outcomes and zero expected comparisons remain inconclusive. See
 
 Timed simulation accepts Boolean eventual response and until forms on both
 backends. C1 `unbounded_properties` records `id`, `kind`, private `clock`, source
-`event`, parsed `terms`, `operator`, `nonoverlap` and `monitor`. Zero-argument
+`event`, parsed `terms`, `operator`, `nonoverlap`, `monitor`, optional `disable_iff` and its
+`disable_inputs` dependencies. Zero-argument
 named properties expand before native lowering. Clock-local sampled functions
 use the shared history emitter. The probe removes these statements only for
 interface extraction. The sealed simulation model contains the actual monitors.
@@ -481,7 +482,24 @@ inconclusive result. Native runner cancellation uses the shared process cleanup.
 This is finite observation evidence. Native replay does not prove unbounded
 liveness, restore earlier assertion obligations from a DUT trace, or qualify
 full scheduling semantics. Native unbounded sequence composition, local captures,
-cross-clock response and disable cancellation remain unsupported.
+cross-clock response remain unsupported. Native disable cancellation is defined
+below.
+
+## Native asynchronous assertion cancellation
+
+Native eventual-response and until monitors accept `disable iff` on top-input
+Boolean controls. They cancel active and delayed requests asynchronously.
+Assertion records add optional `cancelled`. Cancellation is neither a pass nor
+a failure. Previously recorded failures remain failures. Sampled history keeps
+running. Disable conditions cancel only when their Boolean value is true.
+Finite temporal monitors use the same true-only rule for X/Z disable values.
+
+Native unbounded disable dependencies must be top inputs, must not include the
+property event inputs, and must stay stable at matching event timestamps.
+Internal and sampled disable expressions remain refused. These restrictions
+preserve current-value disable semantics beside pre-event property sampling.
+The formal liveness adapter still refuses cancellation. This native format does
+not extend the engine's asynchronous-state support.
 
 ## Typed finite local captures
 
