@@ -164,6 +164,10 @@ struct Machine : simif_t {
     e.halted=cpu->is_waiting_for_interrupt();
     e.pc_next=s->pc;
     if(e.trap) {
+      // A scalar fault record must not turn logged effects into zero completion.
+      // The shim cannot yet expose ordered partial effects independently.
+      if(!s->log_mem_read.empty() || !s->log_mem_write.empty())
+        throw std::runtime_error("partial fault memory effects require per-access observations");
       e.cause=(s->prv==1 ? s->scause : s->mcause)->read();
       e.tval=(s->prv==1 ? s->stval : s->mtval)->read();
       e.intr=e.cause>>(cpu->get_xlen()-1);

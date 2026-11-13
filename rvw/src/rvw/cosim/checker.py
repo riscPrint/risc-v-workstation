@@ -105,6 +105,8 @@ def check(trace_path, model, platform, history=10, sync=SYNC_KINDS):
     core_regs = [0] * 32
     count, trap_events, sync_count = 0, 0, 0
     translation_count = 0
+    csr_snapshot_steps = 0
+    fault_access_steps = 0
     instret_synced = False
     sync_recent = deque(maxlen=history)
     applied_masks = {}
@@ -146,7 +148,9 @@ def check(trace_path, model, platform, history=10, sync=SYNC_KINDS):
                                    "vector": trace.header.get("vector") if last_order is not None else None,
                                    "hypervisor": bool(trace.header.get("hypervisor") and last_order is not None),
                                    "two_stage_translations": translation_count,
-                                   "csr_snapshot": trace.header.get("csr_snapshot", [])},
+                                   "csr_snapshot": trace.header.get("csr_snapshot", []),
+                                   "csr_snapshot_steps": csr_snapshot_steps,
+                                   "fault_access_steps": fault_access_steps},
                 "platform_policy": {key: getattr(platform, key) for key in
                                     ("privilege_modes", "misaligned", "endianness",
                                      "absent_pmp_csrs", "ecall_tval")},
@@ -275,6 +279,7 @@ def check(trace_path, model, platform, history=10, sync=SYNC_KINDS):
                     raise ValueError("reference cannot check CSR snapshots")
                 snapshot = model.csr_snapshot(trace.header["csr_snapshot"])
                 expected["csr_state"] = snapshot
+                csr_snapshot_steps += 1
                 for address, value in actual["csr_state"].items():
                     if address not in snapshot:
                         raise ValueError(f"reference cannot observe CSR {address}")
@@ -289,6 +294,7 @@ def check(trace_path, model, platform, history=10, sync=SYNC_KINDS):
                     raise ValueError("reference cannot check fault-access records")
                 reference_access = reference_fault(expected, platform.xlen)
                 expected["fault_access"] = reference_access
+                fault_access_steps += 1
                 for key, value in access.items():
                     if value != reference_access[key]:
                         diff[f"fault_access.{key}"] = {"expected": reference_access[key], "actual": value}
