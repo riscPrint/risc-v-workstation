@@ -14,7 +14,8 @@ pass and its length must be exactly warmup plus measured instructions.
 
 `rvw.sample-report/1` contains the clustering points, weights, measured cycles,
 CPI, IPC and equality status per point. Scalar register and memory effects are
-compared with normalized Spike effects. Traps and incomplete traces exclude a
+compared with normalized Spike effects. Memory data is compared only in the
+accessed byte lanes, using the shared cosim mask helper. Traps and incomplete traces exclude a
 point. Failed weight prevents a whole-workload estimate. `conditional_ipc`
 refers only to surviving weight. It is not a substitute for `weighted_ipc`.
 The latter is 1 / sum(weight * CPI) only with all points matched.
@@ -39,3 +40,17 @@ CPI, IPC, signed CPI bias, absolute bias and target comparison. Failed rows
 are excluded explicitly. `smallest_observed_within_target` is an observation,
 not a universal recommendation. Detailed execution is the fallback when the
 core has no qualified functional cache/predictor injection port.
+
+## Empirical confidence statement
+
+Optional `validation_report` attaches the observed error from a completed
+validation study with matching platform, mapping, adapter files, warm-up and
+sampling settings. The report identifies the calibration ELF. The statement
+is explicitly limited to the calibration prefix and is not a statistical
+confidence interval or a guaranteed bound for another program. The report
+hash is bound to the resume identity. RTL revision/configuration identity
+remains the project adapter's responsibility and requires revalidation.
+
+`program_complete` records a successful `tohost` completion during profiling.
+`profiled_instructions` gives the actual profiling count. Without completion,
+`scope` is `profiled prefix`; a prefix estimate is not a whole-program result.

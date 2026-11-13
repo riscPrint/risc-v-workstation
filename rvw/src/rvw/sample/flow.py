@@ -5,6 +5,7 @@ import json
 from rvw.common.proc import run_group
 from rvw.csim import simpoint, traces
 from rvw.cosim.trace import Trace
+from rvw.cosim.checker import masked
 from rvw.sim.cpu_env import spike_reference
 from rvw.sim.spike_bootstrap import capture
 
@@ -29,6 +30,7 @@ def profile(spec, work):
     path = work / 'profile.csim'
     model = reference(spec, work)
     count = 0
+    completed = False
     tohost = model.elf.symbols.get('tohost')
     try:
         with path.open('w') as out:
@@ -45,11 +47,19 @@ def profile(spec, work):
                 if tohost is not None and r['mem_wmask'] and r['mem_addr'] == tohost:
                     if r['mem_wdata'] != 1:
                         raise ValueError('workload reported failure through tohost')
+                    completed = True
                     break
-            out.write(f'END {count}\n')
+            out.write(f'# program_complete {int(completed)}\nEND {count}\n')
     finally:
         model.close()
     return path
+
+
+def profile_complete(path):
+    path = Path(path)
+    with path.open('rb') as stream:
+        stream.seek(max(0, path.stat().st_size-128))
+        return b'# program_complete 1\n' in stream.read()
 
 
 def compare(trace, expected, warmup, length):
@@ -78,7 +88,11 @@ def compare(trace, expected, warmup, length):
         fields += ['mem_wdata'] if ref['mem_wmask'] else []
         for key in fields:
             value = int(rtl[key], 0) if isinstance(rtl[key], str) else rtl[key]
-            if value != ref[key]:
+            wanted = ref[key]
+            if key in ('mem_rdata', 'mem_wdata'):
+                lanes = ref['mem_rmask' if key == 'mem_rdata' else 'mem_wmask']
+                value, wanted = masked(value, lanes), masked(wanted, lanes)
+            if value != wanted:
                 raise ValueError(f'transfer mismatch at {i}: {key}')
     # Retirement-to-retirement span avoids attributing reset/bootstrap cycles to IPC.
     if length < 2:
@@ -131,7 +145,7 @@ def aggregate(points):
                 excluded_points=len(points)-len(good))
 
 
-def run(manifest, out, interval=10000, max_k=10, warmup=1000, seed=1):
+def run(manifest, out, interval=10000, max_k=10, warmup=1000, seed=1, validation_report=None):
     if min(interval, max_k) < 1 or warmup < 0:
         raise ValueError('positive interval and max_k; nonnegative warmup required')
     manifest = Path(manifest).resolve()
@@ -150,6 +164,10 @@ def run(manifest, out, interval=10000, max_k=10, warmup=1000, seed=1):
     identity['implementation'] = digest(__file__)
     identity['adapter_files'] = {a: digest(a) for a in spec['adapter'] if Path(a).is_file()}
     identity.update(manifest=digest(manifest), interval=interval, max_k=max_k, warmup=warmup, seed=seed)
+    from .confidence import statement
+    confidence = statement(validation_report, identity, interval, max_k, warmup)
+    if validation_report is not None:
+        identity['validation_report'] = digest(validation_report)
     out = Path(out).resolve()
     out.mkdir(parents=True, exist_ok=True)
     receipt = out/'identity.json'
@@ -165,6 +183,7 @@ def run(manifest, out, interval=10000, max_k=10, warmup=1000, seed=1):
         path = profile(spec, out)
         points = simpoint.choose(path, interval, max_k, seed=seed)
         write(selected, points)
+    completed = profile_complete(out/'profile.csim')
     results = []
     for i, point in enumerate(points['points']):
         work = out/f'point-{i:04d}'
@@ -183,7 +202,8 @@ def run(manifest, out, interval=10000, max_k=10, warmup=1000, seed=1):
             row = dict(status='excluded', point=point, reason=str(exc))
         results.append(row)
         report = dict(schema='rvw.sample-report/1', **aggregate(results), points=results,
-                      identity=identity, confidence='unmeasured; run validation on this core and workload class',
+                      identity=identity, confidence=confidence, profiled_instructions=points['instructions'],
+                      program_complete=completed, scope='whole program' if completed else 'profiled prefix',
                       weighting='instruction-weighted CPI, then reciprocal; excluded weight is never silently renormalized',
                       timing='N-1 retirement gaps per N-instruction measured interval')
         # A partial progress report cannot claim a complete workload estimate.

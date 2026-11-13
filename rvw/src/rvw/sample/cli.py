@@ -16,7 +16,7 @@ def command(a):
         result = validate(a.manifest, a.out, a.intervals, a.clusters, a.warmup)
         print(json.dumps(result, indent=2, allow_nan=False))
         return 0 if result['status'] == 'reported' else 3
-    result = run(a.manifest, a.out, a.interval, a.max_k, a.warmup, a.seed)
+    result = run(a.manifest, a.out, a.interval, a.max_k, a.warmup, a.seed, a.validation_report)
     print(json.dumps(result, indent=2, allow_nan=False))
     return 0 if result['status'] == 'estimated' else 3
 
@@ -28,6 +28,7 @@ def register(sub):
     p.add_argument('--interval', type=int, default=10000)
     p.add_argument('--max-k', type=int, default=10)
     p.add_argument('--warmup', type=int, default=1000)
+    p.add_argument('--validation-report', help='attach compatible measured calibration error')
     p.add_argument('--seed', type=int, default=1)
     mode = p.add_mutually_exclusive_group()
     mode.add_argument('--warmup-sweep', action='store_true')
