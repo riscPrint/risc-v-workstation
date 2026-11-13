@@ -6,6 +6,7 @@ from .axiomatic import check as axiomatic_check
 from .concurrent import generate
 from .tilelink_bind import generate as tilelink_bind
 from .directory_model import check as directory_check
+from .concurrent_native import smoke as concurrent_smoke
 
 
 def register(sub):
@@ -41,6 +42,15 @@ def register(sub):
     d.add_argument('--limit', type=int, default=100000)
     d.add_argument('--bug', choices=('lost_ack', 'stale_data', 'early_grant', 'starvation', 'cyclic_wait'))
     d.set_defaults(func=lambda args: emit(lambda: directory_check(args.profile, args.lines, args.requests, args.limit, args.bug)))
+    n = commands.add_parser('concurrent-smoke', help='run a bounded native Spike concurrent completion smoke')
+    n.add_argument('--out', required=True, type=Path)
+    n.add_argument('--seed', type=int, default=1)
+    n.add_argument('--harts', type=int, default=2)
+    n.add_argument('--length', type=int, default=16)
+    n.add_argument('--gcc', default='riscv64-unknown-elf-gcc')
+    n.add_argument('--spike', default='spike')
+    n.add_argument('--timeout', type=float, default=30)
+    n.set_defaults(func=lambda args: emit(lambda: concurrent_smoke(args.out, args.seed, args.harts, args.length, args.gcc, args.spike, args.timeout)))
 
 
 def command_images(args):

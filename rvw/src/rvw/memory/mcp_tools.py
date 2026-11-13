@@ -4,10 +4,17 @@ from .axiomatic import check as axiomatic_check
 from .concurrent import generate
 from .tilelink_bind import generate as tilelink_bind
 from .directory_model import check as directory_check
+from .concurrent_native import smoke as concurrent_smoke
 
 
 def mcp_tools():
-    return [ToolSpec('memory_directory', 'Check a finite queued MESI/MOESI directory model with named weak fairness.',
+    return [ToolSpec('memory_concurrent_smoke', 'Run a bounded native Spike completion smoke; ordering and RTL remain unchecked.',
+                     schema({'out': {'type': 'string'}, 'seed': {'type': 'integer', 'default': 1},
+                             'harts': {'type': 'integer', 'default': 2}, 'length': {'type': 'integer', 'default': 16},
+                             'gcc': {'type': 'string', 'default': 'riscv64-unknown-elf-gcc'},
+                             'spike': {'type': 'string', 'default': 'spike'}, 'timeout': {'type': 'number', 'default': 30}},
+                            required=['out']), concurrent_smoke),
+            ToolSpec('memory_directory', 'Check a finite queued MESI/MOESI directory model with named weak fairness.',
                      schema({'profile': {'type': 'string', 'default': 'mesi'}, 'lines': {'type': 'integer', 'default': 1},
                              'requests': {'type': 'integer', 'default': 1}, 'limit': {'type': 'integer', 'default': 100000},
                              'bug': {'type': 'string'} }), directory_check),
