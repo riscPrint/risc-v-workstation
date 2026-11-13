@@ -68,7 +68,7 @@ def _command_error(job, code, context):
             continue
         if isinstance(data, dict) and data.get('error'):
             return {**data, 'status': 'error', 'exit_code': code}
-    raise ToolError(context, {'exit_code': code, 'log_tail': job.tail(30)})
+    raise ToolError(f'{context} (exit {code})', {'exit_code': code, 'log_tail': job.tail(30)})
 
 
 def _runner(command):

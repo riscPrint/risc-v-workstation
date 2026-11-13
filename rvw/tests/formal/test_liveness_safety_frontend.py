@@ -39,7 +39,9 @@ endmodule''')
     run(Namespace(source=str(source),top='m',out=str(out),run=True,timeout=30,
                   backend='l2s',reset='reset',engine=None,mode='prove',depth=12))
     data=json.loads((out/'result.json').read_text())
-    assert data['observation']=='PASS' and data['status']=='unknown', data
+    assert data['observation']=='unknown' and data['status']=='unknown', data
+    assert data['jobs'][0]['status']=='inconclusive'
+    assert json.loads((out/'l2s-0/proof/result.json').read_text())['status']=='pass'
     assert data['jobs'][0]['fairness']==['rvw_live_0']
 
 

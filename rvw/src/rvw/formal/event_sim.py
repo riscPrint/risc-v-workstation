@@ -105,6 +105,8 @@ def testbench(top, ports, observed, scale, rows, raw_pulses=None, state=None, cr
         prefix=prop['monitor']
         pending=f'dut.{prefix}_pending'+(f' + dut.{prefix}_delayed' if prop['nonoverlap'] else '')
         lines.append(f'$display("RVW_PENDING {prefix} %0d", {pending});')
+        if prop.get('disable_iff') is not None:
+            lines.append(f'$display("RVW_CANCELLED {prefix} %0d", dut.{prefix}_cancelled);')
     for prop in cross or []:
         prefix = prop['monitor']
         lines.append(f'$display("RVW_PENDING {prefix} %0d", dut.{prefix}_pending);')
