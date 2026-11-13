@@ -21,9 +21,9 @@ def mcp_tools():
             return run_function(job, "rvw.ooo.evidence", _action, arguments)
         tools.append(ToolSpec("ooo_" + action, "Report saved OoO timing evidence without a fidelity verdict.",
             schema({k: {"type": "string"} for k in (*fields, "out", "project")}, [*fields, "out"]),
-            handler, long=True))
+            handler, long=True, side_effects='long-running; writes results under out and native model caches; may compile or load native models', native_tools=('native OoO', 'native csim')))
     return tools + [ToolSpec("ooo_run", "Predict committed-path OoO timing. Accuracy remains inconclusive.",
                     schema({"config": {"type": "string"}, "trace": {"type": "string"},
                             "max_cycles": {"type": "integer", "minimum": 1},
                             "effective_config": {"type": "string"}}, ["config", "trace"]),
-                    timing, long=True)]
+                    timing, long=True, side_effects='long-running; reads trace; may compile or load native models and write native caches', native_tools=('native OoO', 'native csim'))]

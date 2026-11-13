@@ -24,4 +24,4 @@ def mcp_tools():
     def handler(job,**kw):
         return run_function(job,'rvw.ooo.sensitivity','sensitivity',kw)
     return [ToolSpec('arch_ooo_sensitivity','Rank local model parameter effects; no fidelity verdict.',
-                     schema({'plan':{'type':'string'},'out':{'type':'string'}},['plan','out']),handler,long=True)]
+                     schema({'plan':{'type':'string'},'out':{'type':'string'}},['plan','out']),handler,long=True, side_effects='long-running; writes results under out and native model caches; may compile or load native models', native_tools=('native OoO', 'native csim'))]

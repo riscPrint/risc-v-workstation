@@ -134,3 +134,12 @@ The old names `db_path` and `run` remain accepted on those tools. Their schema
 properties carry `deprecated: true` and `x-alias-for` with the canonical name.
 A call must supply at most one name for each value. Required inputs accept either
 name. A boolean `run` selects execution and is not a run directory alias.
+
+## Native dependency declarations
+
+`native_tools` lists optional dependencies by installer inventory ID. Executable
+names are not inventory IDs. A tool with no optional inventory dependency uses
+an empty tuple. Its effect description must still name system commands such as
+Git and SSH, and project-selected commands. Keep the native declaration unknown
+when an optional dependency has no inventory entry. Do not hide that gap with an
+empty tuple.

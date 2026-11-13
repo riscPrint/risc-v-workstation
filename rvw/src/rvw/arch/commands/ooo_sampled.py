@@ -26,4 +26,4 @@ def mcp_tools():
     fields={k:{'type':'string'} for k in ('config','trace','points','out')}
     fields.update(warmup={'type':'integer','minimum':0},max_cycles={'type':'integer','minimum':1},full={'type':'boolean'})
     return [ToolSpec('arch_ooo_sampled','Time shared simulation points; quantify sampling gap with optional full run.',
-                     schema(fields,['config','trace','points','out']),handler,long=True)]
+                     schema(fields,['config','trace','points','out']),handler,long=True, side_effects='long-running; writes results under out and native model caches; may compile or load native models', native_tools=('native OoO', 'native csim'))]

@@ -62,3 +62,14 @@ def test_formal_declarations(registry):
     assert registry.tools['formal_doctor'].native_tools == ()
     assert 'EQY' in registry.tools['formal_equiv'].native_tools
     assert registry.tools['formal_sail_state'].native_tools == ('Sail',)
+
+
+def test_architecture_declarations_keep_inventory_gap_explicit(registry):
+    tools = [tool for name, tool in registry.tools.items()
+             if name.startswith(('arch_', 'ooo_', 'csim_', 'workloads_'))]
+    assert tools and all(tool.side_effects for tool in tools)
+    assert {tool.name for tool in tools if tool.native_tools is None} == {'arch_sched_study'}
+    assert 'llvm-mca' in registry.tools['arch_sched_study'].side_effects
+    assert registry.tools['csim_budget'].native_tools == ('native csim',)
+    assert registry.tools['workloads_list'].native_tools == ()
+    assert registry.tools['workloads_verify'].native_tools == ('Spike', 'QEMU')

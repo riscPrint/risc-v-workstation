@@ -20,4 +20,4 @@ def command(args):
 def mcp_tools():
     def handler(job,**kw):return run_function(job,'rvw.arch.custom_tradeoff','tradeoff',kw)
     return [ToolSpec('arch_custom_tradeoff','Join extension timing, software cost and saved RTL/PPA evidence.',
-                     schema({k:{'type':'string'} for k in ['plan','out']},['plan','out']),handler,long=True)]
+                     schema({k:{'type':'string'} for k in ['plan','out']},['plan','out']),handler,long=True, side_effects='long-running; writes results under out and native model caches; may compile or load native models', native_tools=('native OoO', 'native csim'))]

@@ -26,5 +26,5 @@ def mcp_tools():
         def handler(job, _action=action, **arguments):
             return run_function(job, 'rvw.workloads.mcp_tools', 'execute_json', {'action': _action, **arguments})
         result.append(ToolSpec('workloads_' + action, 'Build or reference-check pinned open workloads. No RTL accuracy claim.',
-                               schema(properties, required), handler, long=True))
+                               schema(properties, required), handler, long=True, side_effects={'workloads_list': 'read-only; long-running', 'workloads_build': 'long-running; launches compiler; writes workload build under out', 'workloads_verify': 'long-running; launches selected reference; writes reports under out'}['workloads_' + action], native_tools={'workloads_list': (), 'workloads_build': ('RISC-V GCC',), 'workloads_verify': ('Spike', 'QEMU')}['workloads_' + action]))
     return result

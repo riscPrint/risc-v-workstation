@@ -20,4 +20,4 @@ def command(args):
 def mcp_tools():
     def handler(job,**kw):return run_function(job,'rvw.ooo.fit','fit',kw)
     return [ToolSpec('arch_ooo_fit','Fit a bounded declared grid to saved training evidence; report heldout errors.',
-                     schema({k:{'type':'string'} for k in ['plan','out']},['plan','out']),handler,long=True)]
+                     schema({k:{'type':'string'} for k in ['plan','out']},['plan','out']),handler,long=True, side_effects='long-running; writes results under out and native model caches; may compile or load native models', native_tools=('native OoO', 'native csim'))]

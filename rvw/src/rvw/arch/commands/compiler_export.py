@@ -30,5 +30,5 @@ def mcp_tools():
         def handler(job,_action=action,**kw):
             return run_function(job,__name__,'execute',dict(action=_action,**kw))
         tools.append(ToolSpec('arch_'+action.replace('-','_'),'Partial compiler model export or syntax check.',
-                              schema({k:{'type':'string'} for k in fields},fields),handler,long=True))
+                              schema({k:{'type':'string'} for k in fields},fields),handler,long=True, side_effects={'arch_compiler_export': 'long-running; writes generated artifacts or saved evidence under out', 'arch_compiler_check': 'read-only; long-running'}['arch_' + action.replace('-', '_')], native_tools=()))
     return tools

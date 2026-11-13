@@ -66,7 +66,7 @@ def mcp_tools():
                  "front-end FTQ model, caches, replacement, prefetchers, TLB, store sets, value prediction) on C2, "
                  "CBP BT9, ChampSim or rvw.csim-trace/1 traces. Reports MPKI, coverage, accuracy and storage per trace. Runs as a job.",
                  schema({"study": S, "traces": TRACES, "format": FMT, "sets": SETS, "timeout": {"type": "number"}}, ["study", "traces"]),
-                 _run, long=True, annotations={"readOnlyHint": True}),
+                 _run, long=True, annotations={"readOnlyHint": True}, side_effects='long-running; launches native component engine; builds engine cache if absent', native_tools=('native csim',)),
         ToolSpec("csim_sweep", "Cartesian sweep of dotted study keys over traces, with storage-budget marking and a Pareto "
                  "front on one lower-is-better metric (e.g. direction_mpki, l1d_mpki). Runs as a job.",
                  schema({"study": S, "traces": TRACES, "params": {"type": "object", "additionalProperties": {"type": "array"}},
@@ -74,15 +74,15 @@ def mcp_tools():
                          "budget_scope": {**S, "enum": ["metadata", "all"], "default": "metadata"},
                          "metric": S, "jobs": {"type": "integer", "minimum": 1}, "timeout": {"type": "number"}},
                         ["study", "traces", "params"]),
-                 _sweep, long=True, annotations={"readOnlyHint": True}),
+                 _sweep, long=True, annotations={"readOnlyHint": True}, side_effects='long-running; launches native component engine; builds engine cache if absent', native_tools=('native csim',)),
         ToolSpec("csim_budget", "Storage accounting (bits/KiB per table) of a component study without running a trace.",
-                 schema({"study": S, "sets": SETS}, ["study"]), _budget, annotations={"readOnlyHint": True}),
+                 schema({"study": S, "sets": SETS}, ["study"]), _budget, annotations={"readOnlyHint": True}, side_effects='long-running; launches native component engine; builds engine cache if absent', native_tools=('native csim',)),
         ToolSpec("csim_models", "List the component models and their study keys.", schema({}), _models,
-                 annotations={"readOnlyHint": True}),
+                 annotations={"readOnlyHint": True}, side_effects='read-only; long-running', native_tools=()),
         ToolSpec("csim_convert", "Convert a C2 RVFI trace or a Spike -l --log-commits log (optionally with register values), or a CBP 2016 BT9 trace "
                  "into rvw.csim-trace/1.",
                  schema({"source_format": {**S, "enum": ["c2", "spike", "bt9"]}, "source": S, "out": S, "values": {"type": "boolean", "default": False}},
-                        ["source_format", "source", "out"]), _convert, isolate=True),
+                        ["source_format", "source", "out"]), _convert, isolate=True, side_effects='long-running; writes converted trace to out', native_tools=()),
         ToolSpec("csim_qualify", "Compare a csim direction model with a pinned external reference predictor "
                  "(CBP 2016 TAGE-SC-L 64/8 KB, multiperspective perceptron 64/8 KB/unlimited, MPP+TAGE, Pruett; fetched outside "
                  "the repository and checked by sha256) on the same "
@@ -90,23 +90,23 @@ def mcp_tools():
                  schema({"traces": TRACES, "reference": {**S, "default": "cbp2016-tage-sc-l-64kb",
                                                          "description": "see rvw.csim.qualify.REFERENCES"},
                          "study": S, "format": FMT, "tolerance": {"type": "number", "default": 0.1}, "archive": S}, ["traces"]),
-                 _qualify, long=True, annotations={"readOnlyHint": True}),
+                 _qualify, long=True, annotations={"readOnlyHint": True}, side_effects='long-running; downloads pinned reference sources, builds cache and launches native predictors', native_tools=('native csim',)),
         ToolSpec("csim_simpoint", "Choose weighted simulation points of a trace (basic-block vectors per interval, random "
                  "projection, k-means with BIC). Writes rvw.csim-simpoints/1. Runs as a job.",
                  schema({"trace": S, "interval": {"type": "integer", "minimum": 1}, "max_k": {"type": "integer", "default": 10},
                          "dims": {"type": "integer", "default": 15}, "seed": {"type": "integer", "default": 1}, "format": FMT},
-                        ["trace", "interval"]), _simpoint, long=True, annotations={"readOnlyHint": True}),
+                        ["trace", "interval"]), _simpoint, long=True, annotations={"readOnlyHint": True}, side_effects='read-only; long-running', native_tools=()),
         ToolSpec("csim_run_points", "Run a component study on simulation points (rvw.csim-simpoints/1 path or object) and "
                  "weight the metrics by the point weights. Runs as a job.",
                  schema({"study": S, "trace": S, "points": {"type": ["string", "object"]}, "warmup": {"type": "integer"},
                          "sets": SETS, "format": FMT}, ["study", "trace", "points"]),
-                 _run_points, long=True, annotations={"readOnlyHint": True}),
+                 _run_points, long=True, annotations={"readOnlyHint": True}, side_effects='long-running; launches native component engine; builds engine cache if absent', native_tools=('native csim',)),
         ToolSpec("csim_compare", "Per-trace metric deltas (better/worse/same) between two rvw csim run reports, paired by "
                  "trace hash.", schema({"base": S, "candidate": S, "tolerance": {"type": "number", "default": 0}}, ["base", "candidate"]),
-                 _compare_reports, annotations={"readOnlyHint": True}),
+                 _compare_reports, annotations={"readOnlyHint": True}, side_effects='read-only; long-running', native_tools=()),
         ToolSpec("csim_compare_rtl", "Compare a predictor model with explicit RTL predictor events (rvw.bp-events/1 or Kanata "
                  "#rvw prediction records) on the same C2 run, branch by branch. Missing identity or events gives inconclusive. Runs as a job.",
                  schema({"study": S, "trace": S, "events": S, "roi_start": {"type": "integer"}, "roi_end": {"type": "integer"},
                          "elf_sha256": S, "top": {"type": "integer", "default": 20}}, ["study", "trace", "events"]),
-                 _compare, long=True, annotations={"readOnlyHint": True}),
+                 _compare, long=True, annotations={"readOnlyHint": True}, side_effects='long-running; launches native component engine; builds engine cache if absent', native_tools=('native csim',)),
     ]
