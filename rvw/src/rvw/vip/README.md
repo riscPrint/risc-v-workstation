@@ -6,6 +6,7 @@ No cocotb dependency is needed to import the cycle models.
 
 | Module | Profile | SV agent and fixture |
 |---|---|---|
+| `rvw.vip.wishbone` | Wishbone Classic, 32-bit, byte selects and ACK/ERR | `Uvm/vip/wishbone/` |
 | `rvw.vip.gpio` | GPIO direction, synchronization and edge/level interrupts | `Uvm/vip/gpio/` |
 | `rvw.vip.i2c` | Resolved open-drain I2C, ACK/NACK, stretching and arbitration | `Uvm/vip/i2c/` |
 | `rvw.vip.spi` | Four-wire SPI, all modes, 1 to 32 bits, both bit orders | `Uvm/vip/spi/` |
