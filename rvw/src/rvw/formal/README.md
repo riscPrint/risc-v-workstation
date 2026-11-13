@@ -1448,8 +1448,7 @@ data, set `[formal] regress = "suite.toml"` in `rvw.toml` and omit the argument.
 `results.json` uses C3. Each row retains the task, requested BMC depth, trace
 paths, and `formal_status`: `proven` (conditional unbounded engine result),
 `bounded-pass`, `failed`, `unknown`, `timeout`, `unsupported`, `vacuous`, or
-`error`. An explicit solver PREUNSAT result is `vacuous`. Other activation and
-non-vacuity evidence remains `not_measured`. A bounded pass is never `proven`.
+`error`. An explicit solver PREUNSAT result is `vacuous`. Without a separate activation cover job, activation remains `not_measured`. A bounded pass is never `proven`.
 The suite remains inconclusive and exits 1. JUnit records conditional observations
 as errors, so CI cannot treat them as accepted design proofs. `result.json`
 is the summary returned by the `formal_regress` MCP tool. `formal_sva_lower`
@@ -3253,8 +3252,8 @@ See [the partition guide](README-equiv-partitions.md).
 The [VexRiscv campaign](../../../../examples/vexriscv/README.md#scala-dsl-property-campaign)
 compiles project-owned DSL assertions into a native Verilator ISA harness.
 It prepares one SBY BMC task per assertion for `formal regress`. Its measured
-table states each simulation and formal result. The campaign does not measure
-antecedent reachability or instruction-identity liveness.
+table states each simulation and formal result. The campaign measures finite antecedent matches and bounded cover witnesses.
+Instruction-identity liveness remains unimplemented.
 
 Use `formal regress --proof-cache DIR` to reuse exact self-contained engine
 observations. The MCP argument is `proof_cache`. A C3 `cache.hit` preserves the
@@ -3286,3 +3285,22 @@ bus assumptions. Consistency checks retain their separate retirement cover.
 
 See `examples/vexriscv/formal/SAIL_M.md` for the RV32IM profile, corner tests and
 native campaign. Preparation and simulation results are separate from proof.
+
+### Antecedent reachability and DSL source lines
+
+Finite temporal simulation reports `activated` separately from `passed`.
+Each matched antecedent increments `activated` at its own endpoint. Thus a
+passing implication can have zero observed activations. This is finite evidence.
+Other monitor routes report null when activation is not measured.
+
+A `formal regress` row can add `activation_sby = "response-cover.sby"`.
+Use one cover-mode job that checks the antecedent, with the assertion job's
+engine. Optional `activation_task` selects its SBY task. The runner checks the
+one-cover inventory and records reached, not reached within the bound, timeout
+or error. It does not infer unreachable antecedents from a bounded miss.
+
+The Scala builder writes source-line comments. The temporal frontend retains
+these as `source` in property reports and C1. A generated regression manifest
+can retain the same `source` field for C3 failure attribution. The VexRiscv
+campaign supplies both activation jobs and locations. A wrapper around the DSL
+can use `sourceDepth = 1` to attribute the statement to its caller.

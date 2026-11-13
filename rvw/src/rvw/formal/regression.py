@@ -47,11 +47,14 @@ def task_config(text, task=None):
     return '\n'.join(lines) + '\n'
 
 
-def observe(prop, directory, job, mode, tools, timeout, depth, cache=None):
+def observe(prop, directory, job, mode, tools, timeout, depth, cache=None, activation=None):
     from . import regression_cache
     identity = regression_cache.identity(job, tools) if cache else None
     if identity is not None:
         identity["property"] = prop
+        identity["activation"] = regression_cache.identity(activation[0], tools) if activation else None
+        if activation and identity["activation"] is None:
+            identity = None
     if cache:
         tools.verify()
         hit = regression_cache.restore(cache, identity, directory)
@@ -89,6 +92,10 @@ def observe(prop, directory, job, mode, tools, timeout, depth, cache=None):
             'job_sha256': hashlib.sha256(job.read_bytes()).hexdigest(),
             'activation': 'not_measured',
             'inconclusive': 'Engine observation; transitive input closure, attribution and non-vacuity are not certified.'}
+    result["source"] = prop.get("source")
+    if activation:
+        from .antecedent_cover import observe as observe_activation
+        result["activation"] = observe_activation(*activation, tools, directory, timeout, prop["top"])
     if cache:
         result["cache"] = {"hit": False, "eligible": identity is not None, "scope": "conditional engine observation"}
         regression_cache.publish(cache, identity, directory, result)
@@ -140,7 +147,11 @@ def run(args):
             job = directory / 'job.sby'
             job.write_text(config)
             tools = Toolchain(capture, Namespace(engine=engines), directory / 'tools')
-            prepared.append((prop, directory, job, mode, tools, args.timeout, depth, getattr(args, 'proof_cache', None)))
+            from .antecedent_cover import prepare as prepare_activation
+            activation = prepare_activation(prop, selected, capture, directory)
+            if activation and activation[1] != engines:
+                raise ValueError('unsupported:activation_engine_must_match_property')
+            prepared.append((prop, directory, job, mode, tools, args.timeout, depth, getattr(args, 'proof_cache', None), activation))
         except ValueError as error:
             if 'unsupported:' not in str(error):
                 raise

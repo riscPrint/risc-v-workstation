@@ -236,6 +236,14 @@ class Property:
                       f'else $display("RVW_SVA {prefix} {self.kind} {no}");')
         lines.append(f'always @(posedge {self.clock}) if ({enable}) begin : {prefix}_check\n'
                      f'  {action}\nend')
+        if simulation and self.antecedents is not None:
+            activation = Property(self.name, 'cover', self.clock, self.disable, None, self.antecedents)
+            active_monitor = prefix + '_antecedent'
+            emitted, _ = activation.monitor(active_monitor, simulation=True)
+            emitted = emitted.replace(f'$display("RVW_SVA {active_monitor} cover cover");',
+                                      f'$display("RVW_ACTIVATE {prefix}");')
+            emitted = emitted.replace(f'$display("RVW_SVA {active_monitor} cover miss");', 'begin end')
+            lines.append(emitted)
         return '\n'.join(lines), horizon
 
 
@@ -335,7 +343,13 @@ def lower(source, simulation=False):
                 item.name = label[1]
                 pos = module.start() + label.start()
             edits.append((pos, end + semi.end(), emitted + '\n'))
+            line_end = source.find('\n', end + semi.end())
+            marker = re.search(r'// rvw-source: ([\w.-]+):(\d+)',
+                               source[end + semi.end():line_end if line_end >= 0 else len(source)])
+            location = {'file': marker[1], 'line': int(marker[2])} if marker else None
             reports.append({'id': item.name, 'kind': item.kind, 'clock': item.clock,
+                            'source': location,
+                            'antecedent': parts[0] if len(parts) == 3 else None,
                             'disable_iff': disable, 'horizon': horizon,
                             'monitor': f'rvw_sva_{module_index}_{index}',
                             **({'local_variables': {name: dict(width=width, signed=signed)

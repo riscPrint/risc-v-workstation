@@ -7,8 +7,8 @@ class SvaSpec extends AnyFunSuite {
   test("emit finite properties with explicit clocks and reset") {
     val request = signal("req").sequence
     val response = signal("ack").sequence
-    assert(request.implies(response, overlap = false).assertOn("response", signal("clk"), Some(signal("rst"))) ==
-      "response: assert property (@(posedge clk) disable iff (rst) (req) |=> (ack));")
+    assert(request.implies(response, overlap = false).assertOn("response", signal("clk"), Some(signal("rst"))).startsWith(
+      "response: assert property (@(posedge clk) disable iff (rst) (req) |=> (ack));"))
     assert(signal("data").stable.sequence.property.assertOn("hold", signal("clk")).contains("$stable(data)"))
   }
   test("resolve final names from an elaborated Spinal design") {
@@ -22,6 +22,7 @@ class SvaSpec extends AnyFunSuite {
     val report = SpinalConfig(targetDirectory = directory.toString).generateVerilog(new Tiny)
     val rendered = report.toplevel.contract.assertOn("response", signal("clk"))
     assert(rendered.contains("(io_req) |=> (io_ack)"))
+    assert(rendered.contains("rvw-source: SvaSpec.scala:"))
     val paths = java.nio.file.Files.walk(directory)
     try paths.sorted(java.util.Comparator.reverseOrder()).forEach(p => java.nio.file.Files.delete(p))
     finally paths.close()

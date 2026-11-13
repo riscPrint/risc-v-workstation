@@ -33,12 +33,25 @@ always @* assume(reset == (property_reset_age < 2));
         monitor = monitor.removeprefix('module Properties;').removesuffix('endmodule')
         model = source[:end] + reset + monitor + '\n' + source[end:]
         (directory / 'model.sv').write_text(model)
+        activation = directory / 'activation'
+        activation.mkdir()
+        antecedent = props[0]['antecedent'] or "1'b1"
+        active, _ = lower('module Properties;\ncover property (@(posedge clk) disable iff(reset) '
+                          + antecedent + ');\nendmodule')
+        active = active.removeprefix('module Properties;').removesuffix('endmodule')
+        (activation / 'model.sv').write_text(source[:end] + reset + active + '\n' + source[end:])
+
         (directory / 'job.sby').write_text(
             f'[options]\nmode bmc\ndepth {depth}\n\n[engines]\nsmtbmc yices\n\n'
             '[script]\nread_verilog -formal -sv model.sv\nprep -top VexTop\nasync2sync\ndffunmap\n\n'
             '[files]\nmodel.sv\n')
         manifest += ['', '[[property]]', f'id = "{name}"', f'sby = "{name}/job.sby"',
                      'top = "VexTop"', 'assumptions = ["two reset clocks; other inputs arbitrary"]']
+        (activation / 'job.sby').write_text((directory / 'job.sby').read_text().replace('mode bmc', 'mode cover'))
+        manifest += [f'activation_sby = "{name}/activation/job.sby"']
+        if props[0].get('source'):
+            location = props[0]['source']
+            manifest += [f'source = {{ file = "{location["file"]}", line = {location["line"]} }}']
         inventory += props
     (out / 'regress.toml').write_text('\n'.join(manifest) + '\n')
     (out / 'properties.json').write_text(json.dumps(inventory, indent=2) + '\n')

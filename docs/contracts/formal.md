@@ -858,3 +858,27 @@ formal/common Python code, executable identities and the tool environment.
 Restoration checks stored artifact hashes and current tool bindings. Failed,
 vacuous, unknown and timeout outcomes are not published. General SBY input
 closure remains outside this restricted cache route.
+
+## Antecedent observations and DSL locations
+
+Finite temporal simulation adds `assertions[].activated`. It counts complete
+antecedent matches at their own endpoint. It does not wait for the consequent.
+False antecedents do not increment this field. Pass counts retain their existing
+implication semantics. Other monitor routes report null when activation is not
+measured. A count of zero reports no witnessed match in this finite run.
+
+A regression property can declare `activation_sby` and optional
+`activation_task`. The selected job must use cover mode, the same engine as the
+assertion job and exactly one cover cell after preparation. C3 `activation`
+records `status`, `depth`, traces and elapsed time. `reached` means that this
+bounded cover has a witness. `not_reached_within_bound` does not prove that an
+antecedent is unreachable. Other engine outcomes retain their error or unknown
+status. The cache key includes both jobs. Cache entries retain activation logs,
+models and traces. Assertion results keep their original formal status.
+
+The Scala DSL emits `// rvw-source: FILE:LINE` at each statement. Its frontend
+report and finite C1 rows retain `source = {file, line}`. The example generator
+puts that location in each regression manifest row. C3 retains it on failures
+and other outcomes. File names are source basenames. This identifies the DSL
+call site. It is not a complete transitive source or input-closure certificate.
+Helper functions can pass `sourceDepth` to skip their own Scala stack frames.

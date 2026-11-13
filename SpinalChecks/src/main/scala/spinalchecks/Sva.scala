@@ -87,17 +87,22 @@ object Sva {
 
   final class Property private[Sva] (private val value: () => String) {
     def render: String = value()
-    private def statement(kind: String, name: String, clock: Expr, reset: Option[Expr]): String = {
+    private def statement(kind: String, name: String, clock: Expr, reset: Option[Expr], sourceDepth: Int): String = {
       val event = ident(clock.render)
       val disable = reset.map(r => s"disable iff (${r.render}) ").getOrElse("")
-      s"${ident(name)}: $kind property (@(posedge $event) $disable${render});"
+      require(sourceDepth >= 0 && sourceDepth <= 16, "source depth must be in 0..16")
+      val caller = Thread.currentThread.getStackTrace.filter(f =>
+        !f.getClassName.startsWith("java.") && !f.getClassName.startsWith("spinalchecks.Sva$") && f.getClassName != "spinalchecks.Sva" &&
+          f.getFileName != null && f.getLineNumber > 0).drop(sourceDepth).headOption
+      val source = caller.map(f => s" // rvw-source: ${f.getFileName}:${f.getLineNumber}").getOrElse("")
+      s"${ident(name)}: $kind property (@(posedge $event) $disable${render});$source"
     }
-    def assertOn(name: String, clock: Expr, reset: Option[Expr] = None): String =
-      statement("assert", name, clock, reset)
-    def assumeOn(name: String, clock: Expr, reset: Option[Expr] = None): String =
-      statement("assume", name, clock, reset)
-    def coverOn(name: String, clock: Expr, reset: Option[Expr] = None): String =
-      statement("cover", name, clock, reset)
+    def assertOn(name: String, clock: Expr, reset: Option[Expr] = None, sourceDepth: Int = 0): String =
+      statement("assert", name, clock, reset, sourceDepth)
+    def assumeOn(name: String, clock: Expr, reset: Option[Expr] = None, sourceDepth: Int = 0): String =
+      statement("assume", name, clock, reset, sourceDepth)
+    def coverOn(name: String, clock: Expr, reset: Option[Expr] = None, sourceDepth: Int = 0): String =
+      statement("cover", name, clock, reset, sourceDepth)
   }
 
   def signal(name: String): Expr = { ident(name); new Expr(() => name) }

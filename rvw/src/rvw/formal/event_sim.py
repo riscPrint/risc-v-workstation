@@ -112,13 +112,18 @@ def testbench(top, ports, observed, scale, rows, raw_pulses=None, state=None, cr
 
 
 def counts(output, properties):
-    result = {p['monitor']: dict(id=p['id'], kind=p['kind'], passed=0, failed=0, covered=0, missed=0)
+    result = {p['monitor']: dict(id=p['id'], kind=p['kind'], passed=0, failed=0, covered=0, missed=0,
+                                             activated=0 if p.get('antecedent') is not None else None, source=p.get('source'))
               for p in properties}
     for tag, kind, outcome in re.findall(r'^RVW_SVA (\w+) (assert|assume|cover) (pass|fail|cover|miss)$', output, re.M):
         if tag not in result or kind != result[tag]['kind']:
             raise ValueError('unattributed simulation assertion output')
         field = {'pass': 'passed', 'fail': 'failed', 'cover': 'covered', 'miss': 'missed'}[outcome]
         result[tag][field] += 1
+    for tag in re.findall(r'^RVW_ACTIVATE (\w+)$', output, re.M):
+        if tag not in result:
+            raise ValueError('unattributed antecedent activation')
+        result[tag]['activated'] += 1
     for tag,value in re.findall(r'^RVW_PENDING (\w+) (\d+)$',output,re.M):
         if tag not in result:
             raise ValueError('unattributed pending obligation output')
