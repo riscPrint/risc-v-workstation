@@ -298,3 +298,10 @@ features remain `not established`. It lists the workaround for each bounded
 feature and keeps unqualified HDL backdoor/VPI and full upstream bench support
 visible. Feed results from `rvw regress uvm` or `rvw regress uvm-cpu`, not a
 Python unit test, to report native engine evidence.
+
+## SoC composition
+
+The [map-driven Python environment](examples/soc/README.md) connects the
+merged APB, AXI4-Lite and UART monitors to the CPU services and map-derived
+RAL. Project callbacks supply live wire sampling and active frontdoors.
+Its unit tests do not establish a connected RTL SoC run.
