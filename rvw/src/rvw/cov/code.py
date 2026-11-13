@@ -354,6 +354,14 @@ class SourceMap:
         for begin, end in ranges:
             for n in range(max(begin, 1), min(end, len(lines)) + 1):
                 match = re.search(r'(\S+\.scala)(?::|\s+l)(\d+)', lines[n - 1])
+                # GHDL emits a locator immediately before its lowered statement.
+                # Accept only this exact pair, not a nearest-comment search.
+                if not match and n > 1 and re.match(r'\s*(?:assign|wire|reg|always)\b', lines[n - 1]):
+                    ghdl = re.fullmatch(r'\s*/\* (.+\.vhdl?):(\d+):\d+\s*\*/\s*', lines[n - 2])
+                    if ghdl:
+                        comment_used = True
+                        locations.append((ghdl[1], int(ghdl[2])))
+                        continue
                 if not match:
                     instance = self.db_instance(fields)
                     if instance is not None:
@@ -515,8 +523,8 @@ def report(data, exclusions=None):
                               "mapped": sum(bool(p.get('scala')) for p in data['points']),
                               "methods": dict(sorted(mapping_methods.items())),
                               "statement_hit_status": "undetermined",
-                              "note": "Source links navigate to declarations or assignments. Point hits do not establish individual Scala statement hits.",
-                              "unit": "instrumented points; a point can link to several Scala lines"}, "summary": summary(data['points']),
+                              "note": "Source links navigate to declarations or assignments. Point hits do not establish individual source statement hits.",
+                              "unit": "instrumented points; a point can link to several source lines"}, "summary": summary(data['points']),
             **{kind: {k: summary(v) for k, v in sorted(items.items())} for kind, items in groups.items()},
             "module_types": {module: {kind: summary(points) for kind, points in sorted(kinds.items())}
                              for module, kinds in sorted(module_types.items())},
