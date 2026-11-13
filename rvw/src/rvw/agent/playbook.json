@@ -846,6 +846,7 @@
         "regress_known_remove",
         "regress_mmu_iommu",
         "regress_mmu_iommu_generate",
+        "regress_mutation",
         "regress_plan",
         "regress_privilege_build",
         "regress_privilege_check",

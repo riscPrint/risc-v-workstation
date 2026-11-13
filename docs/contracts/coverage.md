@@ -100,3 +100,12 @@ killer. The project manifest and test receipts use
 See [the campaign contract](../../rvw/src/rvw/cov/CORE_MUTATION.md).
 Build failures are invalid. They never earn kills. Strict passing controls are
 required. Only unconditional formal equivalence earns proved equivalence.
+
+## Mutation detection regression
+
+`rvw.mutation-expectations/1` binds the exported RTL and exact mutation list by
+`mutant_set_sha256`. Test inputs can change in a newly prepared plan.
+`rvw.mutation-regression/1` reports each expected first killer as detected, lost,
+changed or inconclusive. A passing unmutated control and every expected killer
+are required. This is a slow execution tier. Saved detection results cannot
+pass it without rerunning the campaign.

@@ -142,3 +142,21 @@ def test_no_inferred_early_detection(evidence,before,unknown):
     result=tables([row])['timing']
     assert result['property_before_reference']==before
     assert result['property_timing_unmeasured']==unknown
+
+
+@pytest.mark.parametrize('timed_out,schema',[(True,'rvw.formal.equiv/1'),(False,'other')])
+def test_partial_or_wrong_proof_cannot_confirm_gap(campaign,monkeypatch,timed_out,schema):
+    from rvw.cov import core_mutation as module
+    from rvw.common.proc import Result
+    plan=json.loads((campaign/'plan.json').read_text())
+    row=plan['mutants'][1];row['new']=row['old'].replace('a & b','b & a')
+    plan['mutants']=[row];(campaign/'plan.json').write_text(json.dumps(plan))
+    original=module._command
+    def command(argv,values,root,log,deadline):
+        if log.name!='equivalence.log':return original(argv,values,root,log,deadline)
+        proof=campaign/row['id']/'equivalence';proof.mkdir()
+        (proof/'result.json').write_text(json.dumps(dict(schema=schema,status='not_equivalent')))
+        return Result(124 if timed_out else 1,timed_out)
+    monkeypatch.setattr(module,'_command',command)
+    result=run_campaign(campaign)['mutants'][0]
+    assert result['state']=='survived' and not result['test_gap']
