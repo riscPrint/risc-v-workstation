@@ -1129,3 +1129,218 @@ select one instance of each bound kind. Only the selected enum sample closes
 with activation on both cores. Unknown and no_activation results remain
 separate from passing conditional evidence. The CSR-read/state helper group
 has an ABC PDR pass, while its portfolio status stays inconclusive.
+
+## Prove your core against the ISA
+
+Start with a retirement observer or an architectural-state map. Bind actual
+committed operands, register writes, memory effects and trap boundaries. Keep
+core signal names in project files. Do not derive the observed result from the
+reference model. First compare the observer with independent native evidence.
+Then run instruction assertions and instruction-activation covers.
+
+`rvw formal isa` prints the instruction, machine-state and adapter-conformance
+rows. It also lists unselected checks as unsupported. A bounded check is not an
+unbounded proof. A general retirement cover does not establish activation of
+each instruction. A timeout stays inconclusive. It must not become a bounded
+pass or an unsupported-profile result.
+
+### Measured results, 2026-11-13
+
+This table reports selected profiles and bindings. It does not certify a whole
+core. `Unsupported` means the selected kit has no qualified binding or selected
+check. The profile limits below distinguish missing bindings from disabled
+features. `Proven` applies only to the stated arithmetic domain or transaction.
+
+| Check kind | VexRiscv | VexiiRiscv | PicoRV32 |
+| --- | --- | --- | --- |
+| RV32I instruction assertions | Historical bounded 20 for 37 checks | Inconclusive: ADD, LUI, BEQ, LW and SW at depth 60; assertions and activation timed out at 20 s | Unsupported for signoff: state-map equivalence failed |
+| Full-pipeline unbounded instruction proof | Still bounded 20; all 37 new restricted-model PDR/Bitwuzla races timed out | Unsupported in this selection; unbounded attempts NOT RUN | Unsupported for signoff: state-map equivalence failed |
+| Sail M instruction semantics | Eight earlier concrete-arithmetic checks inconclusive; new MUL/MULHU UF checks inconclusive after abstract counterexamples | Unsupported: Sail models not selected | Unsupported: M disabled in this profile |
+| Multiplier arithmetic | Proven MULHSU/MULHU for reduced eight-bit operand domains and full selected RV32 results; MUL/MULH timed out | Proven four reduced-domain helper operations; no pipeline proof | Unsupported: M disabled |
+| Divider arithmetic | Earlier legacy-export zero-divisor cases proven; all four new reduced-operand FormalMTop attempts inconclusive | Failed on an older optional DivRadix2 zero-divisor case; default divider not proved | Unsupported: M disabled |
+| CSR consistency | mscratch bounded 15 in the whole pipeline; local slice bounded 25 under its operand contract; 20 CSR bindings open | Unsupported: no machine-state binding selected | Unsupported: no CSR binding in this profile |
+| Exception and interrupt entry | Bounded 25 on FormalMTop | Unsupported for formal signoff; one ECALL path matched in directed simulation; interrupts NOT RUN | Unsupported for precise-trap signoff; terminal-trap frame comparison failed |
+| MRET and MPP | Failed: M-only profile exposes MPP=0 after MRET | Unsupported for formal signoff; directed MRET record matched | Unsupported in the selected profile |
+| MEPC readback | Failed: bit 0 reads as 1 after an odd write | Unsupported: no machine-state binding selected | Unsupported in the selected profile |
+| Instruction memory and retirement history | Instruction-memory pairing bounded 15; live pipeline history bounded 25 | LW/SW formal attempts inconclusive; directed memory records matched | Forty finite program stream matches; no formal memory signoff |
+| Independent observer equivalence | Unsupported: not certified by instruction checks | Unsupported: finite 15-record alignment check is not formal equivalence | Failed at cycle 10 in the depth-35 miter; fourth-retirement cover reached at cycle 18 |
+
+The VexRiscv instruction bounds use the older FormalSimple RV32IC export at
+SHA-256 `545c0864dec04e72a7b74480464866c8af876c21ff7833f8f7d67dba6aa9e7c1`.
+Only the 37 selected RV32I checks have those historical bounds. Compressed
+checks remain unselected. The historical generated wrapper differs from the
+new single-flight wrapper. Its settings and wrapper hashes stay in the receipt.
+The new model restricts four pipeline-valid signals to at most one active bit.
+It retains regfile word zero and abstracts the other 31 words. Fetch queues are
+not included in that restriction. All 37 new general retirement covers reached.
+They do not revalidate historical instruction activation. An older all-word
+RAM abstraction closed a conditional LUI native proof. It did not certify full
+pipeline behavior or the observer. See the [per-check table](../examples/vexriscv/formal/portfolio-table.md),
+[campaign scope](../examples/vexriscv/formal/PORTFOLIO.md) and
+[older conditional attempts](../examples/vexriscv/formal/ABSTRACT_RESULTS.md).
+
+The VexRiscv machine and new arithmetic rows use the separate FormalMTop RV32IM
+profile at core revision `baf7dc82f855eddaf5b0a20a6802c526f127e38a`, with
+SpinalHDL `de72faf6062206a89b445e5cc07e32ed982712c8`. Its measured base RTL
+SHA-256 is `420f2d5bd0100a07ca48542d232c76e8048a4bb73e03757e51cd1aa664027a37`.
+The local mscratch slice does not discharge its operand contract or certify the
+other 20 catalog rows. Reduced operands do not make the physical datapath an
+eight-bit instance. The new divider check retains the real 32-bit state cone and
+requires first completion within 64 clocks. The older zero-divisor proofs use
+a different captured VexTop export. Do not substitute them for FormalMTop.
+See the [M route](../examples/vexriscv/formal/M_ROUTE.md),
+[machine checks](../examples/vexriscv/formal/MACHINE_M.md) and
+[history/CSR checks](../examples/vexriscv/formal/MACHINE_REMAINING.md).
+
+The VexiiRiscv observer uses core revision
+`9f70315deb3390b283995c5b8f1bd38215ecf52b` and pinned SpinalHDL
+`de72faf6062206a89b445e5cc07e32ed982712c8`. The directed program matched
+15 expected records through a dependent store/load, ECALL, handler entry and
+MRET. A forced zero store-data output failed at the intended store check.
+The formal helper tried ADD at depth 12 first. Its assertion passed, but its
+retirement cover timed out. No qualified bound is claimed. At depth 60, all
+five selected assertion and activation tasks timed out. Interrupt and bus-error
+inputs are zero. Other bus inputs are unconstrained. The last normal commit
+still needs a following commit or trap boundary to supply its next PC.
+See the [observer scope and receipts](../examples/vexiiriscv/formal-observer.md).
+The separate [multiplier helper proofs](../examples/vexiiriscv/formal/MUL_UNIT.md)
+use released SpinalHDL 1.15.0. They do not qualify the complete core against its
+pinned development dependency. The [divider failure](../examples/vexiiriscv/formal/DIV_UNIT.md)
+uses the optional DivRadix2 implementation at older core revision
+`3cff1cc2411ca97e6ee9ef64414ef274d30371e1`. It is not a finding against the
+current default divider or this observer profile.
+
+### M-only deviations and their status
+
+Both measured VexRiscv deviations remain defects. No core fix was applied.
+An M-only core can hard-wire MPP to M. It cannot expose MPP=0 after MRET when
+U-mode is absent. The directed program reads MPP=0 on the captured core and
+MPP=3 on Spike with `--priv=m`. Privileged ISA version 1.13,
+[section 2.1.1.6.1, privilege and interrupt-enable stack](https://docs.riscv.org/reference/isa/v20260120/priv/machine.html),
+requires xRET to reset xPP to the lowest supported mode. That mode is M here.
+This is not a legal M-only choice.
+
+The second program writes MEPC=`0x80000019`. The core reads that odd value
+back. Spike reads `0x80000018`. Both execute MRET at `0x80000018`.
+[Section 2.1.1.14, Machine Exception Program Counter](https://docs.riscv.org/reference/isa/v20260120/priv/machine.html),
+requires MEPC bit 0 to be zero. The core's fetch mask does not correct the CSR
+readback defect. The redirect/RVFI next-PC payload also needs alignment with
+the actual architectural target. Do not mask the property to waive this result.
+The older SRET symbolic witness had unknown values in replay. It is not an
+independent replay-confirmed MRET-target defect. Use the later directed program
+and its retained logs for the MEPC finding.
+
+### PicoRV32 profile limits
+
+The state-map comparison uses PicoRV32 revision
+`ef203c2b0a3fb793280f5114941416c425c5b461`. It selects RV32I, zero register
+reset state, no compressed instructions, no IRQ and no PCPI. The harness has
+one MiB of RAM and immediate memory service. Forty of 42 upstream RV32UI
+programs completed with matching base RVFI streams and register frames.
+These are simulation matches, not 40 formal proofs.
+
+The other two programs are unsupported by this profile. `fence_i` executes
+FENCE.I, but the RTL profile does not implement Zifencei. `ma_data` expects
+misaligned accesses to complete. This profile has CATCH_MISALIGN=1 and no trap
+emulator. The retained diagnosis reports LH at `0x80000581`. These two cases
+are profile limits. They are not solver timeouts or stream matches.
+
+The separate `0xfeeff76f` misaligned-JAL negative control still fails. Native
+RVFI and physical state retain a destination write on the terminal trap. The
+strict architectural monitor suppresses that write and checks the register
+frame. Keep the failed comparison. Do not copy native RVFI destination fields
+into the state map to force equivalence. See the [PicoRV32 state-map record](../examples/picorv32/formal/README.md).
+
+### Commands and inputs
+
+Use private pinned source copies. Set `RISCV_FORMAL`, `VEXIIRISCV`, `PICORV32`
+and `RISCV_TESTS` to those copies. Set `RVW_HOME` to this workstation checkout.
+Put the native formal tools and RISC-V GCC on PATH. Use a new output directory
+for each run. Keep at most two proof engines active. The commands below use
+private locks and nice priority 15.
+
+For a new core, prepare a project-owned RVFI binding or architectural-state map:
+
+```sh
+rvw formal rvfi-generate core-binding.json --out PROJECT
+# Alternative for an independently observed state map:
+rvw formal state-generate core-state.json --out STATE_PROJECT
+scripts/with-lock.sh vex-conn nice -n 15 \
+  rvw formal isa --project PROJECT --out SIGNOFF --timeout 20
+```
+
+Reproduce the VexRiscv restricted instruction portfolio and M-unit route:
+
+```sh
+scripts/with-lock.sh vex-conn nice -n 15 rvw/.venv/bin/python \
+  examples/vexriscv/formal/portfolio_campaign.py \
+  --out PORTFOLIO --timeout 15 --budget 40
+for op in mul mulh mulhsu mulhu; do
+  budget=30
+  if [ "$op" = mulh ]; then budget=60; fi
+  rvw/.venv/bin/python examples/vexriscv/formal/mul-smoke.py \
+    --rtl M_BUILD/VexRiscv.v --top VexRiscv --operation "$op" \
+    --width 8 --timeout "$budget" --out "M_UNITS/$op"
+done
+rvw/.venv/bin/python examples/vexriscv/formal/div-smoke.py \
+  --rtl M_BUILD/VexRiscv.v --top VexRiscv --operand-bits 8 \
+  --timeout 30 --out M_UNITS/divider
+scripts/with-lock.sh vex-conn nice -n 15 rvw/.venv/bin/python \
+  examples/vexriscv/formal/uf_m.py --project SAIL_PROJECT \
+  --timeout 45 --out M_UF
+```
+
+`M_BUILD` is the retained FormalMTop export. `SAIL_PROJECT` is the generated
+project with the pinned Sail M models. Set `--jobs 2` when using run_sail_m.py. Use the [Sail M build recipe](../examples/vexriscv/formal/SAIL_M.md)
+to create these inputs. A UF counterexample remains inconclusive. The captured
+core and Sail products use different bit widths. Separate typed UFs do not
+establish the arithmetic relation between those widths.
+
+For the machine history checks, keep the FormalMTop capture separate from the
+FormalSimple instruction project:
+
+```sh
+rvw/.venv/bin/python examples/vexriscv/formal/machine_remaining.py \
+  --rtl M_BUILD/VexRiscv.v --depth 15 --out MACHINE_CAPTURE
+scripts/with-lock.sh vex-conn nice -n 15 rvw formal isa \
+  --project examples/vexriscv --machine MACHINE_CAPTURE/machine.json \
+  --out MACHINE_SIGNOFF --timeout 180
+```
+
+The 180-second command is the recorded historical recipe. It was not rerun
+in this continuation. The [MPP and MEPC records](../examples/vexriscv/formal/MACHINE_REMAINING.md)
+link the exact directed assembly, Icarus harnesses and Spike commands.
+
+Build the VexiiRiscv profile with its [pinned example recipe](../examples/vexiiriscv/formal-observer.md).
+The measured continuation reused the private example's compiler classpath.
+It compiled only the updated observer before elaboration. A full sbt/core
+rebuild was NOT RUN. Then run the observer comparison and instruction kit:
+
+```sh
+scripts/with-lock.sh vex-conn nice -n 15 rvw/.venv/bin/python \
+  examples/vexiiriscv/formal/observer_smoke.py \
+  --rtl VEXII_BUILD/VexiiRiscv.v --out VEXII_SMOKE
+scripts/with-lock.sh vex-conn nice -n 15 rvw/.venv/bin/python \
+  examples/vexiiriscv/formal/observer_checks.py \
+  --rtl VEXII_BUILD/VexiiRiscv.v --riscv-formal "$RISCV_FORMAL" \
+  --out VEXII_CHECKS --timeout 20
+scripts/with-lock.sh vex-conn nice -n 15 rvw formal isa \
+  --project VEXII_CHECKS/project --out VEXII_SIGNOFF --timeout 20
+```
+
+Reproduce the PicoRV32 state-map generation and finite stream comparison:
+
+```sh
+rvw/.venv/bin/python examples/picorv32/formal/prepare.py \
+  --source "$PICORV32" --riscv-formal "$RISCV_FORMAL" --out PICO_CAPTURE
+rvw formal state-generate PICO_CAPTURE/state-map.json --out PICO_PROJECT
+scripts/with-lock.sh vex-conn nice -n 15 rvw/.venv/bin/python \
+  examples/picorv32/formal/suite.py --source "$PICORV32" \
+  --riscv-formal "$RISCV_FORMAL" --tests "$RISCV_TESTS/isa/rv32ui" \
+  --out PICO_SUITE --prefix riscv64-unknown-elf-
+```
+
+The PicoRV32 record also gives the depth-35 miter and the required trapping
+negative control. Those earlier programs and the M-only deviation programs
+were not rerun for this guide. Keep their receipts and profile limits with
+any summary that uses their results.
