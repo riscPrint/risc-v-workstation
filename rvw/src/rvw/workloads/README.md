@@ -233,3 +233,16 @@ Keep RUN_ROOT outside Git. `report.json` and `report.md` are the result tables.
 No waves or instruction traces are requested. Optional probe events are
 summarized with the existing top-down reader, then removed. Missing top-down
 bindings remain explicit. MCP tool: `workloads_run`.
+
+Set `bounded: true` for the example RTL smoke sizes. These variants use the
+first 128 pinned sort inputs, Python-sorted expected results, the first eight
+SpMV rows with unchanged expected values, and ten Dhrystone iterations.
+Override `sort_size`, `spmv_rows` and `dhrystone_runs` in `target`.
+The Dhrystone variant checks all printed final scalar, record and string
+values. It runs one fixed loop count. It is not an official Dhrystone score.
+`runtime: user-counters` uses a CSR-free single-hart startup and user counter
+reads for cores without machine CSRs. C1 still supplies the full-run counts.
+
+The runner reuses C1 `run-many` with one worker. Each manifest entry has its
+own wall limit. The launch budget also covers adapter setup. Completed table
+rows resume; raw results from an interrupted batch are not reused.

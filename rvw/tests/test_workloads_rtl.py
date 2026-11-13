@@ -37,8 +37,8 @@ def test_campaign_resume_and_failure(tmp_path, monkeypatch):
         good = 'vvadd' in cmd.get('elf')
         data = {'status': 'pass' if good else 'fail', 'instret': 10, 'cycles': 20}
         return SimpleNamespace(run=SimpleNamespace(get=data.get, inconclusive=None),
-                               returncode=0 if good else 1, dir=out, error=None, wall=0.1)
-    monkeypatch.setattr(rtl, 'execute', execute)
+                               returncode=0 if good else 1, dir=out, error=None, wall=0.1, timed_out=False)
+    monkeypatch.setattr(rtl, 'execute_many', lambda commands, outputs, **kw: [execute(c, o) for c, o in zip(commands, outputs)])
     kw = dict(out=tmp_path / 'out', project=project, settings=settings, repeats=2)
     result = rtl.run(**kw)
     assert len(calls) == 4

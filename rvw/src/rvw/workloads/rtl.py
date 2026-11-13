@@ -9,7 +9,7 @@ from pathlib import Path
 
 from rvw.common.project import find_project
 from rvw.regress.config import load_config
-from rvw.runs.adapter import Command, execute
+from rvw.runs.adapter import Command, execute_many
 from . import core
 
 
@@ -52,6 +52,12 @@ def run(out, project=None, settings=None, source=None, config=None, resume=False
         raise ValueError('target needs march, abi, ram_base and ram_size')
     for w in manifest['workloads']:
         w['build'] += ['RAM_BASE={ram_base}', 'RAM_SIZE={ram_size}']
+        if data.get('bounded', False):
+            w['build'] += ['RTL_VARIANT=bounded', 'SORT_SIZE={sort_size}', 'DHRYSTONE_RUNS={dhrystone_runs}', 'RUNTIME={runtime}', 'SPMV_ROWS={spmv_rows}']
+            if w['id'] == 'dhrystone':
+                w['checker'] = 'printed-final-values'
+    if data.get('bounded', False):
+        target = {'spmv_rows': 8, 'sort_size': 128, 'dhrystone_runs': 10, 'runtime': 'machine', **target}
     identity = []
     for repo in (project.parent, cfg.source_repo):
         if repo and Path(repo).exists():
@@ -75,6 +81,18 @@ def run(out, project=None, settings=None, source=None, config=None, resume=False
         core.build(out / 'manifest.json', source or data['source'], out / 'build',
                    data.get('cc', 'riscv64-unknown-elf-gcc'), ','.join(selected), target=target, keep_going=True)
     build = json.loads(build_path.read_text())
+    pending = [w for w in build['workloads'] if 'build_error' not in w and not any(
+        r['program'] == w['id'] for r in report['workloads'])]
+    commands, outputs = [], []
+    for w in pending:
+        if core.digest(w['elf']) != w['elf_sha256']:
+            raise ValueError('ELF changed since build')
+        for index in range(repeats):
+            commands.append(Command(exe=cfg.adapter).set(elf=w['elf'], config=config, seed=1,
+                max_cycles=data.get('max_cycles', 2000000), mem_latency=0, wall_timeout=timeout,
+                probes=data.get('probes', False)))
+            outputs.append(out / f"{w['id']}-{index}")
+    attempts = iter(execute_many(commands, outputs, jobs=1, timeout=timeout))
     for w in build['workloads']:
         if 'build_error' not in w and core.digest(w['elf']) != w['elf_sha256']:
             raise ValueError('ELF changed since build')
@@ -91,18 +109,15 @@ def run(out, project=None, settings=None, source=None, config=None, resume=False
         row = {'program': w['id'], 'elf_sha256': w['elf_sha256'], 'samples': [],
                'status': 'inconclusive', 'instructions': None, 'cycles': None, 'ipc': None}
         for index in range(repeats):
-            cmd = Command(exe=cfg.adapter).set(elf=w['elf'], config=config, seed=1,
-                       max_cycles=data.get('max_cycles', 2000000), mem_latency=0,
-                       probes=data.get('probes', False))
-            attempt = execute(cmd, out / f"{w['id']}-{index}", timeout=timeout, lock=False)
+            attempt = next(attempts)
             sample = {'status': 'inconclusive', 'error': attempt.error, 'wall_s': attempt.wall}
             if attempt.run is not None:
                 r = attempt.run
-                sample.update(status=r.get('status'), instructions=r.get('instret'), cycles=r.get('cycles'))
-                if w['id'] == 'dhrystone' and sample['status'] == 'pass':
+                sample.update(status=r.get('status'), instructions=r.get('instret'), cycles=r.get('cycles'), metrics=r.get('metrics', {}))
+                if w['id'] == 'dhrystone' and not w.get('checker') and sample['status'] == 'pass':
                     sample.update(status='no_checks', error='upstream Dhrystone prints expected values but does not check them')
                 # A C1 pass is the upstream program's HTIF self-check.
-                if r.inconclusive or (attempt.returncode != 0 and sample['status'] == 'pass'):
+                if r.inconclusive or attempt.timed_out:
                     sample['status'] = 'inconclusive'
                 if data.get('probes'):
                     from rvw.perf.topdown import report as analyze
@@ -111,7 +126,11 @@ def run(out, project=None, settings=None, source=None, config=None, resume=False
                     except (OSError, ValueError, KeyError) as exc:
                         sample['topdown_error'] = str(exc)
             row['samples'].append(sample)
-            # No wave or instruction trace is requested. Remove optional adapter traces.
+            # C1 collection can capture artifacts for replay. Remove those copies too.
+            for name, path in getattr(attempt.run, 'captured_artifacts', {}).items():
+                if name in ('probe_events', 'rvfi_trace', 'wave', 'konata'):
+                    Path(path).unlink(missing_ok=True)
+            # Remove optional adapter traces.
             for pattern in ('*.vcd*', '*.fst', '*rvfi*.jsonl', '*probe-events*.jsonl', '*kanata*'):
                 for path in attempt.dir.glob(pattern):
                     if path.is_file():

@@ -9,6 +9,7 @@ ABI ?= lp64d
 CFLAGS ?= -march=$(MARCH)_zicsr_zifencei -mabi=$(ABI) -mcmodel=medany -O2 -std=gnu99 -ffast-math -fno-common \
           -fno-builtin-printf -fno-tree-loop-distribute-patterns \
           -Wno-implicit-int -Wno-implicit-function-declaration -U_FORTIFY_SOURCE -DPREALLOCATE=1
+COUNTER_MODE ?= machine
 BARE_FLAGS = -static -nostdlib -nostartfiles -T $(SRC)/common/test.ld
 
 .PHONY: all bare clean check FORCE
@@ -27,7 +28,7 @@ check:
 # FORCE also catches a changed SRC, compiler or flags in a reused build dir.
 $(BUILD)/syscalls.c: FORCE | check
 	@mkdir -p $(@D)
-	sh rt/patch_syscalls.sh "$(SRC)/common/syscalls.c" > $@.tmp
+	sh rt/patch_syscalls.sh "$(SRC)/common/syscalls.c" | $(if $(filter user,$(COUNTER_MODE)),sed -e 's/mcycle/cycle/g' -e 's/minstret/instret/g',cat) > $@.tmp
 	mv $@.tmp $@
 
 $(BUILD)/%.riscv: $(BUILD)/syscalls.c $(wildcard $(SRC)/common/*) FORCE | check
