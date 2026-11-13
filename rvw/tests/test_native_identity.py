@@ -75,6 +75,7 @@ def test_each_resolved_native_file_is_read_once(native, monkeypatch):
     'RVW_LOCKS_HELD', 'RVW_LOCK_FD_BOOM', 'RVW_LOCK_PYTHON', 'RVW_PYTHON',
     'RISCVSIM_WORK', 'RISCVSIM_CP_CACHE', 'RISCVSIM_XMX', 'RISCVSIM_CACHE_ENTRIES',
     'CODEX_TOOL_CALL_ID', 'CODEX_THREAD_ID', 'CODEX_SESSION_ID', 'T3CODE_THREAD_ID',
+    'XPC_SERVICE_NAME', 'RVW_COSIM_PORT', 'RVW_RVFI_FLUSH',
 ])
 def test_native_identity_ignores_launch_bookkeeping(native, monkeypatch, variable):
     before = native.module.collect()
@@ -86,7 +87,7 @@ def test_native_identity_ignores_launch_bookkeeping(native, monkeypatch, variabl
 
 @pytest.mark.parametrize('variable,value', [
     ('SPINAL_VERILATOR_FLAGS', '-DFLAG_FAIL'), ('CXXFLAGS', '-O1'),
-    ('RISCVSIM_COVERAGE', 'line'), ('UNLISTED_NATIVE_SETTING', 'changed'),
+    ('RISCVSIM_COVERAGE', 'line'), ('RVW_COSIM_DPI', '1'), ('UNLISTED_NATIVE_SETTING', 'changed'),
 ])
 def test_native_identity_keeps_build_options(native, monkeypatch, variable, value):
     before = native.module.collect()
