@@ -16,13 +16,12 @@ package cpu_smoke_pkg;
   endfunction
   task run_phase(uvm_phase phase);
    string image;
-   cpu_control_sequence controls=new(); controls.vif=vif;
+   cpu_program_sequence program_seq=new();
    phase.raise_objection(this);
    env.memory.base=32'h80000000; env.memory.size=4096;
    if(!$value$plusargs("image=%s",image)) `uvm_fatal("IMAGE","missing ELF byte image")
-   env.memory.preload(image);
-   controls.reset();
-   wait(env.scoreboard.checks==6);
+   program_seq.byte_image=image; program_seq.retirements=6;
+   program_seq.start(env.vseqr);
    phase.drop_objection(this);
   endtask
   function void report_phase(uvm_phase phase);

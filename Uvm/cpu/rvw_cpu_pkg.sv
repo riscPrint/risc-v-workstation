@@ -125,6 +125,49 @@ package rvw_cpu_pkg;
    @(negedge vif.clk); vif.debug_req=1;
    repeat(cycles) @(negedge vif.clk); vif.debug_req=0;
   endtask
+  task random_requests(int count, bit [31:0] allowed_irqs, int max_gap=8);
+   if(count<1 || max_gap<1 || allowed_irqs==0)
+    `uvm_fatal("CONTROL_CONFIG","positive count/gap and project IRQ mask required")
+   repeat(count) begin
+    bit [31:0] levels=$urandom & allowed_irqs;
+    repeat($urandom_range(max_gap,1)) @(negedge vif.clk);
+    if($urandom_range(1,0)) debug_pulse($urandom_range(3,1));
+    else interrupt_pulse(levels==0 ? allowed_irqs & (~allowed_irqs+1) : levels,$urandom_range(3,1));
+   end
+  endtask
+ endclass
+ class cpu_virtual_sequencer extends uvm_sequencer;
+  `uvm_component_utils(cpu_virtual_sequencer)
+  cpu_control_sequence controls;
+  cpu_memory memory;
+  cpu_scoreboard scoreboard;
+  function new(string name,uvm_component parent); super.new(name,parent); endfunction
+ endclass
+ class cpu_program_sequence extends uvm_sequence;
+  `uvm_object_utils(cpu_program_sequence)
+  `uvm_declare_p_sequencer(cpu_virtual_sequencer)
+  string byte_image;
+  int unsigned retirements, max_cycles=1000;
+  function new(string name="cpu_program_sequence"); super.new(name); endfunction
+  task body();
+   bit complete=0;
+   if(retirements==0 || max_cycles==0) `uvm_fatal("PROGRAM_CONFIG","positive retirement and cycle bounds required")
+   p_sequencer.memory.preload(byte_image);
+   p_sequencer.controls.reset();
+   repeat(max_cycles) begin
+    @(negedge p_sequencer.controls.vif.clk);
+    if(p_sequencer.scoreboard.checks==retirements) begin complete=1; break; end
+   end
+   if(!complete) `uvm_fatal("CPU_WATCHDOG","program did not reach its expected retirement count")
+  endtask
+ endclass
+ class cpu_random_control_sequence extends uvm_sequence;
+  `uvm_object_utils(cpu_random_control_sequence)
+  `uvm_declare_p_sequencer(cpu_virtual_sequencer)
+  bit [31:0] allowed_irqs;
+  int count=16, max_gap=8;
+  function new(string name="cpu_random_control_sequence"); super.new(name); endfunction
+  task body(); p_sequencer.controls.random_requests(count,allowed_irqs,max_gap); endtask
  endclass
  class cpu_env extends uvm_env;
   `uvm_component_utils(cpu_env)
@@ -132,15 +175,19 @@ package rvw_cpu_pkg;
   cpu_scoreboard scoreboard;
   cpu_coverage coverage;
   cpu_memory memory;
+  cpu_virtual_sequencer vseqr;
   function new(string name,uvm_component parent); super.new(name,parent); endfunction
   function void build_phase(uvm_phase phase);
    if(!uvm_config_db#(cpu_memory)::get(this,"","memory",memory))
     memory=cpu_memory::type_id::create("memory");
+   vseqr=cpu_virtual_sequencer::type_id::create("vseqr",this);
+   vseqr.controls=new("controls");
    monitor=cpu_monitor::type_id::create("monitor",this);
    scoreboard=cpu_scoreboard::type_id::create("scoreboard",this);
    coverage=cpu_coverage::type_id::create("coverage",this);
   endfunction
   function void connect_phase(uvm_phase phase);
+   vseqr.memory=memory; vseqr.scoreboard=scoreboard; vseqr.controls.vif=monitor.vif;
    monitor.ap.connect(scoreboard.analysis_export); monitor.ap.connect(coverage.analysis_export);
   endfunction
  endclass
