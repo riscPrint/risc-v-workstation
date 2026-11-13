@@ -162,6 +162,11 @@ def _value(wave, name, at, db=None, dec=False, period=None, clock=ops.CLOCK_RX):
     return value(database, wave, name, t, "dec" if dec else "hex")
 
 
+def _bench(tasks, vars=None, only=None, timeout=600):
+    from .tasks import run
+    return run(tasks, vars or {}, only, timeout)
+
+
 def mcp_tools():
     return [
         ToolSpec("wave_info", "Inspect timescale, signal count, time range and clock period of a waveform.",
@@ -222,6 +227,11 @@ def mcp_tools():
                  "Spinal path, enum element names, and Stream fire. Needs a SpinalDB database (db or RVW_DESIGNDB).",
                  schema({"wave": WAVE["wave"], **TIME, "name": S, "at": S, "dec": B, "db": S}, ["wave", "name", "at"]),
                  _indexed(_value), annotations=RO),
+        ToolSpec("wave_bench", "Run a debug task file (rvw.debug-tasks/1): each task's rvw command is timed and its "
+                 "JSON answer checked; recorded reference-tool results (e.g. Verdi) are compared when present.",
+                 schema({"tasks": S, "vars": {"type": "object", "additionalProperties": S},
+                         "only": {"type": "array", "items": S}, "timeout": {"type": "number", "default": 600}},
+                        ["tasks"]), _bench, long=True),
         ToolSpec("wave_index", "Build an identity-bound .rvwi index of a VCD/FST wave for fast window, sample and search queries.",
                  schema({"wave": WAVE["wave"], "out": S,
                          "reader": {"enum": ["auto", "vcd", "wellen"], "default": "auto"}}, ["wave", "out"]), _index),

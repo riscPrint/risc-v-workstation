@@ -1,0 +1,41 @@
+{
+  "schema": "rvw.debug-tasks/1",
+  "description": "Small debug questions on fixture waves. Fill each reference record after answering the same question with another tool.",
+  "tasks": [
+    {
+      "id": "why-x",
+      "question": "Why is GCD register x 0x4 at time 18? Which assignment set it and from which values?",
+      "argv": ["wave", "why", "gcd.vcd", "x", "--at", "18", "--db", "{db}", "--depth", "1"],
+      "expect": [
+        {"path": "trace.set_at", "equals": 15},
+        {"path": "trace.assignments", "any": {"source": "x - y", "holds": true}},
+        {"path": "trace.children", "any": {"signal": "y", "value": "0x8"}}
+      ],
+      "reference": {"tool": "Verdi", "seconds": null, "steps": null, "solved": null, "notes": null}
+    },
+    {
+      "id": "stream-protocol",
+      "question": "Does the cmd Stream break the valid/payload stability rule, and when?",
+      "argv": ["wave", "txn", "hs.vcd", "--valid", "io_cmd_valid", "--ready", "io_cmd_ready", "--payload", "payload"],
+      "expect": [
+        {"path": "issues", "any": {"time": 45, "issue": "payload_changed"}},
+        {"path": "transfers", "equals": 1}
+      ],
+      "reference": {"tool": "Verdi", "seconds": null, "steps": null, "solved": null, "notes": null}
+    },
+    {
+      "id": "first-stall",
+      "question": "When does valid first wait for ready, and for how long?",
+      "argv": ["wave", "find", "hs.vcd", "io_cmd_valid && !io_cmd_ready"],
+      "expect": [{"path": "first", "equals": 5}, {"path": "matches.0.end", "equals": 15}],
+      "reference": {"tool": "Verdi", "seconds": null, "steps": null, "solved": null, "notes": null}
+    },
+    {
+      "id": "handshake-latency",
+      "question": "After valid rises, does ready follow within one to two cycles?",
+      "argv": ["wave", "seq", "hs.vcd", "rose(io_cmd_valid) ##[1:2] io_cmd_ready"],
+      "expect": [{"path": "matched", "equals": 1}, {"path": "failed", "equals": 0}],
+      "reference": {"tool": "Verdi", "seconds": null, "steps": null, "solved": null, "notes": null}
+    }
+  ]
+}

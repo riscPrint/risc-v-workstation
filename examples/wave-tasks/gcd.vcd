@@ -1,0 +1,53 @@
+$timescale 1ns $end
+$scope module TOP $end
+$scope module GCD $end
+$var wire 1 ! clk $end
+$var wire 1 " reset $end
+$var wire 32 # io_a [31:0] $end
+$var wire 32 $ io_b [31:0] $end
+$var wire 1 % io_loadValues $end
+$var wire 32 & x [31:0] $end
+$var wire 32 ' y [31:0] $end
+$var wire 1 ( when_Gcd_l19 $end
+$var wire 32 ) io_result [31:0] $end
+$upscope $end
+$upscope $end
+$enddefinitions $end
+#0
+$dumpvars
+0!
+1"
+b1100 #
+b1000 $
+0%
+b0 &
+b0 '
+0(
+b0 )
+$end
+#2
+0"
+1%
+#5
+1!
+b1100 &
+b1000 '
+b1100 )
+1(
+#7
+0%
+#10
+0!
+#15
+1!
+b100 &
+b100 )
+0(
+#20
+0!
+#25
+1!
+b0 '
+1(
+#30
+0!

@@ -138,6 +138,17 @@ index and both times. A run with fewer events is `diverged` with that cause. Use
 compare runs with different timing (two configurations, a fix, another core). Equal events
 do not prove equal timing.
 
+## Debug task protocol (`bench`)
+
+`rvw wave bench TASKS.json [--var NAME=VALUE ...]` (MCP `wave_bench`, a job) runs a
+`rvw.debug-tasks/1` file: each task has a question, one rvw command (`argv`, with `{NAME}`
+variables and `{dir}` for the task file directory), `expect` checks on its JSON output
+(`equals`, `contains`, `any` element with fields) and an optional hand-recorded `reference`
+from another tool (`tool`, `seconds`, `steps`, `solved`, `notes`). Each task is `solved`,
+`unsolved`, `no_checks` or `error`, with rvw wall seconds. A speedup is reported only for a
+solved task with a recorded reference time. The example pack and protocol are in
+`examples/wave-tasks/`; no reference results are recorded there yet.
+
 ## Debug sessions
 
 ```sh

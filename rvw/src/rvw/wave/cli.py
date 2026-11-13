@@ -164,6 +164,14 @@ def register(sub: argparse._SubParsersAction) -> None:
     q.add_argument("--dec", action="store_true", help="decimal instead of hex")
     q.set_defaults(func=_value)
 
+    q = w.add_parser("bench", help="run a debug task file (rvw.debug-tasks/1): time and check each rvw answer")
+    q.add_argument("tasks")
+    q.add_argument("--var", action="append", default=[], help="NAME=VALUE for {NAME} in task argv (repeat)")
+    q.add_argument("--task", action="append", help="run only this task id (repeat)")
+    q.add_argument("--timeout", type=float, default=600)
+    q.add_argument("--json", action="store_true")
+    q.set_defaults(func=_bench)
+
     q = w.add_parser("info", help="timescale, signal count, first/last time, clock period")
     common(q, regex=False)
     q.set_defaults(func=_info)
@@ -429,6 +437,26 @@ def _diff(a):
         if r.get('only_in_a_count'):
             print(f"# {r['only_in_a_count']} signals only in A")
     return 0 if r['status'] == 'match' else 1
+
+
+def _bench(a):
+    from .tasks import run
+    try:
+        variables = dict(v.split("=", 1) for v in a.var if "=" in v)
+        r = run(a.tasks, variables, a.task, a.timeout)
+        if a.json:
+            jsonout.write(r)
+        else:
+            for t in r['results']:
+                print(f"{t['id']}: {t['status']}" + (f" in {t['seconds']} s" if 'seconds' in t else "")
+                      + (f" ({t['cause']})" if t.get('cause') else ""))
+            print(f"# {r['solved']}/{r['total']} solved; {r['comparison']}")
+        return 0 if r['solved'] == r['total'] else 1
+    except (WaveError, jsonout.JsonOutputError) as e:
+        if a.json:
+            jsonout.write({'error': str(e)})
+        print(f"rvw wave: {e}", file=sys.stderr)
+        return 2
 
 
 def _session_save(a):
