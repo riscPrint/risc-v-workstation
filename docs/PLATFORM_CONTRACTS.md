@@ -4764,3 +4764,16 @@ counts, and no ELF claim. A pass requires exit zero, no UVM error/fatal, and one
 C1 and log. `source.identity_complete` is false. These results are component
 checks, not a core gate identity. Native coverage merging does not merge
 functional coverage plans or establish closure.
+
+
+### Shortest captured counterexamples and explanations
+
+`rvw.shortest-cex/1` records increasing solver sample depths for a captured BMC
+model with one assertion. `shortest=true` requires FAIL at the reported depth
+and PASS at every smaller positive depth. Unknown depths stop the search.
+All-PASS finite searches stay inconclusive. Restrictions and input hashes remain.
+`rvw.cex-explanation/1` contains a `chain` from an actual SpinalTrace dynamic
+graph. Node IDs refer to its vertex order. Each node records source location,
+timestamp, observed value and `causes` with node ID, edge kind and clock flag.
+Trace accuracy is retained. Missing accuracy becomes incomplete. These records
+are not an unbounded proof or a repair certificate.

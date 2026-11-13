@@ -2241,3 +2241,18 @@ that a source change fixes the design or authorize a coverage exclusion.
 The output retains both SBY jobs, their logs, the pinned model and captured
 inputs. The `formal_recheck` MCP tool has the same inputs. Native tests check a
 removed failure, a retained failure and an assumption conflict with Yosys/SBY/Z3.
+### Shortest solver counterexample
+
+`rvw formal shortest --result RUN --max-depth 20 --out DIR` checks increasing
+sample depths in a captured BMC model. The model must have exactly one assertion.
+The first FAIL is shortest only if all smaller depths passed. An unknown or
+failed solver invocation stops the search as inconclusive. Reaching the depth
+limit with PASS results also stays inconclusive. This is not an unbounded proof.
+The original assumptions and restrictions remain. Each SBY job and trace is
+retained. `formal_shortest` provides the same operation through MCP.
+
+When counterexample replay uses `--pdg`, successful SpinalTrace output also
+writes `explanation.json`. The agent-readable chain lists source locations,
+observed values, timestamps and dependencies. It keeps the dynamic graph's
+accuracy status. Missing accuracy is incomplete. The chain is observed trace
+evidence. It does not prove counterfactual causality or a source repair.

@@ -786,7 +786,7 @@ usage: rvw fault report [-h] [--project PROJECT] directory
 
 ```text
 usage: rvw formal [-h] [--project PROJECT]
-    {device-events,upf,power,buses,csr,bug-hunt,model-live,rtl-grid,rtl-refine,relation-strengthen,doctor,engines,engine-race,engine-bench,model-grid,security,regress,properties,simulate,liveness,sva-lower,template,contracts,strengthen,testplan,proof-core,apps,autocheck,bench,recheck,cex,sby-history,sby-regress,prove,depth-search,rvfi-generate,sail-zicond,custom-isa,profiles,riscv,connectivity,datapath,equiv,bmc,from-sim,swarm,xprop,x-context,x-sweep}
+    {device-events,upf,power,buses,csr,bug-hunt,model-live,rtl-grid,rtl-refine,relation-strengthen,doctor,engines,engine-race,engine-bench,model-grid,security,regress,properties,simulate,liveness,sva-lower,template,contracts,strengthen,testplan,shortest,proof-core,apps,autocheck,bench,recheck,cex,sby-history,sby-regress,prove,depth-search,rvfi-generate,sail-zicond,custom-isa,profiles,riscv,connectivity,datapath,equiv,bmc,from-sim,swarm,xprop,x-context,x-sweep}
     ...
 ```
 
@@ -985,6 +985,14 @@ usage: rvw formal strengthen [-h] --out OUT [--budget BUDGET] [--depth DEPTH]
 ```text
 usage: rvw formal testplan [-h] --manifest MANIFEST --out OUT [--json]
     [--project PROJECT]
+```
+
+### `rvw formal shortest`
+
+```text
+usage: rvw formal shortest [-h] --result RESULT --out OUT [--max-depth
+    MAX_DEPTH] [--timeout TIMEOUT] [--engine ENGINE] [--json] [--project
+    PROJECT]
 ```
 
 ### `rvw formal proof-core`
@@ -2937,6 +2945,14 @@ Starts a background job: yes.
 Prove declared digital two-copy observation contracts or initial-state independence.
 
 Arguments: `manifest` (required), `out` (required), `timeout`.
+
+Starts a background job: yes.
+
+### `formal_shortest`
+
+Search increasing BMC depths for the sole captured assertion. Unknown depths cannot certify minimality.
+
+Arguments: `result` (required), `out` (required), `max_depth`, `timeout`, `engine`.
 
 Starts a background job: yes.
 
