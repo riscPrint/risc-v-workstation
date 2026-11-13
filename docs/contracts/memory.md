@@ -117,3 +117,20 @@ reset, a trap event or an external maintenance event gives `inconclusive`.
 These events do not silently disappear from the candidate graph. An LR
 before reset cannot pair with an SC after reset. Initial reset records and
 ordinary single-epoch executions remain supported under RVWMO and Ztso.
+
+
+## Concurrent execution campaign
+
+`rvw.concurrent-campaign/1` records `memory concurrent-run`. The command builds
+seeded per-hart images, invokes an explicit C1 adapter and checks captured C2
+with the selected scalar model. It records build metadata, adapter command and
+SHA256, C1 status, trace SHA256, retirement counts and the axiomatic answer.
+C1 config, seed, cycle limit and image hashes must match the generated run.
+C2 hart IDs and image hashes must match too. Retired instruction bytes come
+from the captured pre-launch images. Each hart starts at its entry and reaches
+its generated completion PC. This direct-boot smoke profile has at most 10000
+retirements. All scalar checker requirements still apply. A total budget of
+at most 90 seconds bounds compiler, adapter and checker subprocesses. An
+`allowed` result requires a passing C1, valid capture, and an allowed answer
+from the selected model with a matching process exit. This is finite ordering
+evidence. Project architectural and production qualification remain separate.
