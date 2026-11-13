@@ -20,8 +20,8 @@ object SmpAdapter extends CoreAdapter {
   def isa(config: String) = "rv64ima_zicsr_zifencei"
   override def hartIds(config: String) = 0 until VexiiTop.count(config)
   def sourceDir = new File(sys.env("VEXIIRISCV")).getCanonicalFile
-  override def replayEnv = Seq("VEXIIRISCV" -> sourceDir.getPath, "RVW_VEX_LOCK" -> "vex-mem") ++
-    Seq("RVW_SMP_MAX_DELAY", "RVW_SMP_READY_PERCENT", "RVW_SMP_CLOCK_PERCENT", "RVW_SMP_PLIC_SOURCE_MASK")
+  override def replayEnv = Seq("VEXIIRISCV" -> sourceDir.getPath, "RVW_VEX_LOCK" -> sys.env.getOrElse("RVW_VEX_LOCK", "vex-mem")) ++
+    Seq("RVW_SBT_LOCK", "RVW_SMP_MAX_DELAY", "RVW_SMP_READY_PERCENT", "RVW_SMP_CLOCK_PERCENT", "RVW_SMP_PLIC_SOURCE_MASK")
       .flatMap(name => sys.env.get(name).map(name -> _))
   private def report(key: ModelKey, work: File) = RiscvSimConfig.elaborate(key, work,
     VexiiTop.spinalConfig, sourceRoots = Seq(new File(sourceDir, "src/main/scala")))(new SmpTop(key.config))
@@ -74,6 +74,7 @@ object SmpAdapter extends CoreAdapter {
     }
     val host = images.harts.map { case (h,e) => h -> new ToHost(ToHost.find(e).get + (if(commonBoot) h*8 else 0), 8) }.toMap
     val done = mutable.Map.empty[Int, Status]
+    val failCodes = mutable.Map.empty[Int, Long]
     val reservations = mutable.Map.empty[Int, (Long, Int)]
     val backends = mutable.ArrayBuffer.empty[C2Backend]
     val events = mutable.ArrayBuffer.empty[(Long, () => Unit)]
@@ -121,8 +122,8 @@ object SmpAdapter extends CoreAdapter {
           r => events += ((r.cycle, () => trace.retire(h,r))),
           (c,cause,tval,intr) => events += ((c, () => trace.trap(h,c,cause,tval,intr))),
           (a,s,d) => host(h).onStore(a,s,d).foreach {
-            case ToHost.Pass => done(h) = Status.Pass
-            case _: ToHost.Fail => done(h) = Status.Fail
+            case ToHost.Pass => done(h) = Status.Pass; failCodes.remove(h)
+            case ToHost.Fail(code, _, _) => done(h) = Status.Fail; failCodes(h) = code
           }, r => {
             val failedSc = (r.insn & 0x7f) == 0x2f && (r.insn >> 27) == 3
             if(serialized && (r.memRmask != 0 || r.memWmask != 0 || failedSc)) {
@@ -303,7 +304,9 @@ object SmpAdapter extends CoreAdapter {
       "clock_stall_edges" -> ujson.Obj.from(ids.map(h => h.toString -> RvwJson.num(clockStalls(h)))))
     if(hsmMode) details("hsm") = ujson.Obj("starts" -> starts, "entries" -> entered,
       "stops" -> stops, "stopped" -> parked, "ipis" -> ipis, "scope" -> "SBI software lifecycle; no clock/reset/power gating")
-    RunOutcome(result._1,result._4,backends.map(_.retired).sum,message=result._3,details=details)
+    details("hart_failures") = ujson.Obj.from(failCodes.toSeq.sortBy(_._1).map { case (h, code) => h.toString -> RvwJson.num(code) })
+    RunOutcome(result._1,result._4,backends.map(_.retired).sum,
+      failCode=failCodes.toSeq.sortBy(_._1).headOption.map(_._2),message=result._3,details=details)
   }
 }
 object Main { def main(args: Array[String]): Unit = new Driver(SmpAdapter).main(args) }

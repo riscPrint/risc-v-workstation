@@ -62,6 +62,7 @@ class Options:
     latencies: list[int] = field(default_factory=lambda: [1, 2, 5, 10, 20, 50])
     symbols: list[str] = field(default_factory=list)
     instructions: list[str] = field(default_factory=list)
+    hart_symbols: list[str] = field(default_factory=list)
     margin: int = 100
     hang_cycles: int = 5000
     project: str | None = None
@@ -132,6 +133,16 @@ class Reducer:
             return False, None
         if r.inconclusive:           # harness error, synthesized, wall clock, C1 mark (rvw.results rule)
             return None, f"inconclusive: {r.inconclusive}"
+        if "hart_instructions" in self.o.modes and self.run.get("status") == "fail":
+            expected = self.run.get("details", {}).get("hart_failures")
+            actual = r.get("details", {}).get("hart_failures")
+            if not expected:
+                return None, "original per-hart failure codes are unavailable"
+            if r.get("status") == "fail":
+                if not actual:
+                    return None, "candidate per-hart failure codes are unavailable"
+                if actual != expected:
+                    return False, "per-hart failure codes differ"
         s = runs.signature(r.data)
         if not runs.signature_matches(s, self.sig):
             return False, None
@@ -403,6 +414,14 @@ class Reducer:
             schedule = ','.join([entries[0], *[entries[i] for i in kept]])
             return base.set(irq_schedule=schedule), {"irq_schedule": schedule, "elf": self.best['elf']}
         self._stream_search('irq', range(1, len(entries)), command)
+
+    def mode_hart_instructions(self):
+        from .hart_instructions import reduce_hart_instructions
+        reduce_hart_instructions(self)
+
+    def mode_uart_rx(self):
+        from .device_rx import reduce_device_rx
+        reduce_device_rx(self)
 
     def mode_stimulus(self):
         from .streams import Stimulus

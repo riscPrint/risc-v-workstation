@@ -15,9 +15,10 @@ def mcp_tools():
         "smallest tested failing value, or null when the original value did not reproduce in this search. "
         "It is `exact` only with monotone or exhaustive after the failing upper bound is confirmed.",
         schema({"project": S, "run_dir": S, "out": S, "signature": S,
-                "modes": {**S, "default": "cycles,seeds,latency", "description": "comma-separated mode names"},
+                "modes": {**S, "default": "cycles,seeds,latency", "description": "comma-separated modes; uart_rx removes timed UART input transactions"},
                 "seeds": {**I, "default": 12}, "seed_start": {**I, "default": 1},
                 "latencies": {**S, "default": "1,2,5,10,20,50", "description": "comma-separated fixed latencies"},
+                "hart_symbol": {"type": "array", "items": S, "description": "HART:NAME private code symbols; adds hart_instructions mode"},
                 "instruction_symbol": {"type": "array", "items": S, "description": "sized executable ELF symbols; adds instructions mode"},
                 "symbol": {"type": "array", "items": S, "description": "NAME[:BYTES] data symbols; adds symbols mode"},
                 "margin": {**I, "default": 100}, "hang_cycles": {**I, "minimum": 1, "default": 5000},

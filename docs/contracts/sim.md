@@ -481,3 +481,17 @@ Older snapshots without this register restore it as zero.
 The live CLINT model supports aligned eight-byte accesses to `mtime` and
 `mtimecmp`. Both halves use one sampled device state. MSIP and PLIC registers
 use four-byte accesses. UART registers use byte accesses.
+
+## Device and per-hart reduction
+
+The `uart_rx` reduction stage consumes the captured `soc_map` artifact and its
+C1 SHA-256. It removes only timed UART RX entries. Retained cycles and order
+stay fixed. The `hart_instructions` stage consumes `rvw.hart-images/1` and
+checks each ELF against C1 `details.hart_images`. It preserves hart IDs and
+entries. Named private code symbols use address-preserving NOP replacement.
+
+The SMP example records C1 `details.hart_failures` as a map from decimal hart
+IDs to program failure codes. C1 `fail_code` is the code from the lowest
+failed hart. Per-hart reduction also requires the complete failure-code map
+to match. Missing codes are inconclusive. Other failure-signature and timeout
+rules still apply. Each stage reports local minimality and budget exhaustion.

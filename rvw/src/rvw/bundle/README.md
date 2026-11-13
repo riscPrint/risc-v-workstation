@@ -477,7 +477,7 @@ options still pass the normal C1 checks. A mismatch stays inconclusive.
 The live path captures the ELF and any captured simulation map. It sends these
 request bytes to the existing process. It does not copy or launch another core
 source tree. Normal process reruns retain full source capture. Boot payloads,
-hart images, fault-file requests and interactive debug/trace bindings currently
+hart images, fault-file and stimulus-file requests, and interactive debug/trace bindings currently
 need the normal process path.
 The live bundle's replay script still requires the original project setup.
 A self-contained portable replay archive is a separate feature.
@@ -485,3 +485,25 @@ A self-contained portable replay archive is a separate feature.
 Generic RiscvSim now supplies FST by default. The bundle reads that artifact
 and writes its existing selected VCD window. Capture bounds apply inside the
 native simulation. See [the simulation service](../sim/README.md#live-server-and-failure-windows).
+
+### Timed UART inputs and per-hart code
+
+`rvw reduce RUN --modes uart_rx` removes UART RX transactions from the captured
+simulation map. It checks the original map digest. It keeps device setup,
+cycle numbers, retained-byte order, the ELF and interrupt routing. Every
+candidate uses the existing conclusive C1 failure-signature check.
+Use this mode when removal of input bytes is a valid environment change.
+
+`rvw reduce RUN --hart-symbol 1:fault_region` adds `hart_instructions` mode.
+It checks all per-hart ELF hashes against the original C1 identities. It
+replaces selected instructions with same-size NOPs in the named private code
+symbol. It keeps every hart, entry address and peer image. Setup and required
+synchronization must stay outside that symbol. Shared overlapping code cannot
+be patched independently; the adapter's overlap checks still apply.
+
+For failing multi-hart programs, the original and candidate C1 records must
+provide identical `details.hart_failures` maps. Missing codes stop the search
+as inconclusive. A different failed hart or code cannot reproduce the target.
+The SMP example now records these codes and a deterministic C1 fail code.
+A completed search proves one-item local minimality for that stage only.
+No global minimum follows from a sequence of stages.

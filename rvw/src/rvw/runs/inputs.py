@@ -123,7 +123,7 @@ class DebugInputs(WaveInputs):
         if cmd.sub != 'run':
             raise ValueError('live rerun requires a single-run command')
         cmd = cmd.set(elf=str(snapshot_elf(run, self.capture.root.parent, self.capture, root=self.root)))
-        for name in ('boot_payloads', 'hart_images', 'fault', 'debug', 'debug_binding', 'trace_ingress'):
+        for name in ('boot_payloads', 'hart_images', 'fault', 'debug', 'debug_binding', 'trace_ingress', 'stimulus_file'):
             if cmd.get(name) is not None:
                 raise ValueError('live bundle does not capture this structured input: ' + name)
         if cmd.get('soc_map') is not None:

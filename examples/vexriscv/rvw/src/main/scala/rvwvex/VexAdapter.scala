@@ -18,7 +18,7 @@ object VexAdapter extends CoreAdapter {
   def isa(config: String) = VexCached.isa(config)
   def sourceDir = new File(sys.env("VEXRISCV")).getCanonicalFile
   override def replayEnv = Seq("VEXRISCV" -> sourceDir.getPath) ++
-    Seq("RVW_COSIM_DPI", "RVW_COSIM_FAULT_ORDER", "RVW_VEX_LOCK", "RVW_VEX_CSR_FULL", "RVW_VEX_CSR_CAPTURE").flatMap(
+    Seq("RVW_COSIM_DPI", "RVW_COSIM_FAULT_ORDER", "RVW_VEX_LOCK", "RVW_SBT_LOCK", "RVW_VEX_CSR_FULL", "RVW_VEX_CSR_CAPTURE").flatMap(
       name => sys.env.get(name).map(name -> _))
   override def supportsProbes = true
   override def supportsInstructionPort(config: String) = config == "rv32im"

@@ -18,7 +18,7 @@ def register(sub: argparse._SubParsersAction) -> None:
     p.add_argument("--out", help="output directory (default RUN_DIR/reduce)")
     p.add_argument("--signature", help="signature to preserve (default: the run's; 're:REGEX' for a family)")
     p.add_argument("--modes", default="cycles,seeds,latency",
-                   help="comma list of cycles, seeds, latency, symbols, instructions, irq, stimulus (default cycles,seeds,latency)")
+                   help="comma list of cycles, seeds, latency, symbols, instructions, irq, stimulus, uart_rx, hart_instructions (default cycles,seeds,latency)")
     p.add_argument("--seeds", type=int, default=12, help="number of seeds to try (12)")
     p.add_argument("--seed-start", type=int, default=1, help="first seed to try (1)")
     p.add_argument("--latencies", default="1,2,5,10,20,50", help="fixed memory latencies to try")
@@ -26,6 +26,8 @@ def register(sub: argparse._SubParsersAction) -> None:
                    help="NAME[:BYTES] integer in initialized data to minimize (adds the symbols mode)")
     p.add_argument("--instruction-symbol", action="append", default=[],
                    help="sized executable ELF symbol to reduce with NOP replacement")
+    p.add_argument("--hart-symbol", action="append", default=[],
+                   help="HART:NAME sized executable symbol in private per-hart code")
     p.add_argument("--monotone", action="store_true",
                    help="symbols: the failure is known to be monotone in the value, so the binary search "
                         "boundary is the minimum (exact)")
@@ -46,19 +48,21 @@ def register(sub: argparse._SubParsersAction) -> None:
 def execute_json(run_dir: str, *, out=None, signature=None, modes="cycles,seeds,latency", seeds=12,
                  seed_start=1, latencies="1,2,5,10,20,50", symbol=None, margin=100,
                  hang_cycles=5000, jobs=1, batch=4, budget=64, timeout=None, monotone=False,
-                 exhaustive=False, instruction_symbol=None, project=None) -> dict:
+                 exhaustive=False, instruction_symbol=None, hart_symbol=None, project=None) -> dict:
     """Shared CLI/MCP options and reduction result."""
     modes = [m.strip() for m in modes.split(",") if m.strip()]
     if symbol and "symbols" not in modes:
         modes.append("symbols")
     if instruction_symbol and "instructions" not in modes:
         modes.append("instructions")
-    bad = [m for m in modes if m not in ("cycles", "seeds", "latency", "symbols", "instructions", "irq", "stimulus")]
+    if hart_symbol and "hart_instructions" not in modes:
+        modes.append("hart_instructions")
+    bad = [m for m in modes if m not in ("cycles", "seeds", "latency", "symbols", "instructions", "irq", "stimulus", "uart_rx", "hart_instructions")]
     if bad:
         raise ValueError(f"unknown mode(s) {bad}")
     o = Options(project=project, out=out, signature=signature, modes=modes, seeds=seeds, seed_start=seed_start,
                 latencies=[int(x) for x in latencies.split(",") if x.strip()], symbols=symbol or [],
-                instructions=instruction_symbol or [], margin=margin, hang_cycles=hang_cycles, jobs=jobs, batch=batch, budget=budget,
+                instructions=instruction_symbol or [], hart_symbols=hart_symbol or [], margin=margin, hang_cycles=hang_cycles, jobs=jobs, batch=batch, budget=budget,
                 timeout=timeout, monotone=monotone, exhaustive=exhaustive)
     return Reducer(run_dir, o).reduce()
 
@@ -68,7 +72,7 @@ def run(a) -> int:
         r = execute_json(a.run_dir, project=getattr(a, "project", None), out=a.out, signature=a.signature, modes=a.modes, seeds=a.seeds,
                          seed_start=a.seed_start, latencies=a.latencies, symbol=a.symbol, margin=a.margin,
                          hang_cycles=a.hang_cycles, jobs=a.jobs, batch=a.batch, budget=a.budget,
-                         instruction_symbol=a.instruction_symbol, timeout=a.timeout, monotone=a.monotone, exhaustive=a.exhaustive)
+                         instruction_symbol=a.instruction_symbol, hart_symbol=a.hart_symbol, timeout=a.timeout, monotone=a.monotone, exhaustive=a.exhaustive)
     except (FileNotFoundError, ValueError) as e:
         print(f"rvw reduce: {e}", file=sys.stderr)
         return 2

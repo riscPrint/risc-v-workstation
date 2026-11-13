@@ -113,7 +113,7 @@ def test_changed_semantic_trace_header_is_not_reproduced(failing, tmp_path):
     assert not result['checks']['c2_header']
 
 
-@pytest.mark.parametrize('option', ['debug', 'trace-ingress'])
+@pytest.mark.parametrize('option', ['debug', 'trace-ingress', 'stimulus-file'])
 def test_pack_refuses_external_debug_and_trace_bindings(failing, tmp_path, option):
     run, recipe, _, _ = failing
     result = json.loads((run/'result.json').read_text())

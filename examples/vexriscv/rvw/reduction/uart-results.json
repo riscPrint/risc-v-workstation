@@ -1,0 +1,112 @@
+{
+  "schema": "rvw.native-reduction-sample/1",
+  "date": "2026-11-13",
+  "core_revision": "a62c145aa042a5de874344e0a7683bd7c8c8c870",
+  "source_snapshot": "core Git archive; excluded unused VexRiscvRegressionData test-data Git link",
+  "original_rtl_sha256": "80b1dfec5f3dde68a490dbf05cbee620b4ae3cc4e627ffff045d1a25e0856159",
+  "capture_rtl_change": "generator Git comment only; all other Verilog bytes equal",
+  "stream": {
+    "original": 5,
+    "remaining": 1,
+    "kept": [
+      1
+    ],
+    "completion": "one_minimal",
+    "one_minimal": true,
+    "global_minimum": false
+  },
+  "reproduced": true,
+  "retained_rx": [
+    {
+      "cycle": 1000,
+      "byte": 42
+    }
+  ],
+  "setup_and_retained_timing_equal": true,
+  "trials": [
+    {
+      "trial": "t000-stream0",
+      "status": "fail",
+      "fail_code": 21,
+      "cycles": 1064,
+      "instret": 257,
+      "c2_records": 259,
+      "c2_sha256": "1a9571a8a8a6bf3b1b153e0c1159599b06d3ab3ae7ff3ec5a1cab25d43f5066a",
+      "rtl_sha256": "80b1dfec5f3dde68a490dbf05cbee620b4ae3cc4e627ffff045d1a25e0856159"
+    },
+    {
+      "trial": "t001-stream1",
+      "status": "pass",
+      "fail_code": null,
+      "cycles": 42050,
+      "instret": 10015,
+      "c2_records": 10017,
+      "c2_sha256": "66b7cd1f84e6f6940e956efe356d8bf77543c37af984f5a19b480977792c4396",
+      "rtl_sha256": "80b1dfec5f3dde68a490dbf05cbee620b4ae3cc4e627ffff045d1a25e0856159"
+    },
+    {
+      "trial": "t002-stream2",
+      "status": "fail",
+      "fail_code": 21,
+      "cycles": 1064,
+      "instret": 257,
+      "c2_records": 259,
+      "c2_sha256": "1a9571a8a8a6bf3b1b153e0c1159599b06d3ab3ae7ff3ec5a1cab25d43f5066a",
+      "rtl_sha256": "80b1dfec5f3dde68a490dbf05cbee620b4ae3cc4e627ffff045d1a25e0856159"
+    },
+    {
+      "trial": "t003-stream3",
+      "status": "pass",
+      "fail_code": null,
+      "cycles": 42044,
+      "instret": 10012,
+      "c2_records": 10014,
+      "c2_sha256": "4391d6deb2cad012a97525be2ce5b8fe1985cee1dd7d616b9a026f89c1182d95",
+      "rtl_sha256": "80b1dfec5f3dde68a490dbf05cbee620b4ae3cc4e627ffff045d1a25e0856159"
+    },
+    {
+      "trial": "t004-stream4",
+      "status": "fail",
+      "fail_code": 21,
+      "cycles": 1064,
+      "instret": 257,
+      "c2_records": 259,
+      "c2_sha256": "1a9571a8a8a6bf3b1b153e0c1159599b06d3ab3ae7ff3ec5a1cab25d43f5066a",
+      "rtl_sha256": "80b1dfec5f3dde68a490dbf05cbee620b4ae3cc4e627ffff045d1a25e0856159"
+    },
+    {
+      "trial": "t005-stream5",
+      "status": "fail",
+      "fail_code": 21,
+      "cycles": 1037,
+      "instret": 249,
+      "c2_records": 251,
+      "c2_sha256": "fa7dc4a0632efa4c67cbbdeb402acfdbbdab3e21b995cdc3801c4ccdddc1a800",
+      "rtl_sha256": "80b1dfec5f3dde68a490dbf05cbee620b4ae3cc4e627ffff045d1a25e0856159"
+    },
+    {
+      "trial": "t006-stream6",
+      "status": "pass",
+      "fail_code": null,
+      "cycles": 42038,
+      "instret": 10009,
+      "c2_records": 10011,
+      "c2_sha256": "7a3f385a4dd3e8ac4096b5de1660ac58f28d90af3ca938114a45683422a65753",
+      "rtl_sha256": "80b1dfec5f3dde68a490dbf05cbee620b4ae3cc4e627ffff045d1a25e0856159"
+    },
+    {
+      "trial": "t007-confirm",
+      "status": "fail",
+      "fail_code": 21,
+      "cycles": 1037,
+      "instret": 249,
+      "c2_records": 251,
+      "c2_sha256": "fa7dc4a0632efa4c67cbbdeb402acfdbbdab3e21b995cdc3801c4ccdddc1a800",
+      "rtl_sha256": "80b1dfec5f3dde68a490dbf05cbee620b4ae3cc4e627ffff045d1a25e0856159"
+    }
+  ],
+  "limits": [
+    "bounded UART RX removal; other device transaction forms are not reduced",
+    "stage-local one-minimal result, not a global minimum"
+  ]
+}

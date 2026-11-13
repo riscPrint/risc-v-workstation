@@ -98,3 +98,25 @@ asserted and quiet IRQ schedules. General multi-hart stimulus, reordered
 schedules, device transaction reduction and unknown upstream failures were
 not run. This recipe provides the real instruction and concurrent IRQ piece
 of #152. Broader stimulus reduction remains separate work.
+
+## Timed UART RX reduction
+
+The Spinal adapter also supports reduction of UART RX bytes in a captured
+simulation map. Use the private source snapshot described above. Set
+`RVW_SBT_LOCK=sbt-NAME` when the build writes only to your private directories.
+Prepare and record a deliberate failure:
+
+```sh
+rvw/.venv/bin/python examples/vexriscv/rvw/reduction/prepare-uart.py --out INPUTS
+nice -n 10 examples/vexriscv/rvw/run.sh run --elf INPUTS/uart.elf --soc-map INPUTS/sim-map.json --out UART_RUN --seed 1 --mem-latency 0 --max-cycles 50000 --rvfi-trace
+RVW_NO_LOCK=1 scripts/with-lock.sh vex-NAME nice -n 10 rvw/.venv/bin/rvw reduce UART_RUN --project examples/vexriscv/rvw.toml --out UART_REDUCED --modes uart_rx --budget 32 --timeout 300 --json
+```
+
+The native sample kept byte 42 from five RX entries. Its cycle remains 1000.
+The program still reports fail code 21. Removing that byte passes. All device
+setup, routing and retained timing stayed equal. Eight conclusive native trials
+completed, including a final confirmation. Their complete C2 streams passed
+the shared parser. Source capture changed only the generator Git comment in
+RTL. All captured trials used one RTL hash. See `uart-results.json`.
+This stage removes RX entries only. It does not reduce arbitrary device models
+or prove a global minimum.
