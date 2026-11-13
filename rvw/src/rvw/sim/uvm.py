@@ -71,7 +71,7 @@ def evidence(log: str, returncode: int, timed_out: bool, *, negative=False) -> b
     markers = re.findall(r"^RVW_UVM_PASS (\w+)$", log, re.M)
     return (returncode == 0 and log.count("RVW_UVM_DONE") == 1
             and sorted(markers) == sorted(FEATURES)
-            and not re.search(r"^UVM_(?:ERROR|FATAL)\b(?!\s*:\s*0\s*$)", log, re.M))
+            and not re.search(r"^\s*UVM_(?:ERROR|FATAL)\b(?!\s*:\s*0\s*$)", log, re.M))
 
 
 def run(out: Path, *, archive=None, suite=DEFAULT_SUITE, verilator="verilator",
