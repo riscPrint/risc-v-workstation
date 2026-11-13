@@ -78,8 +78,21 @@ def register(subparsers):
     x.add_argument("--events", required=True, help="rvw.bp-events/1 JSONL or a Kanata log")
     x.add_argument("--roi-start", type=int); x.add_argument("--roi-end", type=int)
     x.add_argument("--elf-sha256"); x.add_argument("--top", type=int, default=20)
+    x.add_argument("--cache", help="compare this cache probe instead of predictor events")
+    x.add_argument("--level", choices=["l1d", "l1i"])
+    x.add_argument("--trace-out", help="write the aligned cache access stream")
     x.add_argument("--json", action="store_true")
     x.set_defaults(func=_compare)
+
+    cc = sub.add_parser("compare-cache", help="per-access comparison of a cache model with RTL cache probe events")
+    cc.add_argument("study"); cc.add_argument("--trace", required=True, help="C2 rvfi.jsonl of the same run")
+    cc.add_argument("--events", required=True, help="rvw.probe-events/1 stream with cache access events")
+    cc.add_argument("--cache", default="dcache", help="probe cache name (default dcache)")
+    cc.add_argument("--level", choices=["l1d", "l1i"], help="study level (default l1i for a cache named i*, else l1d)")
+    cc.add_argument("--top", type=int, default=20)
+    cc.add_argument("--trace-out", help="also write the aligned access stream (RTL addresses, C2 PCs) as rvw.csim-trace/1")
+    cc.add_argument("--json", action="store_true")
+    cc.set_defaults(func=_compare_cache)
 
     q = sub.add_parser("qualify", help="compare a direction model with a pinned external reference predictor")
     q.add_argument("traces", nargs="+")
@@ -172,8 +185,17 @@ def _models(args):
 
 @_guard
 def _compare(args):
+    if args.cache:
+        from . import rtl_cache
+        return rtl_cache.compare(args.study, args.trace, args.events, args.cache, args.level, args.top, args.trace_out)
     from . import rtl
     return rtl.compare(args.study, args.trace, args.events, args.roi_start, args.roi_end, args.elf_sha256, args.top)
+
+
+@_guard
+def _compare_cache(args):
+    from . import rtl_cache
+    return rtl_cache.compare(args.study, args.trace, args.events, args.cache, args.level, args.top, args.trace_out)
 
 
 @_guard
@@ -223,9 +245,16 @@ def sweep_json(study, traces, params, format="auto", sets=None, budget_kib=None,
     return st.sweep(_overrides(study, sets), traces, params, format, jobs, budget_kib, metric, timeout, budget_scope)
 
 
-def compare_json(study, trace, events, roi_start=None, roi_end=None, elf_sha256=None, top=20):
+def compare_json(study, trace, events, roi_start=None, roi_end=None, elf_sha256=None, top=20, cache=None, level=None, trace_out=None):
+    if cache:
+        return compare_cache_json(study, trace, events, cache=cache, level=level, top=top, trace_out=trace_out)
     from . import rtl
     return rtl.compare(study, trace, events, roi_start, roi_end, elf_sha256, top)
+
+
+def compare_cache_json(study, trace, events, cache="dcache", level=None, top=20, trace_out=None):
+    from . import rtl_cache
+    return rtl_cache.compare(study, trace, events, cache, level, top, trace_out)
 
 
 def qualify_json(traces, reference="cbp2016-tage-sc-l-64kb", study=None, format="auto", tolerance=0.10, archive=None):

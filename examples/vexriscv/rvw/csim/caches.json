@@ -1,0 +1,11 @@
+{
+  "schema": "rvw.csim-study/1",
+  "name": "vexriscv-rv32im_cached-caches",
+  "description": "VexRiscv rv32im_cached / rv32ima_linux L1 caches (GenFullNoMmu sizes): 4 KiB, 32-byte lines, one way. The data cache is write-through and does not allocate on a store miss.",
+  "source": {"fidelity": "approximate", "approximations": ["no wrong-path or redo fetches in the model", "fixed latencies, not the RTL bus timing"]},
+  "memory": {
+    "dram_latency": 4,
+    "l1i": {"size_kib": 4, "ways": 1, "line_bytes": 32, "latency": 1},
+    "l1d": {"size_kib": 4, "ways": 1, "line_bytes": 32, "latency": 1, "write_allocate": false, "write_back": false}
+  }
+}

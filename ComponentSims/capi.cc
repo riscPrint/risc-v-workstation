@@ -79,6 +79,23 @@ uint64_t csim_mem_access(void* p, uint64_t cycle, uint64_t pc, uint64_t addr, in
     uint64_t t = m.mmu ? m.mmu->translate(addr, pc, cycle) : cycle;
     return m.l1d->access(addr, pc, t, is_store != 0, false, UINT64_MAX, nullptr);
 }
+// The same access, also returning whether the first level hit (*hit = 1) or missed.
+uint64_t csim_mem_access_hit(void* p, uint64_t cycle, uint64_t pc, uint64_t addr, int is_store, int fetch, int* hit) {
+    auto* h = static_cast<Handle*>(p); auto& m = *h->mem; bool b = false; uint64_t done = 0;
+    if (fetch) { if (m.l1i) done = m.l1i->access(addr, pc, cycle, false, false, UINT64_MAX, &b); }
+    else if (m.l1d) {
+        uint64_t t = m.mmu ? m.mmu->translate(addr, pc, cycle) : cycle;
+        done = m.l1d->access(addr, pc, t, is_store != 0, false, UINT64_MAX, &b);
+    }
+    if (hit) *hit = b ? 1 : 0;
+    return done;
+}
+// Invalidate the whole first-level cache (fetch=1: l1i, else l1d). -1 when it does not exist.
+int csim_mem_flush(void* p, int fetch) {
+    auto* h = static_cast<Handle*>(p); Cache* c = fetch ? h->mem->l1i.get() : h->mem->l1d.get();
+    if (!c) return -1;
+    c->flush(); return 0;
+}
 // Explicit FTQ-directed instruction prefetch. Address is a byte address.
 int csim_ifetch_prefetch(void* p, uint64_t cycle, uint64_t pc, uint64_t address) {
     auto* h = static_cast<Handle*>(p);

@@ -1,0 +1,388 @@
+{
+  "schema": "rvw.example-cache-measurements/1",
+  "date": "2026-11-13",
+  "config": "rv32im_cached",
+  "program": "cache-probes.S",
+  "elf_sha256": "51763dc6aa1ac866016acfe194e0f772a8db0f14b67c52297cfa666e06ca7180",
+  "rtl_sha256": null,
+  "status": "pass",
+  "cycles": 7774,
+  "instret": 3342,
+  "inconclusive": null,
+  "cache_check": {
+    "schema": "rvw.probe-cache-check/1",
+    "status": "mismatch",
+    "elf": "$RUN_ROOT/cache-probes",
+    "c2_stores": 513,
+    "geometry": {
+      "dcache": {
+        "sets": 128,
+        "ways": 1
+      },
+      "icache": {
+        "sets": 128,
+        "ways": 1
+      }
+    },
+    "caches": {
+      "dcache": {
+        "line_bytes": 32,
+        "evict_probe": true,
+        "access": 769,
+        "misses": 513,
+        "fill": 256,
+        "fill_data_checked": 256,
+        "hits_checked": 256,
+        "evict": 192,
+        "writeback_data_checked": 0
+      },
+      "icache": {
+        "line_bytes": 32,
+        "evict_probe": false,
+        "fill": 5,
+        "fill_data_checked": 5,
+        "access": 3342,
+        "misses": 5,
+        "hits_checked": 3335,
+        "flush": 1,
+        "violations": 2,
+        "writeback_data_checked": 0
+      }
+    },
+    "mismatches": [
+      {
+        "cache": "icache",
+        "cycle": 7611,
+        "rule": "hit on a line that is not resident",
+        "line": "0x80000040",
+        "address": "0x80000054"
+      },
+      {
+        "cache": "icache",
+        "cycle": 7612,
+        "rule": "hit on a line that is not resident",
+        "line": "0x80000040",
+        "address": "0x80000058"
+      }
+    ]
+  },
+  "comparisons": {
+    "icache": {
+      "schema": "rvw.csim-cache-compare/1",
+      "status": "compared",
+      "reasons": [],
+      "cache": "icache",
+      "level": "l1i",
+      "study": "vexriscv-rv32im_cached-caches",
+      "study_sha256": "f8f4281e17c48662c659a63267e836f7b51918115eebd01caf9c61b473cb7839",
+      "trace": "$RUN_ROOT/vex-sweep-fixed/rvfi.jsonl",
+      "events": "$RUN_ROOT/vex-sweep-fixed/probe-events.jsonl",
+      "instructions": 3342,
+      "rtl_events": {
+        "access": 3342,
+        "fill": 5,
+        "evict": 0
+      },
+      "model_accesses": 3342,
+      "unsampled_tail": 0,
+      "summary": {
+        "accesses": 3342,
+        "both_hit": 3336,
+        "both_miss": 4,
+        "rtl_hit_model_miss": 1,
+        "model_hit_rtl_miss": 1,
+        "loads": 3342,
+        "stores": 0,
+        "agreement": 0.9994015559545183,
+        "rtl_miss_rate": 0.0014961101137043686,
+        "model_miss_rate": 0.0014961101137043686,
+        "miss_rate_error": 0.0,
+        "rtl_mpki": 1.4961101137043686,
+        "model_mpki": 1.4961101137043686
+      },
+      "misaligned": null,
+      "first_disagreements": [
+        {
+          "index": 3337,
+          "order": 3337,
+          "pc": "0x80000058",
+          "address": "0x80000058",
+          "store": false,
+          "rtl_hit": true,
+          "model_hit": false,
+          "rtl_cycle": 7612
+        },
+        {
+          "index": 3338,
+          "order": 3338,
+          "pc": "0x8000005c",
+          "address": "0x8000005c",
+          "store": false,
+          "rtl_hit": false,
+          "model_hit": true,
+          "rtl_cycle": 7757
+        }
+      ],
+      "per_pc": [
+        {
+          "pc": "0x80000058",
+          "disagreements": 1,
+          "rtl_misses": 0,
+          "model_misses": 1
+        },
+        {
+          "pc": "0x8000005c",
+          "disagreements": 1,
+          "rtl_misses": 1,
+          "model_misses": 0
+        }
+      ],
+      "model_stats": {
+        "size_kib": 4,
+        "ways": 1,
+        "sets": 128,
+        "latency": 1,
+        "replacement": "lru",
+        "perfect": false,
+        "demand_accesses": 3342,
+        "demand_hits": 3337,
+        "demand_misses": 5,
+        "demand_mpki": 1.496110114,
+        "miss_rate": 0.001496110114,
+        "average_latency": 1.011968881,
+        "write_allocate": true,
+        "write_back": true,
+        "flushes": 1,
+        "prefetch_requests_from_upper": 0,
+        "prefetch_misses_from_upper": 0,
+        "writebacks": 0,
+        "prefetch": {
+          "requested": 0,
+          "dropped_present": 0,
+          "dropped_queue_full": 0,
+          "issued": 0,
+          "sent_to_lower": 0,
+          "useful": 0,
+          "late": 0,
+          "useless_evicted": 0,
+          "pollution_misses": 0,
+          "accuracy": 0,
+          "coverage": 0,
+          "prefetchers": []
+        },
+        "replacement_stats": {},
+        "storage": {
+          "bits": 37760,
+          "kib": 4.609375,
+          "parts": {
+            "data": 32768,
+            "tags": 4992,
+            "replacement_extra": 0,
+            "prefetchers": 0
+          }
+        }
+      },
+      "trace_out": null,
+      "note": "Agreement is a measured model gap, not an RTL correctness or fidelity verdict."
+    },
+    "dcache": {
+      "schema": "rvw.csim-cache-compare/1",
+      "status": "compared",
+      "reasons": [],
+      "cache": "dcache",
+      "level": "l1d",
+      "study": "vexriscv-rv32im_cached-caches",
+      "study_sha256": "f8f4281e17c48662c659a63267e836f7b51918115eebd01caf9c61b473cb7839",
+      "trace": "$RUN_ROOT/vex-sweep-fixed/rvfi.jsonl",
+      "events": "$RUN_ROOT/vex-sweep-fixed/probe-events.jsonl",
+      "instructions": 3342,
+      "rtl_events": {
+        "access": 769,
+        "fill": 256,
+        "evict": 192
+      },
+      "model_accesses": 769,
+      "unsampled_tail": 0,
+      "summary": {
+        "accesses": 769,
+        "both_hit": 256,
+        "both_miss": 513,
+        "rtl_hit_model_miss": 0,
+        "model_hit_rtl_miss": 0,
+        "loads": 256,
+        "stores": 513,
+        "agreement": 1.0,
+        "rtl_miss_rate": 0.6671001300390117,
+        "model_miss_rate": 0.6671001300390117,
+        "miss_rate_error": 0.0,
+        "rtl_mpki": 153.50089766606823,
+        "model_mpki": 153.50089766606823
+      },
+      "misaligned": null,
+      "first_disagreements": [],
+      "per_pc": [],
+      "model_stats": {
+        "size_kib": 4,
+        "ways": 1,
+        "sets": 128,
+        "latency": 1,
+        "replacement": "lru",
+        "perfect": false,
+        "demand_accesses": 769,
+        "demand_hits": 256,
+        "demand_misses": 513,
+        "demand_mpki": 153.5008977,
+        "miss_rate": 0.66710013,
+        "average_latency": 2.66449935,
+        "write_allocate": false,
+        "write_back": false,
+        "flushes": 0,
+        "prefetch_requests_from_upper": 0,
+        "prefetch_misses_from_upper": 0,
+        "writebacks": 0,
+        "prefetch": {
+          "requested": 0,
+          "dropped_present": 0,
+          "dropped_queue_full": 0,
+          "issued": 0,
+          "sent_to_lower": 0,
+          "useful": 0,
+          "late": 0,
+          "useless_evicted": 0,
+          "pollution_misses": 0,
+          "accuracy": 0,
+          "coverage": 0,
+          "prefetchers": []
+        },
+        "replacement_stats": {},
+        "storage": {
+          "bits": 37760,
+          "kib": 4.609375,
+          "parts": {
+            "data": 32768,
+            "tags": 4992,
+            "replacement_extra": 0,
+            "prefetchers": 0
+          }
+        }
+      },
+      "trace_out": null,
+      "note": "Agreement is a measured model gap, not an RTL correctness or fidelity verdict."
+    }
+  },
+  "studies": [
+    {
+      "replacement": "lru",
+      "next_line_prefetch": false,
+      "metrics": {
+        "weighting": "arithmetic mean of per-trace values (equal trace weights)",
+        "traces": 1,
+        "mean": {
+          "l1d_mpki": 153.5008977,
+          "l1d_prefetch_accuracy": 0.0,
+          "l1d_prefetch_coverage": 0.0,
+          "l1i_mpki": 0.0,
+          "l1i_prefetch_accuracy": 0.0,
+          "l1i_prefetch_coverage": 0.0,
+          "metadata_kib": 1.21875,
+          "storage_kib": 9.21875
+        }
+      }
+    },
+    {
+      "replacement": "lru",
+      "next_line_prefetch": true,
+      "metrics": {
+        "weighting": "arithmetic mean of per-trace values (equal trace weights)",
+        "traces": 1,
+        "mean": {
+          "l1d_mpki": 153.5008977,
+          "l1d_prefetch_accuracy": 0.0,
+          "l1d_prefetch_coverage": 0.0,
+          "l1i_mpki": 0.0,
+          "l1i_prefetch_accuracy": 0.0,
+          "l1i_prefetch_coverage": 0.0,
+          "metadata_kib": 1.21875,
+          "storage_kib": 9.21875
+        }
+      }
+    },
+    {
+      "replacement": "plru",
+      "next_line_prefetch": false,
+      "metrics": {
+        "weighting": "arithmetic mean of per-trace values (equal trace weights)",
+        "traces": 1,
+        "mean": {
+          "l1d_mpki": 153.5008977,
+          "l1d_prefetch_accuracy": 0.0,
+          "l1d_prefetch_coverage": 0.0,
+          "l1i_mpki": 0.0,
+          "l1i_prefetch_accuracy": 0.0,
+          "l1i_prefetch_coverage": 0.0,
+          "metadata_kib": 1.234375,
+          "storage_kib": 9.234375
+        }
+      }
+    },
+    {
+      "replacement": "plru",
+      "next_line_prefetch": true,
+      "metrics": {
+        "weighting": "arithmetic mean of per-trace values (equal trace weights)",
+        "traces": 1,
+        "mean": {
+          "l1d_mpki": 153.5008977,
+          "l1d_prefetch_accuracy": 0.0,
+          "l1d_prefetch_coverage": 0.0,
+          "l1i_mpki": 0.0,
+          "l1i_prefetch_accuracy": 0.0,
+          "l1i_prefetch_coverage": 0.0,
+          "metadata_kib": 1.234375,
+          "storage_kib": 9.234375
+        }
+      }
+    },
+    {
+      "replacement": "srrip",
+      "next_line_prefetch": false,
+      "metrics": {
+        "weighting": "arithmetic mean of per-trace values (equal trace weights)",
+        "traces": 1,
+        "mean": {
+          "l1d_mpki": 153.5008977,
+          "l1d_prefetch_accuracy": 0.0,
+          "l1d_prefetch_coverage": 0.0,
+          "l1i_mpki": 0.0,
+          "l1i_prefetch_accuracy": 0.0,
+          "l1i_prefetch_coverage": 0.0,
+          "metadata_kib": 1.25,
+          "storage_kib": 9.25
+        }
+      }
+    },
+    {
+      "replacement": "srrip",
+      "next_line_prefetch": true,
+      "metrics": {
+        "weighting": "arithmetic mean of per-trace values (equal trace weights)",
+        "traces": 1,
+        "mean": {
+          "l1d_mpki": 153.5008977,
+          "l1d_prefetch_accuracy": 0.0,
+          "l1d_prefetch_coverage": 0.0,
+          "l1i_mpki": 0.0,
+          "l1i_prefetch_accuracy": 0.0,
+          "l1i_prefetch_coverage": 0.0,
+          "metadata_kib": 1.25,
+          "storage_kib": 9.25
+        }
+      }
+    }
+  ],
+  "limits": [
+    "Retired instruction accesses attribute refills to instructions; they are not physical fetch lookups.",
+    "VexRiscv whole-cache invalidation and buffered retirement differ: residency check reports two instruction hits after invalidation.",
+    "VexiiRiscv C2 uses upstream completion-based retirement; commit-port probes have a shorter tail."
+  ]
+}

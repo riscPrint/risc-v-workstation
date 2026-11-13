@@ -37,6 +37,8 @@ def register(subparsers):
     cv.add_argument("--c1", type=Path, help="the run's result.json (counts)")
     cv.add_argument("--probe", help="probe name when several probes of the kind exist")
     cv.add_argument("--roi", help="START:END C2 orders (bp-events)")
+    cv.add_argument("--elf", type=Path, help="the run's ELF (cache-check; default: the stream identity)")
+    cv.add_argument("--geometry", action="append", metavar="CACHE=SETSxWAYS", help="cache geometry (cache-check)")
     cv.add_argument("--json", action="store_true")
     cv.set_defaults(func=_convert)
 
@@ -79,7 +81,8 @@ def _convert(args):
         a, b = args.roi.split(":")
         roi = (int(a), int(b))
     try:
-        rep = api.run_convert(args.events, args.to, args.out, c2=args.c2, c1=args.c1, probe=args.probe, roi=roi)
+        rep = api.run_convert(args.events, args.to, args.out, c2=args.c2, c1=args.c1, probe=args.probe, roi=roi,
+                              elf=args.elf, geometry=args.geometry)
     except (ValueError, OSError, KeyError) as e:
         return _fail(e)
     rep = {"status": "written", "out": str(args.out), **rep}

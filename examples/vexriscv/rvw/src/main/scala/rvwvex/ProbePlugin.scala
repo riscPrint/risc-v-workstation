@@ -3,7 +3,7 @@ package rvwvex
 import spinal.core._
 import spinal.lib._
 import spinalprobes.Probe
-import vexriscv.{Stageable, VexRiscv}
+import vexriscv.{Stage, Stageable, VexRiscv}
 import vexriscv.Riscv.IMM
 import vexriscv.plugin._
 
@@ -26,7 +26,12 @@ class ProbePlugin extends Plugin[VexRiscv] {
     import pipeline.config._
     val bp = pipeline.config.get(classOf[BranchPlugin])
     val csr = pipeline.config.get(classOf[CsrPlugin])
-    val dbus = pipeline.config.get(classOf[DBusSimplePlugin])
+    val simple = pipeline.config.plugins.collectFirst { case d: DBusSimplePlugin => d }
+    val cachedD = pipeline.config.plugins.collectFirst { case d: DBusCachedPlugin => d }
+    // Memory instructions: the simple bus waits in memory, the data cache in write-back.
+    def memEnable(s: Stage): Bool = simple.map(d => s.input(d.MEMORY_ENABLE)).getOrElse(s.input(cachedD.get.MEMORY_ENABLE))
+    def memStore(s: Stage): Bool = simple.map(d => s.input(d.MEMORY_STORE)).getOrElse(s.input(cachedD.get.MEMORY_WR))
+    val memStage = if (simple.nonEmpty) memory else writeBack
     val stagesWithNames = Seq(decode -> "D", execute -> "X", memory -> "M", writeBack -> "W")
 
     // One ID per instruction that leaves decode (moves on or is removed).
@@ -59,14 +64,29 @@ class ProbePlugin extends Plugin[VexRiscv] {
     Probe.retire("wb", retire, wb.input(PROBE_ID))
 
     // Stall levels. Stuck by itself (haltItself) is the stage's own wait.
-    val memWait = memory.arbitration.isValid && memory.arbitration.haltItself
-    val memIsLoad = memory.input(dbus.MEMORY_ENABLE)
+    val memWait = memStage.arbitration.isValid && memStage.arbitration.haltItself
+    val memIsLoad = memEnable(memStage)
     Probe.stall("memory", "load_miss", memWait && memIsLoad, evidence = "inferred")
     Probe.stall("memory", "structural", memWait && !memIsLoad, evidence = "inferred")
     Probe.stall("execute", "structural", execute.arbitration.isValid && execute.arbitration.haltItself, evidence = "inferred")
     Probe.stall("decode", "operand_wait", decode.arbitration.isValid && decode.arbitration.haltByOther &&
       !execute.arbitration.isStuck, evidence = "inferred")
-    Probe.stall("fetch", "empty", !decode.arbitration.isValid, evidence = "inferred")
+    // Fetch: an instruction-cache refill in flight is the measured reason when present.
+    val icRefill = pipeline.config.plugins.collectFirst { case p: IBusCachedPlugin => p }.map { p =>
+      val busy = RegInit(False)
+      val beats = Reg(UInt(8 bits)) init(0)
+      when(p.iBus.rsp.valid) { beats := beats + 1 }
+      when(p.iBus.rsp.valid && beats === p.config.bytePerLine * 8 / p.config.memDataWidth - 1) { busy := False; beats := 0 }
+      when(p.iBus.cmd.fire) { busy := True }
+      busy
+    }
+    val fetchEmpty = !decode.arbitration.isValid
+    icRefill match {
+      case Some(busy) =>
+        Probe.stall("fetch", "icache_miss", fetchEmpty && busy)
+        Probe.stall("fetch", "empty", fetchEmpty && !busy, evidence = "inferred")
+      case None => Probe.stall("fetch", "empty", fetchEmpty, evidence = "inferred")
+    }
 
     // Event counters (names are the calibration plan's RTL event names).
     Probe.counter("cycles", True)
@@ -74,19 +94,32 @@ class ProbePlugin extends Plugin[VexRiscv] {
     Probe.counter("branches", retire && isBranch)
     Probe.counter("cond_branches", retire && wb.input(BRANCH_CTRL) === BranchCtrlEnum.B)
     Probe.counter("mispredicts", retire && isBranch && wb.input(bp.BRANCH_DO), hpm = Some(3))
-    Probe.counter("loads", retire && wb.input(dbus.MEMORY_ENABLE) && !wb.input(dbus.MEMORY_STORE), hpm = Some(4))
-    Probe.counter("stores", retire && wb.input(dbus.MEMORY_ENABLE) && wb.input(dbus.MEMORY_STORE), hpm = Some(5))
+    Probe.counter("loads", retire && memEnable(wb) && !memStore(wb), hpm = Some(4))
+    Probe.counter("stores", retire && memEnable(wb) && memStore(wb), hpm = Some(5))
     Probe.counter("memory_wait_cycles", memWait && memIsLoad)
     Probe.counter("decode_stall_cycles", decode.arbitration.isValid && decode.arbitration.isStuck)
     Probe.counter("fetch_empty_cycles", !decode.arbitration.isValid)
     Probe.counter("flushes", stagesWithNames.map { case (s, _) => s.arbitration.isValid && s.arbitration.removeIt }.reduce(_ || _))
 
-    // Accepted bus requests at the core ports. The data bus has no cache in this config.
-    val ibus = pipeline.config.get(classOf[IBusSimplePlugin]).iBus
-    Probe.bus("ibus", ibus.cmd.fire, ibus.cmd.pc)
-    val dcmd = dbus.dBus.cmd
-    Probe.bus("dbus", dcmd.fire, dcmd.address, write = Some(dcmd.wr), data = Some(dcmd.data),
-      mask = Some(dcmd.mask), size = Some(dcmd.size))
+    // Accepted bus requests at the core ports. With caches these are refills and
+    // write-through stores, not one request per instruction.
+    pipeline.config.plugins.collectFirst { case p: IBusSimplePlugin => p }.foreach { p =>
+      Probe.bus("ibus", p.iBus.cmd.fire, p.iBus.cmd.pc)
+    }
+    pipeline.config.plugins.collectFirst { case p: IBusCachedPlugin => p }.foreach { p =>
+      Probe.bus("ibus", p.iBus.cmd.fire, p.iBus.cmd.address)
+    }
+    simple.foreach { d =>
+      val dcmd = d.dBus.cmd
+      Probe.bus("dbus", dcmd.fire, dcmd.address, write = Some(dcmd.wr), data = Some(dcmd.data),
+        mask = Some(dcmd.mask), size = Some(dcmd.size))
+    }
+    cachedD.foreach { d =>
+      val dcmd = d.dBus.cmd
+      Probe.bus("dbus", dcmd.fire, dcmd.address, write = Some(dcmd.wr), data = Some(dcmd.data),
+        mask = Some(dcmd.mask), size = Some(dcmd.size))
+    }
+    CacheProbes(pipeline)
 
     // CSR writes: the plugin's own write strobe (any address), the instruction's CSR field and
     // the data it writes. Unimplemented bits are dropped by the CSR storage, not here.

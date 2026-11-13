@@ -44,6 +44,8 @@ def _load():
             "csim_ind_update": (i, [vp, u64, u64]),
             "csim_mem_access": (u64, [vp, u64, u64, u64, i, i]),
             "csim_ifetch_prefetch": (i, [vp, u64, u64, u64]),
+            "csim_mem_access_hit": (u64, [vp, u64, u64, u64, i, i, ctypes.POINTER(i)]),
+            "csim_mem_flush": (i, [vp, i]),
             "csim_ooo_service": (None, [vp, u64, i, ctypes.POINTER(u64), ctypes.POINTER(ctypes.c_int64)]),
             "csim_reset_stats": (None, [vp]),
             "csim_stats": (ctypes.c_size_t, [vp, u64, ctypes.c_char_p, ctypes.c_size_t]),
@@ -126,6 +128,17 @@ class Components:
 
     def access(self, cycle: int, pc: int, addr: int, store: bool = False, fetch: bool = False) -> int:
         return self._lib.csim_mem_access(self._h, cycle, pc, addr, int(store), int(fetch))
+
+    def access_hit(self, cycle: int, pc: int, addr: int, store: bool = False, fetch: bool = False) -> tuple[int, bool]:
+        """(completion cycle, first-level hit) of one access."""
+        hit = ctypes.c_int(0)
+        done = self._lib.csim_mem_access_hit(self._h, cycle, pc, addr, int(store), int(fetch), ctypes.byref(hit))
+        return done, bool(hit.value)
+
+    def flush(self, fetch: bool = False) -> None:
+        """Invalidate the whole first-level instruction (fetch) or data cache."""
+        if self._lib.csim_mem_flush(self._h, int(fetch)):
+            raise ValueError("flush requires memory.l1i" if fetch else "flush requires memory.l1d")
 
     def prefetch_instruction(self, cycle: int, pc: int, address: int) -> None:
         """Request one instruction line through the shared native prefetch path."""

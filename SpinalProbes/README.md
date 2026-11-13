@@ -131,3 +131,30 @@ the event rows, the counter totals and the end record.
 - Counter totals are JSON numbers; values above 2^53 lose precision.
 - `csrWrite` events do not fill a C2 `csr_snapshot` (see the table).
 - The library does not add probes to any core. A core or its adapter calls the API.
+
+## Cache probe comparison
+
+The optional cached configurations tap existing cache signals. They emit
+`access`, `fill`, `evict`, `flush` and, for a write-back cache, `writeback`.
+The write-through VexRiscv cache has no dirty writeback event.
+An instruction access is recorded at retirement. Its miss bit associates a
+refill with the first retirement in that line. It does not count speculative
+fetch lookups. Data access semantics are in each example's `CacheProbes.scala`.
+
+Use the run's `probe-events.jsonl`, `rvfi.jsonl` and ELF together:
+
+```sh
+rvw probes convert RUN/probe-events.jsonl --to cache-check \
+  --c2 RUN/rvfi.jsonl --elf ELF --geometry dcache=128x1 \
+  --geometry icache=128x1 --out cache-check.json
+rvw csim compare-rtl examples/vexriscv/rvw/csim/caches.json \
+  --cache dcache --trace RUN/rvfi.jsonl --events RUN/probe-events.jsonl \
+  --trace-out accesses.csim --json
+```
+
+For VexiiRiscv use its study and `32x2` geometry for both caches.
+`compare-cache` provides the same cache comparison. Reports give per-access
+hit agreement and signed miss-rate error. Incomplete streams and missing or
+misaligned accesses are inconclusive. The aligned access stream can feed
+replacement and prefetch studies with `rvw csim run` or `sweep`. Model results
+do not establish RTL correctness or speed.

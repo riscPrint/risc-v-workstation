@@ -16,10 +16,10 @@ def _summary(events):
     return api.summary(events)
 
 
-def _convert(events, to, out, c2=None, c1=None, probe=None, roi_start=None, roi_end=None):
+def _convert(events, to, out, c2=None, c1=None, probe=None, roi_start=None, roi_end=None, elf=None, geometry=None):
     from . import api
     roi = (roi_start, roi_end) if roi_start is not None and roi_end is not None else None
-    return api.run_convert(events, to, out, c2=c2, c1=c1, probe=probe, roi=roi)
+    return api.run_convert(events, to, out, c2=c2, c1=c1, probe=probe, roi=roi, elf=elf, geometry=geometry)
 
 
 def mcp_tools():
@@ -38,8 +38,10 @@ def mcp_tools():
                  schema({'events': S}, ['events']), _summary, annotations={'readOnlyHint': True}, side_effects='read-only', native_tools=()),
         ToolSpec('probes_convert', 'Convert a rvw.probe-events/1 stream into a consumer format: '
                  + ', '.join(sorted(CONVERTERS)) + '. bp-events, counts and interrupts need the run C2 (c2); '
-                 'counts also needs C1 (c1). Refuses events that do not align with C2.',
+                 'counts also needs C1 (c1). cache-check needs c2 and the ELF (elf, default the stream identity), '
+                 'with optional geometry ["dcache=32x2"]. Refuses events that do not align with C2.',
                  schema({'events': S, 'to': {'type': 'string', 'enum': sorted(CONVERTERS)}, 'out': S, 'c2': S,
-                         'c1': S, 'probe': S, 'roi_start': {'type': 'integer'}, 'roi_end': {'type': 'integer'}},
+                         'c1': S, 'probe': S, 'roi_start': {'type': 'integer'}, 'roi_end': {'type': 'integer'},
+                         'elf': S, 'geometry': {'type': 'array', 'items': S}},
                         ['events', 'to', 'out']), _convert, side_effects='writes converted files to out', native_tools=()),
     ]

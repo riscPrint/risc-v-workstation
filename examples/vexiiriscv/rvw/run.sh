@@ -40,7 +40,7 @@ cache="${RISCVSIM_CP_CACHE:-${RISCVSIM_WORK:-$here/target}/vexii-classpath.json}
 cache_args=(--root "$repo" --root "$VEXIIRISCV")
 if ! cp="$("$RVW_PYTHON" "$here/classpath-cache.py" load --cache "$cache" "${cache_args[@]}")"; then
   before="$("$RVW_PYTHON" "$here/classpath-cache.py" sources "${cache_args[@]}")"
-  output="$(cd "$here" && "$repo/scripts/with-lock.sh" "${RVW_SBT_LOCK:-sbt}" nice -n 10 \
+  output="$(cd "$here" && "$repo/scripts/with-lock.sh" "${RVW_SBT_LOCK:-sbt}" nice -n "${RVW_NICE:-10}" \
     sbt -J-Xmx3g -batch -Dsbt.offline=true '++2.13.14!' 'root/compile' 'export root/Runtime/fullClasspath' 2>&1)" || {
     echo "$output" >&2; exit 2;
   }

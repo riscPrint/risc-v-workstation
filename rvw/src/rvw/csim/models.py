@@ -37,6 +37,7 @@ CATALOG = {
     "memory": {"doc": "cache hierarchy l1i, l1d, l2, llc and an optional TLB/page walker",
                "keys": ["cycles_per_instruction", "dram_latency",
                         "<level>.size_kib/ways/line_bytes/latency/replacement/prefetch_queue/perfect/pollution_filter",
+                        "<level>.write_allocate/write_back (false/false: write-through, no allocation on a store miss)",
                         "<level>.prefetchers[].kind (+ kind keys)", "<level>.rrip.*", "<level>.hawkeye.*",
                         "tlb.page_bits/levels/level_bits/l1.*/l2.*/l2_enabled/pwc[].*/walk_through_cache/walk_ref_latency",
                         "tlb.context (shared|flush|tagged)"],
