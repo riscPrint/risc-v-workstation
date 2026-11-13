@@ -11,13 +11,14 @@ import naxriscv.utilities.Plugin
   * Sv32 MMU, two-wide decode and commit, two ALUs, one shared EU (mul/div/branch/CSR), Lsu2 with
   * 16-entry load and store queues, a 64-entry ROB, BTB, GShare, and 64-byte-line I$ and D$. */
 object NaxTop {
-  val configs = Seq("rv32imasu")
+  val configs = Seq("rv32imasu", "rv32imasu-iq16")
 
   def plugins(config: String, probeTap: Boolean = true) = {
     require(configs.contains(config), s"unknown NaxRiscv config $config")
     val l = Config.plugins(
       withRdTime = false,
       aluCount = 2,
+      dispatchSlots = if (config == "rv32imasu-iq16") 16 else 32,
       decodeCount = 2,
       withRvc = false,
       withMmu = true,

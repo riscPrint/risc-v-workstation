@@ -59,6 +59,11 @@ class ProbeTapPlugin extends Plugin {
       val recovering = pending || refill || early || flush
       val robWork = !commit.ptr.empty
       val lost = U(width, log2Up(width + 1) bits) - retired
+      Probe.custom("topdown_cycle", True,
+        "retiring" -> retired,
+        "bad_speculation" -> (recovering ? lost | U(0)),
+        "backend_bound" -> ((!recovering && robWork) ? lost | U(0)),
+        "frontend_bound" -> ((!recovering && !robWork) ? lost | U(0)))
       Probe.counter("topdown_slots", U(width, log2Up(width + 1) bits))
       Probe.counter("topdown_retiring", retired)
       Probe.counter("topdown_bad_speculation", recovering ? lost | U(0))
@@ -81,6 +86,7 @@ class ProbeTapPlugin extends Plugin {
       val iq = getService[DispatchPlugin].logic.get.queue.io
       Probe.counter("iq_occupancy", CountOne(iq.usage))
       Probe.counter("iq_full_cycles", iq.usage.andR)
+      Probe.counter("iq_push_blocked", getService[DispatchPlugin].logic.get.push.stage.isValid && !iq.push.ready)
 
       val lsu = getService[Lsu2Plugin]
       val lq = lsu.logic.get.lq.tracker

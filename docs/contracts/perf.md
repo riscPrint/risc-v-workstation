@@ -139,3 +139,25 @@ The four classes must sum to `total_slots`, or the command fails (exit 2). With 
 `status` is `checked`; without it `status` is `unchecked`. With `--result`, `retiring` must also
 equal C1 `instret`. A run without an end record fails. The report is a project-bound slot
 partition, not hardware top-down counters.
+
+## Function top-down reports and configuration comparisons
+
+`rvw perf topdown EVENTS --c2 TRACE --elf ELF` adds function slot counts and
+fractions to `rvw.topdown/1`. It requires one `custom/topdown_cycle` event per
+sampled cycle. The four integer fields are `retiring`, `bad_speculation`,
+`backend_bound` and `frontend_bound`. Each sample must partition the commit
+width. Their totals must equal the end counters. Retiring slots must equal
+C2 retirements on each cycle. The ELF hash must equal the C2 ELF hash.
+
+Retired slots use the ELF symbol of each C2 instruction, including mixed-function
+retirement cycles. Lost slots use the next retiring function. Trailing slots
+and PCs outside sized symbols use `(unknown)`. This is time attribution. It
+does not identify the instruction that caused a stall. Aggregate-only streams
+are refused for function attribution.
+
+`rvw perf topdown-compare A.json B.json` and MCP `perf_topdown_compare` compare
+reports with the same ELF hash, retirement count and attribution method.
+`rvw.topdown-diff/1` gives candidate-minus-base cycle, IPC and slot changes,
+including counts per function. They are measured differences, not statistical
+significance or a correctness verdict. MCP `perf_topdown` accepts optional
+`elf` for function attribution.

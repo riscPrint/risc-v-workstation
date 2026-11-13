@@ -168,3 +168,17 @@ unavailable fields unknown. BOOM stall/commit probe wiring remains core-owned:
 [#13](https://github.com/riscPrint/spinal-boom/issues/13). BOOM predictor event
 bindings and DUT validation remain open under #49. No predictor measurements
 are claimed from legacy logs.
+
+## Functions and configuration differences
+
+Use `rvw perf topdown EVENTS --c2 TRACE --elf ELF --result RESULT --json` to
+attribute slot counts to ELF symbols. The project must emit `topdown_cycle`
+custom samples beside the aggregate counters. Retired slots use their own
+C2 PCs. Lost slots use the next retirement. This is time attribution, not a
+causal stall diagnosis. Aggregate-only streams cannot give function counts.
+
+Save two reports from the same ELF. Run
+`rvw perf topdown-compare base.json candidate.json --json` to compare total
+and per-function counts. MCP exposes `perf_topdown_compare`. The existing
+`perf_topdown` tool accepts `elf`. Read queue occupancy and full-cycle probes
+beside the diff before naming a bottleneck.

@@ -26,15 +26,24 @@ def register(subparsers):
     parser.add_argument("--result", help="C1 result.json (otherwise discovered beside log)")
     parser.add_argument("--tolerance", type=float, default=.05, help="comparison relative magnitude threshold")
     parser.add_argument("--top", type=int, default=10)
+    parser.add_argument("--elf", help="topdown: ELF for per-function time attribution")
     parser.add_argument("--c2", help="topdown: the run's rvfi.jsonl; retiring slots must equal its retirements")
     parser.set_defaults(func=run)
 
 
 def calculate(args):
     """Return the CLI JSON report for reuse by MCP."""
+    if args.paths[0] == "topdown-compare":
+        from .function_topdown import compare as compare_topdown
+        if len(args.paths) != 3:
+            raise ValueError("usage: rvw perf topdown-compare A.json B.json")
+        return compare_topdown(*args.paths[1:])
     if args.paths[0] == "topdown":
         if len(args.paths) != 2:
             raise ValueError("usage: rvw perf topdown EVENTS [--c2 RVFI] [--result RESULT]")
+        if getattr(args, "elf", None):
+            from .function_topdown import by_function
+            return by_function(args.paths[1], getattr(args, "c2", None), args.elf, args.result)
         return topdown.report(args.paths[1], c2=getattr(args, "c2", None), c1=args.result)
     options = {key: getattr(args, key) for key in ("window", "isa", "lane", "queue_stage", "issue_stage",
                                                  "head_stage", "in_order_retirement", "result")}
@@ -72,6 +81,8 @@ def run(args):
         report = calculate(args)
         if args.json:
             write(report)
+        elif report.get("schema") == "rvw.topdown-diff/1":
+            print(json.dumps(report, indent=2))
         elif report.get("schema") == topdown.SCHEMA:
             print(topdown.render(report))
         else:
@@ -91,7 +102,7 @@ def run(args):
 def execute_json(paths: list[str], **options) -> dict:
     from argparse import Namespace
     defaults = dict(window=1000, isa="none", lane="0", queue_stage=None, issue_stage=None,
-                    head_stage=None, in_order_retirement=False, result=None, tolerance=.05, c2=None)
+                    head_stage=None, in_order_retirement=False, result=None, tolerance=.05, c2=None, elf=None)
     unknown = options.keys() - defaults.keys()
     if unknown:
         raise TypeError(f"unknown options: {sorted(unknown)}")

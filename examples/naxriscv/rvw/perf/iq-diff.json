@@ -1,0 +1,85 @@
+{
+  "schema": "rvw.topdown-diff/1",
+  "status": "reported",
+  "functions": {
+    "(unknown)": {
+      "retiring": 0,
+      "bad_speculation": 0,
+      "backend_bound": 0,
+      "frontend_bound": 0
+    },
+    "_init": {
+      "retiring": 0,
+      "bad_speculation": 0,
+      "backend_bound": 0,
+      "frontend_bound": 0
+    },
+    "main": {
+      "retiring": 0,
+      "bad_speculation": 104,
+      "backend_bound": 7160,
+      "frontend_bound": 0
+    },
+    "memcpy": {
+      "retiring": 0,
+      "bad_speculation": 0,
+      "backend_bound": 0,
+      "frontend_bound": 0
+    },
+    "memset": {
+      "retiring": 0,
+      "bad_speculation": 0,
+      "backend_bound": 0,
+      "frontend_bound": 0
+    },
+    "setStats": {
+      "retiring": 0,
+      "bad_speculation": 0,
+      "backend_bound": -16,
+      "frontend_bound": 0
+    },
+    "thread_entry": {
+      "retiring": 0,
+      "bad_speculation": 0,
+      "backend_bound": 0,
+      "frontend_bound": 0
+    },
+    "tohost_exit": {
+      "retiring": 0,
+      "bad_speculation": 0,
+      "backend_bound": 0,
+      "frontend_bound": 0
+    }
+  },
+  "direction": "candidate-minus-base",
+  "elf_sha256": "c16e097a646a0278577f39503d3c115f5041b73706dd1278117323f74ce7f2ce",
+  "base_identity": {
+    "core": "naxriscv",
+    "config": "rv32imasu",
+    "elf": "$CHECKOUT/examples/naxriscv/rvw/out/bench/memcpy.riscv",
+    "elf_sha256": "c16e097a646a0278577f39503d3c115f5041b73706dd1278117323f74ce7f2ce",
+    "rtl_sha256": "25244c69f5cd71584f429ec41410ee5007f990b1176c0e3dfb74895c4d7a8f76",
+    "seed": 1
+  },
+  "candidate_identity": {
+    "core": "naxriscv",
+    "config": "rv32imasu-iq16",
+    "elf": "$CHECKOUT/examples/naxriscv/rvw/out/bench/memcpy.riscv",
+    "elf_sha256": "c16e097a646a0278577f39503d3c115f5041b73706dd1278117323f74ce7f2ce",
+    "rtl_sha256": "d60190ea88f70945e066c203da05588a6ad75fd8f684a24c59afc6db279efc52",
+    "seed": 1
+  },
+  "cycles_delta": 3624,
+  "base_cycles": 25375,
+  "candidate_cycles": 28999,
+  "ipc_delta": -0.1535836075203545,
+  "slots_delta": {
+    "retiring": 0,
+    "bad_speculation": 104,
+    "backend_bound": 7144,
+    "frontend_bound": 0
+  },
+  "limits": [
+    "absolute slot differences, not statistical significance or causal attribution"
+  ]
+}
