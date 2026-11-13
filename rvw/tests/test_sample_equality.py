@@ -48,3 +48,14 @@ def test_incomplete_or_bad_transfer_rejected(tmp_path,failure):
     if failure=='warmup_mismatch': rows[0]['rd_wdata']='0x8'
     path=save(end=failure!='no_end',status='fail' if failure=='failed_end' else 'pass')
     with pytest.raises(ValueError): compare(path,expected,1,3)
+
+
+def test_byte_load_ignores_inactive_bus_lanes(tmp_path):
+    rows,expected,save=fixture(tmp_path)
+    for r,e in zip(rows,expected):
+        r.update(insn='0x14083',rd_wdata='0x23',mem_rmask=1,mem_rdata='0xbeef0023')
+        e.update(insn=0x14083,rd_wdata=0x23,mem_rmask=1,mem_rdata=0x23)
+    assert compare(save(),expected,1,3)['status']=='matched'
+    rows[-1]['mem_rdata']='0xbeef0024'
+    with pytest.raises(ValueError,match='mismatch'):
+        compare(save(),expected,1,3)

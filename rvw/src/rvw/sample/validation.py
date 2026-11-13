@@ -18,6 +18,8 @@ def load(manifest):
 
 def validate(manifest, out, intervals=(10000,50000), clusters=(1,4,8), warmup=1000):
     """Run the same bounded prefix fully and through each sampling setting."""
+    if not intervals or not clusters:
+        raise ValueError('at least one interval and cluster setting required')
     out = Path(out).resolve()
     out.mkdir(parents=True, exist_ok=True)
     spec = load(manifest)
@@ -37,7 +39,7 @@ def validate(manifest, out, intervals=(10000,50000), clusters=(1,4,8), warmup=10
     errors = [abs(r['signed_error_percent']) for r in rows if r['signed_error_percent'] is not None]
     report = dict(schema='rvw.sample-validation/1',status='reported' if len(errors)==len(rows) and rows else 'inconclusive',
                   elf_sha256=flow.digest(spec['elf']),platform_sha256=flow.digest(spec['platform']),
-                  full=full,rows=rows,max_observed_error_percent=max(errors) if errors else None,
+                  full=full,rows=rows,program_complete=flow.profile_complete(profile),warmup=warmup,identity=sampled.get('identity',{}),max_observed_error_percent=max(errors) if errors else None,
                   confidence='empirical error on this prefix only; no statistical confidence interval or long-program guarantee',
                   timing='N-1 retirement gaps for full and sampled intervals')
     flow.write(out/'validation.json',report)

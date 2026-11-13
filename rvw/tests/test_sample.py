@@ -74,6 +74,7 @@ def test_resume_checks_inputs(tmp_path, monkeypatch):
     monkeypatch.setattr(flow, 'run_point', point)
     result = flow.run(manifest, tmp_path/'run', interval=10, max_k=1)
     assert result['weighted_ipc'] == .5 and calls
+    assert result['scope'] == 'profiled prefix' and not result['program_complete']
     (tmp_path/'elf').write_text('changed')
     with pytest.raises(ValueError, match='inputs changed'):
         flow.run(manifest, tmp_path/'run', interval=10, max_k=1)
@@ -92,3 +93,4 @@ def test_profile_stops_at_tohost(tmp_path, monkeypatch):
     monkeypatch.setattr(flow,'reference',lambda *a:Model())
     result=flow.profile({'instructions':1000000},tmp_path)
     assert result.read_text().endswith('END 1\n')
+    assert flow.profile_complete(result)

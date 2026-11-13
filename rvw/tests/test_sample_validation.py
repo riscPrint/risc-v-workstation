@@ -11,6 +11,7 @@ def test_validation_reports_observed_gap(tmp_path, monkeypatch):
     elf = tmp_path/'elf'; elf.write_text('elf')
     platform = tmp_path/'platform'; platform.write_text('platform')
     monkeypatch.setattr(validation, 'load', lambda _:dict(instructions=100,elf=str(elf),platform=str(platform)))
+    monkeypatch.setattr(validation.flow, 'profile_complete', lambda _:True)
     monkeypatch.setattr(validation.flow, 'profile', lambda *a:None)
     monkeypatch.setattr(validation.flow.simpoint, 'bbvs', lambda *a:([{}],100))
     monkeypatch.setattr(validation.flow, 'run_point',lambda *a:dict(ipc=.5))
@@ -24,6 +25,7 @@ def test_validation_reports_observed_gap(tmp_path, monkeypatch):
 def test_validation_never_hides_failed_setting(tmp_path, monkeypatch):
     p=tmp_path/'input'; p.write_text('x')
     monkeypatch.setattr(validation,'load',lambda _:dict(instructions=100,elf=str(p),platform=str(p)))
+    monkeypatch.setattr(validation.flow,'profile_complete',lambda _:True)
     monkeypatch.setattr(validation.flow,'profile',lambda *a:None)
     monkeypatch.setattr(validation.flow.simpoint,'bbvs',lambda *a:([{}],100))
     monkeypatch.setattr(validation.flow,'run_point',lambda *a:dict(ipc=.5))

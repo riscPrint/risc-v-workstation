@@ -93,3 +93,11 @@ Cached VexRiscv and VexiiRiscv bootstrap adapters still need native qualificatio
 
 Retirement-span timing excludes latency before the first measured retirement.
 The warm-up report does not measure that part of cold-start cost.
+## Use calibration for a long program
+
+Add `--validation-report /path/to/validation/validation.json` to a sample run.
+The report must cover the same interval, cluster limit, warm-up, platform,
+architectural mapping and adapter files. The result states the observed error
+for the calibration workload. It does not claim a guaranteed error bound for
+the long program. Revalidate after a core build or configuration change.
+No long-workload estimate was measured in this implementation run.
