@@ -79,3 +79,15 @@ These ten tasks use the real VexRiscv example. The repair is evaluator supplied.
 Qualification tests the task, not an agent. Dynamic Scala cause links, native
 synthetic-core tasks and external agent repairs remain open in #364 and #27.
 A native task result is not C4 acceptance.
+
+## Misleading and incomplete evidence
+
+`examples/agent-bench/misleading.json` adds five fixture tasks: a stale RTL hash,
+a wrong ELF hash, unsupported observation fields, incomplete coverage and a
+missing run end. Run this pack with `dry-run` or an external MCP client.
+The public observations identify the evidence limits. The evaluator records
+whether the agent rejects each artifact for the correct reason and preserves
+an inconclusive outcome. A correct arithmetic patch cannot earn a repair result
+when required evidence is missing. A claimed fix counts as a false fix in that
+case. The report retains the required and preserved inconclusive counts.
+These are declared fixture defects. They do not validate real wave or ELF files.
