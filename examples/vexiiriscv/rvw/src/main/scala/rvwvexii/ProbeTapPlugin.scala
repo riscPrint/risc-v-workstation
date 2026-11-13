@@ -9,6 +9,7 @@ import vexiiriscv.fetch.{FetchCachelessPlugin, FetchL1Plugin}
 import vexiiriscv.memory.MmuPlugin
 import vexiiriscv.misc.{PipelineBuilderPlugin, PrivilegedPlugin, TrapPlugin}
 import vexiiriscv.test.WhiteboxerPlugin
+import vexiiriscv.prediction.{BtbPlugin, LearnPlugin, Prediction}
 
 /** Workstation probes on existing VexiiRiscv signals: the upstream whitebox (commits, learn
   * port, CSR access, load and store events), the cacheless buses, the trap whitebox and, when
@@ -18,17 +19,25 @@ class ProbeTapPlugin extends FiberPlugin {
   val logic = during setup new Area {
     val pbp = host[PipelineBuilderPlugin]
     val buildBefore = retains(pbp.elaborationLock)
+    // Carry the actual final direction. wasWrong also includes target errors.
+    val dynamicDirection = Probe.isEnabled && host.get[BtbPlugin].nonEmpty
+    if (dynamicDirection) {
+      host[LearnPlugin].addLearnCtx(Prediction.ALIGNED_JUMPED)
+      host[LearnPlugin].addLearnCtx(Prediction.ALIGNED_JUMPED_PC)
+    }
     awaitBuild()
     if (Probe.isEnabled) {
       val wb = host[WhiteboxerPlugin].logic
 
-      // Conditional branches at the learn port. Without a BTB or GShare the prediction is the
-      // sequential PC, so predicted = taken xor wasWrong.
+      // Conditional branches at the learn port. With a BTB, use the carried final prediction.
+      // Without a BTB the prediction is sequential, so predicted = taken xor wasWrong.
       val learns = wb.prediction.learns
       for ((l, i) <- learns.zipWithIndex) {
         val p = l.payload
         Probe.branch(s"learn$i", l.valid && p.isBranch, p.pcOnLastSlice, p.taken, p.pcTarget,
-          predictedTaken = Some(p.taken ^ p.wasWrong), covers = Seq("cond"))
+          predictedTaken = Some(if (dynamicDirection) p.ctx(Prediction.ALIGNED_JUMPED) else p.taken ^ p.wasWrong),
+          predictedTarget = if (dynamicDirection) Some(p.ctx(Prediction.ALIGNED_JUMPED_PC)) else None,
+          covers = Seq("cond"))
       }
       val retired = wb.commits.ports.map(_.valid.asUInt.resize(4 bits)).reduce(_ + _)
       Probe.counter("cycles", True)

@@ -1,0 +1,29 @@
+{
+  "schema": "rvw.csim-study/1",
+  "name": "vexiiriscv-rv32im_cached-predictors",
+  "source": {
+    "fidelity": "approximate",
+    "approximations": [
+      "RTL reverses PC hash bits; model uses the standard PC xor history hash",
+      "RTL trains fetched counter values with speculative history and bypass; model trains in trace order",
+      "RTL initializes prediction RAM with Random(42); model uses its own reset state",
+      "BTB chunks and speculative RAS recovery are approximated"
+    ]
+  },
+  "branch": {
+    "model": "gshare",
+    "entries": 16384,
+    "pc_shift": 2,
+    "history": 12
+  },
+  "btb": {
+    "entries": 512,
+    "ways": 1,
+    "tag_bits": 16,
+    "pc_shift": 2
+  },
+  "ras": {
+    "entries": 4,
+    "repair": "full"
+  }
+}
