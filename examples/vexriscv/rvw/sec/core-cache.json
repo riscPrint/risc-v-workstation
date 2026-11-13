@@ -1,0 +1,68 @@
+{
+  "schema": "rvw.sec-core/1",
+  "name": "vexriscv-cache",
+  "rtl": [
+    "${RVW_SEC_RTL}/vex/rv32imu-cache/VexTop.v"
+  ],
+  "top": "VexTop",
+  "clock": "clk",
+  "reset": "reset",
+  "reset_cycles": 4,
+  "ram": {
+    "base": "0x80000000",
+    "size": "0x10000"
+  },
+  "max_cycles": 50000,
+  "platform": "platform-mu.json",
+  "buses": [
+    {
+      "name": "ibus",
+      "kind": "fetch",
+      "latency": 1,
+      "burst": true,
+      "cmd_valid": "iBus_cmd_valid",
+      "cmd_ready": "iBus_cmd_ready",
+      "cmd_address": "iBus_cmd_payload_address",
+      "cmd_size": "iBus_cmd_payload_size",
+      "rsp_valid": "iBus_rsp_valid",
+      "rsp_data": "iBus_rsp_payload_data",
+      "rsp_error": "iBus_rsp_payload_error"
+    },
+    {
+      "name": "dbus",
+      "kind": "data",
+      "latency": 1,
+      "burst": true,
+      "write_response": false,
+      "cmd_valid": "dBus_cmd_valid",
+      "cmd_ready": "dBus_cmd_ready",
+      "cmd_address": "dBus_cmd_payload_address",
+      "cmd_write": "dBus_cmd_payload_wr",
+      "cmd_data": "dBus_cmd_payload_data",
+      "cmd_mask": "dBus_cmd_payload_mask",
+      "cmd_size": "dBus_cmd_payload_size",
+      "rsp_valid": "dBus_rsp_valid",
+      "rsp_data": "dBus_rsp_payload_data",
+      "rsp_error": "dBus_rsp_payload_error",
+      "rsp_last": "dBus_rsp_payload_last"
+    }
+  ],
+  "retire": {
+    "kind": "rvfi",
+    "prefix": "rvfi_"
+  },
+  "trap": {
+    "valid": "trap_valid",
+    "cause": "trap_cause",
+    "tval": "trap_tval",
+    "privilege": "CsrPlugin_privilege"
+  },
+  "c2_keys": [
+    "pc",
+    "insn",
+    "rd",
+    "rd_wdata",
+    "trap",
+    "mode"
+  ]
+}

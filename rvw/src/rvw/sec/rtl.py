@@ -17,7 +17,7 @@ SCHEMA = 'rvw.sec-core/1'
 RVFI = ('valid', 'order', 'insn', 'trap', 'mode', 'rd_addr', 'rd_wdata', 'pc_rdata', 'pc_wdata',
         'mem_addr', 'mem_rmask', 'mem_wmask', 'mem_rdata', 'mem_wdata')
 BUS_FIELDS = ('cmd_valid', 'cmd_ready', 'cmd_address', 'cmd_write', 'cmd_data', 'cmd_mask', 'cmd_size',
-              'cmd_id', 'rsp_valid', 'rsp_data', 'rsp_error', 'rsp_id')
+              'cmd_id', 'rsp_valid', 'rsp_data', 'rsp_error', 'rsp_id', 'rsp_last')
 SIMPLE = re.compile(r'[A-Za-z_][A-Za-z0-9_]*')
 
 
@@ -124,14 +124,15 @@ def testbench(binding, widths, ift=None):
           f"  inram = (a >= {base}) && (a - {base} < 32'd{binding['ram_size']});", 'endfunction']
     # One FIFO per bus: responses in request order after `latency` cycles.
     for bus in binding['buses']:
-        n = bus['name']; lat = int(bus.get('latency', 1)); depth = 16
+        n = bus['name']; lat = int(bus.get('latency', 1)); depth = 64 if bus.get('burst') else 16
         w_id = widths[bus['cmd_id']][1] if bus.get('cmd_id') else 1
         L += [f'reg [31:0] {n}_q_addr [0:{depth-1}]; reg {n}_q_err [0:{depth-1}]; reg [31:0] {n}_q_due [0:{depth-1}];',
               f'reg [31:0] {n}_q_data [0:{depth-1}]; reg [31:0] {n}_q_taint [0:{depth-1}];',
               f'reg [{w_id-1}:0] {n}_q_id [0:{depth-1}]; reg {n}_q_rsp [0:{depth-1}];',
+              *([f'reg {n}_q_last [0:{depth-1}]; reg [31:0] {n}_a; integer {n}_k, {n}_beats;'] if bus.get('burst') else []),
               f'integer {n}_head = 0, {n}_tail = 0;']
         driven.add(bus['rsp_valid']); driven.add(bus['rsp_data'])
-        for f in ('cmd_ready', 'rsp_error', 'rsp_id'):
+        for f in ('cmd_ready', 'rsp_error', 'rsp_id', 'rsp_last'):
             if bus.get(f):
                 driven.add(bus[f])
     for n, (d, w) in widths.items():
@@ -152,17 +153,22 @@ def testbench(binding, widths, ift=None):
             L.append(f'  {bus["rsp_id"]} = 0;')
         if ift:
             L.append(f'  {bus["rsp_data"]}__t = 0;')
+        D = 64 if bus.get('burst') else 16
+        if bus.get('rsp_last'):
+            L.append(f'  {bus["rsp_last"]} = 0;')
         # Skip queued requests that need no response (stores without a response channel).
-        L += [f'  while ({n}_head != {n}_tail && !{n}_q_rsp[{n}_head % 16]) {n}_head = {n}_head + 1;',
-              f'  if ({n}_head != {n}_tail && {n}_q_due[{n}_head % 16] <= cycle) begin',
+        L += [f'  while ({n}_head != {n}_tail && !{n}_q_rsp[{n}_head % {D}]) {n}_head = {n}_head + 1;',
+              f'  if ({n}_head != {n}_tail && {n}_q_due[{n}_head % {D}] <= cycle) begin',
               f'    {bus["rsp_valid"]} = 1;',
-              f'    {bus["rsp_data"]} = {n}_q_data[{n}_head % 16];']
+              f'    {bus["rsp_data"]} = {n}_q_data[{n}_head % {D}];']
         if ift:
-            L.append(f'    {bus["rsp_data"]}__t = {n}_q_taint[{n}_head % 16];')
+            L.append(f'    {bus["rsp_data"]}__t = {n}_q_taint[{n}_head % {D}];')
         if bus.get('rsp_error'):
-            L.append(f'    {bus["rsp_error"]} = {n}_q_err[{n}_head % 16];')
+            L.append(f'    {bus["rsp_error"]} = {n}_q_err[{n}_head % {D}];')
         if bus.get('rsp_id'):
-            L.append(f'    {bus["rsp_id"]} = {n}_q_id[{n}_head % 16];')
+            L.append(f'    {bus["rsp_id"]} = {n}_q_id[{n}_head % {D}];')
+        if bus.get('rsp_last'):
+            L.append(f'    {bus["rsp_last"]} = {n}_q_last[{n}_head % {D}];')
         L.append('  end')
     if ift:
         for n, (d, w) in widths.items():
@@ -179,14 +185,28 @@ def testbench(binding, widths, ift=None):
         L += [f'  if ({bus["rsp_valid"]}) {n}_head = {n}_head + 1;',
               f'  if ({fire}) begin']
         addr = bus['cmd_address']
-        L.append(f'    {n}_q_addr[{n}_tail % 16] = {addr}; {n}_q_err[{n}_tail % 16] = !inram({addr});')
-        # Read data at acceptance, like the project adapters' bus models.
-        L.append(f'    {n}_q_data[{n}_tail % 16] = inram({addr}) ? mem[{word(addr)}] : 0;')
-        L.append(f'    {n}_q_taint[{n}_tail % 16] = inram({addr}) ? taint[{word(addr)}] : 0;')
-        L.append(f'    {n}_q_due[{n}_tail % 16] = cycle + {int(bus.get("latency", 1))};')
-        L.append(f'    {n}_q_id[{n}_tail % 16] = ' + (bus['cmd_id'] if bus.get('cmd_id') else '0') + ';')
-        L.append(f'    {n}_q_rsp[{n}_tail % 16] = ' + (f'!{wr} || 1\'b{int(bool(bus.get("write_response", True)))}' if wr else '1') + ';')
-        L.append(f'    {n}_tail = {n}_tail + 1;')
+        if bus.get('burst'):
+            # A read returns 2^size bytes as word beats from the aligned base; a write is one beat.
+            size = bus['cmd_size']
+            L += [f'    {n}_beats = ' + (f'{wr} ? 1 : ' if wr else '') + f'((1 << {size}) > 4 ? (1 << {size}) / 4 : 1);',
+                  f'    for ({n}_k = 0; {n}_k < {n}_beats; {n}_k++) begin',
+                  f'      {n}_a = ({n}_beats > 1 ? ({addr} & ~((32\'d1 << {size}) - 1)) : {addr}) + 4*{n}_k;',
+                  f'      {n}_q_addr[{n}_tail % 64] = {n}_a; {n}_q_err[{n}_tail % 64] = !inram({n}_a);',
+                  f'      {n}_q_data[{n}_tail % 64] = inram({n}_a) ? mem[{word(n+"_a")}] : 0;',
+                  f'      {n}_q_taint[{n}_tail % 64] = inram({n}_a) ? taint[{word(n+"_a")}] : 0;',
+                  f'      {n}_q_due[{n}_tail % 64] = cycle + {int(bus.get("latency", 1))} + {n}_k;',
+                  f'      {n}_q_id[{n}_tail % 64] = 0; {n}_q_last[{n}_tail % 64] = {n}_k == {n}_beats - 1;',
+                  f'      {n}_q_rsp[{n}_tail % 64] = ' + (f'!{wr} || 1\'b{int(bool(bus.get("write_response", True)))}' if wr else '1') + ';',
+                  f'      {n}_tail = {n}_tail + 1;', '    end']
+        else:
+            L.append(f'    {n}_q_addr[{n}_tail % 16] = {addr}; {n}_q_err[{n}_tail % 16] = !inram({addr});')
+            # Read data at acceptance, like the project adapters' bus models.
+            L.append(f'    {n}_q_data[{n}_tail % 16] = inram({addr}) ? mem[{word(addr)}] : 0;')
+            L.append(f'    {n}_q_taint[{n}_tail % 16] = inram({addr}) ? taint[{word(addr)}] : 0;')
+            L.append(f'    {n}_q_due[{n}_tail % 16] = cycle + {int(bus.get("latency", 1))};')
+            L.append(f'    {n}_q_id[{n}_tail % 16] = ' + (bus['cmd_id'] if bus.get('cmd_id') else '0') + ';')
+            L.append(f'    {n}_q_rsp[{n}_tail % 16] = ' + (f'!{wr} || 1\'b{int(bool(bus.get("write_response", True)))}' if wr else '1') + ';')
+            L.append(f'    {n}_tail = {n}_tail + 1;')
         L.append(f'    $fdisplay(fd, "B %0d {n} %h %0d", cycle, {addr}, ' + (wr if wr else "1'b0") + ');')
         if wr:
             data = bus.get('cmd_data')
@@ -343,8 +363,10 @@ def parse(text, mem, binding):
 def cut(result):
     """Retirements up to and including the first tohost store."""
     rows = result['retired']
+    # RVFI without memory fields (zero placeholders) falls back to the commit rule below.
+    memory = any(r.get('mem_wmask') or r.get('mem_rmask') for r in rows)
     for i, r in enumerate(rows):
-        if 'mem_wmask' in r:
+        if 'mem_wmask' in r and memory:
             if r['mem_wmask'] and r['mem_addr'] == result.get('tohost_address'):
                 return rows[:i+1]
         elif result['done'] is not None and result['done'] >= 0 and r['cycle'] >= result['done'] and r['insn'] & 127 == 0x23:

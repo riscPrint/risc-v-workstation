@@ -132,7 +132,7 @@ def run_case(binding_path, template, request_path, out, work=None):
     probe = None
     observations = observe(result, request.get('observations', ['cycles']), request.get('contract_start_pc'), probe,
                            request.get('observer_mode'))
-    keys = ['pc', 'insn'] if binding['retire']['kind'] == 'commit' else None
+    keys = ['pc', 'insn'] if binding['retire']['kind'] == 'commit' else binding.get('c2_keys')
     response = dict(complete=status == 'pass', reset_complete=True, reference_c2='reference.jsonl',
                     rtl_c2='rtl.jsonl', observations=observations, rtl_status=status,
                     cycles=result['cycles'], core=binding.get('name'))
