@@ -37,3 +37,12 @@ those Scala files only; none points at emitted Verilog. Artifacts: `rtl/<file>`
 (emitted Verilog, media type `text/x-systemverilog`), `hgldd/<module>.dd`
 (firtool HGLDD) and `hdl/source-map.json` (`{rtl file: {verilog line: ["file:line", ...]}}`).
 `spinal_path` holds the Chisel name from HGLDD when it differs from the Verilog name.
+
+## C6 HDL front ends: block diagrams
+
+Every `build-hdl` database holds artifact `blocks.json` (gzip, SpinalBlocks format version 1),
+derived from the database tables only. Modules are keyed by `components.module`; the first
+instance in path order defines the diagram and `instanceCount` counts all instances. Nodes are
+named registers (`sig:<name>`) and memories (`mem:<name>`); there are no areas or FSMs. A net's
+`control` is true when every hop into its sinks is a `sel` or `cond` edge; `clock` marks a
+driver with a `clock_role`.

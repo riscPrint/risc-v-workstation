@@ -410,7 +410,8 @@ self-contained translation units explicitly. It captures source bytes and the
 Yosys executable identity before compilation. It publishes the database with
 atomic replacement. A failed build leaves an existing output intact.
 Semantic diff keys stay incomplete. Self-diff cannot report hardware identity.
-No PDG, block or HGLDD artifact is generated.
+Every HDL database carries a SpinalBlocks diagram, artifact `blocks.json`
+(see `SpinalBlocks/README.md`). No PDG is generated.
 
 The native integration tests accept read-only SERV and Ibex reference clones.
 Set `RVW_HDL_REF` to their parent directory. The tests use SERV `serv_top` with

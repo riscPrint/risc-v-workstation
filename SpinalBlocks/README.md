@@ -238,6 +238,16 @@ JSON is checked in as `engine/test/fixtures/demo.json`.
   Use database queries for conservative inout paths. The diagram does not
   resolve analog drive strength or tri-state values. SpinalHDL's `PhaseAnalog` can reject sliced wide inout
   attachments before either extractor runs. See [SpinalDB limits](../SpinalDB/README.md#limitations).
+- Databases from `rvw query build-hdl` (SystemVerilog through slang, VHDL
+  through GHDL, Chisel through firtool, the native Yosys subset) carry a
+  `blocks.json` artifact made by `rvw/src/rvw/query/blocks.py` from the database
+  tables: one diagram per module name (its first instance), ports, instances,
+  one node per named register or memory, and nets traced backwards through wires,
+  bit nodes and hidden cell hubs. Register bits stand for their register; a
+  registered output port gets its own node only when no internal register holds
+  its bits. These diagrams have no Areas or FSMs, and clock and reset pins of
+  flip-flops draw no nets. `rvw query export blocks blocks.json.gz --db DB` then
+  `node hosts/web/serve.mjs blocks.json.gz` shows them.
 - Verilog and SystemVerilog exports use the same diagram format. Other compiler
   backends need separate checks. The workstation's Scala and SpinalHDL versions
   must match the core build. NaxRiscv's upstream build uses Scala 2.12 and local

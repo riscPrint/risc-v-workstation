@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from importlib.resources import files
+import gzip
 import json
 import os
 from pathlib import Path
@@ -246,6 +247,11 @@ def build_hdl(sources, top, out, *, yosys='yosys', timeout=120, frontend='yosys'
                 if ast:
                     _artifact(conn, 'hdl/parameters.json', {p: ast[0][p] for p in sorted(ast[0])
                                                             if p in writer.components})
+                # The SpinalBlocks diagram of the same database (`rvw query export blocks`).
+                from .blocks import blocks
+                raw = json.dumps(blocks(conn), separators=(',', ':')).encode()
+                conn.execute('INSERT INTO artifacts VALUES (?,?,?,?,?)',
+                             ('blocks.json', 'application/json', 'gzip', len(raw), gzip.compress(raw, mtime=0)))
                 conn.execute('INSERT INTO warnings VALUES (?,?)', ('hdl',
                              'Conservative lowered graph. No semantic diff or blackbox support.'))
                 conn.commit()
