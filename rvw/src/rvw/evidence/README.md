@@ -26,3 +26,10 @@ all recorded fields. Configuration and scope remain in the observations.
 There is no automatic dependency extraction or vendor adapter. Formal, coverage
 and lint semantic validation remains with those tools. Large-campaign latency
 has not been measured. Queries can expose captured project data to their caller.
+
+A native-history sample indexed 583 reports: 564 C1, 13 C3, three C4 and three
+C5. One local build took 0.668 seconds. One full query took 0.137 seconds and
+rechecked all 583 hashes unchanged. Changing a separate copied C1 after its
+indexing made its integrity inconclusive while retaining its recorded pass.
+These are local discovery checks, not semantic validation or scale limits.
+See `examples/regression-scale/management-rollup.json`.
