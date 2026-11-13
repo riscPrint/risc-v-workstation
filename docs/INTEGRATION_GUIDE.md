@@ -479,6 +479,7 @@ later cancellation binding. See the [formal record](../SpinalChecks/connected-de
 |---|---:|---:|---:|---:|---:|---|
 | VexRiscv | 57 | 57 | 0 | 57 | 0 / 0 | 0; native bindings present |
 | VexiiRiscv | 25 | 25 | 0 | 25 | 0 / 0 | 0; native bindings present |
+| VexiiRiscv, nine catalog CSR programs | 33 | 33 | NOT RUN | NOT RUN | 0 / 0 | 0; accepted CSR interface, including RAM |
 | Composed RV32 stub SoC | 17 | 17 | 0 | 17 | 0 / 0 | 0; native bindings present |
 
 VexRiscv passed 49 aligned ISA programs with 49 C1 passes. VexiiRiscv ran two
@@ -650,3 +651,7 @@ See [the VexRiscv records](../examples/vexriscv/formal/GENERATED_RESULTS.md),
 [the Sail M campaign](../examples/vexriscv/formal/SAIL_M.md) and
 [the conditional proof records](../examples/vexriscv/formal/ABSTRACT_RESULTS.md)
 for source pins, measured variants, limits and reproduction commands.
+
+The [nine-CSR Vexii record](../examples/vexiiriscv/csr-bank-native-results.json) has nine RTL passes,
+eight Spike passes and one retained `marchid` configuration mismatch. The new
+33-check binding has no formal run. Earlier 25-check formal evidence stays separate.

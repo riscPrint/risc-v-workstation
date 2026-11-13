@@ -1011,6 +1011,7 @@ measurement or unbounded proof was obtained.
 |---|---:|---:|---:|---:|---:|---|
 | VexRiscv, 49 aligned ISA programs | 57 | 57 | 0 | 57 | 0 / 0 | 0; all native bindings present |
 | VexiiRiscv, scratch and absent-CSR programs | 25 | 25 | 0 | 25 | 0 / 0 | 0; all native bindings present |
+| VexiiRiscv, nine catalog CSR programs | 33 | 33 | NOT RUN | NOT RUN | 0 / 0 | 0; accepted CSR interface, including RAM |
 | Composed SoC, RV32 stub hello | 17 | 17 | 0 | 17 | 0 / 0 | 0; all native bindings present |
 
 VexRiscv has 49 C1 passes. VexiiRiscv has two C1 passes after the exact
@@ -1105,3 +1106,7 @@ fixture runs one legal scenario and 14 fault scenarios. It checks late effects,
 same-cycle cancellation, reuse, early fences and lifecycle errors. This is a
 native template test. No BOOM or other core binding, instruction-level recovery
 proof, byte-data check or full memory-order qualification is claimed.
+
+The [nine-CSR Vexii record](../examples/vexiiriscv/csr-bank-native-results.json) has nine RTL passes,
+eight Spike passes and one retained `marchid` configuration mismatch. The new
+33-check binding has no formal run. Earlier 25-check formal evidence stays separate.

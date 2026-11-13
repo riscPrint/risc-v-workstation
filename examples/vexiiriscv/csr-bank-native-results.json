@@ -1,0 +1,142 @@
+{
+  "schema": "rvw.vexii-csr-bank-native/1",
+  "observed": "2026-11-13",
+  "core_revision": "9b63f47fe559dbba7874af9196746412fa1294c1",
+  "spinal_revision": "de72faf6062206a89b445e5cc07e32ed982712c8",
+  "seed": 17,
+  "assertions_compiled": true,
+  "generated": 33,
+  "bound": 33,
+  "proven": null,
+  "bounded": null,
+  "fired": 0,
+  "unbound": 0,
+  "programs": [
+    {
+      "program": "mscratch",
+      "rtl": "pass",
+      "spike": "pass",
+      "spike_returncode": 0,
+      "cycles": 366,
+      "retired": 82,
+      "fired": 0,
+      "fault_firings": [
+        {
+          "id": "csr.read:mscratch",
+          "count": 15
+        }
+      ],
+      "elf_sha256": "a9803dbd52814fb377c7e79f2105cb357c0c7e3c6f6f8b204914504e1a4cc35b",
+      "c1_sha256": "4bfc3c8a88605204a3bd4a5e0b7a266cb1473a26f91ce1790a37a704c01d2edc"
+    },
+    {
+      "program": "mtval",
+      "rtl": "pass",
+      "spike": "pass",
+      "spike_returncode": 0,
+      "cycles": 366,
+      "retired": 82,
+      "fired": 0,
+      "fault_firings": [],
+      "elf_sha256": "0a1fce354b1e17b2d95a5ee75f3eb8400bfbb7e3799ce05f3afd0d7de3ad4e51",
+      "c1_sha256": "8363f8cdcf296f2beddcf92648d21722e778e49511940deb27a49c5ae46b2749"
+    },
+    {
+      "program": "mepc",
+      "rtl": "pass",
+      "spike": "pass",
+      "spike_returncode": 0,
+      "cycles": 366,
+      "retired": 82,
+      "fired": 0,
+      "fault_firings": [],
+      "elf_sha256": "d21601542ed5fb94b56241160f26db8c058f38ab58b52b01fda6e85d28033e32",
+      "c1_sha256": "23e69d79fe2cee7e5c5e87b0c71febdd9e1f211a7315df1953945699af98268a"
+    },
+    {
+      "program": "mtvec",
+      "rtl": "pass",
+      "spike": "pass",
+      "spike_returncode": 0,
+      "cycles": 366,
+      "retired": 82,
+      "fired": 0,
+      "fault_firings": [],
+      "elf_sha256": "ae754f5e3674863c68600b01023d5f4d5acd121a4f7baff6e25a26fdf02833a4",
+      "c1_sha256": "097a5c0bb12143b8ffb416b04f9ee6ff9fe3d88d4ce24cdaf1676aa906a8a222"
+    },
+    {
+      "program": "misa",
+      "rtl": "pass",
+      "spike": "pass",
+      "spike_returncode": 0,
+      "cycles": 84,
+      "retired": 14,
+      "fired": 0,
+      "fault_firings": [],
+      "elf_sha256": "c467fdc8f4fcdf9631ea2a28ecbe92fe3ef6daef88c6fee393d4080c67f3577c",
+      "c1_sha256": "d0e221a173c7e1212c4d8d84ab9e1d44411a095bede3f9397e6b36afc2e2dd42"
+    },
+    {
+      "program": "mvendorid",
+      "rtl": "pass",
+      "spike": "pass",
+      "spike_returncode": 0,
+      "cycles": 79,
+      "retired": 13,
+      "fired": 0,
+      "fault_firings": [],
+      "elf_sha256": "68bcbf8ef0f9f9be8c71d245abcfc4be5093071974b3b48bf288268d967e84ce",
+      "c1_sha256": "c4228448bf1f6c24cb4cc440768c2e689275adc905b92b0dc89b0ce272660876"
+    },
+    {
+      "program": "marchid",
+      "rtl": "pass",
+      "spike": "configuration_mismatch",
+      "spike_returncode": 1,
+      "cycles": 79,
+      "retired": 13,
+      "fired": 0,
+      "fault_firings": [],
+      "elf_sha256": "273c25bc9801d539527de1146ee85f78b07b29b64b74e7cd27e00302eb0a5870",
+      "c1_sha256": "736587e421e773ae7cb0be33c4ab30e8819a23cded6d0019012c491bb4e6a6c2"
+    },
+    {
+      "program": "mimpid",
+      "rtl": "pass",
+      "spike": "pass",
+      "spike_returncode": 0,
+      "cycles": 79,
+      "retired": 13,
+      "fired": 0,
+      "fault_firings": [],
+      "elf_sha256": "104f2145d5824d7809c38654dd2b0d3a0e9a31995e28589b9dd773aa8aad6b83",
+      "c1_sha256": "695e1223498120f16434d1199bc7cbab8ffc81f5df8bdf4b9933c22bd11893b2"
+    },
+    {
+      "program": "mhartid",
+      "rtl": "pass",
+      "spike": "pass",
+      "spike_returncode": 0,
+      "cycles": 79,
+      "retired": 13,
+      "fired": 0,
+      "fault_firings": [],
+      "elf_sha256": "a0459ff5894e37401a48d4121b79f7d3772f00ae54d76340280a5ff18d0c92b7",
+      "c1_sha256": "d551b71e9217e4874474b61297082064b1a1d0b8b1f6be0b24b8baca24b19324"
+    }
+  ],
+  "marchid": {
+    "rtl_project": 46,
+    "spike_observed": 5,
+    "classification": "reference_configuration_mismatch"
+  },
+  "limits": [
+    "Final current plugin and runtime compiled against private cached core classes and pinned dependency jars. Dependencies were not rebuilt.",
+    "Four RAM-backed CSRs have legal aligned write/set/clear/read programs. Five constant CSRs have read programs.",
+    "Denied accesses, illegal WARL inputs, lower modes, shared aliases, dynamic AIA state, and hardware-update semantics are NOT RUN.",
+    "Trap updates invalidate mepc/mtval expected state until a software write.",
+    "New nine-CSR binding formal is NOT RUN. Prior 25-check formal capture is separate.",
+    "The read-corruption control uses the same functional binding before added input-shape guards. It is an intentional monitor finding."
+  ]
+}

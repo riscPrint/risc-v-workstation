@@ -1,0 +1,125 @@
+{
+  "schema": "rvw.csr-bank/1",
+  "xlen": 32,
+  "banks": [
+    {
+      "name": "mscratch",
+      "width": 32,
+      "reset": 0
+    },
+    {
+      "name": "mtval",
+      "width": 32,
+      "reset": 0
+    },
+    {
+      "name": "mepc",
+      "width": 32,
+      "reset": 0
+    },
+    {
+      "name": "mtvec",
+      "width": 32,
+      "reset": 0
+    },
+    {
+      "name": "misa",
+      "width": 32,
+      "reset": 1073746176
+    },
+    {
+      "name": "mvendorid",
+      "width": 32,
+      "reset": 0
+    },
+    {
+      "name": "marchid",
+      "width": 32,
+      "reset": 46
+    },
+    {
+      "name": "mimpid",
+      "width": 32,
+      "reset": 0
+    },
+    {
+      "name": "mhartid",
+      "width": 32,
+      "reset": 0
+    }
+  ],
+  "views": [
+    {
+      "name": "mscratch",
+      "bank": "mscratch",
+      "catalog": "mscratch",
+      "mask": 4294967295,
+      "write_mask": 4294967295,
+      "read_only": false
+    },
+    {
+      "name": "mtval",
+      "bank": "mtval",
+      "catalog": "mtval",
+      "mask": 4294967295,
+      "write_mask": 4294967295,
+      "read_only": false
+    },
+    {
+      "name": "mepc",
+      "bank": "mepc",
+      "catalog": "mepc",
+      "mask": 4294967295,
+      "write_mask": 4294967292,
+      "read_only": false
+    },
+    {
+      "name": "mtvec",
+      "bank": "mtvec",
+      "catalog": "mtvec",
+      "mask": 4294967295,
+      "write_mask": 4294967293,
+      "read_only": false
+    },
+    {
+      "name": "misa",
+      "bank": "misa",
+      "catalog": "misa",
+      "mask": 4294967295,
+      "write_mask": 0,
+      "read_only": true
+    },
+    {
+      "name": "mvendorid",
+      "bank": "mvendorid",
+      "catalog": "mvendorid",
+      "mask": 4294967295,
+      "write_mask": 0,
+      "read_only": true
+    },
+    {
+      "name": "marchid",
+      "bank": "marchid",
+      "catalog": "marchid",
+      "mask": 4294967295,
+      "write_mask": 0,
+      "read_only": true
+    },
+    {
+      "name": "mimpid",
+      "bank": "mimpid",
+      "catalog": "mimpid",
+      "mask": 4294967295,
+      "write_mask": 0,
+      "read_only": true
+    },
+    {
+      "name": "mhartid",
+      "bank": "mhartid",
+      "catalog": "mhartid",
+      "mask": 4294967295,
+      "write_mask": 0,
+      "read_only": true
+    }
+  ]
+}
