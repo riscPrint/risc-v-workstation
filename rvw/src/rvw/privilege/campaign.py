@@ -25,7 +25,7 @@ def load(path):
         raise ValueError('modes must be distinct M, S or U entries')
     if raw.get('priv', 'msu') != 'msu' and not (raw.get('kind') in ('disabled','disabled-matrix') and raw.get('priv') == 'mu'):
         raise ValueError('control campaign requires supervisor support (msu)')
-    if raw.get('kind', 'controls') not in ('aplic-priority', 'aplic-delegation', 'wfi-stop', 'ssstateen-only', 'stateen-rv32', 'random-transitions', 'fast-preemption', 'fast-vector', 'nmi-matrix', 'nmi-return', 'reri-transactions', 'plic-delivery', 'pma-access', 'reset-inflight', 'stateen-hierarchy', 'envcfg-zero', 'landing-recovery', 'sstc-rv32', 'aplic-msi', 'epmp-matrix', 'disabled-matrix', 'reri', 'dvfs', 'controls', 'wfi', 'disabled', 'scheduled-wfi', 'plic', 'reset', 'nmi', 'pma', 'pmp', 'epmp', 'imsic', 'aplic', 'aclint', 'smnip', 'sstc', 'stateen', 'envcfg', 'landing', 'shadow'):
+    if raw.get('kind', 'controls') not in ('envcfg-cbom', 'aplic-priority', 'aplic-delegation', 'wfi-stop', 'ssstateen-only', 'stateen-rv32', 'random-transitions', 'fast-preemption', 'fast-vector', 'nmi-matrix', 'nmi-return', 'reri-transactions', 'plic-delivery', 'pma-access', 'reset-inflight', 'stateen-hierarchy', 'envcfg-zero', 'landing-recovery', 'sstc-rv32', 'aplic-msi', 'epmp-matrix', 'disabled-matrix', 'reri', 'dvfs', 'controls', 'wfi', 'disabled', 'scheduled-wfi', 'plic', 'reset', 'nmi', 'pma', 'pmp', 'epmp', 'imsic', 'aplic', 'aclint', 'smnip', 'sstc', 'stateen', 'envcfg', 'landing', 'shadow'):
         raise ValueError('kind must be controls, wfi or disabled')
     if raw.get('kind') == 'wfi':
         from .wake import programs
@@ -37,7 +37,7 @@ def load(path):
 def scenarios(config):
     from importlib import import_module
     kind = config.get('kind', 'controls')
-    module = {'aplic-priority':'aplic_priority', 'aplic-delegation':'aplic_delegation', 'wfi-stop':'wfi_stop', 'ssstateen-only':'ssstateen', 'stateen-rv32':'state32', 'random-transitions':'random_transitions', 'fast-preemption':'fast_preemption', 'fast-vector':'fast_vector', 'nmi-matrix':'rnmi', 'nmi-return':'rnmi', 'reri-transactions':'reri_transactions', 'plic-delivery':'plic_delivery', 'pma-access':'pma_access', 'reset-inflight':'reset_phase', 'stateen-hierarchy':'state_hierarchy', 'envcfg-zero':'env_behavior', 'landing-recovery':'cfi_recovery', 'sstc-rv32':'timer32', 'aplic-msi':'aplic_gateway', 'epmp-matrix':'epmp_matrix', 'disabled-matrix':'disabled_matrix', 'controls':'programs', 'wfi':'wake', 'scheduled-wfi':'scheduled',
+    module = {'envcfg-cbom':'env_cbom', 'aplic-priority':'aplic_priority', 'aplic-delegation':'aplic_delegation', 'wfi-stop':'wfi_stop', 'ssstateen-only':'ssstateen', 'stateen-rv32':'state32', 'random-transitions':'random_transitions', 'fast-preemption':'fast_preemption', 'fast-vector':'fast_vector', 'nmi-matrix':'rnmi', 'nmi-return':'rnmi', 'reri-transactions':'reri_transactions', 'plic-delivery':'plic_delivery', 'pma-access':'pma_access', 'reset-inflight':'reset_phase', 'stateen-hierarchy':'state_hierarchy', 'envcfg-zero':'env_behavior', 'landing-recovery':'cfi_recovery', 'sstc-rv32':'timer32', 'aplic-msi':'aplic_gateway', 'epmp-matrix':'epmp_matrix', 'disabled-matrix':'disabled_matrix', 'controls':'programs', 'wfi':'wake', 'scheduled-wfi':'scheduled',
               'reset':'lifecycle', 'nmi':'lifecycle', 'imsic':'aia', 'aplic':'aia',
               'aclint':'fast_interrupts', 'smnip':'fast_interrupts',
               'sstc':'extensions', 'stateen':'extensions', 'envcfg':'extensions', 'landing':'extensions'}.get(kind, kind)
@@ -84,6 +84,9 @@ def build(description, out, gcc='riscv64-unknown-elf-gcc'):
     if config.get('kind')=='wfi-stop':irq_causes=sorted({s['cause'] for s in config['wake']['sources']})
     state_csrs=([f'0x{base+i:03x}' for base in (0x10c,0x30c,0x31c,0x60c,0x61c) for i in range(4)]+['0x017','0xdb0','0x5a8']) if config.get('kind') in ('stateen','stateen-hierarchy','stateen-rv32') else []
     if config.get('kind')=='ssstateen-only':state_csrs=[f'0x{base+i:03x}' for base in (0x10c,0x60c) for i in range(4)]
+    if config.get('kind')=='envcfg-cbom':
+        state_csrs+=['0x10a']
+        if config['isa'].startswith('rv32') and 'h' in config['isa'].split('_')[0][4:]:state_csrs+=['0x310']
     (out / 'functional-groups.json').write_text(json.dumps({'replace_defaults': True, 'groups': [
         {'name': 'privilege_csr_mode', 'fields': ['csr', 'mode'], 'when': {'class': 'csr'},
          'domains': [['0x180', '0x300', '0x341', '0x342', '0x307', '0x346', '0x347', '0x348', '0x350', '0x351', '0x352', '0x353', '0x355', '0x35c', '0x150', '0x151', '0x15c', '0x250', '0x251', '0x25c', '0x600', '0x011', '0x14d', '0x15d', '0x24d', '0x25d', '0x30a', '0x31a', '0x60a', '0x61a', '0x605', '0x615', '0x606', '0x306', '0x344', '0x644']+state_csrs, ['M', 'S', 'U']]},

@@ -413,3 +413,21 @@ The native APLIC register backend honors the same width. Named load bindings
 check the complete target/threshold/claim values and read counts. Results earn
 only model-based subset groups. The plan does not predict writes of reserved
 WLRL threshold values or establish physical IRQ delivery.
+
+## CBOM environment-control campaigns
+
+`kind = "envcfg-cbom"` requires RV32/RV64 Zicbom and
+`spec_version = "CMO-1.0.0"`. `envcfg` supplies power-of-two `block_bytes`
+from 16 to 4096 and per-level legal value lists in `cbie` and `cbcfe`.
+Levels are `machine`, `supervisor` and, with H, `hypervisor`. CBIE values
+are a selected subset of 0/1/3; CBCFE values are a subset of 0/1. Lists must
+be nonempty and distinct. Optional `operations` selects clean/flush/inval.
+Top-level base `modes` and `envcfg.virtualization` restrict mode coverage.
+
+Rows record `expected_outcome`: controls, mode, permission, trap/completion
+cause and expected operation selection. Program self-checks enforce field
+readback, permission, exact PC and cause. The operation selection is metadata
+only. It does not establish cache data effects. Functional CSR domains include
+senvcfg and RV32 H mstatush. Existing strict C1/Spike comparison requirements
+apply. Shared access probes accept XLEN 32/64, with MPV and tohost transport
+selected for that XLEN. RV64 code remains unchanged by the RV32 path.

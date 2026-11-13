@@ -5,9 +5,10 @@ from .disabled import enter
 PIN = 'https://docs.riscv.org/reference/isa/v20260120/'
 
 
-def access(mode, setup, operation, denied=False, cause=2, tval=None):
+def access(mode, setup, operation, denied=False, cause=2, tval=None, xlen=64):
+    if xlen not in (32,64):raise ValueError('access probe requires RV32 or RV64')
     if mode == 'VS':
-        setup += ' li t0, 1\n slli t0, t0, 39\n csrs mstatus, t0\n'
+        setup += (' li t0, 128\n csrs 0x310, t0\n' if xlen==32 else ' li t0, 1\n slli t0, t0, 39\n csrs mstatus, t0\n')
     code = HEAD + ' la t0, handler\n csrw mtvec, t0\n' + setup + enter('S' if mode == 'VS' else mode)
     code += 'access_site:\n ' + operation + '\necall_site:\n ecall\n j fail\nhandler:\n'
     code += f''' csrr t0, mcause
@@ -19,6 +20,9 @@ def access(mode, setup, operation, denied=False, cause=2, tval=None):
 '''
     if denied and tval is not None:
         code += f' csrr t0, mtval\n li t1, {tval}\n bne t0, t1, fail\n'
+    if xlen==32:
+        from .timer32 import TAIL32
+        return code+' j pass\n'+TAIL32
     return code + ' j pass\n' + TAIL
 
 
