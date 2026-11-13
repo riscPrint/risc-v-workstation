@@ -1,0 +1,549 @@
+{
+  "config": {
+    "fetch_width": 2,
+    "fetch_entries": 8,
+    "rename_width": 2,
+    "rob_entries": 16,
+    "issue_width": 2,
+    "issue_entries": 8,
+    "load_entries": 4,
+    "store_entries": 4,
+    "commit_width": 2,
+    "latencies": {
+      "alu": 1,
+      "multiply": 3,
+      "divide": 34,
+      "load": 3,
+      "store": 1,
+      "branch": 6,
+      "jump": 6,
+      "csr": 1,
+      "fence": 1,
+      "system": 1
+    },
+    "ports": {},
+    "physical_registers": 48,
+    "physical_float_registers": 0,
+    "branch_penalty": 3,
+    "branch_speculation": false,
+    "branch_prediction": "sequential",
+    "issue_order": "out_of_order",
+    "memory_policy": "ordered",
+    "dependence_entries": 1024,
+    "replay_penalty": 5,
+    "forwarding_latency": 1,
+    "frontend": {},
+    "execution": {},
+    "translation": {},
+    "rename": {},
+    "custom_instructions": [],
+    "components": {
+      "memory": {
+        "dram_latency": 20,
+        "l1d": {
+          "size_kib": 4,
+          "ways": 2,
+          "latency": 2
+        }
+      }
+    },
+    "memory_rename": {}
+  },
+  "samples": [
+    {
+      "schema": "rvw.ooo-wrong-path/1",
+      "status": "reported",
+      "evidence": "Spike functional paths and model timing",
+      "accuracy_status": "inconclusive",
+      "config_sha256": "ee57b6b97a5d3a49b11ec76a51b6854326f3c420bd9a07c189e979a5b253884c",
+      "trace_sha256": "2b5711f4a2bcbe27f1fbe3c7607a4815baa68610c83305d4f89075a212640e03",
+      "elf_sha256": "4d035169f41d0bb36d1dea35be3d2f1c658f0fbee915a625bd1e401847f16ec9",
+      "platform_sha256": "65aca0a787c8fd2acff24ed9a78f0509f899f4309689b80f8ae3b01481db29b5",
+      "capture": {
+        "verified": 1110,
+        "branch_misses": 299,
+        "captured": 299,
+        "native_inputs": {
+          "primary_source_sha256": "3733bfa7f281f3a250953ad61d5d4ac48121a2f3f623024bc6479cb810ffbb47",
+          "primary_library_sha256": "5d8ebfd4122f4c302806377cb77846e17e3cb2f6653aded4c739caca4ff72486",
+          "replay_source_sha256": "ad5983571ee1dfd861237110999f2317a6bd862ed1c1713483b3680885c423a9",
+          "replay_library_sha256": "8499ee390e2f01aae9cd121c45bb3d399e72d7d53f955eec9559a7d7a94e781a"
+        }
+      },
+      "timing_source_sha256": "54dec94cd64c834d92577cd3dba93182371f1c2b8f1c315805c86795820670f8",
+      "coverage": "all_sequential_misses",
+      "baseline": {
+        "backend": "python",
+        "cycles": 3878,
+        "instret": 1110,
+        "ipc": 0.28623001547189275,
+        "events": {
+          "dependency_blocked": 1392,
+          "issued": 1110,
+          "branches": 400,
+          "branch_misses": 299,
+          "wrong_path_fetch_slots_estimate": 1794,
+          "l1d_demand_accesses": 1,
+          "l1d_demand_hits": 0,
+          "l1d_demand_misses": 1,
+          "l1d_writebacks": 0,
+          "l1d_prefetch_requested": 0,
+          "l1d_prefetch_dropped_present": 0,
+          "l1d_prefetch_dropped_queue_full": 0,
+          "l1d_prefetch_issued": 0,
+          "l1d_prefetch_sent_to_lower": 0,
+          "l1d_prefetch_useful": 0,
+          "l1d_prefetch_late": 0,
+          "l1d_prefetch_useless_evicted": 0,
+          "l1d_prefetch_pollution_misses": 0,
+          "l1d_prefetch_accuracy": 0,
+          "l1d_prefetch_coverage": 0
+        },
+        "max_occupancy": {
+          "rob_entries": 5,
+          "issue_entries": 3,
+          "load_entries": 0,
+          "store_entries": 1,
+          "fetch_entries": 2,
+          "decode_entries": 0
+        },
+        "topdown": {
+          "unit": "commit_slots",
+          "total_slots": 7756,
+          "slots": {
+            "retiring": 1110,
+            "frontend_bound": 5,
+            "bad_speculation": 4485,
+            "backend_bound": 2156
+          },
+          "fractions": {
+            "retiring": 0.14311500773594638,
+            "frontend_bound": 0.0006446621970087674,
+            "bad_speculation": 0.5782619907168643,
+            "backend_bound": 0.2779783393501805
+          },
+          "method": "retired slots, then recovery, then ROB occupancy, then front end"
+        },
+        "components": {
+          "memory": {
+            "l1d": {
+              "size_kib": 4,
+              "ways": 2,
+              "sets": 32,
+              "latency": 2,
+              "replacement": "lru",
+              "perfect": false,
+              "demand_accesses": 1,
+              "demand_hits": 0,
+              "demand_misses": 1,
+              "demand_mpki": 0.9009009009,
+              "miss_rate": 1,
+              "average_latency": 22,
+              "prefetch_requests_from_upper": 0,
+              "prefetch_misses_from_upper": 0,
+              "writebacks": 0,
+              "prefetch": {
+                "requested": 0,
+                "dropped_present": 0,
+                "dropped_queue_full": 0,
+                "issued": 0,
+                "sent_to_lower": 0,
+                "useful": 0,
+                "late": 0,
+                "useless_evicted": 0,
+                "pollution_misses": 0,
+                "accuracy": 0,
+                "coverage": 0,
+                "prefetchers": []
+              },
+              "replacement_stats": {},
+              "storage": {
+                "bits": 35392,
+                "kib": 4.3203125,
+                "parts": {
+                  "data": 32768,
+                  "tags": 2624,
+                  "replacement_extra": 0,
+                  "prefetchers": 0
+                }
+              }
+            },
+            "cycles_per_instruction": 1,
+            "basis": "access time = ordinal * cycles_per_instruction; no bandwidth or MSHR limit for demand misses; prefetch timeliness uses these cycles"
+          }
+        }
+      },
+      "wrong_path": {
+        "backend": "python",
+        "cycles": 4628,
+        "instret": 1110,
+        "ipc": 0.23984442523768368,
+        "events": {
+          "dependency_blocked": 600,
+          "issued": 3203,
+          "branches": 400,
+          "branch_misses": 299,
+          "wrong_path_fetch_slots_estimate": 1794,
+          "wrong_path_renamed": 2990,
+          "wrong_path_issued": 2093,
+          "wrong_path_squashed": 2990,
+          "wrong_path_store_requests_suppressed": 199,
+          "l1d_demand_accesses": 1,
+          "l1d_demand_hits": 0,
+          "l1d_demand_misses": 1,
+          "l1d_writebacks": 0,
+          "l1d_prefetch_requested": 0,
+          "l1d_prefetch_dropped_present": 0,
+          "l1d_prefetch_dropped_queue_full": 0,
+          "l1d_prefetch_issued": 0,
+          "l1d_prefetch_sent_to_lower": 0,
+          "l1d_prefetch_useful": 0,
+          "l1d_prefetch_late": 0,
+          "l1d_prefetch_useless_evicted": 0,
+          "l1d_prefetch_pollution_misses": 0,
+          "l1d_prefetch_accuracy": 0,
+          "l1d_prefetch_coverage": 0,
+          "wrong_path_fetched": 3588
+        },
+        "max_occupancy": {
+          "rob_entries": 11,
+          "issue_entries": 3,
+          "load_entries": 0,
+          "store_entries": 1,
+          "fetch_entries": 2,
+          "decode_entries": 0
+        },
+        "topdown": {
+          "unit": "commit_slots",
+          "total_slots": 9256,
+          "slots": {
+            "retiring": 1110,
+            "frontend_bound": 1504,
+            "bad_speculation": 4485,
+            "backend_bound": 2157
+          },
+          "fractions": {
+            "retiring": 0.11992221261884184,
+            "frontend_bound": 0.16248919619706137,
+            "bad_speculation": 0.4845505617977528,
+            "backend_bound": 0.233038029386344
+          },
+          "method": "retired slots, then recovery, then ROB occupancy, then front end"
+        },
+        "components": {
+          "memory": {
+            "l1d": {
+              "size_kib": 4,
+              "ways": 2,
+              "sets": 32,
+              "latency": 2,
+              "replacement": "lru",
+              "perfect": false,
+              "demand_accesses": 1,
+              "demand_hits": 0,
+              "demand_misses": 1,
+              "demand_mpki": 0.9009009009,
+              "miss_rate": 1,
+              "average_latency": 22,
+              "prefetch_requests_from_upper": 0,
+              "prefetch_misses_from_upper": 0,
+              "writebacks": 0,
+              "prefetch": {
+                "requested": 0,
+                "dropped_present": 0,
+                "dropped_queue_full": 0,
+                "issued": 0,
+                "sent_to_lower": 0,
+                "useful": 0,
+                "late": 0,
+                "useless_evicted": 0,
+                "pollution_misses": 0,
+                "accuracy": 0,
+                "coverage": 0,
+                "prefetchers": []
+              },
+              "replacement_stats": {},
+              "storage": {
+                "bits": 35392,
+                "kib": 4.3203125,
+                "parts": {
+                  "data": 32768,
+                  "tags": 2624,
+                  "replacement_extra": 0,
+                  "prefetchers": 0
+                }
+              }
+            },
+            "cycles_per_instruction": 1,
+            "basis": "access time = ordinal * cycles_per_instruction; no bandwidth or MSHR limit for demand misses; prefetch timeliness uses these cycles"
+          }
+        }
+      },
+      "approximation_gap": {
+        "cycles": -750,
+        "ipc_error_percent": 19.339865910263022,
+        "wrong_fetch_estimate": 1794,
+        "actual_bounded_wrong_fetches": 3588
+      },
+      "limits": [
+        "functional replay restores a single-hart command history, not an RTL checkpoint",
+        "static sequential prediction; bounded wrong-path window at branch issue",
+        "fetch stops at unresolved branch admission; correct-target lookahead is removed",
+        "wrong instruction fetches enter at branch issue within a fetch-width times resolution-latency budget; loads issue through the scheduler",
+        "wrong stores do not write cache or architectural memory",
+        "wrong entries use shared ROB, queues, registers and issue ports, then squash at branch resolution",
+        "fetch requests are batched at branch issue; nested speculative prediction and uop-cache pollution remain unmodeled",
+        "timing gap compares two models; it is not error against RTL"
+      ],
+      "workload": "branch"
+    },
+    {
+      "schema": "rvw.ooo-wrong-path/1",
+      "status": "reported",
+      "evidence": "Spike functional paths and model timing",
+      "accuracy_status": "inconclusive",
+      "config_sha256": "ee57b6b97a5d3a49b11ec76a51b6854326f3c420bd9a07c189e979a5b253884c",
+      "trace_sha256": "d2447935037c7bec225d71c7a5505bc189c06c28fe0681273bce6896b85c3594",
+      "elf_sha256": "9a1a7bcbc88503ab9f3d3d69aed84f7860fd300c32dd8239e2fcbe26d3bc65bf",
+      "platform_sha256": "65aca0a787c8fd2acff24ed9a78f0509f899f4309689b80f8ae3b01481db29b5",
+      "capture": {
+        "verified": 1010,
+        "branch_misses": 199,
+        "captured": 199,
+        "native_inputs": {
+          "primary_source_sha256": "3733bfa7f281f3a250953ad61d5d4ac48121a2f3f623024bc6479cb810ffbb47",
+          "primary_library_sha256": "5d8ebfd4122f4c302806377cb77846e17e3cb2f6653aded4c739caca4ff72486",
+          "replay_source_sha256": "ad5983571ee1dfd861237110999f2317a6bd862ed1c1713483b3680885c423a9",
+          "replay_library_sha256": "8499ee390e2f01aae9cd121c45bb3d399e72d7d53f955eec9559a7d7a94e781a"
+        }
+      },
+      "timing_source_sha256": "54dec94cd64c834d92577cd3dba93182371f1c2b8f1c315805c86795820670f8",
+      "coverage": "all_sequential_misses",
+      "baseline": {
+        "backend": "python",
+        "cycles": 3012,
+        "instret": 1010,
+        "ipc": 0.3353253652058433,
+        "events": {
+          "dependency_blocked": 3003,
+          "issued": 1010,
+          "branches": 200,
+          "branch_misses": 199,
+          "wrong_path_fetch_slots_estimate": 1194,
+          "issue_full": 988,
+          "l1d_demand_accesses": 401,
+          "l1d_demand_hits": 400,
+          "l1d_demand_misses": 1,
+          "l1d_writebacks": 0,
+          "l1d_prefetch_requested": 0,
+          "l1d_prefetch_dropped_present": 0,
+          "l1d_prefetch_dropped_queue_full": 0,
+          "l1d_prefetch_issued": 0,
+          "l1d_prefetch_sent_to_lower": 0,
+          "l1d_prefetch_useful": 0,
+          "l1d_prefetch_late": 0,
+          "l1d_prefetch_useless_evicted": 0,
+          "l1d_prefetch_pollution_misses": 0,
+          "l1d_prefetch_accuracy": 0,
+          "l1d_prefetch_coverage": 0
+        },
+        "max_occupancy": {
+          "rob_entries": 15,
+          "issue_entries": 8,
+          "load_entries": 3,
+          "store_entries": 3,
+          "fetch_entries": 8,
+          "decode_entries": 0
+        },
+        "topdown": {
+          "unit": "commit_slots",
+          "total_slots": 6024,
+          "slots": {
+            "retiring": 1010,
+            "frontend_bound": 5,
+            "bad_speculation": 2987,
+            "backend_bound": 2022
+          },
+          "fractions": {
+            "retiring": 0.16766268260292164,
+            "frontend_bound": 0.0008300132802124834,
+            "bad_speculation": 0.4958499335989376,
+            "backend_bound": 0.33565737051792827
+          },
+          "method": "retired slots, then recovery, then ROB occupancy, then front end"
+        },
+        "components": {
+          "memory": {
+            "l1d": {
+              "size_kib": 4,
+              "ways": 2,
+              "sets": 32,
+              "latency": 2,
+              "replacement": "lru",
+              "perfect": false,
+              "demand_accesses": 401,
+              "demand_hits": 400,
+              "demand_misses": 1,
+              "demand_mpki": 0.9900990099,
+              "miss_rate": 0.002493765586,
+              "average_latency": 2.049875312,
+              "prefetch_requests_from_upper": 0,
+              "prefetch_misses_from_upper": 0,
+              "writebacks": 0,
+              "prefetch": {
+                "requested": 0,
+                "dropped_present": 0,
+                "dropped_queue_full": 0,
+                "issued": 0,
+                "sent_to_lower": 0,
+                "useful": 0,
+                "late": 0,
+                "useless_evicted": 0,
+                "pollution_misses": 0,
+                "accuracy": 0,
+                "coverage": 0,
+                "prefetchers": []
+              },
+              "replacement_stats": {},
+              "storage": {
+                "bits": 35392,
+                "kib": 4.3203125,
+                "parts": {
+                  "data": 32768,
+                  "tags": 2624,
+                  "replacement_extra": 0,
+                  "prefetchers": 0
+                }
+              }
+            },
+            "cycles_per_instruction": 1,
+            "basis": "access time = ordinal * cycles_per_instruction; no bandwidth or MSHR limit for demand misses; prefetch timeliness uses these cycles"
+          }
+        }
+      },
+      "wrong_path": {
+        "backend": "python",
+        "cycles": 2608,
+        "instret": 1010,
+        "ipc": 0.38726993865030673,
+        "events": {
+          "dependency_blocked": 1434,
+          "issued": 2396,
+          "branches": 200,
+          "branch_misses": 199,
+          "wrong_path_fetch_slots_estimate": 1194,
+          "wrong_path_renamed": 1980,
+          "wrong_path_issued": 1386,
+          "wrong_path_squashed": 1980,
+          "wrong_path_rename_stall": 7,
+          "l1d_demand_accesses": 401,
+          "l1d_demand_hits": 400,
+          "l1d_demand_misses": 1,
+          "l1d_writebacks": 0,
+          "l1d_prefetch_requested": 0,
+          "l1d_prefetch_dropped_present": 0,
+          "l1d_prefetch_dropped_queue_full": 0,
+          "l1d_prefetch_issued": 0,
+          "l1d_prefetch_sent_to_lower": 0,
+          "l1d_prefetch_useful": 0,
+          "l1d_prefetch_late": 0,
+          "l1d_prefetch_useless_evicted": 0,
+          "l1d_prefetch_pollution_misses": 0,
+          "l1d_prefetch_accuracy": 0,
+          "l1d_prefetch_coverage": 0,
+          "wrong_path_fetched": 2388
+        },
+        "max_occupancy": {
+          "rob_entries": 16,
+          "issue_entries": 8,
+          "load_entries": 3,
+          "store_entries": 3,
+          "fetch_entries": 2,
+          "decode_entries": 0
+        },
+        "topdown": {
+          "unit": "commit_slots",
+          "total_slots": 5216,
+          "slots": {
+            "retiring": 1010,
+            "frontend_bound": 780,
+            "bad_speculation": 2200,
+            "backend_bound": 1226
+          },
+          "fractions": {
+            "retiring": 0.19363496932515337,
+            "frontend_bound": 0.1495398773006135,
+            "bad_speculation": 0.4217791411042945,
+            "backend_bound": 0.23504601226993865
+          },
+          "method": "retired slots, then recovery, then ROB occupancy, then front end"
+        },
+        "components": {
+          "memory": {
+            "l1d": {
+              "size_kib": 4,
+              "ways": 2,
+              "sets": 32,
+              "latency": 2,
+              "replacement": "lru",
+              "perfect": false,
+              "demand_accesses": 401,
+              "demand_hits": 400,
+              "demand_misses": 1,
+              "demand_mpki": 0.9900990099,
+              "miss_rate": 0.002493765586,
+              "average_latency": 2.049875312,
+              "prefetch_requests_from_upper": 0,
+              "prefetch_misses_from_upper": 0,
+              "writebacks": 0,
+              "prefetch": {
+                "requested": 0,
+                "dropped_present": 0,
+                "dropped_queue_full": 0,
+                "issued": 0,
+                "sent_to_lower": 0,
+                "useful": 0,
+                "late": 0,
+                "useless_evicted": 0,
+                "pollution_misses": 0,
+                "accuracy": 0,
+                "coverage": 0,
+                "prefetchers": []
+              },
+              "replacement_stats": {},
+              "storage": {
+                "bits": 35392,
+                "kib": 4.3203125,
+                "parts": {
+                  "data": 32768,
+                  "tags": 2624,
+                  "replacement_extra": 0,
+                  "prefetchers": 0
+                }
+              }
+            },
+            "cycles_per_instruction": 1,
+            "basis": "access time = ordinal * cycles_per_instruction; no bandwidth or MSHR limit for demand misses; prefetch timeliness uses these cycles"
+          }
+        }
+      },
+      "approximation_gap": {
+        "cycles": 404,
+        "ipc_error_percent": -13.41301460823373,
+        "wrong_fetch_estimate": 1194,
+        "actual_bounded_wrong_fetches": 2388
+      },
+      "limits": [
+        "functional replay restores a single-hart command history, not an RTL checkpoint",
+        "static sequential prediction; bounded wrong-path window at branch issue",
+        "fetch stops at unresolved branch admission; correct-target lookahead is removed",
+        "wrong instruction fetches enter at branch issue within a fetch-width times resolution-latency budget; loads issue through the scheduler",
+        "wrong stores do not write cache or architectural memory",
+        "wrong entries use shared ROB, queues, registers and issue ports, then squash at branch resolution",
+        "fetch requests are batched at branch issue; nested speculative prediction and uop-cache pollution remain unmodeled",
+        "timing gap compares two models; it is not error against RTL"
+      ],
+      "workload": "memory"
+    }
+  ]
+}

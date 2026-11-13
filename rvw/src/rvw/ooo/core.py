@@ -134,13 +134,14 @@ class Entry:
     translation_ready: int | None = None
     predicted_correct: bool | None = None
     data_producer: object = None
+    wrong_parent: object = None
 
 
-def simulate(instructions, config, max_cycles=1_000_000, predictor=None, memory=None, backend="auto", observer=None):
+def simulate(instructions, config, max_cycles=1_000_000, predictor=None, memory=None, backend="auto", observer=None, wrong_path=None):
     if not config.components:
-        return _simulate(instructions, config, max_cycles, predictor, memory, backend, observer=observer)
+        return _simulate(instructions, config, max_cycles, predictor, memory, backend, observer=observer, wrong_path=wrong_path)
     instructions = list(instructions)
-    if backend != "python" and observer is None and predictor is None and memory is None:
+    if backend != "python" and observer is None and predictor is None and memory is None and wrong_path is None:
         # Keep the public input checks in _simulate before entering native code.
         result = _simulate(instructions, config, max_cycles, backend=backend)
         if result.get("backend") == "native":
@@ -153,7 +154,7 @@ def simulate(instructions, config, max_cycles=1_000_000, predictor=None, memory=
         result = _simulate(instructions, config, max_cycles,
                            predictor=adapter if branch else None,
                            memory=adapter if "memory" in config.components else None,
-                           backend="python", observer=observer, instruction_memory=adapter if config.components.get("memory", {}).get("l1i") else None)
+                           backend="python", observer=observer, wrong_path=wrong_path, instruction_memory=adapter if config.components.get("memory", {}).get("l1i") else None)
         result["events"].update(adapter.events)
         result["components"] = adapter.stats(result["instret"])
         from .component_events import counters
@@ -161,7 +162,7 @@ def simulate(instructions, config, max_cycles=1_000_000, predictor=None, memory=
         return result
 
 
-def _simulate(instructions, config, max_cycles=1_000_000, predictor=None, memory=None, backend="auto", instruction_memory=None, observer=None):
+def _simulate(instructions, config, max_cycles=1_000_000, predictor=None, memory=None, backend="auto", instruction_memory=None, observer=None, wrong_path=None):
     """Commit, issue, rename, fetch. Latency 1 completes next cycle.
 
     Memory instructions issue only after older memory instructions complete.
@@ -188,7 +189,7 @@ def _simulate(instructions, config, max_cycles=1_000_000, predictor=None, memory
             raise ValueError("invalid destination register")
     if backend not in ("auto", "python", "native"):
         raise ValueError("backend must be auto, python or native")
-    if observer is not None:
+    if observer is not None or wrong_path is not None:
         if backend == "native":
             raise ValueError("region attribution requires Python timing")
         backend = "python"
@@ -205,7 +206,7 @@ def _simulate(instructions, config, max_cycles=1_000_000, predictor=None, memory
     from .execution import Execution
     from .translation import Translation
     from .attribution import Attribution
-    frontend = Frontend(config.frontend, config.fetch_width, config.fetch_entries) if config.frontend else None
+    frontend = Frontend(config.frontend, config.fetch_width, config.fetch_entries, guard_branches=wrong_path is not None) if config.frontend else None
     execution = Execution(config.execution)
     translation = Translation(config.translation) if config.translation else None
     attribution = Attribution(config.commit_width)
@@ -214,6 +215,8 @@ def _simulate(instructions, config, max_cycles=1_000_000, predictor=None, memory
     pc = retired = loads = stores = allocated = allocated_float = 0
     blocked_until = 0
     unresolved_branch = None
+    wrong_parent = fetch_guard = None
+    wrong_fetched = deque()
     # Predictors implement predict(pc, fallthrough) and update(pc, actual_next).
     from .structures import StaticPredictor, BackwardPredictor
     predictor = predictor or (BackwardPredictor() if config.branch_prediction == "static_btfn" else StaticPredictor())
@@ -224,6 +227,23 @@ def _simulate(instructions, config, max_cycles=1_000_000, predictor=None, memory
     from .dependence import Dependence
     dependence = Dependence(config.dependence_entries)
     for cycle in range(max_cycles):
+        if wrong_parent is not None and wrong_parent.done is not None and wrong_parent.done <= cycle:
+            removed = {e for e in rob if e.wrong_parent is wrong_parent}
+            rob = deque(e for e in rob if e not in removed)
+            waiting[:] = [e for e in waiting if e not in removed]
+            for victim in removed:
+                loads -= victim.insn.kind == 'load'
+                stores -= victim.insn.kind == 'store'
+                if victim.register and victim.insn.dest:
+                    if victim.insn.dest < 32: allocated -= 1
+                    else: allocated_float -= 1
+            for reg in {e.insn.dest for e in removed if e.insn.dest}:
+                producer = next((e for e in reversed(rob) if e.insn.dest == reg), None)
+                if producer is None: writers.pop(reg, None)
+                else: writers[reg] = producer
+            events['wrong_path_squashed'] += len(removed)
+            wrong_fetched.clear()
+            wrong_parent = None
         for entry in rob:
             if entry.bypass_ready and entry.done is None and all(dep.done is not None for dep in entry.deps):
                 entry.done = max([entry.bypass_ready] + [dep.done for dep in entry.deps])
@@ -233,6 +253,8 @@ def _simulate(instructions, config, max_cycles=1_000_000, predictor=None, memory
             if not rob or rob[0].done is None or rob[0].done > cycle:
                 break
             entry = rob.popleft()
+            if entry.wrong_parent is not None:
+                raise ValueError("wrong-path instruction reached commit")
             if observer is not None:
                 committed_entries.append(entry)
             retired += 1
@@ -275,9 +297,9 @@ def _simulate(instructions, config, max_cycles=1_000_000, predictor=None, memory
             for previous in rob:
                 if previous is entry:
                     break
-                if previous.insn.kind in ("branch", "jump") or previous.insn.kind in SERIAL:
+                if (previous.insn.kind in ("branch", "jump") or previous.insn.kind in SERIAL) and previous.wrong_parent is None and previous is not entry.wrong_parent:
                     older_branches.append(previous)
-            if cycle < blocked_until or any((p.done is None or p.done > cycle) and not (config.branch_speculation and p.insn.kind in ("branch", "jump") and p.predicted_correct is True) for p in older_branches):
+            if (cycle < blocked_until and wrong_path is None) or any((p.done is None or p.done > cycle) and not (config.branch_speculation and p.insn.kind in ("branch", "jump") and p.predicted_correct is True) for p in older_branches):
                 continue
             speculating = config.branch_speculation and any(p.insn.kind in ("branch", "jump") and p.predicted_correct is True and p.done is not None and p.done > cycle for p in older_branches)
             kind = entry.insn.kind
@@ -338,15 +360,19 @@ def _simulate(instructions, config, max_cycles=1_000_000, predictor=None, memory
                 continue
             if forwarded:
                 events["forwarded_loads"] += 1
-            if kind in ("load", "store") and memory is not None and not forwarded:
+            if entry.wrong_parent is not None and kind == "store":
+                events["wrong_path_store_requests_suppressed"] += 1
+            if kind in ("load", "store") and memory is not None and not forwarded and not (entry.wrong_parent is not None and kind == "store"):
                 # The component owner supplies access(address, size, write, cycle).
                 # It returns an additional service delay in model cycles.
+                if entry.wrong_parent is not None:
+                    events["wrong_path_load_requests"] += 1
                 service = (memory.access_instruction(entry.insn, cycle) if hasattr(memory, "access_instruction") else
                            memory.access(entry.insn.address, entry.insn.size, kind == "store", cycle))
                 if type(service) is not int or service < 0:
                     raise ValueError("memory service must return nonnegative cycles")
                 latency += service
-            if kind in ("branch", "jump", "system"):
+            if kind in ("branch", "jump", "system") and entry.wrong_parent is None:
                 if hasattr(predictor, "predict_instruction"):
                     predicted = predictor.predict_instruction(entry.insn)
                     latency += predictor.last_delay
@@ -356,8 +382,13 @@ def _simulate(instructions, config, max_cycles=1_000_000, predictor=None, memory
                     predictor.update(entry.insn.pc, entry.insn.next_pc)
                 entry.predicted_correct = predicted == entry.insn.next_pc
                 events["branches"] += 1
+                if frontend: frontend.release(entry.insn)
+                if fetch_guard is entry.insn: fetch_guard = None
                 if predicted != entry.insn.next_pc:
                     events["branch_misses"] += 1
+                    if wrong_path is not None:
+                        wrong_parent = entry
+                        wrong_fetched = deque(wrong_path.begin(entry.insn, cycle, latency, config, instruction_memory))
                     blocked_until = max(blocked_until, cycle + latency + config.branch_penalty)
                     events["wrong_path_fetch_slots_estimate"] += config.branch_penalty * config.fetch_width
                 if kind == "system" or not config.branch_speculation or not entry.predicted_correct:
@@ -390,9 +421,33 @@ def _simulate(instructions, config, max_cycles=1_000_000, predictor=None, memory
             waiting.remove(entry)
             issued += 1
             events["issued"] += 1
+            if entry.wrong_parent is not None: events["wrong_path_issued"] += 1
             if speculating:
                 events["correct_path_speculative_issues"] += 1
         events["dependency_blocked"] += dependency_blocked
+        for _ in range(config.rename_width):
+            if wrong_parent is None or not wrong_fetched or wrong_fetched[0][1] > cycle:
+                break
+            op = wrong_fetched[0][0]
+            if (len(rob) >= config.rob_entries or len(waiting) >= config.issue_entries or
+                execution.queue_full(op.kind, waiting) or
+                (op.kind == 'load' and loads >= config.load_entries) or
+                (op.kind == 'store' and stores >= config.store_entries) or
+                (op.dest and op.dest < 32 and config.physical_registers and allocated >= config.physical_registers-32) or
+                (op.dest is not None and op.dest >= 32 and config.physical_float_registers and allocated_float >= config.physical_float_registers-32)):
+                events['wrong_path_rename_stall'] += 1
+                break
+            wrong_fetched.popleft()
+            entry = Entry(op, tuple(writers[r] for r in op.sources if r and r in writers), wrong_parent=wrong_parent)
+            if op.dest:
+                writers[op.dest] = entry
+                if op.dest < 32: allocated += 1
+                else: allocated_float += 1
+            if op.kind == 'store' and len(op.sources) == 2 and op.sources[1]:
+                entry.data_producer = writers.get(op.sources[1])
+            rob.append(entry); waiting.append(entry)
+            loads += op.kind == 'load'; stores += op.kind == 'store'
+            events['wrong_path_renamed'] += 1
         for _ in range(config.rename_width):
             if cycle < blocked_until or unresolved_branch is not None:
                 break
@@ -454,11 +509,13 @@ def _simulate(instructions, config, max_cycles=1_000_000, predictor=None, memory
         if frontend:
             frontend.advance(cycle, instructions, cycle < blocked_until or unresolved_branch is not None, memory=instruction_memory)
         for _ in range(0 if frontend else config.fetch_width):
-            if cycle < blocked_until or unresolved_branch is not None:
+            if cycle < blocked_until or unresolved_branch is not None or fetch_guard is not None:
                 break
             if pc == len(instructions) or len(fetched) == config.fetch_entries:
                 break
             fetched.append(instructions[pc])
+            if wrong_path is not None and instructions[pc].kind in ("branch", "jump"):
+                fetch_guard = instructions[pc]
             pc += 1
         for name, count in dict(rob_entries=len(rob), issue_entries=len(waiting),
                                 load_entries=loads, store_entries=stores,
