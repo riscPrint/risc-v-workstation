@@ -150,3 +150,8 @@ checks. Without a platform, signal mapping stays inconclusive.
 and `full_c2` stay inconclusive. One ELF cannot test all option interactions,
 interrupt acceptance, memory faults or architectural trace fields. Replay must
 also exit successfully; a result file alone cannot establish replay success.
+
+Declare `hdl = "sv"` or `hdl = "vhdl"` in `[project]` for pure HDL projects.
+The HDL scaffold writes this field. Doctor marks the JDK, javac and sbt checks
+`not_applicable`. Applicable native checks still run. The raw installer output
+is retained. An installed version does not prove that the adapter runs.

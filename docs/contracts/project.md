@@ -252,3 +252,11 @@ Wired launchers store `target/rvw-classpath.json` in the adapter project.
 It is a build accelerator, not a result identity. Source and runtime file hashes
 must match before reuse. Native identity capture still runs on every launch.
 The generated sbt lock is private to the project name (`sbt-<name>`).
+
+## HDL diagnostic applicability
+
+`[project] hdl` can declare `sv`, `vhdl`, `chisel` or `spinal`. The non-Spinal
+scaffold writes this field. It is a language value, not a file path. Doctor
+marks JDK, javac and sbt version probes `not_applicable` for SV and VHDL.
+Their installed values remain recorded. Missing applicable native tools still
+fail the diagnostic. This does not assert adapter execution or qualification.

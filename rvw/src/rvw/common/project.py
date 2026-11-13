@@ -71,7 +71,7 @@ def parse_project(raw, path, environment):
     base = path.parent
     tables = {
         "stimulus": {"random_settings"},
-        "project": {"schema", "root", "rvw_version"}, "cosim": {"platform"},
+        "project": {"schema", "root", "rvw_version", "hdl"}, "cosim": {"platform"},
         "debug": {"config"}, "checks": {"settings", "waivers"},
         "debug_module": {"profile"},
         "query": {"build", "db"},
@@ -91,6 +91,8 @@ def parse_project(raw, path, environment):
         sections[section] = dict(table)
     if sections["project"].get("schema", "rvw.project/1") != "rvw.project/1":
         raise ProjectError(f"{path}: unsupported project schema")
+    if sections['project'].get('hdl') not in (None,'sv','vhdl','chisel','spinal'):
+        raise ProjectError('project.hdl must be sv, vhdl, chisel or spinal')
     pin = sections["project"].get("rvw_version")
     if pin is not None:
         import rvw
@@ -116,7 +118,7 @@ def parse_project(raw, path, environment):
                         raise ProjectError("riscv_formal.verilog must be a nonempty path list")
                     table[key] = [_path(v, base, environment) for v in value]
                 continue
-            if key in {"schema", "rvw_version", "top", "clock", "reset"}:
+            if key in {"schema", "rvw_version", "top", "clock", "reset", "hdl"}:
                 if not isinstance(value, str) or not value:
                     raise ProjectError(f"{section}.{key} must be a non-empty string")
             elif key in {"build", "verilog", "export_dependencies"}:

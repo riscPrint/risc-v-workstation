@@ -158,6 +158,7 @@ int main(int argc, char** argv) {{
     config = f'''[project]
 schema = "rvw.project/1"
 rvw_version = {q(rvw.__version__)}
+hdl = {q(hdl)}
 root = "."
 
 [core]
