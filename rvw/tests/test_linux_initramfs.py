@@ -81,7 +81,8 @@ def test_debug_result_requires_userspace_and_shutdown(tmp_path, status, console,
     elf = tmp_path / 'reset.elf'
     elf.write_bytes(b'ELF fixture')
     sample = dict(schema='rvw.vexii-boot-slice-result/1', status=status, cycle='100', retired='20',
-                  pc='0x80000000', trap=None, wall_seconds=1, console={'uart': console})
+                  pc='0x80000000', trap=None, wall_seconds=1, console={'uart': console},
+                  wave_cycle_origin='99', wave_time_origin='58', wave_time_of_cycle_1=str(58+(1-99)*11))
     report, checkpoint = tmp_path / 'slice.json', tmp_path / 'slice.zip'
     report.write_text(json.dumps(sample))
     state = {k: sample[k] for k in ('cycle', 'retired', 'pc', 'trap')}
@@ -92,6 +93,10 @@ def test_debug_result_requires_userspace_and_shutdown(tmp_path, status, console,
     result = load_run(tmp_path / 'debug/result.json')
     assert result.status == expected
     assert result.why_inconclusive
+    from rvw.bundle.clock import wave_clock
+    clock = wave_clock(result.to_dict(), {})
+    assert clock.known and clock.time(100) == 58
+    assert result.to_dict()['details']['boot_trace_cycle_base'] == 0
     elf.write_bytes(b'different ELF')
     with pytest.raises(ValueError, match='ELF differs'):
         module.convert(report, checkpoint, elf, tmp_path / 'bad')

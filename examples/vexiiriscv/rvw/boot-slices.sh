@@ -30,4 +30,21 @@ if [[ -n "${RVW_BOOT_FREEZE_RUNTIME:-}" ]]; then
   cp="$("${RVW_PYTHON:-$repo/rvw/.venv/bin/python}" "$here/linux/freeze_runtime.py" --classpath "$cp" --out "$RVW_BOOT_FREEZE_RUNTIME")"
 fi
 [[ -n "$cp" ]] || { echo "No runtime classpath." >&2; exit 2; }
-exec nice -n "$nice_delta" java -Xss64m -Xmx3g -XX:+UseParallelGC -Driscvsim.script="$here/run.sh" -cp "$cp" rvwvexii.BootSlices "$@"
+java_args=(-Xss64m -Xmx3g -XX:+UseParallelGC -Driscvsim.script="$here/run.sh" -cp "$cp" rvwvexii.BootSlices "$@")
+if [[ -n "${RVW_BOOT_WAVE:-}" ]]; then
+  # The backend reuses its test directory. Save this bounded wave before
+  # another process can clean that directory, while still holding the lock.
+  status=0
+  nice -n "$nice_delta" java "${java_args[@]}" || status=$?
+  (( status == 0 )) || exit "$status"
+  wave="${RVW_BOOT_WORK:-$(dirname "$4")/boot-native}/VexiiRiscv/test/wave.fst"
+  if [[ -s "$wave" && -d "$4" ]]; then
+    cp "$wave" "$4/wave.fst"
+    rm "$wave"
+  else
+    echo 'The requested wave was not produced.' >&2
+    exit 2
+  fi
+  exit "$status"
+fi
+exec nice -n "$nice_delta" java "${java_args[@]}"

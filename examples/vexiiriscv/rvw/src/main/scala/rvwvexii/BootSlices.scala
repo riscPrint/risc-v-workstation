@@ -22,6 +22,15 @@ object BootSlices {
     val checkpoint = new File(args(4)); val restore = args(5) == "restore"
     require(restore || args(5) == "fresh", "unknown mode")
     val stop = args(6).toLong
+    def window(name: String, maximum: Long): Option[(Long,Long)] = sys.env.get(name).map { text =>
+      val fields = text.split(":"); require(fields.length == 2, s"$name needs FROM:TO cycles")
+      val from = fields(0).toLong; val to = fields(1).toLong
+      require(from >= 0 && to > from && to-from <= maximum, s"$name exceeds its bounded window")
+      (from,to)
+    }
+    val traceWindow = window("RVW_BOOT_TRACE", 65536)
+    val waveWindow = window("RVW_BOOT_WAVE", 4096)
+    val maskTimer = window("RVW_BOOT_MASK_TIMER", Long.MaxValue)
     val ram = map.regions.filter(_.kind == "ram"); require(ram.size == 1)
     val base = ram.head.base.toLong; val size = ram.head.size.toInt
     require(size > 0 && size <= 128 * 1024 * 1024)
@@ -31,9 +40,10 @@ object BootSlices {
     sys.props("rvwvexii.bootMap") = new File(args(2)).getCanonicalPath
     val bridge = new BridgeState
     val config = bridge.instrument(VexiiTop.spinalConfig.copy(headerWithDate = false, headerWithRepoHash = false))
-    val compiled = SimConfig.withConfig(config).withVerilator
+    val sim = SimConfig.withConfig(config).withVerilator
       .workspacePath(sys.env.getOrElse("RVW_BOOT_WORK", new File(out.getParentFile, "boot-native").getPath))
-      .compile(VexiiTop("rv64imacsu_linux"))
+    if (waveWindow.nonEmpty) sim.withFstWave
+    val compiled = sim.compile(VexiiTop("rv64imacsu_linux", probeTap = false, bootTrace = true))
     def hash(bytes: Array[Byte]) = MessageDigest.getInstance("SHA-256").digest(bytes).map(b => f"${b & 255}%02x").mkString
     val rtl = new File(compiled.compiledPath, "rtl").listFiles().filter(_.getName.endsWith(".v")).sortBy(_.getName)
     val identity = ujson.Obj("rtl" -> hash(rtl.flatMap(f => Files.readAllBytes(f.toPath))),
@@ -42,6 +52,8 @@ object BootSlices {
       "harness" -> hash(getClass.getResourceAsStream("BootSlices$.class").readAllBytes()),
       "memory" -> hash(classOf[ByteMemory].getResourceAsStream("ByteMemory.class").readAllBytes()),
       "bridge" -> hash(classOf[BridgeState].getResourceAsStream("BridgeState.class").readAllBytes()),
+      "trace" -> hash(classOf[BootTrace].getResourceAsStream("BootTrace.class").readAllBytes()),
+      "reference_inputs" -> hash(classOf[BootInputs].getResourceAsStream("BootInputs.class").readAllBytes()),
       "devices" -> hash(Seq("LiveDevices", "LiveDevices$Device", "LiveDevices$Uart", "LiveDevices$Clint", "LiveDevices$Plic", "LiveDevices$Poweroff").flatMap(n =>
         classOf[LiveDevices].getResourceAsStream(n + ".class").readAllBytes()).toArray))
     val saved = if (restore) {
@@ -62,6 +74,10 @@ object BootSlices {
     var retired = saved.map(_("retired").str.toLong).getOrElse(0L)
     require(stop > cycle, "stop must follow restored cycle")
     var lastLevels = BigInt(0)
+    var lastDeviceLevels = BigInt(0)
+    var waveCycleOne = 0L
+    var waveOriginTime = 0L
+    var traceRecords = 0L
     val byMode = saved.map(_("retired_by_mode").arr.map(_.str.toLong).toArray).getOrElse(Array.fill(4)(0L))
     var lastMode = saved.map(_("mode").num.toInt).getOrElse(3)
     def address(value: BigInt, width: Int): BigInt = if (width < 64 && value.testBit(width-1)) value | (((BigInt(1)<<64)-1) ^ ((BigInt(1)<<width)-1)) else value
@@ -81,14 +97,26 @@ object BootSlices {
     var wallExpired = false
     val startCycle = cycle; val startRetired = retired; val startTime = System.nanoTime()
     compiled.doSim(seed = 1) { dut =>
+      if (waveWindow.nonEmpty) disableSimWave()
       val cd = dut.clockDomain
       val ib = dut.host[FetchCachelessPlugin].logic.bus
       val db = dut.host[LsuCachelessPlugin].logic.bus
       val priv = dut.host[PrivilegedPlugin].logic.harts(0)
       val tap = dut.host[TrapTapPlugin].logic
       val commits = dut.host[WhiteboxerPlugin].logic.commits.ports
+      val referenceInputs = new BootInputs(saved.map(_("reference_inputs")),
+        sys.env.get("RVW_BOOT_REFERENCE_INPUTS").map { flag => require(Set("0","1")(flag)); flag == "1" })
+      val trace = new BootTrace(dut.host[BootTraceTap].logic.port, out,
+        ujson.Obj("xlen" -> 64, "isa" -> "rv64imac_zicsr_zifencei_zicntr", "core" -> "vexiiriscv",
+          "config" -> "rv64imacsu_linux", "elf" -> elf.file.getPath, "elf_sha256" -> boot.identities.head._2,
+          "external_interrupts" -> ujson.Obj("schema" -> "rvw.external-interrupts/1", "map_sha256" -> map.sha256),
+          "rtl_sha256" -> identity("rtl"), "seed" -> 1, "mem_latency" -> 1),
+        traceWindow, saved.map(_("trace_memory")), referenceInputs)
       def inputs(): Unit = {
-        val levels = devices.tick(cycle); lastLevels = levels
+        val observed = devices.tick(cycle)
+        lastDeviceLevels = observed
+        val levels = if (maskTimer.exists { case (from,to) => cycle >= from && cycle < to }) observed.clearBit(7) else observed
+        lastLevels = levels
         priv.int.m.timer #= levels.testBit(7); priv.int.m.software #= levels.testBit(3)
         priv.int.m.external #= levels.testBit(11); priv.int.s.external #= levels.testBit(9)
         dut.host[PrivilegedPlugin].logic.rdtime #= cycle
@@ -103,7 +131,15 @@ object BootSlices {
       cd.resetSim #= false; sleep(1)
       saved.foreach { s => devices.restore(s("devices")); bridge.restore(s("rtl")); inputs(); sleep(1)
         require(bridge.capture() == s("rtl"), "RTL restore readback mismatch") }
+      // A restored process starts its simulator clock near zero. Debug tools
+      // need this offset to map cumulative logical cycles to FST time.
+      waveOriginTime = simTime() + 1
+      waveCycleOne = waveOriginTime + (1-cycle) * 11
       while (cycle < stop && !wallExpired && !devices.poweroff) {
+        waveWindow.foreach { case (from,to) =>
+          if (cycle == from) enableSimWave()
+          if (cycle == to) disableSimWave()
+        }
         inputs(); sleep(1)
         val ni: Response = if (ib.cmd.valid.toBoolean) {
           val n = ib.p.dataWidth / 8; val a = ib.cmd.address.toLong & ~(n-1L)
@@ -129,20 +165,29 @@ object BootSlices {
           if (op == 3) reservation = None
           if (device && write) devices.write(address,width,(data>>shift)&mask)
           val result = if (device && !write) devices.read(address,width)<<shift else if (atomic || !write) old else BigInt(0)
+          if (c.fromHart.toBoolean) trace.observe(c.uopId.toLong,address,
+            if ((!atomic && !write) || (atomic && op != 3)) (result >> shift) & mask else BigInt(0),
+            if (write) (data >> shift) & mask else BigInt(0),
+            if ((!atomic && !write) || (atomic && op != 3)) (1<<width)-1 else 0,
+            if (write) (1<<width)-1 else 0, !inRam(a,n) && !device, device)
           Some((result, !inRam(a,n) && !device, c.id.toInt, miss))
         } else None
+        trace.sample(cycle, lastLevels, if (tap.fire.toBoolean) Some((tap.epc.toBigInt,tap.cause.toBigInt,tap.tval.toBigInt)) else None)
         commits.foreach(p => if (p.valid.toBoolean) { retired += 1; lastPc = Hex(address(p.pc.toBigInt,p.pc.getBitsWidth)); lastMode = tap.privilege.toInt & 3; byMode(lastMode) += 1 })
         if (tap.fire.toBoolean) lastTrap = ujson.Obj("cycle" -> cycle.toString, "epc" -> Hex(tap.epc.toBigInt), "tval" -> Hex(tap.tval.toBigInt), "cause" -> Hex(tap.cause.toBigInt))
         cd.clockSim #= true; sleep(5); cd.clockSim #= false; sleep(5)
         cycle += 1; ip = ni; dp = nd
         if ((cycle & 1023) == 0) wallExpired = wallLimit.exists((System.nanoTime()-startTime)/1e9 >= _)
       }
+      trace.finish(cycle); traceRecords = trace.count
+      if (waveWindow.nonEmpty) { sleep(1); disableSimWave() }
       // No edge follows capture. A fresh process reconstructs all inputs before its first edge.
       val state = ujson.Obj("schema" -> "rvw.vexii-boot-slice/1", "identity" -> identity,
         "cycle" -> cycle.toString, "retired" -> retired.toString, "pc" -> lastPc, "trap" -> lastTrap,
         "mode" -> lastMode, "retired_by_mode" -> ujson.Arr.from(byMode.map(_.toString)), "irq_levels" -> Hex(lastLevels),
         "reservation" -> reservation.map(v => ujson.Str(v.toString)).getOrElse(ujson.Null),
-        "ram_sha256" -> memory.sha256, "ibus" -> encode(ip), "dbus" -> encode(dp), "devices" -> devices.snapshot(), "rtl" -> bridge.capture())
+        "ram_sha256" -> memory.sha256, "ibus" -> encode(ip), "dbus" -> encode(dp), "devices" -> devices.snapshot(),
+        "trace_memory" -> trace.state, "reference_inputs" -> referenceInputs.snapshot, "rtl" -> bridge.capture())
       val temp = new File(checkpoint.getPath + ".partial")
       val zip = new ZipOutputStream(Files.newOutputStream(temp.toPath))
       try {
@@ -158,7 +203,11 @@ object BootSlices {
         "mode" -> lastMode, "retired_by_mode" -> ujson.Arr.from(byMode.map(_.toString)), "irq_levels" -> Hex(lastLevels),
       "slice_cycles" -> (cycle-startCycle).toString, "slice_retired" -> (retired-startRetired).toString,
       "wall_seconds" -> seconds, "cycles_per_second" -> ((cycle-startCycle)/seconds),
-      "instructions_per_second" -> ((retired-startRetired)/seconds), "console" -> devices.outputs)
+      "instructions_per_second" -> ((retired-startRetired)/seconds), "console" -> devices.outputs,
+      "trace_records" -> traceRecords.toString, "wave_time_of_cycle_1" -> waveCycleOne.toString,
+      "wave_cycle_origin" -> startCycle.toString, "wave_time_origin" -> waveOriginTime.toString,
+      "device_irq_levels" -> Hex(lastDeviceLevels),
+      "timer_mask" -> maskTimer.map { case (from,to) => ujson.Arr(from.toString,to.toString) }.getOrElse(ujson.Null))
     Files.writeString(new File(out,"result.json").toPath, ujson.write(result,indent=2))
     println(ujson.write(result))
   }

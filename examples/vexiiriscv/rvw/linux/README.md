@@ -127,3 +127,6 @@ RVW_LINUX_INPUTS=INPUTS python -m pytest rvw/tests/test_linux_reference.py -q \
 This test runs from the example directory with the native environment set.
 It checks the input hashes, userspace marker and QEMU power-off exit.
 QEMU completion is reference evidence. It is separate from RTL completion.
+
+See [checkpoint debugging](CHECKPOINT_DEBUG.md) for bounded C2 and FST windows,
+the timer-input fault control and the diagnostic bundle commands.

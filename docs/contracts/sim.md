@@ -552,3 +552,41 @@ copied in classpath order. The saved `classpath.txt` is the Java classpath,
 not a new checkpoint format. `RVW_BOOT_CLASSPATH` selects it for later launches.
 Checkpoint identities still bind the RTL, harness, memory and device classes.
 Freezing does not qualify cross-version or cross-host restore.
+
+## Project boot checkpoint debug windows
+
+The VexiiRiscv boot-slice harness can enable C2 with `RVW_BOOT_TRACE=FROM:TO`
+and FST with `RVW_BOOT_WAVE=FROM:TO` after restore. The limits are 65,536 C2
+cycles and 4,096 wave cycles. Without these options it creates neither file.
+The passive observer's pending retirement and instruction/write tags are
+model state. Pending host memory effects are checkpoint state. A missing
+observed operand, destination, raw instruction or memory effect is an error.
+The final pending retirement can be absent when no next boundary was seen.
+The harness does not guess its next PC.
+
+Each C2 window has local `order` from zero and an extra `absolute_order`.
+The header's `window` declares its cumulative cycle bounds and lack of reset
+prefix. Its external inputs use `rvw.external-interrupts/1` with local C2
+retirement boundaries. It is not a reset-prefix trace for ordinary cosim.
+
+`RVW_BOOT_REFERENCE_INPUTS=1` on the reset run also retains compact input
+history. This is off by default. A restore keeps that setting and refuses a
+change. The project checkpoint's `reference_inputs` object has schema
+`rvw.boot-reference-inputs/1`, `enabled`, `next_seq`, `last_levels`, `external`,
+`counters` and `traps`. External records reuse the external-interrupt evidence
+fields with absolute retirement boundaries. Their array uses append order,
+not C2 cycle order. Consumers group them by `before_order`. Counter and trap
+rows name their absolute `order`, observed cycle, PC or EPC and values.
+Ordinary register writes and RAM traffic are absent. This history is input
+evidence, not an independent full-run comparison.
+
+`RVW_BOOT_MASK_TIMER=FROM:TO` is an explicit diagnostic fault. The CLINT keeps
+running. The harness clears MTIP only at the core input during that interval.
+The result records the mask and both device and driven interrupt levels.
+The mask is not part of checkpoint identity because the diagnostic run
+deliberately changes the future environment. C1 diagnostic conversion keeps
+that fact and remains inconclusive for acceptance. Restored wave clocks use
+the explicit cycle/time origin pair defined in C1.
+The native boot C2 cycle index starts at zero before its sampled edge.
+The diagnostic converter shifts its wave origin by one for C1's completed
+edge count. Its C1 details record `boot_trace_cycle_base=0`.
