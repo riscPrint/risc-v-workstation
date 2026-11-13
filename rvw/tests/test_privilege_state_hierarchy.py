@@ -33,3 +33,32 @@ def test_each_gate_preserves_the_other_indices():
     code=next(r['assembly'] for r in rows if r['id']=='stateen-hierarchy-stateen-2-vs-000')
     assert 'csrr a1, 0x10f' in code
     assert 'target_site:' in code and 'la t1, target_site' in code
+
+
+@pytest.mark.parametrize('profile,count', [('stateen-extensions',48),('stateen-extensions-h',160)])
+def test_extension_matrix(profile,count):
+    from rvw.privilege import campaign,state_hierarchy
+    rows=programs(campaign.load('examples/privilege/'+profile+'.json'))
+    assert len(rows)==count
+    for item in rows:
+        assert state_hierarchy.reference(item)['status']=='pass'
+        assert item['model_bindings']==state_hierarchy.observation_bindings(item['reference_model'])
+    assert {r['reference_model']['probe'] for r in rows}=={'jvt','aia','csrind','imsic','context','zfinx-op'}
+
+
+def test_extension_contracts():
+    from rvw.privilege import campaign
+    c=campaign.load('examples/privilege/stateen-extensions.json')
+    c['stateen']['context_supported']=False
+    with pytest.raises(ValueError,match='trigger-context'):programs(c)
+    c['stateen']['context_supported']=True;c['spec_version']='future'
+    with pytest.raises(ValueError,match='version'):programs(c)
+
+
+def test_imsic_guest_file_gate():
+    from rvw.privilege import campaign,state_hierarchy
+    c=campaign.load('examples/privilege/stateen-extensions-h.json')
+    c['stateen']['guest_index']=1
+    item=next(r for r in programs(c) if r['id']=='stateen-hierarchy-imsic-0-vs-110')
+    assert item['reference_unavailable']
+    assert state_hierarchy.reference(item)['actual']==dict(denied=False,cause=10)

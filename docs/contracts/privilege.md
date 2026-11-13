@@ -278,3 +278,15 @@ Architectural groups and overall pass keep the strict full-reference gate.
 Model subset pass leaves architecture inconclusive when no complete ISA model
 exists. A known subset mismatch fails. Native device reference traces carry
 config=reference and evidence=model-based and remain oracle evidence only.
+
+
+## State-enable instruction observations
+
+State-enable hierarchy rows can carry `reference_model.kind = "stateen-access"`
+and `spec_version = "Smstateen-1.0"`. Their `model_bindings` include trap cause
+and exception PC reads. Successful accesses also bind privilege and virtual mode.
+An instruction-result binding uses `kind = "writeback"` and an exact `insn`.
+`model_forbidden_pcs` names denied instruction symbols. A nontrapping retirement
+at such a PC fails. Trap records do not count as successful retirement.
+Missing required observations stay inconclusive. These checks earn only the
+existing model-based subset groups, not complete architectural comparison.
