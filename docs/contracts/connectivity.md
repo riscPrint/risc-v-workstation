@@ -120,3 +120,13 @@ unreachable retirement and tool errors remain `inconclusive`. Missing bindings
 are `unsupported`. `not applicable` identifies a check covered elsewhere or
 excluded by an explicit project scope. Overall status is `fail` on a check
 failure and otherwise `inconclusive`; this version does not grant full signoff.
+
+## Machine transition checks
+
+`rvw.machine-checks/1` selects RV32 rules, source files and local signal maps.
+`rvw.machine-check-results/1` records per-rule status, depth, native assertion
+and cover outcomes, source hashes and limits. Generation gives no proof.
+A bounded result needs both assertion PASS and trigger cover PASS. A missing
+binding is unsupported. An absent project feature can be not applicable only
+with an explicit reason. Source copies are instrumented under the output tree.
+The reset assumption is `reset == $initstate`.

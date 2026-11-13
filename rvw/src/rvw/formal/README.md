@@ -3114,3 +3114,43 @@ features. It requires a liveness reduction when live/fair cells exist. It runs
 no proof and changes no RTL. State size is a cell inventory, not reachable
 state. Counter leaf bindings still need a project declaration. Supplied history
 need not predict a different design. No ML package is used.
+
+## Machine transition properties
+
+`rvw formal machine-checks --manifest MAP.json --out OUT --run` generates
+RV32 properties and runs a bounded assertion job and a reachability job per
+rule. Omit `--run` to generate only. MCP: `formal_machine_checks`.
+`rvw formal isa --machine MAP.json` runs these checks with the instruction kit.
+
+The map has schema `rvw.machine-checks/1`, `xlen = 32`, `sources`, `top`,
+`clock`, `reset`, `depth` and `checks`. Each selected rule maps every named
+monitor input to a local RTL identifier under `signals`. The generator inserts
+an instance in a captured source copy. It never edits the external source.
+`machine_checks.RULES` defines each input and its width. Source widths must
+match those inputs. Use `not_applicable` with a reason for absent features.
+Use `unsupported` with a reason when a feature lacks observations.
+
+The rules check x0 operand and destination values, a killed retirement slot,
+exception entry, interrupt entry with direct or vectored targets, trap return,
+CSR read/write state, instruction memory and the PC chain. Entry and return
+inputs must represent the two states of one architectural transition. Return
+checks cover PC, interrupt enable and restored mode. They do not cover all
+WARL rules, delegation, or previous-mode clearing. `trap_pc_chain.redirect`
+and `redirect_pc` must describe any entry or return since the last retirement.
+`flush_retirement.retired_killed` must track the retiring instruction, not a
+current flush pulse for an unrelated instruction.
+
+CSR selection adds `csr` and `write_mask`. The catalog supplies address,
+privilege and read-only state. `op` is 1 for replace, 2 for set and 3 for
+clear. A zero operand suppresses set/clear writes. `before`, `after` and
+`read_data` are aligned storage observations. Project masks cover ordinary
+storage only. Dynamic WARL, aliases and autonomous updates need another model.
+Instruction memory uses an arbitrary immutable aligned 32-bit word. It checks
+that a retirement at that address has the assumed fetch value. It excludes
+compressed and self-modifying code. Project data must pair each fetch address
+with its returned data. These transition slices do not prove a complete
+privileged machine.
+
+Both native tasks must pass to earn `bounded N`. A timeout or unreachable
+trigger is inconclusive. The reset assumption asserts reset only in the
+initial state. Results retain captured source hashes and all native trees.
