@@ -513,3 +513,12 @@ are validated. A new directory holds both configurations, JSON and Markdown.
 cycle, IPC and event deltas. Both runs must have the same trace hash. Invalid
 configuration values fail before output creation. A run failure can leave a
 partial directory. The comparison predicts no changed path or RTL accuracy.
+
+## Shared sampled inputs
+
+Workload evaluation can share validated windows across configurations with
+identical custom instruction definitions. Each group validates the complete C2
+structure, point identity and instruction count once. A raw trace hash check
+precedes each reuse. Each project description must match the C2 selection.
+Each model creates fresh timing state. Distinct custom definitions get separate validation. The
+`rvw.ooo-sampled/1` report format and timing semantics stay unchanged.

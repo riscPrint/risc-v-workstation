@@ -811,3 +811,9 @@ It validates one numeric, Boolean or string change and reports cycle, IPC and
 event deltas. Both runs use the same trace. The source configuration stays
 unchanged. Outputs include JSON and Markdown. MCP: `arch_ooo_what_if`.
 See [usage and limits](../../../../Arch/ooo/WHAT_IF.md).
+
+The workload evaluator reuses validated sample windows across compatible model
+configurations. It retains source hash checks. Project descriptions must still
+match the C2 selection.
+It resets timing and component state for each model. This reduces repeated C2
+validation. It does not reuse warmed hardware state or change sampling accuracy.

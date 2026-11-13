@@ -27,3 +27,11 @@ validation. Raw byte hashes are checked before and after extraction. Each
 reused window must reproduce the complete-validation Zen-5-like timing.
 The [campaign helper](reuse-validated-windows.py) records this reuse in the
 M1-like report. The regular evaluation command validates each model input.
+
+## Shared validation check
+
+The evaluator now shares complete validation and decoded windows across
+compatible models. On the 3,831,528-instruction CRC32 source, one validation
+call produced both reports. Both reports exactly match the saved independent
+runs. This check measures validation calls, not wall-time speedup.
+See [the source hashes and result](shared-validation.json).

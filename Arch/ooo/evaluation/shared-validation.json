@@ -1,0 +1,19 @@
+{
+  "schema": "rvw.shared-sample-validation-evidence/1",
+  "status": "reported",
+  "accuracy_status": "inconclusive",
+  "workload": "crc32",
+  "instructions": 3831528,
+  "trace_sha256": "e94ddd03880c8e925444ed8cf15ff982dff15d7b5b422abce322e28039941bdd",
+  "points_sha256": "dff73f54c9d6df79e825af4d12188b6a713e21e317489748cb59f547d91c673e",
+  "complete_validation_calls": 1,
+  "models": [
+    "zen5-like",
+    "m1-like"
+  ],
+  "reports_equal_saved_independent_runs": true,
+  "limits": [
+    "compares saved deterministic model reports; no wall-time speedup measured",
+    "RTL accuracy and sampling error remain unmeasured"
+  ]
+}

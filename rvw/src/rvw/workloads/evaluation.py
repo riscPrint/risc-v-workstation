@@ -6,7 +6,7 @@ from pathlib import Path
 import sys
 from rvw.common.proc import run_group
 from rvw.ooo.project import configuration
-from rvw.ooo.sampled import sampled
+from rvw.ooo.sampled import sampled_many
 from rvw.ooo.windows import digest as trace_digest
 from rvw.csim.cli import simpoint_json
 from .core import ASSETS, build, verify, recipe, digest
@@ -71,8 +71,10 @@ def evaluate(out, sources=None, builds=None, manifest=None, timeout=600, traces=
             points['source_c2_sha256']=source_hash
             pp = wd/'points.json'; pp.write_text(json.dumps(points,indent=2)+'\n')
             timings = {}
+            reports = sampled_many({name:row[0] for name,row in models.items()},trace,pp,
+                                   {name:wd/(name+'.json') for name in models},spec['warmup'],10000000)
             for model,(config,model_source_hash) in models.items():
-                r = sampled(config,trace,pp,wd/(model+'.json'),spec['warmup'],10000000)
+                r = reports[model]
                 timings[model] = dict(ipc=r['sampled_ipc'],estimated_cycles=r['estimated_cycles'],
                                       model_source_sha256=model_source_hash,config_sha256=r['config_sha256'])
             rows.append(dict(id=w['id'],elf_sha256=w['elf_sha256'],trace_sha256=source_hash,
