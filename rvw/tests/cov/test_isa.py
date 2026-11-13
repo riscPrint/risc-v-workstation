@@ -1,5 +1,6 @@
 import json
 import pytest
+from .test_functional import decoded_observations_only
 from rvw.cov.isa import check_manifest, load_manifest
 
 

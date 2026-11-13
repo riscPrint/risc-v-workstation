@@ -1,5 +1,6 @@
 import copy
 import pytest
+from .test_functional import decoded_observations_only
 from rvw.cov.semantic_forms import groups, observe
 
 
