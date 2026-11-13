@@ -35,6 +35,35 @@ class WordMemory(addressBits: Int, words: Int, readOnly: Boolean,
 
 object Fabric {
   def connect(master: Apb3, targets: Seq[(Apb3, SizeMapping)]): Unit = {
-    Apb3Decoder(master, targets)
+    val decoder = Apb3Decoder(master, targets)
+    ApbChecks(master)
+    targets.foreach(t => ApbChecks(t._1))
+    val selected = decoder.io.output.PSEL
+    assert(CountOne(selected) <= 1, "SoC decode windows must be disjoint")
+    for (((_, mapping), index) <- targets.zipWithIndex) {
+      assert(selected(index) === (master.PSEL.lsb && mapping.hit(master.PADDR)), "SoC decode must match the map")
+    }
+    when(master.PSEL.lsb && selected === 0) {
+      assert(master.PREADY && master.PSLVERROR, "Unmapped SoC accesses must return an error")
+    }
+  }
+}
+
+/** Protocol obligations on each APB3 endpoint. Assertions are not proof results. */
+object ApbChecks {
+  def apply(bus: Apb3): Unit = {
+    val selected = bus.PSEL.lsb
+    val hold = selected && (!bus.PENABLE || !bus.PREADY)
+    val previousHold = RegNext(hold) init(False)
+    val previousAddress = RegNext(bus.PADDR)
+    val previousWrite = RegNext(bus.PWRITE)
+    val previousData = RegNext(bus.PWDATA)
+    val previousCompleted = RegNext(selected && bus.PENABLE && bus.PREADY) init(False)
+    when(previousHold) {
+      assert(selected && bus.PENABLE, "APB setup/wait must advance to access")
+      assert(bus.PADDR === previousAddress && bus.PWRITE === previousWrite, "APB control must remain stable")
+      when(previousWrite) { assert(bus.PWDATA === previousData, "APB write data must remain stable") }
+    }
+    when(previousCompleted) { assert(!selected || !bus.PENABLE, "APB completion requires setup or idle") }
   }
 }

@@ -44,7 +44,7 @@ class Stub extends Component with CoreWrapper {
   io.bus.PENABLE := state === 1 || state === 4
   io.bus.PWRITE := state >= 3 && !load
   io.bus.PWDATA := data
-  when(state === 2 || fault) { io.bus.PSEL := 0 }
+  when(state === 2 || fault || (state === 0 && mstatus(3) && (mie & io.interrupts).orR)) { io.bus.PSEL := 0 }
   switch(state) {
     is(0) {
       when(mstatus(3) && (mie & io.interrupts).orR) {

@@ -282,3 +282,11 @@ control value, repair signals and isolation declarations to database memories.
 `rvw.soc-mbist-handoff/1` exports dimensions, ports, clock/reset records and
 unrun isolation obligations. Status remains inconclusive. Dimension and
 endpoint consistency do not establish functional isolation or BIST coverage.
+
+## SoC audit
+
+`rvw.soc-audit/1` records exact map decode intervals, unmapped error windows,
+complete APB endpoint bindings, formal connectivity results and the lint
+clock/reset inventory. Map interval arithmetic is separate from RTL decode
+proof. Emitted APB/decode assertions and structural IRQ paths do not earn a
+proof result. Missing fabric endpoints are errors. The audit remains inconclusive.
