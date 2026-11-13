@@ -302,3 +302,81 @@ occurred, so union-rebase.sh was not needed.
 
 Owned cocotb and SoC build directories were removed after validation. Small
 logs, JSON, project sources and the cited probe stream remain.
+
+## Third pass: measured bounds and finite flow preparation
+
+This is an informed implementation rerun on the same Stepper core. It is not
+an independent newcomer test. Core sources stayed outside the workstation.
+The worker used generated inputs, CLI help and the guides for native commands.
+Workstation source and formal witness reads informed the fixes and cycle tuning.
+The first-pass 50 instruction tests were NOT RERUN.
+
+| Step | Second pass | Third pass | New result |
+|---|---|---|---|
+| formal isa | worked after one doc lookup | needed guessing | Trace-selected depth 22 timed out at 15 seconds per check. Reviewed Bitwuzla instruction cycles gave bounded passes: add 5, lw 7, sw 6. Each activation reached. Retirement cover passed at depth 10. Exact-cycle tuning remains project work. |
+| Security | worked after one doc lookup | worked after one doc lookup | Precise flow completed with no_leak_observed over 42 checked cycles. Two native constant-time pairs, add and division, returned no_leak_observed for their selected operands. |
+| SoC compose / verify | worked after one doc lookup | needed guessing | Composition emits consumer manifests, register inputs and direct connection tables. The classpath-bound fabric protocol row passed at depth 8. Decode was proven. Five other consumers remain inconclusive. |
+
+The trace measured first retirement 9 and largest interval 11 over 15
+retirements. The selected default is 9 + 11 + 2 = 22. Yices, ABC and Bitwuzla
+trials did not close assertion checks at that bound within 15 seconds per check.
+Bitwuzla independently reached all three selected instructions. Thus depth 22
+was reachable. Solver cost, rather than missing activation, prevented closure.
+A separate trial at add=9 and lw=11 returned PREUNSAT: no execution met those
+check-cycle assumptions. It did not earn a pass. At add=5, lw=7 and sw=6,
+assertions and activation both closed with Bitwuzla. Memory assumptions stayed
+the same stable symbolic-byte model. RVFI order fields were not waived or changed.
+These are exact-cycle bounded results. They do not establish unbounded ISA,
+machine-state or observer conformance.
+
+The flow preparation reached 56,003 cells and a 16,608,169-byte shadow source.
+The initial 110-second run stopped in compilation. The simulator had not run.
+Progress output now distinguishes these phases. Split C++ compilation with
+C++ optimization disabled completed the generated short load scenario. It
+retired successfully and checked 42 cycles. The policy marks the scratch word
+and observes the memory address output. No flow reached that sink in this run.
+The division pair varied operands 7/3 and 21/4. Its declared cycle, retirement
+interval and bus timing observations matched. This finite pair found no
+operand-dependent timing. It is not a constant-time proof over all operands.
+
+The SoC map used here has RAM only. It has no MMIO register declarations or
+interrupt sources. Register, VIP, UVM, connectivity and CDC/RDC rows did not
+close. The generated manifest names runtime-classpath.txt, soc.db and apb.jsonl.
+The fabric-only rerun used the runtime classpath exported from the scratch SoC
+build. Its protocol and decode rows cover Fabric.connect with the selected
+windows. They do not cover the full CPU or peripheral state. Automatic native
+preparation and seven-consumer closure remain open.
+
+Small evidence records remain under `$RUN_ROOT`:
+
+- `core/rvw/out/formal-third-measured/result.json`: measured depth and Yices trial.
+- `core/rvw/out/formal-third-bitwuzla/result.json`: reached activations at depth 22.
+- `core/rvw/out/formal-third-small/result.json`: unreachable cycles and store pass.
+- `core/rvw/out/formal-third-first-insn/result.json`: three bounded instruction passes.
+- `core/rvw/out/sec-flow-third/report.json`: partial compilation timeout.
+- `core/rvw/out/sec-flow-third-split/report.json`: completed precise flow.
+- `core/rvw/out/sec-pair-third/report.json`: add pair.
+- `core/rvw/out/sec-div-third/report.json`: division pair.
+- `core/rvw/out/soc-third-verify/result.json`: generated consumer requirements.
+- `core/rvw/out/soc-third-fabric/result.json`: protocol pass and decode proof.
+
+Native jobs used nice priority 10. The SoC classpath build used private
+sbt-cosim. No BOOM build, full Python suite, long proof, CI wait or hardware
+operation ran. No scratch core, build tree or wave was committed. The task is
+partially complete: security has finite native results, instruction checks have
+reviewed bounded results, and five SoC consumers still need native preparation.
+
+The formal implementation is in [#1234](https://github.com/riscPrint/risc-v-workstation/pull/1234).
+The finite security flow is in [#1240](https://github.com/riscPrint/risc-v-workstation/pull/1240).
+Initial ISA export used the scaffold's private sbt-stepper lock. The later
+SoC classpath build used sbt-cosim. The initial export therefore did not follow
+the task's requested lock name. No shared sbt output was used by that export.
+Owned shadow build caches and intermediate formal checker trees were removed.
+The cited result JSON and command logs remain. Disk fell below 15 GiB after the
+native runs; no further native build was started at that point.
+The composed consumer inputs are in
+[#1243](https://github.com/riscPrint/risc-v-workstation/pull/1243).
+Targeted SoC tests: 36 passed. Targeted security tests: seven passed.
+Fast sets before the three code pushes: 2,986, 2,987 and 2,994 passed,
+with one skip each. Final MCP discovery had no skipped modules on stderr.
+The agent guide and its generated setup block were checked together.

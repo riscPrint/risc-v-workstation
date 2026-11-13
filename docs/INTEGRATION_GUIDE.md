@@ -1815,14 +1815,19 @@ binding under `rvw/sec`. Export fresh RTL through the shared simulation entry:
 
 ```sh
 rvw/export-rtl.sh
-rvw sec contract --manifest rvw/sec/constant-time.json --out rvw/out/sec-pair --json
-rvw sec ift-core --binding rvw/sec/core.json --policy rvw/sec/flow.json --elf rvw/out/programs/smoke --out rvw/out/sec-flow --json
+rvw sec contract --manifest rvw/sec/constant-time.json --out rvw/out/sec-pair
+rvw sec ift-core --binding rvw/sec/core.json --policy rvw/sec/flow.json --asm rvw/sec/flow.S --out rvw/out/sec-flow --timeout 110
 ```
 
 The binding declares one-cycle responses and active-high reset. Review those
 choices against the core. The pair varies two register values in a short
 arithmetic program. The flow policy watches the memory address output and
 marks `scratch` as secret. Change the policy for the intended threat model.
+The generated flow.S loads one secret word. Precise mode is the default.
+Progress goes to stderr and progress.json. A timeout report names the phase
+and available cell/byte counts. Shadow compilation uses split C++ files and
+disables C++ optimization to reduce preparation cost. The IM pair uses division;
+the I pair uses addition. These are finite operand pairs.
 CSR policies resolve storage through the existing netlist resolver. Missing
 or ambiguous storage needs an explicit `csr_signals` entry. A small native
 result does not establish complete security.
@@ -1836,16 +1841,27 @@ checkout before init. Without it, the generated root is
 `riscv_formal.root` path. It must contain `checks` and `insns`.
 
 ```sh
-rvw formal isa --out rvw/out/isa-first --timeout 8 --json
+rvw formal isa --trace rvw/out/first/rvfi.jsonl --out rvw/out/isa-first --timeout 15 --json
 ```
 
 The command exports fresh RTL before checking add, load, store and retirement
-cover. The default bound is 24 cycles. A timeout is inconclusive. Inspect each
+cover. First run a smoke with `--rvfi-trace`. The trace selects the default
+bound from its first retirement and largest retirement interval. This sampled
+bound does not establish worst-case latency. A timeout is inconclusive. Inspect each
 instruction's activation result. Add checks to `riscv_formal.checks` for more
 instructions. The generated memory has stable symbolic bytes and ordered
 writes. It returns read responses one cycle after acceptance. Review this
 choice against the core. Machine-state and observer conformance rows remain
 unsupported until their separate bindings exist.
+
+Instruction checks use an exact assertion cycle. A larger depth can cost more
+and can miss a reachable retirement phase. Inspect bounded/*-activation.log.
+PREUNSAT means the assumptions cannot hold at that cycle. Review
+`riscv_formal.check_options.<check>.cycles` and the reset/memory timing.
+Change `riscv_formal.solver` when solver cost dominates. Stepper reached bounded
+passes with Bitwuzla at add=5, lw=7, sw=6 and cover=10. These settings are
+specific to that core and its generated memory environment. Its trace-selected
+depth 22 remained inconclusive at 15 seconds per check.
 
 ## Compose the mapped CPU
 
@@ -1862,7 +1878,16 @@ response pins. RVFI outputs are exported when declared. The build references
 the core project directly. Compile the generated SoC from its directory with
 `sbt "runMain generated.Generate"`. Use the private sbt lock on a shared host.
 Run `rvw soc verify` on its map to inspect each consumer and its remaining
-bindings. An emitted wrapper or verify table is not a native pass.
+bindings. Composition emits verify.json, connections.json and register-checks.json.
+Use `--manifest GENERATED/verify.json` to select these inputs. Place the compiled
+runtime classpath in GENERATED/runtime-classpath.txt. Extract the composed SoC
+as GENERATED/soc.db. Supply independently sampled APB data as GENERATED/apb.jsonl.
+These paths are explicit requirements. The fabric protocol and decode consumers
+can run with the classpath alone. Their results cover the fabric instance.
+Registers, live VIP/UVM and whole-SoC connectivity need their native inputs.
+Direct single-source interrupt transfers are generated. Aggregated or crossed
+interrupts need a project temporal contract. An emitted wrapper or verify table
+is not a native pass.
 
 For a cocotb run of generated RAM, list the emitted `.bin` files in the bench
 manifest's `data_files`. The worker copies them into the simulation directory

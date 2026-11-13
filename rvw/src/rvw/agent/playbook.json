@@ -5,7 +5,7 @@
     "exit_codes": "0 earned result; 1 failure or mismatch; 2 usage or setup error; 3 inconclusive. Never treat 3 as a pass.",
     "stop": "A step ends a workflow with `stop` when its decision says so. Record the command, exit code and log before you stop.",
     "locks": "Heavy runs hold the project lock (core.lock). Do not start a second heavy run of the same core.",
-    "integration_guide": "Follow docs/INTEGRATION_GUIDE.md for install, project binding and evidence limits. A scaffold or tool list does not qualify a core.",
+    "integration_guide": "Follow docs/INTEGRATION_GUIDE.md for install, project binding and evidence limits. A scaffold or tool list does not qualify a core. For mapped security, use rvw/sec/flow.S with the generated flow policy and a 110-second budget. Progress reports name preparation cost. For composed SoCs, use GENERATED/verify.json and supply runtime-classpath.txt, soc.db and apb.jsonl. Fabric proof rows do not close whole-SoC verification.",
     "verdicts": "Evidence producers own verification verdicts in their stated scope. The evidence index preserves reports. Plan summaries retain the weakest input verdict. Farm completion and guide steps do not grant verification or C4 acceptance."
   },
   "workflows": [
@@ -940,16 +940,18 @@
         },
         {
           "id": "riscv",
-          "do": "Optional: run the declared riscv-formal checks. Mapped single-bus Spinal RV32 init supplies a bounded formal isa kit. Review its symbolic memory assumptions. Timeouts and machine-state gaps remain inconclusive.",
+          "do": "Optional: run the declared ISA kit. Mapped single-bus Spinal RV32 init supplies the wrapper. Run smoke with --rvfi-trace, then formal isa --trace RUN/rvfi.jsonl. Review latency_measurement, memory assumptions and per-check actions. Exact instruction cycles can need check_options.cycles. Timeouts and machine-state gaps remain inconclusive.",
           "cli": [
             "formal",
-            "riscv",
+            "isa",
+            "--trace",
+            "<TRACE>",
             "--out",
             "<OUT>",
             "--json"
           ],
           "mcp": {
-            "tool": "formal_riscv"
+            "tool": "formal_isa"
           },
           "optional": true,
           "decide": [
