@@ -76,7 +76,7 @@ def main(captured=None):
     if run.timed_out or run.returncode: raise ValueError("native harness failed or exceeded wall time")
     trace=out/"rvfi.jsonl"
     lines=trace.read_text().splitlines()
-    header=json.loads(lines[0]); header["elf"]=str(elf)
+    header=json.loads(lines[0]); header["elf"]=str(elf); header["elf_sha256"]=hashlib.sha256(data).hexdigest()
     lines[0]=json.dumps(header)
     trace.write_text("\n".join(lines)+"\n")
     result=json.loads((out/"native.json").read_text())

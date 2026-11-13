@@ -35,6 +35,8 @@ def validate(cfg):
         raise ValueError("depth must be 2..200")
     if not isinstance(cfg["solver"], str) or cfg["solver"] not in {"bitwuzla", "yices", "z3", "boolector"}:
         raise ValueError("unsupported solver")
+    if type(cfg.get("multiclock", False)) is not bool:
+        raise ValueError("multiclock must be a boolean")
     checks = cfg["checks"]
     if not isinstance(checks, list) or not checks or not all(isinstance(c, str) for c in checks) or len(set(checks)) != len(checks):
         raise ValueError("checks must be a nonempty unique list")
@@ -213,6 +215,8 @@ def run(cfg, out, timeout, core_name):
         else:
             settings = check_settings(cfg, name)
             source = file.read_text()
+            if cfg.get('multiclock'):
+                source = re.sub(r'(?m)^\[options\]$', '[options]\nmulticlock on', source, count=1)
             if settings['defines']:
                 source = source.replace('[file defines.sv]\n', '[file defines.sv]\n' + '\n'.join(settings['defines']) + '\n', 1)
             source = re.sub(r'(?m)^(\[engines\]\n)[^\n]+', lambda m: m[1] + settings['engine'], source)

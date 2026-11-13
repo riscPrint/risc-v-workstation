@@ -152,6 +152,7 @@ def _build_hdl(sources, top, out, *, yosys='yosys', timeout=120, frontend='yosys
         netlist = private / 'design.json'
         script = private / 'build.ys'
         ast = locs = None
+        automatic = set()
         env = None
         if frontend == 'ghdl':
             prefix = hdl_ghdl.ghdl_prefix(tool)
@@ -193,8 +194,10 @@ def _build_hdl(sources, top, out, *, yosys='yosys', timeout=120, frontend='yosys
                                 cwd=private, capture=True, timeout=timeout)
             if process.returncode:
                 raise ValueError('HDL elaboration failed: ' + ((process.stdout or '') + process.stderr)[-3000:])
-            from .hdl_slang import instances, parse_ast
-            ast = instances(parse_ast(process.stdout))
+            from .hdl_slang import automatic_locals, instances, parse_ast
+            parsed = parse_ast(process.stdout)
+            ast = instances(parsed)
+            automatic = automatic_locals(parsed)
             script.write_text('read_slang --keep-hierarchy ' + ' '.join(options)
                               + f'\nhierarchy -top {top}\nproc\nwrite_json {_quote(netlist)}\n')
         process = run_group(argv, cwd=private, env=env, capture=True, timeout=timeout)
@@ -212,7 +215,7 @@ def _build_hdl(sources, top, out, *, yosys='yosys', timeout=120, frontend='yosys
                 if locs:
                     rename = {m: e for m in data['modules']
                               if (e := hdl_ghdl.entity_of(m, locs['entities'])) is not None}
-                writer = _Writer(conn, data, paths, base=private, types=ast[1] if ast else {}, rename=rename)
+                writer = _Writer(conn, data, paths, base=private, types=ast[1] if ast else {}, rename=rename, automatic=automatic)
                 writer.instance(top, '', None)
                 writer.domains()
                 _artifact(conn, "hdl/port-connections.json", writer.port_connections)
@@ -286,12 +289,13 @@ def _dotted(path):
 
 
 class _Writer:
-    def __init__(self, conn, data, paths, base=None, types=None, rename=None):
+    def __init__(self, conn, data, paths, base=None, types=None, rename=None, automatic=()):
         self.c = conn
         self.modules = data['modules']
         self.paths = paths
         self.base = base
         self.types = types or {}
+        self.automatic = set(automatic)
         self.components = {}
         self.port_connections = {}
         self.rename = rename or {}
@@ -324,7 +328,7 @@ class _Writer:
             (id,component_id,name,path,spinal_path,kind,direction,type,width,generated,file_id,line,tags)
             VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)''',
             (self.sid,cid,name,path,spinal or _dotted(path),kind,direction,'Bits',width,int(generated),fid,line,
-             '$incomplete:hdl-navigation-only'))
+             '$incomplete:hdl-navigation-only' + (' hdl:automatic-local' if path in self.automatic else '')))
         if path in self.types:
             self.c.execute('UPDATE signals SET type=? WHERE id=?', (self.types[path], self.sid))
         return self.sid
@@ -365,7 +369,7 @@ class _Writer:
         self.c.execute('''INSERT INTO components
             (id,parent_id,path,name,module,depth,file_id,line,tags) VALUES (?,?,?,?,?,?,?,?,?)''',
             (cid,parent,path,cell or name,name,
-             _dotted(path).count('.')+1 if path else 0,fid,line,'$incomplete:hdl-navigation-only'))
+             _dotted(path).count('.')+1 if path else 0,fid,line,'$incomplete:hdl-navigation-only' + (' hdl:automatic-local' if path in self.automatic else '')))
         prefix = path + '.' if path else ''
         bits = sorted({b for n in m['netnames'].values() for b in n['bits'] if isinstance(b,int)})
         named = {}

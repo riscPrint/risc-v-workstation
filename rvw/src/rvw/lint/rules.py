@@ -239,7 +239,9 @@ def analyze(db, config=None):
             elif s['direction'] is None:
                 emit('lint.unused', i)
         if (not by_target.get(i) and not driven(i) and not d.is_top_input(i) and i not in role
-                and not (boxed and s['direction'] == 'out') and s['kind'] == 'wire'):
+                and not (boxed and s['direction'] == 'out') and s['kind'] == 'wire'
+                and not ('hdl:automatic-local' in (s.get('tags') or '').split()
+                         and s['direction'] is None and not loaded(i))):
             emit('lint.undriven', i)
         if s['kind'] == 'reg' and not d.incoming[i] and not any(
                 a['kind'] == 'data' for a in by_target.get(i, [])):

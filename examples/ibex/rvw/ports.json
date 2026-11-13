@@ -1,0 +1,36 @@
+{
+  "schema": "rvw.hdl-ports/1",
+  "top": "ibex_top",
+  "clock": "clk_i",
+  "reset": {
+    "signal": "rst_ni",
+    "active": 0
+  },
+  "buses": [
+    {
+      "name": "instr",
+      "protocol": "req_ack",
+      "ports": {
+        "request": "instr_req_o",
+        "response": "instr_gnt_i",
+        "payload": [
+          "instr_addr_o"
+        ]
+      }
+    },
+    {
+      "name": "data",
+      "protocol": "req_ack",
+      "ports": {
+        "request": "data_req_o",
+        "response": "data_gnt_i",
+        "payload": [
+          "data_addr_o",
+          "data_we_o",
+          "data_be_o",
+          "data_wdata_o"
+        ]
+      }
+    }
+  ]
+}

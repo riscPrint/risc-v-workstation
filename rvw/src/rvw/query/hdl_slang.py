@@ -70,3 +70,28 @@ def capture_sources(capture, sources, include_dirs):
     return ([trees[p.parent].copy / p.name for p in sources],
             [trees[Path(d).absolute()].copy for d in include_dirs],
             [f for tree in trees.values() for f in tree.files])
+
+
+def automatic_locals(ast):
+    """Names of automatic subroutine declarations, separate from hardware nets."""
+    found = set()
+    def body(members, prefix):
+        for item in members or []:
+            kind, name = item.get('kind'), item.get('name', '')
+            if kind == 'Instance':
+                body(item.get('body', {}).get('members'), prefix + name + '.')
+            elif kind == 'GenerateBlock' and not item.get('isUninstantiated'):
+                body(item.get('members'), prefix + name + '.' if name else prefix)
+            elif kind == 'GenerateBlockArray':
+                for index, block in enumerate(item.get('members') or []):
+                    if block.get('kind') == 'GenerateBlock' and not block.get('isUninstantiated'):
+                        body(block.get('members'), prefix + name + '[' + str(block.get('constructIndex', index)) + '].')
+            elif kind == 'Subroutine':
+                for local in item.get('members') or []:
+                    if (local.get('kind') in ('FormalArgument', 'Variable') and
+                            local.get('lifetime', item.get('defaultLifetime')) == 'Automatic'):
+                        found.add(prefix + name + '.' + local['name'])
+    for top in ast.get('members', []):
+        if top.get('kind') == 'Instance':
+            body(top.get('body', {}).get('members'), '')
+    return found
