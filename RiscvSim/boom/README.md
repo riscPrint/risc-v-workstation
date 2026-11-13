@@ -157,3 +157,26 @@ still identify the build. The namespace change invalidates old cache receipts;
 old binaries are not promoted into the new namespace without verification.
 Unit tests change each frontend ID and require the same native identity.
 They also require changed compiler flags and unknown settings to change it.
+
+## Full-state comparison follow-up
+
+The platform declares `fcsr_reset: "unspecified"`. The flags and rounding-mode
+registers in `rocketchip/rocket/CSR.scala:518-519` have no reset assignment.
+The comparator seeds Spike once before the neutral integer instruction at
+order zero. The shim preserves mstatus, including FS. This is a recorded
+reset alignment. It adds no FP comparison mask. Strict mode disables it.
+
+A fresh small batch, seed 1, gave these results with C2/2 FP and CSR state:
+
+| Program | Cycles | C2 instructions | Spike result |
+|---|---:|---:|---|
+| rv64ui-p-add | 2487 | 514 | match |
+| rv64ui-p-sub | 2400 | 505 | match |
+| rv64ui-p-beq | 1844 | 335 | match |
+| rv64uf-p-fadd | 1790 | 219 | match |
+
+Each trace has two trap events. C1 instret excludes those traps. Doctor
+before and after inspects complete FP and CSR capture; it does not run the
+reference. The after report also shows the configured FCSR reset policy.
+The new native shim test checks that initialization preserves mstatus.
+The short batch used one native build. No regression suite or formal ran.

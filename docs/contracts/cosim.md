@@ -252,3 +252,16 @@ bus transactions, partial stores, page faults or fault order.
 
 Rebuild the Spike shim with `Cosim/build.sh` after updating the workstation.
 The shim behavior version is 7. Older libraries are refused.
+## Unspecified FCSR reset
+
+A platform can set `fcsr_reset` to `unspecified`. The default is `zero`.
+This policy requires a trace from reset. With CSR synchronization enabled,
+the checker can seed the reference once from C2/2 state at order zero.
+The first instruction must be at the reset PC and must use a known integer
+opcode that cannot change FCSR. It must not trap or write an FP register.
+No prior trap event can occur. Otherwise comparison stays strict.
+The checker records `fcsr_reset_unspecified` in recent synchronizations.
+The Spike binding preserves mstatus while it writes flags and rounding mode.
+All subsequent FP writes, flags and CSR snapshots compare exactly.
+`--strict` and `--strict-sync csr` disable this alignment. Doctor reports
+the configured policy without claiming that comparison ran.

@@ -47,6 +47,8 @@ def execute_json(*, trace, core=None, platform=None, project=None, strict=False)
             'fault_access': 'fault' in caps,
         }
         masks = []
+        reset_policy = dict(fcsr=p.fcsr_reset, enabled=not strict and p.fcsr_reset == "unspecified" and extended and t.state,
+                            scope="once before a neutral first instruction; later values compare exactly")
         if not strict:
             masks += [dict(kind='csr', csr=hex(a), mask=hex(m),
                            reason='platform declares implementation-defined CSR read bits')
@@ -71,6 +73,7 @@ def execute_json(*, trace, core=None, platform=None, project=None, strict=False)
                         reason='captured; requires a capable reference' if value else 'not captured in this trace')
                         for key, value in checks.items()},
                     synchronization_enabled=[] if strict else list(SYNC_KINDS),
+                    reset_policy=reset_policy,
                     conditional_masks=masks,
                     platform_policy={key: getattr(p, key) for key in
                         ('privilege_modes', 'pmp_regions', 'absent_pmp_csrs', 'ecall_tval',

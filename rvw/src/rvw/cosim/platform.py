@@ -77,6 +77,7 @@ class Platform:
     sail_reference_isa: str | None = None
     memory_read_convention: str = "architectural"
     scalar_split_ram: bool = False
+    fcsr_reset: str = "zero"
 
     @classmethod
     def load(cls, core, path=None):
@@ -101,6 +102,11 @@ class Platform:
         p.scalar_split_ram = obj.get('scalar_split_ram', False)
         if type(p.scalar_split_ram) is not bool:
             raise ValueError('scalar_split_ram must be a boolean')
+        p.fcsr_reset = obj.get('fcsr_reset', 'zero')
+        if p.fcsr_reset not in ('zero', 'unspecified'):
+            raise ValueError('fcsr_reset must be zero or unspecified')
+        if p.fcsr_reset == 'unspecified' and not p.trace_from_reset:
+            raise ValueError('unspecified fcsr requires a trace from reset')
         p.memory_read_convention = obj.get('memory_read_convention', 'architectural')
         if p.memory_read_convention not in ('architectural', 'full_word'):
             raise ValueError('memory_read_convention must be architectural or full_word')

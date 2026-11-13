@@ -111,6 +111,7 @@ def check(trace_path, model, platform, history=10, sync=SYNC_KINDS, *, ordered_e
     vector_memory_steps = 0
     vector_memory_accesses = 0
     fault_access_steps = 0
+    fp_reset_pending = platform.fcsr_reset == "unspecified" and "csr" in enabled and trace.state and trace.header["schema"] == "rvw.rvfi/2"
     instret_synced = False
     sync_recent = deque(maxlen=history)
     applied_masks = {}
@@ -260,6 +261,13 @@ def check(trace_path, model, platform, history=10, sync=SYNC_KINDS, *, ordered_e
                 after_trap = True
                 last_trap = None
                 continue
+            if fp_reset_pending:
+                from .reset_fp import seed
+                entry = seed(actual, model, platform, prior_events=trap_events)
+                if entry is not None:
+                    sync_recent.append(entry)
+                    sync_count += 1
+                fp_reset_pending = False
             last_order = actual["order"]
             # intr marks the first handler instruction after any trap. An
             # interrupt event supplies cause; never infer a cause from a boolean.
