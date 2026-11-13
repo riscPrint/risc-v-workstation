@@ -25,7 +25,7 @@ def test_native_simulation(tmp_path, backend, mutant):
     source = tmp_path / 'm.sv'
     source.write_text('''module m(input clk, other, irq, rst, a, output reg q=0);
 always @(posedge other or posedge rst) if (rst) q <= 0; else q <= a;
-property hold; @(posedge clk) a |=> a; endproperty
+property hold; logic remembered; @(posedge clk) (a,remembered=a) |=> a==remembered; endproperty
 p: assert property (hold);
 c: cover property (@(posedge irq) a);
 endmodule''')

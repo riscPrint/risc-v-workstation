@@ -1388,11 +1388,37 @@ Finite `first_match` excludes every earlier matching endpoint. It retains ties
 at the first endpoint. The same path and delay capacity limits apply.
 Run `python3 scripts/formal-support-table.py` to regenerate the table.
 
+### Typed finite local captures
+
+Named properties can declare packed `logic`/`reg` variables or 32-bit
+`int`/`integer` variables. Signed and unsigned declarations retain their type.
+A Boolean antecedent can capture one or more independent design expressions:
+
+```systemverilog
+property response;
+  logic [31:0] sent;
+  @(posedge clk) (req, sent=data) |=> ack && result==sent;
+endproperty
+check_response: assert property (response);
+```
+
+Each attempt uses clock history for its own captured value. A later request
+cannot overwrite an earlier attempt. The consequent can use the existing finite
+sequence operators. Capture-to-use distance is limited to 64 clock ticks.
+The lowering report includes optional `local_variables` width/signedness data.
+
+This subset requires one Boolean capture antecedent and one implication.
+Reassignment, captures that depend on another local, initialized declarations,
+flow-sensitive antecedents, local slices, sampled uses of locals and additional
+local types remain refused. Local clocks and local reset conditions are refused.
+The same lowered captures run in formal and native simulation. This is not full
+local-variable flow or SystemVerilog scheduling qualification.
+
 ### Named properties and checker bindings
 
 The temporal frontend accepts module-local, argument-free named properties.
 Each referenced declaration must resolve to an explicit rising-edge property.
-Recursive references and unused declarations are refused.
+Recursive references and unused named-property declarations are refused.
 
 Checkers with explicit ANSI input ports can bind to a module type with named
 port connections. Each instance of that module gets the checker instance.

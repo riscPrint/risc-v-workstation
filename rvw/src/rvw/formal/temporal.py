@@ -280,9 +280,15 @@ def lower(source, simulation=False):
                 seen.add(name)
                 used_properties.add(name)
                 body = properties[name]
+            from .local_capture import declarations, capture, resolve
+            variables, body = declarations(body)
+            if variables and not seen:
+                raise Unsupported('local_scope', 'locals need a named property')
             clock = re.match(r'\s*@\(\s*posedge\s+(\w+)\s*\)\s*', body)
             if not clock:
                 raise Unsupported('clock_event', 'explicit posedge clock required')
+            if clock[1] in variables:
+                raise Unsupported('local_clock')
             expr = body[clock.end():].strip()
             disable = None
             dm = re.match(r'disable\s+iff\s*', expr)
@@ -292,17 +298,32 @@ def lower(source, simulation=False):
                     _expression(disable)
                 except ValueError as error:
                     raise Unsupported('disable_iff_expression', str(error)) from error
+                if variables:
+                    from .local_capture import pattern
+                    if pattern(variables).search(disable):
+                        raise Unsupported('local_disable')
                 if '$' in disable:
                     raise Unsupported('disable_iff_sampled_function')
                 expr = expr[offset:].strip()
             parts = split(unwrap(expr), r'\|->|\|=>')
             if len(parts) not in (1, 3):
                 raise Unsupported('nested_implication')
+            local_lines = []
+            bound = {}
+            if variables:
+                if len(parts) != 3:
+                    raise Unsupported('local_property_shape', 'one capture antecedent and implication required')
+                parts[0], bound, local_lines = capture(parts[0], variables, clock[1],
+                                                       f'rvw_sva_{module_index}_{index}_local', names)
             antecedents = sequence(parts[0], names) if len(parts) == 3 else None
             consequent = sequence(parts[-1], names)
+            if variables:
+                consequent = resolve(consequent, variables, bound, int(parts[1] == '|=>'))
             item = Property(f'property_{module_index}_{index}', prop[1], clock[1], disable,
                             antecedents, consequent, int(len(parts) == 3 and parts[1] == '|=>'))
             emitted, horizon = item.monitor(f'rvw_sva_{module_index}_{index}', simulation=simulation)
+            if local_lines:
+                emitted = '\n'.join(local_lines) + '\n' + emitted
             semi = re.match(r'\s*;', text[end:])
             if not semi:
                 raise Unsupported('action_block')
@@ -312,10 +333,12 @@ def lower(source, simulation=False):
             if label:
                 item.name = label[1]
                 pos = module.start() + label.start()
-            edits.append((pos, end + semi.end(), emitted))
+            edits.append((pos, end + semi.end(), emitted + '\n'))
             reports.append({'id': item.name, 'kind': item.kind, 'clock': item.clock,
                             'disable_iff': disable, 'horizon': horizon,
-                            'monitor': f'rvw_sva_{module_index}_{index}'})
+                            'monitor': f'rvw_sva_{module_index}_{index}',
+                            **({'local_variables': {name: dict(width=width, signed=signed)
+                                  for name,(width,signed) in variables.items()}} if variables else {})})
         if set(properties) - used_properties:
             raise Unsupported('property', 'unused declarations need explicit checks')
     remainder = text

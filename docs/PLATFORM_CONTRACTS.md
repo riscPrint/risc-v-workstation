@@ -54,7 +54,7 @@ Principles (from `ROADMAP.md`):
 - [Farm and job queue](contracts/farm.md)
 - [Proof cores and counterexamples](contracts/formal-cex.md)
 - [Deep formal runs](contracts/formal-deep.md)
-- [Formal checks and SVA](contracts/formal.md)
+- [Formal checks, SVA and local captures](contracts/formal.md)
 - [Hardware leakage](contracts/leakage.md)
 - [Lint and CDC/RDC](contracts/lint.md)
 - [Memory order and multi-hart](contracts/memory.md)
