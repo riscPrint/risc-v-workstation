@@ -1,0 +1,265 @@
+{
+ "schema": "rvw.naxriscv-ooo-correlation/1",
+ "date": "2026-11-13",
+ "core": "naxriscv",
+ "config": "rv32imasu",
+ "nax_revision": "9f452d50560d02fb391bc8039f5453c54e0911af",
+ "mem_latency": 0,
+ "grid": {
+  "branch_penalty": [
+   6,
+   8,
+   10
+  ],
+  "frontend.fetch_latency": [
+   2,
+   3,
+   4
+  ],
+  "latencies.load": [
+   2,
+   3,
+   4
+  ]
+ },
+ "best": {
+  "branch_penalty": 6,
+  "frontend.fetch_latency": 3,
+  "latencies.load": 2
+ },
+ "budgets": {
+  "ipc_percent": 10,
+  "nonzero_event_percent": 15,
+  "observed_events_within_budget": true,
+  "observed_ipc_within_budget": false,
+  "sufficient_coverage": false
+ },
+ "correlations": {
+  "branches": {
+   "n": 5,
+   "pearson_r": 1,
+   "reason": "",
+   "status": "reported"
+  }
+ },
+ "accuracy_status": "inconclusive",
+ "heldout_hashes": {
+  "towers": {
+   "elf": "fb9cd62ea59d6f981f048934fa103a362ba739af58af48e3022d1c2ae370abb8",
+   "trace": "64287ceee57cd64a4e0def4530a534772883b4958187032ebccc160fd7d54f93",
+   "c1": "479269d0b723f4ff69e3f4616053ea79dc0f5039ef6e4d853c7dfaf82ad94b6a",
+   "events": "029c1ecd4bc2ff4af574529b05d5c3447e3440d166f6923f41d4fe693a63c800"
+  },
+  "vvadd": {
+   "elf": "e15a718ee177549177ed487a34eed2d51fb73714bff299e958073b13543dc77a",
+   "trace": "6a46b07f255cea539e72d228a9797da04c8ad07640559a5e002e50f8919ac576",
+   "c1": "5950ae3c2cc146ca95bff6a36427bd81c6b06d6c5d8aa9e86c4d0ac3b0a671dc",
+   "events": "42421aecbea7ba1cba3f2779ab88dca875aced2f05f2158a04f3e2b192195acc"
+  },
+  "rsort": {
+   "elf": "2cead089b5a4aad4150019e7f5b436b2bc8e4d7ad534913b308edc1351366df6",
+   "trace": "9e83964ab364344bd9dae36e5e90ecaf2fac902b3f62dbe28c26ee4ee7ced014",
+   "c1": "fe1cd504d050cbdf7b9900ab90b661cdcde4c391309da46b0f7004984f17f180",
+   "events": "cac214fa6a1d0bb362c3a06972e218f5f18e1e709cdc9641b493f9bb239aa394"
+  },
+  "memcpy": {
+   "elf": "c16e097a646a0278577f39503d3c115f5041b73706dd1278117323f74ce7f2ce",
+   "trace": "e36394e14b1e71fb5711bcefe20e7d48be28ff6551fb9b17885e56297fdd34f9",
+   "c1": "fd8f145441f7b8ad1d9135343dd72e95709d9df1ce81a8d338f71d17494481de",
+   "events": "64ada41720de12a7a3c16084883bec222662130c21c667897008ef2d284b6ff4"
+  },
+  "dhrystone": {
+   "elf": "38261472ac0b5e628d48f5b1c48ac2e93a8036826ca21be08af1dc2f51a9694f",
+   "trace": "d64dcac9cabd965be0702f71254758407d23ce81180567e0de6798137b1c4ae8",
+   "c1": "aa75061fd49502f53e54f7b13bfd6a719e2e07bdb3bb3a07a03aa261f154f918",
+   "events": "9fc87ad1c79cd5c319a1d80e98aa9679d6b07126b44f5da4d60814e729ea3726"
+  }
+ },
+ "samples": [
+  {
+   "program": "median",
+   "split": "training",
+   "rtl_cycles": 18061,
+   "instructions": 10653,
+   "rtl_ipc": 0.5898344499197166,
+   "model_cycles": 15886,
+   "model_ipc": 0.6705904570061689,
+   "ipc_error_pct": 13.691300516177773,
+   "rtl_topdown": {
+    "retiring": 0.2949172249598583,
+    "bad_speculation": 0.20148386025137036,
+    "backend_bound": 0.4946846796965838,
+    "frontend_bound": 0.008914235092187587
+   },
+   "model_topdown": {
+    "retiring": 0.33529522850308446,
+    "frontend_bound": 0.007679717990683621,
+    "bad_speculation": 0.21745562130177515,
+    "backend_bound": 0.43956943220445677
+   },
+   "round1_ipc_error_pct": 14.913787618502262
+  },
+  {
+   "program": "qsort",
+   "split": "training",
+   "rtl_cycles": 293449,
+   "instructions": 226061,
+   "rtl_ipc": 0.7703587335448409,
+   "model_cycles": 352921,
+   "model_ipc": 0.640542784362506,
+   "ipc_error_pct": -16.85136333627073,
+   "rtl_topdown": {
+    "retiring": 0.38517936677242043,
+    "bad_speculation": 0.14954557691455755,
+    "backend_bound": 0.4646309920974343,
+    "frontend_bound": 0.0006440642155877171
+   },
+   "model_topdown": {
+    "retiring": 0.320271392181253,
+    "frontend_bound": 0.00015017525168522133,
+    "bad_speculation": 0.2187727565092471,
+    "backend_bound": 0.46080567605781464
+   },
+   "round1_ipc_error_pct": -12.688414550691164
+  },
+  {
+   "program": "multiply",
+   "split": "training",
+   "rtl_cycles": 38207,
+   "instructions": 54296,
+   "rtl_ipc": 1.4211008453948228,
+   "model_cycles": 43600,
+   "model_ipc": 1.2453211009174312,
+   "ipc_error_pct": -12.36926605504588,
+   "rtl_topdown": {
+    "retiring": 0.7105504226974114,
+    "bad_speculation": 0.027809040228230428,
+    "backend_bound": 0.2570863977805114,
+    "frontend_bound": 0.0045541392938466775
+   },
+   "model_topdown": {
+    "retiring": 0.6226605504587156,
+    "frontend_bound": 0.01055045871559633,
+    "bad_speculation": 0.030206422018348625,
+    "backend_bound": 0.33658256880733944
+   },
+   "round1_ipc_error_pct": -31.679273286483202
+  },
+  {
+   "program": "towers",
+   "split": "heldout",
+   "rtl_cycles": 8880,
+   "instructions": 7273,
+   "rtl_ipc": 0.8190315315315315,
+   "model_cycles": 9633,
+   "model_ipc": 0.7550088238347348,
+   "ipc_error_pct": -7.81687947679851,
+   "rtl_topdown": {
+    "retiring": 0.40951576576576576,
+    "bad_speculation": 0.09684684684684684,
+    "backend_bound": 0.46998873873873875,
+    "frontend_bound": 0.02364864864864865
+   },
+   "model_topdown": {
+    "retiring": 0.3775044119173674,
+    "frontend_bound": 0.004827156649018997,
+    "bad_speculation": 0.08476071836395722,
+    "backend_bound": 0.5329077130696563
+   },
+   "round1_ipc_error_pct": -5.128205128205121
+  },
+  {
+   "program": "vvadd",
+   "split": "heldout",
+   "rtl_cycles": 5220,
+   "instructions": 6490,
+   "rtl_ipc": 1.2432950191570882,
+   "model_cycles": 6150,
+   "model_ipc": 1.0552845528455284,
+   "ipc_error_pct": -15.121951219512209,
+   "rtl_topdown": {
+    "retiring": 0.6216475095785441,
+    "bad_speculation": 0.06264367816091954,
+    "backend_bound": 0.28218390804597704,
+    "frontend_bound": 0.033524904214559385
+   },
+   "model_topdown": {
+    "retiring": 0.5276422764227642,
+    "frontend_bound": 0.008617886178861788,
+    "bad_speculation": 0.04504065040650407,
+    "backend_bound": 0.4186991869918699
+   },
+   "round1_ipc_error_pct": -26.633872101194655
+  },
+  {
+   "program": "rsort",
+   "split": "heldout",
+   "rtl_cycles": 210339,
+   "instructions": 364958,
+   "rtl_ipc": 1.7350943001535617,
+   "model_cycles": 266253,
+   "model_ipc": 1.3707188275812854,
+   "ipc_error_pct": -21.000326756881616,
+   "rtl_topdown": {
+    "retiring": 0.8675471500767808,
+    "bad_speculation": 0.01804705736929433,
+    "backend_bound": 0.11352625998982595,
+    "frontend_bound": 0.000879532564098907
+   },
+   "model_topdown": {
+    "retiring": 0.6853594137906427,
+    "frontend_bound": 0.0036393956124438033,
+    "bad_speculation": 0.0025577176595193295,
+    "backend_bound": 0.30844347293739416
+   },
+   "round1_ipc_error_pct": -30.249932849406914
+  },
+  {
+   "program": "memcpy",
+   "split": "heldout",
+   "rtl_cycles": 25375,
+   "instructions": 31185,
+   "rtl_ipc": 1.2289655172413794,
+   "model_cycles": 44256,
+   "model_ipc": 0.7046502169197397,
+   "ipc_error_pct": -42.663141720896604,
+   "rtl_topdown": {
+    "retiring": 0.6144827586206897,
+    "bad_speculation": 0.01534975369458128,
+    "backend_bound": 0.3629950738916256,
+    "frontend_bound": 0.007172413793103448
+   },
+   "model_topdown": {
+    "retiring": 0.35232510845986986,
+    "frontend_bound": 0.0011749819233550253,
+    "bad_speculation": 0.00500497107736804,
+    "backend_bound": 0.6414949385394071
+   },
+   "round1_ipc_error_pct": -42.5866009005136
+  },
+  {
+   "program": "dhrystone",
+   "split": "heldout",
+   "rtl_cycles": 144337,
+   "instructions": 206224,
+   "rtl_ipc": 1.4287673985187443,
+   "model_cycles": 232312,
+   "model_ipc": 0.8877027445848686,
+   "ipc_error_pct": -37.86933089982437,
+   "rtl_topdown": {
+    "retiring": 0.7143836992593722,
+    "bad_speculation": 0.01444882462570235,
+    "backend_bound": 0.2689850835198182,
+    "frontend_bound": 0.0021823925951072838
+   },
+   "model_topdown": {
+    "retiring": 0.4438513722924343,
+    "frontend_bound": 0.0066656048762009715,
+    "bad_speculation": 0.10964134439891181,
+    "backend_bound": 0.4398416784324529
+   },
+   "round1_ipc_error_pct": -40.33466853512242
+  }
+ ],
+ "note": "Round 1 used fetch/decode buffers of 4 and a branch-penalty grid 4..8; round 2 changed those after training-only comparisons. Held-out programs never selected parameters."
+}
