@@ -1,0 +1,22 @@
+{
+  "schema": "rvw.privilege/1",
+  "kind": "dvfs",
+  "reference_backend": "python",
+  "dvfs": {
+    "states": {
+      "low": {
+        "frequency_hz": 50000000,
+        "voltage_uv": 800000
+      },
+      "high": {
+        "frequency_hz": 100000000,
+        "voltage_uv": 1000000
+      }
+    },
+    "sequence": [
+      "low",
+      "high",
+      "low"
+    ]
+  }
+}

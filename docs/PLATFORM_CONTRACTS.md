@@ -3876,6 +3876,17 @@ walk and PMA checks remain inconclusive.
 
 ### Privilege campaign artifacts
 
+Kinds `reri` and `dvfs` use the same model-based reference report and mailbox
+stimulus contract. RERI pins its revision in project data and derives expected
+record updates and signal requests from the versioned model. Its error payload
+is a hardware-injection request, not proof that the error was handled.
+`privilege_dvfs` is a C1 JSON sample-list artifact. Samples contain `tick`,
+`step`, `phase`, `frequency_hz`, `voltage_uv`, `clock_ready`, `voltage_ready`.
+The checker binds its hash and checks the complete ordered handshake against
+project states. Digital sequencing never implies analog voltage or PLL proof.
+Known C1 self-check failures remain failures when optional observations are
+missing.
+
 Kinds `imsic`, `aplic`, `aclint` and `smnip` select versioned controller
 programs. `spec_version` pins the implemented version; `spec_revision` records
 an optional immutable source revision. `reference_backend = "python"` selects
