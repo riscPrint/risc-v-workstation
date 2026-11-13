@@ -97,10 +97,10 @@ exec "${{RVW:-rvw}}" query build-hdl --out "$out" \\
         rtl = 'rtl=(' + ' '.join(sh(f) for f in files_in) + ')\n' + \
               'incs=(' + ' '.join(sh('-I' + i) for i in incs) + ')\n'
     elif hdl == 'vhdl':
-        # Verilator reads Verilog: GHDL synthesizes the VHDL, Yosys writes it.
+        # Verilator reads Verilog emitted by standalone GHDL. No Yosys plugin ABI is needed.
         rtl = f'''mkdir -p rvw/out
 srcs=({' '.join(sh(f) for f in files_in)})
-yosys -q -m "${{RVW_GHDL_PLUGIN:-ghdl}}" -p "ghdl --std=08 --work={library} ${{srcs[*]}} -e {top}; write_verilog -noattr rvw/out/{top}.v"
+ghdl --synth --std=08 --work={sh(library)} --out=verilog "${{srcs[@]}}" -e {sh(top)} > rvw/out/{top}.v
 rtl=(rvw/out/{top}.v)
 incs=()
 '''
@@ -187,7 +187,7 @@ build = ["./rvw/build-db.sh"]
 db = "rvw/out/design.db"
 '''
     tools = {'sv': 'Yosys with the yosys-slang plugin (RVW_SLANG or OSS CAD Suite)',
-             'vhdl': 'Yosys, GHDL and a GHDL Yosys plugin (RVW_GHDL_PLUGIN; scripts/build-ghdl-plugin.py)',
+             'vhdl': 'GHDL with Verilog synthesis output; queries also need Yosys and a matching GHDL plugin',
              'chisel': 'Yosys and firtool (RVW_FIRTOOL); the core build must emit the FIRRTL file first'}[hdl]
     readme = f'''# Core setup playbook ({hdl})
 
