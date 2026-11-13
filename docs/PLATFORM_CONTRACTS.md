@@ -3519,3 +3519,16 @@ property case. It uses pinned source bundles and the same farm artifact adapter
 as explicit-model grids. `pass` requires every case to earn a portfolio proof.
 A concrete case failure reports `fail`. Missing remote properties are
 inconclusive. The full exported property set must be supplied by the caller.
+
+### Native formal engine diagnostics and benchmark totals
+
+`rvw.formal-doctor/1` records installed dependencies, executable paths, supported
+modes, and enabled adapter features. `qualification` is `not_measured`.
+`status: pass` means the diagnostic completed. It does not mean a proof passed.
+The `formal_doctor` MCP tool returns the same report.
+
+`rvw.formal-engine-bench/1` adds `total_wall_s` per row, including preparation,
+and `summary` per engine with solved, bounded passes, cases, and total wall time.
+Only `pass` and `fail` count as solved. Missing tools and unsupported modes do
+not count. SBY `UNKNOWN` with exit 4 is inconclusive. Inconsistent status and
+exit code pairs are errors.

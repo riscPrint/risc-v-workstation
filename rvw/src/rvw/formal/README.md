@@ -1605,3 +1605,41 @@ answer leaves its assigned properties inconclusive.
 
 If cut-free SMT induction is inconclusive, RTL refinement tries ABC PDR with
 the remaining budget. This is a fresh proof, not reuse of a failed induction.
+
+## Native engine diagnostics
+
+Run `rvw formal doctor --out OUT --json` to list dependencies and enabled adapter
+features. The `formal_doctor` MCP tool returns the same data. Installed tools
+remain unqualified until a native benchmark runs. Bitwuzla and cvc5 are optional
+SMTBMC backends. `btor:btormc` enables bounded search. `aiger:suprove` enables
+unbounded safety when its external executable is present.
+
+Use `scripts/install.sh --with-ric3` or `--with-ebmc` for pinned source builds.
+Builds use two jobs at low priority under `~/.cache/rvw/formal-engines`.
+rIC3 uses a pinned Rust nightly. EBMC needs a C++ compiler, GNU make, flex,
+bison, curl and patch. Source revisions and native build commands are in
+`scripts/install-formal-engine.py`. Source this checkout's `env.sh` after install.
+`--check` probes the selected executable. A successful probe is not proof
+qualification. Existing OSS CAD Suite installs supply pono, Avy, Bitwuzla, cvc5
+and Yices; their native benchmark results must be checked separately.
+
+Native measurement on macOS ARM64, 2026-11-13, on the two pinned cases in
+`examples/formal/deep/hwmcc-small.json`. Each engine ran alone with a 12 s
+timeout. Times below sum engine execution time, excluding preparation.
+This small subset does not establish full-block capacity.
+
+| Engine | Solved / 2 | Engine time (s) | Outcomes |
+|---|---:|---:|---|
+| `abc:pdr` | 2 | 4.797 | pass, pass |
+| `smtbmc:yices` | 1 | 7.108 | pass, inconclusive |
+| `smtbmc:z3` | 1 | 4.910 | pass, inconclusive |
+| `smtbmc:cvc5` | 1 | 7.278 | pass, inconclusive |
+| `smtbmc:bitwuzla` | 1 | 5.920 | pass, inconclusive |
+| `aiger:avy` | 0 | 4.233 | error, error |
+| `aiger:rIC3` | 0 | 0.000 | not_installed, not_installed |
+| `aiger:suprove` | 0 | 0.000 | not_installed, not_installed |
+| `ebmc` | 0 | 0.000 | not_installed, not_installed |
+
+Raw results and tool hashes: `/tmp/rvw-deep-hwmcc-run2/result.json`.
+Avy crashed. Induction exhaustion stays inconclusive. Missing engines were
+not run. No licensed comparison or open-core property campaign ran.

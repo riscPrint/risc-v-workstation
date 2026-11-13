@@ -17,6 +17,10 @@ from rvw.common.proc import run_group
 ENGINES = {
     'smtbmc:yices': ('sby', ('sby', 'yosys', 'yosys-smtbmc', 'yices-smt2'), ('prove', 'bmc')),
     'smtbmc:z3': ('sby', ('sby', 'yosys', 'yosys-smtbmc', 'z3'), ('prove', 'bmc')),
+    'smtbmc:bitwuzla': ('sby', ('sby', 'yosys', 'yosys-smtbmc', 'bitwuzla'), ('prove', 'bmc')),
+    'smtbmc:cvc5': ('sby', ('sby', 'yosys', 'yosys-smtbmc', 'cvc5'), ('prove', 'bmc')),
+    'btor:btormc': ('sby', ('sby', 'yosys', 'btormc', 'btorsim'), ('bmc',)),
+    'aiger:suprove': ('sby', ('sby', 'yosys', 'suprove'), ('prove',)),
     'abc:pdr': ('sby', ('sby', 'yosys', 'yosys-abc'), ('prove',)),
     'abc:bmc3': ('sby', ('sby', 'yosys', 'yosys-abc'), ('bmc',)),
     'btor:pono': ('sby', ('sby', 'yosys', 'pono', 'btorsim'), ('bmc',)),
@@ -37,9 +41,12 @@ def parse_status(backend, text, returncode, mode):
         statuses = set(re.findall(r'^DONE \((PASS|FAIL|UNKNOWN|ERROR)', text, re.M))
         # SBY usually prefixes DONE with time and command name.
         statuses |= set(re.findall(r'\bDONE \((PASS|FAIL|UNKNOWN|ERROR)', text))
-        if returncode not in (0, 2) or len(statuses) != 1:
+        if len(statuses) != 1:
             return 'error'
         verdict = next(iter(statuses))
+        expected = {'PASS': 0, 'FAIL': 2, 'UNKNOWN': 4, 'ERROR': 16}
+        if returncode != expected[verdict]:
+            return 'error'
         if verdict == 'PASS':
             return 'pass' if mode == 'prove' else 'bounded_pass'
         return {'FAIL': 'fail', 'UNKNOWN': 'inconclusive', 'ERROR': 'error'}[verdict]

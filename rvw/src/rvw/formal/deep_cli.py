@@ -5,8 +5,11 @@ from pathlib import Path
 
 def run(args):
     from .portfolio import race, installed
-    if args.deep_action == 'engines':
+    if args.deep_action in ('engines', 'doctor'):
         data = {'schema': 'rvw.formal-engines/1', 'status': 'pass', 'engines': installed()}
+        if args.deep_action == 'doctor':
+            from .engine_doctor import diagnose
+            data = diagnose()
         out = Path(args.out)
         out.mkdir(parents=True, exist_ok=False)
     else:
@@ -50,12 +53,13 @@ def register(sub):
         ('rtl-grid', 'split exported RTL properties over local and farm workers'),
         ('rtl-refine', 'select RTL state and RAM cuts, then refine abstract failures'),
         ('relation-strengthen', 'mine trace relations and certify them with unbounded native proofs'),
+        ('doctor', 'list native engines and the features their adapters enable'),
         ('engines', 'check optional native formal engine dependencies'),
         ('engine-race', 'race engines on pinned self-contained RTL'),
         ('engine-bench', 'measure each engine on pinned cases'),
         ('model-grid', 'prove explicit finite models with induction or CEGAR')):
         p = sub.add_parser(name, help=help_text)
-        if name != 'engines':
+        if name not in ('engines', 'doctor'):
             p.add_argument('--manifest', required=True)
         p.add_argument('--out', required=True)
         p.add_argument('--json', action='store_true')
@@ -89,7 +93,9 @@ def mcp_tools():
     from .mcp_tools import _runner
     s = {'type': 'string'}
     common = {'out': s, 'manifest': s}
-    return [ToolSpec('formal_rtl_grid', 'Split pinned exported RTL properties across local and farm workers.',
+    return [ToolSpec('formal_doctor', 'List installed native engines, dependencies and enabled adapter features.',
+                    schema({'out': s}, ['out']), _runner('doctor'), long=True),
+            ToolSpec('formal_rtl_grid', 'Split pinned exported RTL properties across local and farm workers.',
                     schema({**common, 'hosts': s, 'timeout': {'type': 'number', 'exclusiveMinimum': 0},
                             'workers': {'type': 'integer', 'minimum': 1}}, ['out', 'manifest']), _runner('rtl-grid'), long=True),
             ToolSpec('formal_rtl_refine', 'Automatically cut internal RTL state and RAM read outputs, then restore drivers after abstract failures.',
