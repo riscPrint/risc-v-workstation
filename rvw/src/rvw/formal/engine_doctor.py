@@ -8,6 +8,8 @@ def diagnose():
     for name, row in rows.items():
         backend, deps, modes = ENGINES[name]
         features = ['bounded_search' if m == 'bmc' else 'unbounded_safety' for m in modes]
+        if name.startswith('smtbmc:') and 'prove' in modes:
+            features.append('uninterpreted_datapath')
         row.update(backend=backend, features=features,
                    enabled_features=features if row['status'] == 'installed' else [],
                    executables={d: shutil.which(d) for d in deps},

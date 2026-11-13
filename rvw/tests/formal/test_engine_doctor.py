@@ -9,7 +9,7 @@ def test_doctor_distinguishes_presence_and_qualification(monkeypatch):
     assert missing['missing'] == ['bitwuzla']
     assert missing['qualification'] == 'not_measured'
     present = data['engines']['smtbmc:cvc5']
-    assert set(present['enabled_features']) == {'bounded_search', 'unbounded_safety'}
+    assert set(present['enabled_features']) == {'bounded_search', 'unbounded_safety', 'uninterpreted_datapath'}
     assert data['status'] == 'pass'
 
 

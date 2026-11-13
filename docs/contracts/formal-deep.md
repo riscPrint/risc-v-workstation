@@ -151,3 +151,23 @@ unbounded safety pass receives `proof_kind=liveness_to_safety`. A bounded pass
 is a bounded lasso search. Justice feasibility and existential CTL deadlock
 freedom are not established. Existing safety assertions are removed from this
 separate job. Original assumptions remain.
+
+## Typed uninterpreted arithmetic reports
+
+`rvw.formal-smt-uf/1` records original and transformed SMT2 hashes, the
+transformer hash, selected operators and global function names, operand widths
+and occurrence counts. One global function serves each operator and width
+across all states. Functions use named bit-vector sorts. Yosys witness and
+assertion comments stay in the transformed file.
+
+`rvw.formal-uf-prove/1` records `status`, `proof_kind`, `native_status`,
+`native_result`, pinned source hashes, wrapper hash and captured `smt_models`.
+`rewritten_operations` is the winning model's occurrence count, or null when
+there is no winner. `pass` requires a captured model and an unbounded native
+pass with no unchecked source assumptions. Its proof kind is
+`unbounded_uf_overapproximation`, or `unbounded_concrete` when no operation
+was replaced. Abstract failures remain inconclusive. Only a captured model
+with zero replacements and a native failure can report `fail` with
+`proof_kind: counterexample`. Cross-check disagreement remains inconclusive.
+The SMTBMC jobs use explicit `QF_AUFBV` logic. No performance claim is implied.
+CLI `uf-prove` and MCP `formal_uf_prove` expose the same plan and report.

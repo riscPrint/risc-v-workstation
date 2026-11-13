@@ -2289,3 +2289,33 @@ must pass with no internal crossbits before the result can be `equivalent`.
 state relation. The solver must prove the relation through the outputs.
 MCP tool `formal_equiv` exposes the same controls and source revision export.
 Blackboxes, memory mappings and generated clocks remain unsupported.
+
+## Uninterpreted arithmetic proofs
+
+Run `rvw formal uf-prove --manifest PLAN.json --out OUT --timeout 12`.
+The `formal_uf_prove` MCP tool runs the same job. The manifest uses the pinned
+`sources` and `top` fields from `engine-race`. Choose SMTBMC engines with
+`engines`, such as `["smtbmc:yices", "smtbmc:cvc5"]`. Add `--cross-check` to
+retain all answers. The optional `operators` list selects `bvmul`, `bvudiv`
+and `bvsdiv`. An empty list runs the original arithmetic.
+
+The command replaces each selected SMT operator with one global uninterpreted
+function per operand width. Equal operands have equal results across states
+and properties. Concrete arithmetic is one permitted interpretation. An
+unbounded pass therefore proves the original safety property. A failure with
+a replaced operation stays inconclusive. Run again with `operators: []` to
+check the concrete arithmetic. Source assumptions keep a pass inconclusive
+until their activation is checked.
+
+The typed transformation preserves Yosys witness and assertion metadata. It
+uses operand widths before extraction, named bit-vector sorts and explicit
+`QF_AUFBV` logic. Unknown widths stop the transformation. The report records
+source hashes, transformed SMT hashes, operation counts and wrapper identity.
+It makes no arithmetic speed claim.
+
+Native smoke checks on macOS ARM64, 2026-11-13: Yices, Z3, cvc5 and Bitwuzla
+each proved a registered multiplier pipeline with two replaced operations.
+A signed-division pipeline also proved. A division identity was inconclusive
+with UFs and proved with concrete arithmetic. A faulty pipeline was
+inconclusive with UFs and failed with concrete arithmetic. Each stage used
+a 12 s timeout. These are small-design checks, not capacity measurements.

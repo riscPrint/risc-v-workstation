@@ -7,6 +7,7 @@ import os
 from pathlib import Path
 import re
 import shutil
+import shlex
 import signal
 import threading
 import time
@@ -69,9 +70,11 @@ def parse_status(backend, text, returncode, mode):
 
 
 
-def race(plan, root, out, *, timeout=30, cross_check=False):
+def race(plan, root, out, *, timeout=30, cross_check=False, yosys_executable=None, smtbmc_logic=None):
     if not math.isfinite(timeout) or timeout <= 0:
         raise ValueError('timeout must be finite and positive')
+    if smtbmc_logic is not None and not re.fullmatch(r'[A-Z0-9_]+', smtbmc_logic):
+        raise ValueError('invalid SMTBMC logic name')
     names = plan.get('engines', list(ENGINES))
     if not names or len(names) != len(set(names)) or any(n not in ENGINES for n in names):
         raise ValueError('engines must be unique known engine IDs')
@@ -167,12 +170,19 @@ def race(plan, root, out, *, timeout=30, cross_check=False):
         if backend == 'sby':
             config = directory / 'problem.sby'
             engine_line = name.replace(':', ' ')
+            if name.startswith('smtbmc:') and smtbmc_logic is not None:
+                engine_line += ' -- --logic ' + smtbmc_logic
+                row['smtbmc_logic'] = smtbmc_logic
             if name == 'aiger:rIC3' and seed is not None:
                 engine_line += f' --rseed {seed}'
             config.write_text('[options]\nmode ' + mode + f'\ndepth {depth}\n' +
                               '[engines]\n' + engine_line + '\n[script]\n' + read_script + '\nprep -top ' + plan['top'] +
                               '\n[files]\n' + '\n'.join(str(p) for p in sources) + '\n')
             command = ['sby', '-f', 'problem.sby']
+            if yosys_executable is not None:
+                shim = Path(yosys_executable).resolve()
+                command.extend(['--yosys', shlex.quote(str(shim))])
+                row['yosys_wrapper_sha256'] = sha256(shim.read_bytes()).hexdigest()
             if name == 'aiger:rIC3' and mode == 'bmc':
                 help_result = run_group(['rIC3', '--help'], capture=True, timeout=min(5, timeout))
                 if '--end <' in (help_result.stdout or ''):
