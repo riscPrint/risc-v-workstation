@@ -1,5 +1,28 @@
 # Formal checks and SVA contracts
 
+## Native typed SVA inspection
+
+`formal sva-inspect` and MCP `formal_sva_inspect` emit
+`rvw.sva-inspection/1`. Inputs are Verilog files, the top module, an output
+directory, a native Slang plugin and a positive timeout. `RVW_SLANG` is the
+default plugin selection. The command captures the input files, literal
+includes, compiler identity and plugin hash. It writes the typed native tree
+to `ast.json`. `properties` gives each native concurrent assertion an index,
+AST `node_path` and `assertion_kind`. `node_kinds` and `operators` contain
+native syntax counts. Native AST addresses have process scope only.
+
+`proof_status` and `lowering_status` are always `not_run`. `status=parsed`
+means native compilation succeeded and the native dependency report verified
+the captured source closure. A missing report gives `inconclusive` with cause
+`missing_native_dependency_report`. A missing active assertion gives
+`no_checks`. Native compilation errors, an invalid AST or unsealed native
+source dependencies give `error`. A timeout gives `timeout`. Only `parsed`
+returns exit code 0. All other result statuses return exit code 1.
+
+The result keeps compiler logs and source capture records. Runtime libraries
+are not sealed. This inspection result is not a formal result or a support
+claim for synthesis, property lowering or proof engines.
+
 Part of the [platform contracts](../PLATFORM_CONTRACTS.md).
 
 ## Formal X campaign result extension

@@ -834,6 +834,33 @@ whole-core claim. Issue #18 remains an epic.
 
 ## Imported SVA through slang
 
+`rvw formal sva-inspect` runs the native Slang parser without synthesis or
+property lowering. Use it to inspect typed syntax before selecting a supported
+lowering route:
+
+```sh
+rvw formal sva-inspect --verilog dut.sv checks.sv --top dut --plugin /path/to/slang.so --out inspect
+```
+
+`RVW_SLANG` supplies the plugin path when `--plugin` is absent. MCP
+`formal_sva_inspect` has the same inputs. The result lists native node kinds,
+operators and assertion nodes. `ast.json` retains the typed native tree.
+The compiler capture records Yosys and plugin hashes. Literal includes are
+captured with the source files. Native AST addresses are valid only for that
+process. They are not persistent property identifiers.
+
+Parsing does not establish lowering or proof support. Both stages remain
+`not_run`. `parsed` requires a native dependency report that matches the captured
+source closure. A plugin that accepts `--all-deps` but does not write that report
+produces `inconclusive`, even when it emits a valid AST. Native compilation
+errors and unsealed source dependencies produce `error`. A tree with no active
+assertions produces `no_checks`. Runtime libraries are not sealed.
+
+Native parser tests cover unbounded sequence operators, local variables,
+liveness, property arguments, default clocking, multiple clocks, checkers and
+bind files. These tests qualify parsing only. The lowering support table below
+keeps its separate test basis.
+
 `rvw formal bmc --frontend slang` selects the pinned native plugin in `RVW_SLANG`.
 Install it with `scripts/install.sh --with-formal`. Source the generated `env.sh`.
 The default frontend stays `verilog`. The SBY campaign runner stays independent.
