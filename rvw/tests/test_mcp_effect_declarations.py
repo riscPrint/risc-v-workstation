@@ -150,3 +150,10 @@ def test_agent_bench_effects_and_native_requirements(name, registry):
     tool = registry.tools[name]
     assert tool.side_effects
     assert (tool.native_tools is None) == (name == 'farm_batch')
+
+
+@pytest.mark.parametrize('name', ['bisect_run'])
+def test_bisect_effects_and_native_requirements(name, registry):
+    tool = registry.tools[name]
+    assert tool.side_effects
+    assert (tool.native_tools is None) == (name == 'farm_batch')

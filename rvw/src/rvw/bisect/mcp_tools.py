@@ -15,4 +15,6 @@ def mcp_tools():
                 "max_cycles": {"type": "integer", "minimum": 1}, "hang_cycles": {"type": "integer", "minimum": 1, "default": 5000},
                 "no_verify": B, "remove_clone": B,
                 "timeout": {"type": "number", "exclusiveMinimum": 0}}, ["run_dir", "good"]),
-        handler("rvw.bisect.cli"), long=True)]
+        handler("rvw.bisect.cli"), long=True,
+        side_effects='long-running; launches Git and configured native adapter; writes private clone and bisection output under workdir', native_tools=(),
+        )]
