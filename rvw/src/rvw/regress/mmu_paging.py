@@ -53,6 +53,11 @@ def page_tables(s, root, pa, flags):
             if s.get('napot'):
                 for slot in range(index & ~15, (index & ~15) + 16):
                     table[slot] = table[index]
+    if 'pte_fault_level' in s:
+        fault_level = s['pte_fault_level']
+        depth = g.levels - 1 - fault_level
+        index = va >> (12 + g.vpn_bits * fault_level) & ((1 << g.vpn_bits) - 1)
+        tables[depth][index] = 0
     leaf = root + (count - 1) * 4096 + ((va >> (12 + g.vpn_bits * s['level'])) & ((1 << g.vpn_bits) - 1)) * g.width
     if s.get('root_switch'):
         alternate, _ = page_tables({**s, 'root_switch': False}, root + count * 4096, pa + 4096, flags)
