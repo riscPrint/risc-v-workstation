@@ -2,7 +2,7 @@
   "base": {
     "xlen": 32,
     "E": false,
-    "writable_fiom": true,
+    "writable_fiom": false,
     "writable_hpm_counters": {
       "len": 32,
       "value": "0x5"
@@ -72,8 +72,8 @@
     "xtval_nonzero": {
       "illegal_instruction": true,
       "virtual_instruction": true,
-      "software_breakpoint": true,
-      "hardware_breakpoint": true,
+      "software_breakpoint": false,
+      "hardware_breakpoint": false,
       "load_address_misaligned": true,
       "load_access_fault": true,
       "load_page_fault": true,
@@ -270,13 +270,13 @@
     "interrupts": {
       "machine": {
         "software": {
-          "supported": false
+          "supported": true
         },
         "external": {
-          "supported": false
+          "supported": true
         },
         "timer": {
-          "supported": false
+          "supported": true
         }
       }
     },

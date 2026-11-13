@@ -32,7 +32,7 @@
     "TRAP_ON_UNIMPLEMENTED_INSTRUCTION": true,
     "TRAP_ON_RESERVED_INSTRUCTION": true,
     "TRAP_ON_UNIMPLEMENTED_CSR": true,
-    "REPORT_VA_IN_MTVAL_ON_BREAKPOINT": true,
+    "REPORT_VA_IN_MTVAL_ON_BREAKPOINT": false,
     "REPORT_VA_IN_MTVAL_ON_LOAD_MISALIGNED": true,
     "REPORT_VA_IN_MTVAL_ON_STORE_AMO_MISALIGNED": true,
     "REPORT_VA_IN_MTVAL_ON_INSTRUCTION_MISALIGNED": true,
@@ -165,9 +165,9 @@
       false,
       false
     ],
-    "MEI_INTR_IMPL": false,
-    "MSI_INTR_IMPL": false,
-    "MTI_INTR_IMPL": false,
+    "MEI_INTR_IMPL": true,
+    "MSI_INTR_IMPL": true,
+    "MTI_INTR_IMPL": true,
     "MISALIGNED_MAX_ATOMICITY_GRANULE_SIZE": 4,
     "MISALIGNED_SPLIT_STRATEGY": "custom"
   },
@@ -181,7 +181,8 @@
     "Standard Sm bootstrap is retained. A build or plan is not a DUT pass.",
     "Interrupt inputs are tied low. No interrupt-device behavior is qualified.",
     "Ibex splits misaligned accesses at word boundaries. UDB has no exact word-split policy; custom is explicit.",
-    "Sail-only CLINT and interrupt-generator regions are not DUT devices."
+    "Sail-only CLINT and interrupt-generator regions are not DUT devices.",
+    "Interrupt CSR bits are implemented. Interrupt delivery is unqualified because the harness ties the inputs low."
   ],
   "include_priv_tests": true,
   "all_applicable": true
