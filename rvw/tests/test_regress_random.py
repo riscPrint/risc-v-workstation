@@ -140,3 +140,8 @@ def test_reference_uses_c1_core_outside_project_directory(tmp_path,monkeypatch):
     monkeypatch.setattr(random,'cosim',compare)
     assert random.verify(elf,tmp_path,'platform')['status']=='pass'
     assert seen==['fixture']
+
+
+@pytest.fixture
+def tmp_path(external_tmp_path):
+    return external_tmp_path

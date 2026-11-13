@@ -19,3 +19,8 @@ def test_fetch_pinned_bytes(tmp_path):
     (out / 'case.aig').write_bytes(b'corrupt')
     with pytest.raises(ValueError, match='hash mismatch'):
         fetch(manifest, out)
+
+
+@pytest.fixture
+def tmp_path(external_tmp_path):
+    return external_tmp_path
