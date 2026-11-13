@@ -390,3 +390,12 @@ Native qualification covers the four-entry, eight-bit real Spinal `StreamFifo`
 RAM and register-vector configurations. The wrapper compares payload only while
 valid. This is a finite RTL refinement result under that observation rule.
 Symbolic arrays, arbitrary capacities and banked-memory refinement remain open.
+
+## Core divider diagnosis receipt
+
+The example-owned `rvw.div-core-diagnosis/1` receipt records the core and
+riscv-tests revisions, configuration, RTL digest and per-program RTL and
+Spike results. Trace digests identify the raw private runs. `controls`
+records separate RTL controls. A `NOT RUN` Spike status gives no comparison
+evidence. `minimal` records the self-checking program outcome. This receipt
+is simulation evidence. It is not an arithmetic proof or a qualification.

@@ -1,0 +1,116 @@
+{
+  "schema": "rvw.div-core-diagnosis/1",
+  "core_revision": "9f70315deb3390b283995c5b8f1bd38215ecf52b",
+  "tests_revision": "d7e86f701b929b5d801f8cda1a4871ab05f452bb",
+  "config": "rv32im_bitpasta_ipc",
+  "rtl_sha256": "c910e3941cb4a6244cb630b151f392d4e3da8e0bcf2c2dfbae1d18b8ae841e1e",
+  "backend": "Verilator RTL and Spike shim 8",
+  "results": [
+    {
+      "test": "div",
+      "rtl_status": "fail",
+      "fail_code": 8,
+      "spike_status": "mismatch",
+      "instructions": 103,
+      "pc": "0x80000228",
+      "differences": {
+        "rd_wdata": {
+          "expected": "0xffffffff",
+          "actual": "0x808080ab"
+        }
+      },
+      "trace_sha256": "de8e23457c3e6eb77918ac4d5c7180d0c4541eec993a4cc99b568fb6adebfdb5"
+    },
+    {
+      "test": "divu",
+      "rtl_status": "fail",
+      "fail_code": 8,
+      "spike_status": "mismatch",
+      "instructions": 104,
+      "pc": "0x8000022c",
+      "differences": {
+        "rd_wdata": {
+          "expected": "0xffffffff",
+          "actual": "0x808080ab"
+        }
+      },
+      "trace_sha256": "16aa3bf7b2693917d1ccf139162ffc660a01e06c0480fc94cac328a838a7fbe7"
+    },
+    {
+      "test": "rem",
+      "rtl_status": "pass",
+      "fail_code": null,
+      "spike_status": "match",
+      "instructions": 133,
+      "pc": null,
+      "differences": null,
+      "trace_sha256": "0a7ace770e1370452d738af8f0b7d998c2cccad8597ea90afd22c8239036e3cc"
+    },
+    {
+      "test": "remu",
+      "rtl_status": "pass",
+      "fail_code": null,
+      "spike_status": "match",
+      "instructions": 133,
+      "pc": null,
+      "differences": null,
+      "trace_sha256": "3a69a6ec643051048c278ff21b6dda95fe4a2efd44a64522ec2d186a34de97d4"
+    }
+  ],
+  "controls": [
+    {
+      "config": "rv32im",
+      "test": "div",
+      "rtl_status": "pass",
+      "spike_status": "NOT RUN"
+    },
+    {
+      "config": "rv32im",
+      "test": "divu",
+      "rtl_status": "pass",
+      "spike_status": "NOT RUN"
+    },
+    {
+      "config": "rv32im",
+      "test": "rem",
+      "rtl_status": "pass",
+      "spike_status": "NOT RUN"
+    },
+    {
+      "config": "rv32im",
+      "test": "remu",
+      "rtl_status": "pass",
+      "spike_status": "NOT RUN"
+    },
+    {
+      "config": "rv32im_bitpasta",
+      "test": "div",
+      "rtl_status": "pass",
+      "spike_status": "NOT RUN"
+    },
+    {
+      "config": "rv32im_bitpasta",
+      "test": "divu",
+      "rtl_status": "pass",
+      "spike_status": "NOT RUN"
+    },
+    {
+      "config": "rv32im_bitpasta",
+      "test": "rem",
+      "rtl_status": "pass",
+      "spike_status": "NOT RUN"
+    },
+    {
+      "config": "rv32im_bitpasta",
+      "test": "remu",
+      "rtl_status": "pass",
+      "spike_status": "NOT RUN"
+    }
+  ],
+  "minimal": {
+    "source": "../findings/bitpasta-div-zero/minimal.S",
+    "status": "fail",
+    "fail_code": 1,
+    "cycles": 75
+  }
+}

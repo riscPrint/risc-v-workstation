@@ -85,3 +85,59 @@ divisor zero. Times were 59.056 and 45.531 seconds. Icarus returned
 `0xffffffff` for the separate `1 / 0` sample. These results apply to
 `DivRadix`. They do not clear the `DivRadix2` mismatch above.
 Nonzero unrestricted divisors and signed operations remain open.
+
+## Core diagnosis, 2026-11-13
+
+Decision: this is a real ISA difference in the optional IPC configuration.
+It is not a unit harness error. Select `--div-impl bitpasta --div-ipc` in
+upstream `ParamSimple`, or `rv32im_bitpasta_ipc` in this example.
+`DivPlugin` instantiates `DivRadix2(32, lowArea=false)`. The example pin is
+`9f70315deb3390b283995c5b8f1bd38215ecf52b`.
+
+The core supplies unnormalized unsigned magnitudes. It holds operands while
+execution is frozen. It consumes the response with `flush`, with response
+`ready` low. Those differences from the standalone consumer do not repair
+the first quotient. Signed conversion in `DivPlugin` explicitly prevents
+negation of a division-by-zero quotient.
+
+The skip logic uses shifts of 1, 2 or 8. On a zero denominator it skips
+quotient positions that must contain ones. The quotient update appends one
+`doSub` bit after each shift. That skip is invalid for division by zero.
+No core source was changed.
+
+| Core instruction | Dividend | Divisor | RTL result | M result |
+| --- | --- | --- | --- | --- |
+| DIV | `0x80000000` | `0` | `0x808080ab` | `0xffffffff` |
+| DIVU | `0x80000000` | `0` | `0x808080ab` | `0xffffffff` |
+| REM | `0x80000000` | `0` | `0x80000000` | `0x80000000` |
+| REMU | `0x80000000` | `0` | `0x80000000` | `0x80000000` |
+| DIV, signed overflow | `0x80000000` | `0xffffffff` | `0x80000000` | `0x80000000` |
+| REM, signed overflow | `0x80000000` | `0xffffffff` | `0` | `0` |
+
+The native Verilator core run used the pinned development SpinalHDL source.
+It ran external riscv-tests revision
+`d7e86f701b929b5d801f8cda1a4871ab05f452bb`, `rv32um` programs `div`,
+`divu`, `rem` and `remu`. DIV and DIVU failed at test 8. The remainder
+programs passed. The earlier independent Icarus unit result for `1 / 0`
+remains `0x808080ab`; the required quotient is `0xffffffff`.
+These are simulation results, not unrestricted arithmetic proofs.
+
+`../findings/bitpasta-div-zero/minimal.S` is the minimal self-checking program. Link it with the example
+`rvw/programs/link.ld`. It reports tohost 3 on the faulty quotient.
+Use `div-core.py --tests /path/to/riscv-tests --out /path/to/new-run` to
+build all four upstream tests, run the optional core and compare its commits
+with Spike. Set `VEXIIRISCV` to the private pinned core first. The runner
+limits each native step to two minutes. Build the current Spike shim with
+`Cosim/build.sh` before the comparison. `--config rv32im` selects the default
+control. `--config rv32im_bitpasta` selects the optional area control.
+The unit exporter also accepts `--low-area` for that control.
+
+Spike shim 8 confirmed the first difference at PC `0x80000228` for DIV
+and `0x8000022c` for DIVU. Both differences are `rd_wdata`: expected
+`0xffffffff`, observed `0x808080ab`. The REM and REMU traces match Spike.
+See `div-core-results.json` for compact receipts and trace hashes.
+
+Control runs: all four programs passed on `rv32im` and
+`rv32im_bitpasta`. The fault requires the IPC skip configuration in this
+measurement. The minimal `../findings/bitpasta-div-zero/minimal.S` also failed on the IPC core with
+tohost 3. These control traces were not compared with Spike.

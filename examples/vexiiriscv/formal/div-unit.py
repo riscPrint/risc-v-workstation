@@ -96,6 +96,7 @@ def main():
     p.add_argument('--build-timeout', type=float, default=180)
     p.add_argument('--max-latency', type=int, default=40)
     p.add_argument('--zero-smoke', action='store_true')
+    p.add_argument('--low-area', action='store_true', help='use the core default bitpasta area configuration')
     p.add_argument('--implementation', choices=['DivRadix2', 'DivRadix'], default='DivRadix2')
     a = p.parse_args()
     root = Path(__file__).resolve().parents[3]
@@ -107,7 +108,7 @@ def main():
     (build / 'project').mkdir()
     manifest = {'schema': 'rvw.vexii-div-unit/1', 'source_revision': revision,
                 'spinal_version': '1.15.0', 'implementation': a.implementation, 'width': 32,
-                'low_area': False if a.implementation == 'DivRadix2' else None,
+                'low_area': a.low_area if a.implementation == 'DivRadix2' else None,
                 'radix': 2,
                 'scope': 'real source unit; unsigned transactions; stable operands; no pipeline or ISA integration',
                 'operand_bits': a.operand_bits, 'divisor': a.divisor,
@@ -134,7 +135,7 @@ libraryDependencies ++= Seq(
  compilerPlugin("com.github.spinalhdl" %% "spinalhdl-idsl-plugin" % spinalVersion))
 fork := true
 """)
-    constructor = f'new vexiiriscv.misc.{a.implementation}(32, ' + ('false)' if a.implementation == 'DivRadix2' else '2)')
+    constructor = f'new vexiiriscv.misc.{a.implementation}(32, ' + (str(a.low_area).lower() + ')' if a.implementation == 'DivRadix2' else '2)')
     (build / 'src/main/scala/Export.scala').write_text("""import spinal.core._
 object Export extends App {
  SpinalConfig(targetDirectory=args(0), defaultConfigForClockDomains=ClockDomainConfig(resetKind=SYNC))
