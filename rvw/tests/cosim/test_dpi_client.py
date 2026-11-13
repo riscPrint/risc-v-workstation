@@ -31,7 +31,12 @@ def client(tmp_path):
     ({'status': 'continue'}, 0),
     ({'status': 'match', 'trace_complete': True}, 1),
     ({'status': 'match', 'trace_complete': False}, 2),
-    ({'status': 'mismatch'}, 2), ({'status': 'error'}, 2)])
+    ({'status': 'mismatch'}, 2), ({'status': 'error'}, 2),
+    ({'status': 'mismatch', 'harts': {'0': {'status': 'match', 'trace_complete': True}}}, 2),
+    ({'status': 'error', 'reproduction': {'status': 'continue'}}, 2),
+    ({'status': 'match', 'trace_complete': False, 'harts': {'0': {'trace_complete': True}}}, 2),
+    ({'harts': {'0': {'status': 'continue'}}, 'status': 'mismatch'}, 2),
+    ({'message': 'escaped \" status \" and }', 'status': 'match', 'trace_complete': True}, 1)])
 def test_real_client_reply(client, monkeypatch, reply, expected):
     listener = socket.socket()
     listener.bind(('127.0.0.1', 0))
