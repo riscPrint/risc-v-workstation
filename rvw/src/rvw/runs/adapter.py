@@ -343,7 +343,7 @@ def _manifest_entry(cmd: Command) -> dict:
 
 
 def execute_many(cmds: list[Command], outs: list[Path], core: str | None = None, jobs: int = 1,
-                 timeout: float | None = None, log: Path | None = None) -> list[Attempt]:
+                 timeout: float | None = None, log: Path | None = None, fallback: bool = True) -> list[Attempt]:
     """Run several variants of one adapter command, each into its own fresh directory. Uses the
     adapter's `run-many` (one JVM, one compiled model) and falls back to one `run` per command if
     that yields no results (and did not time out)."""
@@ -386,6 +386,6 @@ def execute_many(cmds: list[Command], outs: list[Path], core: str | None = None,
             res.append(Attempt(run, d, wall, r.returncode, r.timed_out and run is None, log,
                                err if run is None and not r.timed_out else
                                (f"run-many timed out after {budget}s" if run is None else None), held.wait))
-        if any(a.run is not None for a in res) or r.timed_out:
+        if any(a.run is not None for a in res) or r.timed_out or not fallback:
             return res
     return [execute(c, o, core=core, timeout=timeout) for c, o in zip(cmds, outs)]

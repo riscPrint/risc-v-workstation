@@ -36,11 +36,12 @@ case class RunJob(elf: File, out: File, config: String, seed: Int, seedPicked: B
                   wallTimeoutS: Option[Double] = None, spinaltrace: Boolean = false, irqSchedule: Option[InterruptSchedule] = None, elfLoadBias: Long = 0L, bootPayloads: Option[File] = None, socMap: Option[SimMap] = None, hartImages: Option[File] = None, probes: Boolean = false,
                   fault: Option[FaultFile] = None, debug: Option[DebugMode] = None,
                   traceIngress: Option[IngressBinding] = None, simThreads: Option[Int] = None,
-                  stimulus: Option[StimulusFile] = None, instructionPort: Option[InstructionMode] = None) {
+                  stimulus: Option[StimulusFile] = None, instructionPort: Option[InstructionMode] = None, probeMode: String = "all") {
   def model: ModelKey = ModelKey(config, rvfi = rvfiTrace || rvfiCheck || hartImages.nonEmpty, wave = wave, coverage = coverage, konata = konata, spinaltrace = spinaltrace, probes = probes, faults = fault.nonEmpty, simThreads = simThreads)
   /** C1 records the selected model and observation flags for regression identity checks. */
   def recordedOptions: ujson.Obj = {
     val options = model.toJson
+    if (probes) options("probe_mode") = ujson.Str(probeMode)
     options("rvfi_trace") = ujson.Bool(rvfiTrace)
     options("rvfi_check") = ujson.Bool(rvfiCheck)
     options("wave_from") = waveFrom.map(RvwJson.num).getOrElse(ujson.Null)

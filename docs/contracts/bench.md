@@ -25,3 +25,19 @@ A `compared` row requires two or more identical passing samples on each side
 and equal retired instruction counts. Otherwise it is inconclusive. The
 noise check reads samples directly. Top-down deltas subtract compatible
 commit-slot fractions. Different ELF hashes remain explicit.
+
+Optional row `topdown_status: c1_checked` states that top-down retirements
+match C1 instructions. This is separate from the embedded top-down report's
+C2 `checked`/`unchecked` status. `lowest_ipc` lists at most three passing
+programs with valid attribution, sorted by IPC. Its explanations name the
+largest non-retiring slot class. These remain project-bound partitions.
+The row can also retain the first sample's C1 `metrics` for ROI interpretation.
+Benchmark probe captures select C1 `probe_mode: topdown`. They retain only
+the five counter totals needed for the table. Full event capture remains
+available through the existing C1 adapter commands.
+
+The campaign saves its identity with `status: incomplete` before building or
+launching a batch. Resume can reuse a completed passing C1 result after
+validating its ELF hash, seed, config, limits and capture mode. An output
+directory without a saved identity cannot resume. Unfinished programs run
+again. Completed table rows remain unchanged.

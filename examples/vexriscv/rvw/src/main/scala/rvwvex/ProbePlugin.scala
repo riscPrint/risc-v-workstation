@@ -95,6 +95,17 @@ class ProbePlugin extends Plugin[VexRiscv] {
     Probe.stall("frontend", "mispredict_recovery", recovering && !decode.arbitration.isValid,
       evidence = "inferred")
 
+    // One commit slot per cycle. Retirement wins, then redirect recovery,
+    // then pipeline occupancy. This is a project partition, not causal signoff.
+    val slotLost = !retire
+    val slotRecovery = recovering || bp.jumpInterface.valid
+    val slotWork = stagesWithNames.map(_._1.arbitration.isValid).reduce(_ || _)
+    Probe.counter("topdown_slots", True)
+    Probe.counter("topdown_retiring", retire)
+    Probe.counter("topdown_bad_speculation", slotLost && slotRecovery)
+    Probe.counter("topdown_backend_bound", slotLost && !slotRecovery && slotWork)
+    Probe.counter("topdown_frontend_bound", slotLost && !slotRecovery && !slotWork)
+
     // Event counters (names are the calibration plan's RTL event names).
     Probe.counter("cycles", True)
     Probe.counter("retired", retire)

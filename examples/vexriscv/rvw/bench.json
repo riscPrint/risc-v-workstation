@@ -23,5 +23,6 @@
     "spmv_rows": 8
   },
   "max_cycles": 2000000,
-  "bounded": true
+  "bounded": true,
+  "probes": true
 }

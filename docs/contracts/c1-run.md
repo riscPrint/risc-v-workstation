@@ -183,3 +183,13 @@ use different architectural widths. The default returns `xlen` for compatibility
 The driver checks ELF width and writes the C2 header with the selected width.
 The adapter must use that width for its own store lanes and trace conversion.
 The adapter description's scalar `xlen` still describes the default configuration.
+
+## Probe capture selection
+
+`run` and `run-many` accept `probe_mode: "all" | "topdown"` or
+`--probe-mode all|topdown`. The default is `all`. `topdown` requires
+`probes: true`. It samples only the five `topdown_*` commit-slot counters.
+Missing counters are an error. The stream has consecutive probe IDs and
+`capture_mode: "topdown"` in its header. It contains no event rows.
+C1 `options.probe_mode` and the replay command record the selection.
+This changes observation cost. It does not select a different RTL model.

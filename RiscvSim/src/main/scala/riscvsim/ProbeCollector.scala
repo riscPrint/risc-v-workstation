@@ -14,7 +14,7 @@ import spinalprobes.ProbeSite
   * Counter probes add their increment each cycle and appear only in the end record.
   * Fault sites are listed in the header and never sampled. Call `sample` from the
   * adapter's `onSamplings`, with the same cycle number that the C2 writer uses. */
-final class ProbeCollector(sites: Seq[ProbeSite], file: File, identity: ujson.Obj = ujson.Obj()) {
+final class ProbeCollector(sites: Seq[ProbeSite], file: File, identity: ujson.Obj = ujson.Obj(), captureMode: String = "all") {
   private val out = new BufferedWriter(new FileWriter(file))
   private val sampled = sites.filter(s => s.kind != "counter" && s.kind != "fault").toArray
   private val counters = sites.filter(_.kind == "counter").toArray
@@ -25,7 +25,7 @@ final class ProbeCollector(sites: Seq[ProbeSite], file: File, identity: ujson.Ob
   private var closed = false
 
   out.write(ujson.write(ujson.Obj("schema" -> ProbeCollector.Schema, "identity" -> identity,
-    "probes" -> ujson.Arr.from(sites.map(ProbeCollector.describe)))))
+    "capture_mode" -> ujson.Str(captureMode), "probes" -> ujson.Arr.from(sites.map(ProbeCollector.describe)))))
   out.write('\n')
 
   private def value(d: BaseType): BigInt = d match {
@@ -83,8 +83,17 @@ object ProbeCollector {
     if (!job.probes) None
     else {
       require(sites.nonEmpty, "--probes was given but the design registered no probes")
-      Some(new ProbeCollector(sites, new File(job.out, FileName), identity(header)))
+      Some(new ProbeCollector(select(sites, job.probeMode), new File(job.out, FileName), identity(header), job.probeMode))
     }
+  def select(sites: Seq[ProbeSite], mode: String): Seq[ProbeSite] = {
+    require(Set("all", "topdown")(mode), "unknown probe capture mode")
+    if (mode == "all") sites else {
+      val names = Set("topdown_slots", "topdown_retiring", "topdown_bad_speculation", "topdown_frontend_bound", "topdown_backend_bound")
+      val selected = sites.filter(s => s.kind == "counter" && names(s.name))
+      require(selected.map(_.name).toSet == names, "topdown mode needs all five slot counters")
+      selected.zipWithIndex.map { case (s, i) => s.copy(index = i) }
+    }
+  }
   def describe(s: ProbeSite): ujson.Obj = ujson.Obj("id" -> s.index, "kind" -> s.kind, "name" -> s.name,
     "fields" -> ujson.Arr.from(s.fields.map { case (n, d) => ujson.Arr(n, d.getBitsWidth) }),
     "meta" -> ujson.Obj.from((s.meta ++ faultPath(s)).toSeq.sortBy(_._1).map { case (k, v) => k -> ujson.Str(v) }))

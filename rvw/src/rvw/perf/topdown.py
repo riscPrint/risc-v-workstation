@@ -35,7 +35,7 @@ def report(events, c2=None, c1=None) -> dict:
 
     `status` is `checked` when `retiring` equals the C2 retirement count (and the C1 instret
     when given), `unchecked` without C2. A mismatch raises: the binding is wrong."""
-    stream = read(events)
+    stream = read(events, retain_rows=False)
     if stream.end is None:
         raise ValueError("probe stream has no end record (incomplete run); counters are not totals")
     counters = stream.counters

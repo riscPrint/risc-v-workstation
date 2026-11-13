@@ -240,7 +240,7 @@ class Driver(val adapter: CoreAdapter) {
       (if (job.konata) Seq("--konata") else Nil) ++
       (if (job.coverage) Seq("--coverage") else Nil) ++
       (if (job.spinaltrace) Seq("--spinaltrace") else Nil) ++
-      (if (job.probes) Seq("--probes") else Nil)
+      (if (job.probes) Seq("--probes", "--probe-mode", job.probeMode) else Nil)
     val coverageEnv = if (job.coverage)
       Seq("RISCVSIM_COVERAGE" -> RiscvSimConfig.coverageTypes.mkString(",")) else Nil
     ((NativeBuild.replayEnv ++ adapter.replayEnv ++ coverageEnv).map { case (k, v) => s"$k=${q(v)}" } ++
