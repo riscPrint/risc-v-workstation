@@ -942,8 +942,13 @@ ROM was preloaded. The generated RAM image is empty, and a read-only runtime
 observation checked RAM word zero before boot. This is component simulation
 evidence. C1 acceptance, XIP, program/erase modeling and hardware boot are unrun.
 
-Native AXI4/TileLink crossbars, AXI width conversion, composer-hosted SMP,
-external-IP import and composed debug-module integration remain separate work.
+The [native fabric example](../SpinalSoc/examples/fabric/README.md) supplies
+N-master/M-target AXI4 and Get/Put TileLink components. Two-master/two-target
+tests passed with independent VIP endpoint models. AXI conversion passed
+from 32 to 64 bits and from 64 to 32 bits. A composed CPU and DMA-style master
+passed in 2,135 cycles with 236 CPU retirements and 33 DMA write/read pairs.
+Composer-hosted SMP, external-IP import and composed debug-module integration
+remain separate work.
 The existing standalone SMP example is unchanged.
 ## Write properties for your core
 
