@@ -1,6 +1,6 @@
-# Cacheless SMP example
+# SMP RTL examples
 
-This example runs two to eight RV64IMA VexiiRiscv RTL cores in Verilator.
+The cacheless C1 example runs two to eight RV64IMA VexiiRiscv RTL cores in Verilator.
 Each core has a separate fetch bus, LSU bus, reset PC and retirement probe.
 All cores use one simulation RAM. The simulation memory service implements
 LR/SC reservations and the nine standard AMOs at word and doubleword widths.
@@ -82,10 +82,10 @@ results, not hardware or full ISA qualification.
 | SB+fence.rw.rws | smp2 | 17 | 82 | 28 | consistent with herd7 |
 | MP+fence.rw.rws | smp2 | 17 | 81 | 27 | consistent with herd7 |
 | LB+fence.rw.rws | smp2 | 17 | 82 | 28 | consistent with herd7 |
-| Generated seed 1 | smp2 | 1 | 208 | 75 | inconclusive at 100000 candidates |
-| Generated seed 7 | smp2 | 7 | 119 | 40 | allowed after 6 candidates |
-| Generated seed 17 | smp2 | 17 | 87 | 26 | allowed after 1 candidate |
-| Generated seed 23 | smp2 | 23 | 105 | 39 | allowed after 8 candidates |
+| Generated seed 1 | smp2 | 1 | 208 | 75 | allowed on checker recheck |
+| Generated seed 7 | smp2 | 7 | 119 | 40 | allowed on checker recheck |
+| Generated seed 17 | smp2 | 17 | 87 | 26 | allowed on checker recheck |
+| Generated seed 23 | smp2 | 23 | 105 | 39 | allowed on checker recheck |
 | Cross-hart FENCE.I | smp2 | 17 | 191 | 62 | pass |
 | IPI | smp2 | 17 | 247 | 74 | pass |
 | HSM | hsm2 | 17 | 1431 | 530 | pass |
@@ -93,8 +93,8 @@ results, not hardware or full ISA qualification.
 
 Each litmus case has one captured outcome. Seed 17 used two generated program
 steps. Seeds 1, 7 and 23 used four. An allowed execution is a finite checker
-result. The candidate-limit result remains inconclusive. The HSM observer saw
-two starts, two S-mode entries, one stop/stopped transition and two IPIs.
+result. The original candidate-limit result was inconclusive. A later checker
+recheck found a valid witness. The HSM observer saw two starts, two S-mode entries, one stop/stopped transition and two IPIs.
 Clock/reset/power control and coherent-cache RTL remain unqualified.
 The JSON files under `rvw/` record the RTL and trace hashes.
 
@@ -151,10 +151,12 @@ faults, traps, device accesses and later resets refuse a complete binding.
 The derived header records the input trace hash and binding source hash.
 See the [RVWMO dependency tables](https://docs.riscv.org/reference/isa/v20260120/unpriv/rvwmo.html).
 
-Four generated programs ran on RTL. Seed 17 used length 2. Seeds 1, 7 and 23
-used length 4. Seeds 7, 17 and 23 are allowed after 6, 1 and 8 candidates.
-Seed 1 remains inconclusive at 100000 candidates. The candidate limit was not
-waived. These finite results do not prove general RVWMO compliance.
+The four original generated programs used length 2 at seed 17 and length 4
+at seeds 1, 7 and 23. All four saved captures now have allowed witnesses.
+Seed 1 previously reached 100000 candidates. The checker now finds a sparse
+SC witness. No candidate limit was waived. See `rvw/search-scale-results.json`.
+The later 16-seed default and stress campaigns each have 16 allowed captures.
+These finite results do not prove general RVWMO compliance.
 
 ## Multi-hart Spike comparison
 
@@ -211,7 +213,8 @@ Use `summarize.py RUN...` to validate C1/C2 count and completion consistency.
 ## Cache and protocol observer scope
 
 See [the cache and coherence scope](COHERENCE.md). Both observer groups are
-unbound because these profiles have no caches or TileLink-C ports. C1 reports
+unbound in the cacheless C1 profiles. These profiles have no caches or
+TileLink-C ports. C1 reports
 `cache_coherence: not_present`. Native program passes do not change that limit.
 
 ## Timing stress and replay
@@ -250,7 +253,7 @@ The native stress control used those settings:
 | LR/SC run A | 17 | 2132 | 498 | pass |
 | LR/SC replay B | 17 | 2132 | 498 | byte-identical C2 |
 | AMO | 23 | 35860 | 8326 | pass |
-| Generated shared program | 7 | 230 | 39 | RVWMO allowed after 6 candidates |
+| Generated shared program | 7 | 230 | 39 | RVWMO allowed on checker recheck |
 | HSM | 17 | 2813 | 520 | two starts, one stop, two IPIs |
 | Serialized shared AMO | 23 | 152 | 30 | Spike match; zero masks/sync |
 
@@ -351,7 +354,7 @@ oracle. Only the selected data line has an independent byte binding.
 The passive `observed0` and `observed1` bundles project this line. They track
 request sources and grant sinks. They do not control any core/fabric handshake.
 `expected_data` is an independent test input. The native runner writes
-`projected.jsonl` with clock samples for generated-monitor replay.
+`projected.jsonl` with clock and reset events for generated-monitor replay.
 
 The `db` sbt project provides `rvwsmp.CachedDatabase ELF DATABASE`. Run it with
 JDK 21, the same private source checkout, and the `sbt-mem` lock. Then use:
