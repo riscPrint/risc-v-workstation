@@ -103,6 +103,23 @@ class VPlan:
                 row['coverage_expected']+=group['expected_bins']
                 row['coverage_hit']+=group['expected_hit']
                 row['holes'] += [{'role':'coverage','group':name,'bin':b,'reason':'unobserved'} for b in group['holes']]
+        elif schema=='rvw.probe-coverage/1':
+            comparison=data.get('comparison',{})
+            if (data.get('status')!='qualified' or comparison.get('status')!='match'
+                    or comparison.get('trace_complete') is not True
+                    or type(comparison.get('instructions')) is not int or comparison['instructions']<=0
+                    or comparison.get('synchronized')!=0 or comparison.get('applied_masks')!=[]):
+                raise ValueError('probe execution lacks complete strict reference qualification')
+            row['coverage_contexts'].append('probe:'+data['plan_id']+':'+data['design'])
+            records=[(b['id'],b['count']) for b in data['bins']]
+            records += [(s['id'],s['completed']) for s in data.get('sequences',[])]
+            if len({name for name,_ in records})!=len(records) or any(type(n) is not int or n<0 for _,n in records):
+                raise ValueError('invalid probe goal counts')
+            bins=dict(records)
+            for name in groups:
+                if name not in bins:raise ValueError('unknown probe goal: '+name)
+                row['coverage_expected']+=1;row['coverage_hit']+=int(bins[name]>0)
+                if not bins[name]:row['holes'].append({'role':'coverage','group':name,'reason':'unobserved'})
         elif schema=='rvw.rtl-coverage/1':
             if data.get('status')!='ok' or data.get('sampling_complete') is not True:
                 raise ValueError('RTL samples are incomplete')
