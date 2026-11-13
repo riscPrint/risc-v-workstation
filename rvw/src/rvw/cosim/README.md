@@ -46,3 +46,23 @@ They cannot be converted to full C2. Unsupported effects are errors. The bounded
 RVVI importer retains raw elements for sparse retirements. It does not implement
 all RVVI state latching. `cosim_exchange` provides the same operation over MCP.
 Format exchange does not run an independent reference or establish a match.
+
+### Custom reference extensions
+
+Set `reference_extensions` in the project's cosim platform JSON:
+
+```json
+{"reference_extensions": [{"library": "extensions/custom.so", "name": "rvw_example"}]}
+```
+
+The path is relative to the platform file. Build the library against the same
+Spike headers and library used by `Cosim/build.sh`. Export a Spike extension
+factory with `REGISTER_EXTENSION`. Inputs capture each library and record its
+digest. Spike loads the captured library and registers the named extension
+before it runs the ELF. Declare custom CSRs in C2 `csr_snapshot` to compare them.
+`Cosim/tests/custom_extension.cc` is a small custom-0 instruction example.
+
+Missing libraries, unknown extensions and unsupported reference state give
+errors. Sail does not load these libraries. C2 reference generation still refuses
+unknown custom operand layouts. This does not establish custom ISA compliance.
+Native extension dependencies must use the same installed Spike ABI.

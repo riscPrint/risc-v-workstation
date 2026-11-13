@@ -185,6 +185,11 @@ class Spike:
         if self.elf.xlen != platform.xlen:
             raise ValueError("ELF and platform XLEN differ")
         self.lib = lib = load_shim(shim)
+        from .custom import load_extensions
+        self.extension_libraries = load_extensions(platform.reference_extensions)
+        if platform.reference_extensions:
+            lib.rvw_register_extension.argtypes = [C.c_void_p, C.c_char_p]
+            lib.rvw_register_extension.restype = C.c_int
         lib.rvw_error.restype = C.c_char_p
         lib.rvw_create.argtypes = [C.c_char_p, C.POINTER(C.c_uint64), C.c_size_t,
                                   C.POINTER(C.c_uint64), C.c_size_t, C.c_uint64, C.c_uint, C.c_uint64, C.c_char_p, C.c_int, C.c_int]
@@ -216,6 +221,9 @@ class Spike:
         if not self.handle:
             raise ValueError(self.error())
         try:
+            for extension in platform.reference_extensions:
+                if lib.rvw_register_extension(self.handle, extension["name"].encode()):
+                    raise ValueError(self.error())
             platform.check_segments(self.elf)
             for addr, data, memsz in self.elf.segments:
                 if lib.rvw_write(self.handle, addr, data, len(data)):

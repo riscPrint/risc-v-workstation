@@ -62,6 +62,9 @@ class Inputs:
         platform_path = args.platform or Path(__file__).parent / "configs" / f"{args.core}.json"
         self.files["platform"] = c.file(platform_path)
         self.platform = Platform.load(args.core, self.files["platform"].copy)
+        from .custom import capture_extensions
+        self.platform.reference_extensions = capture_extensions(
+            self.platform.reference_extensions, c, platform_path)
         self.core_run = None
         if args.cosim_action == "check":
             adjacent = Path(args.trace).parent / "result.json"
@@ -90,6 +93,8 @@ class Inputs:
         self.pythonpath = None
         self.default_sail_config = None
         model = getattr(args, "model", "spike") if args.cosim_action in ("check", "live") else "spike"
+        if model == "sail" and self.platform.reference_extensions:
+            raise ValueError("Spike extension libraries are unsupported by Sail")
         if model == "sail":
             self.tool = c.tool(args.sail)
             self.args.sail = str(self.tool.path)
