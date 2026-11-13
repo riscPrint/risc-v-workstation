@@ -25,3 +25,11 @@ rvw sec spec-suite --binding rvw/sec/core.json --template rvw/sec/spec.S --out o
 - `case.S`, `spec.S`, `isolation-*.S`, `campaign.S`: case templates for `python -m rvw.sec.core_adapter`.
 - `campaign.json`, `probe-ct.json`, `model-precheck.json`: campaign, probe-channel and model pre-check manifests.
 - `soc-sec.json` and `ift/auto-policy.json`: a `keystore` SoC region and `mscratch` as automatic IFT secrets.
+
+The PMP-only export binds its two address-translation response metadata bits
+from `pmp-response.json`. `PmpResponseBinding` adds those drivers in the
+example configuration. Both bits are true because this variant has no page
+translation. They do not bypass PMP permissions. Upstream `allowRead`,
+`allowWrite` and `allowExecute` logic is unchanged. The external core source
+is unchanged. Set `RVW_SBT_LOCK=sbt-equiv` and `RVW_VEX_LOCK=vex-equiv` for
+private native exports.

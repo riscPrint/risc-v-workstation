@@ -24,7 +24,7 @@ object SecRtl {
           memoryTranslatorPortConfig = MmuPortConfig(portTlbSize = 4)))
         case _: DBusSimplePlugin => Seq(new DBusSimplePlugin(catchAddressMisaligned = true, catchAccessFault = true,
           memoryTranslatorPortConfig = MmuPortConfig(portTlbSize = 4)),
-          new PmpPluginNapot(regions = 4, granularity = 32, ioRange = _ => False))
+          new PmpResponseBinding)
         case p => Seq(p)
       })
       case other => sys.error(s"unknown sec variant $other")

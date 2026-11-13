@@ -1,5 +1,6 @@
 """Value-sensitive Boolean IFT instrumentation of a Yosys simplemap netlist."""
 import re
+from .unsupported import UnsupportedSecurity, RESET_HINT, check_properties
 
 
 def instrument(design, top, *, state_sources=()):
@@ -19,11 +20,12 @@ def instrument(design, top, *, state_sources=()):
         raise ValueError('simple top identifier required')
     if any(not re.fullmatch(r'[A-Za-z_][A-Za-z0-9_]*', p) or p.endswith('__t') for p in ports):
         raise ValueError('simple port identifiers without __t suffix required')
+    check_properties(mod)
     cells = mod.get('cells', {})
     supported = {'$_NOT_', '$_AND_', '$_OR_', '$_XOR_', '$_MUX_', '$_DFF_P_'}
     bad = sorted({c['type'] for c in cells.values()} - supported)
     if any(kind.startswith('$_DFF_') and kind != '$_DFF_P_' for kind in bad):
-        raise ValueError('unsupported reset or clock in IFT shadow pass: use a public rising-edge clock and SYNC reset in the shared project Elaboration.config; rebuild simulation and SpinalDB before retrying')
+        raise UnsupportedSecurity('unsupported reset or clock in IFT shadow pass. ' + RESET_HINT)
     if bad:
         raise ValueError(f'unmodeled cells: {bad}')
     state = {c['connections']['Q'][0] for c in cells.values() if c['type'] == '$_DFF_P_'}

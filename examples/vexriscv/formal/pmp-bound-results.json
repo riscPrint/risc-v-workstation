@@ -1,0 +1,58 @@
+{
+  "rtl_sha256": "3823477129387a4d9030c3da74d84145434ee46af8e44b54447043b14f35dd99",
+  "fresh_elaboration": true,
+  "scope": "supplied real core RTL export; no source revision certification",
+  "cases": [
+    {
+      "name": "memory-observation",
+      "status": "pass",
+      "proof_kind": "bounded",
+      "depth": 5,
+      "reason": null,
+      "exit": 0
+    },
+    {
+      "name": "initialization",
+      "status": "pass",
+      "proof_kind": "bounded",
+      "depth": 5,
+      "reason": null,
+      "exit": 0
+    },
+    {
+      "name": "ift",
+      "status": "inconclusive",
+      "reason": "proof did not complete; see proof.log",
+      "proof_kind": "bounded",
+      "depth": 5,
+      "exit": 1
+    },
+    {
+      "name": "memory-observation",
+      "status": "fail",
+      "depth": 8,
+      "proof_kind": "bounded",
+      "failure_cycles": [
+        5
+      ]
+    },
+    {
+      "name": "initialization",
+      "status": "fail",
+      "depth": 8,
+      "proof_kind": "bounded",
+      "failure_cycles": [
+        5
+      ]
+    }
+  ],
+  "schema": "rvw.vex-pmp-binding/1",
+  "core_revision": "a62c145aa042a5de874344e0a7683bd7c8c8c870",
+  "binding_file": "../rvw/sec/pmp-response.json",
+  "mapping": "Yosys check -assert accepted the fresh export; no undriven controls",
+  "async_assertion_fixture": {
+    "status": "unsupported",
+    "reason": "asynchronous-reset DUT properties are unsupported by the security transform. Move assertions from an asynchronous-reset process to a rising-edge process guarded by sampled reset. For IFT, use a public rising-edge clock and SYNC reset in the shared project Elaboration.config, then rebuild RTL and SpinalDB. Do not remove the assertions or tie state."
+  },
+  "limits": "Two-copy digital observation contracts only. The depth-8 failures do not isolate a PMP permission violation. No whole-core isolation or IFT pass."
+}

@@ -1,4 +1,5 @@
 """Two-copy digital observation contracts and initial-state independence."""
+from .unsupported import UnsupportedSecurity, check_properties, mapping_failure
 import json
 import math
 from pathlib import Path
@@ -99,8 +100,11 @@ def run(args):
         (out/'map.ys').write_text(script)
         process=run_group(['yosys','-Q','-s','map.ys'],cwd=out,timeout=budget(),capture=True)
         (out/'map.log').write_text((process.stdout or '')+(process.stderr or ''))
-        if process.timed_out or process.returncode:raise ValueError('RTL mapping failed')
+        if process.timed_out or process.returncode:
+            mapping_failure((out/'map.log').read_text())
+            raise ValueError('RTL mapping failed')
         mod=json.loads((out/'mapped.json').read_text())['modules'][plan['top']]
+        check_properties(mod)
         actual={name:{'direction':p['direction'],'width':len(p['bits'])} for name,p in mod['ports'].items()}
         if actual!=plan['ports']:raise ValueError('declared ports differ from RTL')
         forbidden={'$assume','$assert','$cover','$anyseq','$anyconst','$allseq','$allconst','$initstate','$check','$fair','$live'}
@@ -117,6 +121,8 @@ def run(args):
         if proof.get('status') in ('pass','fail'):result['status']=proof['status']
         result['semantics']='equal architectural observation prefixes imply equal simultaneous digital observation samples'
         result['limits']='Declared digital channels and reset only. No physical leakage or whole-core security claim. Architectural observation timing is part of the declared contract.'
+    except UnsupportedSecurity as exc:
+        result.update(status='unsupported', reason=str(exc))
     except (ValueError,KeyError,TypeError,OSError) as exc:
         result['reason']=str(exc)
     (out/'result.json').write_text(json.dumps(result,indent=2)+'\n');print(json.dumps(result))

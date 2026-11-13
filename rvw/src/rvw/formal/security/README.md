@@ -281,3 +281,12 @@ activation. No bus fairness or program constraints are inferred.
 Set `memory_map: true` to lower finite memories with Yosys before instrumentation.
 This preserves every memory word as register state. It is not a memory abstraction.
 Region-specific source alignment is unsupported and causes an error.
+
+Asynchronous-reset DUT assertions are not accepted by the security transform.
+The result is `unsupported` before the solver starts. The diagnostic names
+the unsupported reset form and gives a fix: put assertions in a rising-edge
+process with a sampled-reset guard. For IFT state, select a public rising-edge
+clock and SYNC reset in the shared project elaboration configuration. Rebuild
+RTL and SpinalDB. Do not remove assertions or tie initial state to force a pass.
+The separate `formal bmc --async-reset` environment remains available for
+sampled asynchronous-reset checks outside this transform.
