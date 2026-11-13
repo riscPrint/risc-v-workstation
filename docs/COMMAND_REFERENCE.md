@@ -707,8 +707,8 @@ usage: rvw init [-h] [--isa ISA] [--xlen {32,64}] [--name NAME] [--wire-build]
 ```text
 usage: rvw lint [-h] [--settings SETTINGS] [--benchmark BENCHMARK] [--protocol
     PROTOCOL] [--out OUT] [--depth DEPTH] [--engine ENGINE] [--timeout
-    TIMEOUT] [--simulate SAMPLES] [--seed SEED] [--mode {bmc,prove}] [--json]
-    [--project PROJECT]
+    TIMEOUT] [--simulate SAMPLES] [--seed SEED] [--mode {bmc,prove}] [--emit
+    DIR] [--sarif PATH] [--json] [--project PROJECT]
 ```
 
 ### `rvw mcp`

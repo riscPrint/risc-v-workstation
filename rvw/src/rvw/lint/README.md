@@ -75,15 +75,13 @@ result inconclusive or findings. It never earns signoff.
 Read current SpinalDB data through the captured query reader. Walk data, selector
 and condition dependencies through combinational nodes. Stop at each register.
 Do not cross initial-value edges. Equal clock keys and edges mean the same
-structural clock. Other clocks have an unknown relationship. They are checked
-as possible asynchronous crossings. No frequency relationship is inferred.
+structural clock. Other relationships come from clock inference and
+declarations (below). No frequency relationship is inferred.
 
-A direct one-bit two-register destination chain is a `cdc.sync_candidate`.
-Fanout or intervening logic prevents this match. It remains a warning. A match
-does not prove pulse capture, stable data, physical placement or metastability
-resolution. Multi-bit paths get `cdc.multi_bit`; other paths get
-`cdc.unsynchronized`. Gray and handshake protocols need properties before a
-path can be considered safe. Unknown clock identity gets `cdc.unknown_domain`.
+The crossing classes are below. A synchronizer match does not prove pulse
+capture, stable data, physical placement or metastability resolution. Gray and
+handshake protocols need properties before a path can be considered safe.
+Unknown clock identity gets `cdc.unknown_domain`.
 
 The graph has no physical delay model. Primary input clock intent, memory data
 paths, pulse loss, metastability perturbation and protocol properties remain
@@ -91,6 +89,100 @@ unproved. Bounded FIFO topology and reconvergence checks are described below.
 A single-clock design can report `no_crossings_found` for register paths. This
 is not a multi-clock validation result. Non-Spinal RTL needs a domain-aware
 importer. The optional Yosys backend checks native connectivity. It does not infer clock domains.
+
+## RTL lint rules
+
+Select backend `rules` to run lint rules on the design database (`db`). These
+rules read the elaborated graph, so they also work on `rvw query build-hdl`
+databases. Defaults:
+
+| Rule | Severity | Check |
+|---|---|---|
+| `lint.comb_loop` | error | Cycle through wires (strongly connected components); `members` lists the loop. |
+| `lint.multiple_drivers` | error | Data assignments to one signal from more than one component. |
+| `lint.input_driven` | error | A toplevel input is assigned inside the design. |
+| `lint.latch` | error | A wire is assigned only under conditions. |
+| `lint.width_truncation` / `lint.width_extension` | warning / info | A typed `Resize` key changes the width. |
+| `lint.unused` | info | An internal signal without loads (Spinal prunes most; pruned signals are skipped). |
+| `lint.unconnected_output` | warning | A child output port without loads. |
+| `lint.undriven` | error | A wire without assignments or inputs, not a toplevel input, clock-domain net or blackbox output. |
+| `lint.constant_register` | info | A register that is never assigned after reset. |
+| `lint.fsm_unreachable` | warning | An enum state that no assignment in the state register's same-type cone writes. The `fsm` list keeps `checked` or `inconclusive` per register. |
+| `lint.no_reset` | info | A register without `init` in a clock domain with a reset. |
+| `lint.clock_as_data` | error | A clock net reaches register data or control logic. |
+| `lint.naming` | warning | A Verilog/SystemVerilog keyword as a name, or a mismatch with a configured pattern. |
+| `lint.max_fanout` | warning | Fan-out above `limit` (default 512). |
+
+Settings `rules` change severities (`off`, `info`, `warning`, `error`) and
+parameters: `{"lint.no_reset": "off", "lint.max_fanout": {"limit": 64},
+"lint.naming": {"ports": "[a-z][A-Za-z0-9_]*", "registers": "...",
+"signals": "..."}}`. Unknown rules or bad patterns are input errors. Exact-ID
+waivers apply as for the other backends. The `fsm_unreachable` check finds
+states that are never written. It does not prove that written states are
+reachable. Blackbox edges make the backend `inconclusive`.
+
+`rvw lint --sarif PATH` also writes all findings (all backends and stale
+waivers) as SARIF 2.1.0. Each result keeps the rule, level (`info` becomes
+`note`), file and line, the endpoint as a logical location, the finding `id` as
+fingerprint `rvw/finding-id`, and a suppression with the reason for each
+waived finding.
+
+## Clock inference and synchronizer classes
+
+`cdc.py` infers each clock domain's clock from its driver in the graph:
+`primary` (a toplevel input, through wires), `divided` (driven by a register;
+`divide_by: 2` for a toggling one-bit register), `gated` (a clock combined with
+enables), `generated` (a blackbox output, for example a PLL) or `unknown`.
+`master` is the primary input behind a divided or gated clock. Two clock
+records are `same` (equal key and edge), `related` (same master),
+`asynchronous` (different masters), `declared_synchronous` or
+`declared_asynchronous` (from `intent.clocks`) or `unknown`. Each
+`intent.clocks` row has `clocks` (two or more clock paths), `relationship` and
+`reason`. Unknown clock paths are input errors.
+
+Each register path between different clock records gets one class in
+`crossings[].kind`:
+
+| Kind | Rule | Structure |
+|---|---|---|
+| `synchronous_related` | `cdc.related_clock_crossing` (info) | Related or declared synchronous clocks. Timing analysis owns the path. |
+| `glitch_before_sync` | `cdc.comb_before_sync` (error) | Combinational logic with more than one input before a synchronizer (two or more stages, or a `crossClockDomain` tag). |
+| `first_stage_fanout` | `cdc.sync_stage_fanout` (error) | The first stage drives more than the next stage. |
+| `sync_2ff`, `sync_3ff`, ... | `cdc.sync_candidate` | One-bit chain of 2 to 6 stages through single-input wires, without fan-out. |
+| `gray_sync` | `cdc.gray_candidate` (info) | Multi-bit chain whose source register is assigned `binary ^ (binary >> 1)`. Emits a `gray_code` obligation. |
+| `qualified_data` | `cdc.qualified_data_candidate` (info) | Multi-bit data sampled under the output of a one-bit synchronizer (mux or enable). Emits a `data_stable` obligation. |
+| `multi_bit` | `cdc.multi_bit` | Other multi-bit paths, including `BufferCC` on a non-Gray bus. |
+| `unsynchronized` | `cdc.unsynchronized` | Other one-bit paths. |
+
+Spinal library structures are recognized from `components.class_name`:
+`BufferCC`, `StreamCCByToggle`, `FlowCCByToggle`, `PulseCCByToggle`,
+`StreamFifoCC`, `DataCC` and `ResetCtrl`. The crossing records the library
+component in `library`. A memory written and read in unrelated clocks gives
+`cdc.async_fifo_candidate` (info) inside `StreamFifoCC`, else
+`cdc.memory_crossing`. `cdc.fanout_before_sync` marks one source that crosses
+into several registers of one clock. `cdc.hierarchy` groups findings by the
+endpoint's component path. Existing exact-ID waivers apply to all these rules.
+
+## Functional CDC step
+
+`rvw lint --settings lint.json --emit DIR` writes the protocol assertions for
+the obligations into a new or empty directory:
+
+- `cdc_obligations.json` (`rvw.cdc-obligations/1`): each obligation with
+  `kind`, `signal`, `width`, `clock_domain`, `destination` and `bind` (Verilog
+  module and local port names) or `unbound_reason`.
+- `cdc_checks.sv`: checker modules `rvw_cdc_gray` (at most one bit changes per
+  source clock) and `rvw_cdc_stable` (data is stable while its qualifier stays
+  asserted), and one `bind` line per bound obligation. Use it with Verilator
+  `--assert` or another simulator with `bind`.
+- `checked/`: copies of the settings `files` with the checker instances inside
+  the target modules, and `rvw_cdc_checkers.sv`. Yosys does not elaborate
+  `bind`; give these files to `rvw formal bmc|prove`.
+
+The checkers use one clock (the source clock) and immediate assertions. The
+`data_stable` checker uses level semantics. A toggle protocol needs its own
+monitor. Emission is never a pass; the obligations stay unproved until a formal
+or simulation run checks them.
 
 ## Reset-domain crossings
 
@@ -171,6 +263,11 @@ The same entry emits `reset-shared`, `reset-independent` and `reset-async`.
 The shared synchronous reset has no RDC candidate. Independent reset controls
 must report `rdc.independent_reset`. Asynchronous controls must report
 `rdc.async_assert_crossing` and `rdc.async_release_unsynchronized`.
+
+`Test/runMain spinaldb.LintLibraryFixtures DIR` adds `library`: BufferCC,
+StreamFifoCC, PulseCCByToggle, a `ResetCtrl` reset synchronizer and a divided
+clock. The extracted test checks their classes, the two bound Gray obligations
+and the reset release states.
 
 Run the extracted-design assertions from the workstation root:
 

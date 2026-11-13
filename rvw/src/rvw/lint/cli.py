@@ -10,6 +10,7 @@ from rvw.query.db import run_on, QueryError
 from . import native, structural
 
 
+BACKENDS = ('verilator', 'verible', 'yosys', 'structural', 'rules')
 BACKEND_OF = {'verilator': 'verilator', 'verible': 'verible', 'yosys': 'yosys', 'cdc': 'structural',
               'rdc': 'structural', 'lint': 'rules', 'sdc': 'sdc'}
 
@@ -26,6 +27,8 @@ def register(sub):
     p.add_argument('--simulate', type=int, default=0, metavar='SAMPLES')
     p.add_argument('--seed', type=int, default=1)
     p.add_argument('--mode', choices=['bmc', 'prove'], default='bmc')
+    p.add_argument('--emit', metavar='DIR', help='write CDC protocol assertions and obligations to a new directory')
+    p.add_argument('--sarif', metavar='PATH', help='also write the findings as SARIF 2.1.0')
     p.add_argument('--json', action='store_true')
     p.set_defaults(func=run)
 
@@ -34,7 +37,7 @@ def load(path):
     path = Path(path).resolve()
     data = path.read_bytes()
     cfg = json.loads(data)
-    allowed = {'schema', 'config', 'top', 'files', 'db', 'backends', 'waivers', 'timeout_s', 'intent'}
+    allowed = {'schema', 'config', 'top', 'files', 'db', 'backends', 'waivers', 'timeout_s', 'intent', 'rules', 'sdc'}
     if not isinstance(cfg, dict) or set(cfg) - allowed or cfg.get('schema') != 'rvw.lint-settings/1':
         raise ValueError('invalid lint settings schema or keys')
     for key in ('config', 'top'):
@@ -43,8 +46,8 @@ def load(path):
     backends = cfg.get('backends', ['verilator', 'verible', 'structural'])
     if (not isinstance(backends, list) or not backends or
             not all(isinstance(b, str) for b in backends) or len(set(backends)) != len(backends)
-            or set(backends) - {'verilator', 'verible', 'yosys', 'structural'}):
-        raise ValueError('backends must select verilator, verible, yosys or structural')
+            or set(backends) - set(BACKENDS)):
+        raise ValueError('backends must select ' + ', '.join(BACKENDS))
     files = cfg.get('files', [])
     if not isinstance(files, list) or not all(isinstance(f, str) and f for f in files):
         raise ValueError('files must be a list of paths')
@@ -54,8 +57,10 @@ def load(path):
             raise ValueError(f'RTL file not found: {file}')
     if set(backends) & {'verilator', 'verible', 'yosys'} and not files:
         raise ValueError('native lint needs files')
-    if 'structural' in backends and not isinstance(cfg.get('db'), str):
-        raise ValueError('structural analysis needs db')
+    if set(backends) & {'structural', 'rules', 'sdc'} and not isinstance(cfg.get('db'), str):
+        raise ValueError('structural, rules and sdc analysis need db')
+    from . import rules
+    rules.settings(cfg.get('rules'))
     if cfg.get('db'):
         cfg['db'] = str((path.parent / cfg['db']).resolve())
     timeout = cfg.get('timeout_s', 120)
@@ -78,7 +83,7 @@ def load(path):
 def report(path):
     cfg, identity = load(path)
     runs = {}
-    for backend in ('verilator', 'verible', 'yosys', 'structural'):
+    for backend in BACKENDS:
         if backend not in cfg['backends']:
             runs[backend] = dict(status='not_run', reason='not selected', findings=[])
         elif backend == 'structural':
@@ -89,6 +94,9 @@ def report(path):
                     raise ValueError('settings top does not match database toplevel')
                 return structural.analyze(db, cfg.get('intent', {}))
             runs[backend] = run_on(cfg['db'], checked)
+        elif backend == 'rules':
+            from . import rules
+            runs[backend] = run_on(cfg['db'], lambda db: rules.analyze(db, cfg.get('rules')))
         elif backend == 'yosys':
             from . import yosys
             if not re.fullmatch(r'[A-Za-z_][A-Za-z0-9_]*', cfg['top']):
@@ -135,6 +143,8 @@ def run(args):
     try:
         if (args.protocol or args.benchmark) and getattr(args, 'project', None):
             load_project(args.project)
+        if (args.protocol or args.benchmark) and (getattr(args, 'emit', None) or getattr(args, 'sarif', None)):
+            raise ValueError('--emit and --sarif need --settings or a project, not --protocol or --benchmark')
         if not (args.protocol or args.benchmark) and (args.out or args.simulate):
             raise ValueError('--out and --simulate need --protocol or --benchmark')
         if args.benchmark:
@@ -156,6 +166,12 @@ def run(args):
         if not path:
             raise ValueError('select --settings or a project with lint.settings')
         result = report(path)
+        if getattr(args, 'sarif', None):
+            from . import sarif
+            result['sarif'] = sarif.write(result, args.sarif)
+        if getattr(args, 'emit', None):
+            from . import emit
+            result['emitted'] = emit.write(result, [i['path'] for i in result['inputs']], args.emit)
         code = 1 if result['status'] == 'findings' else (3 if result['status'] == 'inconclusive' else 0)
     except (ValueError, OSError, QueryError, ProjectError, sqlite3.DatabaseError) as exc:
         result, code = dict(status='error', error=str(exc)), 2
