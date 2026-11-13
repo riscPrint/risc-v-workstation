@@ -2447,11 +2447,19 @@ Arguments: `job_id` (required), `wait_s`.
 
 Starts a background job: no.
 
+### `lint_emit`
+
+Run lint and write CDC protocol assertions (checker modules, bind lines, checked RTL copies), the obligation list and generated SDC to a new directory. Emitted checks are obligations, not results.
+
+Arguments: `settings` (required), `out` (required), `sarif`.
+
+Starts a background job: yes.
+
 ### `lint_report`
 
-Run native lint and structural CDC/RDC. Retain waivers and unrun checks. No signoff.
+Run native lint, design-database lint rules, structural CDC/RDC and SDC intent. Retain waivers and unrun checks. Optional SARIF path. No signoff.
 
-Arguments: `settings` (required).
+Arguments: `settings` (required), `sarif`.
 
 Starts a background job: yes.
 

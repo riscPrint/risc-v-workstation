@@ -135,3 +135,19 @@ def test_backend_waiver_and_sarif(tmp_path, capsys):
     p.write_text(json.dumps(cfg))
     with pytest.raises(ValueError, match='unknown lint rule'):
         report(p)
+
+
+def test_mcp_emit_tool(tmp_path):
+    from rvw.lint.mcp_tools import mcp_tools
+    from rvw.lint.cli import report_outputs
+    tools = {t.name: t for t in mcp_tools()}
+    assert set(tools) == {'lint_report', 'lint_emit'}
+    assert tools['lint_emit'].input_schema['required'] == ['settings', 'out']
+    b = base(tmp_path)
+    db = b.done()
+    p = tmp_path / 'lint.json'
+    p.write_text(json.dumps(dict(schema='rvw.lint-settings/1', config='c', top='Top', db=str(db),
+                                 backends=['rules', 'structural'])))
+    r = report_outputs(str(p), emit_dir=str(tmp_path / 'e'), sarif_path=str(tmp_path / 'x.sarif'))
+    assert (tmp_path / 'e/cdc_obligations.json').is_file() and (tmp_path / 'x.sarif').is_file()
+    assert r['emitted']['obligations'] == 0

@@ -84,6 +84,15 @@ def analyze(db, intent=None):
                                         relationship='independent_or_unknown'))
     details = depth.analyze(c, regs, signals, domains, incoming, outgoing, crossings,
                             reset_crossings, emit, {} if intent is None else intent)
+    # A reset merge is covered when every cross-reset path into it is declared protected.
+    rows = {}
+    for row in reset_report['crossings']:
+        rows.setdefault(row['destination'], []).append(row['status'])
+    covered = {d for d, st in rows.items() if st and all(x in ('protected', 'no_hazard') for x in st)
+               and 'protected' in st}
+    for f in [f for f in findings if f['rule'] == 'rdc.reconvergence' and f['endpoint'] in covered]:
+        findings.remove(f)
+        reset_report.setdefault('protected_merges', []).append(f['endpoint'])
     clock_report['hierarchy'] = cdc.hierarchy(design, findings)
     warnings = [dict(r) for r in c.execute('SELECT * FROM warnings')]
     unknown_inputs = [s['path'] for s in signals.values() if s['direction'] == 'in' and not s['clock_role']]

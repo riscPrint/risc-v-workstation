@@ -147,6 +147,18 @@ def report(path):
                 status=status, active_findings=active, backends=runs, waivers=waivers, waiver_findings=stale)
 
 
+def report_outputs(path, emit_dir=None, sarif_path=None):
+    """The report plus optional SARIF and emitted checks/SDC; used by the MCP tools."""
+    result = report(path)
+    if sarif_path:
+        from . import sarif
+        result['sarif'] = sarif.write(result, sarif_path)
+    if emit_dir:
+        from . import emit
+        result['emitted'] = emit.write(result, [i['path'] for i in result['inputs']], emit_dir)
+    return result
+
+
 def run(args):
     try:
         if (args.protocol or args.benchmark) and getattr(args, 'project', None):
@@ -173,13 +185,7 @@ def run(args):
             load_project(args.project)  # invalid explicit selections never fall back
         if not path:
             raise ValueError('select --settings or a project with lint.settings')
-        result = report(path)
-        if getattr(args, 'sarif', None):
-            from . import sarif
-            result['sarif'] = sarif.write(result, args.sarif)
-        if getattr(args, 'emit', None):
-            from . import emit
-            result['emitted'] = emit.write(result, [i['path'] for i in result['inputs']], args.emit)
+        result = report_outputs(path, getattr(args, 'emit', None), getattr(args, 'sarif', None))
         code = 1 if result['status'] == 'findings' else (3 if result['status'] == 'inconclusive' else 0)
     except (ValueError, OSError, QueryError, ProjectError, sqlite3.DatabaseError) as exc:
         result, code = dict(status='error', error=str(exc)), 2
