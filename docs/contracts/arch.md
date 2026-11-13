@@ -493,3 +493,13 @@ output directory holds `rvw.ooo-wrong-path/1`. It records input hashes, native
 source and library hashes, capture coverage, both timing runs and their gap.
 The gap compares model policies. It is not an RTL error bound. Dynamic branch
 predictors, entropy, custom extensions and multi-hart replay are refused.
+
+## Native C2 instruction decoding
+
+Own-model run reports add `c2_decoder`: `native-imc`, `python-template`,
+or `python`. The native IMC decoder packs supported instruction words without
+new-word Python callbacks. Other classes use the existing template decoder.
+Old libraries keep the callback path. The shared C2 validator remains the
+fallback for unsupported syntax. Decoder source and loaded library bytes
+remain part of engine identity. This field does not validate architectural
+execution or establish timing accuracy.

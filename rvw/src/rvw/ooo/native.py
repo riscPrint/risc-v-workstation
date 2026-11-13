@@ -36,7 +36,7 @@ def build(path):
     compiler = os.environ.get('CC', 'cc')
     subprocess.run([compiler, '-O3', '-std=c11', '-fPIC',
                     '-dynamiclib' if sys.platform == 'darwin' else '-shared',
-                    str(source), str(source.with_name('native_c2.c')), '-o', str(path)], check=True, timeout=120)
+                    str(source), str(source.with_name('native_c2.c')), str(source.with_name('native_decode.c')), '-o', str(path)], check=True, timeout=120)
     return path
 
 
@@ -51,8 +51,9 @@ def supported(config):
 
 
 class Packed:
-    def __init__(self, data, info, count):
+    def __init__(self, data, info, count, decoder="python-template"):
         self.data, self.info, self.count = data, info, count
+        self.decoder = decoder
 
     def __len__(self):
         return self.count
@@ -82,6 +83,15 @@ def parse_c2(data, config):
     packed, info = (Op * capacity)(), (ct.c_uint64 * (capacity*6))()
     callback_type = ct.CFUNCTYPE(ct.c_int, ct.c_uint32, ct.c_int, ct.POINTER(Op), ct.POINTER(ct.c_uint64))
     branch = any(k in config.components for k in ('branch', 'btb', 'ras', 'indirect'))
+    if hasattr(lib, 'rvw_ooo_parse_c2_native'):
+        fn = lib.rvw_ooo_parse_c2_native
+        fn.argtypes = [ct.c_char_p, ct.c_size_t, ct.c_int, ct.POINTER(Op), ct.POINTER(ct.c_uint64),
+                       ct.c_int64, ct.POINTER(ct.c_int64), ct.c_int]
+        fn.restype = ct.c_int64
+        latencies = (ct.c_int64 * len(KINDS))(*(config.latencies.get(k,0) for k in KINDS))
+        count = fn(data, len(data), h['xlen'], packed, info, capacity, latencies, int(branch))
+        if count > 0:
+            return Packed(packed, info, count, decoder='native-imc')
     def template(word, rd, out, meta):
         d = decode(word, h['xlen'])
         if d.cls not in KINDS or d.cls not in config.latencies or d.dest_bank != 'x' or any(b != 'x' for b, _ in d.sources):
