@@ -405,7 +405,12 @@ class _Writer:
                 owner = (visible or aliases or [None])[0]
                 label = f'$bit${b}'
                 if owner is not None and f'{owner}[0]' not in m['netnames']:
-                    label = f"{owner}[{m['netnames'][owner]['bits'].index(b)}]"
+                    net = m['netnames'][owner]
+                    index = net['bits'].index(b)
+                    if net.get('upto'):
+                        index = len(net['bits']) - 1 - index
+                    index += net.get('offset', 0)
+                    label = f'{owner}[{index}]'
                 bitids[b] = self.signal(cid,prefix+label,label,generated=True,
                                         spinal=_dotted(prefix+label))
         for name, net in m['netnames'].items():
