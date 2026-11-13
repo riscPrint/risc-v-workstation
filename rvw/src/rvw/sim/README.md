@@ -14,6 +14,11 @@ until they have a profile and conformance tests.
 See [architectural injection](INJECTION.md) for project state maps, readback,
 raw FP values and the RV32IM bootstrap API. This API is separate from live snapshots.
 
+Use `rvw sim reverse-step adapter.json --snapshot A.json --snapshot B.json
+--current 500 --target 450 --max-seconds 30 --out restored.json` for checkpoint
+replay. MCP: `sim_reverse_step`. See [reverse execution](REVERSE.md) for port
+requirements, history limits and the current native qualification limit.
+
 ## Cocotb component suites
 
 Install the optional dependency with `cd rvw && uv pip install -e '.[cocotb]'`.

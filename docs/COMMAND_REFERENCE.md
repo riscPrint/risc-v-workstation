@@ -1096,7 +1096,7 @@ usage: rvw regress [-h] [--project PROJECT]
 
 ```text
 usage: rvw regress sim [-h] [--project PROJECT]
-    {checkpoint,resume,suffix-check} ...
+    {checkpoint,resume,reverse-step,suffix-check} ...
 ```
 
 ### `rvw regress sim checkpoint`
@@ -1111,6 +1111,14 @@ usage: rvw regress sim checkpoint [-h] (--cycle CYCLE | --instruction
 ```text
 usage: rvw regress sim resume [-h] --out OUT [--project PROJECT] manifest
     snapshot
+```
+
+### `rvw regress sim reverse-step`
+
+```text
+usage: rvw regress sim reverse-step [-h] --snapshot SNAPSHOT --current CURRENT
+    --target TARGET [--max-seconds MAX_SECONDS] --out OUT [--project PROJECT]
+    manifest
 ```
 
 ### `rvw regress sim suffix-check`
@@ -1340,7 +1348,8 @@ usage: rvw regress list [-h] [--core CORE] [--suite SUITE] [--json] [--project
 ### `rvw sim`
 
 ```text
-usage: rvw sim [-h] [--project PROJECT] {checkpoint,resume,suffix-check} ...
+usage: rvw sim [-h] [--project PROJECT]
+    {checkpoint,resume,reverse-step,suffix-check} ...
 ```
 
 ### `rvw sim checkpoint`
@@ -1354,6 +1363,14 @@ usage: rvw sim checkpoint [-h] (--cycle CYCLE | --instruction INSTRUCTION)
 
 ```text
 usage: rvw sim resume [-h] --out OUT [--project PROJECT] manifest snapshot
+```
+
+### `rvw sim reverse-step`
+
+```text
+usage: rvw sim reverse-step [-h] --snapshot SNAPSHOT --current CURRENT
+    --target TARGET [--max-seconds MAX_SECONDS] --out OUT [--project PROJECT]
+    manifest
 ```
 
 ### `rvw sim suffix-check`
@@ -2533,6 +2550,14 @@ Restore a native snapshot into a fresh project adapter and finish its C1/C2 run.
 Arguments: `manifest` (required), `snapshot` (required), `out` (required).
 
 Starts a background job: no.
+
+### `sim_reverse_step`
+
+Restore the nearest valid native checkpoint and execute forward to an earlier instruction. Requires a time-bounded replay port. Reports available history.
+
+Arguments: `manifest` (required), `snapshots` (required), `out` (required), `current` (required), `target` (required), `max_seconds`.
+
+Starts a background job: yes.
 
 ### `sim_suffix_check`
 
