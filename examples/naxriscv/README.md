@@ -442,7 +442,7 @@ rvw perf rvw/out/pipeline/pipeline.log --result rvw/out/pipeline/result.json --q
 
 Open the log in Konata, or drag it into the Konata viewer. The native C1
 `--konata` option remains refused; this path converts the probe stream.
-[`rvw/probes/add.kanata`](rvw/probes/add.kanata) is a measured sample.
+`rvw/probes/add.kanata` (historical counts and regeneration command in the example README) is a measured sample.
 It contains 718 instruction lifetimes, 501 retirements and 210 flushed
 instructions. All 501 retired PCs and cycles match C2. Spike matches the 501
 instructions and 3 trap events. Seven instructions remain open at `tohost`.
@@ -568,7 +568,7 @@ It used one stable new identity for all 30 runs. Five first-run receipts
 record native cache misses. The owner authorized the fifth build after
 the original four-build limit was reached. The other 25 runs hit the cache.
 
-[The retained matrix](rvw/arch/matrix-results.json) has 30 passing runs and
+The retained matrix (historical counts and regeneration command in the example README) has 30 passing runs and
 30 complete Spike matches. Each uses seed 1 and zero added memory wait.
 Counter synchronization remains explicit in the Spike receipts. The full
 C1/C2/probe captures stay under `$RUN_ROOT/<variant>/<program>`; the retained
@@ -733,7 +733,7 @@ The final structural correction improves both held-out set means.
 Individual regressions remain: revised memcpy error is -8.15%, against
 -7.16% before. Towers remains +20.34%.
 
-[Calibration inputs, candidates and all sample errors](rvw/arch/calibration-results.json)
+Calibration inputs, candidates and all sample errors (historical counts and regeneration command in the example README)
 retain these distinctions. The branch-count event family matches retired
 counts. It does not validate predictor miss timing. Event coverage remains
 insufficient for a fidelity verdict.
@@ -854,3 +854,15 @@ rejected LSU attempts. Zero activation is not exercised retry behavior.
 Only the NaxRiscv cache cause activates in these two short runs. Other
 causes still need directed captures. Completion spans include queue and
 service time. They are not isolated replay penalties.
+
+Historical `rvw/arch/calibration-results.json`: {"stages":{"entries":5},"selection":{"id":4,"score":0.053335279427832255},"candidates":{"records":6},"selection_basis":"base training only: median, qsort, multiply; IPC and branch-count objective","limits":{"records":5}}.
+Raw records are no longer tracked. Regenerate outside the repository:
+`python3 rvw/arch/calibrate.py rvw/out/probe RUN_ROOT`. Use the pinned inputs and options from [PR #1212](https://github.com/riscPrint/risc-v-workstation/pull/1212).
+
+Historical `rvw/arch/matrix-results.json`: {"samples":{"records":30,"statuses":{"pass":30}},"variants":{"entries":5},"limits":{"records":5}}.
+Raw records are no longer tracked. Regenerate outside the repository:
+`python3 rvw/arch/retain-matrix.py RUN_ROOT OUTPUT`. Use the pinned inputs and options from [PR #1206](https://github.com/riscPrint/risc-v-workstation/pull/1206).
+
+Historical `rvw/probes/add.kanata`: {}.
+Raw records are no longer tracked. Regenerate outside the repository:
+`rvw probes convert rvw/out/pipeline/probe-events.jsonl --to kanata --out RUN_ROOT/add.kanata`. Use the pinned inputs and options from [PR #1127](https://github.com/riscPrint/risc-v-workstation/pull/1127).

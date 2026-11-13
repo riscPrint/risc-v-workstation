@@ -17,7 +17,7 @@ Six closed points have Scala source links. The full native denominator stays
 32703. Only 586 points have source links.
 The rest remain unmapped. No Scala statement hit is inferred.
 
-[The source report](source-report.json) keeps line/toggle/branch metrics and
+The source report (historical counts and regeneration command in the example README) keeps line/toggle/branch metrics and
 functional groups separate. Functional links to the ALU source line are
 project declarations. They are not measured statement attribution.
 The report emits native `code_targets` and semantic `functional_targets`.
@@ -47,3 +47,7 @@ These results do not grant C4 acceptance or whole-core qualification.
 A fresh guided replay matched all 321 instructions against Spike.
 It closed 546 initial native holes. No masks or synchronization
 were used. The replay uses the characterized workload and seed.
+
+Historical `source-report.json`: {"status":"reported","point_universe":"46ff39b8fe06141c5ac512acfe278769a49f5e825086e5a7a2cda6b1348ce7b6","lines":{"records":356},"code_targets":{"records":5058},"functional_targets":{"records":2},"unmapped_native_points":32117,"unmapped_functional_groups":{"records":239},"native_source_states":{"entries":1},"notes":{"records":4}}.
+Raw records are no longer tracked. Regenerate outside the repository:
+`rvw cov source-report --database code.json --functional functional.json --bindings source-bindings.json --json`. Use the pinned inputs and options from [PR #1022](https://github.com/riscPrint/risc-v-workstation/pull/1022).

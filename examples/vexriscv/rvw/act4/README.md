@@ -71,3 +71,7 @@ read/write register in `CsrPlugin.scala`. Core sources remain unchanged.
 See [the six MEPC decisions](MEPC_DECISIONS.md) for minimal programs,
 strict Spike first differences and comparison with the formal ISA and
 interrupt findings. All six remain core readback differences.
+
+Historical `observations.json`: {"date":"2026-11-13","evidence":"native instruction-only ACT4 with reduced CSR boot; not Sm compatibility or certification","build_inputs":{"entries":4},"tools":{"entries":2},"reference_policy":"strict; no synchronization or masks","counts":{"entries":5},"tests":{"records":58},"baseline":{"entries":2},"minimal_reproduction_counts":{"fail":2},"minimal_reproductions":{"records":4},"workstation_dirty":true,"core_dirty":true,"core_fingerprint":"ed26b3bf284aaf5157f3b9c2807e8471887ea7b4ff048e9cfbe3013cf3136191","tools_key":"fb39d5a7314b62e7c95cf7da0943d8169f24f7c9e0f18d002abbc1cf6a2f139d"}.
+Raw records are no longer tracked. Regenerate outside the repository:
+`rvw regress run --suite act4 --rvfi-trace --out RUN_ROOT`. Use the pinned inputs and options from [PR #1100](https://github.com/riscPrint/risc-v-workstation/pull/1100).

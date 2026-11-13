@@ -353,7 +353,7 @@ records, 123 accepted MMIO accesses, 30 claims, eight completions, 27 source
 changes, 27 served acknowledgements and six interrupt-taken boundaries.
 The six delivery programs each take one interrupt.
 
-[The retained evidence](plic-results.json) gives every ordered input/device
+The retained evidence (historical counts and regeneration command in the example README) gives every ordered input/device
 record with cycle and retirement boundary, plus ELF, RTL and trace hashes.
 A missing acknowledgement gives a reference load mismatch. A wrong claim
 value and a wrong pin level each fail the independent device check. These
@@ -402,7 +402,7 @@ scenarios of the shared description; the satp-mode subset is in parentheses.
 The RV32 PMP run generated 394 applicable programs. All 394 passed C1 and
 matched Spike in strict replay, with zero synchronizations. The completed RTL
 capture was retained from the interrupted worker. The resumed comparison used
-a rebuilt Spike shim. See [the per-program hashes and results](pmp32-results.json).
+a rebuilt Spike shim. See the per-program hashes and results (historical counts and regeneration command in the example README).
 This covers standard PMP accesses, locks, priority and MPRV. It does not cover
 page-table accesses by the walker.
 
@@ -574,7 +574,7 @@ operand, native-counter and probe evidence. Run it from the workstation root:
 rvw plan status examples/vexiiriscv/verification-plan.json --json
 ```
 
-[The saved status](verification-status.json) comes from real native results.
+The saved status (historical counts and regeneration command in the example README) comes from real native results.
 It retains unobserved add classes, native counter holes, missing retirement
 pairs. It also records the tested instruction injection hook. Source path aliases are
 for display. Raw runs remain in the worker checkout. Missing raw runs on a
@@ -856,3 +856,19 @@ The three IRQ differences require `--allow-sync irq`. They are not strict
 matches. [Fresh strict IRQ replay](rvw/rv64/irq-replay.json) retains the same
 three differences. [Fresh machine ordering](rvw/rv64/ordering-results.json)
 has four strict matches and the excluded AMO-fault failure described above.
+
+Historical `plic-results.json`: {"seed":1,"memory_latency":0,"counts":{"generated":12,"applicable":12,"run":12,"c1_pass":12,"c1_fail":0,"spike_match":12,"finding":0,"inconclusive":0},"instructions":1424,"event_counts":{"pins":36,"mmio":123,"source":27,"ack":27,"claim":30,"complete":8,"taken":6},"rows":{"records":12},"negative_controls":{"records":3,"statuses":{"mismatch":1,"error":2}},"reference":{"shim_version":8},"isa":"rv64ima_zicsr_zifencei"}.
+Raw records are no longer tracked. Regenerate outside the repository:
+`rvw regress run --suite plic --rvfi-trace --out RUN_ROOT; rvw regress cosim RUN_ROOT`. Use the pinned inputs and options from [PR #1147](https://github.com/riscPrint/risc-v-workstation/pull/1147).
+
+Historical `pmp32-results.json`: {"scope":"VexiiRiscv RV32 supervisor PMP programs on RTL; strict Spike replay","date":"2026-11-13","core_dirty":false,"profile":"rv32imasu","seed":1,"mem_latency":0,"generator_config":{"entries":4},"platform":"rvw/platform32.json","counts":{"generated":394,"applicable":394,"run":394,"c1_pass":394,"c1_fail":0,"spike_match":394,"finding":0,"inconclusive":0},"allow_sync":{"records":0},"compared_instructions":26798,"rows":{"records":394}}.
+Raw records are no longer tracked. Regenerate outside the repository:
+`rvw regress run --suite pmp --rvfi-trace --out RUN_ROOT; rvw regress cosim RUN_ROOT`. Use the pinned inputs and options from [PR #1111](https://github.com/riscPrint/risc-v-workstation/pull/1111).
+
+Run-output JSON files with `summary_only` contain historical counts only.
+They are not inputs to `rvw plan`, `rvw evidence`, or coverage merging.
+Regenerate full records outside the repository before using those tools.
+
+Historical `verification-status.json`: {"status":"reported","features":{"records":7,"statuses":{"reported_closed":4,"open":3}},"notes":{"records":2},"unassigned_requirements":{"records":0},"summary":{"features":7,"reported_closed":4,"open":3,"holes":5082,"unassigned_requirements":0}}.
+Raw records are no longer tracked. Regenerate outside the repository:
+`rvw plan status examples/vexiiriscv/verification-plan.json --json`. Use the pinned inputs and options from [PR #1145](https://github.com/riscPrint/risc-v-workstation/pull/1145).

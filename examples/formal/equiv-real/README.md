@@ -160,3 +160,11 @@ A negative control flips bit zero of each valid payload in the vector revision.
 The same revision flow returned `not_equivalent` in 47.645 seconds. The other
 four interface partitions still passed. This counterexample is an intentional
 wrapper defect. It is not a fault in the library FIFO.
+
+Historical `private-lock-results.json`: {"attempts":{"records":3,"statuses":{"equivalent":1,"inconclusive":2}},"divider_proof":{"solver_exit":0,"wall_s":138.503},"sqrt_retry_proof":{"solver_exit":124,"wall_s":240.151}}.
+Raw records are no longer tracked. Regenerate outside the repository:
+`rvw/.venv/bin/python examples/formal/equiv-real/run.py --cases CASES --out RUN_ROOT`. Use the pinned inputs and options from [PR #1000](https://github.com/riscPrint/risc-v-workstation/pull/1000).
+
+Historical `two-bit-results.json`: {"sqrt_mantissa_width":2,"attempts":{"records":1,"statuses":{"equivalent":1}},"proof":{"solver_exit":0,"wall_s":93.135}}.
+Raw records are no longer tracked. Regenerate outside the repository:
+`rvw/.venv/bin/python examples/formal/equiv-real/run.py --cases CASES --out RUN_ROOT`. Use the pinned inputs and options from [PR #1086](https://github.com/riscPrint/risc-v-workstation/pull/1086).

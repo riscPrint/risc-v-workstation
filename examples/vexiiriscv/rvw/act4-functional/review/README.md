@@ -183,3 +183,15 @@ The JSON files retain every bin and hole, the pinned opcode inputs and
 raw trace hashes. The corpus ledger retains each C1 and qualification
 decision. Default domains include unsupported or unreachable cases. A hole
 does not by itself prove a core defect. A hit does not qualify an extension.
+
+Historical `corpus.json`: {"scope":"ACT4 plus riscv-tests plus four generated random privilege programs and 394 PMP programs; other generated families are not included","observed":717,"qualified":447}.
+Raw records are no longer tracked. Regenerate outside the repository:
+`rvw cov functional TRACE_PATHS --platform PLATFORM --json`. Use the pinned inputs and options from [PR #1198](https://github.com/riscPrint/risc-v-workstation/pull/1198).
+
+Historical `observed.json`: {"groups":{"entries":316},"notes":{"records":8},"retired":369607,"traces":{"entries":717},"unknown_encodings":{"entries":0}}.
+Raw records are no longer tracked. Regenerate outside the repository:
+`rvw cov functional TRACE_PATHS --platform PLATFORM --json`. Use the pinned inputs and options from [PR #1198](https://github.com/riscPrint/risc-v-workstation/pull/1198).
+
+Historical `qualified.json`: {"groups":{"entries":316},"notes":{"records":8},"retired":52750,"traces":{"entries":447},"unknown_encodings":{"entries":0}}.
+Raw records are no longer tracked. Regenerate outside the repository:
+`rvw cov functional TRACE_PATHS --platform PLATFORM --json`. Use the pinned inputs and options from [PR #1198](https://github.com/riscPrint/risc-v-workstation/pull/1198).

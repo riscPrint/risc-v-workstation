@@ -969,7 +969,7 @@ uses device values in Spike. A complete strict match needs no IRQ or MMIO
 synchronization. Legacy captures without these events retain their limit.
 The VexiiRiscv device profile has 12 fresh RTL passes and 12 strict matches:
 six PLIC programs and six M/S delivery programs. See the
-[ordered events and negative controls](../../../../examples/vexiiriscv/plic-results.json).
+ordered events and negative controls (historical counts and regeneration command in the example README).
 
 ## Repeated reset RTL results
 
