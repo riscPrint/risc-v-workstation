@@ -516,7 +516,7 @@ not transfer qualification to a new core, bus configuration or simulator.
 
 | Profile | Measured result | Evidence boundary |
 |---|---|---|
-| SV protocol agents, Verilator 5.052 | 20 compiled. 13 passed all three normal good-DUT and corrupt-DUT seeds. | AXI, TileLink and UART good fixtures failed. DRAM, Ethernet, PCIe and RNM have inert SV model stubs. AHB's malformed-manager assertion diagnostic remains unqualified. |
+| SV protocol agents, Verilator 5.052 | 20 compiled. All 16 runnable fixtures passed their declared normal and fault cases at three seeds: 120 checked runs. | DRAM, Ethernet, PCIe and RNM have inert SV model stubs. AXI4-Lite has no separate SV runtime result. The reactive fixtures use one UVM phase invocation per component. |
 | Live VexRiscv SV CPU environment | Seeds 1 and 3 each checked 13 retirements. Next-PC corruption was detected. Same-revision C4 returned `accept` at `b17abae9`. | Fixed generated CPU image and one arithmetic/load/store/branch program. Fifteen declared native files participate in identity. No changed-core or full-ISA acceptance. |
 | Live VexRiscv pyuvm RV32IM ISA | 50 attempted, 49 passed, 1 failed. Passing programs checked 17,735 retirements and 196 traps. | `rv32ui-p-ma_data` failed with tohost 1337. This is the built RV32UI/RV32UM machine-mode set, not a complete upstream ISA matrix. |
 | Native VexiiRiscv ISA captures through pyuvm | 50 native programs attempted. 49 complete passing captures checked 17,637 retirements and 245 traps. | Offline C2 replay. The native `ma_data` failure remains explicit. No live cocotb VexiiRiscv binding or full suite pass. |

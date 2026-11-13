@@ -27,7 +27,7 @@ module ahb_ram(ahb_if b);
         pending<=b.hsel && b.htrans[1]; first_error<=0;
         if(b.hsel && b.htrans[1]) begin
           address<=b.haddr; wr<=b.hwrite; size<=b.hsize;
-          remaining<=$test$plusargs("bad_manager") ? 1 : $urandom_range(0,3);
+          remaining<=$test$plusargs("bad_manager") ? 2 : $urandom_range(0,3);
         end
       end
     end

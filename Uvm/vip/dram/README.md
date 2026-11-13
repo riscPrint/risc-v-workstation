@@ -31,3 +31,10 @@ agent against good and corrupt RTL on 2026-11-13. The opt-in native suite
 returned 4 passed and 0 skipped across its four profiles. Read that matrix
 for the exact scope and excluded features. This does not qualify an external
 native protocol model, a physical link or the SV UVM agent.
+
+## Measured SV campaign
+
+The [dated SV matrix](../qualification/native-2026-11-13.md) records this
+fixture's compile and runtime status on Verilator 5.052. The SV model stub has no runnable UVM checks and remains unqualified.
+Earlier lint/unit-only notes describe the initial test set. The dated matrix
+gives the current SV result and its limits. Cocotb evidence is separate.

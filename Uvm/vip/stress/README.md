@@ -18,3 +18,10 @@ fixture is not a NoC or DRAM controller. Python's scheduler is not RTL.
 Run `rvw/.venv/bin/python -m pytest rvw/tests/test_vip_stress.py -q`.
 Lint the four SV files with pinned UVM. Native controller/NoC campaigns,
 UVM runtime builds and electrical memory validation were not run.
+
+## Measured SV campaign
+
+The [dated SV matrix](../qualification/native-2026-11-13.md) records this
+fixture's compile and runtime status on Verilator 5.052. All declared normal and fault cases passed at seeds 1, 2 and 3.
+Earlier lint/unit-only notes describe the initial test set. The dated matrix
+gives the current SV result and its limits. Cocotb evidence is separate.

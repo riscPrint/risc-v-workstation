@@ -17,3 +17,10 @@ Run `rvw/.venv/bin/python -m pytest rvw/tests/test_vip_rnm.py -q`.
 SV lint checks syntax only. No native RNM runtime, behavioral sensor/PLL
 model, transistor simulation, UVM runtime build or electrical signoff was
 run. Issue #217 remains open for actual native model integration.
+
+## Measured SV campaign
+
+The [dated SV matrix](../qualification/native-2026-11-13.md) records this
+fixture's compile and runtime status on Verilator 5.052. The SV model stub has no runnable UVM checks and remains unqualified.
+Earlier lint/unit-only notes describe the initial test set. The dated matrix
+gives the current SV result and its limits. Cocotb evidence is separate.
