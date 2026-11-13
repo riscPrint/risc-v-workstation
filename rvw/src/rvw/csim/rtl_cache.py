@@ -5,7 +5,7 @@ trace of the same run: one data access per retired load/store/AMO, or one fetch 
 instruction (FENCE.I invalidates the model I-cache). The RTL side is the `access` events of one
 cache probe (`Probe.cacheAccess(cache, "access", ..., hit = ...)`) in a `rvw.probe-events/1`
 stream, one per retired access in retirement order. The k-th RTL access is paired with the
-k-th model access; the pair must name the same line, else the comparison is `inconclusive`.
+k-th model access; address and write direction must agree, else comparison is `inconclusive`.
 Agreement is a measured model gap, never a correctness or fidelity verdict.
 """
 from __future__ import annotations
@@ -34,14 +34,16 @@ def _rtl(events, cache: str):
     ids = {p.id for p in access}
     if any("hit" not in dict(p.fields) for p in access):
         raise ValueError(f"the {cache} access probe has no hit field")
-    rows, fills, evicts = [], 0, 0
+    rows = []
+    counts = dict.fromkeys(("access", "fill", "evict", "writeback", "flush", "lookup", "refill_beat"), 0)
     for cycle, p, v in stream.events("cache"):
+        if p.meta.get("cache") != cache:
+            continue
+        event = p.meta.get("event")
+        counts[event] = counts.get(event, 0) + 1
         if p.id in ids:
             rows.append((cycle, v["address"], bool(v["hit"]), bool(v.get("write", 0))))
-        elif p.meta.get("cache") == cache:
-            fills += p.meta.get("event") == "fill"
-            evicts += p.meta.get("event") == "evict"
-    return stream, rows, fills, evicts
+    return stream, rows, counts
 
 
 def _c2(path):
@@ -92,7 +94,7 @@ def compare(study_path, c2_path, events_path, cache: str = "dcache", level: str 
         raise ValueError(f"the study has no memory.{level}")
     line_bits = (int(mem[level].get("line_bytes", 64)) - 1).bit_length()
     fetch = level == "l1i"
-    stream, rtl, fills, evicts = _rtl(events_path, cache)
+    stream, rtl, rtl_counts = _rtl(events_path, cache)
     header, recs, c2_end = _c2(c2_path)
     reasons: list[str] = []
     a, b = stream.identity.get("elf_sha256"), header.get("elf_sha256")
@@ -162,14 +164,20 @@ def compare(study_path, c2_path, events_path, cache: str = "dcache", level: str 
                 f.write(f"{'S' if store else 'L'} {ordinal} {pc:x} {address:x} 4\n")
             f.write(f"END {instructions}\n")
     worst = sorted(({"pc": hex(pc), **dict(v)} for pc, v in per_pc.items()), key=lambda r: -r["disagreements"])[:top]
+    level_stats = (stats.get("memory") or {}).get(level)
+    model_writebacks = (level_stats or {}).get("writebacks")
+    writeback_probe = any(p.meta.get("cache") == cache and p.meta.get("event") == "writeback"
+                         for p in stream.of_kind("cache"))
     return {"schema": REPORT, "status": "inconclusive" if reasons else "compared", "reasons": reasons,
             "cache": cache, "level": level,
             "access_semantics": sorted({p.meta.get("semantics", "unspecified") for p in stream.of_kind("cache")
                                         if p.meta.get("cache") == cache and p.meta.get("event") == "access"}),
             "study": data.get("name"), "study_sha256": cfg.digest(data),
             "trace": str(c2_path), "events": str(events_path), "instructions": instructions,
-            "rtl_events": {"access": len(rtl), "fill": fills, "evict": evicts},
+            "rtl_events": rtl_counts, "writeback_probe": writeback_probe,
+            "writeback_count_error": model_writebacks - rtl_counts["writeback"]
+                if writeback_probe and model_writebacks is not None else None,
             "model_accesses": len(model), "unsampled_tail": unsampled, "summary": summary, "misaligned": misaligned,
             "first_disagreements": first, "per_pc": worst,
-            "model_stats": (stats.get("memory") or {}).get(level), "trace_out": str(trace_out) if trace_out else None,
+            "model_stats": level_stats, "trace_out": str(trace_out) if trace_out else None,
             "note": "Agreement is a measured model gap, not an RTL correctness or fidelity verdict."}

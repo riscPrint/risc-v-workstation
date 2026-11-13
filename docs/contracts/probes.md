@@ -106,3 +106,13 @@ retirement ID, stall sample and dependency ID/producer bindings. MCP accepts
 the same `consumer` field. This checks declarations. It does not prove wiring
 or activation. Convert the captured events to Kanata and use `rvw perf` for
 measured cause counts and the remaining unknown zero-retirement intervals.
+
+A cache `flush` with `semantics=writeback-only` records completion of a
+dirty-line clean operation. It retains resident tags. The default flush
+semantics invalidate all resident lines. The checker keeps these operations
+separate and still rejects a hit after invalidation.
+
+Cache comparison `rtl_events` counts each observed event kind. When a
+writeback probe is present, `writeback_count_error` is model writebacks
+minus observed writebacks. Otherwise it is null. This is an aggregate
+model gap. Access alignment and hit/miss comparison remain per access.

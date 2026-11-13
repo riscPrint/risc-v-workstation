@@ -13,7 +13,8 @@ ROOT=Path(__file__).resolve().parents[1]
 
 def readmes():
     paths=set(ROOT.glob('*/README.md')) | set((ROOT/'rvw/src/rvw').glob('*/README.md'))
-    return sorted(p.relative_to(ROOT).as_posix() for p in paths)
+    return sorted(p.relative_to(ROOT).as_posix() for p in paths
+                  if not any(part.startswith('.') for part in p.relative_to(ROOT).parts))
 
 
 def main():

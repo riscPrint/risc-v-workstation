@@ -132,3 +132,21 @@ def test_early_restart_requires_the_exact_returned_word_and_checks_its_data(tmp_
     assert rep["caches"]["dcache"]["early_restart_hits_checked"] == 2
     assert [m["rule"] for m in rep["mismatches"]] == [
         "hit on a line that is not resident", "early restart data differs from memory"]
+
+
+def test_writeback_only_flush_keeps_tags_but_invalidation_removes_them(tmp_path):
+    run(tmp_path, [])
+    path = tmp_path / "ev.jsonl"
+    rows = [json.loads(x) for x in path.read_text().splitlines()]
+    rows[0]["probes"] += [
+        {"id": 4, "kind": "cache", "name": "dcache_clean",
+         "meta": {"cache": "dcache", "event": "flush", "semantics": "writeback-only"}, "fields": [["address", 32]]},
+        {"id": 5, "kind": "cache", "name": "dcache_invalidate",
+         "meta": {"cache": "dcache", "event": "flush"}, "fields": [["address", 32]]},
+    ]
+    rows[1:1] = [[5, 0, BASE, line(BASE)], [6, 4, 0], [7, 1, BASE, 1, 0],
+                 [8, 5, 0], [9, 1, BASE, 1, 0]]
+    path.write_text("\n".join(json.dumps(x) for x in rows) + "\n")
+    rep = api.run_convert(path, "cache-check", tmp_path / "flush.json", c2=tmp_path / "rvfi.jsonl")
+    assert rep["caches"]["dcache"]["hits_checked"] == 1
+    assert [m["cycle"] for m in rep["mismatches"]] == [9]

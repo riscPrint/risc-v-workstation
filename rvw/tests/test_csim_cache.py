@@ -89,3 +89,25 @@ def test_incomplete_c2_and_wrong_store_direction(tmp_path):
     c2.write_text("\n".join(c2.read_text().splitlines()[:-1]) + "\n")
     rep = rtl_cache.compare(study, c2, ev)
     assert "incomplete C2 trace (no end record)" in rep["reasons"]
+
+
+def test_writeback_count_gap_is_visible_even_when_all_accesses_agree(tmp_path):
+    recs = [load(0, 0x2000, store=True), load(1, 0x2400, store=True)]
+    for record in recs:
+        record['insn'] = '0x2023'
+    rows = [[20, 0, 0x2000, 0, 1], [21, 0, 0x2400, 0, 1],
+            [22, 1, 0x2000, 1], [23, 1, 0x2400, 2]]
+    study, c2, events = setup(tmp_path, rows, recs)
+    data = json.loads(study.read_text())
+    data['memory']['l1d'].update(write_allocate=True, write_back=True)
+    study.write_text(json.dumps(data))
+    lines = [json.loads(x) for x in events.read_text().splitlines()]
+    lines[0]['probes'].append({'id': 1, 'kind': 'cache', 'name': 'dcache_writeback',
+                              'meta': {'cache': 'dcache', 'event': 'writeback'},
+                              'fields': [['address', 32], ['data', 256]]})
+    events.write_text('\n'.join(json.dumps(x) for x in lines) + '\n')
+    report = rtl_cache.compare(study, c2, events)
+    assert report['summary']['agreement'] == 1.0
+    assert report['writeback_probe'] and report['rtl_events']['writeback'] == 2
+    assert report['model_stats']['writebacks'] == 1
+    assert report['writeback_count_error'] == -1

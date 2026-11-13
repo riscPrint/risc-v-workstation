@@ -63,7 +63,7 @@ RAM at `0x80000000`, and reset PC `0x80000000`. It has no caches, PMP, MMU or de
 unit. Supervisor CSRs, including SATP, are absent and trap on access. Interrupt inputs default to low. `--irq-schedule` can drive MSIP, MTIP
 and MEIP. The adapter records changes in C2. See
 [RiscvSim interrupt schedules](../../RiscvSim/README.md#interrupt-schedules). Misaligned data access traps.
-The only configuration is `rv32im`.
+The default configuration is `rv32im`. Extra configurations are listed below.
 
 The build compiles core sources in the adapter's own target directory.
 It consumes the generic RiscvSim library through `ProjectRef`.
@@ -791,9 +791,8 @@ rvw csim compare-rtl rvw/probes/btfn.json --trace RUN/rvfi.jsonl --events RUN/bp
   7854, core 4855 (the model predicts the sequential PC; the core uses static BTFN). IPC
   error 224.5 % and 105.2 % (the core's fetch is slow). Accuracy stays `inconclusive`
   (two samples).
-- No cache probes: this config has no caches (`IBusSimplePlugin`, `DBusSimplePlugin`), so the
-  cache observer has no input. A cached config would change the bus type that the other
-  example tools drive.
+- The default config has no caches (`IBusSimplePlugin`, `DBusSimplePlugin`).
+  The cached configurations provide the cache events listed below.
 
 The first BTFN comparison found one disagreement at the loop exit. The C2 trace converter
 wrote the fall-through as the target of a not-taken branch, so the model's BTFN rule saw
@@ -1139,3 +1138,37 @@ All six WFI programs pass C1. Three fail reference comparison with
 operations and RV64 reset family are outside this M-only profile.
 [The audit](../vexiiriscv/suite-family-audit.json) records each planner exclusion.
 The optional Linux configuration is not qualified by these M-only results.
+
+## Cached probe measurements
+
+The default stays cacheless. `rv32im_cached` adds instruction and data caches
+without core source changes. With probes enabled, all 49 selected aligned
+RV32UI/UM programs passed and matched complete Spike traces at seed 7 and
+memory latency 0. [The ISA record](rvw/csim/isa-measured.json) includes the
+ELF, C1, C2 and RTL hashes. Misaligned `ma_data` stays excluded.
+
+[CacheProbes](rvw/src/main/scala/rvwvex/CacheProbes.scala) taps physical
+instruction lookups, refill beats and completed lines. It records data
+access hit/miss, refill, victim eviction and cache invalidation. The data
+cache writes through. It has no dirty writeback event. Retired instruction
+accesses carry separate `retired-refill-attribution` semantics.
+
+The cache sweep retired 3,342 instructions in 7,774 cycles. Its data cache
+emitted 769 accesses, 513 misses, 256 fills and 192 evictions. All 769 data
+accesses agreed with the component model. Miss-rate error was zero. The
+independent checker was consistent on `smoke`, `branches`, the cache sweep
+and its `nop` variant. It checked physical lookups and refill data. The
+reported instruction comparison retains its committed-stream model gaps.
+
+`rvw perf` reports measured instruction-refill waits and inferred data-refill
+and redirect-recovery spans. Spans can overlap. They are not a sum of lost
+CPU cycles. Both clock and retirement counts matched C1 in these four runs.
+`rvw arch ooo-calibrate` scored three programs with a frozen approximate
+model. It reported inconclusive accuracy. The held-out IPC errors were
+-18.99 percent on `branches` and +9.80 percent on the `nop` cache sweep.
+
+See [the commands and scope](rvw/csim/README.md),
+[performance and cache records](rvw/csim/perf-measured.json), and
+[the native misplaced-probe test](rvw/tests/test_probe_misplaced.py).
+These are selected simulation results. They do not qualify other configs
+or establish hardware correctness.

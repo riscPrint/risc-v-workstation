@@ -159,7 +159,7 @@ def check(stream: Stream, c2_path, out, elf=None, geometry: dict[str, tuple[int,
                 if got != want:
                     bad(cache, cycle, "writeback data differs from memory", line=_hex(line),
                         bytes=[i for i in range(lb) if got[i] != want[i]][:8])
-        elif event == "flush":
+        elif event == "flush" and p.meta.get("semantics") != "writeback-only":
             resident[cache].clear()
             partial[cache].clear()
             uncertain[cache].clear()

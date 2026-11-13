@@ -96,6 +96,13 @@ object CacheProbes {
     val refilling = ctrl.doRefill && !ctrl.preventSideEffects
     Probe.cacheAccess("dcache", "evict", refilling && victim.loaded, victimAddress)
 
+    // The noncoherent LSU flush writes dirty lines back and keeps their tags loaded.
+    if (lsu.logic.flusher != null) {
+      val done = lsu.logic.flusher.arbiter.io.output.fire
+      Probe.cacheAccess("dcache", "flush", done, U(0, bus.p.addressWidth bits), semantics = "writeback-only")
+      Probe.counter("dcache_flushes", done)
+    }
+
     val probe = lsu.logic.commitProbe
     val oc = lsu.logic.onCtrl
     val miss = oc(LsuL1.MISS) || oc(LsuL1.MISS_UNIQUE)

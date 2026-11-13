@@ -165,3 +165,42 @@ Use it again at later stages with distinct probe names and the same ID.
 when requested. The Kanata converter reports orphan events, unknown anchors
 and stale live-ID replacements. Check those fields beside C2 retirement counts.
 See the NaxRiscv example for a native out-of-order binding.
+
+## Measured cached examples
+
+Both examples have an extra `rv32im_cached` configuration. Their defaults
+remain cacheless. No core source changes are needed. With probes enabled,
+each cached core passed 49 selected aligned RV32UI/UM programs and matched
+all 49 complete Spike traces at seed 7 and memory latency 0.
+
+Four programs per core feed the cache checker and performance reports. All
+eight cache checks were consistent. The cache sweep produced 769 data
+accesses and 513 misses on each core. Each data-cache model agreed on all
+769 accesses. VexiiRiscv also checked 512 writeback bursts. Its instruction
+cache restarted early 12 times; the checker verified the exact returned
+word and data before accepting each hit. A hit on an unreturned word still
+fails. The VexRiscv data cache writes through and has no dirty writeback.
+The VexiiRiscv data-cache flush cleans dirty lines and retains tags. Its
+model omits that final clean and writes back 449 lines, 63 fewer than RTL.
+The report keeps that aggregate gap beside per-access agreement.
+
+Physical `lookup` events and retired refill attribution are separate. Use
+`refill_beat` events for caches that restart before a full line arrives. A
+retired attribution stream without physical lookups cannot establish
+residency consistency. The old line-only and retirement-only record stays
+in each example's `measured.json`. Current physical checks and performance
+measurements are in `perf-measured.json`.
+
+`rvw perf` preserves explicit sampling bounds. It keeps inferred spans
+separate from measured stalls. The VexiiRiscv commit-port count differs
+from its completion-based C1 count. The report retains that difference.
+Both three-program timing calibrations report inconclusive accuracy.
+These checks are selected simulation evidence. They are not cache proofs
+or timing qualification.
+
+See the [VexRiscv results](../examples/vexriscv/rvw/csim/README.md),
+[VexiiRiscv results](../examples/vexiiriscv/rvw/csim/README.md), and
+[retirement boundaries](../examples/vexiiriscv/rvw/csim/RETIREMENT.md).
+The [native negative test](../examples/vexriscv/rvw/tests/test_probe_misplaced.py)
+moves a branch probe to decode in a temporary adapter. Validation returns
+1 and names `branch/misplaced_decode_branch`.
