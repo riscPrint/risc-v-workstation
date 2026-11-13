@@ -47,3 +47,17 @@ def test_plan_cycle_budget_reaches_every_model_run(tmp_path):
         fit(p,tmp_path/'zero')
     data['max_cycles']=5_000_000;cal.write_text(json.dumps(data))
     assert fit(p,tmp_path/'large')['status']=='reported'
+
+
+def test_ipc_objective_scores_the_reported_metric(tmp_path):
+    from test_ooo_evidence import inputs
+    from rvw.ooo.core import run
+    cal, data = inputs(tmp_path)
+    p = tmp_path/'fit.json'
+    p.write_text(json.dumps(dict(schema='rvw.ooo-fit-plan/1', calibration_plan=cal.name,
+                                parameters={'latencies.alu': [1]}, objective='ipc')))
+    result = fit(p, tmp_path/'out')
+    modeled = run(tmp_path/'out/candidate-0.json', tmp_path/data['samples'][0]['trace'])
+    expected = abs(modeled['ipc']/(4/8)-1)/2  # one IPC error and one exact event
+    assert result['best']['score'] == pytest.approx(expected)
+    assert 'ipc' in result['objective']

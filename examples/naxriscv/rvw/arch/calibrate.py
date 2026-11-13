@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Calibrate the OoO model description (ooo.json) against NaxRiscv RTL runs.
+"""Calibrate the OoO model description (ooo-measured.json) against NaxRiscv RTL runs.
 
 Usage: calibrate.py RUNS OUT
 RUNS holds one directory per benchmark with result.json, rvfi.jsonl and counts.json from
@@ -32,10 +32,10 @@ def main(runs, out):
     samples = [dict(id=n, split="training" if n in TRAIN else "heldout", elf=str(HERE.parent / "out/bench" / f"{n}.riscv"),
                     trace=str(runs / n / "rvfi.jsonl"), c1=str(runs / n / "result.json"), events=str(runs / n / "counts.json"))
                for n in TRAIN + HELD]
-    plan = dict(schema="rvw.ooo-calibration-plan/1", config=str(HERE / "ooo.json"), event_map="event-map.json", samples=samples,
+    plan = dict(schema="rvw.ooo-calibration-plan/1", config=str(HERE / "ooo-measured.json"), event_map="event-map.json", samples=samples,
                 max_cycles=MAX_CYCLES)
     (out / "calibration-plan.json").write_text(json.dumps(plan, indent=1))
-    (out / "fit-plan.json").write_text(json.dumps(dict(schema="rvw.ooo-fit-plan/1", calibration_plan="calibration-plan.json",
+    (out / "fit-plan.json").write_text(json.dumps(dict(schema="rvw.ooo-fit-plan/1", calibration_plan="calibration-plan.json", objective="ipc",
                                                        parameters=GRID), indent=1))
     rvw = Path(sys.executable).with_name("rvw")
     with (out / "fit-stdout.json").open("w") as f:
