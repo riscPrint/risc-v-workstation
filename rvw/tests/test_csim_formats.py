@@ -129,3 +129,28 @@ def test_bt9_conversion(tmp_path):
     body = [line for line in out.read_text().splitlines() if not line.startswith('#')]
     assert body[1:] == ["B 3 400 cond 1 480 4", "B 7 500 call 1 600 4", "B 9 600 ret 1 504 4", "END 9"]
     assert info["branches"] == 3 and traces.detect(src) == "bt9"
+
+
+SPIKE_LOG = """core   0: 0x0000000080000000 (0x00012283) lw t0, 0(sp)
+core   0: 3 0x0000000080000000 (0x00012283) x5  0x0000000000000007 mem 0x0000000080001000
+core   0: 0x0000000080000004 (0x00000463) beqz zero, pc + 8
+core   0: 3 0x0000000080000004 (0x00000463)
+core   0: 3 0x000000008000000c (0x00512023) mem 0x0000000080001008 0x0000000000000007
+core   0: 3 0x0000000080000010 (0x100000ef) x1  0x0000000080000014
+core   0: 3 0x0000000080000020 (0x00008067)
+core   0: 3 0x0000000080000014 (0x00000463)
+core   0: exception trap_illegal_instruction, epc 0x0000000080000018
+core   0: 3 0x0000000080000100 (0x00000013) x0  0x0000000000000000
+"""
+
+
+def test_spike_commit_log_conversion(tmp_path):
+    src = tmp_path / 'spike.log'; src.write_text(SPIKE_LOG)
+    out = tmp_path / 's.csim'
+    info = traces.from_spike(src, out, values=True)
+    body = [line for line in out.read_text().splitlines() if not line.startswith('#')]
+    assert info == {"format": "spike", "instructions": 7, "branches": 3, "memory_rows": 2, "branches_skipped": 1}
+    assert body[1:] == ["L 1 80000000 80001000 4", "W 1 80000000 5 7 l", "B 2 80000004 cond 1 8000000c 4",
+                        "S 3 8000000c 80001008 4", "W 4 80000010 1 80000014 -", "B 4 80000010 call 1 80000020 4",
+                        "B 5 80000020 ret 1 80000014 4", "END 7"]
+    assert traces.detect(src) == "spike"

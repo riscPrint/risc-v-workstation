@@ -3,7 +3,7 @@ from rvw.mcp.spec import ToolSpec, schema
 from rvw.mcp.worker import run_function
 
 S = {"type": "string"}
-FMT = {**S, "enum": ["auto", "csim", "branch", "c2", "bt9", "champsim"], "default": "auto"}
+FMT = {**S, "enum": ["auto", "csim", "branch", "c2", "bt9", "spike", "champsim"], "default": "auto"}
 SETS = {"type": "array", "items": S, "description": "KEY=VALUE overrides of dotted study keys"}
 TRACES = {"type": "array", "items": S, "minItems": 1}
 
@@ -18,6 +18,10 @@ def _sweep(study, traces, params, job, **kw):
 
 def _compare(study, trace, events, job, **kw):
     return run_function(job, "rvw.csim.cli", "compare_json", dict(study=study, trace=trace, events=events, **kw))
+
+
+def _qualify(traces, job, **kw):
+    return run_function(job, "rvw.csim.cli", "qualify_json", dict(traces=traces, **kw))
 
 
 def _budget(study, sets=None):
@@ -36,9 +40,11 @@ def _convert(source_format, source, out, values=False):
     from . import traces
     if source_format == "c2":
         return traces.from_c2(Path(source), Path(out), values=values)
+    if source_format == "spike":
+        return traces.from_spike(Path(source), Path(out), values=values)
     if source_format == "bt9":
         return traces.from_bt9(Path(source), Path(out))
-    raise ValueError("source_format must be c2 or bt9")
+    raise ValueError("source_format must be c2, spike or bt9")
 
 
 def mcp_tools():
@@ -60,10 +66,17 @@ def mcp_tools():
                  schema({"study": S, "sets": SETS}, ["study"]), _budget, annotations={"readOnlyHint": True}),
         ToolSpec("csim_models", "List the component models and their study keys.", schema({}), _models,
                  annotations={"readOnlyHint": True}),
-        ToolSpec("csim_convert", "Convert a C2 RVFI trace (optionally with register values) or a CBP 2016 BT9 trace "
+        ToolSpec("csim_convert", "Convert a C2 RVFI trace or a Spike -l --log-commits log (optionally with register values), or a CBP 2016 BT9 trace "
                  "into rvw.csim-trace/1.",
-                 schema({"source_format": {**S, "enum": ["c2", "bt9"]}, "source": S, "out": S, "values": {"type": "boolean", "default": False}},
+                 schema({"source_format": {**S, "enum": ["c2", "spike", "bt9"]}, "source": S, "out": S, "values": {"type": "boolean", "default": False}},
                         ["source_format", "source", "out"]), _convert, isolate=True),
+        ToolSpec("csim_qualify", "Compare a csim direction model with a pinned external reference predictor "
+                 "(CBP 2016 TAGE-SC-L 64 KB or 8 KB, fetched outside the repository and checked by sha256) on the same "
+                 "traces: MPKI, relative tolerance and per-branch prediction agreement. Runs as a job.",
+                 schema({"traces": TRACES, "reference": {**S, "enum": ["cbp2016-tage-sc-l-64kb", "cbp2016-tage-sc-l-8kb"],
+                                                         "default": "cbp2016-tage-sc-l-64kb"},
+                         "study": S, "format": FMT, "tolerance": {"type": "number", "default": 0.1}, "archive": S}, ["traces"]),
+                 _qualify, long=True, annotations={"readOnlyHint": True}),
         ToolSpec("csim_compare_rtl", "Compare a predictor model with explicit RTL predictor events (rvw.bp-events/1 or Kanata "
                  "#rvw prediction records) on the same C2 run, branch by branch. Missing identity or events gives inconclusive. Runs as a job.",
                  schema({"study": S, "trace": S, "events": S, "roi_start": {"type": "integer"}, "roi_end": {"type": "integer"},

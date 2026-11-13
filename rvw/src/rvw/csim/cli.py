@@ -4,7 +4,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-FORMATS = ["auto", "csim", "branch", "c2", "bt9", "champsim"]
+FORMATS = ["auto", "csim", "branch", "c2", "bt9", "spike", "champsim"]
 
 
 def _overrides(study_path: str, sets: list[str] | None):
@@ -63,9 +63,9 @@ def register(subparsers):
     b.add_argument("--json", action="store_true")
     b.set_defaults(func=_budget)
 
-    c = sub.add_parser("convert", help="convert C2 or CBP BT9 into rvw.csim-trace/1")
-    c.add_argument("source_format", choices=["c2", "bt9"]); c.add_argument("source")
-    c.add_argument("--out", required=True); c.add_argument("--values", action="store_true", help="C2: add register-write rows")
+    c = sub.add_parser("convert", help="convert C2, a Spike commit log or CBP BT9 into rvw.csim-trace/1")
+    c.add_argument("source_format", choices=["c2", "spike", "bt9"]); c.add_argument("source")
+    c.add_argument("--out", required=True); c.add_argument("--values", action="store_true", help="C2/Spike: add register-write rows")
     c.add_argument("--json", action="store_true")
     c.set_defaults(func=_convert)
 
@@ -80,6 +80,16 @@ def register(subparsers):
     x.add_argument("--elf-sha256"); x.add_argument("--top", type=int, default=20)
     x.add_argument("--json", action="store_true")
     x.set_defaults(func=_compare)
+
+    q = sub.add_parser("qualify", help="compare a direction model with a pinned external reference predictor")
+    q.add_argument("traces", nargs="+")
+    q.add_argument("--reference", default="cbp2016-tage-sc-l-64kb")
+    q.add_argument("--study", help="study to qualify (default: the matched example for the reference)")
+    q.add_argument("--format", choices=FORMATS, default="auto")
+    q.add_argument("--tolerance", type=float, default=0.10, help="relative MPKI tolerance")
+    q.add_argument("--archive", help="local copy of the reference archive (checked against the pinned sha256)")
+    q.add_argument("--out"); q.add_argument("--json", action="store_true")
+    q.set_defaults(func=_qualify)
 
     e = sub.add_parser("build", help="build the native engine and library; print their paths")
     e.add_argument("--json", action="store_true")
@@ -126,8 +136,11 @@ def _budget(args):
 @_guard
 def _convert(args):
     from . import traces
-    fn = traces.from_c2 if args.source_format == "c2" else traces.from_bt9
-    info = fn(Path(args.source), Path(args.out), values=args.values) if args.source_format == "c2" else fn(Path(args.source), Path(args.out))
+    if args.source_format == "bt9":
+        info = traces.from_bt9(Path(args.source), Path(args.out))
+    else:
+        fn = traces.from_c2 if args.source_format == "c2" else traces.from_spike
+        info = fn(Path(args.source), Path(args.out), values=args.values)
     return {"schema": "rvw.csim-convert/1", "out": args.out, **info}
 
 
@@ -141,6 +154,13 @@ def _models(args):
 def _compare(args):
     from . import rtl
     return rtl.compare(args.study, args.trace, args.events, args.roi_start, args.roi_end, args.elf_sha256, args.top)
+
+
+@_guard
+def _qualify(args):
+    from . import qualify
+    return qualify.qualify(args.reference, args.traces, args.study, args.format, args.tolerance,
+                           Path(args.archive) if args.archive else None)
 
 
 @_guard
@@ -164,3 +184,8 @@ def sweep_json(study, traces, params, format="auto", sets=None, budget_kib=None,
 def compare_json(study, trace, events, roi_start=None, roi_end=None, elf_sha256=None, top=20):
     from . import rtl
     return rtl.compare(study, trace, events, roi_start, roi_end, elf_sha256, top)
+
+
+def qualify_json(traces, reference="cbp2016-tage-sc-l-64kb", study=None, format="auto", tolerance=0.10, archive=None):
+    from . import qualify
+    return qualify.qualify(reference, traces, study, format, tolerance, Path(archive) if archive else None)

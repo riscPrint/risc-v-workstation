@@ -32,6 +32,8 @@ def prepare(trace: Path, fmt: str, work: Path, values: bool = False) -> tuple[Pa
         info = traces.from_c2(trace, out, values=values)
     elif fmt == "bt9":
         info = traces.from_bt9(trace, out)
+    elif fmt == "spike":
+        info = traces.from_spike(trace, out, values=values)
     else:
         raise ValueError(f"unknown trace format {fmt}")
     return out, "csim", info
