@@ -10,7 +10,7 @@ import scala.collection.mutable
 object VexAdapter extends CoreAdapter {
   override def freshInstancePerRun = true
   type Model = SimCompiled[VexTop]
-  override def irqInputMask: BigInt = 0xA88
+  override def irqInputMask: BigInt = 0x888
   def core = "vexriscv"
   val configs = Seq("rv32im")
   def xlen = 32
