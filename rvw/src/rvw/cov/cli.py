@@ -192,6 +192,8 @@ def register(subparsers):
     register_actions(sub)
     from .exchange_cli import register as register_exchange
     register_exchange(sub)
+    from .block_evidence import register as register_block_check
+    register_block_check(sub)
     generate = sub.add_parser('generate', help='solve one pinned integer ISA coverage goal; no coverage credit')
     generate.add_argument('--manifest', required=True)
     generate.add_argument('--source-root', required=True)

@@ -1142,3 +1142,5 @@ native tool. No missing metric is inferred from another metric.
 `statement_hit_status` stays `undetermined`. These are native instrumented
 points with source navigation links. They do not establish individual Scala
 statement hits. Unmapped points remain in the report's unmapped denominator.
+
+See [reusable block evidence](BLOCK_EVIDENCE.md) for exact tested parameter and assumption checks.

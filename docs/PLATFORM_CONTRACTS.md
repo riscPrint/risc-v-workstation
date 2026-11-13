@@ -205,6 +205,21 @@ through an absolute `RVW_HOME`. Keep core adapter sources in the core repository
 Use offline sbt after toolchain dependencies are installed. Source-directory settings
 in reusable builds must resolve from `baseDirectory.value`, not the caller's cwd.
 
+### Reusable block evidence
+
+`rvw cov block-check` and `cov_block_check` compare `rvw.block-evidence/1` with
+`rvw.block-integration/1`. Both bind the same declared logical source set.
+Evidence lists source path/hash pairs and exact tested configurations with
+parameters, assumptions and hash-bound C1 records. Integration lists current
+source paths, parameters and environment facts. Matching C1 records must have
+an exact `details.block_evidence` receipt with source_id/parameters/assumptions.
+Source ID hashes the compact sorted logical-name-to-source-hash JSON map.
+`rvw.block-reuse/1` reports eligible_for_reuse, incompatible or inconclusive,
+with holes and matched run records. Missing evidence cannot authorize reuse.
+new_wiring_covered is always false. Assumption checks are static declarations.
+Transitive dependency closure, runtime enforcement, formal evidence and new
+integration wiring remain outside the first interface.
+
 ### Directed tests linked to pinned Sail rules
 
 `rvw regress sail-tests` and `regress_sail_tests` emit
