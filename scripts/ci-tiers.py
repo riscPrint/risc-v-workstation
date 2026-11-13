@@ -99,6 +99,7 @@ def main():
         argv = [str(ROOT / 'scripts/with-lock.sh'), lock, 'nice', '-n', '10', *command]
         emit(f'### {name}')
         result = run_group(argv, cwd=cwd, timeout=TIERS[args.tier]['seconds'], capture=True)
+        (ROOT / ('ci-' + name.replace('/', '-') + '.log')).write_text(result.stdout + result.stderr)
         print(result.stdout, end='')
         print(result.stderr, end='', file=sys.stderr)
         failed |= result.returncode != 0 or result.timed_out
