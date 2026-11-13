@@ -392,6 +392,38 @@ checks. MCP: `formal_upf`. See `SpinalChecks/upf/README.md` for exact commands,
 binding fields, event semantics and unsupported constructs. Retention, supply
 state tables, clock gating and general Tcl remain unsupported. No verification
 runs during generation.
+## Simple bus protocol generation
+
+`rvw formal template axis|apb|ahb_lite --width N --out monitor.sv` writes a
+sampled assertion module. Use one kind at a time. `axis` requires a packed
+payload with all enabled AXI4-Stream data and sideband fields. It checks valid
+and payload stability under backpressure. It makes no packet-length claim.
+`apb` checks setup, access, stable request, wait states and back-to-back setup.
+Pack address, write direction, write data and enabled request sidebands into
+`request`. Response data and errors are not an independent memory scoreboard.
+`ahb_lite` checks active address/control stability during waits and the two-cycle
+ERROR response. ERROR permits cancellation of the next address. Pack address,
+write direction, size, burst, protection and lock into `request`. This monitor
+does not check burst progression, data-phase writes, exclusive memory effects,
+or a multi-master AHB bus. All monitors require reset and a rising sample clock.
+The standalone monitors use immediate SystemVerilog assertions for simulation
+and formal engines. They do not run either engine during generation.
+
+`rvw formal buses --db design.db --out generated` discovers recorded `Apb3`,
+`AhbLite3` and `Axi4Stream` bundle types. MCP: `formal_buses`. It derives ports
+and packed payloads from typed signal paths. It writes `monitors.sv`,
+`binds.sv`, and `result.json`. Load both SV files with the DUT in a frontend
+that supports instance `bind`. Only top-component buses with one recorded
+rising clock, reset, and no clock enable or soft reset are supported. APB
+requires one select bit. Missing fields, missing clock associations and other
+unsupported cases stay named in the report. No bindings gives `no_checks`
+and exit 3. Generation is not evidence of compilation or verification.
+
+These additions do not complete #66. AXI4-Lite, AXI4 and coherent TileLink
+continue to use their existing monitors. Automatic database binding for those
+bus types, deeper hierarchy, full AHB burst/data checks and complete protocol
+compliance remain open. Native seeded simple-bus tests check monitor behavior;
+they do not establish real-device correctness or database-to-RTL integration.
 
 ## SBY campaigns and property history
 
