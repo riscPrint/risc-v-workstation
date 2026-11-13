@@ -51,3 +51,13 @@ def test_default_core_divider_can_be_selected():
 def test_unknown_divider_is_refused():
     with pytest.raises(ValueError):
         runner.adapter('divu', 'full', 32, 'unknown')
+
+
+@pytest.mark.fast
+def test_core_reproducer_builds_real_rv32um_tests_without_changing_sources():
+    import runpy
+    module = runpy.run_path(str(ROOT / 'examples/vexiiriscv/formal/div-core.py'))
+    command = module['compile_command']('gcc', Path('source'), 'div', Path('div.elf'))
+    assert 'source/isa/rv32um/div.S' in command
+    assert '-march=rv32im_zicsr_zifencei' in command
+    assert '-Isource/env/p' in command
