@@ -71,7 +71,7 @@ them. The table gives the format each tool reads and the probe that now feeds it
 | `rvw csim compare-rtl` | `rvw.bp-events/1` JSONL (order, pc, kind, taken, target, predicted_*) | `branch` | `bp-events` |
 | `rvw perf`, SpinalKonata reports | Kanata 0004 (I/L/S/E/R) | `stage`, `retire`, `flush` | `kanata` |
 | `rvw perf` stall causes (#49) | Kanata `#rvw 1 stall scope cause evidence` | `stall` | `kanata` |
-| `rvw perf` predictor effects | Kanata `#rvw 1 prediction ...` | SpinalKonata `PipelineTags.direction` | not yet (needs a live instruction ID on the branch probe) |
+| `rvw perf` predictor effects | Kanata `#rvw 1 prediction ...` (direction) | `branch` with `predictedTaken` and `id` (the stage probes' instruction ID) | `kanata` |
 | RiscvSim `CacheEventObserver` | JSONL cycle, hart, event, physical_address, bytes, mask | `cacheAccess` | `cache` |
 | `rvw regress mmu report --protocol-config` | `rvw.mmu-observations/1` tlb_fill, tlb_hit, tlb_invalidate | `tlb` | `mmu` |
 | MMU observation capture | `rvw.mmu-observations/1` walk_request, walk_response | `pageWalk` | `mmu` |

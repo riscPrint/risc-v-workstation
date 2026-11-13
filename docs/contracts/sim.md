@@ -143,7 +143,10 @@ sampled; meta `path` is the register path that C1 `--fault` resolves) and `custo
 
 `rvw probes convert` writes consumer formats: `rvw.bp-events/1` (events aligned 1:1 with C2
 branch retirements of the covered kinds, matching PC and taken outcome, else refused),
-Kanata 0004 with `#rvw 1 stall` records, cache observer JSONL (`event` is `CACHE.EVENT`),
+Kanata 0004 with `#rvw 1 stall` records and, for branch events with an `id` field (the
+stage probes' instruction ID) and `predicted_taken`, `#rvw 1 prediction` direction records
+(predictor = probe name; recovery, work, warmup, alias and context `?`) before the
+instruction's retire, cache observer JSONL (`event` is `CACHE.EVENT`),
 `rvw.mmu-observations/1`, ooo-calibrate RTL event counts (`c1_sha256`, `trace_sha256`,
 `counts`, `cycles`), E-Trace encoder ingress CSV, `rvw.hpm-bindings/1` (`identity`, `cycles`,
 `bindings: [{selector, counter, total}]`) and `rvw.probe-interrupts/1` (`status`

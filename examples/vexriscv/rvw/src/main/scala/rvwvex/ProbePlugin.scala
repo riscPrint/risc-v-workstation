@@ -50,7 +50,7 @@ class ProbePlugin extends Plugin[VexRiscv] {
     val taken = wb.input(bp.BRANCH_COND_RESULT)
     val predicted = wb.input(bp.BRANCH_DO) ^ taken
     Probe.branch("vex_static", retire && isBranch, wb.input(PC), taken, wb.input(PROBE_TARGET),
-      predictedTaken = Some(predicted), semantics = "final-prediction")
+      predictedTaken = Some(predicted), semantics = "final-prediction", id = Some(wb.input(PROBE_ID)))
 
     for ((s, name) <- stagesWithNames) {
       Probe.stage(name, s.arbitration.isValid, s.input(PROBE_ID), pc = Some(s.input(PC)))
