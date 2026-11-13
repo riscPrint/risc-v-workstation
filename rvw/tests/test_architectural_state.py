@@ -3,8 +3,57 @@ import json
 from pathlib import Path
 import os
 import shutil
+import subprocess
+import sys
 import pytest
 from rvw.formal.architectural_state import monitor,generate
+
+
+@pytest.mark.parametrize('mutation', ['none', 'x0', 'frame', 'trap', 'unknown'])
+def test_simulation_frame_exit_code(tmp_path, mutation):
+    if not shutil.which('iverilog') or not shutil.which('vvp'):
+        pytest.skip('Icarus required')
+    text, widths, _ = monitor(32)
+    (tmp_path/'monitor.sv').write_text(text)
+    values = {name: "'0" for name in widths}
+    values.update(retire="1'b1", rd="5'd1", regs_after="1024'd137438953472")
+    # A write to x1 is legal. A write to x0 or x2 is not. Traps cannot write x1.
+    if mutation == 'x0': values['regs_after'] = "1024'd1"
+    if mutation == 'frame': values['regs_after'] = "1024'd18446744073709551616"
+    if mutation == 'trap': values['trap'] = "1'b1"
+    if mutation == 'unknown': values['regs_before'] = "'x"
+    ports = ','.join(f'.{name}({value})' for name, value in values.items())
+    (tmp_path/'tb.sv').write_text('module tb; reg clock=0; always #5 clock=~clock;\n'
+        'rvw_state_monitor dut(.clock(clock),.reset(1\'b0),'+ports+');\n'
+        'initial begin #12; $finish; end endmodule\n')
+    subprocess.run(['iverilog','-g2012','-s','tb','-o','sim','monitor.sv','tb.sv'],
+                   cwd=tmp_path,check=True,capture_output=True,timeout=10)
+    result = subprocess.run(['vvp','sim'],cwd=tmp_path,capture_output=True,text=True,timeout=10)
+    assert (result.returncode == 0) == (mutation == 'none'), result.stdout
+
+
+@pytest.mark.parametrize('valid,retire', [(0,0), (0,1), (1,0), (1,"1'bx")])
+def test_pico_simulation_validity_exit_code(tmp_path, valid, retire):
+    if not shutil.which('iverilog') or not shutil.which('vvp'):
+        pytest.skip('Icarus required')
+    _, widths, outputs = monitor(32, halt=True)
+    declarations = [f'wire [{w-1}:0] rvfi_{name} = {valid if name == "valid" else 0};'
+                    for name,w in outputs.items()]
+    declarations += [f'wire [{w-1}:0] state_{name} = {retire if name == "retire" else 0};'
+                     for name,w in widths.items()]
+    (tmp_path/'picorv32-observed.sv').write_text(
+        'module picorv32(input clk,resetn);\n'+'\n'.join(declarations)+'\nendmodule\n')
+    script = Path(__file__).resolve().parents[2]/'examples/picorv32/formal/compare.py'
+    subprocess.run([sys.executable,str(script),'--capture',str(tmp_path)],check=True,
+                   capture_output=True,timeout=10)
+    (tmp_path/'validity.sv').write_text('module tb; reg clk=0; always #5 clk=~clk;\n'
+        'picorv32 dut(.clk(clk),.resetn(1\'b1)); initial begin #12; $finish; end endmodule\n')
+    subprocess.run(['iverilog','-g2012','-s','tb','-o','sim','miter.sv','monitor.sv','validity.sv'],
+                   cwd=tmp_path,check=True,capture_output=True,timeout=10)
+    result = subprocess.run(['vvp','sim'],cwd=tmp_path,capture_output=True,text=True,timeout=10)
+    assert (result.returncode == 0) == (valid == retire), result.stdout
+    if valid != retire:
+        assert 'RVFI mismatch: valid' in result.stdout
 
 
 def test_monitor_has_frame_and_memory_checks():

@@ -13,6 +13,13 @@ def test_optional_halt_observation():
     assert 'assign rvfi_halt = 0;' in old
 
 
+def test_simulation_assertions_stop_on_failure():
+    text, _, _ = monitor(32)
+    assert 'else $fatal(1, "architectural x0 changed")' in text
+    assert 'else $fatal(1, "architectural register frame changed")' in text
+    assert text.count('`ifdef YOSYS') == 2
+
+
 def test_reset_polarity_is_explicit(tmp_path):
     plan = dict(schema='rvw.architectural-state/1', xlen=32, signals={}, reset_active_low='yes')
     path=tmp_path/'map.json';path.write_text(json.dumps(plan))

@@ -16,7 +16,11 @@ instance+='''
 always @* assume(resetn != $initstate);
 `endif
 always @(posedge clk) if(resetn) begin
+`ifdef FORMAL
     assert(rvfi_valid == state_rvfi_valid);
+`else
+    if(rvfi_valid !== state_rvfi_valid) $fatal(1, "RVFI mismatch: valid");
+`endif
 '''
 for f in FIELDS:
     if f=='valid': continue
@@ -67,6 +71,9 @@ ram[1]=32'h00100293; // addi x5,x0,1
 ram[2]=32'hfff08093; // addi x1,x1,-1
 ram[3]=32'hfe009ee3; // bne x1,x0,-4
 ram[4]=32'hff1ff06f; // loop
+end
+if(program_id==3) begin
+ram[0]=32'hfeeff76f; // misaligned JAL from the bounded counterexample; must fail
 end
 end
 always @* mem_rdata=ram[mem_addr[9:2]];
