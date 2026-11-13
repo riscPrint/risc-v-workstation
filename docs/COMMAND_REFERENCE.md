@@ -929,8 +929,15 @@ usage: rvw evidence query [-h] --db DB [--text TEXT] [--schema SCHEMA]
 
 ```text
 usage: rvw farm [-h] [--project PROJECT] [--json]
-    {observe,run,cancel,notifications,classify,recover,plan,live,workflow,select,triage,budget,batch,queue,serve,dashboard}
+    {gate,observe,run,cancel,notifications,classify,recover,plan,live,workflow,select,triage,budget,batch,queue,serve,dashboard}
     ...
+```
+
+### `rvw farm gate`
+
+```text
+usage: rvw farm gate [-h] --base BASE --candidate CANDIDATE --out OUT [--tier
+    TIER] [--rvfi-trace] [--project PROJECT] [--json]
 ```
 
 ### `rvw farm observe`
@@ -978,7 +985,7 @@ usage: rvw farm recover [-h] --out OUT [--project PROJECT] [--json]
 ```text
 usage: rvw farm plan [-h] --manifest MANIFEST --adapter ADAPTER --root ROOT
     --image IMAGE --claim CLAIM [--shards SHARDS] [--jobs JOBS] [--identity
-    IDENTITY] [--project PROJECT] [--json]
+    IDENTITY] [--persistent] [--python PYTHON] [--project PROJECT] [--json]
 ```
 
 ### `rvw farm live`
@@ -1021,8 +1028,8 @@ usage: rvw farm budget [-h] --root ROOT --scope SCOPE [--limits LIMITS]
 
 ```text
 usage: rvw farm batch [-h] --plan PLAN [--action
-    {render,submit,status,cancel,collect}] [--executor {local,k8s}] [--root
-    ROOT] [--ids IDS] [--project PROJECT] [--json]
+    {render,validate,submit,status,cancel,collect}] [--executor {local,k8s}]
+    [--root ROOT] [--ids IDS] [--openapi OPENAPI] [--project PROJECT] [--json]
 ```
 
 ### `rvw farm queue`
@@ -2410,10 +2417,10 @@ usage: rvw regress compare [-h] [--core CORE] [--known KNOWN]
 ### `rvw regress gate`
 
 ```text
-usage: rvw regress gate [-h] [--core CORE] [--tier TIER] [--base-rev BASE_REV]
-    [--base BASE] [--cand-rev CAND_REV] [--cand CAND] [--config CONFIG]
-    [--known KNOWN] [--perf-tolerance PERF_TOLERANCE] [--allow-missing]
-    [--seed-policy {auto,exact,count}] [--budget-cpu-seconds
+usage: rvw regress gate [-h] [--core CORE] [--tier TIER] [--out OUT]
+    [--base-rev BASE_REV] [--base BASE] [--cand-rev CAND_REV] [--cand CAND]
+    [--config CONFIG] [--known KNOWN] [--perf-tolerance PERF_TOLERANCE]
+    [--allow-missing] [--seed-policy {auto,exact,count}] [--budget-cpu-seconds
     BUDGET_CPU_SECONDS] [--budget-wall-seconds BUDGET_WALL_SECONDS]
     [--budget-job-count BUDGET_JOB_COUNT] [--cost-report COST_REPORT] [--jobs
     JOBS] [--seeds SEEDS] [--seed-base SEED_BASE] [--random-seeds] [--filter
@@ -2489,8 +2496,9 @@ usage: rvw regress instruction-feed [-h] --elf ELF --out OUT [--word-bytes
 ### `rvw regress cosim`
 
 ```text
-usage: rvw regress cosim [-h] --platform PLATFORM [--model MODEL]
-    [--allow-sync ALLOW_SYNC] [--out OUT] [--json] [--project PROJECT] run
+usage: rvw regress cosim [-h] --platform PLATFORM [--model MODEL] [--findings
+    FINDINGS] [--allow-sync ALLOW_SYNC] [--out OUT] [--json] [--project
+    PROJECT] run
 ```
 
 ### `rvw replay-pack`
@@ -2710,7 +2718,7 @@ usage: rvw cocotb [-h] --out OUT [--seed SEED] [--timeout TIMEOUT] [--json]
 
 ```text
 usage: rvw soc [-h] [--project PROJECT] [--json]
-    {audit,compose,export-ipxact,feedback,handoff,mbist,new,observe,observe-pack,peripheral,verify,pair,generate,import-ipxact,capture-check,check}
+    {audit,compose,export-ipxact,feedback,handoff,import-ip,mbist,new,observe,observe-pack,peripheral,verify,pair,generate,import-ipxact,capture-check,check}
     ...
 ```
 
@@ -2747,6 +2755,13 @@ usage: rvw soc feedback [-h] --db DB --source SOURCE --out OUT [--json]
 ```text
 usage: rvw soc handoff [-h] --db DB --out OUT [--settings SETTINGS] [--json]
     [--project PROJECT]
+```
+
+### `rvw soc import-ip`
+
+```text
+usage: rvw soc import-ip [-h] --root ROOT --out OUT --base BASE [--project
+    PROJECT] [--json] source
 ```
 
 ### `rvw soc mbist`
@@ -3875,7 +3890,7 @@ Starts a background job: no.
 
 Render, submit, inspect, cancel or collect explicit local/Kubernetes shards.
 
-Arguments: `plan` (required), `action`, `executor`, `root`, `ids`.
+Arguments: `plan` (required), `action`, `executor`, `root`, `ids`, `openapi`.
 
 Starts a background job: yes.
 
@@ -3911,6 +3926,14 @@ Arguments: `root` (required), `out` (required), `core`, `suite`, `config`, `gate
 
 Starts a background job: yes.
 
+### `farm_gate`
+
+Feed identity-checked native farm results to rvw regress gate.
+
+Arguments: `base` (required), `candidate` (required), `project` (required), `tier`, `out`, `rvfi_trace`.
+
+Starts a background job: yes.
+
 ### `farm_live`
 
 Read owner-scoped runs, trends, test history and failure clusters.
@@ -3939,7 +3962,7 @@ Starts a background job: yes.
 
 Build one local/Kubernetes shard plan from a C1 manifest with hashed ELF inputs and expected cells.
 
-Arguments: `manifest` (required), `adapter` (required), `root` (required), `image` (required), `claim` (required), `shards`, `jobs`, `identity`, `resources`, `timeout`.
+Arguments: `manifest` (required), `adapter` (required), `root` (required), `image` (required), `claim` (required), `shards`, `jobs`, `persistent`, `python`, `identity`, `resources`, `timeout`.
 
 Starts a background job: yes.
 
@@ -5081,9 +5104,9 @@ Starts a background job: no.
 
 ### `regress_cosim`
 
-Strictly compare every C1 result of one regress run with the reference. Statuses: match, mismatch, fail, error, inconclusive. Nothing is masked or promoted.
+Strictly compare every C1 result of one regress run with the reference. Statuses: match, mismatch, fail, error, inconclusive, known_finding. Nothing is masked or promoted.
 
-Arguments: `run_dir` (required), `platform` (required), `model`, `allow_sync`.
+Arguments: `run_dir` (required), `platform` (required), `model`, `findings`, `allow_sync`.
 
 Starts a background job: no.
 
@@ -5091,7 +5114,7 @@ Starts a background job: no.
 
 Gate a change by running a tier on base/candidate revisions or comparing stored runs. base and base_rev are mutually exclusive; cand and cand_rev are mutually exclusive. Use base_rev or base; candidate defaults to HEAD when clean. Dirty trees run but cannot accept: C4 /2 reports tests separately and not_accepted_reason=uncommitted. Commit (a scratch branch is fine) and rerun; complete RTL identities reuse passing results. Returns a job; the runner takes the core lock.
 
-Arguments: `project`, `core`, `known`, `perf_tolerance`, `allow_missing`, `seed_policy`, `jobs`, `seeds`, `seed_base`, `random_seeds`, `filter`, `max_cycles`, `timeout`, `rvfi_trace`, `no_cache`, `replay_max_bytes`, `budget_cpu_seconds`, `budget_wall_seconds`, `budget_job_count`, `cost_report`, `tier`, `config`, `base_rev`, `base`, `cand_rev`, `cand`.
+Arguments: `project`, `core`, `known`, `perf_tolerance`, `allow_missing`, `seed_policy`, `jobs`, `seeds`, `seed_base`, `random_seeds`, `filter`, `max_cycles`, `timeout`, `rvfi_trace`, `no_cache`, `replay_max_bytes`, `budget_cpu_seconds`, `budget_wall_seconds`, `budget_job_count`, `cost_report`, `tier`, `config`, `base_rev`, `base`, `cand_rev`, `cand`, `out`.
 
 Starts a background job: yes.
 
@@ -5444,6 +5467,14 @@ Starts a background job: no.
 Export captured implementation inputs. This is not signoff evidence.
 
 Arguments: `db_path`, `out` (required), `settings`, `db`.
+
+Starts a background job: no.
+
+### `soc_import_ip`
+
+Wrap declared external Verilog APB3 or classic Wishbone IP. Generation only.
+
+Arguments: `source` (required), `root` (required), `out` (required), `base` (required).
 
 Starts a background job: no.
 
