@@ -4886,3 +4886,12 @@ unbounded safety pass receives `proof_kind=liveness_to_safety`. A bounded pass
 is a bounded lasso search. Justice feasibility and existential CTL deadlock
 freedom are not established. Existing safety assertions are removed from this
 separate job. Original assumptions remain.
+
+### Database app role evidence
+
+Formal app reports retain `database.roles` with role, source database evidence,
+generated check IDs and unsupported reasons. Exact internal enum exposure is
+recorded in the captured generated plan as `internal_ports` with widths.
+`counts` separates generated obligations, unbounded passes, bounded passes,
+solver failures and unsupported discovery records. Reachability failures retain
+their observation semantics. Counts do not grant a design pass.

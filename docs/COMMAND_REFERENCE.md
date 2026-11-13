@@ -1049,7 +1049,7 @@ usage: rvw formal apps [-h] --out OUT [--depth DEPTH] [--engine ENGINE]
 
 ```text
 usage: rvw formal autocheck [-h] --out OUT [--db DB] [--kind
-    {stuck_at,toggle,fsm_state,fsm_transition,dead_code,onehot,mutex,array_bound,arithmetic_overflow,fifo,deadlock,livelock,arbiter_starvation,handshake_progress}]
+    {stuck_at,toggle,fsm_state,fsm_transition,dead_code,onehot,mutex,array_bound,arithmetic_overflow,fifo,deadlock,livelock,arbiter_starvation,handshake_progress,stream_stability}]
     [--max-properties MAX_PROPERTIES] [--depth DEPTH] [--engine ENGINE]
     [--timeout TIMEOUT] [--mode {bmc,prove}] [--xprop] [--json] [--project
     PROJECT] manifest

@@ -136,6 +136,14 @@ def generate(plan, prop):
         from .security.entropy import generate as entropy_monitor
         extra, assertion = entropy_monitor(prop, ports, signal, clock, reset)
         body.extend(extra)
+    elif kind == 'stream_stability':
+        valid, ready, data = (signal(prop[k]) for k in ('valid', 'ready', 'signal'))
+        if ports[valid]['width'] != 1 or ports[ready]['width'] != 1:
+            raise ValueError('Stream controls must have width one')
+        width = ports[data]['width']
+        body += ['reg rvwa_stalled = 0;', f'reg [{width-1}:0] rvwa_payload;',
+                 f'always @(posedge {clock}) begin rvwa_stalled <= !{reset} && {valid} && !{ready}; rvwa_payload <= {data}; end']
+        assertion = f'!rvwa_stalled || ({valid} && {data} == rvwa_payload)'
     elif kind in ('onehot', 'mutex', 'array_bound', 'arithmetic_overflow', 'toggle', 'fifo'):
         from .app_monitors import generate as monitor
         extra, assertion = monitor(prop, ports, signal, expr, clock, reset)

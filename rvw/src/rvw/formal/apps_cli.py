@@ -46,7 +46,7 @@ def register(s):
     auto.add_argument("manifest")
     auto.add_argument("--out", required=True)
     auto.add_argument("--db", help="derive ports and complete output-enum FSM targets from SpinalDB")
-    auto.add_argument("--kind", action="append", choices=["stuck_at", "toggle", "fsm_state", "fsm_transition", "dead_code", "onehot", "mutex", "array_bound", "arithmetic_overflow", "fifo", "deadlock", "livelock", "arbiter_starvation", "handshake_progress"], help="select generated property kinds; repeat to combine")
+    auto.add_argument("--kind", action="append", choices=["stuck_at", "toggle", "fsm_state", "fsm_transition", "dead_code", "onehot", "mutex", "array_bound", "arithmetic_overflow", "fifo", "deadlock", "livelock", "arbiter_starvation", "handshake_progress", "stream_stability"], help="select generated property kinds; repeat to combine")
     auto.add_argument("--max-properties", type=int, default=256)
     auto.add_argument("--depth", type=int, default=20)
     auto.add_argument("--engine", default="smtbmc:yices")

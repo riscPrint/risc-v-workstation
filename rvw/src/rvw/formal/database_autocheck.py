@@ -36,7 +36,7 @@ def populate(plan, database, capture):
                  for s in signals if s.direction in ('in', 'out') and not s.pruned}
         if plan.get('ports') and plan['ports'] != ports:
             raise ValueError('declared ports differ from database module ports')
-        fsms, skipped = [], []
+        fsms, skipped, internal = [], [], {}
         contracts = list(plan.get('contracts', []))
         for signal in signals:
             states = enum_states(signal.type)
@@ -45,8 +45,11 @@ def populate(plan, database, capture):
                     skipped.append({'signal': signal.path, 'reason': 'enum encoding unavailable'})
                 continue
             if signal.name not in ports or ports[signal.name]['direction'] != 'output':
-                skipped.append({'signal': signal.path, 'reason': 'internal enum needs RTL exposure'})
-                continue
+                if signal.pruned or not re.fullmatch(r'[A-Za-z_][A-Za-z0-9_]*', signal.name):
+                    skipped.append({'signal': signal.path, 'reason': 'internal enum lacks a plain retained RTL name'})
+                    continue
+                internal[signal.name] = signal.width
+                ports[signal.name] = {'direction': 'output', 'width': signal.width}
             if len(states) > 1 and all(v >= 0 and (v & (v-1)) == 0 for v in states):
                 contracts.append({'id': f'onehot_{signal.name}', 'kind': 'mutex' if 0 in states else 'onehot', 'signal': signal.name})
             fsms.append({'signal': signal.name, 'states': states,
@@ -68,8 +71,12 @@ def populate(plan, database, capture):
                                   'enable': enable or '1', 'size': depth})
             else:
                 skipped.append({'memory_port': pid, 'reason': 'address or enable needs RTL exposure or expression lowering'})
-        return dict(plan, ports=ports, fsms=fsms, contracts=contracts, toggle=plan.get('toggle', True), source_locations={s.name: {'file': s.file, 'line': s.line} for s in signals if s.file and s.line}, module=plan['top']), {
-            'component': path, 'skipped': skipped, 'staleness': db.staleness(),
-            'scope': 'Port inventory and complete enum encodings from SpinalDB. Internal enum exposure is not inferred.'}
+        from .role_discovery import discover
+        roles, discovered = discover(db, cid, signals, ports)
+        contracts.extend(discovered)
+        roles.extend({'role': 'fsm', 'path': f['signal'], 'evidence': {'encoding': f['states']}, 'checks': ['fsm_state', 'fsm_transition']} for f in fsms)
+        return dict(plan, internal_ports=internal, ports=ports, fsms=fsms, contracts=contracts, toggle=plan.get('toggle', True), source_locations={s.name: {'file': s.file, 'line': s.line} for s in signals if s.file and s.line}, module=plan['top']), {
+            'component': path, 'roles': roles, 'skipped': skipped, 'staleness': db.staleness(),
+            'scope': 'Port inventory and complete enum encodings from SpinalDB. Exact retained internal enum names are exposed and width-checked before proof.'}
     finally:
         db.close()
