@@ -749,10 +749,13 @@ match every trace input at the selected timestamp. Named register values must
 cover all elaborated DUT state bits. Generated monitor registers and native
 formal samplers are excluded. Alias wires do not exempt DUT state.
 
-The current route loads only flat top-level register state with input-driven
-clocks and asynchronous reset controls. It refuses memories, child-module state,
-incomplete state and input-phase mismatches. Icarus setup settles before state
-is deposited. Logical replay time starts after the deposit. Property clocks
+The route loads complete elaborated flip-flop state through named instances.
+State-bit identities include the instance path. Register names must be actual
+RTLIL flip-flop Q destinations, so combinational aliases cannot satisfy coverage.
+It refuses memories, black boxes, incomplete state and input-phase mismatches.
+Icarus input setup settles before all recorded registers are forced. Derived
+clock and asynchronous-control events settle while every register remains
+forced. All registers are then released. Logical replay time starts at release. Property clocks
 use private pre-update pulses, so setup cannot count as a property attempt.
 Monitor histories restart. C1 `state_load` records the captured trace hash,
 timestamp, timescale, scope, loaded register values, state-bit count and limits.

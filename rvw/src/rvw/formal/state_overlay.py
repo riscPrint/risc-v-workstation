@@ -1,4 +1,4 @@
-"""Load a trace-selected flat register state into native timed replay."""
+"""Load a trace-selected register state into native timed replay."""
 import json
 from pathlib import Path
 import re
@@ -25,7 +25,7 @@ def load(spec, capture, event_file, out, top, inputs, initial, timeout):
     if not names or len(set(names))!=len(names):
         raise ValueError('state.registers must name each loaded register once')
     for name in names:
-        common.check_ident('state register',name)
+        common.check_hier('state register',name)
     path=Path(spec['trace'])
     if not path.is_absolute():
         path=Path(event_file.source).parent/path
@@ -39,59 +39,82 @@ def load(spec, capture, event_file, out, top, inputs, initial, timeout):
         if var is None or var.width!=width or bits(var,snap)!=initial[name].lower():
             raise ValueError('initial event inputs disagree with trace: '+name)
     model=json.loads((out/'module_ports.json').read_text())['modules']
-    mod=model[top]
     state=set()
-    generated=set()
-    # Exclude only generated monitor registers. Boolean monitor wires can alias
-    # real DUT state, so their names cannot identify monitor state.
+    instances={}
+    genuine=register_outputs(out/'module_ports.il')
+    # Exclude generated registers, not Boolean aliases of real DUT state.
     source=(out/'inputs/temporal.sv').read_text()
     helpers=re.findall(r'\breg\b[^;\n]*\b(rvw_sva_\w+)\s*(?:=[^;]*)?;',source)
-    for name in helpers:
-        generated.update(mod.get('netnames',{}).get(name,{}).get('bits',[]))
-    for name,net in mod.get('netnames',{}).items():
-        if name.startswith('$formal$'):
-            generated.update(net['bits'])
-    input_bits={bit for p in mod['ports'].values() if p['direction']=='input' for bit in p['bits']}
-    def child_state(name,stack=()):
-        if name in stack:
+    def visit(module,path=(),stack=()):
+        if module in stack:
             raise ValueError('recursive module state')
-        return any((cell['type'] in model and child_state(cell['type'],(*stack,name))) or
-                   cell['type'].startswith(('$mem','$dff','$adff','$sdff','$dlatch','$aldff','$ff'))
-                   for cell in model[name].get('cells',{}).values())
-    for cell in mod.get('cells',{}).values():
-        kind=cell['type']
-        if kind in model:
-            if child_state(kind):
-                raise ValueError('trace state loading currently needs flat top-level state')
-            continue
-        if kind.startswith('$mem'):
-            raise ValueError('trace state loading does not yet load memories')
-        q=set(cell.get('connections',{}).get('Q',[]))
-        if not q or not kind.startswith(('$dff','$adff','$sdff','$ff')):
-            continue
-        if q <= generated:
-            continue
-        for control in ('CLK','ARST'):
-            wire=cell['connections'].get(control)
-            if wire and not set(wire)<=input_bits:
-                raise ValueError('loaded state clocks and async resets must be top-level inputs')
-        state.update(q)
+        mod=model[module]
+        if mod.get('attributes',{}).get('blackbox',0) not in (0,'0','0'*32):
+            raise ValueError('trace state loading cannot inspect black-box state')
+        instances[path]=(module,mod)
+        generated=set()
+        for name,net in mod.get('netnames',{}).items():
+            if name in helpers or name.startswith('$formal$'):
+                generated.update(net['bits'])
+        for name,cell in mod.get('cells',{}).items():
+            kind=cell['type']
+            if kind in model:
+                visit(kind,(*path,name),(*stack,module))
+                continue
+            if kind.startswith('$mem'):
+                raise ValueError('trace state loading does not yet load memories')
+            if not kind.startswith('$'):
+                raise ValueError('trace state loading cannot inspect unknown cell state')
+            q=set(cell.get('connections',{}).get('Q',[]))
+            if not q or not kind.startswith(('$dff','$adff','$sdff','$ff')) or q<=generated:
+                continue
+            state.update((path,bit) for bit in q)
+    visit(top)
     loaded=set()
     assignments=[]
     for name in names:
         var=variables.get(name)
-        net=mod.get('netnames',{}).get(name)
+        *parents,leaf=name.split('.')
+        owner=instances.get(tuple(parents))
+        module,mod=owner if owner else (None,{})
+        net=mod.get('netnames',{}).get(leaf)
+        mapped={(tuple(parents),bit) for bit in net['bits']} if net else set()
         if var is None or var.kind not in ('reg','logic','bit','integer'):
             raise ValueError('state register needs a trace variable: '+name)
-        if net is None or len(net['bits'])!=var.width or not set(net['bits'])<=state:
+        if (net is None or len(net['bits'])!=var.width or not mapped<=state
+                or leaf not in genuine.get(module,set())):
             raise ValueError('state register does not map to DUT register bits: '+name)
-        if name in inputs:
+        if mod.get('ports',{}).get(leaf,{}).get('direction')=='input':
             raise ValueError('state register is an input: '+name)
         assignments.append(dict(signal=name,width=var.width,value=bits(var,snap)))
-        loaded.update(net['bits'])
+        loaded.update(mapped)
     if loaded != state:
         raise ValueError(f'incomplete trace register state: {len(loaded)} of {len(state)} bits')
     return dict(trace=item.source,trace_sha256=item.sha256,time=snap.time,timescale=snap.timescale,scope=scope,
-                registers=assignments,state_bits=len(state),coverage='complete flat register state',
-                limits=['No memory or child-module state.',
+                registers=assignments,state_bits=len(state),coverage='complete hierarchical register state',
+                limits=['No memory or black-box state.',
+                        'Replay forces all state while setup events settle, then releases it.',
                         'Monitor histories restart; this is a finite native continuation, not a proof.'])
+
+
+def register_outputs(path):
+    """Keep actual FF destination names before JSON bit IDs merge aliases."""
+    result={}
+    module=kind=None
+    for line in path.read_text().splitlines():
+        line=line.strip()
+        if line.startswith('module '):
+            module=line.split()[1].removeprefix('\\')
+            result[module]=set()
+        elif line.startswith('cell '):
+            kind=line.split()[1]
+        elif line=='end':
+            if kind is not None:
+                kind=None
+            else:
+                module=None
+        elif (module is not None and kind is not None
+              and kind.startswith(('$dff','$adff','$sdff','$ff'))
+              and line.startswith('connect \\Q ')):
+            result[module].update(re.findall(r'\\([A-Za-z_]\w*)\b',line[len('connect \\Q '):]))
+    return result

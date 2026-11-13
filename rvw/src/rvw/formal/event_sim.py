@@ -71,7 +71,14 @@ def testbench(top, ports, observed, scale, rows, raw_pulses=None, state=None, cr
             # depositing the recorded state. Logical replay time starts here.
             lines.append('#1;')
             for register in state['registers']:
-                lines.append(f"dut.{common.vid(register['signal'])} = {register['width']}'b{register['value']};")
+                signal='.'.join(common.vid(part) for part in register['signal'].split('.'))
+                lines.append(f"force dut.{signal} = {register['width']}'b{register['value']};")
+            # Forces protect all state while derived clocks or async controls
+            # react to the loaded values. Release only after those events settle.
+            lines.append('#1;')
+            for register in state['registers']:
+                signal='.'.join(common.vid(part) for part in register['signal'].split('.'))
+                lines.append(f'release dut.{signal};')
         for name in observed:
             lines.append(f'$strobe("RVW_OBSERVE {at} {name} %b", {common.vid(name)});')
         previous = at
@@ -97,7 +104,10 @@ def run(args):
     common.check_ident('top', args.top)
     fd = common.lock_out(out)
     try:
-        common.clear_outputs(out, 'result.json', 'coverage.dat', 'compile.log', 'run.log')
+        for path in [args.events, *args.verilog]:
+            if Path(path).resolve().is_relative_to((out/'event-inputs').resolve()):
+                raise ValueError('replay input is inside the owned event capture; use a different --out')
+        common.clear_outputs(out, 'result.json', 'coverage.dat', 'compile.log', 'run.log', 'event-inputs')
         spec_capture = Capture(out / 'event-inputs')
         event_file = spec_capture.file(Path(args.events))
         event_data = json.loads(event_file.copy.read_text())
