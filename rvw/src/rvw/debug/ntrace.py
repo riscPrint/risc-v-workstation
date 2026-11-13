@@ -119,6 +119,8 @@ def _parse(chunk, profile):
     position = 0
     def take(width):
         nonlocal position
+        if position + width > len(bits):
+            raise ValueError('message ends inside a fixed field')
         value = sum(bits[position + i] << i for i in range(width))
         position += width
         return value
