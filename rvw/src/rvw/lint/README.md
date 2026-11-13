@@ -543,3 +543,16 @@ in a backend that ran remains a `lint.stale_waiver` error. An unrun backend
 keeps stale null. The metadata and stale-state functions are shared with
 generated check dispositions. Version 1 remains a legacy format without an
 owner or expiry requirement; no values are invented during migration.
+
+### Complete conditional assignments
+
+The latch rule reduces complete `when/elsewhen/otherwise` trees and switches
+with a default before it reports a latch. A default must assign the same
+full-width target. A default that only assigns another signal does not cover
+that target. Partial writes and generated expressions with source-scope
+conditions still need lowered RTL checks.
+
+Regenerate the minimal Spinal test with `Test/runMain
+spinaldb.LintMuxFixture OUTPUT` in `SpinalDB/spinaldb`. Run
+`RVW_LINT_MUX=OUTPUT rvw/.venv/bin/python -m pytest
+rvw/tests/test_lint_extracted.py -k complete_mux -q` from the checkout root.

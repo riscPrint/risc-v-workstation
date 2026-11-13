@@ -97,3 +97,13 @@ def test_extracted_library_sdc():
     assert text.count('set_max_delay -datapath_only') == 3
     assert 'set_false_path -from [get_ports {rawReset}]' in text
     assert r['findings'] == [] and r['spinal_synchronous'] == [['a_toggle', 'clkA']]
+
+
+def test_extracted_complete_mux():
+    root = os.environ.get('RVW_LINT_MUX')
+    if not root:
+        pytest.skip('set RVW_LINT_MUX to the LintMuxFixture output')
+    from rvw.lint.rules import analyze as lint_rules
+    result = run_on(Path(root) / 'design.db', lint_rules)
+    assert not [f for f in result['findings'] if f['rule'] == 'lint.latch']
+

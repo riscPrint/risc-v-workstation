@@ -90,6 +90,28 @@ class ReconvergeReference(merge: Boolean) extends Component {
     result := y2.asBits ## sink.asBits
   }
 }
+/** Complete conditional assignments, including a nested elsewhen and enum mux. */
+class CompleteMuxReference extends Component {
+  val a, b, data = in Bool()
+  val result, selected = out Bool()
+  when(a) { result := data }.elsewhen(b) { result := !data }.otherwise { result := False }
+  val sel = in UInt(2 bits)
+  switch(sel) {
+    is(0) { selected := a }
+    is(1) { selected := b }
+    default { selected := data }
+  }
+}
+
+object LintMuxFixture {
+  def main(args: Array[String]): Unit = {
+    val dir = Paths.get(args(0)); Files.createDirectories(dir)
+    SpinalDB.generate(SpinalConfig(targetDirectory=dir.resolve("rtl").toString),
+      dir.resolve("design.db").toFile, DbOptions(pdg=false, blocks=false, hgldd=false))(
+      new CompleteMuxReference)
+  }
+}
+
 object LintFixtures {
   def main(args: Array[String]): Unit = {
     for ((name, fifo, broken) <- Seq(("handshake", false, false),
@@ -122,3 +144,4 @@ object LintFixtures {
     }
   }
 }
+

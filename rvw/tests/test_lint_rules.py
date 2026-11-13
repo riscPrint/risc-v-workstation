@@ -154,3 +154,26 @@ def test_mcp_emit_tool(tmp_path):
     r = report_outputs(str(p), emit_dir=str(tmp_path / 'e'), sarif_path=str(tmp_path / 'x.sarif'))
     assert (tmp_path / 'e/cdc_obligations.json').is_file() and (tmp_path / 'x.sarif').is_file()
     assert r['emitted']['obligations'] == 0
+
+
+def test_exhaustive_condition_tree_is_not_a_latch(tmp_path):
+    # Spinal: when(a) { x := i }.elsewhen(b) { x := j }.otherwise { x := k }
+    b = base(tmp_path)
+    b.sig('x'); b.edge('x', 'o')
+    for i, parent, kind, key, line in [(1, None, 'when', 'a', 10), (2, None, 'else', 'a', 10),
+                                       (3, 2, 'when', 'b', 11), (4, 2, 'else', 'b', 11)]:
+        b.c.execute('INSERT INTO conds(id,parent_id,component_id,kind,key,file_id,line) VALUES(?,?,1,?,?,1,?)',
+                    (i, parent, kind, key, line))
+    for cond in (1, 3, 4):
+        b.assign('x', ' := i:Bool', cond=cond)
+    assert ('lint.latch', 'x') not in found(lint(b.done()))
+
+
+def test_switch_default_must_assign_target(tmp_path):
+    # Spinal: switch(sel) { is(0) { x := i }; default { y := i } }
+    b = base(tmp_path)
+    b.sig('x'); b.edge('x', 'o')
+    for i, kind in [(1, 'case'), (2, 'default')]:
+        b.c.execute('INSERT INTO conds(id,component_id,kind,signal_id,file_id,line) VALUES(?,1,?,1,1,10)', (i, kind))
+    b.assign('x', ' := i:Bool', cond=1)
+    assert ('lint.latch', 'x') in found(lint(b.done()))

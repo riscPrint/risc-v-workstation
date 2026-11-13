@@ -102,6 +102,32 @@ def sccs(nodes, succ):
     return out
 
 
+def complete_assignment(assigns, conditions):
+    """Reduce full-width assignments through exhaustive source condition branches."""
+    covered = {a['cond_id'] for a in assigns if a['range'] is None}
+    # Partial writes need bit coverage; do not infer completeness from their conditions.
+    changed = True
+    while changed and None not in covered:
+        changed = False
+        for i in list(covered):
+            c = conditions.get(i)
+            if not c:
+                continue
+            siblings = [x for x in conditions.values() if
+                        (x['parent_id'], x['component_id'], x['file_id'], x['line'], x['signal_id']) ==
+                        (c['parent_id'], c['component_id'], c['file_id'], c['line'], c['signal_id'])]
+            if c['kind'] in ('when', 'else'):
+                siblings = [x for x in siblings if x['kind'] in ('when', 'else') and x['key'] == c['key']]
+                exhaustive = {x['kind'] for x in siblings} == {'when', 'else'}
+            else:
+                siblings = [x for x in siblings if x['kind'] in ('case', 'default')]
+                exhaustive = any(x['kind'] == 'default' for x in siblings)
+            if exhaustive and all(x['id'] in covered for x in siblings) and c['parent_id'] not in covered:
+                covered.add(c['parent_id'])
+                changed = True
+    return None in covered
+
+
 def analyze(db, config=None):
     conf = settings(config)
     design = Design(db.conn)
@@ -141,6 +167,7 @@ def analyze(db, config=None):
     read = {r[0] for r in db.conn.execute('SELECT DISTINCT assignment_id FROM assign_reads')}
     rows = [a for a in db.conn.execute('SELECT * FROM assignments')
             if a['source'] != 'Yosys net alias' or a['id'] not in read]
+    conditions = {r['id']: dict(r) for r in db.conn.execute('SELECT * FROM conds')}
     by_target = {}
     for a in rows:
         by_target.setdefault(a['target_id'], []).append(a)
@@ -155,7 +182,7 @@ def analyze(db, config=None):
                 (d.components.get(c) or {}).get('path', '?') for c in comps))
         if data and d.is_top_input(t):
             emit('lint.input_driven', t)
-        if s['kind'] == 'wire' and data and all(a['cond_id'] is not None for a in data) and t not in role:
+        if s['kind'] == 'wire' and data and all(a['cond_id'] is not None for a in data) and t not in role and not complete_assignment(data, conditions):
             if s.get('generated') and len(data) == 1 and data[0]['range'] is None:
                 # Spinal can hoist generated expression temporaries out of their
                 # source scope. A condition in this database is not a lowered
