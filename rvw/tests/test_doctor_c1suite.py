@@ -7,6 +7,8 @@ from types import SimpleNamespace
 
 import pytest
 
+pytestmark = pytest.mark.fast
+
 from rvw.doctor.c1suite import conformance, looping_copy
 
 FAKE = r'''

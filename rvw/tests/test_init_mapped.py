@@ -3,6 +3,8 @@ import json
 
 import pytest
 
+pytestmark = pytest.mark.fast
+
 from rvw.cli import main
 from rvw.common.project import load_project
 from rvw.common.proc import run_group
