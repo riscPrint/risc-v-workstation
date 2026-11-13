@@ -271,8 +271,14 @@ class Graph:
         self.include_clock = include_clock
         self._memo: dict[tuple[int, str], dict[int, frozenset]] = {}
 
+    def aggregate(self, s: Signal) -> bool:
+        # HDL vectors are endpoint views of bit nodes. Traversing through the view
+        # would connect unrelated lanes merely because they share a packed net.
+        return (self.db.meta.get("frontend", "").startswith("yosys-")
+                and s.width > 1 and s.kind not in {"mem", "mem_read"})
+
     def hidden(self, s: Signal) -> bool:
-        return s.generated and s.kind not in STATE_KINDS and s.direction is None
+        return s.generated and s.kind not in STATE_KINDS and s.direction is None and not self.aggregate(s)
 
     def raw(self, sid: int, direction: str) -> list[tuple[int, str]]:
         if direction == "in":
@@ -359,6 +365,8 @@ def _bfs(db: DesignDB, starts: list[Signal], direction: str, depth: int, *, stop
         if dist[u] >= depth:
             continue
         su = db.signal_by_id(u)
+        if u not in start_ids and g.aggregate(su):
+            continue
         if stop_at_regs and dist[u] > 0 and su.kind in STATE_KINDS:
             continue
         for v, ks in sorted(g.neighbours(u, direction).items()):
@@ -420,6 +428,8 @@ def path(db: DesignDB, a: str, b: str, *, comb_only: bool = False, data_only: bo
         if found_at is not None and dist[u] >= found_at:
             break
         su = db.signal_by_id(u)
+        if dist[u] > 0 and g.aggregate(su):
+            continue
         if comb_only and dist[u] > 0 and su.kind in STATE_KINDS:
             continue
         for v, ks in g.neighbours(u, "out").items():

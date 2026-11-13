@@ -212,9 +212,9 @@ The GHDL native tests also cover `neorv32_uart` with four-entry RX and TX
 FIFOs at NEORV32 revision `7bd0858bed243e5e32521a8ffbeef8c68b68c653`.
 The test compares 16 path queries with an independent GHDL/Yosys netlist
 traversal. It checks two memories and the original RX input declaration line.
-Exact connectivity is inconclusive: packed-vector aliases add paths that the
-native bit graph does not have. The test reports xfail for these extra paths.
-A missing native path is a failure.
+All 16 path queries match the independent native traversal. Packed-vector
+views are query endpoints. Traversal does not use them as intermediate links
+between different lanes. Whole-cell dependencies remain conservative.
 
 The Chisel native tests also cover the Chisel 6.5.0 standard `Queue`:
 four entries, 8-bit data, a memory and synchronous pointer resets.
