@@ -35,8 +35,12 @@ def classpath(here, core, repo, lock):
     for library in ('RiscvSim', 'SpinalChecks', 'SpinalDB/spinaldb', 'SpinalProbes', 'SpinalTrace/spinaltrace', 'SpinalWaves/spinalwaves'):
         base = repo / library
         roots += [base / 'src', base / 'project', base / 'build.sbt']
+    roots.append(repo / 'scripts/sbt')
+    if selected := os.environ.get('RVW_SPINAL_SOURCE'):
+        sdk = Path(selected)
+        roots.append(sdk if sdk.is_absolute() else here / sdk)
     key = digest(roots)
-    key += json.dumps({k: v for k, v in os.environ.items() if k.startswith(('SBT_', 'COURSIER_', 'JAVA_', 'JDK_')) or k in ('RVW_HOME', 'RVW_CORE_SOURCE', 'PATH', 'HOME', 'JVM_OPTS', '_JAVA_OPTIONS')}, sort_keys=True)
+    key += json.dumps({k: v for k, v in os.environ.items() if k.startswith(('SBT_', 'COURSIER_', 'JAVA_', 'JDK_')) or k in ('RVW_HOME', 'RVW_CORE_SOURCE', 'RVW_SPINAL_SOURCE', 'PATH', 'HOME', 'JVM_OPTS', '_JAVA_OPTIONS')}, sort_keys=True)
     state = here / 'target/rvw-classpath.json'
     try:
         cached = json.loads(state.read_text())
