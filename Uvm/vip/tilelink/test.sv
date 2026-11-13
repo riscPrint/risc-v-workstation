@@ -1,0 +1,36 @@
+package tilelink_test;
+  import uvm_pkg::*; import tilelink_vip::*;
+  `include "uvm_macros.svh"
+  class test_env extends uvm_test;
+    `uvm_component_utils(test_env)
+    agent source; scoreboard sc;
+    function new(string name="test_env",uvm_component parent=null); super.new(name,parent); endfunction
+    function void build_phase(uvm_phase phase);
+      uvm_config_db#(bit)::set(this,"source.m","uh",!$test$plusargs("ul"));
+      source=new("source",this); sc=new("sc",this);
+    endfunction
+    function void connect_phase(uvm_phase phase); source.m.ap.connect(sc.input_port); endfunction
+    task run_phase(uvm_phase phase);
+      directed ds=new(); random_sequence rs=new(); error_sequence es=new();
+      phase.raise_objection(this); ds.uh=!$test$plusargs("ul");
+      if($test$plusargs("bad_manager")) es.start(source.s);
+      else begin ds.start(source.s); rs.start(source.s); end
+      repeat(20) @(posedge source.d.b.clk);
+      source.m.check_phase(phase); sc.check_phase(phase);
+      $display("RVW_TL_DONE responses=%0d",sc.count); phase.drop_objection(this);
+    endtask
+  endclass
+endpackage
+module top;
+  import uvm_pkg::*;
+  bit clk=0; always #5 clk=~clk;
+  tilelink_if bus(clk);
+  tilelink_ram dut(bus);
+  tilelink_checker checker_i(bus);
+  initial begin #20; bus.reset_n=1; end
+  initial begin
+    uvm_config_db#(virtual tilelink_if)::set(null,"uvm_test_top.source*","bus",bus);
+    run_test("test_env");
+  end
+  initial begin #1000000; $fatal(1,"TL_WATCHDOG"); end
+endmodule
