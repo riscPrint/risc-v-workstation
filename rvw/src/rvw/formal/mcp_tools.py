@@ -27,6 +27,7 @@ COMMON = {
             "the result's `restrictions`)"},
 }
 FLAGS = {"cross_check", "free_reset", "first_failure", "outputs", "payload", "x_inputs", "combinational", "event_model", "async_reset", "open", "xprop", "minimize", "emit_testbench", "check_x", "dsec", "sampled_events"}
+FLAGS = {"free_reset", "first_failure", "outputs", "payload", "x_inputs", "combinational", "event_model", "async_reset", "open", "xprop", "minimize", "emit_testbench", "dsec"}
 
 
 def _argv(command, args):
@@ -69,6 +70,7 @@ def _runner(command):
         if not isinstance(data, dict):
             raise error("result.json is not an object")
         if (code == 0) != (data.get("status") == {"datapath":"proved", "equiv":"equivalent"}.get(command,"pass")):
+        if (code == 0) != (data.get("status") == ("equivalent" if command == "equiv" else "pass")):
             raise error(f"exit code and status {data.get('status')!r} disagree")
         return data
     return run
@@ -294,6 +296,25 @@ def mcp_tools():
                          "clock": S, "reset": S, "depth": I, "max_nodes": I,
                          "engine": S, "timeout": {"type": "number", "exclusiveMinimum": 0}},
                         ["manifest", "db", "out"]), _connectivity, long=True),
+        ToolSpec("formal_equiv", "Prove all output partitions of two RTL revisions with eqy and ABC. Unknown partitions are inconclusive.",
+                 schema({"project": S, "gold": {"type": "array", "items": S},
+                         "gate": {"type": "array", "items": S}, "gold_rev": S, "gate_rev": S,
+                         "config": S, "top": S, "out": S, "clock": S, "reset": S,
+                         "reset_active": {**S, "enum": ["high", "low"]}, "reset_cycles": I,
+                         "settle": I, "latency": I, "dsec": B,
+                         "unmatched_state": {**S, "enum": ["refuse", "prove"]},
+                         "pair": {"type": "array", "items": S},
+                         "latency_map": {"type": "array", "items": S},
+                         "output_map": {"type": "array", "items": S},
+                         "timeout": {"type": "number", "exclusiveMinimum": 0}}, ["top", "out"]),
+                 _runner("equiv"), long=True),
+        ToolSpec("formal_cex", "Replay a captured failing BMC witness with edited inputs through Yosys sim. Not a proof.",
+                 schema({"result": S, "out": S, "trace_index": I,
+                         "edit": {"type": "array", "items": S},
+                         "hgldd": S, "pdg": S, "criterion": S, "at_time": I, "open": B,
+                         "minimize": B, "max_checks": I, "emit_testbench": B, "db": S, "signal": S,
+                         "timeout": {"type": "number", "exclusiveMinimum": 0}}, ["result", "out"]),
+                 _runner("cex"), long=True),
         ToolSpec("formal_bmc", "Bounded model check of a design's assertions from reset (SymbiYosys). Use for shallow "
                  "bugs; failures are named by SpinalChecks id and Scala line when `checks` is given. Runs as a job.",
                  schema({**COMMON, "reset_cycles": I, "free_reset": B, "first_failure": B,

@@ -516,6 +516,17 @@ width and signedness. Simulation comparisons preserve X/Z changes. Gated history
 alternate clock arguments and sampled reset conditions remain refused.
 These are sampled formal observations, not simulator-region qualification.
 
+### Equivalence output alignment
+
+`rvw.formal.equiv/1` can include `output_mapping` and
+`restrictions.latency_map`. The map keys are reference output names. Each signed
+latency in -64..64 gives candidate lag in clocks. Negative values delay the
+candidate in the comparison harness. Other outputs use `--latency`.
+The startup mask adds the maximum absolute output lag to reset and settle.
+An output rename changes only the boundary name. It adds no assumptions.
+Separate output partitions remain closed proofs. A whole-design equivalence
+result needs eqy PASS and PASS for every partition, without crossbits.
+
 ## Database autocheck candidates
 
 `rvw.autocheck/1` can supply semantic `contracts`, `toggle` and a `waivers` map
