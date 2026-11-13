@@ -1,0 +1,27 @@
+{
+  "schema": "rvw.x-candidate-replay/1",
+  "rtl_sha256": "917ec686b4ada9df0218155e84fb9305caa38ff22f8cdf28d2f4733dc8b05f73",
+  "reset_cycles": 2,
+  "depth": 8,
+  "backend": "Icarus",
+  "initial_state": "RTL initialization only; no solver state or hierarchical assignments",
+  "candidates": [
+    {
+      "signal": "iBus_cmd_valid",
+      "formal_step": 7,
+      "disposition": "rejected_witness",
+      "reason": "no X in either source RTL replay after reset",
+      "trace0_value": "1",
+      "trace1_value": "0"
+    },
+    {
+      "signal": "dBus_cmd_valid",
+      "formal_step": 7,
+      "disposition": "rejected_witness",
+      "reason": "no X in either source RTL replay after reset",
+      "trace0_value": "0",
+      "trace1_value": "1"
+    }
+  ],
+  "scope": "Rejects the two captured witnesses in four-state source simulation. Does not prove all-input reset reachability or initialization independence."
+}

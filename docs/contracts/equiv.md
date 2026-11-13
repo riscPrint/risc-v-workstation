@@ -399,3 +399,11 @@ Spike results. Trace digests identify the raw private runs. `controls`
 records separate RTL controls. A `NOT RUN` Spike status gives no comparison
 evidence. `minimal` records the self-checking program outcome. This receipt
 is simulation evidence. It is not an arithmetic proof or a qualification.
+
+## Source X witness replay
+
+The example receipt `rvw.x-candidate-replay/1` identifies the captured RTL
+by SHA-256 and records the reset duration, depth and per-candidate replay
+decision. `rejected_witness` means the saved input sequences do not produce
+the claimed X in source four-state simulation from reset. It is not an
+all-input proof of unreachability. The original formal report is retained.
