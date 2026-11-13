@@ -17,5 +17,5 @@ trap 'rm -rf "$argsdir"' EXIT
 config="$1"; shift 2
 printf '%s\0' "$config" "$out" "$@" > "$argsdir/args"
 cd "$here"
-"$RVW_HOME/scripts/with-lock.sh" vex "$RVW_HOME/scripts/with-lock.sh" sbt \
-  nice -n 10 sbt -J-Xmx3g -batch -Dsbt.offline=true "db/runMain rvwvex.Database --args-file $argsdir/args"
+"$RVW_HOME/scripts/with-lock.sh" "${RVW_VEX_LOCK:-vex}" "$RVW_HOME/scripts/with-lock.sh" "${RVW_SBT_LOCK:-sbt}" \
+  nice -n "${RVW_NICE:-10}" sbt -J-Xmx3g -batch -Dsbt.offline=true "db/runMain rvwvex.Database --args-file $argsdir/args"
