@@ -1094,3 +1094,15 @@ Unknown cancellation logic retains strict checks.
 ## Missing evidence and positive results
 
 Local and distributed RTL grids require at least one property. Empty property maps fail before output creation or solver/SSH dispatch. An empty work set cannot produce a passing proof grid.
+
+## Mapped ISA scaffold and fresh export
+
+`riscv_formal.build` is an optional command list, relative to the project.
+`formal isa` runs it before checks with a 120-second wall cap. A failed export
+is an error. The mapped Spinal RV32 req/rsp scaffold uses the same elaboration
+entry as simulation. It connects the declared RVFI outputs and supplies fixed
+RV32 IXL. It selects add, load, store and retirement cover at depth 24.
+The memory environment uses stable symbolic bytes with writes in program order.
+The bus accepts one request and returns read data one cycle later. Stores get
+responses only when the declared bus requests them. Review this environment.
+No machine-state, observer conformance or unbounded proof is inferred.

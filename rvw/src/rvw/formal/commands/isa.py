@@ -11,6 +11,13 @@ def main(args):
         project = load_project(getattr(args, 'project', None))
         if project is None:
             raise ValueError('select a project with --project')
+        cfg = project.sections.get('riscv_formal')
+        if cfg and cfg.get('build'):
+            from rvw.common.proc import run_group
+            built = run_group(['nice', '-n', '10', *cfg['build']], cwd=project.root,
+                              timeout=120, capture=True, text=True)
+            if built.returncode or built.timed_out:
+                raise ValueError('riscv_formal.build failed: ' + (built.stderr or built.stdout)[-1500:])
         with sigterm_raises():
             result = run(project.sections.get('riscv_formal'), args.out, args.timeout,
                          project.name, unbounded=args.unbounded, engines=args.engines.split(','), machine=args.machine, abstraction=args.abstraction)
