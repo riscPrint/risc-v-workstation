@@ -2119,3 +2119,40 @@ Precision is established only for the small samples in the
 [lint README](../rvw/src/rvw/lint/README.md#five-design-noise-measurement-2026-11-13).
 Native functional-warning triage, functional reset review and pipeline fault
 activation remain open. Grouping does not establish CDC/RDC protection.
+
+## Measure your tests
+
+Run [an exported-RTL mutation campaign](../rvw/src/rvw/cov/CORE_MUTATION.md)
+after the unmutated tests pass with strict Spike comparison. Select mutation
+scope in project data. Build failures do not count as detection. Check surviving
+mutants with formal equivalence before you report a confirmed test gap.
+
+| Step | Command | Evidence required |
+|---|---|---|
+| Measure your tests | `rvw cov mutate-core`; `rvw regress mutation` | Passing control, mutant build status, test-specific detection evidence, strict Spike results and survivor equivalence results. Native example studies and qualified pinned sets remain open. |
+
+### VexRiscv mutation study
+
+| Module scope | Native mutants run | Kill rate | First killer |
+|---|---:|---|---|
+| Decode | 0 | NOT RUN | Not measured |
+| ALU and shift | 0 | NOT RUN | Not measured |
+| Branch | 0 | NOT RUN | Not measured |
+| CSR and trap | 0 | NOT RUN | Not measured |
+| Memory interface | 0 | NOT RUN | Not measured |
+
+### ooo-mini mutation study
+
+| Module scope | Native mutants run | Kill rate | First killer |
+|---|---:|---|---|
+| Rename and free list | 0 | NOT RUN | Not measured |
+| ROB | 0 | NOT RUN | Not measured |
+| Issue queue | 0 | NOT RUN | Not measured |
+| Load/store queue | 0 | NOT RUN | Not measured |
+| Recovery | 0 | NOT RUN | Not measured |
+
+No native mutation test gaps have been measured by this flow. Directed survivor
+tests and counts of property detections before a reference mismatch remain
+open. These tables report missing evidence. They do not report zero test gaps
+or zero detection power. Project adapters for building the supplied mutant RTL
+and running the declared test tiers still need native qualification.
