@@ -68,7 +68,7 @@ class Config:
         if not isinstance(self.latencies, dict) or not self.latencies:
             raise ValueError("latencies must be a nonempty object")
         for key, value in self.latencies.items():
-            if key not in ("alu", "multiply", "divide", "load", "store", "branch", "jump") and not re.fullmatch("custom_[a-zA-Z0-9_]+", key):
+            if key not in ("alu", "multiply", "divide", "load", "store", "branch", "jump", "csr", "fence", "system") and not re.fullmatch("custom_[a-zA-Z0-9_]+", key):
                 raise ValueError(f"unsupported latency class: {key}")
             if type(value) is not int or value < 1:
                 raise ValueError(f"invalid latency for {key}")
@@ -151,6 +151,10 @@ def _simulate(instructions, config, max_cycles=1_000_000, predictor=None, memory
         if (config.memory_policy in ("disambiguate", "speculate") or config.translation or memory is not None) and op.kind in ("load", "store"):
             if type(op.address) is not int or op.address < 0 or type(op.size) is not int or op.size < 1:
                 raise ValueError("disambiguate requires memory address and size")
+        if op.mnemonic == "fence.i" and (config.components.get("memory", {}).get("l1i") or config.frontend.get("uop_cache_entries", 0)):
+            raise ValueError("fence.i requires instruction-cache invalidation not exposed by the component interface")
+        if op.kind == "csr" and op.encoding >> 20 == 0x180 and ((op.encoding >> 12 & 7) in (1, 5) or (op.encoding >> 15 & 31)) and config.components.get("memory", {}).get("tlb"):
+            raise ValueError("satp changes require translation context handling not exposed by the component interface")
         if op.dest is not None and (type(op.dest) is not int or not 0 <= op.dest < 32):
             raise ValueError("invalid destination register")
     if backend not in ("auto", "python", "native"):
@@ -179,6 +183,7 @@ def _simulate(instructions, config, max_cycles=1_000_000, predictor=None, memory
     from .structures import StaticPredictor
     predictor = predictor or StaticPredictor()
 
+    from .control import SERIAL
     from .rename import elimination, fuses
     from .dependence import Dependence
     dependence = Dependence(config.dependence_entries)
@@ -221,11 +226,16 @@ def _simulate(instructions, config, max_cycles=1_000_000, predictor=None, memory
             for previous in rob:
                 if previous is entry:
                     break
-                if previous.insn.kind in ("branch", "jump"):
+                if previous.insn.kind in ("branch", "jump") or previous.insn.kind in SERIAL:
                     older_branches.append(previous)
             if cycle < blocked_until or any(p.done is None or p.done > cycle for p in older_branches):
                 continue
             kind = entry.insn.kind
+            if kind in SERIAL:
+                older = list(rob)[:list(rob).index(entry)]
+                if any(p.done is None or p.done > cycle for p in older):
+                    events["control_serialize_blocked"] += 1
+                    continue
             if used_ports[kind] >= config.ports.get(kind, config.issue_width):
                 events["port_blocked"] += 1
                 continue
@@ -286,7 +296,7 @@ def _simulate(instructions, config, max_cycles=1_000_000, predictor=None, memory
                 if type(service) is not int or service < 0:
                     raise ValueError("memory service must return nonnegative cycles")
                 latency += service
-            if kind in ("branch", "jump"):
+            if kind in ("branch", "jump", "system"):
                 if hasattr(predictor, "predict_instruction"):
                     predicted = predictor.predict_instruction(entry.insn)
                     latency += predictor.last_delay
@@ -410,7 +420,10 @@ def _instructions(data, custom_instructions=()):
                                        encoding=row["insn"], mnemonic=kind))
                 continue
             decoded = decode(row["insn"], trace.header["xlen"])
-            if decoded.cls not in ("alu", "multiply", "divide", "load", "store", "branch", "jump") or decoded.dest_bank != "x" or any(bank != "x" for bank, _ in decoded.sources):
+            from .control import supported
+            if not supported(decoded):
+                raise ValueError(f"unsupported control instruction: {decoded.mnemonic}")
+            if decoded.cls not in ("alu", "multiply", "divide", "load", "store", "branch", "jump", "csr", "fence", "system") or decoded.dest_bank != "x" or any(bank != "x" for bank, _ in decoded.sources):
                 raise ValueError(f"unsupported instruction: {decoded.mnemonic}")
             mask = row["mem_rmask"] or row["mem_wmask"]
             if mask and mask != (1 << mask.bit_length()) - 1:
@@ -445,7 +458,7 @@ def run(config_path, trace_path, max_cycles=1_000_000, effective_config=None):
     import rvw.common.riscv as decoder
     import rvw.cosim.trace as parser
     engine = b"".join(Path(p).read_bytes() for p in (__file__, str(Path(__file__).with_name("structures.py")), decoder.__file__, parser.__file__))
-    engine += b"".join(Path(__file__).with_name(name + ".py").read_bytes() for name in ("frontend", "execution", "translation", "attribution", "native", "rename", "dependence", "custom", "project", "components"))
+    engine += b"".join(Path(__file__).with_name(name + ".py").read_bytes() for name in ("frontend", "execution", "translation", "attribution", "native", "rename", "dependence", "custom", "project", "components", "control"))
     engine += Path(__file__).with_name("native.c").read_bytes()
     if result["backend"] == "native":
         from .native import library_path

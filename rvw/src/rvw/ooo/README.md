@@ -19,8 +19,8 @@ Create CONFIG in your core project. This generic example is not a core preset:
 The fields in the example are required. Unknown fields are errors. Sizes, widths and latencies
 must be positive integers. These latency classes support decoded integer
 instructions only. Compressed integer instructions use the shared decoder.
-Fences, atomics, privileged, FP and vector operations are
-unsupported. Branches and jumps need explicit latency classes. The engine rejects their traces. A missing or unsuccessful end
+Atomics, trapping privileged operations, FP and vector operations are
+unsupported by the default configuration. Optional control timing is described below. Branches and jumps need explicit latency classes. The engine rejects their traces. A missing or unsuccessful end
 marker is an error. An exhausted model cycle budget is an error.
 
 ## Decisions
@@ -424,3 +424,20 @@ a committed-path approximation. Speculative history repair and fetch-time
 prediction remain open. The report's `components` object retains native
 statistics. Own branch and recovery events remain in `events`. Component
 execution uses the Python timing loop. No RTL fidelity is established.
+
+## Non-trapping control instructions
+
+Projects can add `csr`, `fence`, and `system` to `latencies`. CSR and fence
+operations wait for older ROB work to complete. Younger work waits for the
+control operation. MRET and SRET also use the committed-path branch recovery
+policy. Blocking WFI, ECALL/EBREAK traps, SFENCE.VMA, interrupts and fault
+handling remain unsupported. The model does not execute CSR semantics.
+
+A trace with FENCE.I is refused when an instruction cache or micro-op cache
+is active. The component interface has no invalidation operation. A possible
+SATP write is refused when the component TLB is active because its context
+change cannot be applied through this interface. Read-only SATP accesses can
+be timed. The engine does not silently retain invalid instruction or
+translation state. `control_serialize_blocked` counts inspected control
+operations that cannot start. This remains timing evidence, not privilege or
+CSR correctness verification.
