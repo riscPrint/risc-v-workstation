@@ -63,6 +63,18 @@ requested cycle or retired-instruction count. An inexact boundary is refused.
 Restore uses a fresh port. `restored` is not an equivalence verdict. Exact C2
 suffix comparison requires matching prefixes and complete end events.
 
+### Project architectural injection
+
+`rvw.arch-injection/1` and `rvw.arch-map/1` are project-port documents, not the
+proposed qualified Spike interchange format. Their exact fields and port calls
+are defined in `rvw/src/rvw/sim/INJECTION.md`. Both name the same profile. The
+profile declares the complete CSR and RAM inventory. The implementation checks
+widths, x0, unique bindings, exact CSR sets and non-overlapping memory images.
+A successful `injected` result means all mapped registers and memory passed
+readback before fetch release. It is not a C1 pass or C4 accept. Bare M mode
+and no active devices, interrupts or hidden execution state are required.
+Raw FPR bits are preserved. Native FP qualification remains required.
+
 ## Layout
 
 | Path | What | Language |
