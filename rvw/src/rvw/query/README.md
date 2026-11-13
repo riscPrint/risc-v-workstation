@@ -215,3 +215,10 @@ traversal. It checks two memories and the original RX input declaration line.
 Exact connectivity is inconclusive: packed-vector aliases add paths that the
 native bit graph does not have. The test reports xfail for these extra paths.
 A missing native path is a failure.
+
+The Chisel native tests also cover the Chisel 6.5.0 standard `Queue`:
+four entries, 8-bit data, a memory and synchronous pointer resets.
+All nine path queries match the independent emitted-RTL traversal.
+`rvw/tests/data/chisel/QUEUE.md` records generation and source artifact identity.
+Set `RVW_CHISEL_SOURCE` to the matching external library source tree to check
+Counter source mappings as well as wrapper source mappings.
