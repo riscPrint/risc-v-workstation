@@ -49,8 +49,8 @@ establish core correctness, configuration agreement or model accuracy.
 `accuracy_status` is always `inconclusive`. `configuration_status` is `unchecked` unless an exported snapshot is checked. No native RTL speedup has been measured. The 50x and accuracy
 budgets in the design note are targets.
 
-The engine uses fixed latencies. It does not model caches, TLBs, wrong-path
-work, replay or shared functional unit arbitration.
+The default engine uses fixed latencies. Optional pipeline structures are
+described below. Wrong-path execution and replay remain unsupported.
 It retains the full trace in memory. Core elaboration export, calibration, held-out RTL correlation and prediction
 ledgers remain separate work.
 Do not use the existing gem5 report readers to certify this model.
@@ -141,3 +141,68 @@ C1 identity, seed, memory timing and instruction count. The later C1 file must
 have a local modification time after prediction creation. Local times are
 not trusted chronology. A later C2 stream comparison, later event scoring,
 three-repeat native speed qualification and hardware accuracy remain open.
+
+## Decoupled pipeline timing
+
+The optional `frontend`, `execution`, and `translation` objects add timing
+structures to the same C2 engine. An omitted object keeps the original path.
+For example:
+
+```json
+{
+  "frontend": {
+    "decode_width": 8, "decode_entries": 64, "decode_latency": 2,
+    "fetch_latency": 2, "ftq_entries": 32, "block_bytes": 32,
+    "predictor_latency": 2, "uop_cache_entries": 128,
+    "uop_cache_width": 8, "uop_cache_latency": 1
+  },
+  "execution": {
+    "ports": {"p0": 1, "p1": 1},
+    "bindings": {"alu": ["p0", "p1"], "divide": ["p0"]},
+    "intervals": {"divide": 12},
+    "queues": {"alu": 48, "divide": 8}
+  },
+  "translation": {
+    "entries": 64, "page_bytes": 4096, "hit_latency": 1,
+    "walk_latency": 80, "walkers": 4
+  }
+}
+```
+
+Merge these objects into the required configuration above. These are generic
+example values. They are not measured parameters for a particular core.
+
+Fetch and decode use separate buffers. An FTQ slot holds a fetch block until
+its operations leave the fetch buffer. Decode width and delay constrain misses
+in the micro-op cache. Cache hits use a separate width and delay. The cache
+holds decoded contiguous blocks, uses FIFO replacement, and fills at the last
+operation's decode. `uop_cache_entries` counts blocks. Predictor latency stops
+fetch at each branch. Branch recovery still uses the committed-path policy
+above. The engine has no wrong-path instruction bytes.
+
+Execution bindings allow classes to share ports. Each port has the declared
+number of lanes. `intervals` gives the minimum cycles between issues to one
+lane. Latency remains separate in `latencies`. Per-class `queues` constrain
+scheduler admission in addition to the shared `issue_entries` limit.
+
+Translation uses traced addresses as page tags. A miss takes `walk_latency`.
+Requests to a pending page share its walk. Walker capacity causes backpressure.
+Entries fill at walk completion and use FIFO replacement. This is a single
+translation level with a fixed page size. It does not read page tables, check
+permissions, reproduce page faults, or model physical placement.
+
+Python callers can pass `memory=` to `simulate`. Its interface is
+`access(address, size, write, cycle) -> additional_cycles`. This boundary is
+for the component library. Forwarded loads do not request that service.
+The CLI has no cache provider yet. L1/L2/L3 cache policies, prefetch, memory
+interconnect contention, and component-library adapters remain open.
+
+`topdown` partitions commit slots. Retired instructions use `retiring` slots.
+Remaining slots use `bad_speculation` during recovery, then `backend_bound`
+when the ROB is nonempty, else `frontend_bound`. Fractions sum to one. This
+simple model partition is not the hardware top-down method. Counters can be
+compared with RTL only after matching their predicates. The wrong-path fetch
+slot estimate is recovery penalty times fetch width per branch miss. It does
+not consume issue or cache resources. Synthetic tests establish timing rules;
+they do not establish RTL accuracy. Macro-op fusion, move/zero elimination,
+memory renaming, and speculative dependence replay remain open.

@@ -28,8 +28,21 @@ class Config:
     branch_penalty: int = 0
     memory_policy: str = "ordered"
     forwarding_latency: int = 1
+    frontend: dict = field(default_factory=dict)
+    execution: dict = field(default_factory=dict)
+    translation: dict = field(default_factory=dict)
 
     def __post_init__(self):
+        from .frontend import FrontendConfig
+        from .execution import Execution
+        from .translation import Translation
+        if not isinstance(self.frontend, dict):
+            raise ValueError("frontend must be an object")
+        if self.frontend:
+            FrontendConfig(**self.frontend)
+        Execution(self.execution)
+        if self.translation:
+            Translation(self.translation)
         for key, value in asdict(self).items():
             if key in ("fetch_width", "fetch_entries", "rename_width", "rob_entries",
                        "issue_width", "issue_entries", "load_entries", "store_entries", "commit_width") and (type(value) is not int or value < 1):
@@ -76,7 +89,7 @@ class Entry:
     done: int | None = None
 
 
-def simulate(instructions, config, max_cycles=1_000_000, predictor=None):
+def simulate(instructions, config, max_cycles=1_000_000, predictor=None, memory=None):
     """Commit, issue, rename, fetch. Latency 1 completes next cycle.
 
     Memory instructions issue only after older memory instructions complete.
@@ -92,11 +105,19 @@ def simulate(instructions, config, max_cycles=1_000_000, predictor=None):
             raise ValueError(f"unsupported instruction class: {op.kind}")
         if any(type(r) is not int or not 0 <= r < 32 for r in op.sources):
             raise ValueError("invalid source register")
-        if config.memory_policy == "disambiguate" and op.kind in ("load", "store"):
+        if (config.memory_policy == "disambiguate" or config.translation or memory is not None) and op.kind in ("load", "store"):
             if type(op.address) is not int or op.address < 0 or type(op.size) is not int or op.size < 1:
                 raise ValueError("disambiguate requires memory address and size")
         if op.dest is not None and (type(op.dest) is not int or not 0 <= op.dest < 32):
             raise ValueError("invalid destination register")
+    from .frontend import Frontend
+    from .execution import Execution
+    from .translation import Translation
+    from .attribution import Attribution
+    frontend = Frontend(config.frontend, config.fetch_width, config.fetch_entries) if config.frontend else None
+    execution = Execution(config.execution)
+    translation = Translation(config.translation) if config.translation else None
+    attribution = Attribution(config.commit_width)
     rob, fetched, waiting = deque(), deque(), []
     writers, events, peaks = {}, Counter(), Counter()
     pc = retired = loads = stores = allocated = 0
@@ -107,18 +128,27 @@ def simulate(instructions, config, max_cycles=1_000_000, predictor=None):
     predictor = predictor or StaticPredictor()
 
     for cycle in range(max_cycles):
+        committed = 0
         for _ in range(config.commit_width):
             if not rob or rob[0].done is None or rob[0].done > cycle:
                 break
             entry = rob.popleft()
             retired += 1
+            committed += 1
             allocated -= bool(entry.insn.dest)
             loads -= entry.insn.kind == "load"
             stores -= entry.insn.kind == "store"
+        attribution.observe(committed, cycle < blocked_until, bool(rob))
         if retired == len(instructions):
+            if frontend:
+                events.update(frontend.events)
+            events.update(execution.events)
+            if translation:
+                events.update(translation.events)
             cycles = cycle + 1
             return dict(cycles=cycles, instret=retired, ipc=retired / cycles,
-                        events=dict(events), max_occupancy=dict(peaks))
+                        events=dict(events), max_occupancy=dict(peaks),
+                        topdown=attribution.report())
         if unresolved_branch is not None and unresolved_branch.done <= cycle:
             unresolved_branch = None
         issued, dependency_blocked = 0, False
@@ -141,7 +171,10 @@ def simulate(instructions, config, max_cycles=1_000_000, predictor=None):
             if used_ports[kind] >= config.ports.get(kind, config.issue_width):
                 events["port_blocked"] += 1
                 continue
+            if not execution.reserve(kind, cycle, commit=False):
+                continue
             latency = config.latencies[kind]
+            forwarded = False
             if kind in ("load", "store"):
                 older = []
                 for previous in rob:
@@ -170,9 +203,27 @@ def simulate(instructions, config, max_cycles=1_000_000, predictor=None):
                                 continue
                         else:
                             latency = config.forwarding_latency
-                            events["forwarded_loads"] += 1
+                            forwarded = True
                 elif any(p.done is None or p.done > cycle for p in older):
                     continue
+            if kind in ("load", "store") and translation:
+                delay = translation.access(entry.insn.address, entry.insn.size, cycle)
+                if delay is None:
+                    continue
+            else:
+                delay = 0
+            if not execution.reserve(kind, cycle):
+                continue
+            if forwarded:
+                events["forwarded_loads"] += 1
+            if kind in ("load", "store") and memory is not None and not forwarded:
+                # The component owner supplies access(address, size, write, cycle).
+                # It returns an additional service delay in model cycles.
+                service = memory.access(entry.insn.address, entry.insn.size, kind == "store", cycle + delay)
+                if type(service) is not int or service < 0:
+                    raise ValueError("memory service must return nonnegative cycles")
+                latency += service
+            latency += delay
             if kind in ("branch", "jump"):
                 predicted = predictor.predict(entry.insn.pc, entry.insn.pc + entry.insn.length)
                 predictor.update(entry.insn.pc, entry.insn.next_pc)
@@ -180,6 +231,7 @@ def simulate(instructions, config, max_cycles=1_000_000, predictor=None):
                 if predicted != entry.insn.next_pc:
                     events["branch_misses"] += 1
                     blocked_until = max(blocked_until, cycle + latency + config.branch_penalty)
+                    events["wrong_path_fetch_slots_estimate"] += config.branch_penalty * config.fetch_width
                 unresolved_branch = entry
             entry.done = cycle + latency
             used_ports[kind] += 1
@@ -190,18 +242,27 @@ def simulate(instructions, config, max_cycles=1_000_000, predictor=None):
         for _ in range(config.rename_width):
             if cycle < blocked_until or unresolved_branch is not None:
                 break
-            if not fetched:
-                break
-            op = fetched[0]
+            if frontend:
+                if not frontend.ready(cycle):
+                    break
+                op = frontend.decoded[0][0]
+            else:
+                if not fetched:
+                    break
+                op = fetched[0]
             blocked = ("rob_full" if len(rob) >= config.rob_entries else
                        "issue_full" if len(waiting) >= config.issue_entries else
+                       "distributed_issue_full" if execution.queue_full(op.kind, waiting) else
                        "load_full" if op.kind == "load" and loads >= config.load_entries else
                        "store_full" if op.kind == "store" and stores >= config.store_entries else
                        "register_full" if op.dest and config.physical_registers and allocated >= config.physical_registers - 32 else None)
             if blocked:
                 events[blocked] += 1
                 break
-            fetched.popleft()
+            if frontend:
+                frontend.pop()
+            else:
+                fetched.popleft()
             deps = tuple(writers[r] for r in op.sources if r and r in writers)
             entry = Entry(op, deps)
             allocated += bool(op.dest)
@@ -211,7 +272,9 @@ def simulate(instructions, config, max_cycles=1_000_000, predictor=None):
             waiting.append(entry)
             loads += op.kind == "load"
             stores += op.kind == "store"
-        for _ in range(config.fetch_width):
+        if frontend:
+            frontend.advance(cycle, instructions, cycle < blocked_until or unresolved_branch is not None)
+        for _ in range(0 if frontend else config.fetch_width):
             if cycle < blocked_until or unresolved_branch is not None:
                 break
             if pc == len(instructions) or len(fetched) == config.fetch_entries:
@@ -220,7 +283,8 @@ def simulate(instructions, config, max_cycles=1_000_000, predictor=None):
             pc += 1
         for name, count in dict(rob_entries=len(rob), issue_entries=len(waiting),
                                 load_entries=loads, store_entries=stores,
-                                fetch_entries=len(fetched)).items():
+                                fetch_entries=len(frontend.fetch) if frontend else len(fetched),
+                                decode_entries=len(frontend.decoded) if frontend else 0).items():
             peaks[name] = max(peaks[name], count)
     raise ValueError("model cycle budget exhausted")
 
@@ -271,6 +335,7 @@ def run(config_path, trace_path, max_cycles=1_000_000, effective_config=None):
     import rvw.common.riscv as decoder
     import rvw.cosim.trace as parser
     engine = b"".join(Path(p).read_bytes() for p in (__file__, str(Path(__file__).with_name("structures.py")), decoder.__file__, parser.__file__))
+    engine += b"".join(Path(__file__).with_name(name + ".py").read_bytes() for name in ("frontend", "execution", "translation", "attribution"))
     return dict(schema="rvw.ooo-run/1", **result, config=asdict(config),
                 config_sha256=sha256(config_bytes).hexdigest(),
                 trace_sha256=sha256(trace_bytes).hexdigest(),
@@ -279,6 +344,7 @@ def run(config_path, trace_path, max_cycles=1_000_000, effective_config=None):
                 configuration_evidence=configuration,
                 limits=["fixed latency", "committed path only; no wrong-path resource use",
                         "branch prediction at issue; no speculative predictor history",
-                        "no cache, TLB, replay or shared functional unit port model",
+                        "cache timing needs a component service; no replay or translation faults",
+                        "topdown is an approximate commit-slot partition",
                         "disambiguation uses traced addresses after store issue"],
                 cycle_order=["commit", "issue", "rename", "fetch"])
