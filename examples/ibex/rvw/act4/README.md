@@ -16,9 +16,9 @@ Do not link a private checkout to a shared Python venv.
 ```sh
 rvw regress plan --act4 rvw/act4/profile.json --json
 rvw regress act4-build --profile rvw/act4/profile.json \
-  --checkout "$ACT4_CHECKOUT" --out "$IBEX_WORK/act4-final"
-rvw regress run --suite act4 --rvfi-trace --out "$IBEX_WORK/act4-500k" --no-index --json
-rvw regress cosim "$IBEX_WORK/act4-500k" --platform rvw/platform.json \
+  --checkout "$ACT4_CHECKOUT" --out "$IBEX_WORK/act4"
+rvw regress run --suite act4 --rvfi-trace --out "$IBEX_WORK/act4-run" --no-index --json
+rvw regress cosim "$IBEX_WORK/act4-run" --platform rvw/platform.json \
   --out "$IBEX_WORK/act4-cosim.json" --json
 ```
 
