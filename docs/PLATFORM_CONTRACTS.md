@@ -4858,3 +4858,28 @@ replacement solver outcomes. Replacements change only the specification Boolean
 expression. `replacement_vacuous_bounded` requires UNSAT for both constant
 replacements in a feasible environment. `sensitive_bounded` requires a SAT
 replacement. State-bit leaves and the finite bound limit the analysis.
+`farm batch` accepts one explicit command and expected C1/C3 result paths per
+shard. The same commands run locally or as batch/v1 Jobs. Project-supplied PVCs
+hold inputs, caches and results. Collection validates schemas and declared C1
+identity claims. Missing cells are explicit and inconclusive. Job process success
+and collection completeness do not establish C4 acceptance. Kubernetes retries
+are disabled; retry policy belongs to the controller.
+
+### VexRiscv reverse process port
+
+The project process port wraps `rvw.vex-bridge-probe/1` bytes in the existing
+`rvw.native-checkpoint/1` envelope. State inventories explicitly declare no
+RNG, devices or active interrupts. RAM, pending bus requests and C2 state are
+inside the native payload. Counters include retired instructions. The stopped
+port owns immutable bytes; replay installs them in a new native process before
+advancement. This port does not implement C1 resume publication.
+
+### Live bridge synchronous memory state
+
+The `rvw.spinal-state/1` inventory includes synchronous memory-read buffers.
+The bridge lowers full-width read-first or don't-care synchronous ports to
+explicit registers before it collects state. Their layout and payload use
+the existing register arrays. Mixed-width and combined synchronous read/write
+ports are refused. This changes native RTL identity. Older snapshots cannot
+restore into the new layout. The caller still owns all bus response and input
+state and must restore at a stopped low clock boundary.

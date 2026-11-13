@@ -4,9 +4,10 @@ set -euo pipefail
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 repo="${RVW_HOME:?Set RVW_HOME}"
 if [[ "${1:-}" != --locked ]]; then
-  exec "$repo/scripts/with-lock.sh" vex "$BASH" "$0" --locked "$@"
+  exec "$repo/scripts/with-lock.sh" "${RVW_VEX_LOCK:-vex}" "$BASH" "$0" --locked "$@"
 fi
 shift
+export SPINAL_MAKE_CMD="$repo/RiscvSim/scripts/make-jobs.sh"
 export VEXRISCV="${VEXRISCV:-$here/..}"
 output="$(cd "$here" && "$repo/scripts/with-lock.sh" sbt nice -n 10 sbt -batch \
   compile 'export Runtime/fullClasspath' 2>&1)" || { echo "$output" >&2; exit 2; }

@@ -284,3 +284,31 @@ so debug-entry comparison is not available.
 `rvw/tests/test_csr_capture.py` checks two consecutive CSR values in native RTL.
 The wiring compiles. Native timing validation is still required before this
 capture can support an RTL CSR comparison claim.
+## Reverse replay on the live bridge
+
+`rvw/checkpoint_port.py` implements the existing snapshot-port interface for
+this probe. The native test builds a manifest, captures retirement 8, reverses
+from instruction 15 to instruction 10, then compares the full saved state with
+an independent from-reset checkpoint at instruction 10:
+
+```sh
+nice -n 10 rvw/.venv/bin/python -m pytest examples/vexriscv/rvw/tests/test_reverse_port.py -q
+```
+
+The existing `rvw sim checkpoint` and `rvw sim reverse-step` commands accept
+that manifest. Each replay starts a new process and restores live state before
+forward execution. Clock cycles, all exposed registers, RAM, pending bus
+responses and the C2 prefix remain in the payload. The port has no C1 resume
+publication and does not provide an interactive debugger session.
+
+Use `RVW_VEX_LOCK=vex-NAME` with a private `VEXRISCV` copy when the shared
+core lock is busy. The checkpoint launcher uses that lock name and bounds
+native make jobs through the common launcher.
+
+Native reverse validation found two missing synchronous register-file read
+buffers in the first bridge inventory. The bridge now makes those buffers
+explicit before state capture. It also checks the restored inventory before
+execution. A fresh process port reports a stopped boundary before its first
+restore. Full replayed state at retirement 10 matched an independent reset run
+on 2026-11-13 with private core revision
+`a62c145aa042a5de874344e0a7683bd7c8c8c870`.
