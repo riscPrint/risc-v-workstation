@@ -34,4 +34,6 @@ def mcp_tools():
                              'gcc':{'type':'string','default':'riscv64-unknown-elf-gcc'},
                              'max_cycles':{'type':'integer','default':20000},'timeout':{'type':'number','default':60},
                              'limit':{'type':'integer','default':100000},'base':{'type':'string','default':'0x80000000'},
-                             'shared_base':{'type':'string','default':'0x81000000'}},required=['out','adapter','config']),run)]
+                             'shared_base':{'type':'string','default':'0x81000000'}},required=['out','adapter','config']),run,
+        side_effects='long-running; launches compiler and configured native adapter; writes campaign under out', native_tools=('RISC-V GCC',),
+        )]
