@@ -57,7 +57,20 @@ external clients and issue #27 acceptance. Tests: `rvw/tests/test_agent_bench.py
 
 ## Native seeded tasks
 
-Build the VexRiscv example ISA programs first. Use the source revision in
+Build the benchmark ISA programs first:
+
+```sh
+nice -n 15 rvw/.venv/bin/python examples/agent-bench/build-native-tests.py \
+  --source /path/to/pinned/riscv-tests --out examples/agent-bench/out/isa
+```
+
+The builder pins riscv-tests at `d7e86f701b929b5d801f8cda1a4871ab05f452bb`.
+It adds `csrw mscratch, zero` as the first instruction. The core does not reset
+this register. This write defines the first post-instruction CSR snapshot.
+Strict comparison stays enabled. Unchanged ISA inputs passed C1 but first
+mismatched Spike at PC `0x80000000` on the undefined `mscratch` snapshot.
+These benchmark programs retain the named ISA test bodies and use an explicit
+startup state. They are separate from the example's original ISA programs. Use the source revision in
 `examples/agent-bench/native.json`. Keep the source checkout outside this repo.
 
 ```sh
@@ -161,3 +174,11 @@ observations exist. Fixture tests of this loop are not native repair evidence.
 
 The checker also requires the same recorded harness revision in both runs.
 A harness change between failure and repair leaves the check inconclusive.
+
+## MCP evidence solver
+
+`rvw agent-bench evidence-solve --plan PLAN.json --out NEW_DIRECTORY` drives
+regression, cosim, bundle, query and wave tools over MCP stdio. It records
+source locations in tool traversal order. See [the workflow](solver.md).
+MCP tool: `agent_bench_evidence_solve`. Native localisation ranks are not yet
+measured. The solver does not edit sources or earn repair acceptance.

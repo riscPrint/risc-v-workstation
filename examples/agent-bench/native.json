@@ -8,7 +8,7 @@
     ]
   },
   "adapter": "../vexriscv/rvw/run.sh",
-  "programs": "../vexriscv/rvw/out/isa",
+  "programs": "out/isa",
   "config": "rv32im",
   "seed": 1,
   "environment": {
@@ -288,7 +288,7 @@
   ],
   "program_copy": [
     {
-      "source": "../vexriscv/rvw/out/isa",
+      "source": "out/isa",
       "dest": "rvw/out/isa"
     }
   ],
