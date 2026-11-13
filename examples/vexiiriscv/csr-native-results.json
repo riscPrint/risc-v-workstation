@@ -1,0 +1,66 @@
+{
+  "schema": "rvw.vexii-csr-native/1",
+  "observed": "2026-11-13",
+  "core_revision": "9b63f47fe559dbba7874af9196746412fa1294c1",
+  "spinal_revision": "de72faf6062206a89b445e5cc07e32ed982712c8",
+  "execution": "Current SpinalChecks, adapter binding and pinned private VexiiRiscv source tree compiled with cached dependency jars.",
+  "assertions_compiled": true,
+  "spike": {
+    "mscratch": "pass",
+    "sscratch": "pass"
+  },
+  "runs": [
+    {
+      "observation_fault": "none",
+      "program": "mscratch.elf",
+      "status": "pass",
+      "cycles": 203,
+      "retired": 49,
+      "inserted": 1,
+      "fired": 0,
+      "firings": []
+    },
+    {
+      "observation_fault": "none",
+      "program": "sscratch.elf",
+      "status": "pass",
+      "cycles": 158,
+      "retired": 26,
+      "inserted": 1,
+      "fired": 0,
+      "firings": []
+    },
+    {
+      "observation_fault": "read",
+      "program": "mscratch.elf",
+      "status": "fail",
+      "cycles": 203,
+      "retired": 49,
+      "inserted": 1,
+      "fired": 1,
+      "firings": [
+        {
+          "id": "csr.read:mscratch",
+          "kind": "csr.read",
+          "count": 4,
+          "first_cycle": 69
+        }
+      ]
+    },
+    {
+      "observation_fault": "read",
+      "program": "sscratch.elf",
+      "status": "pass",
+      "cycles": 158,
+      "retired": 26,
+      "inserted": 1,
+      "fired": 0,
+      "firings": []
+    }
+  ],
+  "limits": [
+    "One scratch read-storage binding. Unknown reset remains unknown until a software write.",
+    "No full CSR RAM state, aliases, lower modes, WARL, autonomous updates or whole-core qualification.",
+    "SBY NOT RUN for this binding. Seeded read fault is an intentional failed monitor result."
+  ]
+}

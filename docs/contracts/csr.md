@@ -245,3 +245,13 @@ explicit bound check IDs. All properties associated with one check must succeed.
 count as proven. Mixed proven and bounded-pass groups count as bounded.
 The summary remains inconclusive without a runtime finding. It certifies
 neither activation nor the closure of inputs.
+
+## Optional VexiiRiscv CSR transaction binding
+
+The VexiiRiscv example selects `mscratch` and absent `sscratch` in versioned
+project data. Its native runtime validates a normalized RV32 machine scratch
+model with unknown reset and a full-width writable field. It checks accepted
+reads against independent last-write tracking. It does not model whole CSR RAM
+state or all instruction decoding. Runtime reports use `rvw.checks-run/1` and
+retain fail status for a seeded read-observation fault. The default adapter
+keeps this instrumentation off.

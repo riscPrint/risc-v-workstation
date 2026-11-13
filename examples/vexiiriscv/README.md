@@ -185,3 +185,38 @@ Both native interrupt controls also passed after adding an actual `mtval` CSR
 read in each handler. The initial value was 7. Each handler read zero, executed
 `MRET`, and completed with a Spike match. Both traces recorded input
 assertion at cycle 200 and deassertion at cycle 220.
+
+## Generated CSR catalog controls
+
+`csr.json` selects machine `mscratch` and absent `sscratch` for the RV32IM
+machine-only example. The scratch reset is unknown. Its first accepted software
+write initializes the independent read model. The generated assembly covers
+scratch read/write/set/clear behavior and the absent-CSR illegal-instruction trap.
+
+The optional `rvwvexii.CsrChecksRuntime MODEL OUT none|read ELF...` installs
+one native `csr.read` check. Build `MODEL` and assembly with `rvw formal csr`.
+Compile the assembly with the example linker script. Run each ELF on Spike with
+`--isa=rv32im_zicsr_zifencei --priv=m`. Run the native entry under `vex-csr`
+and the sbt lock, with nice priority 10. Select a private `VEXIIRISCV` source
+checkout with its pinned SpinalHDL dependencies. The slow regression is
+`rvw/tests/formal/test_vexii_generated_checks.py`.
+
+The wrapper checks accepted CSR reads against the last accepted write-channel
+value. It observes `CsrAccessPlugin.bus` and never reads CSR RAM into expected
+state. This is a transaction-storage check. Generated instruction programs also
+check instruction-level read/modify/write semantics. The wrapper does not prove
+that the CSR access unit decoded each instruction correctly by itself.
+
+The runtime compiles Verilator with `--assert`, reports monitor firings, and
+keeps injected read faults as `fail` in `rvw.checks-run/1`. No checked wrapper
+is installed in the default adapter. This binding covers one storage word.
+Full CSR RAM reset, lower modes, aliases, WARL policies, autonomous hardware
+updates and broader catalog qualification remain open under #85.
+
+On 2026-11-13 the current SpinalChecks and private pinned VexiiRiscv source
+compiled with cached dependency jars. Both generated programs passed Spike and
+native Verilator. The scratch program retired 49 instructions in 203 cycles.
+The absent-supervisor-CSR program retired 26 instructions in 158 cycles.
+Clean runs had zero firings. The seeded read fault fired the scratch read
+checker and retained `fail`; the absent-CSR control stayed clean. Native runs
+used `vex-csr`. Formal was NOT RUN. See [the native record](csr-native-results.json).
