@@ -156,6 +156,17 @@ through an absolute `RVW_HOME`. Keep core adapter sources in the core repository
 Use offline sbt after toolchain dependencies are installed. Source-directory settings
 in reusable builds must resolve from `baseDirectory.value`, not the caller's cwd.
 
+### Encoded coverage field domains
+
+Pinned ISA plans enumerate encoded register fields and aliases, vector register
+fields, scalar rounding modes, atomic ordering bits and bounded vector control
+fields using the captured argument widths. All raw rounding encodings remain
+in the denominator. The bins do not classify runtime legality. Scalar integer
+operand-value classes also cover A, Zba, Zbb, Zbc, Zbs and Zicond source files.
+FP/vector data never use integer RVFI operand values. Explicit reviewed semantic
+forms and cross catalogs retain their existing legality and availability rules.
+Plan fingerprints change when the expected field domains change.
+
 ### Measured RTL recipe feedback
 
 Stimulus-loop settings may bind `rtl_plan` and `recipes` together. Recipes use

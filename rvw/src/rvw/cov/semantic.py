@@ -36,8 +36,8 @@ def groups(manifest, instructions):
             # not identify register banks. Only explicitly integer source files.
             form = settings.get('forms', {}).get(name, {}).get(arg, {})
             integer_form = form.get('bank') == 'integer'
-            if integer_form or (arg in item['args'] and item['source'].split('/')[-1] in (
-                    'rv_i', 'rv32_i', 'rv64_i', 'rv_m', 'rv32_m', 'rv64_m', 'rv_zicsr')):
+            from .integer_sources import integer_source
+            if integer_form or integer_source(item,arg):
                 result.append({'name': f'sem_{name}_{arg}', 'fields': [f'{arg}_class'],
                                'when': {'isa_instruction': name}, 'bins': [[v] for v in VALUE_CLASSES]})
         if 'imm12' in item['args']:
