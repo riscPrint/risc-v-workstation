@@ -357,3 +357,11 @@ Every selected 32-bit result is compared without result truncation.
 
 `rvw.vexii-default-units/1` groups default-divider and multiplier campaign
 receipts. Each campaign keeps its own domain restrictions and proof outcomes.
+
+## Default VexiiRiscv initialization qualification
+
+The example `rvw.vexii-initialization/1` ledger records source/dependency pins,
+the exported RTL hash, model-refusal attempts and local qualification controls.
+An `unsupported` attempt with `solver_ran: false` is not a proof.
+The default asynchronous-reset source and all its assertions remain unchanged.
+The failed guard-relaxation experiment is not a supported model extension.
