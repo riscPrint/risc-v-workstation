@@ -14,6 +14,8 @@ from .unbounded import MARKER, emit
 
 
 def lower_live(source, top):
+    from .property_names import expand
+    source = expand(source, lambda body: True)
     text = re.sub(r'//[^\n]*|/\*.*?\*/|"(?:\\.|[^"\\])*"',
                   lambda m: ' ' * len(m[0]), source, flags=re.S)
     if re.search(r'\brvw_live_\w*', text):
