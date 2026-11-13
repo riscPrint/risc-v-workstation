@@ -632,6 +632,7 @@
         "query_hierarchy_diff",
         "query_info",
         "query_loads",
+        "query_navigate",
         "query_parameters",
         "query_path",
         "query_port_status",

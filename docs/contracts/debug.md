@@ -39,3 +39,17 @@ Infeasible fairness remains inconclusive. No RTL translation claim is added.
 ## Missing evidence and positive results
 
 Known packet vectors require nonempty packet bytes and expected messages. An empty vector yields `inconclusive` and cannot qualify an adapter. Empty transport round trips do not establish packet compatibility.
+
+## Cross-navigation record
+
+`rvw query navigate` and MCP `query_navigate` return `rvw.navigation/1`.
+`signal` is the resolved database path. `source` contains the declaration
+file, line and `query where` identity result. `block` contains the instance,
+module and all exact port or node endpoints in the stored `blocks.json`.
+An absent endpoint has `status=unmapped`; no node ID is invented.
+`wave.path` uses the database scope binding. Its status is `candidate` or
+`pruned`; it does not assert waveform presence. `trace` contains the engine
+selector, top module, extra scopes, PDG availability and the driver fallback.
+The database capture and staleness warnings accompany the record.
+This record is structural. It does not prove that independently chosen waves
+and sources came from the captured elaboration.

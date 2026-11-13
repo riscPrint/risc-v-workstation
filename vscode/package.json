@@ -45,6 +45,7 @@
     "onCommand:navigation.wave",
     "onCommand:navigation.drivers",
     "onCommand:navigation.loads",
+    "onCommand:navigation.navigate",
     "onCommand:perf.open",
     "onView:perf.results",
     "onCommand:perf.pipeline",
@@ -195,6 +196,10 @@
       {
         "command": "navigation.loads",
         "title": "RVW: Show Loads at Line"
+      },
+      {
+        "command": "navigation.navigate",
+        "title": "RVW: Show Cross-Navigation Record"
       },
       {
         "command": "perf.open",
@@ -723,6 +728,11 @@
         },
         {
           "command": "navigation.loads",
+          "when": "resourceExtname == .scala",
+          "group": "rvw"
+        },
+        {
+          "command": "navigation.navigate",
           "when": "resourceExtname == .scala",
           "group": "rvw"
         },

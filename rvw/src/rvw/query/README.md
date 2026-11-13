@@ -236,3 +236,14 @@ option and value before it calls slang. Values use SystemVerilog constant syntax
 Slang captures self-contained source files without their parent trees. Build
 output beside the source does not consume the capture limit. Sources with
 include directives still use conservative directory snapshots and their size limits.
+
+## Cross-navigation
+
+`rvw query navigate SIGNAL --db DESIGN.db --json` returns one
+`rvw.navigation/1` record. MCP exposes `query_navigate`.
+The record contains the source location, exact stored diagram endpoints,
+wave path and SpinalTrace selector. Diagram endpoints can be ports or Area
+nodes. Missing endpoints remain unmapped. Wave paths are candidates until
+checked against a wave. Source identity checks remain in `source.where`.
+The VS Code `navigation.navigate` command displays this record for a signal
+at the selected source line. The other shortcuts use their own commands.
