@@ -46,7 +46,7 @@ class Plic extends Component {
   val selected = UInt(3 bits)
   selected := 0
   for (i <- 6 to 0 by -1) {
-    when(pending(i) && enabled(i+1) && priority(i)(0) && !threshold(0)) {
+    when(pending(i) && enabled(i+1) && priority(i)(0)) {
       selected := i+1
     }
   }
@@ -66,10 +66,11 @@ class Plic extends Component {
   }
   bus.onWrite(0x200004) {
     for (i <- 0 until 7) {
-      when(io.bus.PWDATA === i+1) { active(i) := False }
+      when(io.bus.PWDATA === i+1 && enabled(i+1)) { active(i) := False }
     }
   }
-  io.irq := selected =/= 0
+  // Claim polling ignores the notification threshold.
+  io.irq := selected =/= 0 && !threshold(0)
 }
 
 class Gpio extends Component {
