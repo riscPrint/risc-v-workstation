@@ -137,3 +137,13 @@ scenario into the bench. The scenario binds the custom pins and uses
 For example: `{"schema":"rvw.uvm-adapter/1","bus":"top.io.mem","profile":"cpu",
 "bindings":{"address":"io_address"},"scenario":"scenario.py"}`.
 Generation does not establish protocol or CPU qualification.
+
+Gate configuration stages a runtime bundle beside the output TOML. It keeps
+build metadata, the executable and UVM library sources. Compiler-generated
+C++ and object intermediates stay outside that bundle. Declared source and
+native dependencies remain captured separately. Capture limits stay enabled.
+
+The [SV VexRiscv example](../../../../Uvm/examples/vexriscv/sv/README.md)
+records two live program runs, a PC-corruption control and a clean
+same-revision C4 `accept` at `b17abae9`. It covers a fixed generated CPU image
+and a bounded program. It is not changed-core or full-ISA acceptance.

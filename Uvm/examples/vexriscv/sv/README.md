@@ -29,3 +29,23 @@ A CPU source change needs regenerated RTL and a fresh build.
 This configuration has no debug unit. The SV fixture does not drive IRQs,
 process separate trap events or supply architectural snapshots. It does
 not qualify the full ISA suite. Use the live Python binding for that path.
+
+## Measured result on 2026-11-13
+
+Verilator 5.052 passed seeds 1 and 3. Each run checked 13 retirements.
+The next-PC corruption control failed with `SPIKE_MISMATCH` and no completion.
+The matched reference used ABI 6. See [the result](native-2026-11-13.json).
+
+The clean committed same-revision C4 gate returned `accept` at `b17abae9`.
+Base and candidate each ran the two program seeds through one build-suite
+job. Cache reuse was disabled. The identity captured 15 declared native
+files, the executable, SV sources and pinned UVM library.
+
+The first gate attempt was inconclusive because capturing the compiler
+output tree exceeded its size limit. `gate-config` now stages an immutable
+runtime bundle. It keeps the executable, build metadata and UVM library.
+It captures declared source and native inputs separately. It omits compiler
+intermediates and keeps the capture limits. A unit test checks that behavior.
+
+This accepts the selected bench and fixed generated CPU image. It does not
+compare two changed CPU source revisions or qualify the full ISA suite.
