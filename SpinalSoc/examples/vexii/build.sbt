@@ -9,7 +9,9 @@ lazy val root = (project in file("."))
     Compile / unmanagedSourceDirectories ++= Seq(vexii / "src/main/scala",
       vexii / "ext/rvls/bindings/spinal", vexii / "ext/rvls/bindings/jni", baseDirectory.value / "generated"),
     Compile / unmanagedSources ++= Seq(baseDirectory.value / "VexiiCore.scala", baseDirectory.value / "Run.scala") ++
-      Seq("Soc.scala", "Buses.scala", "Peripherals.scala", "Serial.scala").map(workstation / "SpinalSoc/src/main/scala/rvwsoc" / _),
+      Seq("Soc.scala", "Buses.scala", "Peripherals.scala", "Serial.scala", "SimpleBus.scala", "ProtocolChecks.scala").map(workstation / "SpinalSoc/src/main/scala/rvwsoc" / _),
+    Compile / unmanagedSources ++= Seq("ProtocolChecks.scala", "AxiReadChecks.scala", "AxiWriteChecks.scala",
+      "TileLinkProbeChecks.scala", "BusAssertions.scala").map(workstation / "SpinalChecks/src/main/scala/spinalchecks" / _),
     libraryDependencies ++= Seq(
       "org.scala-lang" % "scala-reflect" % scalaVersion.value,
       "org.scala-lang" % "scala-compiler" % scalaVersion.value,

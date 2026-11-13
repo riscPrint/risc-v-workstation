@@ -84,7 +84,7 @@ def compose(source, out, elf=None):
             raise ValueError('invalid exported core port')
         lines += [f'  val core_{port} = core.io.{port}.toIo()']
     if byte_writes:
-        lines += ['  val fabricBus = BusIngress(core.bus)']
+        lines += ['  ProtocolChecks(core.bus)', '  val fabricBus = BusIngress(core.bus)']
     for name, domain in domains.items():
         lines += [f'  val {name}_clk = in Bool()', f'  val {name}_reset = in Bool()',
                   f'  val {name}_domain = ClockDomain({name}_clk, {name}_reset, config = ClockDomainConfig(resetKind = {"SYNC" if domain["reset"] == "sync_high" else "ASYNC"}), frequency = FixedFrequency({domain["clock_hz"]} Hz))']
@@ -131,6 +131,15 @@ def compose(source, out, elf=None):
             lines += [f'  val {name}_port = Apb3(Apb3Config({size.bit_length()-1}, 32, useStrb = true))',
                       f'  BusIngress.legacy({name}_port, {name}.io.bus)']
             endpoint = f'{name}_port'
+        if domain is not None or (byte_writes and binder['type'] == 'project'):
+            checks = [f'ApbChecks({name}.io.bus)']
+            if domain is not None and byte_writes and binder['type'] == 'project':
+                checks.append(f'ApbChecks({name}_port)')
+            if domain is not None:
+                lines += [f'  val {name}_checks = new ClockingArea({domain}_domain) {{']
+                lines += ['    '+check for check in checks] + ['  }']
+            else:
+                lines += ['  '+check for check in checks]
         if domain is not None:
             lines += [f'  val {name}_crossing = Apb3({endpoint}.config)',
                       f'  {endpoint} << BusClockCrossing({name}_crossing, {domain}_domain)']
@@ -178,5 +187,21 @@ def compose(source, out, elf=None):
                     composition_sha256=hashlib.sha256(source.read_bytes()).hexdigest(), elf_sha256=elf_hash,
                     fragments=fragments, effective_configuration=spec,
                     validation='generated_only', bus_ports=['core.bus'] + [r['name']+'.io.bus' for r in obj['regions']])
+    bindings = [dict(path='core.bus', protocol=bus, domain='default',
+                     checks='APB phase and stability' if bus == 'apb3' else 'channel valid and payload stability')]
+    if bus in ('axi4', 'tilelink'):
+        bindings[0]['transaction_checks'] = 'SpinalChecks trackers; unsupported IDs or issuing limits remain gaps'
+    if byte_writes:
+        bindings.append(dict(path='fabricBus', protocol='apb3', domain='default', checks='APB phase and stability'))
+    for region in obj['regions']:
+        name = region['name']
+        binder = spec['devices'][name]
+        domain = binder.get('domain', 'default')
+        bindings.append(dict(path=name+'.io.bus',protocol='apb3',domain=domain,checks='APB phase and stability'))
+        if byte_writes and binder['type'] == 'project':
+            bindings.append(dict(path=name+'_port',protocol='apb3',domain=domain,checks='APB phase and stability'))
+        if binder.get('domain'):
+            bindings.append(dict(path=name+'_crossing',protocol='apb3',domain='default',checks='APB phase and stability'))
+    manifest['protocol_bindings'] = bindings
     (target / 'composition.json').write_text(dumps(manifest))
     return dict(status='generated', files=sorted(files + ['ComposedSoc.scala', 'composition.json']), profile=manifest['profile'])

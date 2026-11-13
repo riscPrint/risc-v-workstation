@@ -372,3 +372,20 @@ A verification `uvm` entry can contain `composition`, `classpath_file`,
 separate test-master harness, then runs its RAL and APB VIP environment.
 The row result refers to that peripheral harness. It does not certify CPU
 execution. Generated memory images have hashes in the consumer result.
+
+## Native protocol binding inventory
+
+Composition output includes `protocol_bindings` with port `path`, `protocol`,
+`domain` and `checks`. Core AXI/AXI-Lite/TileLink channels get native valid
+and payload stability assertions. Simple CPU bus requests get hold checks.
+The fabric APB master, every peripheral endpoint, legacy bridge boundaries
+and both sides of a clock bridge get APB phase and stability assertions.
+Downstream assertions use the destination clock domain. This inventory is
+`generated_only` until the RTL runs. Channel safety is not a transaction,
+coherence, ordering, liveness or protocol compliance qualification result.
+
+A protocol verification entry can supply `composition`. The runner checks
+map equality and emits the native composition with its full protocol binding
+inventory. This path preserves declared clock domains. The database-backed
+SV generator remains available. Standalone map-only SV binds still require
+project review of instance paths and clocks before use.

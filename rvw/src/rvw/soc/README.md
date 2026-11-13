@@ -464,3 +464,15 @@ map arithmetic for RTL proof. Core and peripheral state are outside this
 fabric proof target. The normal composer keeps protocol assertions enabled.
 The proof target omits temporal APB assertions because it does not assume a
 legal master. A native failure to generate or prove remains inconclusive.
+
+Fresh compositions now contain native channel-stability binds on the core
+bus. APB checks also cover the actual peripheral pins after legacy/clock
+bridges. The generated `composition.json` has `protocol_bindings` with each
+port's clock domain and check scope. Rebuild the generated source before a
+native run. Cached development classes cannot establish new binding runs.
+
+Supply `protocol.composition` to emit native binds with the source
+composition's clocks and bridge boundaries. The selected map must match.
+The Vex example does this before its native program run. Map-only SV bind
+files need project instance/clock review; use native composition or a typed
+database for automatic domain association.

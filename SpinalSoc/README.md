@@ -216,3 +216,24 @@ the complete peripheral fabric through an exported `stimulus` port. Optional
 `core.exports` lists the wrapper IO members to expose with a `core_` prefix.
 The normal bus, interrupt vector and debug-reset port stay under composer
 control. Production wrappers do not need to use this option.
+
+## Native protocol binds
+
+The composer binds channel stability checks to AXI4, AXI4-Lite and TileLink
+core ports. The simple CPU bus gets a stable-request check. APB phase and
+stability checks cover the routed fabric ports and actual peripheral pins.
+A clock bridge gets checks at both clocks. A legacy bridge gets checks at
+both interfaces. `composition.json` records paths, domains and check kinds.
+
+`ProtocolSmoke` passes a stable held request at seed 37. Its `corrupt` case
+changes the address under backpressure and fails the native assertion.
+The VexRiscv register program passed with these binds at seed 31 in 248
+cycles and 36 retired instructions. This is a sampled safety result. It is
+not complete AXI/TileLink transaction, ordering, coherence or liveness proof.
+
+AXI4 and TileLink binds also call the existing SpinalChecks transaction
+checkers through its new `BusAssertions` facade. AXI tracking requires
+positive issuing limits in the wrapper's bus config. Missing limits emit
+a gap warning. The Vex wrapper declares two read and two write requests.
+The build compiles those generic checker sources into its private output.
+It does not build a core or write shared SpinalChecks output directories.

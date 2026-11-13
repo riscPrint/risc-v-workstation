@@ -66,3 +66,9 @@ def test_axis_reset_cancels_stall(tmp_path):
     ports = 'reg valid=0,ready=0; reg [7:0] payload=0;'
     drive = 'valid=1; #10; reset=1; valid=0; payload=7; #10; reset=0;'
     assert not simulate(tmp_path, 'axis', ports, drive)
+
+
+def test_apb_unselected_peripheral_can_observe_shared_enable(tmp_path):
+    ports = 'reg select=0,enable=0,ready=1,error=0; reg [7:0] request=0;'
+    drive = 'enable=1; request=5; #20; request=9; #10; enable=0;'
+    assert not simulate(tmp_path, 'apb', ports, drive)
