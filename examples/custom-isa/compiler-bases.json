@@ -1,0 +1,45 @@
+{
+  "schema": "rvw.custom-backend-bases/1",
+  "files": [
+    {
+      "path": "gcc/config/riscv/riscv-builtins.cc",
+      "revision": "5115c7e447fc07457443df874bf57840e8316d5f",
+      "url": "https://github.com/gcc-mirror/gcc/blob/5115c7e447fc07457443df874bf57840e8316d5f/gcc/config/riscv/riscv-builtins.cc",
+      "sha256": "7a97fab1b6531044a76c5b3ea06103b5040b72cc836a4d394435190e2a12e7d7",
+      "git_blob": "9f8a9806bd94fe225fb19f23edda419ff1468e34",
+      "tag": "releases/gcc-15.2.0"
+    },
+    {
+      "path": "gcc/config/riscv/riscv-ftypes.def",
+      "revision": "5115c7e447fc07457443df874bf57840e8316d5f",
+      "url": "https://github.com/gcc-mirror/gcc/blob/5115c7e447fc07457443df874bf57840e8316d5f/gcc/config/riscv/riscv-ftypes.def",
+      "sha256": "062e825729fee8978c8cd148ac320a5156745b0b5bf15009efc14e5cad5ce5f7",
+      "git_blob": "f7854dd996bcf342a1cdaf3928fe552cc7ce0c21",
+      "tag": "releases/gcc-15.2.0"
+    },
+    {
+      "path": "gcc/config/riscv/riscv.md",
+      "revision": "5115c7e447fc07457443df874bf57840e8316d5f",
+      "url": "https://github.com/gcc-mirror/gcc/blob/5115c7e447fc07457443df874bf57840e8316d5f/gcc/config/riscv/riscv.md",
+      "sha256": "8daef476861883f3ef3f57bc88dfb01e93f87318f164cc7d41f6903325b66053",
+      "tag": "releases/gcc-15.2.0",
+      "git_blob": "3b779e2c060fb0e952c5f23dcba8f57c85e0451a"
+    },
+    {
+      "path": "llvm/lib/Target/RISCV/RISCVInstrInfo.td",
+      "revision": "3623fe661ae35c6c80ac221f14d85be76aa870f1",
+      "url": "https://github.com/llvm/llvm-project/blob/3623fe661ae35c6c80ac221f14d85be76aa870f1/llvm/lib/Target/RISCV/RISCVInstrInfo.td",
+      "sha256": "0088b23039e47a82026e3550a1bb2502af61d47a8892e2d2dda46ede24423de9",
+      "tag": "llvmorg-21.1.0",
+      "git_blob": "f63531a0109b0aa8c7cac23358d6f12ff8dee914"
+    },
+    {
+      "path": "llvm/include/llvm/IR/IntrinsicsRISCV.td",
+      "revision": "3623fe661ae35c6c80ac221f14d85be76aa870f1",
+      "url": "https://github.com/llvm/llvm-project/blob/3623fe661ae35c6c80ac221f14d85be76aa870f1/llvm/include/llvm/IR/IntrinsicsRISCV.td",
+      "sha256": "16ffcf9b4a17da82736ed50eab4d8a0070fbecb987181f5bb76ebcb48bb41938",
+      "tag": "llvmorg-21.1.0",
+      "git_blob": "e63a41f4f6764c787a5b3fc14a0061eda264398b"
+    }
+  ]
+}

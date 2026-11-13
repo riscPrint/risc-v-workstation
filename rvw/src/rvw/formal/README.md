@@ -13,6 +13,41 @@ input ties, assumptions, and reset settings. Missing replay state starts free an
 spurious failures. Exit 0 means `pass`. Other written results exit 1. Invalid input exits 2.
 
 
+## Custom compiler and reference exports
+
+`rvw formal custom-isa CUSTOM.json --out OUT --backend-sources BASES` generates
+GCC and LLVM patches plus a Spike extension for pure version-1 instructions.
+MCP `formal_custom_isa` accepts the same optional `backend_sources` directory.
+Version-2 state/memory/trap effects are not mapped to these software backends.
+
+`BASES/sources.json` uses `rvw.custom-backend-bases/1`. Each logical compiler file
+has its full revision and SHA-256. Source files occupy those paths under BASES.
+See `examples/custom-isa/compiler-bases.json` for pinned GCC 15.2 and LLVM 21.1
+inputs. The checked-in example patches are generated from these exact bytes.
+With no base directory, output contains fragments only and reports the missing
+parent integration as a gap.
+
+GCC output adds instruction patterns and `__builtin_riscv_rvw_NAME` entries.
+LLVM output adds instruction records, `llvm.riscv.rvw.NAME` IR intrinsics and
+selection patterns. Patches target a project compiler with the custom extension
+enabled. No runtime feature discovery is added. Clang C builtin declarations
+are not generated. Applying a patch does not establish a compiler build pass.
+
+`OUT/backends/spike.cc` implements the pure word expressions and registers
+instruction/disassembly handlers. Run `OUT/backends/build-spike.sh` with the
+same `SPIKE_PREFIX` used for the co-simulation shim. It writes `libcustom.so`.
+Merge `platform.fragment.json` into project data with the correct library path.
+The existing co-simulation loader captures and loads that declared library.
+Native smoke tests compile and execute RV32I/RV64I GNU calling-convention
+programs through captured Spike inputs. Without the extension, each program's
+custom instruction traps. These are software/reference fixtures, not DUT proof.
+
+Supported exports cover pure RV32I/RV64I R-type data. E handlers, stateful
+backend semantics and complete compiler qualification remain outside this
+increment. Upstream GCC is GPL-3.0-or-later. LLVM is Apache-2.0 WITH LLVM-exception.
+The generated artifact license is not specified. The installed Spike dependency
+license is not verified. No generated artifact is installed automatically.
+
 ## Custom instruction state, memory and traps
 
 Use `rvw formal custom-effects effects.json --out OUT`. MCP tool

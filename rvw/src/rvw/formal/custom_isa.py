@@ -112,7 +112,7 @@ def reference_checks(data):
     return results, gaps
 
 
-def generate(manifest, out):
+def generate(manifest, out, backend_sources=None):
     import hashlib
     data = load(manifest)
     checks, gaps = reference_checks(data)
@@ -187,13 +187,15 @@ def generate(manifest, out):
                   licenses={'GNU GCC':'GPL-3.0-or-later', 'GNU binutils':'GPL-3.0-or-later',
                             'plugins':'no compiler or disassembler plugin is installed'},
                   limits='Pure register R-type custom opcodes only. No extra state, memory or trap effects. No DUT qualification.')
+    from .custom_backends import export
+    report['backend_exports']=export(data,out,backend_sources)
     (out / 'result.json').write_text(json.dumps(report, indent=2) + '\n')
     return report
 
 
 def main(args):
     try:
-        result = generate(args.manifest, args.out)
+        result = generate(args.manifest, args.out, getattr(args, 'backend_sources', None))
         print(json.dumps(result) if args.json else result['status'])
         return 1 if result['status'] == 'mismatch' else 0
     except (ValueError, OSError, KeyError, TypeError) as exc:
