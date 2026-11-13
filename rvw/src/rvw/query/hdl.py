@@ -133,16 +133,8 @@ def _build_hdl(sources, top, out, *, yosys='yosys', timeout=120, frontend='yosys
                 plugin = capture.file(hdl_ghdl.plugin_path(tool, ghdl_plugin))
                 ghdl_tool = capture.tool('ghdl')
         else:
-            # Capture whole directories: the sources' own (local includes) and each include
-            # directory. Elaboration reads only these copies.
-            trees = {}
-            for d in [*dict.fromkeys(p.parent for p in sources), *map(Path, include_dirs)]:
-                d = Path(d).absolute()
-                if d not in trees:
-                    trees[d] = capture.tree(d, git=False)
-            copies = [trees[p.parent].copy / p.name for p in sources]
-            includes = [trees[Path(d).absolute()].copy for d in include_dirs]
-            used = [f for t in trees.values() for f in t.files]
+            from .hdl_slang import capture_sources
+            copies, includes, used = capture_sources(capture, sources, include_dirs)
             for path in copies:
                 if re.search(SOURCE_REMAP, path.read_text(errors='replace')):
                     raise ValueError('unsupported file input or source remapping')
