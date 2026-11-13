@@ -42,7 +42,7 @@ def usage(jobs, scope, reserve=False):
     return totals
 
 
-def admit(db, jobs, job):
+def admit(db, jobs, job, reserve=True):
     db.execute('CREATE TABLE IF NOT EXISTS budgets (scope TEXT PRIMARY KEY, data TEXT)')
     budgets = {r[0]: json.loads(r[1]) for r in db.execute('SELECT scope,data FROM budgets')}
     timeout = job['timeout']
@@ -53,7 +53,7 @@ def admit(db, jobs, job):
         config = budgets.get(scope)
         if not config:
             continue
-        spent = usage(jobs, scope, reserve=True)
+        spent = usage(jobs, scope, reserve=reserve)
         limits = config['limits']
         if spent['jobs'] >= limits.get('jobs', float('inf')):
             return 0
@@ -77,7 +77,9 @@ def report(queue, scope):
         item = verdicts.setdefault(key, dict(jobs=0, core_hours=0.))
         item['jobs'] += 1
         item['core_hours'] += usage([job], scope)['core_hours']
-    return dict(schema='rvw.queue-cost/1', scope=scope, limits=config['limits'], usage=totals,
+    from .verdict_costs import costs_by_verdict
+    attribution = costs_by_verdict(queue, scope)
+    return dict(**attribution, schema='rvw.queue-cost/1', scope=scope, limits=config['limits'], usage=totals,
                 by_execution_state=verdicts, rate_per_core_hour=config['rate'],
                 cost=totals['core_hours'] * config['rate'] if config['rate'] is not None else None,
                 cpu_basis='declared cores times wall time; includes cleanup; not measured CPU',

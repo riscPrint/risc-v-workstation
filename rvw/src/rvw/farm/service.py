@@ -47,7 +47,7 @@ class Queue:
         with self.connect() as db:
             rows = db.execute('SELECT data FROM jobs ORDER BY rowid').fetchall()
         jobs = [json.loads(r[0]) for r in rows]
-        return [j for j in jobs if owner is None or j['owner'] == owner]
+        return sorted((j for j in jobs if owner is None or j['owner'] == owner), key=lambda j: (j['created'], j['id']))
 
     def events(self, after=0):
         with self.connect() as db:
@@ -62,18 +62,21 @@ class Queue:
                 return None
             # Priority first. Within a priority, choose the least served owner.
             served = lambda owner: sum(len(j['attempts']) for j in rows if j['owner'] == owner)
-            job = min(waiting, key=lambda j: (-j['priority'], served(j['owner']), j['created']))
             from .costs import admit
-            allowed = admit(db, rows, job)
-            if allowed <= 0:
-                job.update(state='budget_exhausted')
+            for job in sorted(waiting, key=lambda j: (-j['priority'], served(j['owner']), j['created'])):
+                allowed = admit(db, rows, job)
+                if allowed <= 0:
+                    # Reservations can expire below their ceiling. Keep that work queued.
+                    if admit(db, rows, job, reserve=False) <= 0:
+                        job.update(state='budget_exhausted')
+                        self.save(db, job)
+                    continue
+                job['effective_timeout'] = allowed
+                job.update(state='running', controller=os.getpid(), heartbeat=time.time(), pgid=None)
+                job['attempts'].append(dict(start=time.time(), status='running'))
                 self.save(db, job)
-                return None
-            job['effective_timeout'] = allowed
-            job.update(state='running', controller=os.getpid(), heartbeat=time.time(), pgid=None)
-            job['attempts'].append(dict(start=time.time(), status='running'))
-            self.save(db, job)
-            return job
+                return job
+            return None
 
     def update(self, job_id, **values):
         with self.connect() as db:
