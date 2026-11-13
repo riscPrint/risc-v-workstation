@@ -98,12 +98,25 @@ def register(subparsers) -> None:
     c.add_argument("artifact")
     c.add_argument("out")
 
+    c = cmd("explain", "each hardware difference with its source, covering tests and measured effect", _explain, db=False)
+    c.add_argument("old")
+    c.add_argument("new")
+    c.add_argument("--coverage", help="rvw.coverage/1 database of the OLD revision")
+    c.add_argument("--effect", help="measured comparison of the whole change (rvw perf compare / arch compare JSON)")
+    c.add_argument("--scope", help="only inside this component")
+    c.add_argument("--limit", type=int, default=500, help="maximum entries per category")
+
     c = cmd("diff", "what changed in the elaborated hardware between two databases", _diff, db=False)
     c.add_argument("old")
     c.add_argument("new")
     c.add_argument("--scope", help="only inside this component")
     c.add_argument("--limit", type=int, default=200, help="maximum entries per category")
     c.add_argument("--no-connections", action="store_true", help="skip the (slower) connection graph comparison")
+
+
+def _explain(_db, a):
+    from .explain import explain
+    return explain(a.old, a.new, a.coverage, a.effect, scope=a.scope, limit=a.limit)
 
 
 def _diff(_db, a):
@@ -155,6 +168,17 @@ def _sig_line(s: dict) -> str:
 def render(command: str, r: dict) -> str:
     out: list[str] = []
     w = out.append
+    if command == "explain":
+        sel = r["selection"]
+        w(f"{r['count']} hardware differences; test selection: {sel['mode']}"
+          + (f" ({len(sel['uncertain_items'])} uncertain)" if sel["uncertain_items"] else ""))
+        for it in r["items"]:
+            t = it["tests"]
+            locs = ", ".join(f"{l['file'].rsplit('/', 1)[-1]}:{l['line']}" for l in it["locations"][:3])
+            w(f"  {it['change']:8} {it['kind']:10} {it['path']}  [{locs}]  tests: {t['status']}"
+              + (f" {', '.join(t.get('tests', [])[:8])}" if t.get("tests") else f" ({t.get('cause')})"))
+        w(f"effect: {r['effect']['status']}" + (f" ({r['effect']['basis']})" if r['effect'].get('basis') else ""))
+        return "\n".join(out)
     if r.get("graph_semantics"):
         w(f"graph: {r['graph_semantics']}")
     if r.get("status") == "inconclusive":

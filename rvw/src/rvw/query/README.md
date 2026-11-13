@@ -25,6 +25,7 @@ export RVW_DESIGNDB=../SpinalDB/out/boom-small.db     # or --db PATH on each com
 | `component PATH` | ports, interfaces (Stream, Flow, Vec, bundles with direction and width), children, registers, memories, Areas, counts |
 | `regs PATH [-r]` | registers with width, clock, reset value, location |
 | `diff OLD.db NEW.db` | typed hardware changes in components, ports, registers, memories, signals, assignments and connections; includes emission settings, ordered tags and port order; needs schema `/20` on both sides; `--scope`, `--no-connections` |
+| `explain OLD.db NEW.db [--coverage COV.json] [--effect CMP.json]` | each difference of `diff` with its Scala locations, the tests that hit base coverage points on those lines, and a measured effect of the whole change; uncertain items (added hardware, no location, unmapped or unhit lines) select every test |
 | `export blocks|pdg|hgldd OUT` | write an artifact of the same elaboration (SpinalBlocks diagram, SpinalTrace PDG, SpinalWaves HGLDD) |
 
 ## Names
@@ -145,3 +146,21 @@ database from Verilog and the native Yosys SV subset. `--yosys PATH` selects the
 native tool. `--timeout SECONDS` bounds elaboration. Drivers, loads and paths use
 the same reader. HDL graphs are conservative and semantic diff is inconclusive.
 See [the frontend limits](../../../../../SpinalDB/README.md#verilog-and-systemverilog-navigation).
+
+## Explained diffs (`explain`)
+
+`rvw query explain OLD.db NEW.db` (MCP `query_explain`) returns `rvw.diff-explain/1`. Each item
+is one `diff` entry (component, port, register, memory, signal, logic or connection) with:
+
+- `locations`: the signal's declaration and its assignments' Scala lines (old database for
+  changed and removed items, new database for added ones);
+- `tests`: with `--coverage` (an `rvw.coverage/1` database of the OLD revision), the tests that hit
+  a coverage point mapped to one of those lines. Status `covered`, `unhit` (mapped, never hit),
+  `unmapped` (no point on those lines), `uncovered` (added hardware) or `unknown` (no location
+  or no coverage). Files match by path, or by a common tail of at least three path parts;
+- `effect`: always `unknown` per item.
+
+`selection.mode` is `covering` only when every item is `covered`; otherwise `all`, and
+`selection.tests` lists every coverage test. With `--effect` (an `rvw perf compare` or
+`rvw arch compare` JSON), `effect.status` is `measured` for the whole change; it is never
+attributed to one difference. No performance model runs here.
