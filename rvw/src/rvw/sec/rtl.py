@@ -268,7 +268,14 @@ def testbench(binding, widths, ift=None):
         L.append(f'  if (dut.{r["valid"]}) $fdisplay(fd, "C %0d %h' + (' %0d' if mode else '') + f'", cycle, dut.{r["pc"]}{mode});')
     t = binding.get('trap')
     if t:
-        L.append(f'  if ({t["valid"]}) $fdisplay(fd, "T %0d %h %h", cycle, {t["cause"]}, {t["tval"]});')
+        # Trap signals are top-level ports or internal signals; `cause` and `epc` are optional.
+        sig = lambda n: n if n in widths else f'dut.{n}'
+        internal = [t[k] for k in ('valid', 'cause', 'tval', 'epc') if t.get(k) and t[k] not in widths]
+        if not (ift and internal):
+            epc = f', {sig(t["epc"])}' if t.get('epc') else ''
+            cause = sig(t['cause']) if t.get('cause') else "32'd0"
+            L.append(f'  if ({sig(t["valid"])}) $fdisplay(fd, "T %0d %h %h' + (' %h' if epc else '') +
+                     f'", cycle, {cause}, {sig(t["tval"])}{epc});')
         if t.get('privilege') and not ift:
             L.append(f'  if (dut.{t["privilege"]} != last_priv) begin $fdisplay(fd, "P %0d %0d", cycle, dut.{t["privilege"]}); last_priv = dut.{t["privilege"]}; end')
     if not ift:
@@ -378,7 +385,8 @@ def parse(text, mem, binding):
         elif w[0] == 'B':
             result['bus'].append(dict(cycle=int(w[1]), bus=w[2], address=int(w[3], 16), write=bool(int(w[4]))))
         elif w[0] == 'T':
-            result['traps'].append(dict(cycle=int(w[1]), cause=int(w[2], 16), tval=int(w[3], 16)))
+            result['traps'].append(dict(cycle=int(w[1]), cause=int(w[2], 16), tval=int(w[3], 16),
+                                        **({'epc': int(w[4], 16)} if len(w) > 4 else {})))
         elif w[0] == 'M':
             result['tainted_words'].append((int(w[1]), int(w[2], 16)))
         elif w[0] == 'A':
@@ -429,9 +437,10 @@ def c2(result, path, elf, binding, isa):
     for r in cut(result):
         while traps and traps[0]['cycle'] < r['cycle']:
             t = traps.pop(0)
-            if previous is not None and not t['cause'] >> 31 and 'pc_next' in previous:
-                # RVFI here omits the trapped instruction. In order, it is the next PC.
-                pc = previous['pc_next']; off = pc-binding['ram_base']
+            if previous is not None and not t['cause'] >> 31 and ('pc_next' in previous or 'epc' in t):
+                # RVFI or the commit port omits the trapped instruction: its PC is the trap's
+                # declared epc, or in order the next PC.
+                pc = t['epc'] if 'epc' in t else previous['pc_next']; off = pc-binding['ram_base']
                 insn = int.from_bytes(mem[off:off+4], 'little') if 0 <= off < len(mem)-3 else 0
                 rows.append(json.dumps(dict(pc=hex(pc), pc_next=hex(r['pc']), insn=hex(insn), rd_wdata='0x0',
                                             mem_addr='0x0', mem_rdata='0x0', mem_wdata='0x0', rs1=0, rs2=0,

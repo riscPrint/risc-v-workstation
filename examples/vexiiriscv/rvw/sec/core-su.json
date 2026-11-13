@@ -1,0 +1,153 @@
+{
+  "schema": "rvw.sec-core/1",
+  "name": "vexiiriscv-su",
+  "rtl": [
+    "${RVW_SEC_RTL}/vexii/rv32imasu/VexiiRiscv.v"
+  ],
+  "top": "VexiiRiscv",
+  "clock": "clk",
+  "reset": "reset",
+  "reset_cycles": 8,
+  "ram": {
+    "base": "0x80000000",
+    "size": "0x10000"
+  },
+  "max_cycles": 50000,
+  "platform": "../platform32.json",
+  "buses": [
+    {
+      "name": "ibus",
+      "kind": "fetch",
+      "latency": 1,
+      "cmd_valid": "FetchCachelessPlugin_logic_bus_cmd_valid",
+      "cmd_ready": "FetchCachelessPlugin_logic_bus_cmd_ready",
+      "cmd_address": "FetchCachelessPlugin_logic_bus_cmd_payload_address",
+      "cmd_id": "FetchCachelessPlugin_logic_bus_cmd_payload_id",
+      "rsp_valid": "FetchCachelessPlugin_logic_bus_rsp_valid",
+      "rsp_data": "FetchCachelessPlugin_logic_bus_rsp_payload_word",
+      "rsp_error": "FetchCachelessPlugin_logic_bus_rsp_payload_error",
+      "rsp_id": "FetchCachelessPlugin_logic_bus_rsp_payload_id"
+    },
+    {
+      "name": "dbus",
+      "kind": "data",
+      "latency": 1,
+      "write_response": true,
+      "cmd_valid": "LsuCachelessPlugin_logic_bus_cmd_valid",
+      "cmd_ready": "LsuCachelessPlugin_logic_bus_cmd_ready",
+      "cmd_address": "LsuCachelessPlugin_logic_bus_cmd_payload_address",
+      "cmd_id": "LsuCachelessPlugin_logic_bus_cmd_payload_id",
+      "cmd_write": "LsuCachelessPlugin_logic_bus_cmd_payload_write",
+      "cmd_data": "LsuCachelessPlugin_logic_bus_cmd_payload_data",
+      "cmd_mask": "LsuCachelessPlugin_logic_bus_cmd_payload_mask",
+      "rsp_valid": "LsuCachelessPlugin_logic_bus_rsp_valid",
+      "rsp_data": "LsuCachelessPlugin_logic_bus_rsp_payload_data",
+      "rsp_error": "LsuCachelessPlugin_logic_bus_rsp_payload_error",
+      "rsp_id": "LsuCachelessPlugin_logic_bus_rsp_payload_id"
+    }
+  ],
+  "retire": {
+    "kind": "commit",
+    "valid": "WhiteboxerPlugin_logic_commits_ports_0_valid",
+    "pc": "WhiteboxerPlugin_logic_commits_ports_0_pc",
+    "mode": "rvw_privilege"
+  },
+  "events": [
+    {
+      "kind": "branch",
+      "name": "learn",
+      "valid": "WhiteboxerPlugin_logic_prediction_learns_0_valid",
+      "fields": {
+        "pc": [
+          "WhiteboxerPlugin_logic_prediction_learns_0_payload_pcOnLastSlice",
+          32
+        ],
+        "taken": [
+          "WhiteboxerPlugin_logic_prediction_learns_0_payload_taken",
+          1
+        ],
+        "target": [
+          "WhiteboxerPlugin_logic_prediction_learns_0_payload_pcTarget",
+          32
+        ],
+        "mispredicted": [
+          "WhiteboxerPlugin_logic_prediction_learns_0_payload_wasWrong",
+          1
+        ],
+        "conditional": [
+          "WhiteboxerPlugin_logic_prediction_learns_0_payload_isBranch",
+          1
+        ]
+      },
+      "meta": {
+        "semantics": "final-prediction",
+        "covers": "cond,jump,ijump,call,icall,ret"
+      }
+    },
+    {
+      "kind": "tlb",
+      "name": "walk",
+      "valid": "rvw_walk_start",
+      "fields": {
+        "va": [
+          "rvw_walk_va",
+          32
+        ],
+        "read": [
+          "rvw_walk_read",
+          1
+        ],
+        "write": [
+          "rvw_walk_write",
+          1
+        ],
+        "execute": [
+          "rvw_walk_execute",
+          1
+        ]
+      },
+      "meta": {
+        "semantics": "page-table walk start (TLB miss)"
+      }
+    },
+    {
+      "kind": "tlb",
+      "name": "pte",
+      "valid": "rvw_walk_pte_cmd",
+      "fields": {
+        "address": [
+          "rvw_walk_pte_address",
+          32
+        ]
+      }
+    },
+    {
+      "kind": "tlb",
+      "name": "refill",
+      "valid": "rvw_walk_done",
+      "fields": {
+        "address": [
+          "rvw_walk_address",
+          32
+        ],
+        "page_fault": [
+          "rvw_walk_page_fault",
+          1
+        ],
+        "access_fault": [
+          "rvw_walk_access_fault",
+          1
+        ]
+      }
+    }
+  ],
+  "soc": "soc-sec.json",
+  "march": "rv32ima_zicsr",
+  "isa": "rv32ima",
+  "trap": {
+    "valid": "rvw_trap_fire",
+    "tval": "rvw_trap_tval",
+    "epc": "rvw_trap_epc",
+    "privilege": "rvw_privilege"
+  }
+}

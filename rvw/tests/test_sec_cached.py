@@ -68,3 +68,28 @@ def test_commit_port_with_mode_records_the_privilege(tmp_path):
     parsed = rtl.parse('C 5 80000004 0\nC 6 80000008\n', bytes(image), b)
     assert parsed['retired'][0] == dict(cycle=5, pc=0x80000004, insn=0x13, mode=0)
     assert 'mode' not in parsed['retired'][1]
+
+
+def test_internal_trap_signals_and_epc_restore_the_trapped_commit(tmp_path):
+    b = binding(tmp_path)
+    b['retire'] = dict(kind='commit', valid='c_valid', pc='c_pc', mode='c_priv')
+    b['trap'] = dict(valid='t_fire', tval='t_tval', epc='t_epc')
+    tb = rtl.testbench(b, rtl.ports(b))
+    assert '''if (dut.t_fire) $fdisplay(fd, "T %0d %h %h %h", cycle, 32'd0, dut.t_tval, dut.t_epc);''' in tb
+    # The gate-level shadow has no internal names: no trap line there.
+    assert 'dut.t_fire' not in rtl.testbench(b, rtl.ports(b), ift=('_', []))
+    image = bytearray(0x1000)
+    image[0:4] = (0x13).to_bytes(4, 'little'); image[4:8] = (0x73).to_bytes(4, 'little')
+    image[0x100:0x104] = (0x13).to_bytes(4, 'little')
+    result = rtl.parse('C 5 80000000 0\nT 7 0 0 80000004\nC 9 80000100 3\n', bytes(image), b)
+    result.update(tohost=1, done=10, image=bytes(image), tohost_address=0)
+    rtl.c2(result, tmp_path/'c2.jsonl', 'x.elf', b, 'rv32i')
+    rows = [json.loads(x) for x in (tmp_path/'c2.jsonl').read_text().splitlines()[1:]]
+    commits = [r for r in rows if 'event' not in r]
+    assert [(r['pc'], r['insn'], r['mode'], r['trap']) for r in commits] == [
+        ('0x80000000', '0x13', 0, False), ('0x80000004', '0x73', 0, True), ('0x80000100', '0x13', 3, False)]
+
+
+def test_isolation_accepts_tlb_state():
+    from rvw.sec import isolation
+    assert 'tlb-state' in isolation.KINDS
