@@ -13,6 +13,10 @@ def _profile(path=None, project=None):
 def suite_run(out, profile=None, groups=None, checks=None, reference=True, log=None, port=None, project=None):
     from . import suite, checks as _registered  # noqa: F401
     prof = _profile(profile, project)
+    if port is None and prof.get('transport_declared') is False:
+        # The built-in reference model is not the core. Never run it as an implicit default.
+        raise profiles.ProfileError('the debug profile has no [transport]; declare the target '
+                                    '(remote_bitbang, dmi_process), or kind = "model" for the reference self-test')
     if port is not None:
         prof['transport'] = {**prof['transport'], 'kind': 'remote_bitbang', 'port': port,
                              'host': prof['transport'].get('host', '127.0.0.1')}

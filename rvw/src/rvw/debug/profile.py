@@ -168,6 +168,8 @@ def load(path):
     except (UnicodeDecodeError, tomllib.TOMLDecodeError) as exc:
         raise ProfileError(f'{path}: {exc}') from None
     profile = normalize(raw, base=path.parent)
+    # A campaign needs a named target. Without [transport], normalize selects the built-in model.
+    profile['transport_declared'] = 'transport' in raw
     profile['path'] = str(path)
     profile['sha256'] = hashlib.sha256(data).hexdigest()
     return profile
