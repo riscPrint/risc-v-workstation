@@ -193,7 +193,7 @@ from regress_fixtures import legacy_layout  # noqa: E402,F401  (kept for fixture
 # Explicit allowlist: new tests default to the nightly set until reviewed.
 # These modules use Python, Git, shell fixtures and committed SQL dumps only.
 FAST_MODULES = {
-    "test_riscv.py", "test_results.py", "test_release_hygiene.py",
+    "test_riscv.py", "test_results.py", "test_csim_formats.py", "test_release_hygiene.py",
     "test_ci.py", "test_command_reference.py", "test_project.py", "test_perf.py", "test_perf_capture.py",
     "test_perf_conclusive.py", "test_arch_model.py",
     "test_query.py", "test_query_round16.py", "test_query_round16_literals.py",

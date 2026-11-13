@@ -1,0 +1,61 @@
+"""Catalog of the component models and their study keys (for `rvw csim models`)."""
+
+CATALOG = {
+    "branch": {
+        "doc": "conditional direction; keys under branch.*; update_delay (branches) delays training",
+        "models": {
+            "bimodal": ["entries", "ctr_bits", "pc_shift"],
+            "gshare": ["entries", "history", "pc_shift"],
+            "local": ["local_histories", "local_bits", "local_ctr_bits", "pc_shift"],
+            "tournament": ["local_histories", "local_bits", "local_ctr_bits", "global_bits", "pc_shift"],
+            "perceptron": ["entries", "history", "weight_bits", "threshold", "pc_shift"],
+            "hashed-perceptron": ["tables[].entries", "tables[].history", "intervals (prefix|segment)", "weight_bits", "threshold"],
+            "tage": ["base_entries", "base_ctr_bits", "tables[].entries/history/tag_bits", "num_tables", "min_history",
+                     "max_history", "table_entries", "min_tag_bits", "max_tag_bits", "ctr_bits", "u_bits",
+                     "u_reset_period", "max_alloc", "path_bits", "history_all_branches", "seed", "loop.*", "sc.*"],
+            "ltage": ["as tage; loop.enabled defaults to true"],
+            "tage-sc-l": ["as tage; loop.* (entries, ways, tag_bits, iter_bits, conf_bits, age_bits) and "
+                          "sc.* (ctr_bits, threshold, bias_entries, local_histories, global[].entries/history, "
+                          "local[].entries/history) default to enabled"],
+            "perfect": ["oracle bound: reads the actual outcome"],
+            "always-taken": [], "btfn": ["backward taken, forward not taken (uses the decoded target)"],
+        },
+    },
+    "btb": {"doc": "set-associative LRU BTB; levels[] gives a multi-level BTB",
+            "keys": ["entries", "ways", "tag_bits (0 = full)", "latency", "levels[].entries/ways/tag_bits/latency",
+                     "target_bits", "allocate_not_taken", "pc_shift"]},
+    "ras": {"doc": "circular return address stack", "keys": ["entries", "repair (none|pointer|pointer_top|full)"]},
+    "indirect": {"doc": "indirect target predictor", "models": {"btb": ["last target from the BTB"],
+                 "ittage": ["base_entries", "tables[].entries/history/tag_bits", "target_bits", "u_reset_period"]}},
+    "wrong_path": {"doc": "learned-CFG wrong-path walk after each execute redirect (RAS corruption and repair)",
+                   "keys": ["branches"]},
+    "frontend": {"doc": "decoupled front-end delivery model (BPU -> FTQ -> I-cache -> decode)",
+                 "keys": ["fetch_width", "predictions_per_cycle", "ftq_entries", "decode_width", "decode_redirect_latency",
+                          "resolve_latency", "bpu_to_fetch", "fetch_to_decode", "fdip", "wrong_path_icache"]},
+    "memory": {"doc": "cache hierarchy l1i, l1d, l2, llc and an optional TLB/page walker",
+               "keys": ["cycles_per_instruction", "dram_latency",
+                        "<level>.size_kib/ways/line_bytes/latency/replacement/prefetch_queue/perfect/pollution_filter",
+                        "<level>.prefetchers[].kind (+ kind keys)", "<level>.rrip.*", "<level>.hawkeye.*",
+                        "tlb.page_bits/levels/level_bits/l1.*/l2.*/l2_enabled/pwc[].*/walk_through_cache/walk_ref_latency"],
+               "replacement": ["lru", "random", "plru", "srrip", "brrip", "drrip", "ship", "hawkeye", "opt (l1d only)"],
+               "prefetchers": {
+                   "next-line": ["degree", "trigger (miss|access)"],
+                   "ip-stride": ["entries", "degree", "distance"],
+                   "stream": ["streams", "degree", "distance", "window"],
+                   "bop": ["rr_entries", "round_max", "score_max", "bad_score", "max_offset"],
+                   "spp": ["st_entries", "pt_entries", "threshold", "max_depth"],
+                   "sms": ["region_bytes", "filter_entries", "accumulation_entries", "pht_entries"],
+                   "berti": ["ip_entries", "history", "deltas", "round", "l1_coverage", "l2_coverage"],
+                   "eip": ["entries", "history", "destinations"],
+               }},
+    "mdp": {"doc": "memory dependence prediction", "models": {
+        "store-sets": ["ssit_entries", "lfst_entries", "unresolved_window", "clear_period"],
+        "wait-table": ["ssit_entries", "unresolved_window", "clear_period"],
+        "always-speculate": ["unresolved_window"], "never-speculate": ["unresolved_window"], "perfect": ["unresolved_window"]}},
+    "vp": {"doc": "value prediction (needs W rows: convert C2 with values)", "models": {
+        "last-value": ["entries", "conf_bits", "threshold", "eligible (loads|all)"],
+        "stride": ["entries", "conf_bits", "threshold", "eligible"],
+        "vtage": ["entries", "tables[].entries/history", "conf_bits", "threshold", "eligible"]}},
+    "report": {"keys": ["top_branches", "predictions_file"]},
+    "top_level": ["warmup_instructions", "simulation_instructions", "name", "source", "description"],
+}

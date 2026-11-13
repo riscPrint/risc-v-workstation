@@ -1,0 +1,29 @@
+{
+  "schema": "rvw.csim-study/1",
+  "name": "wide-core-example",
+  "description": "Illustrative wide out-of-order core front end and memory system. Not a model of any product; tune from your own data.",
+  "source": {"fidelity": "unqualified"},
+  "warmup_instructions": 1000000,
+  "branch": {"model": "tage-sc-l", "num_tables": 12, "table_entries": 2048, "min_history": 4, "max_history": 640,
+             "base_entries": 8192, "update_delay": 0},
+  "btb": {"levels": [{"entries": 256, "ways": 4, "latency": 0, "tag_bits": 16},
+                     {"entries": 8192, "ways": 8, "latency": 1, "tag_bits": 16},
+                     {"entries": 32768, "ways": 8, "latency": 3, "tag_bits": 16}]},
+  "indirect": {"model": "ittage"},
+  "ras": {"entries": 64, "repair": "full"},
+  "wrong_path": {"branches": 16},
+  "frontend": {"fetch_width": 8, "predictions_per_cycle": 2, "ftq_entries": 64, "decode_width": 8,
+               "decode_redirect_latency": 5, "resolve_latency": 13, "fdip": true},
+  "memory": {
+    "cycles_per_instruction": 0.25,
+    "dram_latency": 300,
+    "l1i": {"size_kib": 64, "ways": 8, "latency": 3, "prefetchers": [{"kind": "eip"}]},
+    "l1d": {"size_kib": 48, "ways": 12, "latency": 5, "prefetch_queue": 16, "prefetchers": [{"kind": "berti"}]},
+    "l2": {"size_kib": 1024, "ways": 16, "latency": 14, "replacement": "ship", "prefetch_queue": 32,
+           "prefetchers": [{"kind": "spp"}]},
+    "llc": {"size_kib": 8192, "ways": 16, "latency": 45, "replacement": "drrip", "prefetchers": [{"kind": "sms"}]},
+    "tlb": {"levels": 4, "l1": {"entries": 96, "ways": 6}, "l2": {"entries": 2048, "ways": 16, "latency": 7}}
+  },
+  "mdp": {"model": "store-sets", "unresolved_window": 128},
+  "vp": {"model": "vtage", "eligible": "loads"}
+}

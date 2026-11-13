@@ -11,8 +11,11 @@ The first working increment is a native C++17 direction simulator with bimodal,
 gshare and perfect-direction models. It consumes a small checked text format.
 A Python adapter reads successful `rvw workloads verify --trace` Spike reports.
 It binds the input log and report hashes. It rejects ambiguous branch outcomes.
-This increment is a subset of the requested first slice. TAGE-SC-L, BOOM-like
-configuration and independent published-trace qualification remain open work.
+Status 2026-11-13: `ComponentSims/csim.cc` and `include/csim/` add TAGE,
+TAGE-SC-L, perceptron, tournament, BTB/RAS/ITTAGE, an FTQ front-end model,
+caches, replacement policies, prefetchers, TLBs, store sets and value prediction,
+with `rvw csim` and MCP tools. Independent published-trace qualification remains
+open work. See `ComponentSims/README.md`.
 
 ## Prior art and source inspection
 

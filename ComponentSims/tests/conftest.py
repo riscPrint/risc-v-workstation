@@ -13,3 +13,11 @@ def engine(tmp_path_factory):
                     str(ROOT / 'branch_sim.cc'), '-o', str(binary)], check=True)
     return binary
 
+
+
+@pytest.fixture(scope='session')
+def csim(tmp_path_factory):
+    binary = tmp_path_factory.mktemp('csim-build') / 'csim'
+    subprocess.run(['c++', '-std=c++17', '-O2', '-Wall', '-Wextra', '-Werror', f'-I{ROOT / "include"}',
+                    str(ROOT / 'csim.cc'), '-o', str(binary)], check=True)
+    return binary
