@@ -169,6 +169,9 @@ def register(sub) -> None:
     _json_arg(ls)
     ls.set_defaults(func=cmd_list)
 
+    from rvw.common.subcommands import register_commands
+    register_commands("rvw.regress", rs)
+
 
 def _err(msg: str) -> int:
     print(f"rvw regress: error: {msg}", file=sys.stderr)
