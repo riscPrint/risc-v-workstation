@@ -76,3 +76,14 @@ mem_latency = 0
 
 [tiers.full]
 runs = [{ suite = "isa" }, { suite = "smoke" }]
+
+[suites.act4]
+description = "ACT4 instruction groups; no standard Sm qualification"
+dir = "rvw/out/act4/work/rvw-act4/elfs"
+act4_manifest = "rvw/out/act4/manifest.json"
+glob = "**/*.elf"
+strip_suffix = ".elf"
+configs = ["default"]
+max_cycles = 2000000
+timeout_s = 120
+mem_latency = 0
