@@ -14,7 +14,7 @@ An entry here states availability. It does not qualify a native flow.
 
 ```text
 usage: rvw [-h] [--version] [--project PROJECT] [--json]
-    {agent,agent-bench,arch,bisect,bugmem,bundle,checks,cosim,cov,csim,csr,debug,doctor,evidence,farm,fault,formal,init,lint,lsp,mcp,memory,ooo,perf,plan,privilege,probes,query,reduce,regress,replay-pack,replay,sec,sim,speed-compare,speed-sweep,backends,uvm-ral,uvm-cpu,hdl,cocotb,soc,uvm,verification-plan,vip,wave,workloads}
+    {agent,agent-bench,arch,bisect,bugmem,bundle,checks,cosim,cov,csim,csr,debug,doctor,evidence,farm,fault,formal,init,lint,lsp,mcp,memory,ooo,perf,plan,privilege,probes,query,reduce,regress,replay-pack,replay,sample,sec,sim,speed-compare,speed-sweep,backends,uvm-ral,uvm-cpu,hdl,cocotb,soc,uvm,verification-plan,vip,wave,workloads}
     ...
 ```
 
@@ -42,7 +42,8 @@ usage: rvw agent bringup-check [-h] --out OUT [--timeout TIMEOUT]
 
 ```text
 usage: rvw agent-bench [-h] [--project PROJECT] [--json]
-    {dry-run,serve,native-qualify,repair-prepare,repair-check,trial} ...
+    {dry-run,serve,audit-run,native-qualify,repair-prepare,repair-check,evidence-solve,evidence-trial,trial}
+    ...
 ```
 
 ### `rvw agent-bench dry-run`
@@ -57,6 +58,13 @@ usage: rvw agent-bench dry-run [-h] --pack PACK --out OUT [--agent
 ```text
 usage: rvw agent-bench serve [-h] --pack PACK --out OUT --task TASK [--project
     PROJECT] [--json]
+```
+
+### `rvw agent-bench audit-run`
+
+```text
+usage: rvw agent-bench audit-run [-h] --run-dir RUN_DIR --elf ELF [--expected
+    EXPECTED] [--require REQUIRE] [--project PROJECT] [--json]
 ```
 
 ### `rvw agent-bench native-qualify`
@@ -78,6 +86,21 @@ usage: rvw agent-bench repair-prepare [-h] --pack PACK --task TASK --source
 ```text
 usage: rvw agent-bench repair-check [-h] --challenge CHALLENGE --out OUT
     [--timeout TIMEOUT] [--project PROJECT] [--json]
+```
+
+### `rvw agent-bench evidence-solve`
+
+```text
+usage: rvw agent-bench evidence-solve [-h] --plan PLAN --out OUT [--max-calls
+    MAX_CALLS] [--budget-s BUDGET_S] [--project PROJECT] [--json]
+```
+
+### `rvw agent-bench evidence-trial`
+
+```text
+usage: rvw agent-bench evidence-trial [-h] --plan PLAN --out OUT [--budget-s
+    BUDGET_S] [--max-calls MAX_CALLS] [--repeats REPEATS] [--model MODEL]
+    [--project PROJECT] [--json] command [command ...]
 ```
 
 ### `rvw agent-bench trial`
@@ -534,8 +557,16 @@ usage: rvw cosim live [-h] --elf ELF [--core CORE] [--platform PLATFORM]
 
 ```text
 usage: rvw cov [-h] [--project PROJECT] [--json]
-    {probe-goals,smoke,source-report,campaign,actions,exchange,block-check,generate,merge,report,rank,select,closure,isa-diff,isa-check,functional,rtl,prove,mutate}
+    {mutate-core,probe-goals,smoke,source-report,campaign,actions,exchange,block-check,generate,merge,report,rank,select,closure,isa-diff,isa-check,functional,rtl,prove,mutate}
     ...
+```
+
+### `rvw cov mutate-core`
+
+```text
+usage: rvw cov mutate-core [-h] [--manifest MANIFEST] --work-dir WORK_DIR
+    [--count COUNT] [--budget-s BUDGET_S] [--prepare-only] [--resume] [--json]
+    [--project PROJECT]
 ```
 
 ### `rvw cov probe-goals`
@@ -2186,7 +2217,7 @@ usage: rvw reduce [-h] [--out OUT] [--cosim-platform COSIM_PLATFORM]
 
 ```text
 usage: rvw regress [-h] [--project PROJECT] [--json]
-    {sim,speed-compare,speed-sweep,backends,uvm,uvm-ral,uvm-cpu,hdl,cocotb,random,sail-tests,privilege,mmu,vector,run,compare,gate,known,history,list,act4-build,plan,instruction-feed,cosim}
+    {sim,speed-compare,speed-sweep,backends,uvm,uvm-ral,uvm-cpu,hdl,cocotb,random,sail-tests,privilege,mmu,vector,run,compare,gate,known,history,list,act4-build,plan,instruction-feed,mutation,cosim}
     ...
 ```
 
@@ -2507,6 +2538,13 @@ usage: rvw regress instruction-feed [-h] --elf ELF --out OUT [--word-bytes
     {4,8}] [--json] [--project PROJECT]
 ```
 
+### `rvw regress mutation`
+
+```text
+usage: rvw regress mutation [-h] --work-dir WORK_DIR --expectations
+    EXPECTATIONS [--budget-s BUDGET_S] [--json] [--project PROJECT]
+```
+
 ### `rvw regress cosim`
 
 ```text
@@ -2527,6 +2565,17 @@ usage: rvw replay-pack [-h] --recipe RECIPE --out OUT [--checkpoint-cycle
 ```text
 usage: rvw replay [-h] --out OUT [--timeout TIMEOUT] [--lock LOCK] [--project
     PROJECT] [--json] archive
+```
+
+### `rvw sample`
+
+```text
+usage: rvw sample [-h] --out OUT [--interval INTERVAL] [--max-k MAX_K]
+    [--warmup WARMUP] [--validation-report VALIDATION_REPORT] [--seed SEED]
+    [--warmup-sweep] [--start START] [--length LENGTH] [--warmup-lengths
+    WARMUP_LENGTHS [WARMUP_LENGTHS ...]] [--target-percent TARGET_PERCENT]
+    [--validate] [--intervals INTERVALS [INTERVALS ...]] [--clusters CLUSTERS
+    [CLUSTERS ...]] [--json] [--project PROJECT] manifest
 ```
 
 ### `rvw sec`
@@ -2979,8 +3028,16 @@ usage: rvw vip bench [-h] [--port-map PORT_MAP] --db DB [--bus BUS] --out OUT
 
 ```text
 usage: rvw wave [-h] [--project PROJECT] [--json]
-    {index,verify,list,changes,sample,cut,find,edges,why,seq,txn,diff,session,value,bench,profile,info}
+    {why-run,index,verify,list,changes,sample,cut,find,edges,why,seq,txn,diff,session,value,bench,profile,info}
     ...
+```
+
+### `rvw wave why-run`
+
+```text
+usage: rvw wave why-run [-h] --db DB --binding BINDING --out OUT [--platform
+    PLATFORM] [--window WINDOW] [--depth DEPTH] [--max-nodes MAX_NODES]
+    [--timeout TIMEOUT] [--no-rerun] [--json] [--project PROJECT] run_dir
 ```
 
 ### `rvw wave index`
@@ -3130,7 +3187,7 @@ usage: rvw wave info [-h] [--json] [--period PERIOD] [--clock CLOCK]
 
 ```text
 usage: rvw workloads [-h] [--project PROJECT] [--json]
-    {list,build,verify,evaluate,run} ...
+    {list,build,verify,compare,evaluate,run} ...
 ```
 
 ### `rvw workloads list`
@@ -3153,6 +3210,12 @@ usage: rvw workloads build [-h] [--json] [--manifest MANIFEST | --recipe
 ```text
 usage: rvw workloads verify [-h] [--json] --build BUILD --out OUT [--oracle
     ORACLE] [--trace] [--timeout TIMEOUT] [--project PROJECT]
+```
+
+### `rvw workloads compare`
+
+```text
+usage: rvw workloads compare [-h] [--json] [--project PROJECT] a b
 ```
 
 ### `rvw workloads evaluate`
@@ -3179,6 +3242,30 @@ The default server exposes the built-in tools listed below, including the four j
 CLI commands without an MCP entry are CLI-only.
 Isolated calls can return a job after the sync timeout, even when
 they do not start a background job at once.
+
+### `agent_bench_audit_run`
+
+Check actual C1/C2 identities, ELF hash and run end before using evidence. Required artifact checks cover presence only. Cannot grant repair credit.
+
+Arguments: `run_dir` (required), `elf` (required), `required_artifacts`, `expected_identity`.
+
+Starts a background job: no.
+
+### `agent_bench_evidence_solve`
+
+Run a deterministic five-step evidence workflow through a separate MCP stdio session. Ranks returned source locations only; does not repair a core.
+
+Arguments: `plan` (required), `out` (required), `max_calls`, `budget_s`.
+
+Starts a background job: yes.
+
+### `agent_bench_evidence_trial`
+
+Run a bounded external client over normal regression, cosim, bundle, drivers and wave MCP tools. Retain response evidence and line ranks. This surface cannot grant source repair credit.
+
+Arguments: `plan` (required), `command` (required), `out` (required), `budget_s`, `max_calls`, `repeats`, `model`.
+
+Starts a background job: yes.
 
 ### `agent_bench_native_qualify`
 
@@ -3689,6 +3776,14 @@ Starts a background job: yes.
 Read historical MCY outcomes, or run a captured project with run=true after baseline validation. To earn kills or equivalence, declare all external inputs in the project's rvw-external-inputs JSON list; [] declares none. Legacy databases and saved runs without complete dependency captures stay inconclusive with zero earned counts and retained observations. Inspection uses saved detection and equivalence roles unless explicitly overridden. The job holds the machine heavy-job lock ($RVW_HEAVY_LOCK, or `lock`; empty for none).
 
 Arguments: `project` (required), `run`, `baseline`, `timeout`, `jobs`, `test`, `equivalence_test`, `lock`, `out`.
+
+Starts a background job: yes.
+
+### `cov_mutate_core`
+
+Build each exported RTL mutant once; run ordered test tiers with explicit detection evidence.
+
+Arguments: `manifest`, `work_dir` (required), `count`, `budget_s`, `resume`, `prepare_only`.
 
 Starts a background job: yes.
 
@@ -5038,7 +5133,7 @@ Starts a background job: no.
 
 ### `query_navigate`
 
-Return source, diagram, wave and dependency entry points for one signal.
+Load the handler on first use.
 
 Arguments: `project`, `db`, `signal` (required).
 
@@ -5220,6 +5315,14 @@ Arguments: `seed`, `mode`.
 
 Starts a background job: no.
 
+### `regress_mutation`
+
+Rerun a project-pinned mutant plan and check every expected first killer.
+
+Arguments: `work_dir` (required), `expectations` (required), `budget_s`.
+
+Starts a background job: yes.
+
 ### `regress_plan`
 
 List generated suite applicability from explicit project capabilities. Missing declarations exclude suites. No DUT evidence is earned.
@@ -5323,6 +5426,30 @@ Find tools by keywords and show their loading profiles.
 Arguments: `keyword` (required).
 
 Starts a background job: no.
+
+### `sample_run`
+
+Profile Spike, cluster BBVs, transfer checkpoints to RTL and estimate IPC. Failed equality checks exclude points. Resume uses the same output directory.
+
+Arguments: `manifest` (required), `out` (required), `validation_report`, `interval`, `max_k`, `warmup`, `seed`.
+
+Starts a background job: yes.
+
+### `sample_validate`
+
+Compare full RTL IPC with sampled IPC for interval and cluster settings. Report empirical error, not statistical confidence.
+
+Arguments: `manifest` (required), `out` (required), `intervals`, `clusters`, `warmup`.
+
+Starts a background job: yes.
+
+### `sample_warmup`
+
+Measure detailed RTL warm-up bias at one fixed instruction ROI against a full reset prefix. No functional injection is claimed.
+
+Arguments: `manifest` (required), `out` (required), `start` (required), `length` (required), `lengths`, `target_percent`.
+
+Starts a background job: yes.
 
 ### `sec_campaign`
 
@@ -5828,11 +5955,27 @@ Arguments: `wave` (required), `period`, `clock`, `signal` (required), `at` (requ
 
 Starts a background job: no.
 
+### `wave_why_run`
+
+First Spike mismatch to bounded source dependency chains; may replay from reset
+
+Arguments: `run_dir` (required), `db` (required), `binding` (required), `out` (required), `project`, `platform`, `window`, `rerun`.
+
+Starts a background job: yes.
+
 ### `workloads_build`
 
 Build or reference-check pinned open workloads. No RTL accuracy claim.
 
 Arguments: `manifest`, `recipe`, `source` (required), `out` (required), `cc`, `bench`.
+
+Starts a background job: yes.
+
+### `workloads_compare`
+
+Compare RTL IPC and top-down fractions. Repeated identical RTL samples are required for a verified noise check.
+
+Arguments: `a` (required), `b` (required).
 
 Starts a background job: yes.
 

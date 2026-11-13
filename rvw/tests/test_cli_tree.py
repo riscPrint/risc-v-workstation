@@ -35,6 +35,15 @@ def test_every_mcp_package_loads(monkeypatch):
         registry.jobs.shutdown()
 
 
+def test_command_reference_includes_nested_commands():
+    import runpy
+    from pathlib import Path
+    root = Path(__file__).resolve().parents[2]
+    reference = runpy.run_path(str(root / 'scripts/command-reference.py'))['render']()
+    for command in ('agent guide', 'arch build', 'formal bmc', 'regress run'):
+        assert f'### `rvw {command}`' in reference
+
+
 def _tracked(*patterns):
     import subprocess
     from pathlib import Path
