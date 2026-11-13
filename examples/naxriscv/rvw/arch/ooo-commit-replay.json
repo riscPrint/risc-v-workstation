@@ -1,0 +1,140 @@
+{
+  "branch_penalty": 10,
+  "branch_prediction": "sequential",
+  "branch_speculation": true,
+  "cache_miss_replay": false,
+  "commit_width": 2,
+  "components": {
+    "branch": {
+      "entries": 16384,
+      "history": 13,
+      "model": "gshare"
+    },
+    "btb": {
+      "levels": [
+        {
+          "entries": 512,
+          "latency": 1,
+          "ways": 1
+        }
+      ]
+    },
+    "memory": {
+      "dram_latency": 10,
+      "l1d": {
+        "latency": 1,
+        "size_kib": 16,
+        "ways": 4
+      },
+      "l1i": {
+        "latency": 1,
+        "size_kib": 16,
+        "ways": 4
+      }
+    },
+    "ras": {
+      "entries": 16
+    }
+  },
+  "custom_instructions": [],
+  "dependence_entries": 1024,
+  "execution": {
+    "bindings": {
+      "alu": [
+        "alu0",
+        "alu1"
+      ],
+      "branch": [
+        "alu0",
+        "alu1"
+      ],
+      "csr": [
+        "eu0"
+      ],
+      "divide": [
+        "eu0"
+      ],
+      "jump": [
+        "alu0",
+        "alu1"
+      ],
+      "load": [
+        "eu0"
+      ],
+      "multiply": [
+        "eu0"
+      ],
+      "store": [
+        "eu0"
+      ]
+    },
+    "ports": {
+      "alu0": 1,
+      "alu1": 1,
+      "eu0": 1
+    }
+  },
+  "fetch_entries": 8,
+  "fetch_width": 2,
+  "forwarding_latency": 1,
+  "frontend": {
+    "block_bytes": 8,
+    "decode_entries": 8,
+    "decode_latency": 2,
+    "decode_width": 2,
+    "fetch_blocks_per_cycle": 1,
+    "fetch_latency": 3,
+    "ftq_entries": 8,
+    "predictor_latency": 1
+  },
+  "issue_entries": 32,
+  "issue_order": "out_of_order",
+  "issue_queue_policy": "compacting",
+  "issue_width": 3,
+  "latencies": {
+    "alu": 1,
+    "branch": 2,
+    "csr": 4,
+    "divide": 18,
+    "fence": 4,
+    "jump": 2,
+    "load": 2,
+    "multiply": 3,
+    "store": 4,
+    "system": 4
+  },
+  "load_entries": 16,
+  "memory_policy": "speculate",
+  "memory_rename": {},
+  "physical_float_registers": 0,
+  "physical_registers": 64,
+  "ports": {
+    "alu": 2,
+    "branch": 2,
+    "csr": 1,
+    "divide": 1,
+    "fence": 1,
+    "jump": 2,
+    "load": 1,
+    "multiply": 1,
+    "store": 1,
+    "system": 1
+  },
+  "rename": {},
+  "rename_width": 2,
+  "replay_penalty": 5,
+  "replay_window": true,
+  "rob_entries": 64,
+  "store_drain_width": 1,
+  "store_entries": 16,
+  "store_policy": "buffered",
+  "translation": {},
+  "wrong_path_occupancy": true,
+  "retry_costs": {
+    "memory_order_violation": 1,
+    "store_forward_miss": 0,
+    "cache_miss_retry": 0,
+    "tlb_miss": 0
+  },
+  "replay_at_commit": true
+}

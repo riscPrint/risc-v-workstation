@@ -918,3 +918,16 @@ mechanism check. Full matrix and absolute-error results remain separate.
 
 `rvw/sec/` holds `rvw sec` project data. It runs cases through `rvw/run.sh` with the
 C1-run case adapter. Results: [`FINDINGS.md`](FINDINGS.md) and `rvw/sec/README.md`.
+## Absolute-error mechanism check
+
+[The per-program diagnosis](rvw/arch/absolute-diagnosis.md) separates the
+historical occupancy, drain and retry effects. It also tests the new
+commit-controlled recovery. This policy reduces held-out MAE to 8.82%, but
+meets only 14/24 deltas and 5/15 nonzero changes. LQ8 towers leaves the size
+criterion. The earlier 7.47% held-out mean is not restored.
+
+The missing commit wait now has a mechanism instead of a fixed seven-cycle
+charge. This fixes one source of compensation in the cost. It does not fix
+all prediction errors. Local cache retry reaches 7.29% held-out MAE, but only
+11/24 deltas meet the criterion. Cache retry remains disabled. No individual
+variant receives a different parameter value.
