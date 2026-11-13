@@ -236,3 +236,118 @@ No realistic finding.
 ### Findings
 
 No realistic finding.
+
+## Area 6: fault, security, debug, SoC, lint, UVM/VIP, ACT4
+
+### Files read
+
+| File | Lines |
+|---|---|
+| `rvw/src/rvw/fault/campaign.py`, `fault/cli.py` | 339, 106 |
+| `rvw/src/rvw/sec/common.py`, `campaign.py`, `pairs.py`, `model_check.py`, `suite.py` | 35, 226, 156, 110, 38 |
+| `rvw/src/rvw/debug/suite.py`, `api.py`, `profile.py`, `interop.py`, `campaign.py` | 533, 169, 183, 165, 34 |
+| `rvw/src/rvw/soc/verify.py`, `connection_run.py`, `decode_proof.py` | 304, 79, 39 |
+| `rvw/src/rvw/lint/cli.py`, `native.py`, `yosys.py`, `protocol.py` | 195, 52, 73, 182 |
+| `rvw/src/rvw/uvm/cli.py`, `uvm/flow.py`, `vip/cli.py` | 63, 210, 28 |
+| `rvw/src/rvw/sim/cocotb.py`, `sim/hdl.py` | 135, 152 |
+| `rvw/src/rvw/regress/act4.py`, `act4_csr.py`, `sail_tests.py` | 126, 33, 116 |
+| `rvw/src/rvw/workloads/core.py`, `formal/deep_grid.py`, `formal/initial_split.py`, `privilege/events.py` | 223, 30, 117, 62 |
+
+A tree-wide search also looked for the empty-input pattern (`'pass' if
+all(...)` over a list that can be empty, and verdicts that start as `pass`). Every
+hit either guards against an empty list or cannot be empty.
+
+### What holds
+
+- Fault campaigns: an unconfirmed injection is `not_injected`. A passing run
+  without a C2 trace or without a passing end is `inconclusive`. Any
+  `not_injected`, `timeout` or `inconclusive` fault, or an empty campaign, makes
+  the report `inconclusive` (exit 3). Silent corruption gives `fail`.
+- Security: `no_leak_observed` needs complete evidence and no finding. Suite
+  collection refuses a child verdict that conflicts with its technique status.
+- SoC verify gives `pass` only when all seven check kinds ran and passed.
+  Captured APB samples alone stay `inconclusive`.
+- Lint: a backend that was not selected, not installed or did not complete
+  makes the report `inconclusive`, never `clean`. A waiver binds to the hash
+  of the complete finding and needs an unexpired review date. A waiver that
+  matches nothing in a backend that ran is an error.
+- UVM runs need exactly one `RVW_UVM_DONE <test> checks=N` marker with N ≥ 1
+  and no UVM error or fatal. cocotb needs at least one test case. A skipped
+  case is inconclusive. HDL runs need exactly one `RVW_PASS` marker.
+- ACT4 build status `built` needs a zero `make` exit and at least one ELF. The
+  checkout must be clean at the pinned revision.
+
+### Findings
+
+| ID | Finding | Label | Action |
+|---|---|---|---|
+| D1 | `rvw debug suite` with a profile file that has no `[transport]` section ran the campaign against the built-in reference model, because the transport defaults to `model`. It returned `status: pass`, exit 0, and wrote C3 with `core` set to the profile name. Reproduction: a profile with `name = "mycore"`, `xlen = 32` and no transport, then `rvw debug suite --profile p.toml --out out --group dm`, gave 11 passes and `transport: model`. The README lists `[transport]` with the optional keys, so a new user can miss it. | realistic | Fixed in [#1254](https://github.com/riscPrint/risc-v-workstation/pull/1254). The suite refuses a profile without a declared transport unless `--port` names the target. An explicit `kind = "model"` still runs the self-test. The regression test failed before the fix. |
+| D2 | A security campaign reports `no_leak_observed` (C3 `pass`) when at least one pair was eligible, even if most other pairs were ineligible or errored. The counts are in `statuses` and `errors`. | unusual | Not fixed. `no_leak_observed` is documented as a finite observation, not a proof. |
+| D3 | `rvw fault run --watchdog` counts a harness wall-clock timeout as `detected`. A loaded machine can then raise diagnostic coverage. | unusual | Not fixed. The flag is an explicit user declaration that a watchdog would catch hangs. |
+| D4 | `rvw regress gate --filter REGEX` runs both sides on the filtered subset and can accept. C3 records the filter in `extra.filter`, but the C4 verdict's `gate` block records only the tier. A later reader of `verdict.json` (for example a plan `check` of kind `gate`) cannot see that tests were left out. | unusual | Not fixed. The user asked for the filter, and the base and candidate test counts are in the verdict. Recording the filter in the C4 `gate` block would be a small contract change for the owner to decide. |
+| D5 | `rvw plan status` exits 0 for any rolled-up verdict, including `fail`. The verdict is in the JSON. | unusual | Not fixed. It is a report command. Its JSON carries the verdict. |
+
+## Area 7: MCP result envelope and jobs
+
+### Files read
+
+| File | Lines |
+|---|---|
+| `rvw/src/rvw/mcp/envelope.py` | 29 |
+| `rvw/src/rvw/mcp/worker.py` | 80 |
+| `rvw/src/rvw/mcp/jobs.py` | 312 |
+| `rvw/src/rvw/mcp/registry.py` (isolated calls, `call_json`, job tools) | 421 |
+| `rvw/src/rvw/mcp/execution.py` | 32 |
+
+### What holds
+
+- The envelope sets `verdict` only from an explicit producer verdict or from a
+  `status` in the common verdict set. Completion (`status: ok`, job `done`)
+  never becomes a pass. An error result always gets verdict `error` (or
+  `not_installed`).
+- A job result is returned only when the job status is `done`. A worker that
+  exits nonzero, writes no result or reports an error raises a tool error.
+- The nested producer result is kept unchanged under the job result, with its
+  own status and verdict.
+
+### Findings
+
+| ID | Finding | Label | Action |
+|---|---|---|---|
+| M1 | A C4 verdict returned through MCP (`regress_compare`, `regress_gate`) has no common-vocabulary verdict. The envelope moves `accept` or `reject` to `legacy_verdict` and sets `verdict: inconclusive` and `status: ok`. A `reject` therefore shows as `inconclusive` at the top level. | unusual | Not fixed. This is weaker than the evidence, never a false pass. Contract C7 documents the mapping. |
+
+## Summary
+
+| Label | Count | Findings |
+|---|---|---|
+| realistic | 1 | D1 (fixed in #1254) |
+| unusual | 8 | R1, C1, C2, D2, D3, D4, D5, M1 |
+| adversarial | 0 | (doctored C3 files and edited caches were not pursued: out of scope under C8) |
+
+The core verdict paths (regress compare and gate, cosim comparison, formal
+pass and reachability, proof exclusions, plan roll-ups) were already guarded
+against every realistic false positive this review tried. Most of them carry
+comments from earlier review rounds.
+
+## Not reviewed
+
+There was not enough time to review these areas in depth:
+
+- Formal: ISA flows (`formal/isa.py`, `riscv_proof.py`, `riscv_abstract.py`,
+  Sail subsets), datapath (`datapath.py`, `datapath_kit.py`), security apps
+  (`formal/security/`), IC3 lemma and invariant reuse (`ic3_lemmas.py`,
+  `lemma_cone.py`), deep grids and liveness (`liveness*.py`, `fair_live.py`),
+  native SVA (`sva_*`), equivalence partitions and memory refinement.
+- Cosim: the C++ Spike shim (including `scalar_split_ram`), Sail adapter
+  (`cosim/sail.py`), online and lockstep transports, DII, external PLIC replay,
+  device environment replay, QEMU observations.
+- Regress: MMU suites (`regress/mmu_*.py`), random stream campaigns, the
+  remote cache, run evidence ownership.
+- Coverage: functional coverage bins (`cov/functional.py`), mutation
+  (`cov/mutation.py`), exchange, the full proof-exclusion builder
+  (`cov/proof.py` beyond `apply_exclusions`).
+- Generated checks in Scala beyond stream cancellation (`SpinalChecks`), CDC
+  and RDC structural analysis (`lint/cdc.py`, `lint/rdc.py`), the SDC backend.
+- Privilege, memory-order, CSR, VexiiRiscv and arch-model areas.
+- VIP protocol agents' own monitors (`vip/*.py`) and Uvm/ conformance runs.
+- The VS Code extension, SpinalWaves, SpinalTrace and SpinalBlocks (no verdicts).
