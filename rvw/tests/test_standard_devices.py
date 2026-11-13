@@ -115,3 +115,20 @@ def test_project_options_select_every_model():
         fresh = Device(json.dumps(config))
         fresh.restore(saved)
         assert fresh.snapshot() == saved
+
+
+def test_device_maps_take_hex_strings_and_refuse_rounded_floats():
+    # A host that writes JSON numbers as doubles turns 2**64-1 into 1.8446744073709552e19.
+    layout = dict(mtime=0, mtimecmp=[8], msip=[16], reset_mtime=0)
+    rounded = json.loads(json.dumps(float(2**64 - 1)))
+    with pytest.raises(ValueError, match='exact'):
+        device('clint', map=dict(layout, reset_mtimecmp=rounded), cycles_per_tick=1)
+    t = device('clint', map=dict(layout, mtimecmp=['0x8'], reset_mtimecmp='0xffffffffffffffff'),
+               cycles_per_tick=1)
+    assert t.model.compare == [2**64 - 1]
+    p = device('plic', map=dict(priority='0', pending='0x1000', enable=0x2000, enable_stride=0x80,
+                                context='0x200000', context_stride=0x1000, sources=1, contexts=1))
+    assert p.model.map.context == 0x200000
+    with pytest.raises(ValueError, match='boolean'):
+        device('plic', map=dict(priority=0, pending=0x1000, enable=0x2000, enable_stride=0x80,
+                                context=0x200000, context_stride=0x1000, sources=True, contexts=1))
