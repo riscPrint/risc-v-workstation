@@ -318,6 +318,14 @@ PYTHON
     probe Yosys 0.46 yosys -V || failed=1
     probe SymbiYosys 0 sby --version || failed=1
     probe Yices 2 yices-smt2 --version || failed=1
+    # Optional portfolio engines do not gate the base formal installation.
+    for engine in yosys-abc pono btorsim avy rIC3 ebmc; do
+      if command -v "$engine" >/dev/null; then
+        printf 'PRESENT optional formal engine: %s\n' "$engine"
+      else
+        printf 'not_installed optional formal engine: %s\n' "$engine"
+      fi
+    done
     if [ ! -f "$RVW_SLANG" ] || ! yosys -Q -T -m "$RVW_SLANG" -p 'help read_slang' >/dev/null 2>&1; then
       printf 'MISSING native yosys-slang: %s\n' "$RVW_SLANG"; failed=1
     else printf 'PRESENT native yosys-slang: %s\n' "$RVW_SLANG"; fi

@@ -80,6 +80,8 @@ def register(sub) -> None:
     c.add_argument("--model", required=True)
     c.add_argument("--out", required=True)
     c.set_defaults(func=csr.run)
+    from .deep_cli import register as deep_register
+    deep_register(s)
 
     from .security.cli import register as security_register
     security_register(s)

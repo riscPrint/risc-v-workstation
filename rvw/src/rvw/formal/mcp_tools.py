@@ -25,7 +25,7 @@ COMMON = {
     "tie": {"type": "array", "items": S, "description": "PORT=VALUE constants for toplevel inputs (all flows; listed in "
             "the result's `restrictions`)"},
 }
-FLAGS = {"free_reset", "first_failure", "outputs", "payload", "x_inputs", "combinational", "event_model", "async_reset", "open", "xprop", "minimize", "emit_testbench"}
+FLAGS = {"cross_check", "free_reset", "first_failure", "outputs", "payload", "x_inputs", "combinational", "event_model", "async_reset", "open", "xprop", "minimize", "emit_testbench"}
 
 
 def _argv(command, args):
@@ -95,7 +95,8 @@ def _template(job, **args):
 
 
 def mcp_tools():
-    return [
+    from .deep_cli import mcp_tools as deep_tools
+    return [*deep_tools(),
         ToolSpec("formal_template", "Generate a project-bound safety monitor. No verification run.",
                  schema({"kind": S, "out": S, "entries": I, "width": I}, ["kind", "out"]),
                  _template, long=True),

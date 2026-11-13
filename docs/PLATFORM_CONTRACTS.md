@@ -3236,3 +3236,30 @@ observations only for reference cases and writes C3 with incomplete source
 identity. Missing observations are errors; differing observations are failures.
 Other case kinds remain unexecuted. C3 vector passes do not establish plan
 closure, mutation coverage, architectural correctness or C4 acceptance.
+### Deep formal experiment reports
+
+`rvw.formal-portfolio/1` records pinned self-contained RTL hashes, source
+assumptions, engine rows, the first conclusive winner and observed cross-checks.
+Its `pass` requires an unbounded engine answer. Bounded success is
+`bounded_pass` on the engine row and cannot earn portfolio `pass`. Disagreement
+makes the report `inconclusive`. Unavailable backends are `not_installed`.
+No checks or failed preparation makes the report inconclusive without a winner.
+The raw experiment adds no environment or activation guards.
+
+`rvw.formal-engine-bench/1` records one row per case/engine pair. Its `pass`
+means verdict agreement on each case, including agreement on a fault. It is not
+a proof verdict for the benchmark design. Wall time includes engine preparation.
+A requested depth does not claim a measured reached depth.
+
+`rvw.formal-model-grid/1` records the canonical explicit-model SHA-256 and one
+row per property. `pass` requires every row to prove its safety property.
+`fail` requires a concrete graph counterexample. A spurious projected trace is
+inconclusive until replay and refinement. Helper invariants require initiation
+and consecution. The graph, including all memory choices, is a supplied input.
+No RTL-to-graph correspondence or whole-core result is implied.
+
+A distributed explicit-model grid adds `shards`, expected property names and
+adapter source identities. The existing farm worker transports JSON model bytes
+and formal result artifacts. It adds no C1 simulation claims. Transfer, identity
+or coverage failure leaves that shard inconclusive. Real SSH execution requires
+compatible installed adapters and trusted hosts.
