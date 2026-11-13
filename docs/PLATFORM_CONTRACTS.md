@@ -3563,6 +3563,15 @@ per-size cycles and per-class signed slope errors. Missing evidence exits 2.
 The report is local timing evidence, not a C4 verdict or complete C8 capture.
 Stock llvm-mca cannot load generated TableGen. The built-in baseline does not
 validate a generated model. See `Arch/SCHED_MODELS.md` for limits.
+### Own-core non-trapping control timing
+
+Projects can declare CSR, fence and system-return latencies. These operations
+serialize older and younger execution. Only MRET/SRET system instructions
+are admitted; blocking operations, traps and SFENCE.VMA remain unsupported.
+FENCE.I with instruction/uop caches and possible SATP writes with component
+translation are errors because required invalidation/context interfaces are
+not available. The engine does not verify CSR or privilege semantics.
+
 ### Own-core component-library adapter
 
 The optional `components` configuration object selects shared native
