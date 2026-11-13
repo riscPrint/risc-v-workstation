@@ -1,0 +1,67 @@
+# VexiiRiscv project. Paths are relative to this file.
+[project]
+schema = "rvw.project/1"
+root = "."
+# Uses the generic RiscvSim launch capture and generated RTL identity.
+[core]
+backend = "riscvsim-verilator"
+name = "vexiiriscv"
+adapter = "./rvw/run64.sh"
+configs = ["rv64ima"]
+default_config = "rv64ima"
+lock = "vex-suites"                     # suite lock; run.sh takes RVW_VEX_LOCK (use another name)
+source_repo = "."
+source_env = "VEXIIRISCV"
+cache_paths = ["${RVW_HOME}/rvw/out/suites64/reset", "rvw/classpath-cache.py", "${RVW_HOME}/rvw/src/rvw/sim", "rvw/src", "rvw/run.sh", "rvw/build.sbt", "rvw/project/build.properties", "${RVW_HOME}/RiscvSim/build.sbt", "${RVW_HOME}/RiscvSim/project/build.properties", "${RVW_HOME}/RiscvSim/src", "${RVW_HOME}/Cosim/lockstep_dpi.cc", "${RVW_HOME}/RiscvSim/scripts", "${RVW_HOME}/scripts/with-lock.sh"]
+identity = true                   # generated RTL and native tool identity
+# The launcher binds the generated RTL, harness revision and native tool record.
+input_complete = true
+identity_capture = true
+identity_timeout_s = 1200
+input_tools = ["git", "bash", "java", "verilator", "make"]
+# Match the compiler/linker selection used by native-identity.py. Unused alternatives are optional.
+input_verilator_toolchain = true
+input_commands = [
+  "ar", "awk", "basename", "cat", "chmod", "cmp", "cp", "cut", "date", "dirname", "du", "env",
+  "expr", "find", "getconf", "grep", "head", "hostname", "ld", "ln", "mkdir", "mktemp", "mv", "nice",
+  "perl", "ps", "readlink", "realpath", "rm", "rmdir", "sbt", "sed", "sh", "shasum", "sleep",
+  "sort", "stat", "tail", "tee", "touch", "tr", "uname", "unzip", "wc", "which", "xargs",
+  "zip",
+]
+input_commands_by_platform = { darwin = ["xcode-select", "xcrun"] }
+input_env = [
+  "AR", "BASH_ENV", "CC", "CCACHE_CONFIGPATH", "CCACHE_PATH", "CCACHE_PREFIX",
+  "CCC_OVERRIDE_OPTIONS", "CFLAGS", "COMPILER_PATH", "COURSIER_CACHE", "COURSIER_REPOSITORIES",
+  "CPATH", "CPLUS_INCLUDE_PATH", "CPP", "CPPFLAGS", "CXX", "CXXFLAGS", "C_INCLUDE_PATH",
+  "DEVELOPER_DIR", "DYLD_INSERT_LIBRARIES", "DYLD_LIBRARY_PATH", "ENV", "GCC_EXEC_PREFIX",
+  "GNUMAKEFLAGS", "HOME", "IVY_HOME", "JAVA_HOME", "JAVA_OPTS", "JAVA_TOOL_OPTIONS", "JDK_HOME",
+  "JDK_JAVA_OPTIONS", "JVM_OPTS", "LDFLAGS", "LDLIBS", "LD_LIBRARY_PATH", "LD_PRELOAD",
+  "LIBRARY_PATH", "LINK", "MACOSX_DEPLOYMENT_TARGET", "MAKE", "MAKEFILES", "MAKEFLAGS",
+  "MAKEOVERRIDES", "MFLAGS", "OBJCACHE", "OBJC_INCLUDE_PATH", "OPT", "OPT_FAST", "OPT_GLOBAL",
+  "OPT_SLOW", "PATH", "PERL5LIB", "PERL5OPT", "PYTHONHOME", "PYTHONPATH", "RISCVSIM_COVERAGE", "RISCVSIM_REQUIRES",
+  "RISCVSIM_CP_CACHE", "RISCVSIM_EXTRA_INPUTS", "RISCVSIM_MAKE", "RISCVSIM_MAKE_JOBS",
+  "RISCVSIM_WORK", "RISCVSIM_XMX", "SBT_BOOT_DIRECTORY", "SBT_GLOBAL_BASE", "SBT_IVY_HOME",
+  "SBT_JAVA_OPTS", "SBT_OPTS", "SDKROOT", "VEXIIRISCV", "RVW_HOME", "SPINAL_MAKE_CMD",
+  "SPINAL_VERILATOR_FLAGS", "USER_CPPFLAGS", "USER_LDFLAGS", "USER_LDLIBS", "VERILATOR_BIN",
+  "VERILATOR_FLAGS", "VERILATOR_GDB", "VERILATOR_GDBBT", "VERILATOR_NO_OPT", "VERILATOR_ROOT",
+  "VFLAGS", "_JAVA_OPTIONS", "RVW_VEX_LOCK", "RVW_SBT_LOCK", "RVW_VEX_XLEN", "RVW_COSIM_DPI", "RVW_COSIM_FAULT_ORDER",
+]
+wall_timeout = true               # RiscvSim stops (or abandons) a run after the suite's timeout_s
+jobs = 2
+build_timeout_s = 5400
+startup_s = 1200
+perf_tolerance = 0.01
+
+
+[cosim]
+platform = "rvw/platform64m.json"
+
+[suites.isa-rv64]
+description = "RV64 UI/UM/UA physical-memory tests, aligned accesses"
+dir = "rvw/out/isa64"
+include = ['^rv64u[ima]-p-']
+exclude = ['\.dump$', '^rv64ui-p-ma_data$']
+configs = ["rv64ima"]
+max_cycles = 200000
+timeout_s = 60
+mem_latency = 0

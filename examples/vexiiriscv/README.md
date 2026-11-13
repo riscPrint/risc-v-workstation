@@ -805,3 +805,33 @@ See [the performance record](rvw/csim/perf-measured.json) and
 [the commands](rvw/csim/README.md). These results cover selected native
 simulation cases. They do not qualify cache coherence, other configs or
 physical hardware.
+
+## RV64 ISA profiles
+
+`rvw64m.toml` selects the extra `rv64ima` machine-mode config. It has no MMU,
+PMP, cache, compressed instructions or FPU. `rvw64.toml` selects the existing
+`rv64imasu` supervisor config with Sv39. Both use the pinned private core
+source. `rvw.toml` and its RV32 default are unchanged.
+
+Build the RV64 UI, UM and UA physical-memory ELFs with `rvw/build-tests64.sh`.
+Set `RISCV_TESTS_SOURCE` to the external riscv-tests checkout. Then run:
+
+```sh
+rvw --project examples/vexiiriscv/rvw64m.toml regress run --suite isa-rv64 \
+  --source "$VEXIIRISCV" --rvfi-trace --no-index --out rvw/out/rv64m-isa
+rvw regress cosim rvw/out/rv64m-isa \
+  --platform examples/vexiiriscv/rvw/platform64m.json
+```
+
+Use `rvw64.toml` and `platform64.json` for the supervisor config. Set
+`RVW_VEX_LOCK=vex-suites-adapter` and `RVW_SBT_LOCK=sbt-suites`. The regression
+holds `vex-suites`. Use at most four simulations. The suite omits only
+`rv64ui-p-ma_data`, which requires misaligned data accesses. It retains
+unaligned access fault controls in the generated suites. C/F/D are outside
+these two profiles. The C2 FPU mapping remains unqualified.
+
+Measured on 2026-11-13: each profile has 85 C1 passes and 85 complete strict
+Spike matches: UI 53, UM 13 and UA 19. Both comparisons use zero
+synchronizations and zero masks. The record includes each ELF, C1 and C2
+SHA-256 in [the RV64 ISA results](rvw/rv64/isa-results.json). No core source
+was changed. The source revision is the Setup table's pinned revision.
