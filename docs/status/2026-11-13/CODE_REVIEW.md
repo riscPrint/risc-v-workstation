@@ -2006,3 +2006,304 @@ Source and test files read, with line counts:
 | `rvw/tests/test_csr_catalog.py` | 122 |
 | `rvw/tests/test_ooo_checks.py` | 126 |
 | `scripts/sbt/SpinalAxis.scala` | 56 |
+
+## Generated architecture suites review
+
+The review started at `f3606ad0650861a3d8a3764c2ec0cbd8fecf182f`.
+The inventory below lists 222 source and test files read, with 21066 lines. Counts refer to the reviewed baseline, the fixes, and the refreshed MCP wrappers.
+Later changes to the memory and privilege MCP wrappers were also checked.
+
+Confirmed defects:
+
+- HS guest stores skipped operand setup on MRET. Fixed by https://github.com/riscPrint/risc-v-workstation/pull/1365.
+- The Sv32 PMA checker assumed an eight-byte default access. Fixed by https://github.com/riscPrint/risc-v-workstation/pull/1392.
+- Subword store checks ignored truncation and signed readback. Fixed by https://github.com/riscPrint/risc-v-workstation/pull/1412.
+- Superpage store checks read the physical page base instead of the translated target. Fixed by https://github.com/riscPrint/risc-v-workstation/pull/1435.
+
+One suspected item remains unconfirmed. The TLB protocol model rejects a fill from an older PTE before a fence. The [supervisor specification](https://github.com/riscv/riscv-isa-manual/blob/main/src/priv/supervisor.adoc) permits older translations before a subsuming fence. However, `docs/contracts/mmu.md` explicitly requires current-PTE fills in this bounded probe profile. No profile rule or contract was changed.
+
+The reference checks covered page-table geometry and permissions, SUM/MXR, MPRV use in assembly, PMP priority and locks, extension access gates, interrupt models, and memory-order relations. The primary comparison sources were the [machine specification](https://github.com/riscv/riscv-isa-manual/blob/main/src/priv/machine.adoc), [hypervisor specification](https://github.com/riscv/riscv-isa-manual/blob/main/src/priv/hypervisor.adoc), [state-enable specification](https://github.com/riscv/riscv-isa-manual/blob/main/src/priv/smstateen.adoc), [Smepmp table](https://github.com/riscv/riscv-isa-manual/blob/main/src/priv/smepmp.adoc), [pinned IMSIC specification](https://github.com/riscv/riscv-aia/blob/20318d1b03f0ac8253458b82f8244d0d0db074e9/src/IMSIC.adoc), and [herdtools 7.58 preserved-order definitions](https://github.com/herd/herdtools7/blob/7.58/herd/libdir/riscv-defs.cat).
+
+Validation: The focused reference-model set had 237 passes and 3 deselections. The PMA checks had 6 passes and 67 deselections. The store-width checks had 75 passes and 8 deselections. The superpage checks had 81 passes and 8 deselections. Nine generated programs passed on native Spike after the fixes. A byte-store case and a superpage-store case failed on Spike before their fixes. These are reference results, not DUT results.
+
+Completed required fast sets:
+
+| Fix | Passed | Skipped | Failed | Deselected |
+|---|---:|---:|---:|---:|
+| HS store entry | 3293 | 4 | 1 | 7724 |
+| Sv32 PMA width | 3355 | 4 | 0 | 7729 |
+| Store width | 3468 | 4 | 0 | 7736 |
+| Superpage readback | 3516 | 4 | 0 | 7744 |
+
+The first set failed only in `test_mcp_workflow_coverage.py::test_each_tool_has_a_profile_and_workflow`, because `cov_mutate_core` had no workflow entry. Later sets passed after other work on main. Pytest also reported temporary-directory cleanup warnings during the store-width checks. One early superpage fast invocation was stopped before completion when its branch base needed correction. It earns no validation credit. Core builds, RTL simulations, proofs and the full Python suite were NOT RUN.
+
+The report delivery fast set had 3563 passes, 4 skips, 2 failures and 7744 deselections. The unchanged tests `test_boot_profile.py::test_launcher_reaches_nice_ten_once[1-3]` and `test_boot_profile.py::test_launcher_reaches_nice_ten_once[2-0]` expected nice level 10 but inherited the required nice level 15. The release-hygiene check had 40 passes before rebase and 45 passes after rebase. CLI import and MCP discovery also passed after the report conflict was resolved.
+
+Not read: unrelated architecture/performance models, bug-memory code, formal memory models, standalone verification-plan packages, package README prose, core RTL and third-party implementations. The regression runner was inspected only through its plan/configuration interfaces. No whole-core qualification is claimed.
+
+Reproduce the fix tests with:
+
+```sh
+nice -n 15 rvw/.venv/bin/python -m pytest rvw/tests/test_mmu_hs_store_review.py rvw/tests/test_mmu_pma_width_review.py rvw/tests/test_mmu_store_width_review.py rvw/tests/test_mmu_superpage_store_review.py -q
+nice -n 15 rvw/.venv/bin/python -m pytest rvw/tests -m fast --strict-markers -q
+```
+
+Reproduce the nine native reference cases with RISC-V GCC and Spike on PATH:
+
+```sh
+nice -n 15 rvw/.venv/bin/python - <<'CHECK'
+import json
+import tempfile
+from pathlib import Path
+from rvw.regress import mmu
+from rvw.regress.mmu_hypervisor import matrix
+from rvw.regress.mmu_paging import MODES
+
+hs = next(s for s in matrix() if s['guest_op'] == 'hsv.d' and s['expect'] == 'success')
+cases = [dict(hs, id='hs-store', guest_trap='hs')]
+for i, (mode, width, value) in enumerate([
+    ('sv32', 1, 255), ('sv39', 1, 255), ('sv39', 1, 256), ('sv39', 2, 65535)
+]):
+    cases.append(dict(id=f'width-{i}', mode=mode, level=0, flags='VRWAD',
+        access='store', expect='success', bins=['store'], access_width=width, store_value=value))
+for mode, g in MODES.items():
+    level = g.levels - 1
+    span = 1 << (12 + g.vpn_bits * level)
+    cases.append(dict(id=mode+'-store', mode=mode, level=level,
+        va=(0x40000000 & -span) | (mmu.DATA & (span-1)), pa=mmu.DATA & -span,
+        flags='VRWAD', access='store', expect='success', bins=['store']))
+with tempfile.TemporaryDirectory(prefix='rvw-suite-review-') as directory:
+    root = Path(directory)
+    description = root / 'cases.json'
+    description.write_text(json.dumps(dict(schema='rvw.mmu/1', scenarios=cases)))
+    mmu.build(description, root / 'build', 'riscv64-unknown-elf-gcc')
+    result = mmu.reference(root / 'build', 'spike', 2)
+    print([(row['id'], row['status']) for row in result['scenarios']])
+    assert result['status'] == 'pass'
+CHECK
+```
+
+| File | Lines |
+|---|---:|
+| `RiscvSim/tests/ordering/bus_observer.py` | 109 |
+| `RiscvSim/tests/ordering/fixture.py` | 126 |
+| `RiscvSim/tests/ordering/litmus.py` | 189 |
+| `RiscvSim/tests/ordering/observer.py` | 51 |
+| `RiscvSim/tests/ordering/run.py` | 89 |
+| `RiscvSim/tests/ordering/suite.py` | 483 |
+| `SpinalChecks/coherence/directory.py` | 161 |
+| `SpinalChecks/coherence/fair.py` | 106 |
+| `SpinalChecks/coherence/model.py` | 208 |
+| `SpinalChecks/coherence/test_model.py` | 58 |
+| `examples/smp/rvw/litmus-outcome.py` | 51 |
+| `examples/smp/rvw/litmus_programs.py` | 78 |
+| `examples/smp/rvw/scalar_dependencies.py` | 138 |
+| `rvw/src/rvw/memory/__init__.py` | 0 |
+| `rvw/src/rvw/memory/axiomatic.py` | 392 |
+| `rvw/src/rvw/memory/cli.py` | 75 |
+| `rvw/src/rvw/memory/cli_declarations.py` | 2 |
+| `rvw/src/rvw/memory/commands/__init__.py` | 1 |
+| `rvw/src/rvw/memory/commands/concurrent_build.py` | 38 |
+| `rvw/src/rvw/memory/commands/concurrent_run.py` | 44 |
+| `rvw/src/rvw/memory/concurrent.py` | 40 |
+| `rvw/src/rvw/memory/concurrent_build.py` | 100 |
+| `rvw/src/rvw/memory/concurrent_campaign.py` | 136 |
+| `rvw/src/rvw/memory/concurrent_native.py` | 88 |
+| `rvw/src/rvw/memory/dependency_consistency.py` | 105 |
+| `rvw/src/rvw/memory/directory_model.py` | 29 |
+| `rvw/src/rvw/memory/mcp_tools.py` | 78 |
+| `rvw/src/rvw/memory/multihart.py` | 99 |
+| `rvw/src/rvw/memory/permission_model.py` | 25 |
+| `rvw/src/rvw/memory/sc_schedule.py` | 40 |
+| `rvw/src/rvw/memory/sc_witness.py` | 81 |
+| `rvw/src/rvw/memory/search_graph.py` | 26 |
+| `rvw/src/rvw/memory/tilelink_beats.py` | 75 |
+| `rvw/src/rvw/memory/tilelink_bind.py` | 242 |
+| `rvw/src/rvw/privilege/__init__.py` | 1 |
+| `rvw/src/rvw/privilege/aia.py` | 163 |
+| `rvw/src/rvw/privilege/aplic_delegation.py` | 143 |
+| `rvw/src/rvw/privilege/aplic_gateway.py` | 107 |
+| `rvw/src/rvw/privilege/aplic_priority.py` | 86 |
+| `rvw/src/rvw/privilege/campaign.py` | 423 |
+| `rvw/src/rvw/privilege/cfi_recovery.py` | 90 |
+| `rvw/src/rvw/privilege/cli.py` | 44 |
+| `rvw/src/rvw/privilege/cli_declarations.py` | 2 |
+| `rvw/src/rvw/privilege/clock_edges.py` | 85 |
+| `rvw/src/rvw/privilege/cofpmf.py` | 188 |
+| `rvw/src/rvw/privilege/controllers.py` | 154 |
+| `rvw/src/rvw/privilege/disabled.py` | 55 |
+| `rvw/src/rvw/privilege/disabled_matrix.py` | 65 |
+| `rvw/src/rvw/privilege/dvfs.py` | 91 |
+| `rvw/src/rvw/privilege/env_behavior.py` | 79 |
+| `rvw/src/rvw/privilege/env_cbom.py` | 70 |
+| `rvw/src/rvw/privilege/epmp.py` | 89 |
+| `rvw/src/rvw/privilege/epmp_matrix.py` | 93 |
+| `rvw/src/rvw/privilege/events.py` | 62 |
+| `rvw/src/rvw/privilege/extensions.py` | 130 |
+| `rvw/src/rvw/privilege/fast_interrupts.py` | 102 |
+| `rvw/src/rvw/privilege/fast_preemption.py` | 148 |
+| `rvw/src/rvw/privilege/fast_runtime.py` | 44 |
+| `rvw/src/rvw/privilege/fast_vector.py` | 125 |
+| `rvw/src/rvw/privilege/lifecycle.py` | 118 |
+| `rvw/src/rvw/privilege/mcp_tools.py` | 25 |
+| `rvw/src/rvw/privilege/model_observe.py` | 123 |
+| `rvw/src/rvw/privilege/plic.py` | 69 |
+| `rvw/src/rvw/privilege/plic_delivery.py` | 153 |
+| `rvw/src/rvw/privilege/pma.py` | 78 |
+| `rvw/src/rvw/privilege/pma_access.py` | 77 |
+| `rvw/src/rvw/privilege/pmp.py` | 138 |
+| `rvw/src/rvw/privilege/programs.py` | 185 |
+| `rvw/src/rvw/privilege/random_transitions.py` | 126 |
+| `rvw/src/rvw/privilege/reri.py` | 136 |
+| `rvw/src/rvw/privilege/reri_transactions.py` | 110 |
+| `rvw/src/rvw/privilege/reset_phase.py` | 121 |
+| `rvw/src/rvw/privilege/rnmi.py` | 279 |
+| `rvw/src/rvw/privilege/scheduled.py` | 94 |
+| `rvw/src/rvw/privilege/shadow.py` | 149 |
+| `rvw/src/rvw/privilege/spike_aplic.py` | 131 |
+| `rvw/src/rvw/privilege/spike_device.py` | 80 |
+| `rvw/src/rvw/privilege/spike_plic.py` | 16 |
+| `rvw/src/rvw/privilege/spike_reri.py` | 13 |
+| `rvw/src/rvw/privilege/ssstateen.py` | 64 |
+| `rvw/src/rvw/privilege/state32.py` | 82 |
+| `rvw/src/rvw/privilege/state_hierarchy.py` | 130 |
+| `rvw/src/rvw/privilege/timer32.py` | 92 |
+| `rvw/src/rvw/privilege/timer_observe.py` | 49 |
+| `rvw/src/rvw/privilege/timer_pending.py` | 65 |
+| `rvw/src/rvw/privilege/wake.py` | 94 |
+| `rvw/src/rvw/privilege/wfi_stop.py` | 196 |
+| `rvw/src/rvw/regress/act4.py` | 126 |
+| `rvw/src/rvw/regress/act4_csr.py` | 33 |
+| `rvw/src/rvw/regress/commands/act4.py` | 34 |
+| `rvw/src/rvw/regress/commands/applicability.py` | 97 |
+| `rvw/src/rvw/regress/config.py` | 444 |
+| `rvw/src/rvw/regress/discover.py` | 80 |
+| `rvw/src/rvw/regress/dv_compat.py` | 65 |
+| `rvw/src/rvw/regress/dv_inject.py` | 110 |
+| `rvw/src/rvw/regress/dv_target.py` | 66 |
+| `rvw/src/rvw/regress/mmu.py` | 833 |
+| `rvw/src/rvw/regress/mmu_atomic.py` | 95 |
+| `rvw/src/rvw/regress/mmu_cov.py` | 58 |
+| `rvw/src/rvw/regress/mmu_extensions.py` | 33 |
+| `rvw/src/rvw/regress/mmu_guest.py` | 126 |
+| `rvw/src/rvw/regress/mmu_guest_pointer.py` | 73 |
+| `rvw/src/rvw/regress/mmu_hypervisor.py` | 210 |
+| `rvw/src/rvw/regress/mmu_iommu.py` | 227 |
+| `rvw/src/rvw/regress/mmu_memory_effects.py` | 40 |
+| `rvw/src/rvw/regress/mmu_napot_range.py` | 82 |
+| `rvw/src/rvw/regress/mmu_nested.py` | 121 |
+| `rvw/src/rvw/regress/mmu_observe.py` | 128 |
+| `rvw/src/rvw/regress/mmu_paging.py` | 116 |
+| `rvw/src/rvw/regress/mmu_pointer.py` | 81 |
+| `rvw/src/rvw/regress/mmu_protocol.py` | 133 |
+| `rvw/src/rvw/regress/mmu_random.py` | 143 |
+| `rvw/src/rvw/regress/mmu_shootdown.py` | 129 |
+| `rvw/src/rvw/regress/mmu_walk.py` | 192 |
+| `rvw/src/rvw/regress/plan.py` | 249 |
+| `rvw/src/rvw/regress/random_stream.py` | 280 |
+| `rvw/src/rvw/regress/suite_requirements.json` | 350 |
+| `rvw/tests/ordering/test_bus_observer.py` | 113 |
+| `rvw/tests/ordering/test_cache_blocks.py` | 51 |
+| `rvw/tests/ordering/test_fixture.py` | 107 |
+| `rvw/tests/ordering/test_litmus.py` | 179 |
+| `rvw/tests/ordering/test_observer.py` | 36 |
+| `rvw/tests/ordering/test_runner.py` | 38 |
+| `rvw/tests/ordering/test_suite.py` | 144 |
+| `rvw/tests/ordering/test_zacas.py` | 83 |
+| `rvw/tests/test_act4.py` | 106 |
+| `rvw/tests/test_act4_boom.py` | 63 |
+| `rvw/tests/test_act4_csr.py` | 38 |
+| `rvw/tests/test_act4_examples.py` | 36 |
+| `rvw/tests/test_act4_generic.py` | 29 |
+| `rvw/tests/test_act4_supervisor.py` | 43 |
+| `rvw/tests/test_dv_baseline.py` | 14 |
+| `rvw/tests/test_dv_compat.py` | 48 |
+| `rvw/tests/test_dv_inject.py` | 96 |
+| `rvw/tests/test_dv_project_profile.py` | 39 |
+| `rvw/tests/test_dv_target.py` | 72 |
+| `rvw/tests/test_memory_axiomatic.py` | 154 |
+| `rvw/tests/test_memory_axiomatic_epochs.py` | 52 |
+| `rvw/tests/test_memory_axiomatic_pins.py` | 66 |
+| `rvw/tests/test_memory_axiomatic_scale.py` | 83 |
+| `rvw/tests/test_memory_concurrent_build.py` | 55 |
+| `rvw/tests/test_memory_concurrent_build_native.py` | 46 |
+| `rvw/tests/test_memory_concurrent_campaign.py` | 135 |
+| `rvw/tests/test_memory_concurrent_native.py` | 36 |
+| `rvw/tests/test_memory_contract.py` | 83 |
+| `rvw/tests/test_memory_directory.py` | 41 |
+| `rvw/tests/test_memory_fair.py` | 49 |
+| `rvw/tests/test_memory_permission_model.py` | 64 |
+| `rvw/tests/test_memory_tilelink_beats.py` | 104 |
+| `rvw/tests/test_memory_tilelink_bind.py` | 127 |
+| `rvw/tests/test_mmu_cov.py` | 42 |
+| `rvw/tests/test_mmu_guest_pointer.py` | 25 |
+| `rvw/tests/test_mmu_hs_store_review.py` | 15 |
+| `rvw/tests/test_mmu_hypervisor.py` | 69 |
+| `rvw/tests/test_mmu_iommu.py` | 125 |
+| `rvw/tests/test_mmu_memory_effects.py` | 43 |
+| `rvw/tests/test_mmu_napot_range.py` | 30 |
+| `rvw/tests/test_mmu_nested_capture.py` | 56 |
+| `rvw/tests/test_mmu_paging.py` | 122 |
+| `rvw/tests/test_mmu_pma_width_review.py` | 19 |
+| `rvw/tests/test_mmu_pointer.py` | 44 |
+| `rvw/tests/test_mmu_pointer_extended.py` | 32 |
+| `rvw/tests/test_mmu_protocol.py` | 80 |
+| `rvw/tests/test_mmu_random.py` | 42 |
+| `rvw/tests/test_mmu_store_width_review.py` | 29 |
+| `rvw/tests/test_mmu_superpage_store_review.py` | 19 |
+| `rvw/tests/test_mmu_walk.py` | 122 |
+| `rvw/tests/test_privilege_aia.py` | 54 |
+| `rvw/tests/test_privilege_aplic_delegation.py` | 38 |
+| `rvw/tests/test_privilege_aplic_gateway.py` | 33 |
+| `rvw/tests/test_privilege_aplic_priority.py` | 44 |
+| `rvw/tests/test_privilege_campaign.py` | 167 |
+| `rvw/tests/test_privilege_cfi_recovery.py` | 28 |
+| `rvw/tests/test_privilege_clock_edges.py` | 95 |
+| `rvw/tests/test_privilege_cofpmf.py` | 119 |
+| `rvw/tests/test_privilege_controllers.py` | 73 |
+| `rvw/tests/test_privilege_disabled.py` | 26 |
+| `rvw/tests/test_privilege_disabled_matrix.py` | 26 |
+| `rvw/tests/test_privilege_dvfs.py` | 36 |
+| `rvw/tests/test_privilege_env_behavior.py` | 20 |
+| `rvw/tests/test_privilege_env_cbom.py` | 49 |
+| `rvw/tests/test_privilege_epmp.py` | 17 |
+| `rvw/tests/test_privilege_epmp_matrix.py` | 28 |
+| `rvw/tests/test_privilege_events.py` | 55 |
+| `rvw/tests/test_privilege_extensions.py` | 28 |
+| `rvw/tests/test_privilege_fast_interrupts.py` | 17 |
+| `rvw/tests/test_privilege_fast_runtime.py` | 50 |
+| `rvw/tests/test_privilege_model_observe.py` | 217 |
+| `rvw/tests/test_privilege_plic.py` | 25 |
+| `rvw/tests/test_privilege_plic_delivery.py` | 73 |
+| `rvw/tests/test_privilege_pma.py` | 24 |
+| `rvw/tests/test_privilege_pma_access.py` | 54 |
+| `rvw/tests/test_privilege_pmp.py` | 27 |
+| `rvw/tests/test_privilege_random_transitions.py` | 65 |
+| `rvw/tests/test_privilege_reri.py` | 41 |
+| `rvw/tests/test_privilege_reri_transactions.py` | 47 |
+| `rvw/tests/test_privilege_reset_phase.py` | 110 |
+| `rvw/tests/test_privilege_rnmi.py` | 43 |
+| `rvw/tests/test_privilege_rv32_interrupts.py` | 69 |
+| `rvw/tests/test_privilege_rv32_interrupts_native.py` | 30 |
+| `rvw/tests/test_privilege_scheduled.py` | 55 |
+| `rvw/tests/test_privilege_shadow.py` | 29 |
+| `rvw/tests/test_privilege_spike_aplic.py` | 62 |
+| `rvw/tests/test_privilege_ssstateen.py` | 30 |
+| `rvw/tests/test_privilege_state32.py` | 30 |
+| `rvw/tests/test_privilege_state_hierarchy.py` | 90 |
+| `rvw/tests/test_privilege_timer32.py` | 24 |
+| `rvw/tests/test_privilege_timer_observe.py` | 82 |
+| `rvw/tests/test_privilege_wfi_stop.py` | 107 |
+| `rvw/tests/test_regress_applicability.py` | 57 |
+| `rvw/tests/test_regress_mmu.py` | 502 |
+| `rvw/tests/test_regress_random.py` | 160 |
+| `rvw/tests/test_regress_round21_plan.py` | 154 |
+| `rvw/tests/test_regress_round22_plan.py` | 30 |
+| `rvw/tests/test_riscv_dv_launcher.py` | 50 |
+| `rvw/tests/test_smp_dependencies.py` | 78 |
+| `rvw/tests/test_smp_litmus.py` | 42 |
+| `scripts/install-riscv-dv.py` | 53 |
+| `scripts/riscv-dv-baseline.py` | 63 |
+| `scripts/riscv-dv-project.py` | 59 |
+| `scripts/riscv-dv-pygen.py` | 138 |
+| `scripts/riscv-dv/user_init.s` | 50 |
