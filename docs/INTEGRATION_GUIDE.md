@@ -469,7 +469,8 @@ remaining limits for the independent scratch core.
 ## Connected generated check captures
 
 The 2026-11-13 captures compile generated checks into the selected simulation.
-These are native simulation counts and depth-4 BMC counts for all 99 check IDs.
+These are native simulation counts. The three retained formal captures contain
+99 check IDs with depth-4 BMC results. The later 33-check capture has no formal run.
 Each formal job selects one fail signal in the retained #921 RTL capture. Reset
 is constrained for two samples. Activation was not measured. No unbounded proof
 was obtained. The Vexii PC formal rule is the original strict rule before the
@@ -482,6 +483,10 @@ later cancellation binding. See the [formal record](../SpinalChecks/connected-de
 | VexiiRiscv, nine catalog CSR programs | 33 | 33 | NOT RUN | NOT RUN | 0 / 0 | 0; accepted CSR interface, including RAM |
 | Composed RV32 stub SoC | 17 | 17 | 0 | 17 | 0 / 0 | 0; native bindings present |
 
+The [nine-CSR Vexii record](../examples/vexiiriscv/csr-bank-native-results.json) has nine RTL passes,
+eight Spike passes and one retained `marchid` configuration mismatch. The new
+33-check binding has no formal run. Earlier 25-check formal evidence stays separate.
+
 VexRiscv passed 49 aligned ISA programs with 49 C1 passes. VexiiRiscv ran two
 CSR programs. Both have C1 passes after an exact PC hold cancellation binding.
 The two original valid-hold firings are retained as tool false positives with
@@ -493,6 +498,24 @@ See [SpinalChecks](../SpinalChecks/README.md#connected-captures-on-three-designs
 for selected check IDs, assumptions, capture records and reproduction commands.
 Unknown cancellation semantics retain strict checks. Project cancellation
 bindings require an exact stream path, condition, sample timing and review reason.
+
+## Measured check models and templates
+
+These 2026-11-13 tests are separate from connected core qualification.
+
+| Capability | Evidence | Measured result | Remaining limit |
+|---|---|---|---|
+| Recovery and fence drain | Native Verilator template | 1 legal and 14 detected fault scenarios | No core event/age binding or recovery proof |
+| HPM event selection and mode filters | Native Verilator template | 1 legal and 2 detected fault scenarios | No core HPM binding; OF remains separate |
+| Coherent cache/reservation oracle | Scala model | 3 tests pass, including source-specific capability limits | No RTL cache binding or concurrent coherence model |
+| Dynamic IMSIC indirect registers | Python model | 11 cases pass; unknown state remains inconclusive | No core binding, denial, arbitration or delay proof |
+| Clock gates beside UPF domains | Generated monitors and native Icarus fixtures | 6 generation cases and 4 native cases pass | Explicit companion bindings; no Tcl gate command or physical proof |
+
+The [validation record](../SpinalChecks/model-validation-results.json) gives
+source hashes and test scope. The [check README](../SpinalChecks/README.md#measured-model-and-template-results)
+keeps the core-binding limits. Core-specific integration must supply independent
+observations and new execution evidence. Model tests do not transfer proof to a
+core or peripheral.
 
 ## UVM and VIP integration
 
@@ -651,10 +674,6 @@ See [the VexRiscv records](../examples/vexriscv/formal/GENERATED_RESULTS.md),
 [the Sail M campaign](../examples/vexriscv/formal/SAIL_M.md) and
 [the conditional proof records](../examples/vexriscv/formal/ABSTRACT_RESULTS.md)
 for source pins, measured variants, limits and reproduction commands.
-
-The [nine-CSR Vexii record](../examples/vexiiriscv/csr-bank-native-results.json) has nine RTL passes,
-eight Spike passes and one retained `marchid` configuration mismatch. The new
-33-check binding has no formal run. Earlier 25-check formal evidence stays separate.
 
 ## Give your core a SoC
 
