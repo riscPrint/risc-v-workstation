@@ -1,0 +1,109 @@
+{
+  "schema": "rvw.boom-native-fault-dpi-observation/1",
+  "config": "small",
+  "seed": 1,
+  "offline_faults": {
+    "applied": true,
+    "faults": [
+      {
+        "id": "flags-flip",
+        "kind": "flip",
+        "site": "tile.core.csr.reg_fflags",
+        "bit": 0,
+        "cycle": 200,
+        "applied": true,
+        "applied_cycle": 200,
+        "before": "0x19",
+        "after": "0x18",
+        "writes": 1
+      },
+      {
+        "id": "scratch-flip",
+        "kind": "flip",
+        "site": "tile.core.csr.reg_mscratch",
+        "bit": 0,
+        "cycle": 200,
+        "applied": true,
+        "applied_cycle": 200,
+        "before": "0x880e663d5589b2ae",
+        "after": "0x880e663d5589b2af",
+        "writes": 1
+      }
+    ]
+  },
+  "offline_mismatch": {
+    "order": 13,
+    "cycle": 228,
+    "differences": {
+      "fflags": {
+        "expected": "0x19",
+        "actual": "0x18"
+      },
+      "fcsr": {
+        "expected": "0xd9",
+        "actual": "0xd8"
+      },
+      "csr[0x340]": {
+        "expected": "0x880e663d5589b2ae",
+        "actual": "0x880e663d5589b2af"
+      }
+    }
+  },
+  "clean": {
+    "status": "match",
+    "trace_complete": true,
+    "instructions": 218,
+    "state_coverage": {
+      "trace_schema": "rvw.rvfi/2",
+      "fp": true,
+      "vector": null,
+      "hypervisor": false,
+      "two_stage_translations": 0,
+      "csr_snapshot": [
+        "0x340"
+      ],
+      "csr_snapshot_steps": 218,
+      "vector_memory_steps": 0,
+      "vector_memory_accesses": 0,
+      "fault_access_steps": 0
+    },
+    "fp_writes": 40,
+    "verilator_cached": true,
+    "rtl_sha256": "18d0ff3d26c248ffa093c3c72c808891640d6c3fbbbe5ff0e50c52057d18a507"
+  },
+  "injected": {
+    "status": "mismatch",
+    "trace_complete": false,
+    "simulator_returncode": 143,
+    "mismatch": {
+      "order": 13,
+      "cycle": 228,
+      "differences": {
+        "fflags": {
+          "expected": "0x19",
+          "actual": "0x18"
+        },
+        "fcsr": {
+          "expected": "0xd9",
+          "actual": "0xd8"
+        }
+      }
+    }
+  },
+  "hashes": {
+    "faults/result.json": "ba98fcd4221840ad8da14087dc265a6d6da66f18ac524f357839cf5975491c95",
+    "faults/rvfi.jsonl": "84e75a896f2f0bcae4f93ecf299e51068e0f62c7ee5d18eedba03e53a04c6173",
+    "faults/cosim.json": "25debf28f93782cc2e816665167b90b311bebdb94864267f252760c2894a6ed7",
+    "dpi-clean-thread/rvfi.jsonl": "a55bc1cd40545ba67ae600ee8d282e34966184f5d72bc57a638c844e34b44f49",
+    "dpi-clean-report.json": "c274041b8ac0d8b0255f7daa880c6b31d68f2858ca22ec1bab3839b4c83e8d9f",
+    "dpi-injected/rvfi.jsonl": "b52fd94dc8e33bbf3fec880f470c3094698be00f289578c074080d0df4c53d62",
+    "dpi-injected-report.json": "02c0f17047bf16f4033b4fc3a5905202fc9b20ddadedcdf72bbf76ac90b94a57"
+  },
+  "limits": [
+    "Small and seed 1 only.",
+    "Two offline flips have read-back confirmation. Online mismatch is recorded before host cancellation.",
+    "Register bit flips only; no memory, checkpoint or device-plugin qualification.",
+    "Two native builds in this continuation. The DPI scheduling fix reused the second binary.",
+    "Ordinary and DPI C2 sampling have different host scheduling paths."
+  ]
+}
