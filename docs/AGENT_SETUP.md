@@ -374,6 +374,9 @@ rvw cosim check --elf rvw/out/programs/smoke \
 Success: both exit 0. Check `trace_complete: true` and `end_status: pass`.
 Read the comparison's synchronization and quirk records.
 A matching prefix can exit 0. It is not a complete passing execution.
+For a core with completed misaligned RAM accesses, review the explicit
+`misaligned` policy and `scalar_split_ram` opt-in in the
+[integration recipes](INTEGRATION_GUIDE.md#project-input-recipes).
 
 Failure: exit 1 means an architectural mismatch. Inspect its first instruction.
 Exit 2 means malformed or unsupported data. Exit 3 means incomplete evidence.
