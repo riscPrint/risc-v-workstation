@@ -6,8 +6,9 @@ from .scaffold import generate
 
 def command(args):
     try:
-        print(json.dumps(generate(args.db,args.soc,args.out,rtl=args.rtl,language=args.language,profile=args.profile)))
-        return 0
+        report = generate(args.db,args.soc,args.out,rtl=args.rtl,language=args.language,profile=args.profile)
+        print(json.dumps(report))
+        return 2 if report.get('status') == 'unsupported' else 0
     except (OSError,ValueError,QueryError) as exc:
         print(json.dumps({'error':str(exc)}))
         return 2

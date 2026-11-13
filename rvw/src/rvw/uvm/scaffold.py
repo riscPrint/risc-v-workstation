@@ -22,6 +22,9 @@ def generate(db, soc, out, *, rtl=None, language='pyuvm', profile='auto'):
             if classify(c)]
     finally:
         with_db.close()
+    if not discovered:
+        load(soc)
+        return {'status': 'unsupported', 'reason': 'No supported typed bus metadata. Plain HDL ports need a project-owned UVM bench and explicit VIP pin bindings.'}
     if language != 'pyuvm' or profile != 'auto' or (discovered and discovered != ['apb']):
         from .profiles import generate as generate_profile
         return generate_profile(db,soc,out,rtl=rtl,language=language,profile=profile)

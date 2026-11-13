@@ -23,6 +23,6 @@ def _run(a):
         if a.vip_command=='list': result=agents()
         elif a.vip_command=='buses': result=buses(a.db)
         else: result=skeleton(a.db,a.out,a.bus,a.clock,a.reset)
-        print(json.dumps(result,indent=2)); return 0
+        print(json.dumps(result,indent=2)); return 2 if result.get('status') == 'unsupported' else 0
     except (QueryError,OSError,ValueError) as exc:
         print('rvw vip: '+str(exc),file=sys.stderr); return 2

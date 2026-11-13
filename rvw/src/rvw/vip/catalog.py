@@ -32,12 +32,25 @@ def _buses(db):
             for p,t in db.conn.execute('SELECT path,class_name FROM bundles ORDER BY path') if t in TYPES]
 
 
-def buses(db): return run_on(db, lambda design: {'buses': _buses(design)})
+def buses(db):
+    def inventory(design):
+        found = _buses(design)
+        return {'buses': found} if found else unsupported()
+    return run_on(db, inventory)
+
+
+def unsupported():
+    return {'status': 'unsupported', 'buses': [],
+            'reason': 'No supported typed bus metadata. Plain HDL ports need explicit project-owned VIP pin bindings.'}
+
 
 
 def skeleton(db, out, bus=None, clock='clk', reset='reset_n'):
     def generate(design):
-        found = [b for b in _buses(design) if bus is None or b['path']==bus]
+        available = _buses(design)
+        if not available:
+            return unsupported()
+        found = [b for b in available if bus is None or b['path']==bus]
         if len(found)!=1:
             raise QueryError('select exactly one supported bus: '+', '.join(b['path'] for b in found))
         selected=found[0]; proto=selected['agent']; prefix=selected['path']

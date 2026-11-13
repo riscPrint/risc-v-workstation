@@ -68,3 +68,10 @@ The [SV runtime campaign](../../../../Uvm/vip/qualification/README.md)
 builds each protocol once and records compile, good-DUT and corrupt-DUT
 checks separately. Empty native-model stubs remain unqualified. Read its
 measured matrix before choosing an SV agent for a project.
+
+## Untyped HDL databases
+
+Automatic bench generation requires supported typed bus metadata. A database
+with plain Verilog ports returns `status: unsupported` and writes no bench.
+The CLI exits 2. MCP returns the same status. Supply a project-owned bench
+and explicit protocol pin bindings. Port names alone do not establish a bus.
