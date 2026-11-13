@@ -1,6 +1,9 @@
 """Additive C7 results. Preserve legacy fields and evidence limits."""
 from rvw.common.verdicts import VERDICTS
 
+# C4 decisions keep their meaning in the common vocabulary. Other legacy values stay inconclusive.
+C4_VERDICTS = {"accept": "pass", "reject": "fail", "inconclusive": "inconclusive"}
+
 
 def envelope(value, *, error=False):
     data = dict(value) if isinstance(value, dict) else {"result": value}
@@ -13,7 +16,8 @@ def envelope(value, *, error=False):
         verdict = "not_installed" if data.get("code") == "not_installed" else "error"
     if old_verdict is not None and old_verdict not in VERDICTS:
         data["legacy_verdict"] = old_verdict
-        data["verdict"] = "inconclusive"
+        c4 = str(data.get("schema", "")).startswith("rvw.verdict/") and not (error or data.get("error"))
+        data["verdict"] = C4_VERDICTS.get(old_verdict, "inconclusive") if c4 else "inconclusive"
     elif verdict is not None:
         data["verdict"] = verdict
     data.setdefault("status", "error" if error or data.get("error") else "ok")

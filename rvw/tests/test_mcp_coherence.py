@@ -60,6 +60,14 @@ def test_registry_envelope_preserves_legacy_fields_without_pass():
     assert data["legacy_verdict"] == "accept" and data["verdict"] == "inconclusive"
 
 
+def test_envelope_maps_c4_verdicts_faithfully():
+    from rvw.mcp.envelope import envelope
+    for c4, common in (("accept", "pass"), ("reject", "fail")):
+        data = envelope({"schema": "rvw.verdict/2", "verdict": c4})
+        assert (data["verdict"], data["legacy_verdict"]) == (common, c4)
+    assert envelope({"schema": "rvw.verdict/2", "verdict": "inconclusive"})["verdict"] == "inconclusive"
+
+
 def test_envelope_list_and_explicit_failure():
     from rvw.mcp.envelope import envelope
     assert envelope([1, 2])["result"] == [1, 2]

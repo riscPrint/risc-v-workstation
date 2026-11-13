@@ -91,7 +91,7 @@ def test_boolean_string_cannot_allow_missing_tests(tmp_path):
     try:
         _, result, error = r.call_json('regress_compare', {**args, 'allow_missing': False})
         assert not error and result['legacy_verdict'] == 'reject', result
-        assert result['verdict'] == 'inconclusive' and result['missing'], result
+        assert result['verdict'] == 'fail' and result['missing'], result
         output = tmp_path / 'verdict.json'
         _, result, error = r.call_json('regress_compare', {**args, 'allow_missing': 'false', 'out': str(output)})
         assert error and 'allow_missing' in result['error'], result
