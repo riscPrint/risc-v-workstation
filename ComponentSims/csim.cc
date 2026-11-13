@@ -44,6 +44,7 @@ struct Study {
         if (br->ind) add("indirect", br->ind->storage());
         for (Cache* x : {mem->l1i.get(), mem->l1d.get(), mem->l2.get(), mem->llc.get()}) if (x) add(x->name.c_str(), x->storage());
         if (mem->mmu) add("tlb", mem->mmu->storage());
+        if (fe && fe->opc) add("op_cache", fe->opc->storage());
         if (mdp) add("mdp", mdp->storage());
         if (vp) add("vp", vp->storage());
         if (lap) add("lap", lap->storage());
@@ -76,6 +77,7 @@ struct Study {
             if (br->btb) br->btb->context(r.value);
             if (br->ras) br->ras->context();
             if (mem->mmu) mem->mmu->context(r.value);
+            if (fe && fe->opc) fe->opc->context();
         } else if (r.kind == K_VALUE) {
             if (vp) vp->value(r.pc, r.value, r.is_load, r.is_move, r.is_zero, m);
         }

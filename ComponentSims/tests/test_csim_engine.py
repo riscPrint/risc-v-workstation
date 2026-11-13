@@ -494,3 +494,21 @@ def test_load_address_predictors(csim, tmp_path):
     ctx = report(csim, tmp_path, kv(lap__model='context'), t)['lap']
     assert stride['correct'] >= 90 and stride['incorrect'] <= 2
     assert ctx['correct'] > stride['correct']
+
+
+def test_op_cache_hits_skip_decode_and_flush_on_context(csim, tmp_path):
+    t = frontend_trace(3000, size=6, span=0x104)  # odd span: no BTB set conflicts
+    base = kv(btb__entries=4096, frontend__fetch_width=8, frontend__decode_width=4, warmup_instructions=2000)
+    plain = report(csim, tmp_path, base, t)['frontend']
+    opc = report(csim, tmp_path, base + kv(frontend__op_cache__entries=512, frontend__op_cache__op_width=8), t)['frontend']
+    o = opc['op_cache']
+    assert o['hit_rate'] > 0.95 and o['op_coverage'] > 0.95
+    assert opc['delivered_ipc'] > plain['delivered_ipc']
+    small = report(csim, tmp_path, base + kv(frontend__op_cache__entries=8, frontend__op_cache__ways=8), t)['frontend']['op_cache']
+    assert small['hit_rate'] < 0.5
+    wide = report(csim, tmp_path, base + kv(frontend__op_cache__ops_per_line=2, frontend__op_cache__max_lines_per_window=2), t)['frontend']['op_cache']
+    assert wide['hits'] == 0 and wide['uncacheable_windows'] > 0
+    rows = trace(t.splitlines()[1:-1] + [f'X {6 * 3000 + 1} 1'], 6 * 3000 + 1)
+    d = report(csim, tmp_path, base + kv(frontend__op_cache__entries=512), rows)
+    assert d['frontend']['op_cache']['context_flushes'] == 1
+    assert d['storage']['op_cache']['parts']['ops'] == 512 * 6 * 56

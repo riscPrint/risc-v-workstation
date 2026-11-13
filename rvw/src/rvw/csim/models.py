@@ -31,7 +31,9 @@ CATALOG = {
                    "keys": ["branches"]},
     "frontend": {"doc": "decoupled front-end delivery model (BPU -> FTQ -> I-cache -> decode)",
                  "keys": ["fetch_width", "predictions_per_cycle", "ftq_entries", "decode_width", "decode_redirect_latency",
-                          "resolve_latency", "bpu_to_fetch", "fetch_to_decode", "fdip", "wrong_path_icache"]},
+                          "resolve_latency", "bpu_to_fetch", "fetch_to_decode", "fdip", "wrong_path_icache",
+                          "op_cache.entries/ways/ops_per_line/window_bytes/max_lines_per_window/op_width/latency/"
+                          "switch_penalty/op_bits/context (shared|flush)"]},
     "memory": {"doc": "cache hierarchy l1i, l1d, l2, llc and an optional TLB/page walker",
                "keys": ["cycles_per_instruction", "dram_latency",
                         "<level>.size_kib/ways/line_bytes/latency/replacement/prefetch_queue/perfect/pollution_filter",

@@ -102,6 +102,8 @@ def metrics(rep: dict) -> dict:
     fe = rep.get("frontend")
     if fe:
         m["frontend_ipc"] = fe["delivered_ipc"]
+        if fe.get("op_cache"):
+            m["op_cache_coverage"] = fe["op_cache"]["op_coverage"]
     for level, v in (rep.get("memory") or {}).items():
         if isinstance(v, dict) and "demand_mpki" in v:
             m[f"{level}_mpki"] = v["demand_mpki"]
