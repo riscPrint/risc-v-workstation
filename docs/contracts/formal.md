@@ -1034,3 +1034,31 @@ This rule checks age and selection, not byte data or physical alias detection.
 A binding value can be a nonempty list of signal paths. Element 0 becomes the
 least significant slice. The generator records lane parameters in its report.
 These are simulation or formal assertions, not proof results by themselves.
+## ISA combinational RAM environment
+
+`riscv_formal.memory` selects an explicit environment for `riscv-formal` and
+`formal isa`. It requires `protocol = "combinational-byte"`,
+`response_cycles = 0`, and `initial = "symbolic-stable"`. This protocol has
+32-bit, little-endian transfers at byte addresses. Reads return the memory
+before writes at the sampling edge. There is no ready or response handshake.
+`address_width` defaults to 32. `reads` is a nonempty list. `writes` has one
+entry. Each entry binds `address`, `data`, and four-bit `mask` to wrapper wires.
+The wrapper must contain one `@MEMORY_ENVIRONMENT@` marker.
+
+The generator assumes only read response data. Each byte equals the latest
+write, or its first symbolic observation if no write exists. Initial bytes
+are arbitrary but stable. Reads on both ports share the memory image.
+Byte masks preserve partial and cross-word transfers. Request addresses,
+write data and write masks remain unconstrained. Reset starts a new image.
+The environment retains observations through the largest selected bound.
+History overflow is an assertion failure. It cannot silently restrict a
+longer proof. Other protocols and concrete initial images are not implemented.
+The project must bind its actual simulation protocol. Device reads require a
+separate model. This environment does not certify RVFI export correctness.
+
+`riscv_formal.ports` also accepts the complete optional group `mem_fault`,
+`mem_fault_rmask`, and `mem_fault_wmask`. The runner enables the upstream
+`RISCV_FORMAL_MEM_FAULT` extension for this group. Supply attempted masks on
+a fault, even when the core suppresses its bus request. The upstream checks
+then check trap behavior and suppressed writes. This does not independently
+prove the project's protection policy; machine-state checks must do that.

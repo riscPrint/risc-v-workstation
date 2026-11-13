@@ -20,6 +20,9 @@ from rvw.formal.common import sigterm_raises
 FIELDS = "valid order insn trap halt intr mode ixl rs1_addr rs2_addr rs1_rdata rs2_rdata rd_addr rd_wdata pc_rdata pc_wdata mem_addr mem_rmask mem_wmask mem_rdata mem_wdata".split()
 
 
+MEM_FAULT_FIELDS = "mem_fault mem_fault_rmask mem_fault_wmask".split()
+
+
 def validate(cfg):
     required = {"root", "wrapper", "verilog", "isa", "nret", "checks", "depth", "solver", "ports"}
     if required - cfg.keys():
@@ -63,12 +66,16 @@ def validate(cfg):
         if not isinstance(settings['defines'], list) or any(not isinstance(d, str) or '\n' in d or '\r' in d for d in settings['defines']):
             raise ValueError("check defines must be single-line strings")
     ports = cfg['ports']
-    if not isinstance(ports, dict) or set(ports) != set(FIELDS):
-        raise ValueError("ports must map every RVFI field exactly once")
+    if not isinstance(ports, dict) or set(ports) not in (set(FIELDS), set(FIELDS + MEM_FAULT_FIELDS)):
+        raise ValueError("ports must map every RVFI field and optionally the complete mem_fault group")
     if any(not isinstance(v, str) or not re.fullmatch(r'[A-Za-z_][A-Za-z0-9_$]*', v) for v in ports.values()) or len(set(ports.values())) != len(ports):
         raise ValueError("RVFI ports must be distinct Verilog identifiers")
     if Path(cfg['wrapper']).read_text().count('@RVFI_CONNECTIONS@') != 1:
         raise ValueError("wrapper must contain one @RVFI_CONNECTIONS@ placeholder")
+    from .isa_memory import render
+    environment = render(cfg)
+    if environment and Path(cfg["wrapper"]).read_text().count("@MEMORY_ENVIRONMENT@") != 1:
+        raise ValueError("memory contract needs one @MEMORY_ENVIRONMENT@ placeholder")
     defines = cfg.get("defines", [])
     if not isinstance(defines, list) or any(not isinstance(d, str) or '\n' in d or '\r' in d for d in defines):
         raise ValueError("defines must be single-line strings")
@@ -115,8 +122,17 @@ def prepare(cfg, out):
         shutil.copyfile(src, dest)
         snapshots[str(src)] = hashlib.sha256(dest.read_bytes()).hexdigest()
         if i == 0:
-            dest.write_text(dest.read_text().replace('@RVFI_CONNECTIONS@', ',\n'.join(
-                f'.{cfg["ports"][field]} (rvfi_{field})' for field in FIELDS)))
+            from .isa_memory import render
+            environment = render(cfg)
+            text = dest.read_text()
+            if environment:
+                if text.count("@MEMORY_ENVIRONMENT@") != 1:
+                    raise ValueError("memory contract needs one @MEMORY_ENVIRONMENT@ placeholder")
+                text = text.replace("@MEMORY_ENVIRONMENT@", environment)
+            else:
+                text = text.replace("@MEMORY_ENVIRONMENT@", "")
+            dest.write_text(text.replace('@RVFI_CONNECTIONS@', ',\n'.join(
+                f'.{cfg["ports"][field]} (rvfi_{field})' for field in cfg["ports"])))
         identity[str(src)] = hashlib.sha256(dest.read_bytes()).hexdigest()
     for insn, src in cfg.get('instruction_models', {}).items():
         dest = root / 'insns' / f'insn_{insn}.v'
@@ -147,7 +163,8 @@ def prepare(cfg, out):
     (core / 'checks.cfg').write_text(
         f"[options]\nisa {cfg['isa']}\nnret {cfg['nret']}\nsolver {cfg['solver']}\n"
         f"[depth]\n{depth_lines}\n"
-        '[defines]\n' + '\n'.join(cfg.get('defines', [])) + '\n'
+        '[defines]\n' + '\n'.join(cfg.get('defines', []) +
+            (['`define RISCV_FORMAL_MEM_FAULT'] if 'mem_fault' in cfg['ports'] else [])) + '\n'
         f'[verilog-files]\n{verilog}\n'
         '[cover]\n' + ''.join(f'always @* if (!reset) cover (channel[{i}].cnt_insns > 0);\n' for i in range(cfg['nret'])))
     return core, identity
