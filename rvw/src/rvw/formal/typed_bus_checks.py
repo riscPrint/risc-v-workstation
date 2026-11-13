@@ -55,11 +55,13 @@ end''')
             if not addr:
                 raise ValueError('missing address field')
             if kind == 'axi4':
-                burst = nets.get(channel+'.payload.burst')
-                length = nets.get(channel+'.payload.len')
-                size = nets.get(channel+'.payload.size')
-                if not all((burst, length, size)):
-                    raise ValueError('full AXI4 burst fields are required')
+                burst = nets.get(channel+'.payload.burst', "2'd1")
+                length = nets.get(channel+'.payload.len', "8'd0")
+                data_key='w.payload.data' if channel=='aw' else 'r.payload.data'
+                data_width=signals[data_key][3]
+                if data_width not in (8,16,32,64,128,256,512,1024):
+                    raise ValueError('invalid AXI data width')
+                size = nets.get(channel+'.payload.size', str((data_width//8).bit_length()-1))
                 # WRAP is aligned to the beat, not necessarily to its wrap span.
                 checks.append(f'''always @(posedge clk) if(!reset && {valid}) begin
  assert({burst} != 3);

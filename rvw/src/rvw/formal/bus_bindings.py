@@ -18,14 +18,18 @@ TYPES = {
 PATH = re.compile(r'[A-Za-z_][A-Za-z0-9_]*(?:\.[A-Za-z_][A-Za-z0-9_]*)*')
 
 
-def generate(db, out):
+def generate(db, out, depth=4, max_beats=256):
+    if type(depth) is not int or not 1<=depth<=64:
+        raise ValueError("AXI tracker depth must be in 1..64")
+    if type(max_beats) is not int or not 1<=max_beats<=256:
+        raise ValueError("AXI write strobe history must be in 1..256 beats")
     rows, sources, binds = [], [], []
     with_db = DesignDB(db)
     try:
         c = with_db.conn
         for bid, cid, path, cls, parent in c.execute('SELECT id,component_id,path,class_name,parent_id FROM bundles ORDER BY id').fetchall():
             if cls not in TYPES:
-                if cls.endswith('Bus') or cls in ('Bmb', 'Wishbone', 'AvalonMM'):
+                if cls.endswith('Bus') or cls.split('.')[-1] in ('Bmb','Wishbone','AvalonMM','Axi4ReadOnly','Axi4WriteOnly','Axi4Shared','AxiLite4ReadOnly','AxiLite4WriteOnly'):
                     rows.append(dict(path=path, component_id=cid, class_name=cls,
                                      status='unsupported', reason='bus type has no registered checker; simple Bus is ambiguous'))
                 continue
@@ -90,7 +94,20 @@ def generate(db, out):
                     ports.update(channel_ports)
                     width = sum(s[3] for s in signals.values())
                     row['coverage'] = 'opcode_safety' if kind == 'tilelink' else 'channel_safety'
-                    row['limitations'] = ['No burst accounting, ID ordering, exclusive-operation or coherence scoreboard.']
+                    row['limitations'] = ['No coherence or exclusive memory-reservation model.']
+                    if kind in ('axi4','axi_lite4'):
+                        try:
+                            from .axi_transactions import render as render_transactions
+                            body=render_transactions(kind,signals,depth,max_beats)
+                            source=source.replace('\nendmodule\n','\n'+body+'\nendmodule\n')
+                            row.update(coverage='transaction_safety',tracker_depth=depth,write_history_beats=max_beats,
+                                check_groups=['channel_stability','request_bursts','read_ids_beats','write_address_data_order','response_lock']+(['write_strobes'] if kind=='axi4' else []))
+                            row['limitations'] += ['Queue capacity failures are instrumentation limits, not protocol violations.',
+                                                   'Write burst history is an instrumentation limit. Memory data correctness is not modeled.']
+                        except ValueError as exc:
+                            row['unbound_checks']=[dict(kind='axi_transactions',reason=str(exc))]
+                    else:
+                        row['limitations'] += ['TileLink transaction/coherence tracking is not bound.']
                 elif kind == 'axis':
                     width, data = payload([k for k in signals if k.startswith('payload.')])
                     ports.update(valid=signal('valid',1),ready=signal('ready',1),payload=data)
@@ -114,10 +131,10 @@ def generate(db, out):
             except (ValueError, KeyError, TypeError, QueryError) as exc:
                 row['reason'] = str(exc)
         report = dict(schema='rvw.bus-checks/1', status='generated' if binds else 'no_checks',
-                      buses=rows, complete=bool(binds) and all(r['status'] == 'generated' for r in rows),
+                      buses=rows, complete=bool(binds) and all(r['status'] == 'generated' and not r.get('unbound_checks') for r in rows),
                       database=with_db.capture_record(),
                       limits=['No compiler, solver or simulator was run.',
-                              'Typed AXI4, AXI-Lite4 and TileLink monitors provide channel safety only.',
+                              'AXI transaction checks require complete fields. TileLink provides opcode safety only.',
                               'Instance bind syntax requires a frontend with SystemVerilog bind support.',
                               'Clock associations must exist in the database. Missing bindings stay unsupported.'])
     finally:
@@ -132,7 +149,7 @@ def generate(db, out):
 
 def run(args):
     try:
-        result = generate(args.db,args.out)
+        result = generate(args.db,args.out,getattr(args,'depth',4),getattr(args,'max_beats',256))
         print(json.dumps(result))
         return 0 if result['status'] == 'generated' else 3
     except (ValueError, OSError, QueryError) as exc:

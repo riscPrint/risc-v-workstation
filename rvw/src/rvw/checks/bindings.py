@@ -14,6 +14,12 @@ def generate(kind,entry,base,out):
         contracts=json.loads((base/entry['contracts']).read_text()) if entry.get('contracts') else {}
         result=generate_streams(base/entry['database'],report,contracts,out)
         return dict(status=result['status'],instances=result['channels'])
+    if kind=='buses':
+        if set(entry)-{'database','depth','max_beats'} or 'database' not in entry:
+            raise ValueError('buses needs database and optional tracker depth/max_beats')
+        from rvw.formal.bus_bindings import generate as generate_buses
+        result=generate_buses(base/entry['database'],out,entry.get('depth',4),entry.get('max_beats',256))
+        return dict(status=result['status'],instances=result['buses'])
     if kind=='power':
         if set(entry)!={'source','bindings'}:
             raise ValueError('bound power needs UPF source and bindings paths')

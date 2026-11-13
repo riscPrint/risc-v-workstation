@@ -107,8 +107,9 @@ def test_axi4_five_channels_bind(tmp_path):
     report=generate(path,tmp_path/'out')
     assert report['buses'][0]['status']=='generated'
     assert report['buses'][0]['coverage']=='channel_safety'
+    assert report['complete'] is False
     assert len([k for k in report['buses'][0]['ports'] if k.endswith('_valid')])==5
-    assert 'No burst accounting' in report['buses'][0]['limitations'][0]
+    assert 'LAST' in report['buses'][0]['unbound_checks'][0]['reason']
 
 
 def test_nested_bus_uses_its_own_controls(tmp_path):
@@ -128,3 +129,29 @@ def test_nested_bus_uses_its_own_controls(tmp_path):
     assert report['buses'][0]['status']=='generated'
     assert report['buses'][0]['target']=='Top.child'
     assert report['buses'][0]['ports']['clk']=='clk'
+
+
+def test_full_axi_scoreboard_is_bound(tmp_path):
+    from test_axi_transactions import fields
+    path=tmp_path/'full.db';db=Builder(path)
+    db.domain(1,reset='reset',kind='SYNC');db.sig('clk',direction='in');db.sig('reset',direction='in')
+    db.c.execute("INSERT INTO bundles(id,component_id,path,class_name) VALUES(1,1,'io.bus','Axi4')")
+    for key,row in fields().items():
+        name='io_bus_'+row[0];db.sig(name,width=row[3],domain=1)
+        db.c.execute('UPDATE signals SET spinal_path=? WHERE name=?',('io.bus.'+key,name))
+    db.done()
+    report=generate(path,tmp_path/'out',depth=2,max_beats=4)
+    row=report['buses'][0]
+    assert row['coverage']=='transaction_safety' and row['tracker_depth']==2
+    assert 'rvw_rpresent' in (tmp_path/'out/monitors.sv').read_text()
+    assert 'response_lock' in row['check_groups']
+    assert 'write_strobes' in row['check_groups']
+    assert row['write_history_beats']==4
+    assert report['complete'] is True
+
+
+def test_tracker_bounds_are_explicit(tmp_path):
+    import pytest
+    for kwargs in ({'depth':0},{'max_beats':0},{'max_beats':257}):
+        with pytest.raises(ValueError,match=r'1\.\.'):
+            generate(tmp_path/'unused.db',tmp_path/'out',**kwargs)

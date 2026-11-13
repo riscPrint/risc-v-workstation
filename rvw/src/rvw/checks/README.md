@@ -8,7 +8,10 @@ It has schema `rvw.check-generation/1`. Optional keys `streams`, `buses`,
 `--json` for JSON errors as well as successful summaries.
 
 - `streams`: a property-library JSON document with a `properties` list.
-- `buses`: a captured SpinalDB database.
+- `buses`: a captured SpinalDB database, or an object with `database`, optional
+  AXI tracker `depth` and optional write history `max_beats`. Defaults are 4
+  pending descriptors and 256 beats. Capacity assertions are instrumentation
+  limits. The per-instance report states which transaction checks bind.
 - `csrs`: a CSR model or catalog selection.
 - `queues`: an `rvw.micro-checks/1` document.
 - `power`: an `rvw.power-intent/1` document.

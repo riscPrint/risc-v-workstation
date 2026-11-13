@@ -115,3 +115,17 @@ bindings, failures and capture provenance. No stream policy is guessed.
 A `power` object with source and bindings paths invokes literal UPF generation.
 Legacy source-file entries retain unbound status without instance bindings.
 The combined summary does not upgrade generation to proof or physical evidence.
+
+## Generated AXI transaction bindings
+
+`rvw.bus-checks/1` instance rows can set `coverage=transaction_safety`,
+`tracker_depth`, `write_history_beats` and `check_groups`. These declare
+independent pending transaction state, per-ID read order and write burst
+pairing. AXI4 WSTRB history is checked against paired AW geometry.
+Queue and history exhaustion are instrumentation bounds, not protocol
+violations. Incomplete transaction fields leave `unbound_checks` reasons
+and retain channel safety only. TileLink rows retain opcode safety only.
+Memory data and exclusive reservation state are outside these trackers.
+Project `buses` entries accept `database`, `depth` and `max_beats`. Both
+limits are positive integers. Maximum values are 64 and 256 respectively.
+Generation does not run a compiler or solver.
