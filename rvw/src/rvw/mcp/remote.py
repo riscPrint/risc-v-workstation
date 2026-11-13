@@ -21,7 +21,13 @@ def remote_tool(spec):
         return replace(spec, long=True)
     module, name = spec.handler.__module__, spec.handler.__qualname__
     if not name.isidentifier():
-        raise ValueError('remote tool needs an importable handler: ' + spec.name)
+        if not module.startswith("rvw."):
+            raise ValueError('remote tool needs an importable handler: ' + spec.name)
+        def discovered(job, **arguments):
+            from .worker import run_function
+            return run_function(job, "rvw.mcp.execution", "run_discovered",
+                                {"tool_name": spec.name, "arguments": arguments})
+        return replace(spec, handler=discovered, long=True)
     def execute(job, **arguments):
         from .worker import run_function
         return run_function(job, module, name, arguments)
@@ -29,7 +35,7 @@ def remote_tool(spec):
 
 
 class Remote:
-    def __init__(self, clients, registry_factory=None):
+    def __init__(self, clients, registry_factory=None, *, profile="all", workflow=None):
         from mcp.server.sse import SseServerTransport
         if not clients or any(not token for token in clients):
             raise ValueError('provide nonempty bearer tokens')
@@ -47,7 +53,7 @@ class Remote:
                 selected = [t for t in tools if t.name in allowed]
                 if allowed - {t.name for t in selected}:
                     raise ValueError('unknown allowed tool')
-                registry = ClientRegistry([remote_tool(t) for t in selected], jobs=JobManager(budget=policy.get('budget')), project=policy.get('project'))
+                registry = ClientRegistry([remote_tool(t) for t in selected], jobs=JobManager(budget=policy.get('budget')), project=policy.get('project'), profile=profile, workflow=workflow)
             self.clients[token] = (registry, build_server(registry), SseServerTransport('/messages'))
 
     async def __call__(self, scope, receive, send):
@@ -80,6 +86,6 @@ class Remote:
             await JSONResponse({'error': 'unknown endpoint'}, 404)(scope, receive, send)
 
 
-def serve(clients, host='127.0.0.1', port=8766):
+def serve(clients, host='127.0.0.1', port=8766, *, profile='all', workflow=None):
     import uvicorn
-    uvicorn.run(Remote(clients), host=host, port=port)
+    uvicorn.run(Remote(clients, profile=profile, workflow=workflow), host=host, port=port)

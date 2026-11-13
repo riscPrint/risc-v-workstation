@@ -194,3 +194,13 @@ and the wave benchmark. Providers with job context retain their handlers.
 Other inline tools are file reports, generators or metadata calls. A provider
 must still set `long=True` if its runtime can grow beyond a few seconds.
 
+
+## CLI command map
+
+Use `rvw mcp command-map --json` to get the current parser inventory and the
+ordered commands in each agent workflow. Use `rvw <tool> --help` for options
+and a generated example. Every parser accepts `--json`.
+Existing JSON handlers keep their contracts. Commands without a JSON handler
+return their text in `output` with the common envelope. Exit codes remain
+those of the command. Unhandled JSON-mode exceptions return a common error
+and exit 2. Exit 0 alone never creates a pass verdict.

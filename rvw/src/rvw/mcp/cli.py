@@ -7,7 +7,7 @@ import sys
 
 def register(subparsers) -> None:
     p = subparsers.add_parser("mcp", help="MCP server (stdio) exposing the rvw tools to agents", description=__doc__)
-    p.add_argument("action", nargs="?", choices=("audit",), help="audit interface declarations")
+    p.add_argument("action", nargs="?", choices=("audit", "command-map"), help="audit interface declarations")
     p.add_argument("--list", action="store_true", help="print the tools and exit (needs no MCP SDK)")
     p.add_argument("--profile", choices=("core", "verification", "formal", "arch", "debug", "soc", "all"), default="all")
     p.add_argument("--workflow", help="workflow id from rvw agent guide")
@@ -23,12 +23,26 @@ def register(subparsers) -> None:
 def run(args) -> int:
     from .registry import Registry
 
+    if getattr(args, "action", None) == "command-map":
+        from .command_map import command_map
+        report = command_map()
+        if args.json:
+            print(json.dumps(report, indent=1))
+        else:
+            for workflow in report["workflows"]:
+                print(workflow["id"])
+                for step in workflow["steps"]:
+                    print("  rvw " + " ".join(step["cli"]))
+            print("All commands:")
+            for command in report["commands"]:
+                print(command["command"])
+        return 0
     if getattr(args, "transport", "stdio") == "sse":
         from pathlib import Path
         from .remote import serve
         if not args.clients:
             raise ValueError("SSE transport requires --clients")
-        serve(json.loads(Path(args.clients).read_text()), args.host, args.port)
+        serve(json.loads(Path(args.clients).read_text()), args.host, args.port, profile=args.profile, workflow=args.workflow)
         return 0
     only = set(args.only.split(",")) if args.only else None
     from rvw.common.project import load_project
