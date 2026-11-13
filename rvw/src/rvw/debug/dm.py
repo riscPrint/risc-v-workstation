@@ -68,6 +68,7 @@ class DebugModule:
         self.hartsel = 0
         self.hasel = 0
         self.hawindowsel = 0
+        self._hawindows = {}
         self.ndmreset = 0
         self.data = [0] * 12
         self.progbuf = [0] * 16
@@ -100,8 +101,8 @@ class DebugModule:
     def selected(self):
         indices = {self.hartsel}
         if self.hasel and self.p['hart_array']:
-            base = self.hawindowsel * 32
-            indices |= {base + i for i in range(32) if (getattr(self, '_hawindow', 0) >> i) & 1}
+            indices |= {bank * 32 + i for bank, mask in self._hawindows.items()
+                        for i in range(32) if (mask >> i) & 1}
         return sorted(indices)
 
     def state(self, index):
@@ -161,7 +162,7 @@ class DebugModule:
         if address == HAWINDOWSEL:
             return self.hawindowsel if self.p['hart_array'] else 0
         if address == HAWINDOW:
-            return getattr(self, '_hawindow', 0) if self.p['hart_array'] else 0
+            return self._hawindows.get(self.hawindowsel, 0) if self.p['hart_array'] else 0
         if address == HALTSUM0:
             base = self.hartsel & ~31
             return sum(1 << i for i in range(32) if self.state(base + i) == 'halted')
@@ -220,7 +221,7 @@ class DebugModule:
         elif address == HAWINDOWSEL and self.p['hart_array']:
             self.hawindowsel = value & 0x7fff
         elif address == HAWINDOW and self.p['hart_array']:
-            self._hawindow = value & sum(1 << i for i in range(32)
+            self._hawindows[self.hawindowsel] = value & sum(1 << i for i in range(32)
                                          if self.hawindowsel * 32 + i < len(self.slots))
         elif address == DMCS2 and self.p['haltgroups']:
             if value & 2 and not value & 1:
