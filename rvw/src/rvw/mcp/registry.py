@@ -94,7 +94,8 @@ def discover_resources(only: set[str] | None = None) -> tuple[list[tuple], list[
 
 class Registry:
     def __init__(self, tools: list[ToolSpec], jobs: JobManager | None = None, sync_s: float | None = None,
-                 max_text: int | None = None, project: str | None = None):
+                 max_text: int | None = None, project: str | None = None,
+                 profile: str = "all", workflow: str | None = None):
         self.project = project
         self.jobs = jobs or JobManager()
         self.sync_s = float(os.environ.get("RVW_MCP_SYNC_S", SYNC_S)) if sync_s is None else sync_s
@@ -104,7 +105,9 @@ class Registry:
         self.tools: dict[str, ToolSpec] = {}
         self.resources: dict[str, tuple] = {}
         self._validators = {}
-        for t in tools + self._job_tools():
+        from .profiles import select_tools
+        self.catalog = {t.name: t for t in tools}
+        for t in select_tools(tools, profile, workflow) + self._job_tools() + self._meta_tools():
             if t.name in self.tools:
                 raise ValueError(f"duplicate MCP tool name {t.name!r}")
             self.tools[t.name] = t
@@ -113,13 +116,34 @@ class Registry:
             self._validators[t.name] = validator(t.input_schema)
 
     @classmethod
-    def discover(cls, only: set[str] | None = None, *, project: str | None = None) -> tuple["Registry", list[str]]:
+    def discover(cls, only: set[str] | None = None, *, project: str | None = None, profile: str = "all", workflow: str | None = None) -> tuple["Registry", list[str]]:
         tools, problems = discover(only)
-        registry = cls(tools, project=project)
+        registry = cls(tools, project=project, profile=profile, workflow=workflow)
         resources, more = discover_resources(only)
         for uri, name, description, reader in resources:
             registry.resources[uri] = (name, description, reader)
         return registry, problems + more
+
+    def _meta_tools(self):
+        from .profiles import describe
+        def search(keyword: str):
+            words = keyword.lower().split()
+            matches = [t for t in self.catalog.values()
+                       if all(w in (t.name + " " + t.description).lower() for w in words)]
+            return {"tools": [{"name": t.name, "purpose": t.description.splitlines()[0],
+                              "profile": describe(t)["profile"]} for t in matches]}
+        def detail(name: str):
+            if name not in self.catalog and name not in self.tools:
+                raise ToolError(f"unknown tool {name!r}")
+            return describe(self.catalog.get(name) or self.tools[name])
+        return [
+            ToolSpec("rvw_tools_search", "Find tools by keywords and show their loading profiles.",
+                     schema({"keyword": {"type": "string"}}, ["keyword"]), search,
+                     annotations={"readOnlyHint": True}, side_effects="read-only", native_tools=(), result_envelope=True),
+            ToolSpec("rvw_tools_describe", "Describe a tool, its arguments, effects and loading profile.",
+                     schema({"name": {"type": "string"}}, ["name"]), detail,
+                     annotations={"readOnlyHint": True}, side_effects="read-only", native_tools=(), result_envelope=True),
+        ]
 
     def read_resource(self, uri: str) -> str:
         if uri not in self.resources:
