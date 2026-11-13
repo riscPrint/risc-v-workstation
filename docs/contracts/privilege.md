@@ -431,3 +431,16 @@ only. It does not establish cache data effects. Functional CSR domains include
 senvcfg and RV32 H mstatush. Existing strict C1/Spike comparison requirements
 apply. Shared access probes accept XLEN 32/64, with MPV and tohost transport
 selected for that XLEN. RV64 code remains unchanged by the RV32 path.
+
+## Sscofpmf 1.0 programs
+
+`rvw.privilege/1` accepts `kind = "sscofpmf"`, `spec_version = "Sscofpmf-1.0"`
+and `cofpmf.counter` from 3 to 31. The first profile requires RV64 and Zihpm.
+Optional `event_selector` is a nonzero project event value below bit 56.
+Hardware-event generation also requires `counter_bits = 64`.
+`poll_iterations` is a project execution bound from 32 to 4096, default 512.
+A project event must count the generated instruction loop. Generic code does
+not assign an event number. Hardware rows carry `hardware_event` metadata and
+`reference_unavailable`; native Spike cannot earn their reference pass.
+Software-pending delivery and scountovf probes use normal strict C1 checking.
+The Python Counter unit model is model-based evidence only.

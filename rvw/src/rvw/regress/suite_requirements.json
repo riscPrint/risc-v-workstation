@@ -286,5 +286,17 @@
       "ext:zicbop",
       "cache-block-size"
     ]
+  },
+  {
+    "name": "sscofpmf",
+    "source": "examples/privilege/sscofpmf.json",
+    "requires": [
+      "xlen:64",
+      "mode:S",
+      "mode:U",
+      "pmp",
+      "ext:sscofpmf",
+      "ext:zihpm"
+    ]
   }
 ]

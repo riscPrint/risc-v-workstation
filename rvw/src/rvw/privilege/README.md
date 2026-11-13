@@ -919,3 +919,33 @@ not a measured cache effect and earns no cache-effect group. The suite checks
 permission, legal writes and traps. Cache data writeback, eviction, MPRV,
 translation/protection faults, memory ordering and DUT qualification remain
 separate. Native Spike self-checks do not establish physical cache behavior.
+
+## Sscofpmf overflow controls and delivery
+
+`kind = "sscofpmf"` pins `Sscofpmf-1.0` from the 20260120 ISA manual.
+The project selects an implemented counter from 3 to 31. RV64, Zihpm,
+S-mode, U-mode and PMP are required by this first profile.
+`examples/privilege/sscofpmf.json` generates 12 programs. Six check scountovf
+visibility in M/S/U with mcounteren clear/set. M-mode visibility is unconditional
+in the pinned text. Six check software-pending LCOFI delivery in M/S with
+local/global interrupt masking, cause 13, the saved PC range, entry interrupt
+masking and pending clearing. These delivery cases do not generate a counter
+overflow. They use writable mip/sip pending bits.
+
+Optional `cofpmf.event_selector` adds three hardware-event programs. The project
+must also declare `counter_bits = 64`. The selector must count the generated
+instruction loop. Programs preload the counter near wrap, run a bounded loop,
+and check counter wrap, OF and eventual pending. Separate cases check OF
+notification suppression and MINH counting suppression. `poll_iterations`
+selects the project bound from 32 to 4096. This bound is not an ISA delivery
+latency. A missing event is a program failure. Spike has no project HPM event
+source, so these three reference results remain inconclusive. The small Python
+`Counter` model has unit checks for wrap, notification suppression, clearing
+pending, rearm and inhibit. Those checks are model-based, not program execution.
+
+Builds use the existing C1 suites, functional groups and privilege checker.
+`rvw regress plan` can select `sscofpmf` from declared features. No DUT run,
+RV32 high-word controls, VS filtering or concurrent overflow sources are claimed.
+The installed Spike needs Zihpm to retain HPM mcounteren bits. It also masks
+M-mode scountovf with mcounteren, contrary to the pinned text. The M/clear
+program retains the specified expectation and reports this mismatch.
