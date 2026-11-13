@@ -14,12 +14,21 @@ class Replay:
         self.routes = declaration['routes']
         if any(context >= self.plic.map.contexts or pin not in cpu.platform.irq_inputs for context, pin in self.routes):
             raise ValueError('PLIC evidence routes differ from platform inputs')
-        symbols = cpu.elf.symbols
-        self.request = int(declaration['request_address'], 16)
-        self.ack = int(declaration['ack_address'], 16)
-        if symbols.get('stimulus_step') != self.request or symbols.get('stimulus_ack') != self.ack:
-            raise ValueError('PLIC evidence mailbox differs from ELF')
+        initial = declaration.get('initial_levels', [])
+        if not isinstance(initial, list) or any(type(source) is not int or not 1 <= source <= self.plic.map.sources for source in initial):
+            raise ValueError('invalid initial PLIC source levels')
+        for source in initial:
+            self.plic.set_level(source, True)
         self.plan = declaration['stimulus']
+        self.request = self.ack = None
+        if self.plan or 'request_address' in declaration or 'ack_address' in declaration:
+            if 'request_address' not in declaration or 'ack_address' not in declaration:
+                raise ValueError('PLIC stimuli require request and acknowledgement addresses')
+            self.request = int(declaration['request_address'], 16)
+            self.ack = int(declaration['ack_address'], 16)
+            symbols = cpu.elf.symbols
+            if symbols.get('stimulus_step') != self.request or symbols.get('stimulus_ack') != self.ack:
+                raise ValueError('PLIC evidence mailbox differs from ELF')
         self.started = 0
         self.waiting = deque()
         self.requests = deque()
