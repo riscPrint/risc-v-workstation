@@ -97,6 +97,8 @@ def test_debug_result_requires_userspace_and_shutdown(tmp_path, status, console,
     clock = wave_clock(result.to_dict(), {})
     assert clock.known and clock.time(100) == 58
     assert result.to_dict()['details']['boot_trace_cycle_base'] == 0
+    assert result.wall_s is None
+    assert result.to_dict()['details']['slice_wall_seconds'] == 1
     elf.write_bytes(b'different ELF')
     with pytest.raises(ValueError, match='ELF differs'):
         module.convert(report, checkpoint, elf, tmp_path / 'bad')

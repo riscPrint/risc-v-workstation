@@ -524,6 +524,13 @@ counts are cumulative decimal strings. `slice_cycles` and `slice_retired` count
 only this process. Rates include the cycle loop, RTL restore and checkpoint writes. They exclude
 compilation and initial input and RAM loading. A bounded result does not establish Linux userspace or shutdown.
 
+The diagnostic C1 view uses cumulative counters. It leaves C1 `wall_s` unknown
+for a resumed slice because that slice's time does not cover those counters.
+Its `details.slice_wall_seconds`, `slice_cycles` and `slice_retired` retain the
+current process metrics. The project `linux/summary.py` sums the wall times of
+one contiguous history from reset before it computes cumulative rates. Missing
+or duplicate slice reports are refused.
+
 ## Live device power-off and UART discovery
 
 A live `syscon-poweroff` device names its `region` and integer `value` in the

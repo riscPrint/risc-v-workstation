@@ -35,7 +35,8 @@ def convert(report: Path, checkpoint: Path, elf: Path, out: Path, *, wave=None, 
     complete = sample['status'] == 'shutdown' and userspace
     result = RunResult(status='pass' if complete else 'timeout', core='vexiiriscv',
         config='rv64imacsu_linux', elf=str(elf), elf_sha256=digest, seed=1, mem_latency=1,
-        cycles=int(sample['cycle']), instret=int(sample['retired']), wall_s=sample['wall_seconds'],
+        cycles=int(sample['cycle']), instret=int(sample['retired']),
+        wall_s=sample['wall_seconds'] if int(sample.get('slice_cycles', -1)) == int(sample['cycle']) else None,
         message='userspace marker and power-off observed' if complete else 'stopped boot slice; OS completion not established',
         artifacts=artifacts, extra={'rtl_sha256': state['identity']['rtl'],
             'inconclusive': 'diagnostic view of a project boot slice; C1 replay is not bound',
@@ -51,7 +52,9 @@ def convert(report: Path, checkpoint: Path, elf: Path, out: Path, *, wave=None, 
                             'wave_time_origin': int(sample['wave_time_origin']), 'boot_trace_cycle_base': 0}
                            if 'wave_cycle_origin' in sample else {}),
                         'wave_time_per_cycle': 11,
-                        'timer_mask': sample.get('timer_mask'), 'trace_records': sample.get('trace_records')}})
+                        'timer_mask': sample.get('timer_mask'), 'trace_records': sample.get('trace_records'),
+                        'slice_wall_seconds': sample['wall_seconds'],
+                        'slice_cycles': sample.get('slice_cycles'), 'slice_retired': sample.get('slice_retired')}})
     save_run(result, out / 'result.json')
     return result.to_dict()
 

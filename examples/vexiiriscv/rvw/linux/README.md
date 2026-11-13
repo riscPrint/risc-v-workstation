@@ -23,6 +23,10 @@ compressed instructions, ELF loading, initramfs, the timer and the 8250 console.
 It disables SMP, floating point, modules, networking and block storage.
 It also disables virtual terminals, pseudo terminals, namespaces, futexes,
 ELF core dumps and POSIX timer syscalls. The 8250 driver has one UART slot.
+The crypto menu is enabled only to select `CRYPTO_MANAGER_DISABLE_TESTS`.
+With the menu disabled, that setting is unavailable and the mandatory
+BLAKE2s library runs its long self-test at boot. The minimal workload keeps
+the library and disables those optional boot tests.
 `lpj=1000` avoids delay-loop calibration. This is a simulation workload setting.
 It is not a timing calibration for physical hardware.
 
@@ -42,6 +46,22 @@ power-off register at `0x100000`. OpenSBI writes `0x5555` there for an SBI
 shutdown request. The boot-slice harness reports `shutdown` only after that
 write. Check the console marker as a separate condition. Standard C1 payload
 preparation keeps its previous map unless `--resumable` is selected.
+
+See [boot an OS on your core](../../../../docs/INTEGRATION_GUIDE.md#boot-an-os-on-your-core)
+for the complete RTL boot, source pins, build commands and measured limits.
+The recipe reached the marker and power-off after 38,946,382 cycles and
+13,854,575 retirements. It ran in two processes for 1,125.10 seconds in total.
+Its average rate was 12,314.04 instructions/s. Both processes wrote no C2
+or wave. These are shared-host measurements.
+Sum all slice times before you report a full-boot rate:
+
+```sh
+python rvw/linux/summary.py "$RUN_ROOT"/slice-*/result.json
+```
+
+Run this command from the example directory. Missing or duplicate slices
+are refused. The diagnostic C1 view leaves cumulative wall time unknown
+after restore. Its details keep the current slice's time and counter deltas.
 
 Linux receives both the current `riscv,isa-base` and `riscv,isa-extensions`
 properties and the legacy `riscv,isa` property. The current properties are
