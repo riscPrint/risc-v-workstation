@@ -1841,6 +1841,34 @@ preserves four-state values; `--check-x` fails on any observed X/Z, including
 startup. Use a declared reset sequence when startup state matters. Verilator
 uses two-state simulation and refuses X checks and X/Z input values.
 
+The event file can load a captured register state before replay:
+
+```json
+"state": {
+  "trace": "capture.fst",
+  "time": 125,
+  "scope": "testbench.dut",
+  "registers": ["counter_a", "counter_b"]
+}
+```
+
+The trace path is relative to the event file. VCD and FST are accepted.
+`time` uses trace timestamp units. The first event row must match every traced
+top-level input, including clock levels and reset values. The selected registers
+must cover all DUT register bits. The loader checks this against the elaborated
+model. It excludes generated property-history registers. A Boolean monitor wire
+that aliases DUT state does not remove that state from the coverage check.
+
+This route requires Icarus and flat top-level register state. It refuses memory
+state, child-module state, derived clocks and internal asynchronous reset controls.
+The loader lets setup settle, then deposits the recorded four-state values.
+Logical event time zero starts at that point. No assertion is checked during
+setup. Property histories start empty and count subsequent property events.
+Result `state_load` records the trace hash, timestamp, scope, register values and
+state-bit count. X checks can observe unknown loaded state and its later removal
+by an independent clock or an asynchronous reset. These are finite native
+continuation observations. They do not prove reachability or full formal replay.
+
 Icarus also replays explicit top-input raw property events: `@(irq)`,
 `@(negedge rst)` and event lists such as `@(posedge irq or negedge rst)`.
 The event input must be a top-level port. Edge terms must be scalar.

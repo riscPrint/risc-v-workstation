@@ -22,7 +22,7 @@ def parse(text):
     return events
 
 
-def rewrite(source, top):
+def rewrite(source, top, force=False):
     text = re.sub(r'//[^\n]*|/\*.*?\*/|"(?:\\.|[^"\\])*"',
                   lambda m:' '*len(m[0]), source, flags=re.S)
     if PREFIX in text:
@@ -43,7 +43,7 @@ def rewrite(source, top):
             terms = parse(event)
             ordinary = len(terms)==1 and terms[0]['edge']=='posedge'
             candidates.append((module, start, body, clock, event_end, event, terms, ordinary))
-    if all(row[-1] for row in candidates):
+    if not force and all(row[-1] for row in candidates):
         return source, []
     if re.search(r'\b(checker|bind)\b', text):
         raise Unsupported('raw_event_scope', 'checker and bind replay needs instance clocks')

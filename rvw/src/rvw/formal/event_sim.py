@@ -41,7 +41,7 @@ def events(data, inputs, clocks):
     return scale, rows
 
 
-def testbench(top, ports, observed, scale, rows, raw_pulses=None):
+def testbench(top, ports, observed, scale, rows, raw_pulses=None, state=None):
     lines = [f'`timescale {scale}/{scale}', 'module rvw_event_top;']
     inputs = [p for p in ports if p.direction == 'input']
     outputs = [p for p in ports if p.direction == 'output']
@@ -62,6 +62,12 @@ def testbench(top, ports, observed, scale, rows, raw_pulses=None):
             lines += [f'dut.{name} = 0;' for name in triggered]
         for name, value in changes.items():
             lines.append(f"{common.vid(name)} <= {len(value)}'b{value};")
+        if index == 0 and state:
+            # Let initialization and input-triggered NBA updates finish before
+            # depositing the recorded state. Logical replay time starts here.
+            lines.append('#1;')
+            for register in state['registers']:
+                lines.append(f"dut.{common.vid(register['signal'])} = {register['width']}'b{register['value']};")
         for name in observed:
             lines.append(f'$strobe("RVW_OBSERVE {at} {name} %b", {common.vid(name)});')
         previous = at
@@ -90,13 +96,15 @@ def run(args):
         common.clear_outputs(out, 'result.json', 'coverage.dat', 'compile.log', 'run.log')
         spec_capture = Capture(out / 'event-inputs')
         event_file = spec_capture.file(Path(args.events))
-        snap = InputSnapshot(Namespace(verilog=args.verilog, checks=None, frontend='temporal', raw_events=True, top=args.top), out)
+        event_data = json.loads(event_file.copy.read_text())
+        snap = InputSnapshot(Namespace(verilog=args.verilog, checks=None, frontend='temporal',
+                                       raw_events=True, raw_events_force=event_data.get('state') is not None,
+                                       top=args.top), out)
         ports = common.module_ports(snap.sources, args.top, out, args.timeout,
                                     snapshot=snap, allow_async_reset=True)
         if any(p.direction == 'inout' for p in ports):
             raise ValueError('event replay refuses inout ports')
         inputs = {p.name: p.width for p in ports if p.direction == 'input'}
-        event_data = json.loads(event_file.copy.read_text())
         bindings = snap.raw_events
         from .raw_events import validate, rewrite, pulses
         validate(bindings, inputs)
@@ -110,15 +118,22 @@ def run(args):
         if set(observed) - {p.name for p in ports if p.direction == 'output'}:
             raise ValueError('observations must name top-level outputs')
         scale, rows = events(event_data, inputs, clocks)
+        state = None
+        if event_data.get('state') is not None:
+            if args.backend != 'icarus':
+                raise ValueError('trace state replay requires Icarus four-state semantics')
+            from .state_overlay import load
+            state = load(event_data['state'], spec_capture, event_file, out, args.top,
+                         inputs, rows[0][1], args.timeout)
         if args.backend == 'verilator' and (args.check_x or any(set(v.lower()) & set('xz') for _, row in rows for v in row.values())):
             raise ValueError('four-state replay and --check-x require Icarus')
         original = '\n'.join((out / r['frontend']).read_text() for r in snap.files if r['kind'] == 'source')
-        original, _ = rewrite(original, args.top)
+        original, _ = rewrite(original, args.top, force=state is not None)
         simulation, properties = lower(original, simulation=True)
         model = out / 'simulation.sv'
         model.write_text(simulation)
         bench = out / 'testbench.sv'
-        bench.write_text(testbench(args.top, ports, observed, scale, rows, pulses(rows, bindings, inputs)))
+        bench.write_text(testbench(args.top, ports, observed, scale, rows, pulses(rows, bindings, inputs), state))
         snap.seal(model); snap.seal(bench)
         result = RunResult(status='error', config='formal-event-simulation',
                            source={'model_sha256': digest(model)},
@@ -166,7 +181,7 @@ def run(args):
                 (out / 'coverage.dat').write_text('\n'.join(coverage) + '\n')
         result.update(wall_s=time.monotonic()-started, backend=args.backend, x_semantics='four-state' if args.backend == 'icarus' else 'two-state; X not measured',
                       event_capture=spec_capture.record(), tools={'backend': args.backend},
-                      property_events=bindings, raw_event_sampling='settled values before each timestamp input update' if bindings else None)
+                      state_load=state, property_events=bindings, raw_event_sampling='settled values before each timestamp input update' if bindings else None)
         snap.finish(result)
         (out / 'result.json').write_text(json.dumps(result, indent=2) + '\n')
         print(json.dumps(result, indent=2))

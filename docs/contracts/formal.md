@@ -700,6 +700,7 @@ same-event disable cancellation and properties outside the top module.
 It does not change the formal solver's event or state model. Simulation counts
 and code coverage retain finite-prefix evidence limits. A failed compilation
 cannot retain earlier coverage or runtime logs.
+
 ## Sail state slices
 
 `rvw formal sail-state` and MCP `formal_sail_state` emit
@@ -716,3 +717,22 @@ valid operation events and observed results. FP outputs have no x0
 suppression. Invalid privilege encodings disable privileged entry checks.
 Full CSR, privileged and FP state transitions remain excluded. A passing
 kernel oracle does not prove a core instruction implementation.
+
+## Trace-selected timed replay state
+
+`rvw.formal-events/1` can contain `state` with `trace`, `time`, `scope` and
+`registers`. The trace is VCD or FST and is captured with the event input.
+Relative trace paths use the event file's directory. The initial input row must
+match every trace input at the selected timestamp. Named register values must
+cover all elaborated DUT state bits. Generated monitor registers and native
+formal samplers are excluded. Alias wires do not exempt DUT state.
+
+The current route loads only flat top-level register state with input-driven
+clocks and asynchronous reset controls. It refuses memories, child-module state,
+incomplete state and input-phase mismatches. Icarus setup settles before state
+is deposited. Logical replay time starts after the deposit. Property clocks
+use private pre-update pulses, so setup cannot count as a property attempt.
+Monitor histories restart. C1 `state_load` records the captured trace hash,
+timestamp, timescale, scope, loaded register values, state-bit count and limits.
+Native four-state observations retain finite-continuation scope. This format
+adds no multi-clock state loading to the formal solver.
