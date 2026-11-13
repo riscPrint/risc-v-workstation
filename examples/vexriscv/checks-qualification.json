@@ -6,8 +6,8 @@
     "csr.read": {
       "generated": 1,
       "bound": 1,
-      "proven": null,
-      "bounded": null,
+      "proven": 0,
+      "bounded": 0,
       "fired": 0,
       "firing_count": 0,
       "unbound": 0,
@@ -16,8 +16,8 @@
     "csr.state": {
       "generated": 1,
       "bound": 1,
-      "proven": null,
-      "bounded": null,
+      "proven": 0,
+      "bounded": 0,
       "fired": 0,
       "firing_count": 0,
       "unbound": 0,
@@ -26,8 +26,8 @@
     "csr.access": {
       "generated": 1,
       "bound": 1,
-      "proven": null,
-      "bounded": null,
+      "proven": 0,
+      "bounded": 0,
       "fired": 0,
       "firing_count": 0,
       "unbound": 0,
@@ -36,8 +36,8 @@
     "hpm.count": {
       "generated": 2,
       "bound": 2,
-      "proven": null,
-      "bounded": null,
+      "proven": 0,
+      "bounded": 0,
       "fired": 0,
       "firing_count": 0,
       "unbound": 0,
@@ -46,8 +46,8 @@
     "hpm.read": {
       "generated": 4,
       "bound": 4,
-      "proven": null,
-      "bounded": null,
+      "proven": 0,
+      "bounded": 0,
       "fired": 0,
       "firing_count": 0,
       "unbound": 0,
@@ -56,8 +56,8 @@
     "stream.valid_hold": {
       "generated": 22,
       "bound": 22,
-      "proven": null,
-      "bounded": null,
+      "proven": 0,
+      "bounded": 1,
       "fired": 0,
       "firing_count": 0,
       "unbound": 0,
@@ -66,8 +66,8 @@
     "stream.payload_stable": {
       "generated": 20,
       "bound": 20,
-      "proven": null,
-      "bounded": null,
+      "proven": 0,
+      "bounded": 0,
       "fired": 0,
       "firing_count": 0,
       "unbound": 0,
@@ -76,8 +76,8 @@
     "vec.index": {
       "generated": 1,
       "bound": 1,
-      "proven": null,
-      "bounded": null,
+      "proven": 0,
+      "bounded": 0,
       "fired": 0,
       "firing_count": 0,
       "unbound": 0,
@@ -86,8 +86,8 @@
     "enum.legal": {
       "generated": 5,
       "bound": 5,
-      "proven": null,
-      "bounded": null,
+      "proven": 0,
+      "bounded": 0,
       "fired": 0,
       "firing_count": 0,
       "unbound": 0,
@@ -341,7 +341,7 @@
       "elf_sha256": "fc7631a142b19c5cf1a2b6be5e698ef53c1549ce7f80944020cd650d681fbd95"
     }
   ],
-  "formal": null,
+  "formal": "rvw/out/qualification-proof/result.json",
   "limitations": [
     "Null means NOT RUN. Zero means no matching observation in supplied evidence.",
     "Simulation covers exercised behavior only. Formal requirements are project associations.",
@@ -350,19 +350,20 @@
   "observed": "2026-11-13",
   "core_revision": "a62c145aa042a5de874344e0a7683bd7c8c8c870",
   "assertions_compiled": true,
-  "programs": {
-    "pass": 49
-  },
+  "formal_depth": 4,
+  "formal_activation": "not_measured",
   "c1_status": {
     "pass": 49
   },
-  "limits": [
-    "VexRiscv 49 aligned ISA programs only. VexiiRiscv and composed SoC NOT RUN in this capture.",
-    "No formal run in this capture. Null formal counts mean NOT RUN.",
-    "Zero firings on these programs does not establish input closure or whole-core qualification."
-  ],
   "artifacts_sha256": {
     "inventory": "612d3e364284ead9e5bda1581d981cf0361fd9a11df4c65f4629a3f2d6cc519f",
-    "log": "a903ae0bf10ce5ffbae1897da5a8041e6230ba22b87a0a950b3e7c2f7ed9e081"
+    "formal": "806d0870c9eeb9163782cbabef0bf8d7bb73c5b37d3e69c42588c8146b1c4e83"
+  },
+  "limits": [
+    "One selected check has a bounded pass at depth 4 with two initial reset samples. No activation evidence or unbounded proof.",
+    "Bounded simulation covers only the recorded programs. Source changes during this item are uncommitted in the capture. No release acceptance."
+  ],
+  "programs": {
+    "pass": 49
   }
 }

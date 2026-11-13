@@ -998,3 +998,50 @@ conditional obligation, not a waiver. A missing stream, missing Bool or duplicat
 binding fails elaboration. See the three VexRiscv project bindings in
 `examples/vexriscv/rvw/src/main/scala/rvwvex/CheckSemantics.scala` and their
 [wave evidence](../examples/vexriscv/checks-evidence/README.md).
+
+### Connected captures on three designs
+
+These native results were recorded on 2026-11-13. Bound means that the check
+was compiled into the simulation. Fired counts check IDs, then total events.
+Unbound means a generated check had no native binding. Each selected formal
+check passed BMC through depth 4 with two initial reset samples. No activation
+measurement or unbounded proof was obtained. All other checks remain unproven.
+
+| Design and programs | Generated | Bound | Proven | Bounded | Fired IDs / events | Unbound and reason |
+|---|---:|---:|---:|---:|---:|---|
+| VexRiscv, 49 aligned ISA programs | 57 | 57 | 0 | 1 | 0 / 0 | 0; all native bindings present |
+| VexiiRiscv, scratch and absent-CSR programs | 25 | 25 | 0 | 1 | 1 / 2 | 0; all native bindings present |
+| Composed SoC, RV32 stub hello | 17 | 17 | 0 | 1 | 0 / 0 | 0; all native bindings present |
+
+VexRiscv has 49 C1 passes. VexiiRiscv has one C1 pass and one C1 failure.
+`stream.valid_hold:PcPlugin_logic_harts_0_output` fired twice in the absent-CSR
+program. Its disposition remains open. The composed SoC has one C1 pass and
+its UART output is `hello\n`. These captures use different cores and programs.
+They do not transfer ISA support or check coverage between designs.
+
+The formal selections are VexRiscv `stream.valid_hold:iBus_cmd`, VexiiRiscv
+`stream.valid_hold:FetchCachelessPlugin_logic_bus_cmd`, and the composed SoC's
+`stream.valid_hold:uart.uart.io_write`. The last check stays in the full SoC
+hierarchy. The preparer rejects a shared owner module that would instantiate
+more than one selected assertion. It retains memory init files. Reset is
+constrained in the selected check's clock domain. Other inputs stay arbitrary.
+
+Record files: [VexRiscv](../examples/vexriscv/checks-qualification.json),
+[VexiiRiscv](../examples/vexiiriscv/checks-qualification.json), and
+[SoC](../SpinalSoc/examples/stub/checks-qualification.json).
+
+Set `RVW_CHECKS_ISA=1` for the opt-in VexRiscv or VexiiRiscv CSR runtime entry.
+The SoC stub adapter accepts the same flag. It writes the inventory and check
+observations beside C1 and keeps a check firing as a C1 failure. Set
+`RVW_SBT_LOCK=sbt-csr` when that SoC build uses only this worker's directories.
+
+For formal generation, also set `RVW_CHECKS_FORMAL=1`. The runtime then emits
+formal RTL and its inventory without running a simulation. The SoC entry is
+`example.Run 17 20000`, with `RVW_SOC_CHECKS_OUT` set to the capture directory.
+Use `scripts/prepare-connected-formal.py --rtl DIR --inventory CHECKS_JSON
+--out NEW_DIR --check-id ID` to prepare a selected check. Then run
+`rvw formal regress NEW_DIR/regress.toml --out RESULT_DIR --timeout 60 --jobs 1`.
+The helper requires formal-mode RTL and a one-bit local fail signal. It removes
+native assertions before loading the separate selected assertion. The regression
+runner checks that one assertion remains. The current helper uses rising clocks
+and depth 4 by default. It does not infer asynchronous or analog behavior.

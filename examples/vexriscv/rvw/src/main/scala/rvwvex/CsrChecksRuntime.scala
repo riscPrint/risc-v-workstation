@@ -27,6 +27,10 @@ object CsrChecksRuntime {
       ChecksConfig(streamCancellations = if (allChecks) CheckSemantics.cancellations else Nil,
         mode = if (allChecks) Mode.Both else Mode.Monitor,
         enable = if (allChecks) Seq("*") else Seq("csr.*", "hpm.*"), reportPath = new File(out, "checks.json").getPath))
+    if (sys.env.get("RVW_CHECKS_FORMAL").contains("1")) {
+      config.includeFormal.generateVerilog(new VexRiscv(core))
+      return
+    }
     val simConfig = SimConfig.withConfig(config).workspacePath(out.getPath).workspaceName("native").withVerilator.addSimulatorFlag("--assert")
     if (sys.env.get("RVW_CHECKS_WAVE").contains("1")) simConfig.withWave
     val compiled = simConfig.compile(new VexRiscv(core))
