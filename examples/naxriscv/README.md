@@ -1,5 +1,14 @@
 # NaxRiscv project example
 
+Current timing limit: the later drain model meets the criterion on 5 of 15
+nonzero RTL changes and 14 of 24 total pairs. Ten deltas still fail.
+Training/held-out IPC MAE is 7.33%/9.48%. The earlier tables below retain
+their stage results, including the 2-of-15 result in PR #1218. Use the
+[latest model stage](../../rvw/src/rvw/ooo/README.md#resource-study-drain)
+and [PR #1231](https://github.com/riscPrint/risc-v-workstation/pull/1231)
+for current scores. Structure-size decisions still need RTL measurements.
+
+
 This folder holds the project files for an external
 [NaxRiscv](https://github.com/SpinalHDL/NaxRiscv) checkout. NaxRiscv is an
 out-of-order RISC-V core written in SpinalHDL. This example tests the generic
@@ -285,7 +294,7 @@ Mean absolute IPC error: 14.3 % on training, 24.9 % held out (maximum 42.7 %).
 The `branches` event matches exactly on every program (Pearson r = 1). Only
 towers is inside the 10 % IPC budget; `sufficient_coverage` is false (one event
 family). The model is too slow on high-IPC memory-heavy code: its back-end share
-on memcpy is 64 % against 36 % in RTL. Candidate causes, not yet tested: the
+on memcpy is 64 % against 36 % in RTL. Candidate causes at this early stage, not tested in that campaign: the
 single load/store port and in-order store issue of the model against NaxRiscv's
 Lsu2, and component cache latency added on every access. This is the first
 out-of-order RTL correlation of the model; it is not a fidelity verdict.
