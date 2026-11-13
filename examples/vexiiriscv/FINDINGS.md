@@ -21,18 +21,14 @@ The exact 19 reviewed trace identities are in `known-findings.json`.
 
 ## VEXII-CHECK-PC-001
 
-Open checker-contract finding, not a confirmed core defect. In the generated
-checks runtime, `PcPlugin_logic_harts_0_output` valid-hold fires twice on the
-absent-CSR program. One of two C1 runs fails. The rule requires a valid offer
-to remain stable while stalled. Whether a legal cancellation explains these
-drops is not yet established. No ISA deviation is established.
+Resolved checker-contract finding. The earlier PC payload and divider
+valid-hold events lacked cancellation bindings. The cancellation-aware
+51-program rerun has 51 passes and zero firings. This does not establish a
+core defect. New backpressure runs retain other stream findings.
 
-Reproduce with the generated absent-supervisor-CSR program and checked
-runtime in [the example README](README.md#generated-csr-catalog-controls).
-The exact failing inventory is in [checks-qualification.json](checks-qualification.json).
-Sources: [#921](https://github.com/riscPrint/risc-v-workstation/pull/921),
-[#940](https://github.com/riscPrint/risc-v-workstation/pull/940).
-No minimal isolated core reproduction or specification violation is confirmed.
+Reproduction and current counts: [generated checks](../../SpinalChecks/README.md).
+Sources: [#1136](https://github.com/riscPrint/risc-v-workstation/pull/1136)
+and [#1171](https://github.com/riscPrint/risc-v-workstation/pull/1171).
 
 ## Other tools
 
@@ -41,19 +37,9 @@ VexiiRiscv core defect. Export limits, bounded passes and missing bindings
 remain evidence limits. Reset stimulus was a harness gap in #1128, not a
 core finding. Device and C2 capture bugs fixed in #1147 are tool defects.
 
-## VEXII-ACT4-SM-CSR-001
-
-The `rv32imasu` profile traps on `csrw mhpmevent3, zero` with cause 2.
-The shared catalog defines CSR `0x323` under Sm. The profile declares
-Sm 1.12. The upstream counter plugin supplies unused event selectors as
-zero-valued CSRs, but this profile does not enable it.
-This is one declared-profile compatibility finding, affecting 270 ACT4
-cases before their bodies. A stable-checkout rerun has 270 C1 failures
-and 270 strict Spike first differences. No full trace matches are earned.
-No bootstrap access was removed. No core source was changed.
-See [the decision and trace hashes](rvw/act4-supervisor/README.md#bootstrap-decision).
-
 ## VEXII-CSR-BOOT-001
+
+Alias: VEXII-ACT4-SM-CSR-001. Both IDs refer to the same bootstrap finding.
 
 Confirmed profile compatibility finding, not a confirmed hardware defect.
 The selected RV32 supervisor scaffold writes `mhpmevent3` (CSR `0x323`).

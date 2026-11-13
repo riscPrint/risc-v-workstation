@@ -303,7 +303,12 @@ Missing signal observations, unknown files, empty impact maps or a changed
 database hash retain all affected unknown tests, even beyond the time budget.
 The report shows omitted tests, uncovered signals and any budget overrun.
 This is an advisory scheduling plan. It does not replace a regression gate.
-Held-out regression validation has NOT RUN. MCP exposes `farm_select`.
+Native planted-fault validation now exists. The eight-test point-ranking
+subset misses the fault. Safe coverage fallback runs all 49 tests and finds
+two failures. Reduced selection remains unqualified. See
+[PR #1090](https://github.com/riscPrint/risc-v-workstation/pull/1090)
+and [the measured record](../../../../examples/regression-scale/README.md).
+MCP exposes `farm_select`.
 
 ## Agent workflow plans and events
 

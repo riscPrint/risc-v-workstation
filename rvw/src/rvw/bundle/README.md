@@ -451,8 +451,12 @@ A missing or different hash makes the attempt inconclusive.
 
 `rvw reduce RUN --modes stimulus` reads the original replay's `--stimulus-file`.
 The C1 result must record `stimulus_sha256`. A different input hash is refused.
-The adapter must support this option and execute the supplied events. The bundled
-BOOM and VexRiscv adapters do not yet implement it.
+The adapter must support this option and execute the supplied events.
+The later [VexRiscv reduction recipe](../../../../examples/vexriscv/rvw/reduction/README.md)
+runs real instruction and IRQ reduction through a project adapter (#769).
+Timed UART and private per-hart code reductions add measured slices (#1158).
+These project bindings do not imply arbitrary event support on BOOM or on
+the default VexRiscv adapter.
 
 The JSON input is `{"schema":"rvw.stimulus/1","events":[...]}`.
 Each event has `id`, `kind` (`instruction`, `irq`, `transaction`, or `device`),
@@ -464,8 +468,9 @@ fixed. Each admissible candidate gets a fresh adapter run. Invalid candidates
 are refused before execution. New timeouts do not match an assertion failure.
 A `one_minimal` result means no single group can be removed within these
 constraints. It does not establish a global minimum or verify the adapter's
-implementation of event semantics. Tests use fixture oracles. Real-core and
-arbitrary device schedule support remain open under #152.
+implementation of event semantics. Unit tests use fixture oracles.
+The project-bound native instruction, IRQ, UART and per-hart recipes above
+supply real-core evidence. Arbitrary device schedules remain open under #152.
 
 ## Failure windows from a live server
 
