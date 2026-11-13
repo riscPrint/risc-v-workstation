@@ -33,7 +33,9 @@ def register(subparsers):
     mapped.add_argument('--reset', default='reset', help='Verilog reset port (default reset)')
     mapped.add_argument('--reset-active', choices=('high', 'low'), default='high')
     mapped.add_argument('--bus', action='append', default=[],
-                        help='NAME:PROTOCOL:key=port,... with PROTOCOL req-rsp or valid-ready; repeatable')
+                        help=('NAME:PROTOCOL:key=port,...; repeatable. req-rsp requires cmd_valid,address,rsp_valid,rdata; '
+                      'optional cmd_ready,write,wdata,mask,error,rsp_ready. valid-ready requires '
+                      'valid,ready,address,rdata; optional wdata,mask. Add write_response=1 for store responses.'))
     mapped.add_argument('--rvfi-prefix', help='Prefix of the riscv-formal RVFI ports (default rvfi_ when present)')
     mapped.add_argument('--irq', action='append', default=[], help='MIP_BIT=port interrupt input; repeatable')
     mapped.add_argument('--const', action='append', default=[], help='port=value constant input; repeatable')

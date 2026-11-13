@@ -9,10 +9,9 @@ Use [AGENT_ARCH.md](AGENT_ARCH.md) for gem5 and performance exploration.
 
 Follow the numbered steps in order. A command error is a stop for that step.
 Save its exit code and log. Fix its cause before you continue.
-`rvw doctor` and `rvw init` are planned in
-[#35](https://github.com/riscPrint/risc-v-workstation/issues/35) and
-[#36](https://github.com/riscPrint/risc-v-workstation/issues/36).
-The commands below are the current setup path.
+`rvw doctor` and `rvw init` are available. Use the commands below.
+For mapped adapters and optional-tool input examples, use
+[the integration recipes](INTEGRATION_GUIDE.md#project-input-recipes).
 
 ## Setup diagnostics
 

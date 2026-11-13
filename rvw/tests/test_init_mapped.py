@@ -156,3 +156,12 @@ def test_mapped_adapter_has_a_runtime_source(verilog_core):
     assert source.is_file()
     assert 'object RvwMappedRuntime' in source.read_text()
     assert str(source.relative_to(verilog_core)) in result['files']
+
+
+def test_bus_help_names_required_roles(capsys):
+    with pytest.raises(SystemExit) as exc:
+        main(['init', '--help'])
+    assert exc.value.code == 0
+    text = capsys.readouterr().out
+    assert 'cmd_valid,address,rsp_valid,rdata' in text
+    assert 'write_response=1' in text
