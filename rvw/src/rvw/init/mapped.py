@@ -13,7 +13,7 @@ import subprocess
 import tempfile
 
 import rvw
-from .optional import sim_script
+from .optional import sim_script, build_files
 
 PROTOCOLS = {
     'req-rsp': ({'cmd_valid', 'address', 'rsp_valid', 'rdata'},
@@ -249,6 +249,8 @@ def mapped_scaffold(path='.', *, isa, name=None, top=None, verilog_top=None, ver
             if len(found) != 1:
                 raise ValueError('Supply --sbt-project with the core project ID.')
             sbt_project = found[0]
+        # Reuse build-wiring checks. A Scala 2.12 core cannot load in the 2.13 adapter JVM.
+        build_files((root / 'build.sbt').read_text(), sbt_project=sbt_project, db_top=top)
         ports = None
         top_entry = {'kind': 'spinal', 'class': top}
     else:
@@ -387,7 +389,8 @@ ThisBuild / scalaVersion := "2.13.14"
 val workstation = file(sys.env("RVW_HOME")).getCanonicalFile
 val coreSource = file(sys.env.getOrElse("RVW_CORE_SOURCE", "..")).getCanonicalFile
 lazy val root = (project in file("."))
-  .dependsOn({core_dep}ProjectRef(workstation / "RiscvSim", "riscvsim"))
+  .dependsOn({core_dep}ProjectRef(workstation / "RiscvSim", "riscvsim"),
+    ProjectRef(workstation / "SpinalDB/spinaldb", "spinaldb"))
   .settings(name := "rvw-core-adapter", fork := true)
 '''
     march = isa
@@ -456,6 +459,7 @@ exec nice -n 10 "${{RVW_PYTHON:-$RVW_HOME/rvw/.venv/bin/python}}" -m rvw query b
              'rvw/.gitignore': '/out/\n/target/\n/project/target/\n/project/project/\n'}
     if top is not None:
         files['rvw/templates/RvfiPort.scala'] = RVFI_TEMPLATE
+        files['rvw/templates/CoreProbes.scala'] = PROBE_TEMPLATE
     conflicts = write_files(root, files, force=force, dry_run=dry_run)
     return dict(schema='rvw.init/1', status='planned' if dry_run else 'created', exit_code=0, root=str(root),
                 isa=isa, xlen=xlen, mapped=True, files=files, overwritten=conflicts if force else [],
@@ -463,3 +467,17 @@ exec nice -n 10 "${{RVW_PYTHON:-$RVW_HOME/rvw/.venv/bin/python}}" -m rvw query b
                 next=['Review rvw/core-map.json and rvw/cosim.json against the core.',
                       'Run rvw/build-smoke.sh, then rvw regress run --tier quick.',
                       'Run rvw doctor --conformance --json.'])
+
+
+PROBE_TEMPLATE = """// Copy into the core build, which must depend on SpinalProbes/spinalprobes.
+// Call at the real retirement point during elaboration. Probes are off by default.
+import spinal.core._
+import spinalprobes.Probe
+
+object CoreProbes {
+  def apply(retire: Bool, instructionId: UInt): Unit = {
+    Probe.retire("commit", retire, instructionId)
+    // Add branch, stage and stall probes only from actual core signals.
+  }
+}
+"""
