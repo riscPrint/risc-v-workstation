@@ -200,8 +200,9 @@ def analyze(db, config=None):
             if dom.get('reset') or dom.get('soft_reset'):
                 emit('lint.no_reset', i)
         limit = conf.get('lint.max_fanout', {}).get('limit', 512)
-        if len(d.outgoing[i]) > limit and i not in role:
-            emit('lint.max_fanout', i, f'Fan-out {len(d.outgoing[i])} exceeds {limit}.', fanout=len(d.outgoing[i]))
+        fanout = len(d.loads(i))
+        if fanout > limit and i not in role:
+            emit('lint.max_fanout', i, f'Fan-out {fanout} exceeds {limit}.', fanout=fanout)
         naming = conf.get('lint.naming', {})
         group = 'ports' if s['direction'] else ('registers' if s['kind'] == 'reg' else 'signals')
         pattern = naming.get(group)
