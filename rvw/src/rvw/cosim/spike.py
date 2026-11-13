@@ -39,7 +39,7 @@ class _Serialized:
 
 
 # The shim behaviour this code expects (Cosim/spike_shim.cc, rvw_shim_version). Bump both together.
-SHIM_VERSION = 7
+SHIM_VERSION = 8
 SHIM_SOURCE = Path(__file__).resolve().parents[4] / "Cosim/spike_shim.cc"
 REBUILD = "rebuild with Cosim/build.sh"
 
@@ -190,6 +190,8 @@ class Spike:
         if platform.reference_extensions:
             lib.rvw_register_extension.argtypes = [C.c_void_p, C.c_char_p]
             lib.rvw_register_extension.restype = C.c_int
+        lib.rvw_external_pending.argtypes = [C.c_void_p, C.c_uint64, C.c_uint64]
+        lib.rvw_external_pending.restype = None
         lib.rvw_add_hart.argtypes = [C.c_void_p, C.c_uint]
         lib.rvw_select_hart.argtypes = [C.c_void_p, C.c_uint]
         lib.rvw_debug_state.argtypes = [C.c_void_p, C.POINTER(C.c_uint64)]
@@ -262,6 +264,9 @@ class Spike:
             raise ValueError('rebuild Spike shim for ordered external input evidence')
         if self.lib.rvw_external_mip(self.handle, levels):
             raise ValueError(self.error())
+
+    def external_pending(self, mask, levels):
+        self.lib.rvw_external_pending(self.handle, mask, levels)
 
     def step(self, interrupt=0, mmio=None):
         """One reference step. `interrupt` is the cause of a core's interrupt trap event. Only a

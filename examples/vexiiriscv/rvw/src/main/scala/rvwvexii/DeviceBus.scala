@@ -5,7 +5,7 @@ import riscvsim.PluginDevice
 
 /** Project device map. DeviceApiV1 has no core-specific address or interrupt routing. */
 final class DeviceBus(description: File, library: File, seed: Long) extends AutoCloseable {
-  private case class Region(base: Long, size: Long, routes: Seq[(Int, Int)], model: PluginDevice, kind: String)
+  private case class Region(base: Long, size: Long, routes: Seq[(Int, Int)], model: PluginDevice, kind: String, config: ujson.Value)
   private val descriptionJson = ujson.read(java.nio.file.Files.readString(description.toPath))
   private def number(value: ujson.Value): Long = value match {
     case ujson.Str(text) => java.lang.Long.decode(text)
@@ -18,7 +18,7 @@ final class DeviceBus(description: File, library: File, seed: Long) extends Auto
     }
     Region(number(row("base")), number(row("size")), row("irq_map").arr.map { pair =>
       pair(0).num.toInt -> pair(1).num.toInt
-    }.toSeq, new PluginDevice(library, config, seed), ujson.read(config)("model").str)
+    }.toSeq, new PluginDevice(library, config, seed), ujson.read(config)("model").str, ujson.read(config))
   }.toSeq
   private def region(address: Long, bytes: Int) =
     regions.find(r => address >= r.base && address + bytes <= r.base + r.size)
@@ -42,5 +42,16 @@ final class DeviceBus(description: File, library: File, seed: Long) extends Auto
     case Seq(r) => r.model.setInput(input, level)
     case found => throw new IllegalArgumentException(s"stimulus needs exactly one $kind device, found ${found.size}")
   }
+  def isPlic(address: Long, bytes: Int): Boolean = region(address, bytes).exists(_.kind == "plic")
+  def plicEvidence: Option[ujson.Obj] = regions.filter(_.kind == "plic") match {
+    case Seq(r) =>
+      val layout = ujson.Obj.from(r.config("map").obj.toSeq)
+      for (key <- Seq("priority", "pending", "enable", "context"))
+        layout(key) = RiscvNumber(r.base + number(layout(key)))
+      Some(ujson.Obj("schema" -> "rvw.external-interrupts/1", "plic" -> layout,
+        "routes" -> ujson.Arr.from(r.routes.map { case (context, pin) => ujson.Arr(context, pin) })))
+    case _ => None
+  }
+  private def RiscvNumber(value: Long): ujson.Value = ujson.Num(value.toDouble)
   def close(): Unit = regions.foreach(_.model.close())
 }

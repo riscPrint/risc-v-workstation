@@ -958,3 +958,15 @@ RV32 high-word controls, VS filtering or concurrent overflow sources are claimed
 The installed Spike needs Zihpm to retain HPM mcounteren bits. It also masks
 M-mode scountovf with mcounteren, contrary to the pinned text. The M/clear
 program retains the specified expectation and reports this mismatch.
+
+
+### PLIC RTL replay
+
+A C2 header with `external_interrupts.schema = rvw.external-interrupts/1`
+can supply complete accepted-device, mailbox and pin evidence. The cosim
+consumer checks those events against the independent PLIC model before it
+uses device values in Spike. A complete strict match needs no IRQ or MMIO
+synchronization. Legacy captures without these events retain their limit.
+The VexiiRiscv device profile has 12 fresh RTL passes and 12 strict matches:
+six PLIC programs and six M/S delivery programs. See the
+[ordered events and negative controls](../../../../examples/vexiiriscv/plic-results.json).
