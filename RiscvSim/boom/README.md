@@ -215,3 +215,11 @@ fflags/fcsr mismatch at cycle 228. The host stopped the simulator. Its trace
 is incomplete. A native exception log is not guaranteed after host cancellation.
 Three native evidence checks passed. Both DPI launches reused Verilator.
 No extra native build was needed for the Scala scheduling fix.
+
+## Deferred restore and plugin binding
+
+BOOM checkpoint restore and device plugins remain unimplemented.
+See [the binding gaps](CHECKPOINT_GAPS.md) for the native state, memory-agent,
+device, C2 and reference-state work that remains. No restored BOOM run or
+BOOM device-plugin result is claimed. The continuation used two native
+builds and retained the final build for integration failures.
