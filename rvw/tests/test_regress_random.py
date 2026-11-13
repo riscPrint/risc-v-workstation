@@ -24,7 +24,7 @@ def fixture(tmp_path, monkeypatch):
 @pytest.mark.parametrize('changes,status', [({}, 'pass'), ({'trace_complete':False}, 'cosim_error'),
     ({'end_status':'rvfi_error'}, 'cosim_error'), ({'instructions':1}, 'cosim_error'),
     ({'instructions':0}, 'cosim_error'), ({'status':'mismatch'}, 'mismatch'),
-    ({'status':'error'}, 'cosim_error'), ({'synchronized':1}, 'cosim_error')])
+    ({'status':'error'}, 'cosim_error'), ({'applied_masks':['csr']}, 'cosim_error'), ({'synchronized':1}, 'cosim_error')])
 def test_credit_requires_complete_spike_match(tmp_path, monkeypatch, changes, status):
     elf, run, comparison = fixture(tmp_path, monkeypatch)
     comparison.update(changes)
@@ -91,16 +91,29 @@ compiler = "riscv64-unknown-elf-gcc"
         if stage == 'adapter':
             raise ValueError('adapter failed')
     monkeypatch.setattr(random, 'run_plan', run_plan)
-    monkeypatch.setattr(random, 'verify', lambda *a: dict(status='pass', coverage={'retired':2}))
+    monkeypatch.setattr(random, 'verify', lambda *a: dict(status='adapter_error') if stage == 'adapter' else dict(status='pass', coverage={'retired':2}))
     result = random.execute_json(tmp_path/'out', settings, seeds=2, seed_base=48)
     assert [a['seed'] for a in result['attempts']] == [48, 49]
     assert result['status'] == ('pass' if stage == 'success' else 'inconclusive')
     assert all(a['status'] == ('pass' if stage == 'success' else stage+'_error') for a in result['attempts'])
     assert result['counts'] == {('pass' if stage == 'success' else stage+'_error'): 2}
+    assert result['classes']['arithmetic'] == result['summary']
+    assert result['summary']['compiled'] == (2 if stage in ('adapter', 'success') else 0)
     assert json.loads((tmp_path/'out/campaign.json').read_text()) == result
     if stage == 'success':
-        assert [o.seed_base for _, o in plans] == [48,49]
+        assert [o.seed_base for _, o in plans] == [48]
         assert all(o.rvfi_trace and not o.use_cache for _, o in plans)
+        assert sorted(p.name for p in plans[0][0][0].suite.dir.iterdir()) == ['seed-48.elf', 'seed-49.elf']
+        def no_work(*a, **k):
+            pytest.fail('resume must not repeat completed attempts')
+        monkeypatch.setattr(random, 'run_plan', no_work)
+        monkeypatch.setattr(random, 'run_group', no_work)
+        resumed = random.execute_json(tmp_path/'out', settings, seeds=2, seed_base=48, resume=True)
+        assert resumed['attempts'] == result['attempts']
+        (tmp_path/'platform.json').write_text('{"changed":true}')
+        with pytest.raises(ValueError, match='resume input changed: inputs'):
+            random.execute_json(tmp_path/'out', settings, seeds=2, seed_base=48, resume=True)
+
     with pytest.raises(FileExistsError):
         random.execute_json(tmp_path/'out', settings)
 

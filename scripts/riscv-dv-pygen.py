@@ -21,6 +21,7 @@ def parser():
     p.add_argument('--checkout', type=Path, required=True)
     p.add_argument('--python', default=sys.executable)
     p.add_argument('--target', choices=['rv32imc', 'rv64imc'], required=True)
+    p.add_argument('--test-class', choices=['arithmetic', 'branches', 'load-store'], default='arithmetic')
     p.add_argument('--target-profile', type=Path)
     p.add_argument('--seed', type=int, required=True)
     p.add_argument('--instructions', type=int, default=50)
@@ -46,17 +47,29 @@ def worker(a):
         setattr(pyboolector, name, getattr(pyboolector.BtorOption, name))
     sys.argv = ['pygen', '--target='+a.target, '--gen_test=rvw_single_process',
                 '--seed='+str(a.seed), '--instr_cnt='+str(a.instructions),
-                '--num_of_sub_program=0', '--no_branch_jump=1', '--no_load_store=1',
+                '--num_of_sub_program=0', '--no_branch_jump='+str(int(a.test_class != 'branches')),
+                '--no_load_store='+str(int(a.test_class != 'load-store')),
                 '--disable_compressed_instr=1', '--bare_program_mode=1',
                 '--asm_file_name='+str(a.out/'program'),
                 '--log_file_name='+str(a.out/'generator.log')]
+    if a.test_class == 'branches':
+        sys.argv += ['--directed_instr_0=riscv_jal_instr,20']
+    elif a.test_class == 'load-store':
+        sys.argv += ['--directed_instr_0=riscv_load_store_rand_instr_stream,20',
+                     '--directed_instr_1=riscv_load_store_hazard_instr_stream,20']
     if a.target_profile:
         from importlib import import_module
         sys.path.insert(0, str(Path(__file__).resolve().parents[1]/'rvw/src'))
         from rvw.regress.dv_target import apply
         package = import_module('pygen_src.riscv_instr_pkg')
         module = import_module('pygen_src.target.'+a.target+'.riscv_core_setting')
-        apply(json.loads(a.target_profile.read_text()), module, package)
+        target = json.loads(a.target_profile.read_text())
+        apply(target, module, package)
+        sys.argv += ['--enable_unaligned_load_store='+str(int(target['unaligned_load_store']))]
+    if a.test_class == 'load-store':
+        sys.path.insert(0, str(Path(__file__).resolve().parents[1]/'rvw/src'))
+        from rvw.regress.dv_compat import install_load_store_fix
+        install_load_store_fix()
     # The pinned base class has no directed streams and honors instr_cnt.
     # The upstream rand test overrides it to 10,000 and adds directed streams.
     from pygen_src.test.riscv_instr_base_test import riscv_instr_base_test
@@ -85,13 +98,16 @@ def main():
         r = run_group([a.python, str(Path(__file__).resolve()), '--worker',
                        '--checkout', str(a.checkout), '--target', a.target,
                        '--seed', str(a.seed), '--instructions', str(a.instructions),
-                       '--out', str(a.out), *extra], timeout=a.timeout, stdout=log, stderr=log)
+                       '--out', str(a.out), '--test-class', a.test_class, *extra], timeout=a.timeout, stdout=log, stderr=log)
     source = a.out/'program_0.S'
     metadata = dict(status='generated' if not r.timed_out and r.returncode == 0 and source.is_file() else 'error',
                     generator_revision=revision, target=a.target, seed=a.seed,
-                    instructions=a.instructions, profile='bare-integer-alu',
+                    instructions=a.instructions, profile='bare-integer-alu' if a.test_class == 'arithmetic' else 'bare-'+a.test_class,
+                    test_class=a.test_class,
                     pyboolector='3.2.4.38488416565', pyvsc='0.9.1.10086043874',
                     returncode=r.returncode, timed_out=r.timed_out)
+    if a.test_class == 'load-store':
+        metadata['compatibility_sha256'] = hashlib.sha256((Path(__file__).resolve().parents[1]/'rvw/src/rvw/regress/dv_compat.py').read_bytes()).hexdigest()
     if a.target_profile:
         metadata['target_profile_sha256'] = hashlib.sha256(a.target_profile.read_bytes()).hexdigest()
     if source.is_file():

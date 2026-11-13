@@ -155,3 +155,29 @@ It preserves project reset metadata. This does not assert CSR completeness.
 The launcher records its SHA-256 and replaces upstream architectural preset
 values before configuration import. Legacy settings without the profile keep
 the upstream preset. Neither path grants privilege or CSR coverage credit.
+
+## Random batch execution and resume
+
+`rvw regress random` submits all compiled payloads in one C1 suite.
+`jobs` selects one to four runner workers. Persistent adapters keep one server
+per worker. Generator seeds remain per payload. The execution seed for memory
+timing is the campaign `seed_base`. CLI `--resume` and MCP `resume` retain
+completed attempts. They require equal settings, input hashes, seed range,
+configuration and core source identity. Incomplete attempts regenerate.
+Campaign writes use atomic replacement. Adapter C1 artifacts remain available
+for failed jobs. A batch error does not prevent checking published results.
+Timeout is a separate failed attempt status. `summary` retains generated,
+compiled, RTL run, strict match, mismatch, timeout and generation/compile error
+counts. `wall_s` includes all stages. `programs_per_hour` counts attempts with
+C1 cycle evidence divided by the campaign wall time.
+
+`test_classes` selects arithmetic, branches or load-store. Seeds cycle through
+the selected classes in order. Branch and memory profiles use upstream directed
+streams. Trap, CSR and interrupt generation are not provided by these profiles.
+
+Resume also binds the workstation source identity. Completed ELF and C1 hashes
+are checked before their status is retained. The load/store generation metadata
+records `compatibility_sha256`. This identifies worker-local corrections for
+the pinned upstream memory stream: emitted-address alignment, per-access opcode
+selection, page bounds, nonzero base registers and independent instruction
+objects. The installed upstream checkout remains unchanged.
