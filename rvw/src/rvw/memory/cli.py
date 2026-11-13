@@ -51,6 +51,8 @@ def register(sub):
     n.add_argument('--spike', default='spike')
     n.add_argument('--timeout', type=float, default=30)
     n.set_defaults(func=lambda args: emit(lambda: concurrent_smoke(args.out, args.seed, args.harts, args.length, args.gcc, args.spike, args.timeout)))
+    from rvw.common.subcommands import register_commands
+    register_commands("rvw.memory", commands)
 
 
 def command_images(args):

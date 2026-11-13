@@ -81,3 +81,18 @@ apply to one finite scalar execution under declared dependencies. Limits and
 unsupported profiles cannot produce allowed or forbidden. No full-core proof
 is implied. `rvw.concurrent-programs/1` contains seeded per-hart RV64 assembly
 fragments and project requirements. `executed:false` is mandatory at generation.
+
+
+## Concurrent per-hart ELF build
+
+`rvw.concurrent-build/1` reports the result of `memory concurrent-build`.
+`built` requires one compiled ELF per generated hart. `executed:false`,
+`rtl:not_run` and `ordering:not_checked` keep compilation separate from
+execution. `hart_images` names the hashed `rvw.hart-images/1` manifest.
+`reference` names `rvw.axiomatic-initial/1`. `programs` records per-hart
+entry, completion PC, private tohost, source SHA256 and linker SHA256.
+Each image has disjoint private load memory and the same 40-byte shared
+zeroed BSS segment. The reference includes shared doublewords and private
+tohost locations. Projects must load all images before release, detect each
+hart's completion and supply complete physical memory-event dependencies.
+The command does not supply a scheduling or liveness guarantee.
