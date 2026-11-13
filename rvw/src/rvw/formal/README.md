@@ -426,7 +426,8 @@ Missing native tools cause a skip. No skipped test supplies verification evidenc
 It supports qualified TileLink bus types, including B/C/E channels when present.
 Each payload includes every recorded sideband. AXI4 checks burst encodings,
 FIXED length limits and WRAP length/alignment. AXI-Lite rejects EXOKAY responses.
-TileLink checks channel opcode encodings only. Pre-acceptance offers can change. Hierarchical instances use local
+TileLink starts with opcode checks. Complete fields add transaction checks.
+Pre-acceptance offers can change. Hierarchical instances use local
 clock/reset ports. Missing fields and unresolved controls stay unsupported.
 Complete AXI fields also enable independent transaction trackers. These rows
 report `coverage=transaction_safety`. The trackers check per-ID read bursts,
@@ -438,7 +439,7 @@ first beats. They also check 4 KiB boundaries and exclusive request options.
 strobe history. Capacity assertions describe instrumentation limits, not AXI
 protocol violations. The MCP tool exposes both controls. Generation does not
 run a solver. Memory data and exclusive reservation state remain project
-obligations. TileLink transaction and coherence tracking remain open.
+obligations. Full coherent state and negotiated endpoint capabilities remain open.
 
 ## Resource safety templates
 
@@ -495,7 +496,7 @@ requires one select bit. Missing fields, missing clock associations and other
 unsupported cases stay named in the report. No bindings gives `no_checks`
 and exit 3. Generation is not evidence of compilation or verification.
 
-These additions do not complete #66. Full TileLink coherence, full AHB
+These additions do not complete #66. Full TileLink cache-state coherence, full AHB
 burst/data checks and complete protocol compliance remain open. Native seeded simple-bus tests check monitor behavior;
 they do not establish real-device correctness or database-to-RTL integration.
 
@@ -2743,3 +2744,19 @@ duplicate matches remain unsupported. The report does not prove that two
 elaborations have equal behavior. Use matching project captures.
 MCP `formal_buses` accepts `type_report`. Project bus entries accept the same
 key as a path relative to `checks.generate.json`.
+
+### TileLink transaction trackers
+
+Complete bus fields enable `protocol_profile=tilelink-uh-probe-c`. The generator
+checks A/D sources, request/response kinds, sizes, masks, parameters and
+multibeat headers. It supports Get, Put, ArithmeticData, LogicalData and Hint.
+Coherent channels add Acquire/Grant, Release/ReleaseAck, GrantAck sinks and
+Probe/ProbeAck tracking. Different addresses can share a probe source.
+`--depth` limits pending probe pairs. Capacity failures are instrumentation
+limits. Missing fields retain named `unbound_checks` reasons. Zero-bit source
+and sink fields use the exact options from `--type-report`.
+Coherent B is restricted to probes. The trackers do not infer negotiated
+address ranges or operation capabilities. They do not check cache permissions,
+independent memory data or forward progress. Generation is not a proof run.
+The slow SBY tests require exact PASS/FAIL results on independent good and
+seeded bad fixtures, including reset with pending transactions.

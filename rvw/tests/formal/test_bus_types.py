@@ -49,3 +49,25 @@ def test_wrong_top_is_an_error(tmp_path):
     report=tmp_path/'types.json';report.write_text(json.dumps(info))
     with pytest.raises(ValueError,match='top differs'):
         generate(tmp_path/'design.db',tmp_path/'out',type_report=report)
+
+
+def test_full_coherent_inventory_binds_transaction_trackers(tmp_path):
+    from test_tilelink_transactions import fields as tl_fields
+    db=Builder(tmp_path/'full.db');db.domain(1,reset='reset',kind='SYNC')
+    db.sig('clk',direction='in');db.sig('reset',direction='in')
+    db.c.execute("INSERT INTO bundles(id,component_id,path,class_name) VALUES(1,1,'bus','Bus')")
+    names=[]
+    for key,row in tl_fields(True).items():
+        name='bus_'+row[0];names.append(name);db.sig(name,width=row[3],domain=1)
+        db.c.execute('UPDATE signals SET spinal_path=? WHERE name=?',('bus.'+key,name))
+    db.done()
+    report=tmp_path/'types.json';report.write_text(json.dumps(dict(schema='rvw.checks/1',toplevel='Top',buses=[dict(
+        path='',object='bus',class_name='spinal.lib.bus.tilelink.Bus',signals=names,
+        options=dict(size_max=4,source_width=2,sink_width=2,data_width=32,with_bce=1))])))
+    result=generate(tmp_path/'full.db',tmp_path/'out',depth=2,type_report=report)
+    row=result['buses'][0]
+    assert row['coverage']=='transaction_safety'
+    assert row['probe_tracker_depth']==2
+    assert 'probe_pairs' in row['check_groups'] and 'grant_sinks' in row['check_groups']
+    assert result['complete'] is True
+    assert 'rvw_tl_probe_address' in (tmp_path/'out/monitors.sv').read_text()

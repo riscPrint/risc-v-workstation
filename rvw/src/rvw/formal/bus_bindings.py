@@ -113,7 +113,18 @@ def generate(db, out, depth=4, max_beats=256, type_report=None):
                         except ValueError as exc:
                             row['unbound_checks']=[dict(kind='axi_transactions',reason=str(exc))]
                     else:
-                        row['limitations'] += ['TileLink transaction/coherence tracking is not bound.']
+                        try:
+                            from .tilelink_transactions import render as render_tl
+                            body=render_tl(signals,depth,type_info.get('options',{}))
+                            source=source.replace('\nendmodule\n','\n'+body+'\nendmodule\n')
+                            row.update(coverage='transaction_safety',protocol_profile='tilelink-uh-probe-c',probe_tracker_depth=depth,
+                                check_groups=['a_d_sources','burst_headers','request_parameters','response_parameters',
+                                              'release_ack','grant_sinks','probe_pairs'] if 'b.valid' in signals else
+                                             ['a_d_sources','burst_headers','request_parameters','response_parameters'])
+                            row['limitations'] += ['Probe queue capacity is an instrumentation limit.',
+                                'Coherent B supports probes. Cache permission/data state and negotiated address regions are not modeled.']
+                        except ValueError as exc:
+                            row['unbound_checks']=[dict(kind='tilelink_transactions',reason=str(exc))]
                 elif kind == 'axis':
                     width, data = payload([k for k in signals if k.startswith('payload.')])
                     ports.update(valid=signal('valid',1),ready=signal('ready',1),payload=data)
@@ -140,7 +151,7 @@ def generate(db, out, depth=4, max_beats=256, type_report=None):
                       buses=rows, complete=bool(binds) and all(r['status'] == 'generated' and not r.get('unbound_checks') for r in rows),
                       database=with_db.capture_record(),
                       limits=['No compiler, solver or simulator was run.',
-                              'AXI transaction checks require complete fields. TileLink provides opcode safety only.',
+                              'Transaction checks require complete fields. Partial bindings retain per-instance reasons.',
                               'Instance bind syntax requires a frontend with SystemVerilog bind support.',
                               'Clock associations must exist in the database. Missing bindings stay unsupported.'])
     finally:
