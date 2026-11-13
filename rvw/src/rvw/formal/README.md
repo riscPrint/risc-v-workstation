@@ -3154,3 +3154,19 @@ privileged machine.
 Both native tasks must pass to earn `bounded N`. A timeout or unreachable
 trigger is inconclusive. The reset assumption asserts reset only in the
 initial state. Results retain captured source hashes and all native trees.
+## Re-proof timing across revisions
+
+Run `rvw formal revision-bench --base base.json --revised revised.json --out OUT`.
+MCP: `formal_revision_bench`. Both files use pinned engine-race source manifests.
+The runner exports a certified PDR library from the base, then alternates fresh
+proofs of the revised target with and without cone-matched helper assertions.
+The default is three trials per path. The report gives signed median time saved
+and the separate one-time export cost. Helpers remain assertions. Changed
+cones cannot select old predicates. No cached proof verdict is returned.
+
+The checked-in `examples/formal/deep/revision` sample adds an unrelated output
+counter. All six native target proofs passed and each reuse trial selected one
+matching lemma. Cold median: 1.623 s. Reuse median: 1.801 s. Time saved:
+-0.178 s. Library export cost: 4.906 s. Thus this sample shows no time gain.
+The eight-second native stage limit and nice priority apply to this local run.
+These small-counter timings do not establish core-scale reuse performance.

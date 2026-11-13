@@ -1,0 +1,66 @@
+{
+  "schema": "rvw.formal-revision-bench/1",
+  "status": "pass",
+  "export_wall_s": 4.9060609170701355,
+  "base_source_sha256": [
+    "268e059476c9ac11c53fb16df0eb5d759dd1a8e1e0e1fc1a0c9eb18cf3255da7"
+  ],
+  "revised_source_sha256": [
+    "459a98d8d4385a642d4b20a166f1985ea03db3d3c53746616dd4592e879389c4"
+  ],
+  "trials": [
+    {
+      "trial": 0,
+      "variant": "cold",
+      "status": "pass",
+      "wall_s": 1.6498887080233544,
+      "selected_lemmas": 0,
+      "result": "0-cold/result.json"
+    },
+    {
+      "trial": 0,
+      "variant": "reuse",
+      "status": "pass",
+      "wall_s": 1.8011386250145733,
+      "selected_lemmas": 1,
+      "result": "0-reuse/result.json"
+    },
+    {
+      "trial": 1,
+      "variant": "reuse",
+      "status": "pass",
+      "wall_s": 2.150973500101827,
+      "selected_lemmas": 1,
+      "result": "1-reuse/result.json"
+    },
+    {
+      "trial": 1,
+      "variant": "cold",
+      "status": "pass",
+      "wall_s": 1.622791042085737,
+      "selected_lemmas": 0,
+      "result": "1-cold/result.json"
+    },
+    {
+      "trial": 2,
+      "variant": "cold",
+      "status": "pass",
+      "wall_s": 1.1611172079574317,
+      "selected_lemmas": 0,
+      "result": "2-cold/result.json"
+    },
+    {
+      "trial": 2,
+      "variant": "reuse",
+      "status": "pass",
+      "wall_s": 1.6275680830003694,
+      "selected_lemmas": 1,
+      "result": "2-reuse/result.json"
+    }
+  ],
+  "limits": "Alternating fresh target proofs. Reused lemmas remain assertions and need matching transition cones. Reported savings include target preparation and reuse overhead, but exclude one-time library export. This local sample does not predict another design. No cached verdict is returned.",
+  "cold_median_s": 1.622791042085737,
+  "reuse_median_s": 1.8011386250145733,
+  "saved_s": -0.17834758292883635,
+  "speedup": 0.9009806461024658
+}

@@ -26,7 +26,16 @@ def register(subparsers):
 
 def mcp_tools():
     from rvw.mcp.spec import ToolSpec, schema
-    from rvw.formal.mcp_tools import _runner
+    from rvw.formal.mcp_tools import _argv
+    from rvw.mcp.spec import ToolError
+    def plan(job, **args):
+        code = job.run(_argv("strategy", args))
+        if code != 0:
+            raise ToolError("strategy planning failed", {"exit_code": code})
+        data = json.loads(Path(args["out"]).read_text())
+        if data.get("status") != "planned":
+            raise ToolError("invalid strategy plan")
+        return data
     return [ToolSpec('formal_strategy', 'Plan engine order and candidate abstractions. Runs no proof.',
         schema({'model': {'type':'string'}, 'history': {'type':'array','items':{'type':'string'}},
-                'out': {'type':'string'}}, ['model','out']), _runner('strategy'))]
+                'out': {'type':'string'}}, ['model','out']), plan, long=True)]

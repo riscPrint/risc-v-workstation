@@ -382,3 +382,14 @@ samples and reasons. Only rows with qualified `problem_status=pass|fail` and
 positive elapsed time affect learning. Bounded and conditional rows cannot.
 No proof result is emitted. Liveness returns reduction candidates and no raw
 safety engine order. Counter candidates require explicit leaf bindings.
+
+## Revision timing experiments
+
+`revision-bench` and MCP `formal_revision_bench` emit
+`rvw.formal-revision-bench/1`. Source hashes identify base and revised problems.
+The report retains export time, alternating trial order, fresh proof statuses,
+selected lemma counts and result paths. When every target proof passes, it
+records cold/reuse median wall times, signed `saved_s` and their ratio.
+Failed or inconclusive trials cannot produce savings fields. The one-time
+library export is separate. Cone-matched helpers remain assertions and the
+target proof is fresh. Local timing does not predict another workload.

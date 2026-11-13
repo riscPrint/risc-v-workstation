@@ -28,3 +28,16 @@ def test_only_qualified_history_changes_order():
 def test_liveness_needs_reduction():
     r=select(model('$live'))
     assert not r['engines'] and r['abstractions']==['liveness-to-safety','k-live']
+
+
+def test_mcp_reads_plan_file_without_claiming_proof(tmp_path):
+    import json
+    from rvw.formal.commands.strategy import mcp_tools
+    class Job:
+        def run(self, argv):
+            assert argv.count('--history')==2
+            (tmp_path/'plan.json').write_text(json.dumps({'status':'planned'}))
+            return 0
+    tool=mcp_tools()[0]
+    assert tool.long
+    assert tool.handler(Job(),model='model.json',history=['a.json','b.json'],out=str(tmp_path/'plan.json'))=={'status':'planned'}
