@@ -233,6 +233,13 @@ def check(path, design, names, s, defined, emit):
     design_clocks = {c['clock'] for c in s['cdc']['clocks']}
     cells = {names.hier(i): i for i in design.regs}
     sdc_clocks, exceptions, groups = {}, [], []
+    def glob(ours, theirs):
+        # Either side may be a pattern: our register_pattern or the SDC object pattern.
+        return fnmatch.fnmatchcase(ours, theirs) or fnmatch.fnmatchcase(theirs, ours)
+
+    def matches(objs, i):
+        return any(kind == 'cells' and (glob(names.cell(i), p) or glob(names.hier(i), p)) for kind, p in objs)
+
     for cmd, line in commands:
         objs = get_objects(line)
         if cmd == 'create_clock':
@@ -245,18 +252,40 @@ def check(path, design, names, s, defined, emit):
             sdc_clocks[name] = ports
         elif cmd == 'create_generated_clock':
             m = re.search(r'-name\s+(\S+)', line)
-            sdc_clocks[m.group(1) if m else line] = []
+            name = m.group(1) if m else line
+            sdc_clocks[name] = []
+            div = re.search(r'-divide_by\s+(\d+)', line)
+            pins = [p for k, p in objs if k == 'pins']
+            # The target pin must be a design register output; the ratio must match a known divider.
+            targets = [i for i in design.regs for p in pins
+                       if glob(f'{names.cell(i)}/{names.pin}', p) or glob(f'{names.hier(i)}/{names.pin}', p)]
+            if pins and not targets:
+                emit('sdc.unmatched_endpoint', pins[0], f'create_generated_clock {name} targets no design register.',
+                     severity='error')
+            for c in s['cdc']['clocks']:
+                src = design.by_path.get(c.get('source') or '')
+                if c['kind'] == 'divided' and src in targets and c.get('divide_by') and div \
+                        and int(div.group(1)) != c['divide_by']:
+                    emit('sdc.generated_mismatch', c['clock'],
+                         f"create_generated_clock {name} divides by {div.group(1)}; the design divides by {c['divide_by']}.",
+                         severity='error')
         elif cmd in ('set_false_path', 'set_max_delay', 'set_multicycle_path'):
             frm = get_objects(line.split('-from', 1)[1].split('-to')[0]) if '-from' in line else []
             to = get_objects(line.split('-to', 1)[1]) if '-to' in line else []
             for kind, pattern in frm + to:
-                if kind == 'cells' and not any(fnmatch.fnmatchcase(names.pattern.format(path=c), pattern) or
-                                               fnmatch.fnmatchcase(c, pattern) for c in cells):
+                if kind == 'cells' and not any(glob(names.pattern.format(path=c), pattern) or
+                                               glob(c, pattern) for c in cells):
                     emit('sdc.unmatched_endpoint', pattern, f'{cmd} names no design register: {pattern}.', severity='error')
                 if kind == 'ports' and pattern not in top_inputs and not any(
                         design.signals[i]['name'] == pattern for i in design.signals if design.is_top_output(i)):
                     emit('sdc.unmatched_endpoint', pattern, f'{cmd} names no toplevel port: {pattern}.', severity='error')
             exceptions.append((cmd, frm, to))
+            if cmd == 'set_multicycle_path' and frm and to:
+                a = [i for i in design.regs if matches(frm, i)]
+                b = [i for i in design.regs if matches(to, i)]
+                if a and b and not any(x in design.upstream_regs(y) for x in a for y in b):
+                    emit('sdc.unmatched_multicycle', names.hier(b[0]),
+                         'set_multicycle_path names registers without a register path between them.', severity='error')
         elif cmd == 'set_clock_groups' and '-asynchronous' in line or cmd == 'set_clock_groups' and '-logically_exclusive' in line:
             parts = re.findall(r'-group\s+(\{[^}]*\}|\[[^\]]*\]|\S+)', line)
             groups.append([set(re.findall(r'[\w./$*]+', p)) - {'get_clocks'} for p in parts])
@@ -268,10 +297,6 @@ def check(path, design, names, s, defined, emit):
         if ports and not any(p in {design.signals[design.by_path[x]]['name'] for x in design_clocks if x in design.by_path}
                              for p in ports):
             emit('sdc.unmatched_clock', name, f'SDC clock {name} drives no design clock domain.', severity='error')
-
-    def matches(objs, i):
-        return any(kind == 'cells' and (fnmatch.fnmatchcase(names.cell(i), p) or fnmatch.fnmatchcase(names.hier(i), p))
-                   for kind, p in objs)
 
     def clock_name(domain):
         cname = (design.domains.get(domain) or {}).get('clock')

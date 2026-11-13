@@ -246,10 +246,17 @@ The check reads `create_clock`, `create_generated_clock`, `set_false_path`,
 `get_ports|cells|clocks|pins` objects. It reports `sdc.unmatched_clock`
 (a clock on a port that is not a toplevel input or no design clock),
 `sdc.unconstrained_clock` (a design clock without an SDC clock),
-`sdc.unmatched_endpoint` (a cell or port pattern that matches nothing),
+`sdc.unmatched_endpoint` (a cell, pin or port pattern that matches nothing,
+including a `create_generated_clock` target that is no design register),
+`sdc.generated_mismatch` (a `-divide_by` that differs from the inferred divider),
+`sdc.unmatched_multicycle` (a `set_multicycle_path` between registers without a
+register path),
 `sdc.unsafe_false_path` (an exception or asynchronous clock group that covers an
 unsafe crossing) and `sdc.unconstrained_crossing` (a crossing between unrelated
-clocks without an exception). This checks logical intent against elaborated
+clocks without an exception). Patterns match in both directions: an SDC glob
+against concrete names and `register_pattern` against concrete SDC names. A
+generated SDC checked against the same design gives no findings (round-trip
+test). This checks logical intent against elaborated
 endpoints. It is not routed timing signoff and does not read Tcl variables or
 loops.
 
