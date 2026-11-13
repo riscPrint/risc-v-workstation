@@ -145,6 +145,10 @@ def qualification(task, seeded, repaired):
         a, b = seeded[name]['identity'], repaired[name]['identity']
         if not a.get('rtl_sha256') or a['rtl_sha256'] == b.get('rtl_sha256'):
             return 'inconclusive'
+        a_tools = (a.get('source') or {}).get('tools_rev')
+        b_tools = (b.get('source') or {}).get('tools_rev')
+        if not a_tools or a_tools != b_tools:
+            return 'inconclusive'
         if a.get('elf_sha256') != b.get('elf_sha256') or a.get('seed') != b.get('seed') or a.get('config') != b.get('config'):
             return 'inconclusive'
     return 'qualified'
@@ -165,6 +169,11 @@ def qualify(pack_path, source, out, *, task_ids=None, timeout=110):
         workspace = prepare(pack, source, root / 'workspace', task)
         tests = task['private']['fail_to_pass'] + task['private']['pass_to_pass']
         seeded = run_tests(pack, base, workspace, root / 'seeded', tests, timeout)
+        if any(r['status'] not in ('pass', 'fail', 'assert', 'rvfi_error') for r in seeded.values()):
+            report['tasks'].append({'id': task['id'], 'status': 'inconclusive', 'seeded': seeded,
+                                    'repaired': {}, 'reason': 'seeded workload evidence is incomplete'})
+            (out / 'qualification.json').write_text(json.dumps(report, indent=2) + '\n')
+            continue
         mutate(workspace, task['private']['mutation'], reverse=True)
         git(workspace, 'add', '-A')
         git(workspace, 'commit', '-qm', 'repair task')

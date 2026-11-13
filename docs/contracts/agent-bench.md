@@ -197,3 +197,25 @@ The CLI receives only its URL and token. The client must disable other tools.
 No OS sandbox is claimed. A wall timeout stops the whole client process group.
 Partial attempts remain scored as incomplete, with censored root causes. The
 fixture report's native validation field remains `NOT RUN`.
+
+## Native repair challenge and result
+
+`rvw.agent-repair-challenge/1` records the task pack path and digest, source,
+workspace, baseline revision, seeded workload evidence, reproduction flag and
+bundle/cosim diagnostics. `ready` requires reproduced failures and passing
+controls. Other results are inconclusive. Task packs can declare `project_copy`,
+`project_mutations` and `program_copy` inputs for usable disposable projects.
+Each copy maps `source` relative to the pack to `dest` in the workspace.
+Build output directories are excluded from project copies. Public task text
+contains no mutation or expected fix.
+
+`rvw.agent-repair-check/1` records the task digest, candidate patch hash, source
+and ignored file lists, seeded/repaired C1/C2 evidence and reproduction state.
+Only source-copy paths enter the independent checker. The evaluator's programs
+and adapter remain authoritative. Verdicts are `repair_verified`,
+`repair_rejected` and `inconclusive`. No dynamic cause is inferred from a correct
+patch. The result keeps root cause unknown, requires human review and claims
+no C4 acceptance. Changed evaluator packs are refused.
+
+Native qualification also requires equal, present `source.tools_rev` values
+for seeded and repaired runs. A changed harness revision is inconclusive.
