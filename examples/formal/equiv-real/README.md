@@ -4,7 +4,7 @@ These scripts prepare private, committed source copies. They do not edit either
 upstream checkout. Use a clean output directory outside this repository.
 
 ```sh
-source /Users/mahir/fun/saviour/spinal-boom/env.sh
+source /path/to/workstation/env.sh
 export RVW_HOME="$PWD"
 rvw/.venv/bin/python examples/formal/equiv-real/prepare.py \
   --spinal /path/to/SpinalHDL --vex /path/to/VexRiscv --out /path/to/private-cases

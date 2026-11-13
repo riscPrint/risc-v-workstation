@@ -13,6 +13,7 @@ from .flows import _inputs
 
 def register(sub):
     p = sub.add_parser('equiv', help='prove sequential equivalence of two RTL revisions')
+    p.add_argument('--memory-map', action='store_true', help='lower finite memories exactly to registers; requires unmatched-state prove')
     p.add_argument('--sampled-events', action='store_true', help='conditional global-sample clock-event comparison')
     p.add_argument('--stable-at-edge', action='append', default=[], metavar='INPUT', help='input stable across sampled root rising edges')
     p.add_argument('--state-encoding', help='JSON finite register encoding relations; checked without assumptions')
@@ -216,6 +217,9 @@ def _run(args):
             common.die('timeout must be finite and positive; reset-cycles must be positive')
         if not 0 <= args.latency <= 64:
             raise ValueError('latency must be in 0..64')
+        memory_map = getattr(args, 'memory_map', False)
+        if memory_map and args.unmatched_state != 'prove':
+            raise ValueError('memory-map requires unmatched-state prove')
         sampled = getattr(args, 'sampled_events', False)
         stable = getattr(args, 'stable_at_edge', [])
         if stable and not sampled:
@@ -268,6 +272,11 @@ def _run(args):
             # Each side owns its active tool context until the command ends.
             if not sampled:
                 common.probe_clocks(models, args.top, args.clock, directory, budget())
+            if memory_map:
+                from .equiv_memory import lower
+                model, record = lower(models[0], args.top, directory, snapshot, budget)
+                models = [model]
+                result.setdefault('memory_mapping', {})[side] = record
             script = (f'read_rtlil {models[0]}\nhierarchy -check -top {args.top}\nflatten\n'
                       f'write_json {directory / "flat.json"}\n')
             (directory / 'flat.ys').write_text(script)
@@ -278,7 +287,7 @@ def _run(args):
             body = flat['modules'][args.top]
             bodies.append(state(body, include_latches=sampled))
             proof_models.append(state_encoding.expose(encoding_rows, side, flat, bodies[-1], args.top, directory, budget, snapshot)
-                                if encoding_rows else directory/'module_ports.il')
+                                if encoding_rows else models[0])
             for p in ports:
                 common.check_ident('port', p.name)
                 if p.name.startswith('rvw_'):
