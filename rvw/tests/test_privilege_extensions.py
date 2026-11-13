@@ -18,7 +18,7 @@ def test_environment_mask():
 
 
 def test_virtual_timer_matrix():
-    assert len(programs(dict(kind='sstc',isa='rv64imah_zicsr_zicntr_sstc',sstc={'virtualization':True})))==29
+    assert len(programs(dict(kind='sstc',isa='rv64imah_zicsr_zicntr_sstc',sstc={'virtualization':True})))==30
 
 
 def test_sstc_needs_time():

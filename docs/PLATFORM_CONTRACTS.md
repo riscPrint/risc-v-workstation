@@ -64,7 +64,7 @@ Principles (from `ROADMAP.md`):
 - [Verification obligations and profile catalogs](contracts/obligations.md)
 - [Performance and pipeline events](contracts/perf.md)
 - [Power intent](contracts/power.md)
-- [Privilege and interrupt suites](contracts/privilege.md)
+- [Privilege, interrupt and timer suites](contracts/privilege.md)
 - [Design queries](contracts/query.md)
 - [Simulation security](contracts/sec.md)
 - [Setup and adapter selection](contracts/setup.md)

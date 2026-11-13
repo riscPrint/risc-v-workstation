@@ -45,29 +45,9 @@ def programs(config):
                     denied = mode == 'U' or (mode == 'S' and not (stce and tm))
                     code = access(mode, setup, 'csrr a0, 0x14d', denied)
                     rows.append(row(f'sstc-access-{mode.lower()}-{stce}-{tm}', code, 'priv/sstc.html'))
-        # Event timing comes from STIP transitions, not synchronized time reads.
-        code = HEAD + ''' li t0, 1
- slli t0, t0, 63
- csrs 0x30a, t0
- csrw 0x14d, zero
- li s0, 10000
-1: csrr t0, mip
- andi t0, t0, 32
- bnez t0, 2f
- addi s0, s0, -1
- bnez s0, 1b
- j fail
-2: li t0, -1
- csrw 0x14d, t0
- li s0, 10000
-3: csrr t0, mip
- andi t0, t0, 32
- beqz t0, pass
- addi s0, s0, -1
- bnez s0, 3b
- j fail
-''' + TAIL
-        rows.append(row('sstc-pending-clear', code, 'priv/sstc.html'))
+        from .timer_pending import program as pending_program
+        code=pending_program(64)
+        rows.append(row('sstc-pending-clear',code,'priv/sstc.html'))
     elif kind == 'stateen':
         for mode in ('M', 'S', 'U'):
             for enabled in (0, 1):
@@ -123,6 +103,9 @@ fault_site:
                 value=mask if enabled else 0
                 operation=f'csrw 0x60a, a1\n csrr t1, 0x60a\n li t0, {mask}\n and t1, t1, t0\n li t0, {value}\n bne t0, t1, fail'
                 rows.append(row(f'envcfg-h-{mode.lower()}-{enabled}',access(mode,f' li a1, {value}\n',operation,mode=='U'),'priv/hypervisor.html'))
+    if kind == 'sstc' and config.get('sstc',{}).get('virtualization'):
+        from .timer_pending import program as pending_program
+        rows.append(row('sstc-virtual-pending',pending_program(64,True),'priv/sstc.html'))
     if kind == 'landing':
         for mode in ('S','U'):
             for label in (0x12345,0x12346):
@@ -130,4 +113,12 @@ fault_site:
                 operation=f'la a0, fault_site\n jr a0\n .balign 4\nfault_site:\n .word {(label<<12)|0x17}'
                 rows.append(row(f'landing-label-{mode.lower()}-{label:x}',
                     access(mode,setup,operation,label!=0x12345,cause=18,tval=2),'priv/priv-cfi.html'))
+    if kind == 'sstc':
+        from .timer_pending import contract
+        for item in rows:
+            if 'pending' in item['id']:
+                item['timer_contract']=contract(config,'virtual' in item['id'])
+    if 'h' in isa.split('_')[0][4:]:
+        for item in rows:
+            item['assembly']=item['assembly'].replace(HEAD,HEAD+' li t0, 1\n slli t0, t0, 39\n csrc mstatus, t0\n',1)
     return rows

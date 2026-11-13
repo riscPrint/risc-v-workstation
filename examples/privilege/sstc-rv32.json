@@ -1,0 +1,9 @@
+{
+  "schema": "rvw.privilege/1",
+  "kind": "sstc-rv32",
+  "isa": "rv32im_zicsr_zifencei_zicntr_sstc",
+  "sstc": {
+    "virtualization": false,
+    "max_latency_ticks": 64
+  }
+}

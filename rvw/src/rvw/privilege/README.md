@@ -272,10 +272,10 @@ All these campaigns pin the 20260120 privileged specification.
   changes and mismatch atomicity. Programs check the architectural SSP and
   actual pushed values through SSPOPCHK.
 
-Examples include `sstc-h.json` and `envcfg-h.json` for H profiles. These remain
-RV64 campaigns. RV32 split timer accesses, all extension-state gates, complete
-virtualization transitions, interrupted landing-pad sequences and guest shadow
-stacks remain open. No C1 or DUT result is inferred from a native Spike pass.
+Examples include `sstc-h.json` and `envcfg-h.json` for H profiles. These
+profiles use RV64. The separate RV32 timer profiles are described below. All
+extension-state gates, complete virtualization transitions, interrupted
+landing-pad sequences and guest shadow stacks remain open. No C1 or DUT result is inferred from a native Spike pass.
 
 ## Simultaneous disabled-feature combinations
 
@@ -340,3 +340,35 @@ is model-based. The AIA source revision is
 Smnip has one previous-threshold field. Nested handlers must save and restore
 that field in software. The Python model does not create an implicit hardware
 stack. Its restore_previous method represents the explicit software restore.
+
+
+## RV32 split timers and independent timer observations
+
+`kind = "sstc-rv32"` selects the RV32 Sstc profile and ILP32 compiler ABI.
+It checks both STIMECMP halves in M/S/U, safe split updates, full readback and
+pending assertion/clearing. The H profile adds both halves of virtual accesses,
+virtual-instruction traps and positive/negative HTIMEDELTA offsets. It verifies
+offset-register readback and tests the resulting VSTIP changes against a nonzero
+compare value. The RV64 H profile uses the same event program. H setup clears
+MPV before entry and sets it explicitly for VS cases.
+
+Virtual-time event programs require a fresh reference time below 2^39. They
+use a compare of 2^39 and offsets of plus/minus 2^40. They do not read the time
+counter. The negative offset tests unsigned 64-bit wrap. These are bounded
+program scenarios, not all possible timer states.
+
+Pending-event scenarios require a `privilege_timer` C1 artifact before their
+architectural groups can pass. It is a JSON sample list with `tick`, `phase`,
+`phase_start`, `reference_time` and Boolean `pending`. Reference time comes from
+the independent device/clock model. It is not a synchronized architectural CSR
+read. ELF symbols `timer_armed`, `timer_cleared`, or the virtual phase labels
+identify the program phases. The build manifest records their expected compare
+and delta values. Wide values use hex strings so JSON clients retain all bits.
+The checker also accepts integer values in captured samples.
+
+The checker needs a correct observed event for every phase. Missing samples or
+witnesses remain inconclusive. An optional `sstc.max_latency_ticks` adds a
+project timing bound measured from phase_start. Wrong state at the deadline
+fails. A late-only witness stays inconclusive. Without that field, the report
+makes no latency claim. The report binds the capture hash and still requires
+the normal complete strict architectural reference match.
