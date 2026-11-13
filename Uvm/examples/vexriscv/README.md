@@ -37,3 +37,19 @@ interrupt or debug stimulus. The selected VexTop has no debug unit.
 Architectural IRQ/debug checks, SoC peripheral integration and full ISA
 qualification remain open. The RAM-only binding reports no data faults.
 It does not qualify access-fault behavior.
+
+Use the current generated RTL directory recorded in a C1 `result.json`
+`artifacts.rtl_dir` entry. An old generated VexTop can have different
+privilege modes from the selected platform. Do not mix those configurations.
+
+When `RVW_CPU_ELF` names `rv32ui-p-add`, the test also runs adjacent
+`rv32ui-p-beq` and `rv32ui-p-lw` ELFs in the same native build. Each test resets
+the DUT and creates a new independent reference. Missing ELFs fail explicitly.
+Per-program `cpu-checks-PROGRAM.json` files keep the actual comparison counts.
+
+The wrapper observes separate trap pulses. It steps Spike independently and
+checks cause and tval before the next retirement. This covers synchronous
+trap synchronization in ISA bootstrap code. `CpuEvents` also supplies a
+requested-IRQ check and independent debug halt-state comparison. Those API
+checks have unit tests. They do not qualify architectural IRQ/debug behavior
+on this core. The live example drives no interrupts or debug requests.

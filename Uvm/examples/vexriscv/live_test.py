@@ -11,8 +11,16 @@ from rvw.common.capture import Capture
 from rvw.cosim.elf import Elf
 from rvw.cosim.platform import Platform
 from rvw.cosim.spike import Spike, capture_shim
+from rvw.uvm.cpu_events import CpuEvents
 
 HERE = Path(__file__).resolve().parent
+
+
+class DiagnosticSpike(Spike):
+    def step(self, *args, **kwargs):
+        self.last_effect = super().step(*args, **kwargs)
+        return self.last_effect
+
 
 
 class VexEnvironment(LiveCpuEnvironment):
@@ -34,6 +42,7 @@ class VexEnvironment(LiveCpuEnvironment):
             await edge()
         d.reset.value = 0
         fetch, load = None, None
+        events = CpuEvents(self.config['reference'], xlen=32)
         for cycle in range(self.config['max_cycles']):
             # Each port allows one pending response. Both ports share CpuMemory.
             d.iBus_cmd_ready.value = int(fetch is None)
@@ -75,16 +84,26 @@ class VexEnvironment(LiveCpuEnvironment):
                 record['mem_fault'] = 0  # This profile serves RAM without data faults.
                 if os.environ.get('RVW_VEX_CORRUPT') == '1' and self.scoreboard.checks == 5:
                     record['pc_next'] ^= 4
-                self.scoreboard.observe(record)
+                try:
+                    self.scoreboard.observe(record)
+                except AssertionError:
+                    print('RVW_ACTUAL', record)
+                    print('RVW_REFERENCE', self.config['reference'].last_effect)
+                    raise
                 if record['mem_wmask'] and (record['mem_addr'] & ~3) == self.config['tohost']:
                     assert record['mem_wmask'] == 15 and record['mem_wdata'] == 1, 'ISA program failed'
                     self.scoreboard.finish(self.scoreboard.checks)
                     self.done = True
-                    Path('cpu-checks.json').write_text(json.dumps({
+                    summary = json.dumps({
                         'checks': self.scoreboard.checks, 'cycles': cycle + 1,
                         'coverage': self.scoreboard.coverage.report(),
-                        'memory_transfers': self.memory.transfers}, indent=2)+'\n')
+                        'memory_transfers': self.memory.transfers, 'traps': events.traps}, indent=2)+'\n'
+                    Path('cpu-checks.json').write_text(summary)
+                    Path('cpu-checks-'+self.config['program']+'.json').write_text(summary)
                     return
+            if int(d.trap_valid.value):
+                cause, tval = int(d.trap_cause.value), int(d.trap_tval.value)
+                events.trap(cause, tval)
         raise AssertionError('CPU retirement watchdog expired before tohost pass')
 
     def check_phase(self):
@@ -95,16 +114,18 @@ class VexEnvironment(LiveCpuEnvironment):
 class VexIsa(pyuvm.uvm_test):
     def build_phase(self):
         elf_path = Path(os.environ['RVW_CPU_ELF']).resolve()
+        if getattr(self, 'program', None):
+            elf_path = elf_path.with_name(self.program)
         elf = Elf(elf_path)
         platform = Platform.load(None, HERE.parents[2]/'examples/vexriscv/rvw/platform.json')
         self.capture = Capture(Path('spike-capture'))
         shim = capture_shim(self.capture, Path(os.environ['RVW_CPU_SHIM']))
-        self.reference = Spike(platform, elf_path, shim=shim)
+        self.reference = DiagnosticSpike(platform, elf_path, shim=shim)
         bindings = json.loads((HERE/'bindings.json').read_text())
         cfg = dict(dut=cocotb.top, bindings=bindings, reference=self.reference,
                    elf=elf, memory_base=0x80000000, memory_size=0x1000000,
                    seed=int(os.environ.get('RVW_VEX_SEED', '1')), max_wait=3,
-                   max_cycles=200000, retirements=1, tohost=elf.symbols['tohost'])
+                   max_cycles=200000, retirements=1, tohost=elf.symbols['tohost'], program=elf_path.name)
         pyuvm.ConfigDB().set(self, 'env', 'cpu', cfg)
         self.env = VexEnvironment('env', self)
 
@@ -119,3 +140,15 @@ class VexIsa(pyuvm.uvm_test):
         finally:
             self.drop_objection()
             self.reference.close()
+
+
+# A project ISA directory can qualify several programs in one native build.
+# No absent program is treated as passing evidence.
+if Path(os.environ.get('RVW_CPU_ELF', '')).name == 'rv32ui-p-add':
+    @pyuvm.test()
+    class VexIsaBranch(VexIsa):
+        program = 'rv32ui-p-beq'
+
+    @pyuvm.test()
+    class VexIsaLoad(VexIsa):
+        program = 'rv32ui-p-lw'
