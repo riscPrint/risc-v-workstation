@@ -1971,3 +1971,45 @@ The two-channel native fixture tests an independent ADD implementation and a
 mutation of channel 1. It establishes generation and channel-check execution,
 not conformance of a real core adapter. Real-core trap, killed instruction,
 memory lane and multiple-effect observations remain required for #63.
+Sail Zicond checks (#64)
+-----------------------
+
+`rvw formal sail-zicond --model SAIL_RISCV --compiler sail --out MODELS`
+compiles the RV32 CZERO.EQZ and CZERO.NEZ register-result rules. It requires
+Sail 0.20.1 and sail-riscv commit
+`549e723031b34b5ffea5bbb56367be15c7a38a9e`. The generator checks the SHA-256 of
+`model/extensions/Zicond/zicond_insts.sail` before compilation. It extracts the
+condition, result selection and R-type encoding from that file. It lowers
+32-bit `zeros()` to a zero literal. It lowers inequality to negated equality
+before compilation. This avoids an unspecialized runtime bitvector helper.
+Generated SystemVerilog logic is retained without logic rewrites.
+
+The manifest records source lines, expressions, encoding matches, compiler and
+library hashes, compiler options and generated file hashes. It identifies the
+actual compiler result port. An explicit RVFI shell adds decode, register
+addresses, x0 suppression, PC advance and zero memory effects. Those shell
+assignments are not a compilation of the full Sail machine. The extension is
+enabled. Illegal-instruction behavior when it is disabled is excluded. RV64,
+CSR MISA and privileged behavior are excluded. Other widths are refused by RTL
+elaboration. No complete architectural conformance claim is made.
+
+Add the generated files through the existing project `instruction_models`:
+
+```toml
+[riscv_formal.instruction_models]
+czero_eqz = "models/insn_czero_eqz.v"
+czero_nez = "models/insn_czero_nez.v"
+```
+
+Request `insn_czero_eqz_ch0`, `insn_czero_nez_ch0` and `cover` in `checks`.
+Use the supported upstream base ISA in `isa`. When an instruction model is new,
+the runner adds it to the private copy of that base ISA instruction list. It
+records `instruction_set_additions`. It changes no upstream source file. Each
+new model needs an explicitly requested check. These additional checks do not
+claim that the upstream base ISA includes the extension.
+
+The independent native fixture checks all operand and instruction bits. It
+checks result selection, encoding, register fields, x0, PC and memory effects.
+Result, decode and PC mutations must fail. A separate campaign runs both new
+models through upstream riscv-formal against a correct and a faulty RVFI unit.
+MCP tool `formal_sail_zicond` exposes generation.

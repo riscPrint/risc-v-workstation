@@ -121,7 +121,13 @@ def prepare(cfg, out):
     for insn, src in cfg.get('instruction_models', {}).items():
         dest = root / 'insns' / f'insn_{insn}.v'
         if not dest.is_file():
-            raise ValueError(f'unknown instruction model {insn}')
+            if not any(re.fullmatch(r'insn_' + re.escape(insn) + r'_ch[0-9]+', check) for check in cfg['checks']):
+                raise ValueError(f'new instruction model must have a requested check: {insn}')
+            isa_list = root / 'insns' / f"isa_{cfg['isa']}.txt"
+            if not isa_list.is_file():
+                raise ValueError('missing upstream ISA instruction list')
+            isa_list.write_text(isa_list.read_text().rstrip() + '\n' + insn + '\n')
+            identity.setdefault('instruction_set_additions', []).append(insn)
         shutil.copyfile(src, dest)
         snapshots.pop(str(Path(cfg['root']) / 'insns' / f'insn_{insn}.v'), None)
         snapshots[str(src)] = hashlib.sha256(dest.read_bytes()).hexdigest()
