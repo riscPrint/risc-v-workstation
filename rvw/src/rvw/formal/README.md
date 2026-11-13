@@ -365,6 +365,17 @@ An abstract failure reports `unknown` with `abstraction_counterexample`.
 It is not a confirmed DUT failure. Interface contracts, dependency checks,
 circular-assumption rejection and RAM abstraction contracts remain open.
 
+### Native generated-monitor qualification
+
+`rvw/tests/formal/test_generated_sby.py` runs SBY in `prove` mode on small
+independent fixtures for 16 generated monitor kinds. Every good fixture must
+return `PASS`. Every seeded fault must return `FAIL`. An elaboration error is
+not a detected fault. `test_property_library.py` also runs bounded good/bad
+checks for the six property intents. These tests use Yices and are slow tests.
+`test_csr_spike.py` builds the generated VexRiscv project CSR programs and runs
+them on M-only Spike. This tests the software reference, not VexRiscv RTL.
+Missing native tools cause a skip. No skipped test supplies verification evidence.
+
 ## Resource safety templates
 
 `rvw formal template allocation_pool --entries 4 --width 3 --out pool.sv`
@@ -2211,3 +2222,4 @@ The replay targets the failed closed output partition. Its input names come
 from the captured miter, such as `__pi_a`. It does not map a witness into a
 project simulator or claim a whole-core reproduction. Source files are retained
 for inspection. Missing models or a nonfailed partition are refused.
+
