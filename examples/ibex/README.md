@@ -88,7 +88,7 @@ rvw query build --config default --out "$IBEX_WORK/design.db"
 rvw query drivers --db "$IBEX_WORK/design.db" u_ibex_core.load_store_unit_i.data_req_o
 rvw query loads --db "$IBEX_WORK/design.db" data_rdata_i --limit 10
 rvw query path --db "$IBEX_WORK/design.db" --comb-only --max-paths 1 \
-  data_req_o u_ibex_core.data_req_o
+  u_ibex_core.data_req_o data_req_o
 rvw query export --db "$IBEX_WORK/design.db" blocks "$IBEX_WORK/blocks.json"
 ```
 
@@ -113,3 +113,10 @@ The block export is an artifact check. No rendered-view check was run.
 The front end now ignores comments in its file-input guard. A comment that
 mentions `$readmemh` does not read a file. Active file inputs and source
 remapping remain refused. Five fast regression tests cover that boundary.
+
+The short path has one data hop from `ibex_core.sv:67` to
+`ibex_top.sv:63`. The LSU request driver resolves to a lowered `$buf`.
+Its port has a declaration location. The lowered buffer has no statement
+location. This is a source-navigation limit. This configuration exercises
+packages, enum parameters and generate blocks. It does not establish general
+SystemVerilog interface support.
