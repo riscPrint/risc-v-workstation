@@ -3896,3 +3896,22 @@ apply to one finite scalar execution under declared dependencies. Limits and
 unsupported profiles cannot produce allowed or forbidden. No full-core proof
 is implied. `rvw.concurrent-programs/1` contains seeded per-hart RV64 assembly
 fragments and project requirements. `executed:false` is mandatory at generation.
+
+
+### Timed finite-SVA simulation
+
+`rvw.formal-events/1` contains `timescale`, `clocks` and `events`. Each event has
+`time` and an `inputs` map of exact-width four-state binary strings. Time starts
+at zero with every input declared. Later times strictly increase. Clock changes
+and data/reset changes have distinct timestamps. No periodic clock is inferred.
+
+`formal simulate` and MCP `formal_simulate` write C1 `rvw.run/1`. Additional
+fields include `assertions` with per-property pass/fail/cover/miss counts,
+`observations`, `unknowns`, `backend`, `x_semantics`, `scope` and captured inputs.
+Assumption failures and absent checks are inconclusive errors. Assertion faults
+use C1 `assert`; requested X observations use `fail`. Verilator results cannot
+claim four-state X evidence. The coverage artifact contains sampled monitor
+points in Verilator point-record format, attributed to generated simulation RTL.
+It is consumable by `rvw cov`, and is not native RTL code coverage. Source hashes
+keep different generated models separate. Pending future obligations and full
+simulator scheduling-region conformance remain outside a finite replay pass.

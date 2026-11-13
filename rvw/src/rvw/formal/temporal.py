@@ -214,7 +214,7 @@ class Property:
     consequents: list[tuple]
     offset: int = 0
 
-    def monitor(self, prefix):
+    def monitor(self, prefix, simulation=False):
         # Compare all branches at a common deadline. Overlapping starts are kept
         # in history, so a new request cannot overwrite an older obligation.
         branches = self.antecedents or [('1',)]
@@ -225,7 +225,7 @@ class Property:
         for i, atom in enumerate(atoms):
             lowered, declarations = sampled(atom, self.clock, f'{prefix}_s{i}')
             lines.extend(declarations)
-            lines.append(f'wire {prefix}_a{i} = !!({lowered});')
+            lines.append(f'wire {prefix}_a{i} = !(!({lowered}));')
             if horizon:
                 lines += [f'reg [{horizon-1}:0] {prefix}_h{i};',
                           f'always @(posedge {self.clock}) {prefix}_h{i} <= '
@@ -256,12 +256,18 @@ class Property:
             enable = f'{prefix}_valid[{horizon-1}]'
         if self.disable:
             enable += f' && !({self.disable})'
+        action = f'{self.kind} ({condition});'
+        if simulation:
+            yes = 'cover' if self.kind == 'cover' else 'pass'
+            no = 'miss' if self.kind == 'cover' else 'fail'
+            action = (f'if (({condition}) === 1\'b1) $display("RVW_SVA {prefix} {self.kind} {yes}"); '
+                      f'else $display("RVW_SVA {prefix} {self.kind} {no}");')
         lines.append(f'always @(posedge {self.clock}) if ({enable}) begin : {prefix}_check\n'
-                     f'  {self.kind} ({condition});\nend')
+                     f'  {action}\nend')
         return '\n'.join(lines), horizon
 
 
-def lower(source):
+def lower(source, simulation=False):
     from .bindings import expand
     source = expand(source)
     # Mask comments and strings without shifting source offsets.
@@ -325,7 +331,7 @@ def lower(source):
             consequent = sequence(parts[-1], names)
             item = Property(f'property_{module_index}_{index}', prop[1], clock[1], disable,
                             antecedents, consequent, int(len(parts) == 3 and parts[1] == '|=>'))
-            emitted, horizon = item.monitor(f'rvw_sva_{module_index}_{index}')
+            emitted, horizon = item.monitor(f'rvw_sva_{module_index}_{index}', simulation=simulation)
             semi = re.match(r'\s*;', text[end:])
             if not semi:
                 raise Unsupported('action_block')
@@ -337,7 +343,8 @@ def lower(source):
                 pos = module.start() + label.start()
             edits.append((pos, end + semi.end(), emitted))
             reports.append({'id': item.name, 'kind': item.kind, 'clock': item.clock,
-                            'disable_iff': disable, 'horizon': horizon})
+                            'disable_iff': disable, 'horizon': horizon,
+                            'monitor': f'rvw_sva_{module_index}_{index}'})
         if set(properties) - used_properties:
             raise Unsupported('property', 'unused declarations need explicit checks')
     remainder = text

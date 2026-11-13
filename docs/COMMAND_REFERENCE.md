@@ -613,7 +613,7 @@ usage: rvw farm dashboard [-h] --root ROOT --out OUT [--core CORE] [--suite
 
 ```text
 usage: rvw formal [-h] [--project PROJECT]
-    {csr,model-live,rtl-grid,rtl-refine,relation-strengthen,doctor,engines,engine-race,engine-bench,model-grid,security,regress,properties,liveness,sva-lower,template,contracts,strengthen,testplan,proof-core,apps,autocheck,bench,cex,sby-history,sby-regress,prove,depth-search,riscv,connectivity,datapath,equiv,bmc,from-sim,swarm,xprop,x-context,x-sweep}
+    {csr,model-live,rtl-grid,rtl-refine,relation-strengthen,doctor,engines,engine-race,engine-bench,model-grid,security,regress,properties,simulate,liveness,sva-lower,template,contracts,strengthen,testplan,proof-core,apps,autocheck,bench,cex,sby-history,sby-regress,prove,depth-search,riscv,connectivity,datapath,equiv,bmc,from-sim,swarm,xprop,x-context,x-sweep}
     ...
 ```
 
@@ -721,6 +721,14 @@ usage: rvw formal regress [-h] --out OUT [--jobs JOBS] [--timeout TIMEOUT]
 ```text
 usage: rvw formal properties [-h] [--channels CHANNELS] --out OUT [--project
     PROJECT] spec
+```
+
+### `rvw formal simulate`
+
+```text
+usage: rvw formal simulate [-h] --verilog VERILOG [VERILOG ...] --top TOP
+    --events EVENTS --out OUT [--backend {icarus,verilator}] [--observe
+    OBSERVE] [--check-x] [--timeout TIMEOUT] [--project PROJECT]
 ```
 
 ### `rvw formal liveness`
@@ -2334,6 +2342,14 @@ Starts a background job: yes.
 Automatically cut internal RTL state and RAM read outputs, then restore drivers after abstract failures.
 
 Arguments: `out` (required), `manifest` (required), `budget`, `timeout`, `max_cuts`.
+
+Starts a background job: yes.
+
+### `formal_simulate`
+
+Replay timed multi-clock input events and collect SVA counts and four-state observations as C1.
+
+Arguments: `verilog` (required), `top` (required), `events` (required), `out` (required), `backend`, `observe`, `check_x`, `timeout`.
 
 Starts a background job: yes.
 
