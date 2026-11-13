@@ -6,6 +6,7 @@ No cocotb dependency is needed to import the cycle models.
 
 | Module | Profile | SV agent and fixture |
 |---|---|---|
+| `rvw.vip.pcie` | Optional transaction-model adapter, windows, completions and DMA | `Uvm/vip/pcie/` |
 | `rvw.vip.dram` | Optional digital DRAM model contract and reduced command checker | `Uvm/vip/dram/` |
 | `rvw.vip.stress` | Abstract memory/NoC latency, bandwidth, refresh pauses and QoS | `Uvm/vip/stress/` |
 | `rvw.vip.coherent` | Reduced coherent event bridge, credits, snoops and ownership | `Uvm/vip/coherent/` |
