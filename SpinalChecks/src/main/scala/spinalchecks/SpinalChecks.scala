@@ -563,7 +563,8 @@ class PhaseInsertChecks(cfg: ChecksConfig, result: ChecksResult) extends PhaseNe
           else {
             val loc = SourceLoc.of(v)
             val bindings = cfg.streamCancellations.filter(_.path == qualify(path, name))
-            require(bindings.size <= 1, s"duplicate cancellation binding for ${qualify(path, name)}")
+            require(bindings.map(b => (b.condition, b.previous)).distinct.size == bindings.size,
+              s"duplicate cancellation binding for ${qualify(path, name)}")
             val declared = bindings.map { binding =>
               val signals = f.signals.collect { case b: Bool if b.getName() == binding.condition && driven(b) => b }
               require(signals.size == 1, s"cancellation binding ${binding.path}: missing or ambiguous local Bool ${binding.condition}")

@@ -38,7 +38,11 @@ object CsrChecksRuntime {
       ChecksConfig(mode = Mode.Both,
         streamCancellations = if (allChecks) Seq(StreamCancelBinding(
           "PcPlugin_logic_harts_0_output", "PcPlugin_logic_harts_0_holdReg", false,
-          "PcPlugin.scala:88-97 withdraws the PC offer on registered hold; pre-edge wave windows 760-780 and 1260-1280 ps")) else Nil,
+          "PcPlugin.scala:88-97 withdraws the PC offer on registered hold; pre-edge wave windows 760-780 and 1260-1280 ps"),
+          StreamCancelBinding("PcPlugin_logic_harts_0_output", "PcPlugin_logic_forcedSpawn", false,
+            "PcPlugin.scala:67-85 selects a redirect over a stalled sequential PC offer"),
+          StreamCancelBinding("early0_DivPlugin_logic_processing_div.io_rsp", "io_flush", true,
+            "DivRadix2.scala:187-190 clears done on flush; DivPlugin.scala:116-117 consumes by flush with ready low")) else Nil,
         enable = if (allChecks) Seq("*") else Seq("csr.*"), reportPath = new File(out,"checks.json").getPath))
     def design(): VexiiRiscv = {
       val plugins = VexiiTop.param("rv32im").plugins()

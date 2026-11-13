@@ -1347,3 +1347,20 @@ The [joint CSR record](csr-helper-results.json) has an ABC PDR pass for the
 VexRiscv CSR-read/state group. The primary trigger was reached in the separate
 kind sample. The portfolio remains inconclusive with `proof_kind: none`.
 This is a conditional group result, not a whole-core certificate.
+
+### VexiiRiscv firing dispositions
+
+The [firing triage](../examples/vexiiriscv/checks-evidence/firing-triage.json)
+lists every program that contributed to the 139 historical events. It keeps
+one source statement and a wave window for each distinct firing check.
+Both checks had incomplete cancellation bindings. A redirect replaces a
+stalled PC offer. A previous-cycle divider flush clears its response valid.
+These are tool false positives. The adapter now binds both conditions.
+
+A stream can have more than one reviewed cancellation term. Terms combine
+with OR. Each term selects the current or previous sample. Duplicate
+condition/sample pairs remain errors. Unclassified logic keeps strict checks.
+The cancellation tests retain the illegal payload-change control.
+The rerun uses the same 49 aligned ISA programs and two CSR programs. All
+51 programs pass with 25 inserted checks and zero firings. The historical
+activation table above remains the pre-fix measurement.

@@ -37,7 +37,7 @@ class StreamCancellationSpec extends AnyFunSuite {
         s.payload := p.payload
         p.ready := s.ready
         s
-      case "unknown" | "declared" =>
+      case "unknown" | "declared" | "multi" =>
         val s = Stream(Bits(8 bits))
         s.valid := !cancel
         s.payload := value
@@ -49,14 +49,17 @@ class StreamCancellationSpec extends AnyFunSuite {
     observed := output.payload
   }
 
-  for (kind <- Seq("halt", "clear", "throw", "pipe", "custom", "and", "throw-pipe", "unknown", "declared")) {
+  for (kind <- Seq("halt", "clear", "throw", "pipe", "custom", "and", "throw-pipe", "unknown", "declared", "multi")) {
     test(s"$kind: legal cancellation and illegal payload mutation") {
       val base = SpinalConfig(targetDirectory = s"generated/cancel-$kind",
         debugComponents = scala.collection.mutable.HashSet[Class[_]](classOf[Top]),
         defaultConfigForClockDomains = ClockDomainConfig(resetKind = SYNC))
       val (cfg, checks) = SpinalChecks.install(base, ChecksConfig(mode = Mode.Monitor,
         streamCancellations = if (kind == "declared")
-          Seq(StreamCancelBinding("output", "cancel", false, "reviewed combinational clear")) else Nil))
+          Seq(StreamCancelBinding("output", "cancel", false, "reviewed combinational clear"))
+        else if (kind == "multi") Seq(
+          StreamCancelBinding("output", "cancel", false, "current cancellation"),
+          StreamCancelBinding("output", "cancel", true, "registered cancellation")) else Nil))
       val sim = SimConfig.withConfig(cfg).workspacePath("simWorkspace")
         .workspaceName(s"cancel_$kind").withVerilator.compile(new Top(kind))
       for (illegal <- Seq(false, true)) sim.doSim(seed = 17) { d =>

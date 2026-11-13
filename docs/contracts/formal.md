@@ -1082,3 +1082,12 @@ Use this explicit declaration when a frontend normalizes module case but a
 separate synthesis frontend preserves the source spelling. Port existence
 and widths remain checked against the database. Compilation must confirm
 that the emitted module has those ports. No module-name match is inferred.
+
+## Multiple reviewed stream cancellation terms
+
+`ChecksConfig.streamCancellations` accepts multiple `StreamCancelBinding`
+values for one exact stream path. The condition and `previous` pair must be
+unique for that path. The checker combines the terms with OR. Each term
+retains its source-review reason in the inventory detail. Terms suppress
+valid-hold and payload-stability obligations only at the selected sample.
+Unknown cancellation logic retains strict checks.
