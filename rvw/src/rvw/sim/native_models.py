@@ -2,6 +2,11 @@
 import ctypes
 import hashlib
 import json
+import os
+import time
+import resource
+import platform
+import shlex
 from pathlib import Path
 import re
 import shutil
@@ -10,21 +15,23 @@ from rvw.common.proc import run_group
 IDENT = re.compile(r'[A-Za-z_][A-Za-z0-9_]*\Z')
 
 
-def step(argv, out, timeout=90):
-    result = run_group(['nice', '-n', '10', *map(str, argv)], timeout=timeout, capture=True)
+def step(argv, out, timeout=90, env=None):
+    result = run_group(['nice', '-n', '10', *map(str, argv)], timeout=timeout, capture=True, env=env)
     with (out/'build.log').open('a') as f:
         f.write(json.dumps(list(map(str, argv)))+'\n'+result.stdout+result.stderr)
-    if result.returncode or result.timed_out:
+    if result.returncode or result.timed_out or 'PROFOUTOFDATE' in result.stdout+result.stderr:
         raise ValueError('native build failed or timed out; see '+str(out/'build.log'))
 
 
 class Model:
-    def __init__(self, backend, sources, top, ports, out, *, circt=None):
+    def __init__(self, backend, sources, top, ports, out, *, circt=None, profile=None):
         if backend not in ('arcilator', 'verilator') or not IDENT.fullmatch(top):
             raise ValueError('unsupported engine or top identifier')
         if not ports or any(not IDENT.fullmatch(n) or d not in ('input','output') or not 1 <= w <= 64
                             for n, (d,w) in ports.items()):
             raise ValueError('ports must have scalar names, directions and widths in 1..64')
+        started=time.monotonic()
+        self.profile=None
         self.ports = ports
         self.backend = backend
         self.out = Path(out).resolve()
@@ -38,6 +45,7 @@ class Model:
             return path
         library = self.out/'model.so'
         if backend == 'arcilator':
+            if profile is not None:raise ValueError('build profiles require Verilator')
             step([tool('circt-verilog'), *sources, '--top', top, '--ir-hw', '-o', self.out/'model.mlir'], self.out)
             step([tool('arcilator'), self.out/'model.mlir', '--no-runtime',
                   '--state-file='+str(self.out/'state.json'), '-o', self.out/'model.ll'], self.out)
@@ -59,11 +67,28 @@ class Model:
                 initial = getattr(self.library,layout['initialFnSym'])
                 initial.argtypes=[ctypes.c_void_p];initial.restype=None;initial(self.memory)
         else:
+            from .native_profiles import Profile
+            cc=tool(os.environ.get('RVW_NATIVE_CXX','c++'))
+            sdk=None
+            if profile is not None and platform.system()=='Darwin':
+                resolved=run_group(['xcrun','--find',os.environ.get('RVW_NATIVE_CXX','c++')],timeout=15,capture=True)
+                if resolved.returncode:raise ValueError('cannot resolve native compiler')
+                cc=resolved.stdout.strip()
+                sdk_query=run_group(['xcrun','--show-sdk-path'],timeout=15,capture=True)
+                if sdk_query.returncode:raise ValueError('cannot resolve compiler SDK')
+                sdk=sdk_query.stdout.strip()
+                self.identity[cc]=hashlib.sha256(Path(cc).read_bytes()).hexdigest()
+            verilator=tool('verilator')
+            root = run_group([verilator, '--getenv', 'VERILATOR_ROOT'], timeout=15, capture=True).stdout.strip()
+            self.profile=Profile(profile,sources,cc,verilator,self.out,sdk=sdk,runtime_mk=Path(root)/'include/verilated.mk')
+            sources=self.profile.sources
+            environment=self.profile.env
+            cpp=' '.join(shlex.quote(v) for v in self.profile.cpp)
             verilator = tool('verilator')
             root = run_group([verilator, '--getenv', 'VERILATOR_ROOT'], timeout=15, capture=True).stdout.strip()
             obj = self.out/'obj'
             step([verilator, '--cc', '--build', '-j', '2', '--top-module', top, '--prefix', 'RVWModel',
-                  '--Mdir', obj, '-Wno-fatal', '--x-initial', '0', '--x-assign', '0', '-CFLAGS', '-fPIC', *sources], self.out)
+                  '--Mdir', obj, '-Wno-fatal', '--x-initial', '0', '--x-assign', '0', '-CFLAGS', cpp, *self.profile.flags, *sources], self.out, env=environment)
             wrapper = self.out/'wrapper.cpp'
             getters = ''.join(f'case {i}: return m->{name};' for i,name in enumerate(ports))
             setters = ''.join(f'case {i}: m->{name}=v; break;' for i,(name,(d,w)) in enumerate(ports.items()) if d=='input')
@@ -78,10 +103,24 @@ uint64_t model_read(void* p,unsigned id){auto* m=static_cast<RVWModel*>(p);switc
 void model_write(void* p,unsigned id,uint64_t v){auto* m=static_cast<RVWModel*>(p);switch(id){'''+setters+'''default:break;}}
 }
 ''')
+            if self.profile.raw:
+                with wrapper.open('a') as stream:
+                    stream.write('extern "C" int __llvm_profile_write_file();\nextern "C" int model_flush_profile(){return __llvm_profile_write_file();}\n')
             includes = Path(root)/'include'
-            step([tool('c++'), '-std=c++17','-shared','-fPIC','-pthread','-I'+str(obj),'-I'+str(includes),
-                  '-I'+str(includes/'vltstd'), wrapper, obj/'RVWModel__ALL.a', includes/'verilated.cpp',
-                  includes/'verilated_threads.cpp','-o',library],self.out)
+            runtime=obj/'libverilated.a'
+            archives=[p for p in sorted(obj.rglob('*.a'),key=lambda p:(p.name!='RVWModel__ALL.a',str(p)))
+                      if p.name not in ('libverilated.a','libRVWModel.a')]
+            if runtime.exists():
+                runtime_link=(['-Xlinker','-force_load','-Xlinker',str(runtime)] if platform.system()=='Darwin'
+                              else ['-Xlinker','--whole-archive',str(runtime),'-Xlinker','--no-whole-archive'])
+            else:
+                if self.profile.request.get('compiler_pgo','off')!='off':
+                    raise ValueError('compiler PGO requires the generated runtime archive')
+                runtime_link=[str(includes/'verilated.cpp'),str(includes/'verilated_threads.cpp')]
+            step([self.profile.compiler, '-std=c++17','-shared',*self.profile.cpp,*self.profile.link,'-pthread','-I'+str(obj),'-I'+str(includes),
+                  '-I'+str(includes/'vltstd'), wrapper, *archives, *runtime_link,'-o',library],self.out,env=environment)
+            self.identity.update(self.profile.identity)
+            if self.profile.raw:os.environ['LLVM_PROFILE_FILE']=str(self.profile.raw)
             self.library=ctypes.CDLL(str(library))
             signatures={'model_create':([],ctypes.c_void_p),'model_delete':([ctypes.c_void_p],None),
                 'model_eval':([ctypes.c_void_p],None),'model_read':([ctypes.c_void_p,ctypes.c_uint],ctypes.c_uint64),
@@ -90,6 +129,8 @@ void model_write(void* p,unsigned id,uint64_t v){auto* m=static_cast<RVWModel*>(
                 f=getattr(self.library,name);f.argtypes=args;f.restype=result
             self.memory=self.library.model_create()
             self.ids={n:i for i,n in enumerate(ports)}
+        self.build_seconds=time.monotonic()-started
+        self.child_peak_rss_bytes=resource.getrusage(resource.RUSAGE_CHILDREN).ru_maxrss*(1 if platform.system()=='Darwin' else 1024)
         self.identity[str(library)] = hashlib.sha256(library.read_bytes()).hexdigest()
         (self.out/'identity.json').write_text(json.dumps(self.identity,indent=2)+'\n')
 
@@ -114,4 +155,7 @@ void model_write(void* p,unsigned id,uint64_t v){auto* m=static_cast<RVWModel*>(
 
     def close(self):
         if self.backend=='verilator' and self.memory:
+            if self.profile and self.profile.raw:
+                flush=self.library.model_flush_profile;flush.argtypes=[];flush.restype=ctypes.c_int
+                if flush()!=0:raise ValueError('compiler profile write failed')
             self.library.model_delete(self.memory);self.memory=None

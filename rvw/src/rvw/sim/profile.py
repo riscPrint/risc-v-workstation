@@ -38,7 +38,9 @@ def report(results=(), *, build_profile='default'):
             elaboration_s=_number(timing.get('elaboration_s')),
             native_and_setup_s=_number(timing.get('native_and_setup_s')),
             model_compile_s=_number(details.get('model_compile_s')),
-            execution_s=execution, scala_compile_s=None, peak_rss_bytes=None,
+            execution_s=execution, scala_compile_s=None, peak_rss_bytes=_number(details.get('child_peak_rss_bytes')),
+            peak_rss_scope='maximum child-process build RSS; platform normalized',
+            native_probe_profile=details.get('native_profile'),
             cycles=cycles, instructions=instructions,
             sim_khz=cycles / execution / 1000 if execution and cycles is not None else None,
             instructions_per_s=instructions / execution if execution and instructions is not None else None,
@@ -49,7 +51,7 @@ def report(results=(), *, build_profile='default'):
         tools[tool] = dict(status='installed' if path else 'not_installed', path=path)
     return dict(schema='rvw.sim-profile/1', status='reported', runs=rows, tools=tools,
         build_profile=build_profile, profile_applied=False, environment={'SPINAL_VERILATOR_FLAGS': PROFILES[build_profile]},
-        unsupported=['hierarchical bridge access', 'captured PGO reuse', 'Arcilator C1 engine'],
+        unsupported=['production Spinal hierarchical bridge access', 'production Spinal captured PGO reuse', 'BOOM Arcilator C1 engine'],
         qualification='none; use complete C2 equivalence and paired speed comparisons',
         tool_check='PATH discovery only; no version, lowering or runtime check')
 

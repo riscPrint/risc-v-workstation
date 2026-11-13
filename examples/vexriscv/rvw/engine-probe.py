@@ -21,7 +21,10 @@ def run(args):
             for i,b in enumerate(elf.data[s['off']:s['off']+s['filesz']]):memory[s['paddr']+i]=b
     tohost=elf.symbols()['tohost'].value
     ports=json.loads(args.ports.read_text())
-    model=Model(args.backend,[args.rtl],'VexTop',ports,args.out/'native',circt=os.environ.get('RVW_CIRCT'))
+    model=Model(args.backend,[args.rtl],'VexTop',ports,args.out/'native',circt=os.environ.get('RVW_CIRCT'),profile=getattr(args,'build_profile',None))
+    if model.profile and model.profile.request.get('compiler_pgo')=='generate':
+        if model.profile.record['binding']['training_elf_sha256']!=hashlib.sha256(args.elf.read_bytes()).hexdigest():
+            raise ValueError('training ELF differs from captured compiler profile request')
     def put(**values):
         for n,v in values.items():model.write(n,v)
         model.eval()
@@ -36,6 +39,7 @@ def run(args):
             iBus_rsp_payload_inst=ip[0] if ip else 0,iBus_rsp_payload_error=int(ip[1]) if ip else 0,
             dBus_cmd_ready=rng.randrange(2),dBus_rsp_ready=int(dp is not None),
             dBus_rsp_data=dp[0] if dp else 0,dBus_rsp_error=int(dp[1]) if dp else 0)
+    execution_start=time.monotonic()
     count=0;status='timeout';cycle=0;handler=False
     try:
         for name,(direction,width) in ports.items():
@@ -81,7 +85,9 @@ def run(args):
             elf_sha256=hashlib.sha256(args.elf.read_bytes()).hexdigest(),seed=args.seed,max_cycles=args.max_cycles,
             mem_latency=1,status=status,fail_code=None if status=='pass' else 1,cycles=cycle,instret=count,
             wall_s=time.monotonic()-start,source={},tools={},artifacts={'rvfi_trace':'rvfi.jsonl'},
-            details={'engine':args.backend,'native_identity':model.identity,'initial_state':'zero; then reset',
+            details={'execution_s':time.monotonic()-execution_start,'model_compile_s':model.build_seconds,
+                     'child_peak_rss_bytes':model.child_peak_rss_bytes,'native_profile':model.profile.record if model.profile else None,
+                     'engine':args.backend,'native_identity':model.identity,'initial_state':'zero; then reset',
                      'scope':'bounded seeded-ready, fixed-response-latency probe; no interrupts, wave, CSR snapshot or C4 acceptance'})
         save_run(RunResult.from_dict(result),args.out/'result.json')
         print(json.dumps(result))
@@ -93,6 +99,7 @@ def main():
  p=argparse.ArgumentParser(__doc__)
  p.add_argument('action',nargs='?',choices=['run'],default='run')
  p.add_argument('--backend',choices=['arcilator','verilator'],default=os.environ.get('RVW_NATIVE_ENGINE','arcilator'))
+ p.add_argument('--build-profile',type=Path)
  p.add_argument('--ports',type=Path,default=Path(__file__).with_name('engine-ports.json'))
  p.add_argument('--allow-traps',action='store_true')
  p.add_argument('--rtl',type=Path,required=True);p.add_argument('--elf',type=Path,required=True)

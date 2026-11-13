@@ -544,3 +544,13 @@ identity values. For this no-trap program, every snapshot had `mcycle=cycle`
 and `minstret=order+1`. Both high counter halves were captured. Counter rollover
 and software counter writes were not exercised. The RVFI record is sampled at
 the firing edge; CSR storage is sampled after that edge settles.
+
+## Native build profile measurements
+
+The [profile campaign](rvw/profiles/README.md) runs flat, ccache cold/warm,
+2-thread, 4-thread, hierarchical and compiler PGO capture/reuse builds on the
+same captured core. All eight passed the seeded smoke with complete C2 bytes
+equal to the independent Arcilator reference. The README includes build time,
+execution/trace time, child-process RSS, cache counters and a build-time chart.
+These short samples qualify the profile plumbing. They do not qualify a
+runtime speed improvement or a BOOM preset. Defaults remain unchanged.
