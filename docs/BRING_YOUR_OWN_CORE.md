@@ -558,17 +558,11 @@ without these bounds retain only their observed event window. Mark a stall
 reason as `inferred` when the signals show refill activity or a recovery
 span without proving lost CPU cycles. Causes can overlap.
 
-The extra cached VexRiscv and VexiiRiscv configs each passed 49 selected
-aligned ISA programs with probes enabled. All 98 traces matched Spike.
-Four programs per core supplied physical cache checks and performance
-reports. All eight cache checks were consistent. Data-cache models agreed
-on all 769 accesses in each cache sweep. VexiiRiscv also checked 512
-writebacks and 12 early-restart instruction hits. Frozen timing models
-were scored on three programs per core. Both reported inconclusive
-accuracy. No core source changes were needed.
+The cached-core measurements, selected ISA counts and model limits are kept
+in the example records. Use the
+[VexRiscv commands and records](../examples/vexriscv/rvw/csim/README.md) and
+[VexiiRiscv commands and records](../examples/vexiiriscv/rvw/csim/README.md).
 
-See the [VexRiscv commands and records](../examples/vexriscv/rvw/csim/README.md)
-and [VexiiRiscv commands and records](../examples/vexiiriscv/rvw/csim/README.md).
 The [native negative test](../examples/vexriscv/rvw/tests/test_probe_misplaced.py)
 checks a deliberately misplaced branch probe in a temporary adapter.
 Use `rvw probes check --events RUN/probe-events.jsonl --validate --c2 RUN/rvfi.jsonl`.

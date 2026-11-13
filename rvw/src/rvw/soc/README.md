@@ -4,7 +4,7 @@
 
 | File | Use |
 |---|---|
-| `platform.json` | Existing Spike shim and `rvw cosim --platform` input. Reference policy stays explicit. |
+| `platform.json` | Existing Spike shim and `rvw cosim check --platform` input. Reference policy stays explicit. |
 | `spike.args` | One native Spike argument per line: ISA, reset PC and RAM. MMIO device models are not created. |
 | `memory.ld` | GNU ld MEMORY fragment. Include it from a program's section layout. |
 | `soc.h` | C region bounds and absolute register addresses. No volatile access functions. |

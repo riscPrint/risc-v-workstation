@@ -31,7 +31,7 @@ They do not establish whole-core proof or release qualification.
 | Tool | What the core gets | Measured result and limit |
 |---|---|---|
 | `rvw regress`, native C1 | ELF execution and repeatable results | All 50 RV32UI/M programs pass, including `ma_data`. Three directed programs also pass. |
-| `rvw cosim --strict`, commit-owned C2 | Architectural comparison with Spike | All 50 ISA traces match with zero synchronizations. Directed arithmetic, self-modifying code and trap/counter traces also strictly match. ISA has 18,154 retirements and 18,354 instruction records including trapping records. |
+| `rvw cosim check --strict`, commit-owned C2 | Architectural comparison with Spike | All 50 ISA traces match with zero synchronizations. Directed arithmetic, self-modifying code and trap/counter traces also strictly match. ISA has 18,154 retirements and 18,354 instruction records including trapping records. |
 | `SpinalProbes`, `rvw perf topdown` | Native branch, rename, occupancy, recovery and commit observations | Smoke has 54 commit slots: 17 retiring, 35 waiting at a nonempty ROB head and two empty-ROB slots. The partition agrees with C2. It is a project commit-slot partition, not hardware top-down signoff. |
 | Kanata conversion | Allocation, issue, commit and squash view | The trap/counter sample has 49 retirements, 24 flushed instructions, two open instructions at termination and zero orphan events. A trapping head is flushed, not retired. |
 | `rvw csim compare-rtl` | Predictor comparison with project parameters | Four smoke branches were compared. Conditional direction has zero disagreements. One jump has a target-status classification difference. The model remains approximate. |

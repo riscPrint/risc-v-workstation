@@ -27,7 +27,7 @@ def register(subparsers):
 
     suite = sub.add_parser('suite', help='Debug Specification compliance campaign (C3 results)')
     suite.add_argument('--profile', type=Path, help='debug profile; default: project [debug_module] profile')
-    suite.add_argument('--out', required=True, type=Path)
+    suite.add_argument('--out', type=Path)
     suite.add_argument('--group', action='append', help='dm, abs, pb, dbg, trig or sba (repeatable)')
     suite.add_argument('--check', action='append', help='check id (repeatable)')
     suite.add_argument('--no-reference', action='store_true', help='skip the reference-model comparison')
@@ -162,6 +162,9 @@ def _suite(args):
         for item in api.list_checks():
             print(f"{item['id']}\t{item['rule']}")
         return 0
+    if args.out is None:
+        print('--out is required unless --list is used')
+        return 2
     try:
         result = api.suite_run(args.out, profile=args.profile, groups=args.group, checks=args.check,
                                reference=not args.no_reference, log=args.log, port=args.port,
