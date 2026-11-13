@@ -1,0 +1,8 @@
+{
+  "schema": "rvw.privilege/1",
+  "kind": "epmp-matrix",
+  "isa": "rv64im_zicsr_zifencei_smepmp",
+  "epmp": {
+    "rlb_supported": true
+  }
+}
