@@ -224,8 +224,7 @@ pointers. A caller must consume the delay before it publishes completion.
 The supplied SystemC bridge has one initiator and one outstanding transaction.
 It samples RTL requests at falling edges and consumes a 2 ns delay before the
 next rising edge of a 10 ns clock. The target alone has loosely timed
-semantics. No multi-initiator ordering, DMI, temporal decoupling or cycle-accurate
-device timing is implied.
+semantics. No DMI, temporal decoupling or cycle-accurate device timing is implied.
 
 ### Captured project adapter registry
 
@@ -495,3 +494,12 @@ IDs to program failure codes. C1 `fail_code` is the code from the lowest
 failed hart. Per-hart reduction also requires the complete failure-code map
 to match. Missing codes are inconclusive. Other failure-signature and timeout
 rules still apply. Each stage reports local minimality and budget exhaustion.
+
+## Blocking TLM multi-initiator memory
+
+`TlmMemory.socket` accepts multiple initiator bindings. The SystemC kernel
+orders calls. Each call applies bytes at call time before it returns. Successful
+reads and writes increment `initiatorReads` and `initiatorWrites` by binding ID.
+The caller consumes the annotated delay. Completion times do not reorder memory
+effects. Calls at the same time use kernel process order. Arbitration, fairness,
+parallel host-thread access and separate kernels are outside this contract.

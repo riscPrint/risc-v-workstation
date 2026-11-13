@@ -1,21 +1,29 @@
 #pragma once
 #include <systemc>
 #include <tlm>
-#include <tlm_utils/simple_target_socket.h>
+#include <tlm_utils/multi_passthrough_target_socket.h>
+#include <map>
 #include <cstdint>
 #include <vector>
 
 namespace riscvsim {
-// Blocking, single-initiator memory. The caller consumes annotated delay.
+// Blocking memory shared by SystemC initiators. The caller consumes annotated delay.
 // The target neither waits nor keeps payload pointers. No DMI or atomics.
 struct TlmMemory : sc_core::sc_module {
-  tlm_utils::simple_target_socket<TlmMemory> socket;
+  tlm_utils::multi_passthrough_target_socket<TlmMemory> socket;
   std::vector<unsigned char> bytes;
   sc_core::sc_time latency;
   uint64_t reads=0, writes=0;
+  std::map<int, uint64_t> initiatorReads, initiatorWrites;
   TlmMemory(sc_core::sc_module_name name, size_t size, sc_core::sc_time delay)
       : sc_module(name), socket("socket"), bytes(size, 0), latency(delay) {
-    socket.register_b_transport(this, &TlmMemory::transport);
+    socket.register_b_transport(this, &TlmMemory::transportFrom);
+  }
+  void transportFrom(int id, tlm::tlm_generic_payload& p, sc_core::sc_time& delay) {
+    transport(p, delay);
+    if (p.is_response_ok()) {
+      if (p.is_read()) ++initiatorReads[id]; else ++initiatorWrites[id];
+    }
   }
   void transport(tlm::tlm_generic_payload& p, sc_core::sc_time& delay) {
     p.set_dmi_allowed(false);

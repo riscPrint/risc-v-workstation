@@ -980,7 +980,10 @@ under the named service conditions. They are not unbounded RTL liveness proofs.
 enables and range checks. The [native example](examples/systemc/README.md)
 builds an RTL requester with Verilator `--sc` and connects it through a
 SystemC initiator bridge. The target annotates delay. The caller consumes it.
-The example uses one outstanding transaction and explicit clock-edge sampling.
+The RTL bridge uses one outstanding transaction and explicit clock-edge sampling.
+A second native example binds two SystemC initiators to the same target.
+The kernel orders their blocking calls. The target counts successful accesses
+per binding. It has no bus arbitration, fairness or host-thread synchronization.
 Its native test passed with SystemC 3.0.2 and Verilator 5.049. This is a small
 partition example. It provides no whole-core or timing qualification.
 
