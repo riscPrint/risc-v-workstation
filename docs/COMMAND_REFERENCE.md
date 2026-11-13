@@ -613,7 +613,7 @@ usage: rvw farm dashboard [-h] --root ROOT --out OUT [--core CORE] [--suite
 
 ```text
 usage: rvw formal [-h] [--project PROJECT]
-    {csr,model-live,rtl-grid,rtl-refine,relation-strengthen,doctor,engines,engine-race,engine-bench,model-grid,security,regress,properties,simulate,liveness,sva-lower,template,contracts,strengthen,testplan,proof-core,apps,autocheck,bench,cex,sby-history,sby-regress,prove,depth-search,riscv,connectivity,datapath,equiv,bmc,from-sim,swarm,xprop,x-context,x-sweep}
+    {csr,bug-hunt,model-live,rtl-grid,rtl-refine,relation-strengthen,doctor,engines,engine-race,engine-bench,model-grid,security,regress,properties,simulate,liveness,sva-lower,template,contracts,strengthen,testplan,proof-core,apps,autocheck,bench,cex,sby-history,sby-regress,prove,depth-search,riscv,connectivity,datapath,equiv,bmc,from-sim,swarm,xprop,x-context,x-sweep}
     ...
 ```
 
@@ -621,6 +621,13 @@ usage: rvw formal [-h] [--project PROJECT]
 
 ```text
 usage: rvw formal csr [-h] --model MODEL --out OUT [--project PROJECT]
+```
+
+### `rvw formal bug-hunt`
+
+```text
+usage: rvw formal bug-hunt [-h] --manifest MANIFEST --out OUT [--json]
+    [--timeout TIMEOUT] [--budget BUDGET] [--project PROJECT]
 ```
 
 ### `rvw formal model-live`
@@ -2220,6 +2227,14 @@ Starts a background job: yes.
 Bounded model check of a design's assertions from reset (SymbiYosys). Use for shallow bugs; failures are named by SpinalChecks id and Scala line when `checks` is given. Runs as a job.
 
 Arguments: `project`, `verilog`, `top`, `out` (required), `clock`, `reset`, `reset_active`, `checks`, `depth`, `engine`, `timeout`, `tie`, `reset_cycles`, `free_reset`, `first_failure`, `clock_schedule`, `event_model`, `event_clock`, `async_reset`.
+
+Starts a background job: yes.
+
+### `formal_bug_hunt`
+
+Bounded engine and rIC3 seed search. Only a concrete counterexample is conclusive.
+
+Arguments: `out` (required), `manifest` (required), `budget`, `timeout`.
 
 Starts a background job: yes.
 
