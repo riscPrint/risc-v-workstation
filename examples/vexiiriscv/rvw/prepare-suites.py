@@ -85,6 +85,18 @@ def main():
     if 'privilege-controls' in applicable:
         privilege_build(root / 'examples/privilege/controls.json', out / 'privilege', args.gcc)
         families.append(dict(family='privilege', source='examples/privilege/controls.json'))
+    if 'pmp-rv32' in applicable:
+        granularity = next((int(c.split(':')[1]) for c in capabilities if c.startswith('pmp-granularity:')), 4)
+        config = json.loads((root / 'examples/privilege/pmp-rv32.json').read_text())
+        config.update(isa=features['isa'], pmp=dict(entries=features['pmp_regions'], granularity_bytes=granularity))
+        if features['privilege_modes'] == 'MSU':
+            config.pop('priv', None)  # S present: the standard head and S-mode cases apply
+        description = out / 'pmp.json'
+        description.write_text(json.dumps(config) + '\n')
+        built = privilege_build(description, out / 'pmp', args.gcc)
+        count = len(built['scenarios'])
+        families.append(dict(family='pmp', source='examples/privilege/pmp-rv32.json',
+                             granularity_bytes=granularity, generated=count, applicable=count, excluded=[]))
     if 'pmp' in applicable:
         granularity = next((int(c.split(':')[1]) for c in capabilities if c.startswith('pmp-granularity:')), 4)
         description = out / 'pmp.json'

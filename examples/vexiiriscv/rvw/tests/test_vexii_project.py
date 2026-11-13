@@ -21,6 +21,7 @@ def test_copied_project_uses_core_owned_paths(tmp_path, monkeypatch):
                     ignore=shutil.ignore_patterns('target', 'out', '__pycache__'))
     monkeypatch.setenv('RVW_HOME', str(tmp_path / 'installed workstation'))
     monkeypatch.delenv('RVW_PROJECT', raising=False)
+    monkeypatch.setenv('VEXIIRISCV', str(core))
     monkeypatch.chdir(core / 'rvw' / 'programs')
     assert find_project() == core / 'rvw.toml'
     project = load_project()
@@ -88,8 +89,45 @@ def test_rich_paging_selection_excludes_other_modes_and_hardware_ad():
 def test_plan_selects_profile_families():
     from rvw.regress.commands.applicability import plan
     for name, expected in (('features64.json', {'mmu-sv39', 'privilege-controls', 'pmp', 'scheduled-wfi', 'fence-i-rv64'}),
-                           ('features32.json', {'mmu-sv32', 'amo-rv32', 'fence-rv32', 'scheduled-wfi-rv32'})):
+                           ('features32.json', {'mmu-sv32', 'amo-rv32', 'fence-rv32', 'scheduled-wfi-rv32', 'pmp-rv32'})):
         rows = plan(EXAMPLE / 'rvw' / name)['suites']
         applicable = {r['name'] for r in rows if r['applicable']}
         assert expected <= applicable
         assert not applicable & {'mmu-sv48', 'hypervisor', 'shootdown', 'memory-concurrent'}
+
+
+@pytest.mark.parametrize('modes,expected_count', [('MSU', 394), ('MU', 242)])
+def test_prepare_rv32_pmp_uses_declared_profile(tmp_path, monkeypatch, modes, expected_count):
+    import runpy
+    import sys
+    from rvw.privilege import campaign
+    from rvw.regress.commands import applicability
+    module = runpy.run_path(str(EXAMPLE / 'rvw/prepare-suites.py'))
+    features = json.loads((EXAMPLE / 'rvw/features32.json').read_text())
+    features['privilege_modes'] = modes
+    declaration = tmp_path / 'features.json'
+    declaration.write_text(json.dumps(features))
+    selected = applicability.plan(declaration)
+    selected['suites'] = [r for r in selected['suites'] if r['name'] == 'pmp-rv32']
+    monkeypatch.setattr(applicability, 'plan', lambda path: selected)
+    seen = []
+    def capture(description, out, gcc):
+        config = campaign.load(description)
+        assert config['isa'] == features['isa']
+        assert config['pmp'] == dict(entries=8, granularity_bytes=4)
+        assert config.get('priv', 'msu') == modes.lower()
+        rows = campaign.scenarios(config)
+        assert len(rows) == expected_count
+        assert all('sd t1' not in row['assembly'] for row in rows)
+        seen.append(out.name)
+        return dict(scenarios=rows)
+    monkeypatch.setattr(campaign, 'build', capture)
+    monkeypatch.setenv('RVW_HOME', str(EXAMPLE.parents[1]))
+    monkeypatch.setattr(sys, 'argv', ['prepare', '--features', str(declaration), '--out', str(tmp_path / 'built')])
+    assert module['main']() == 0
+    assert seen == ['pmp']
+    selection = json.loads((tmp_path / 'built/selection.json').read_text())
+    family = selection['families'][0]
+    assert family['source'] == 'examples/privilege/pmp-rv32.json'
+    assert family['generated'] == family['applicable'] == expected_count
+    assert family['excluded'] == []
