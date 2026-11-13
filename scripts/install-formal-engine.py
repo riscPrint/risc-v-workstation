@@ -42,8 +42,16 @@ def install(engine, prefix, dry=False):
         run('git', '-C', src, 'fetch', 'origin', EBMC_REV)
         run('git', '-C', src, 'checkout', '--detach', EBMC_REV)
         run('git', '-C', src, 'submodule', 'update', '--init', '--recursive', '--depth', '1')
-        run('nice', '-n', '10', 'make', '-C', src / 'lib/cbmc/src', 'minisat2-download')
-        run('nice', '-n', '10', 'make', '-C', src / 'src', '-j2')
+        build_env = dict(os.environ)
+        if sys.platform == 'darwin':
+            common = src / 'lib/cbmc/src/common'
+            print('Set the external CBMC macOS deployment target to 14.0', flush=True)
+            if not dry:
+                common.write_text(common.read_text().replace('version-min=10.15', 'version-min=14.0'))
+                brew = subprocess.check_output(['brew', '--prefix'], text=True).strip()
+                build_env['PATH'] = brew + '/opt/bison/bin:' + brew + '/opt/flex/bin:' + build_env['PATH']
+        run('nice', '-n', '10', 'make', '-C', src / 'lib/cbmc/src', 'minisat2-download', env=build_env)
+        run('nice', '-n', '10', 'make', '-C', src / 'src', '-j2', env=build_env)
         run('mkdir', '-p', prefix / 'bin')
         run('cp', src / 'src/ebmc/ebmc', prefix / 'bin/ebmc')
     return prefix / 'bin'
