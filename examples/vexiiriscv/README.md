@@ -872,3 +872,28 @@ Regenerate full records outside the repository before using those tools.
 Historical `verification-status.json`: {"status":"reported","features":{"records":7,"statuses":{"reported_closed":4,"open":3}},"notes":{"records":2},"unassigned_requirements":{"records":0},"summary":{"features":7,"reported_closed":4,"open":3,"holes":5082,"unassigned_requirements":0}}.
 Raw records are no longer tracked. Regenerate outside the repository:
 `rvw plan status examples/vexiiriscv/verification-plan.json --json`. Use the pinned inputs and options from [PR #1145](https://github.com/riscPrint/risc-v-workstation/pull/1145).
+
+## RV32 and RV64 evidence
+
+| Check | RV32 | RV64 |
+|---|---|---|
+| Default | `rv32im` remains the default | Extra `rv64ima` M and `rv64imasu` Sv39 profiles |
+| riscv-tests | 49 strict matches per existing M and MSU profile | 85 strict matches per M and MSU profile |
+| ACT4 reduced-CSR instruction boot | 58 strict matches | 98 strict matches |
+| ACT4 standard supervisor boot | 270 failures at missing `mhpmevent3` | 302 failures at the same missing CSR; zero body retirements |
+| Native generated checks | Existing RV32 qualification | 25 checks, zero firings on two CSR programs; both traces match Spike strictly |
+| Formal ISA | Existing RV32 results remain separate | ADDW, SLLIW and MULW at 32 cycles remain inconclusive |
+| Divider pair | Existing RV32 results remain separate | 42 versus 138 case-window cycles, with strict Spike checks on both sides |
+
+See [the complete RV32/RV64 table](../../docs/INTEGRATION_GUIDE.md#vexiiriscv-rv32-and-rv64-status)
+for generated-family counts and synchronization limits. The
+[tool record](rvw/rv64/TOOLS.md) separates coverage, probes, catalog metadata,
+formal attempts and timing evidence. The [RV64 ACT4 supervisor record](rvw/act4-64su/README.md)
+keeps its standard-boot failure and minimal reproduction. The
+[machine ACT4 record](rvw/act4-64m/README.md) has all 98 strict matches.
+
+No upstream core source was changed. C/F/D suite qualification and whole-core
+ISA proof remain open. The mapped RTL security harness and CSR bank remain
+RV32-only. The new security C1 adapter handles the RV64 pair.
+The standalone `rvw/run64.sh` default remains `rv64imasu`. Select
+`--config rv64ima` or the `rvw64m.toml` project for the machine profile.
