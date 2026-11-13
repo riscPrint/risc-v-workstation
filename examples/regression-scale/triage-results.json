@@ -1,0 +1,151 @@
+{
+  "schema": "rvw.native-triage-example/1",
+  "source": "49 native VexRiscv ISA cells on each revision",
+  "good": "a62c145aa042a5de874344e0a7683bd7c8c8c870",
+  "bad": "b2aab0aec4095949a759442ff2990933413a9274",
+  "diff_verdict": "reject",
+  "new_failures": [
+    {
+      "suite": "isa",
+      "config": "rv32im",
+      "id": "rv32ui-p-xor",
+      "signature": "fail:2",
+      "status": "fail",
+      "seed": 1,
+      "run": "$CHECKOUT/rvw/out/farm-native/bug-queue/7da4fd6f2fe64eb6a74e5e30f80c7207/attempt-1/cells/44",
+      "message": "tohost = 0x5",
+      "base": "pass"
+    },
+    {
+      "suite": "isa",
+      "config": "rv32im",
+      "id": "rv32ui-p-xori",
+      "signature": "fail:2",
+      "status": "fail",
+      "seed": 1,
+      "run": "$CHECKOUT/rvw/out/farm-native/bug-queue/7da4fd6f2fe64eb6a74e5e30f80c7207/attempt-1/cells/20",
+      "message": "tohost = 0x5",
+      "base": "pass"
+    }
+  ],
+  "issues": [],
+  "clusters": [
+    {
+      "id": "87298c1869923698a38d",
+      "signature": "mismatch:[\"0x80000198\", \"0xf0f6c713\"]",
+      "tests": [
+        "rv32ui-p-xori"
+      ],
+      "comparison": {
+        "pc": "0x80000198",
+        "instruction": "0xf0f6c713",
+        "comparison_sha256": "1e7c1c9d12caa157624829f0af9fedee6b1548d7bbb3f26361a9fe0a1d76840f",
+        "model": "spike",
+        "synchronized": 1,
+        "applied_masks": [
+          {
+            "reason": "csr_reset_unknown",
+            "csr": "0x340",
+            "mask": "0xffffffff"
+          }
+        ],
+        "recent_synchronizations": [
+          {
+            "order": 0,
+            "reason": "csr_reset_unknown",
+            "csr": "0x340",
+            "mask": "0xffffffff",
+            "source": "csr_state",
+            "reference": "0x0",
+            "core": "0x304a3852"
+          }
+        ]
+      },
+      "commit_ranges": [
+        "a62c145aa042a5de874344e0a7683bd7c8c8c870..b2aab0aec4095949a759442ff2990933413a9274"
+      ],
+      "bisect": [
+        {
+          "test": "rv32ui-p-xori",
+          "range": "a62c145aa042a5de874344e0a7683bd7c8c8c870..b2aab0aec4095949a759442ff2990933413a9274",
+          "command": [
+            "rvw",
+            "bisect",
+            "$CHECKOUT/rvw/out/farm-native/bug-queue/7da4fd6f2fe64eb6a74e5e30f80c7207/attempt-1/cells/20",
+            "--good",
+            "a62c145aa042a5de874344e0a7683bd7c8c8c870",
+            "--bad",
+            "b2aab0aec4095949a759442ff2990933413a9274",
+            "--core-repo",
+            "~/fun/saviour/wt/.vex/priv-bug",
+            "--core-env",
+            "VEXRISCV"
+          ],
+          "execution": "not_run"
+        }
+      ],
+      "bundle_schema": "rvw.bundle/1",
+      "bundle_signature": "fail:2"
+    },
+    {
+      "id": "60404480ce182059d8db",
+      "signature": "mismatch:[\"0x800001a0\", \"0xc5c733\"]",
+      "tests": [
+        "rv32ui-p-xor"
+      ],
+      "comparison": {
+        "pc": "0x800001a0",
+        "instruction": "0xc5c733",
+        "comparison_sha256": "b08123ffb37e8c5f5b2ae0bb255af7ef9d7177e0e1e3c2abf1793d38eeb2666b",
+        "model": "spike",
+        "synchronized": 1,
+        "applied_masks": [
+          {
+            "reason": "csr_reset_unknown",
+            "csr": "0x340",
+            "mask": "0xffffffff"
+          }
+        ],
+        "recent_synchronizations": [
+          {
+            "order": 0,
+            "reason": "csr_reset_unknown",
+            "csr": "0x340",
+            "mask": "0xffffffff",
+            "source": "csr_state",
+            "reference": "0x0",
+            "core": "0x304a3852"
+          }
+        ]
+      },
+      "commit_ranges": [
+        "a62c145aa042a5de874344e0a7683bd7c8c8c870..b2aab0aec4095949a759442ff2990933413a9274"
+      ],
+      "bisect": [
+        {
+          "test": "rv32ui-p-xor",
+          "range": "a62c145aa042a5de874344e0a7683bd7c8c8c870..b2aab0aec4095949a759442ff2990933413a9274",
+          "command": [
+            "rvw",
+            "bisect",
+            "$CHECKOUT/rvw/out/farm-native/bug-queue/7da4fd6f2fe64eb6a74e5e30f80c7207/attempt-1/cells/44",
+            "--good",
+            "a62c145aa042a5de874344e0a7683bd7c8c8c870",
+            "--bad",
+            "b2aab0aec4095949a759442ff2990933413a9274",
+            "--core-repo",
+            "~/fun/saviour/wt/.vex/priv-bug",
+            "--core-env",
+            "VEXRISCV"
+          ],
+          "execution": "not_run"
+        }
+      ],
+      "bundle_schema": "rvw.bundle/1",
+      "bundle_signature": "fail:2"
+    }
+  ],
+  "bisection": "attempted; blocked before simulation by unsupported tracked core gitlink",
+  "trap_cause_native": "not_exercised by these XOR failures",
+  "bisection_blocker": "src/test/resources/VexRiscvRegressionData: git directory entry is unsupported (submodule)"
+}

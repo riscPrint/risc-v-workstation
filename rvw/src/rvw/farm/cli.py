@@ -55,6 +55,7 @@ def register(sub):
     triage.add_argument("--baseline")
     triage.add_argument("--known")
     triage.add_argument("--bundles")
+    triage.add_argument("--core-env", help="source environment variable for generated bisect commands")
     triage.set_defaults(func=triage_command)
     costs = commands.add_parser("budget")
     costs.add_argument("--root", required=True)
@@ -146,7 +147,7 @@ def budget_command(args):
 
 def triage_command(args):
     from .triage import triage
-    print(json.dumps(triage(args.root, args.baseline, args.known, args.bundles), default=str))
+    print(json.dumps(triage(args.root, args.baseline, args.known, args.bundles, args.core_env), default=str))
 
 
 def selection_command(args):

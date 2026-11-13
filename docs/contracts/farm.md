@@ -118,3 +118,13 @@ Native shard exit code 1 is collection complete only when every expected C1
 cell is valid and conclusive and at least one cell failed. Exit code 1 with
 only passes remains inconclusive. Farm history discovery treats a C5 summary
 and its owned storage as a bundle, not as a C3 regression generation.
+
+## Comparison-backed failure signatures
+
+Triage can read a C1 cell's `cosim.json` (`rvw.cosim/1`). It checks C1/C3 core,
+configuration, seed, status and ELF identity. It requires captured ELF and C2
+hashes before it uses first-mismatch PC and instruction values. Missing or
+invalid comparison evidence does not waive the C1 failure. Invalid evidence
+adds an `issues` entry. Members retain comparison hashes and reference-policy
+metadata. Generated bisect command arrays retain their revision range and
+`execution: not_run`. Generating a command is not bisection evidence.
