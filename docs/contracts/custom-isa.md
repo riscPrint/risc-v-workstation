@@ -28,3 +28,24 @@ is implied. `rvw.custom-effects-generation/1` records source/generator/output
 hashes, reference comparisons, effect mutants and missing evidence. A mismatch
 exits 1. Generated artifacts exit 0. Invalid declarations exit 2. These are
 transition models, not a bus handshake, AMO, compiler integration or ISA proof.
+
+## Pure instruction compiler and Spike exports
+
+`rvw.custom-backend-bases/1` lists logical GCC/LLVM source paths, full revision
+IDs and SHA-256 values. Optional URLs, tags and Git blob IDs retain provenance.
+Generation refuses changed bytes. With source bases, GCC patches add unspec
+values, instruction patterns, builtin availability and builtin registrations.
+LLVM patches add instruction records, IR intrinsics and selection patterns.
+Without source bases, patches contain fragments only and report this gap.
+
+`rvw.custom-backends/1` records generated source/patch hashes, compiler bases,
+reference extension name, XLEN, gaps and qualification limits. It applies to
+pure version-1 R-type semantics only. Spike source registers instruction and
+disassembly handlers. A platform fragment names its compiled library. The
+library must use the same Spike prefix as the captured co-simulation shim.
+RV32E/RV64E handlers remain unsupported. Compiler patches target a project
+compiler with the extension enabled. No runtime feature discovery is supplied.
+
+Generated status is not compiler or DUT qualification. Upstream compiler license
+IDs are reported separately from generated artifacts. The generated artifact
+license is not specified. The installed Spike dependency license is not verified.

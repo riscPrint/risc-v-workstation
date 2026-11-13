@@ -1,0 +1,30 @@
+--- a/llvm/include/llvm/IR/IntrinsicsRISCV.td
++++ b/llvm/include/llvm/IR/IntrinsicsRISCV.td
+@@ -1897,3 +1897,5 @@
+ include "llvm/IR/IntrinsicsRISCVXsf.td"
+ include "llvm/IR/IntrinsicsRISCVXCV.td"
+ include "llvm/IR/IntrinsicsRISCVXAndes.td"
++
++include "llvm/IR/IntrinsicsRVWCustom.td"
+--- /dev/null
++++ b/llvm/include/llvm/IR/IntrinsicsRVWCustom.td
+@@ -0,0 +1,3 @@
++let TargetPrefix = "riscv" in {
++def int_riscv_rvw_xadd : Intrinsic<[llvm_i32_ty],[llvm_i32_ty,llvm_i32_ty],[IntrNoMem]>;
++}
+--- a/llvm/lib/Target/RISCV/RISCVInstrInfo.td
++++ b/llvm/lib/Target/RISCV/RISCVInstrInfo.td
+@@ -2314,3 +2314,5 @@
+ //===----------------------------------------------------------------------===//
+ 
+ include "RISCVInstrGISel.td"
++
++include "RISCVInstrInfoRVWCustom.td"
+--- /dev/null
++++ b/llvm/lib/Target/RISCV/RISCVInstrInfoRVWCustom.td
+@@ -0,0 +1,5 @@
++let Predicates = [IsRV32], hasSideEffects = 0, mayLoad = 0, mayStore = 0 in {
++def RVW_XADD : RVInstR<0b0000000,0b000,OPC_CUSTOM_0,
++  (outs GPR:$rd),(ins GPR:$rs1,GPR:$rs2),"xadd","$rd, $rs1, $rs2">;
++def : Pat<(int_riscv_rvw_xadd GPR:$rs1,GPR:$rs2),(RVW_XADD GPR:$rs1,GPR:$rs2)>;
++}

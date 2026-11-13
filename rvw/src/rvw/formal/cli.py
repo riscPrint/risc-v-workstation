@@ -252,6 +252,7 @@ def register(sub) -> None:
     sail.set_defaults(func=sail_main)
     custom = s.add_parser("custom-isa", help="export pure R-type custom instruction interfaces and tests")
     custom.add_argument("manifest")
+    custom.add_argument("--backend-sources", help="hash-pinned GCC/LLVM source base directory for integrated patches")
     custom.add_argument("--out", required=True)
     custom.add_argument("--json", action="store_true")
     from .custom_isa import main as custom_main

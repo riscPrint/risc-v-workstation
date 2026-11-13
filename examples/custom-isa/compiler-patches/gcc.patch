@@ -1,0 +1,38 @@
+--- a/gcc/config/riscv/riscv-builtins.cc
++++ b/gcc/config/riscv/riscv-builtins.cc
+@@ -208,7 +208,10 @@
+   RISCV_ATYPE_##A, RISCV_ATYPE_##B, RISCV_ATYPE_##C, RISCV_ATYPE_##D, \
+   RISCV_ATYPE_##E
+ 
++AVAIL (rvw_custom, !TARGET_64BIT)
++
+ static const struct riscv_builtin_description riscv_builtins[] = {
++  RISCV_BUILTIN_NO_PREFIX (rvw_xadd, "rvw_xadd", RISCV_BUILTIN_DIRECT, RISCV_USI_FTYPE_USI_USI, rvw_custom),
+   #include "riscv-cmo.def"
+   #include "riscv-scalar-crypto.def"
+   #include "corev.def"
+--- a/gcc/config/riscv/riscv.md
++++ b/gcc/config/riscv/riscv.md
+@@ -103,6 +103,7 @@
+   ;; Stack Smash Protector
+   UNSPEC_SSP_SET
+   UNSPEC_SSP_TEST
++  UNSPEC_RVW_XADD
+ ])
+ 
+ (define_c_enum "unspecv" [
+@@ -4825,3 +4826,5 @@
+ (include "zc.md")
+ (include "corev.md")
+ (include "xiangshan.md")
++
++(include "rvw-custom.md")
+--- /dev/null
++++ b/gcc/config/riscv/rvw-custom.md
+@@ -0,0 +1,6 @@
++(define_insn "rvw_xadd"
++ [(set (match_operand:SI 0 "register_operand" "=r")
++   (unspec:SI [(match_operand:SI 1 "register_operand" "r")
++               (match_operand:SI 2 "register_operand" "r")] UNSPEC_RVW_XADD))]
++ "!TARGET_64BIT"
++ ".insn r 11, 0, 0, %0, %1, %2" [(set_attr "type" "arith")])
