@@ -1,0 +1,14 @@
+retire pc=80000000 insn=00000297 rd= 5 data=80000000 MEPC=xxxxxxxx
+retire pc=80000004 insn=01828293 rd= 5 data=80000018 MEPC=xxxxxxxx
+retire pc=80000008 insn=0012e293 rd= 5 data=80000019 MEPC=xxxxxxxx
+retire pc=8000000c insn=34129073 rd= 0 data=00000000 MEPC=80000019
+retire pc=80000010 insn=34102473 rd= 8 data=80000019 MEPC=80000019
+retire pc=80000014 insn=30200073 rd= 0 data=00000000 MEPC=80000019
+retire pc=80000018 insn=00001297 rd= 5 data=80001018 MEPC=80000019
+store addr=80001048 data=80000019
+retire pc=8000001c insn=03028293 rd= 5 data=80001048 MEPC=80000019
+retire pc=80000020 insn=0082a023 rd= 0 data=00000000 MEPC=80000019
+retire pc=80000024 insn=00001297 rd= 5 data=80001024 MEPC=80000019
+retire pc=80000028 insn=01428293 rd= 5 data=80001038 MEPC=80000019
+store addr=80001038 data=00000001
+.local/pc-directed/tb.sv:14: $finish called at 285000 (1ps)
