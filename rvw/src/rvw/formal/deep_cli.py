@@ -16,7 +16,10 @@ def run(args):
         path = Path(args.manifest).resolve()
         plan = json.loads(path.read_text())
         out = Path(args.out)
-        if args.deep_action == 'bug-hunt':
+        if args.deep_action == 'initial-split':
+            from .initial_split import run as split
+            data = split(plan, path.parent, out, timeout=args.timeout)
+        elif args.deep_action == 'bug-hunt':
             from .bug_hunt import hunt
             data = hunt(plan, path.parent, out, budget=args.budget, timeout=args.timeout)
         elif args.deep_action == 'model-live':
@@ -60,6 +63,7 @@ def run(args):
 
 def register(sub):
     for name, help_text in (
+        ('initial-split', 'prove every initial bit pattern of a declared RTL variable'),
         ('bug-hunt', 'search pinned RTL with increasing bounds, engines and rIC3 seeds'),
         ('model-live', 'check recurrent progress with justice fairness on an explicit finite graph'),
         ('rtl-grid', 'split exported RTL properties over local and farm workers'),
@@ -75,7 +79,7 @@ def register(sub):
             p.add_argument('--manifest', required=True)
         p.add_argument('--out', required=True)
         p.add_argument('--json', action='store_true')
-        if name in ('engine-race', 'engine-bench', 'rtl-refine', 'bug-hunt'):
+        if name in ('engine-race', 'engine-bench', 'rtl-refine', 'bug-hunt', 'initial-split'):
             p.add_argument('--timeout', type=float, default=30)
         if name in ('rtl-refine', 'relation-strengthen', 'bug-hunt'):
             p.add_argument('--budget', type=float, default=60)
@@ -105,7 +109,9 @@ def mcp_tools():
     from .mcp_tools import _runner
     s = {'type': 'string'}
     common = {'out': s, 'manifest': s}
-    return [ToolSpec('formal_bug_hunt', 'Bounded engine and rIC3 seed search. Only a concrete counterexample is conclusive.',
+    return [ToolSpec('formal_initial_split', 'Split every initial value of an RTL variable while retaining full transitions.',
+                    schema({**common, 'timeout': {'type': 'number', 'exclusiveMinimum': 0}}, ['out', 'manifest']), _runner('initial-split'), long=True),
+            ToolSpec('formal_bug_hunt', 'Bounded engine and rIC3 seed search. Only a concrete counterexample is conclusive.',
                     schema({**common, 'budget': {'type': 'number', 'exclusiveMinimum': 0},
                             'timeout': {'type': 'number', 'exclusiveMinimum': 0}}, ['out', 'manifest']), _runner('bug-hunt'), long=True),
             ToolSpec('formal_model_live', 'Check fair recurrent progress on an explicit finite graph. No RTL translation claim.',

@@ -4514,3 +4514,20 @@ A baseline diff reports changed text, mandatory/optional category and activation
 affected checkers and missing tests. Test presence has hashes but implies no
 execution. Changes require explicit adoption. This command changes no source,
 pin or model. Valid reports exit 3 and remain inconclusive. Input errors exit 2.
+### Exhaustive initial-state RTL partition
+
+CLI `initial-split` and MCP `formal_initial_split` read a hash-pinned Verilog
+manifest with `top`, `sources`, `split_variable`, optional `engines`, `depth`
+and `max_cases`. The variable names a flattened Yosys net with distinct,
+nonconstant bits. The runner enumerates every initial bit pattern. Each case
+adds only `$initstate -> variable == value` and retains all original transitions.
+The default limit is 16 cases. The maximum is 256. No partial selection earns
+a partition proof.
+
+`rvw.formal-initial-split-plan/1` records every value, source hash and generated
+case problem. `rvw.formal-initial-split/1` records each case result and the plan
+hash. A pass requires unbounded success on every case and no original source
+environment assumptions. The generated partition guard is discharged by
+exhaustive initial-value coverage. Other source assumptions remain unqualified.
+A failed case is a counterexample in a subset of the original initial states.
+The split does not constrain a variable to stay constant after initialization.

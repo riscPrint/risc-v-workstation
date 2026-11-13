@@ -2132,3 +2132,23 @@ recommendations and implicit extension dependencies are not expanded. Conditions
 inside an obligation are retained as text for its reviewed proof mapping.
 This report never grants full profile compliance. It always exits 3 for a valid
 report. MCP tool `formal_profiles` returns the same result.
+## Exhaustive RTL initial-value splitting
+
+Run `rvw formal initial-split --manifest PLAN.json --out OUT --timeout 10`.
+MCP `formal_initial_split` runs the same operation. The plan uses pinned
+engine-race `top` and `sources`, plus `split_variable` and optional `max_cases`.
+The variable is a flattened Yosys net name. The default case limit is 16.
+A wider variable needs an explicit limit, up to 256 cases.
+
+The runner exports one proof problem for every bit pattern of the variable at
+the initial state. It retains the full transition relation in every problem.
+The variable can change freely after initialization. `plan.json` records the
+complete decomposition and hashes. Every case must prove unbounded before the
+original design earns a pass. Existing source assumptions keep it inconclusive.
+A subset of successful cases cannot earn success. This is not a time-invariant
+input restriction or a state-space abstraction.
+
+Native two-bit reference tests cover all four initial values. The matching
+counter pair proved in all four cases. The seeded mismatch produced a concrete
+counterexample. Evidence: `/tmp/deep-initial-split2-{safe,fault}/result.json`.
+No full-core or capacity result is implied.
