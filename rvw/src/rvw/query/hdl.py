@@ -184,7 +184,7 @@ def _build_hdl(sources, top, out, *, yosys='yosys', timeout=120, frontend='yosys
             if any(re.search(r'\s|"', str(c)) for c in (*copies, *includes)):
                 raise ValueError('source and include paths must not contain spaces or quotes')
             options = [f'--top {top}', *(f'-I {i}' for i in includes),
-                       *(f'-D {d}' for d in defines), *(f'-G {g}' for g in parameters),
+                       *(f'-D {d}' for d in defines), *(f'-G{g}' for g in parameters),
                        *([f'--std {std}'] if std else []), '--ignore-assertions', '--ignore-initial',
                        ' '.join(str(c) for c in copies)]
             argv = [tool.path, '-Q', '-T', '-m', str(plugin.resolved), '-s', str(script)]
