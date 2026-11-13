@@ -941,3 +941,11 @@ Shared interrupt claims have one owner. Completion must come from that owner.
 requirement. Finish requires all expected hart states and no incomplete claims
 or transitions. The tests drive observer events. SBI firmware, CLINT timer
 comparators, PLIC arbitration RTL and real hotplug campaigns remain open.
+
+## Probe events
+
+`run --probes` builds a model with the core's `spinalprobes.Probe` calls enabled. The
+adapter samples them with `ProbeCollector` in its cycle loop and writes
+`probe-events.jsonl` (`rvw.probe-events/1`, C1 artifact `probe_events`). See
+[SpinalProbes](../SpinalProbes/README.md) for the API and `rvw probes` for the converters.
+An adapter declares `supportsProbes`; otherwise the flag is refused.

@@ -194,7 +194,7 @@ class Driver(val adapter: CoreAdapter) {
 
   // ---------------------------------------------------------------- one run
   val artifactFiles: Seq[(String, String)] = Seq("soc_map" -> "sim-map.json", "soc_transactions" -> "soc-transactions.jsonl", "log" -> "run.log", "rvfi_trace" -> "rvfi.jsonl",
-    "wave" -> SimSession.waveFile, "konata" -> "konata.log", "coverage" -> SimSession.coverageFile)
+    "wave" -> SimSession.waveFile, "konata" -> "konata.log", "coverage" -> SimSession.coverageFile, "probe_events" -> "probe-events.jsonl")
 
   private def q(s: String): String = if (s.matches("[A-Za-z0-9_./=:,+@%-]+")) s else "'" + s.replace("'", "'\\''") + "'"
 
@@ -231,7 +231,8 @@ class Driver(val adapter: CoreAdapter) {
       job.waveTo.toSeq.flatMap(c => Seq("--wave-to", c.toString)) ++
       (if (job.konata) Seq("--konata") else Nil) ++
       (if (job.coverage) Seq("--coverage") else Nil) ++
-      (if (job.spinaltrace) Seq("--spinaltrace") else Nil)
+      (if (job.spinaltrace) Seq("--spinaltrace") else Nil) ++
+      (if (job.probes) Seq("--probes") else Nil)
     val coverageEnv = if (job.coverage)
       Seq("RISCVSIM_COVERAGE" -> RiscvSimConfig.coverageTypes.mkString(",")) else Nil
     ((NativeBuild.replayEnv ++ adapter.replayEnv ++ coverageEnv).map { case (k, v) => s"$k=${q(v)}" } ++
@@ -671,7 +672,7 @@ class Driver(val adapter: CoreAdapter) {
 
   def cmdIdentity(o: Map[String, String]): Int = {
     // Identity accepts run-manifest keys. Only model options affect elaboration.
-    val names = Set("rvfi", "rvfi-trace", "rvfi-check", "wave", "wave-from", "wave-to", "coverage", "konata", "spinaltrace")
+    val names = Set("rvfi", "rvfi-trace", "rvfi-check", "wave", "wave-from", "wave-to", "coverage", "konata", "spinaltrace", "probes")
     val opts = o.get("options").map { text =>
       val values = ujson.read(text).obj.filter { case (name, _) => names(Cli.norm(name)) }
       Cli.fromJson(ujson.Obj.from(values))
@@ -679,7 +680,7 @@ class Driver(val adapter: CoreAdapter) {
     val key = ModelKey(opts.getOrElse("config", adapter.defaultConfig),
       rvfi = Cli.bool(opts, "rvfi") || Cli.bool(opts, "rvfi-trace") || Cli.bool(opts, "rvfi-check"),
       wave = Cli.bool(opts, "wave") || opts.contains("wave-from") || opts.contains("wave-to"),
-      coverage = Cli.bool(opts, "coverage"), konata = Cli.bool(opts, "konata"), spinaltrace = Cli.bool(opts, "spinaltrace"))
+      coverage = Cli.bool(opts, "coverage"), konata = Cli.bool(opts, "konata"), spinaltrace = Cli.bool(opts, "spinaltrace"), probes = Cli.bool(opts, "probes"))
     if (!adapter.configs.contains(key.config)) throw new Cli.UsageError(s"unknown config '${key.config}'")
     val (_, sha) = captureRtl(adapter.elaborate(key, workspace))
     if (key.spinaltrace) require(RiscvSimConfig.dependencyGraph(key, workspace).isFile,
@@ -703,7 +704,7 @@ class Driver(val adapter: CoreAdapter) {
     for (c <- configs if !adapter.configs.contains(c)) throw new Cli.UsageError(s"unknown config '$c'")
     val results = configs.map { c =>
       val key = ModelKey(c, rvfi = Cli.bool(o, "rvfi") || Cli.bool(o, "rvfi-trace") || Cli.bool(o, "rvfi-check"),
-        wave = Cli.bool(o, "wave"), coverage = Cli.bool(o, "coverage"), konata = Cli.bool(o, "konata"), spinaltrace = Cli.bool(o, "spinaltrace"))
+        wave = Cli.bool(o, "wave"), coverage = Cli.bool(o, "coverage"), konata = Cli.bool(o, "konata"), spinaltrace = Cli.bool(o, "spinaltrace"), probes = Cli.bool(o, "probes"))
       try {
         val b = model(key, s => System.err.println(s"[build] $s"))
         ujson.Obj("model" -> key.toJson, "status" -> "ok", "compile_s" -> math.round(b.compileS * 10) / 10.0,
