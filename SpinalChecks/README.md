@@ -916,3 +916,11 @@ Use the initialization kind of `rvw formal security pair` for a native proof
 that independent initial states cannot change declared outputs after reset.
 The reset audit refuses latches, other clocks, clock-as-data logic, memories,
 blackboxes, embedded formal properties and explicit initial attributes.
+
+### TileLink type inventory
+
+The JSON report retains each discovered TileLink bus's qualified class name,
+component path, live local RTL signals and library width/options. This permits
+exact type binding when a design database stores only the simple class `Bus`.
+Use the report with `rvw formal buses --type-report` or a project bus
+`type_report` entry. No class is inferred from port spelling.

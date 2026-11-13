@@ -622,6 +622,14 @@ class PhaseInsertChecks(cfg: ChecksConfig, result: ChecksResult) extends PhaseNe
       }
       for (bus <- buses) bus match {
         case b: tilelink.Bus if b.a.valid.component == c =>
+          result.buses += new BusTypeRecord(c, b, "spinal.lib.bus.tilelink.Bus", Map(
+            "size_max" -> b.p.sizeMax, "data_width" -> b.p.dataWidth,
+            "source_width" -> b.p.sourceWidth, "sink_width" -> b.p.sinkWidth,
+            "with_bce" -> (if (b.p.withBCE) 1 else 0)))
+        case _ =>
+      }
+      for (bus <- buses) bus match {
+        case b: tilelink.Bus if b.a.valid.component == c =>
           todo += { () => ProtocolChecks.tileLink(b, (kind, suffix, env, detail, fail) => {
             val rec = newRecord(kind, busNames(b) + suffix, env && isTop, SourceLoc.of(b.a.valid), detail)
             if (rec.inserted) emit(rec, active(ClockDomain.current) && fail)

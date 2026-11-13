@@ -18,7 +18,7 @@ TYPES = {
 PATH = re.compile(r'[A-Za-z_][A-Za-z0-9_]*(?:\.[A-Za-z_][A-Za-z0-9_]*)*')
 
 
-def generate(db, out, depth=4, max_beats=256):
+def generate(db, out, depth=4, max_beats=256, type_report=None):
     if type(depth) is not int or not 1<=depth<=64:
         raise ValueError("AXI tracker depth must be in 1..64")
     if type(max_beats) is not int or not 1<=max_beats<=256:
@@ -27,7 +27,12 @@ def generate(db, out, depth=4, max_beats=256):
     with_db = DesignDB(db)
     try:
         c = with_db.conn
+        from .bus_types import resolve
+        bus_types=resolve(with_db,type_report) if type_report else {}
         for bid, cid, path, cls, parent in c.execute('SELECT id,component_id,path,class_name,parent_id FROM bundles ORDER BY id').fetchall():
+            type_info=bus_types.get(bid,{})
+            recorded_class=cls
+            cls=type_info.get('class_name',cls)
             if cls not in TYPES:
                 if cls.endswith('Bus') or cls.split('.')[-1] in ('Bmb','Wishbone','AvalonMM','Axi4ReadOnly','Axi4WriteOnly','Axi4Shared','AxiLite4ReadOnly','AxiLite4WriteOnly'):
                     rows.append(dict(path=path, component_id=cid, class_name=cls,
@@ -43,6 +48,7 @@ def generate(db, out, depth=4, max_beats=256):
                     rows.append(dict(path=path,kind=kind,status='unsupported',reason='AXI4-Stream payload needs its Stream parent'))
                     continue
             row = dict(path=path, component_id=cid, class_name=cls, kind=kind, status='unsupported')
+            if type_info: row.update(recorded_class=recorded_class,type_source=str(type_report),options=type_info.get('options',{}))
             rows.append(row)
             try:
                 sigs = c.execute('SELECT name,path,spinal_path,width,clock_domain_id,pruned FROM signals WHERE component_id=?', (cid,)).fetchall()
@@ -149,7 +155,7 @@ def generate(db, out, depth=4, max_beats=256):
 
 def run(args):
     try:
-        result = generate(args.db,args.out,getattr(args,'depth',4),getattr(args,'max_beats',256))
+        result = generate(args.db,args.out,getattr(args,'depth',4),getattr(args,'max_beats',256),getattr(args,'type_report',None))
         print(json.dumps(result))
         return 0 if result['status'] == 'generated' else 3
     except (ValueError, OSError, QueryError) as exc:

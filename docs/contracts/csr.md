@@ -129,3 +129,15 @@ Memory data and exclusive reservation state are outside these trackers.
 Project `buses` entries accept `database`, `depth` and `max_beats`. Both
 limits are positive integers. Maximum values are 64 and 256 respectively.
 Generation does not run a compiler or solver.
+
+## Exact TileLink type inventory
+
+`rvw.checks/1` can include `buses` rows with component `path`, local `object`,
+qualified `class_name`, local RTL `signals` and integer library `options`.
+TileLink options retain `size_max`, `data_width`, `source_width`, `sink_width`
+and `with_bce`. These rows record elaborated library objects.
+`formal buses --type-report` and the project bus entry `type_report` resolve
+an ambiguous database `Bus` only when top, component path and the full live
+signal-name set match exactly one inventory row. Missing or duplicate matches
+remain unsupported. The type report does not establish capture equivalence
+or protocol correctness.
