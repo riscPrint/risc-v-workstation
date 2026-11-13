@@ -116,6 +116,9 @@ Generic changes this needed (all version-neutral; the release axis still compile
   `MemoryAgent.blockSize` and `TransactionC.beat`. Each states its fallback.
 - `ScopeStatement.on` returns `Unit` in this revision; `spinalprobes.Probe`
   no longer uses its result.
+- Verilator 5.052 removed the `WData` type name used by the pinned wrapper.
+  The launcher maps it to `EData`, which is the same 32-bit word type.
+  The alias also compiles with 5.049. This build setting does not qualify assertions.
 - The pinned SpinalHDL Verilator wrapper constructs the model before it sets the
   handle that `sc_time_stamp()` reads. Verilator 5.049 reads the time during
   construction and the process crashes. `run.sh` adds `-CFLAGS -DVL_TIME_CONTEXT`

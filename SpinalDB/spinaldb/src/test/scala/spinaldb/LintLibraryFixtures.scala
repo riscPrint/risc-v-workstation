@@ -54,7 +54,8 @@ class ToggleDataReference extends Component {
   val output = master Flow(Bits(1 bits))
   val cdA = ClockDomain(clkA, config=ClockDomainConfig(resetKind=BOOT))
   val cdB = ClockDomain(clkB, config=ClockDomainConfig(resetKind=BOOT))
-  val bridge = new FlowCCUnsafeByToggle(Bits(1 bits), cdA, cdB)
+  // This name is available on both supported SDK axes.
+  val bridge = new FlowCCByToggle(Bits(1 bits), cdA, cdB)
   bridge.io.input << input
   output << bridge.io.output
 }

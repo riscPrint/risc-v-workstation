@@ -45,7 +45,7 @@ def test_changed_user_phase_code_is_different(round22, capsys):
     assert result['emission_config']['changed']
     keys = [result['emission_config'][side] for side in ('old', 'new')]
     assert all('r22.UserPhase' in key and 'sha256=' in key for key in keys)
-    # The changed helper selects X or zero for the same don't-care assignment.
+    # The changed helper changes the emitted constant for the same output.
     assert (round22 / 'code0/rtl/Round22Poison.v').read_text() != (
         round22 / 'code1/rtl/Round22Poison.v').read_text()
 
