@@ -143,3 +143,10 @@ def test_farm_effects_and_native_requirements(name, registry):
     tool = registry.tools[name]
     assert tool.side_effects
     assert (tool.native_tools is None) == (name == 'farm_batch')
+
+
+@pytest.mark.parametrize('name', ['agent_bench_native_qualify', 'agent_bench_repair_prepare', 'agent_bench_repair_check', 'agent_bench_trial'])
+def test_agent_bench_effects_and_native_requirements(name, registry):
+    tool = registry.tools[name]
+    assert tool.side_effects
+    assert (tool.native_tools is None) == (name == 'farm_batch')

@@ -1,12 +1,4 @@
 [
-  "agent_bench_native_qualify:native_tools:Declare inventory tool ids, or an empty tuple.",
-  "agent_bench_native_qualify:side_effects:Declare read-only or writes-files.",
-  "agent_bench_repair_check:native_tools:Declare inventory tool ids, or an empty tuple.",
-  "agent_bench_repair_check:side_effects:Declare read-only or writes-files.",
-  "agent_bench_repair_prepare:native_tools:Declare inventory tool ids, or an empty tuple.",
-  "agent_bench_repair_prepare:side_effects:Declare read-only or writes-files.",
-  "agent_bench_trial:native_tools:Declare inventory tool ids, or an empty tuple.",
-  "agent_bench_trial:side_effects:Declare read-only or writes-files.",
   "arch_sched_study:native_tools:Declare inventory tool ids, or an empty tuple.",
   "bisect_run:native_tools:Declare inventory tool ids, or an empty tuple.",
   "bisect_run:side_effects:Declare read-only or writes-files.",

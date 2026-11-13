@@ -31,4 +31,6 @@ def mcp_tools():
     return [ToolSpec('agent_bench_native_qualify', 'Run seeded failures and repaired workloads. Retain C1/C2 identities. This does not score agent reasoning.',
                      schema({'pack': string, 'source': string, 'out': string,
                              'tasks': {'type': 'array', 'items': string}, 'timeout': {'type': 'number', 'exclusiveMinimum': 0}},
-                            ['pack', 'source', 'out']), native_qualify, long=True)]
+                            ['pack', 'source', 'out']), native_qualify, long=True,
+        side_effects='long-running; launches Git and configured native workloads in disposable source copies; writes artifacts under out', native_tools=(),
+        )]

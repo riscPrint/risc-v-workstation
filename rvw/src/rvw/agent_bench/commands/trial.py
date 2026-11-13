@@ -37,4 +37,6 @@ def mcp_tools():
                              'command': {'type': 'array', 'items': string, 'minItems': 1},
                              'budget_s': {'type': 'number', 'exclusiveMinimum': 0},
                              'max_calls': {'type': 'integer', 'minimum': 1},
-                             'repeats': {'type': 'integer', 'minimum': 1}, 'model': string}, ['pack','task','out','command']), trial, long=True)]
+                             'repeats': {'type': 'integer', 'minimum': 1}, 'model': string}, ['pack','task','out','command']), trial, long=True,
+        side_effects='long-running; launches supplied external agent command and a local fixture MCP server; writes fixture attempts under out', native_tools=(),
+        )]
