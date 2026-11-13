@@ -59,3 +59,20 @@ input-ready partition. It did not finish the raw result payload partitions.
 The aggregate verdict remains inconclusive. Raw invalid payloads are compared.
 No valid-payload constraint, initialization assumption or core change was added.
 See `private-lock-results.json` for the new attempts and native proof reports.
+
+## Smaller real-module configuration check
+
+Use `prepare.py --sqrt-width 2` to select a two-bit mantissa.
+Widths below two are refused because the upstream module reads two operand bits
+per iteration. The default remains four.
+
+The native two-bit case proved equivalent in 93.135 seconds, including both
+source exports. All four interface partitions passed. It compares single-file
+and one-file-per-component export settings for the same committed VexRiscv
+`FpuSqrt` source. Reset and twelve unchecked startup clocks are the same as
+above. Inputs remain free after startup. Raw payloads are compared.
+
+This is a complete result for this small module and these export settings.
+It does not prove square-root arithmetic, IEEE behavior, a hardware parameter
+change, or the larger mantissa case. The four-bit timeouts remain in the ledger.
+See `two-bit-results.json`.

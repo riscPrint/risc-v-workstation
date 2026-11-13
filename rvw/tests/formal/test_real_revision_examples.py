@@ -13,7 +13,8 @@ recipe = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(recipe)
 
 
-def test_private_revision_recipe(tmp_path, monkeypatch):
+@pytest.mark.parametrize('width',[2,4])
+def test_private_revision_recipe(tmp_path, monkeypatch, width):
     original = recipe.git
     divider = '''package spinal.lib.math
   val done = RegInit(True)
@@ -38,7 +39,7 @@ def test_private_revision_recipe(tmp_path, monkeypatch):
     monkeypatch.setenv('GIT_COMMITTER_NAME','Test')
     monkeypatch.setenv('GIT_AUTHOR_EMAIL','test@example.org')
     monkeypatch.setenv('GIT_COMMITTER_EMAIL','test@example.org')
-    cases = recipe.prepare(tmp_path/'private',tmp_path/'spinal',tmp_path/'vex',ROOT)
+    cases = recipe.prepare(tmp_path/'private',tmp_path/'spinal',tmp_path/'vex',ROOT,sqrt_width=width)
     for name, case in cases.items():
         repo = Path(case['project']).parent
         assert case['gold'] != case['gate']
@@ -58,4 +59,12 @@ def test_private_revision_recipe(tmp_path, monkeypatch):
     sqrt = tmp_path/'private/sqrt'
     assert original(sqrt,'show',cases['sqrt']['gold']+':src/main/scala/Unit.scala') == original(sqrt,'show',cases['sqrt']['gate']+':src/main/scala/Unit.scala')
     assert 'oneFilePerComponent=true' in (sqrt/'src/main/scala/RealExport.scala').read_text()
+    assert f'FpuSqrt({width})' in (sqrt/'src/main/scala/RealExport.scala').read_text()
     assert json.loads((tmp_path/'private/cases.json').read_text()) == cases
+
+
+@pytest.mark.parametrize('width',[0,1,2.5])
+def test_bad_square_root_width_is_refused(tmp_path,width):
+    with pytest.raises(ValueError,match='at least two'):
+        recipe.prepare(tmp_path/'private',tmp_path/'spinal',tmp_path/'vex',ROOT,sqrt_width=width)
+    assert not (tmp_path/'private').exists()
