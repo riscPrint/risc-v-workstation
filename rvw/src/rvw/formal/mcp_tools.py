@@ -165,8 +165,9 @@ def _liveness(job, **args):
             '--top', args['top'], '--out', args['out']]
     if args.get('run'):
         argv.append('--run')
-    if 'timeout' in args:
-        argv += ['--timeout', str(args['timeout'])]
+    for key in ('timeout', 'backend', 'reset', 'engine', 'mode', 'depth'):
+        if key in args:
+            argv += ['--' + key, str(args[key])]
     code = job.run(argv)
     if code not in (0, 1):
         raise ToolError('liveness lowering failed', {'exit_code': code, 'log_tail': job.tail(20)})
@@ -235,8 +236,10 @@ def mcp_tools():
                          "observe": {"type": "array", "items": S}, "check_x": B,
                          "timeout": {"type": "number", "exclusiveMinimum": 0}},
                         ["verilog", "top", "events", "out"]), _runner("simulate"), long=True),
-        ToolSpec("formal_liveness", "Lower eventual response properties to SBY live jobs. Engine passes remain inconclusive.",
+        ToolSpec("formal_liveness", "Lower SVA eventual response to native live jobs or finite-state liveness-to-safety. Engine passes remain inconclusive.",
                  schema({"source": S, "top": S, "out": S, "run": B,
+                         "backend": {**S, "enum": ["suprove", "l2s"]}, "reset": S, "engine": S,
+                         "mode": {**S, "enum": ["prove", "bmc"]}, "depth": I,
                          "timeout": {"type": "number", "exclusiveMinimum": 0}}, ["source", "top", "out"]),
                  _liveness, long=True),
         ToolSpec("formal_device_events", "Check concurrent device requests against independent reset state. Matching samples remain inconclusive.",

@@ -1693,11 +1693,37 @@ clock. Reset cancellation, cross-clock properties, nested temporal response
 expressions and mixed safety/liveness jobs remain refused.
 
 Without `--run`, the command writes a job and reports `observation=not_run`.
-With `--run`, a missing SBY or suprove gives `missing_tool`. Engine passes remain
+With `--run --backend suprove`, a missing SBY or suprove gives `missing_tool`. Engine passes remain
 `status=unknown` because attribution, activation and non-vacuity are not certified.
 An engine failure is recorded as a failure. `formal_liveness` exposes the same
-operation through MCP. Native lowering tests check `$live` creation. They do not
-establish a liveness proof when suprove is absent.
+operation through MCP. Native lowering tests check `$live` creation. Those tests
+do not qualify an engine. The `l2s` route below has separate native checks.
+### SVA liveness through safety engines
+
+```sh
+rvw formal liveness response.sv --top dut --out live-proof --run --backend l2s --reset reset
+rvw formal liveness response.sv --top dut --out live-search --run --backend l2s --reset reset --mode bmc --depth 20
+```
+
+The `l2s` backend reuses the finite-state RTL liveness-to-safety runner.
+It exposes generated SVA progress predicates and checks one assertion per job.
+Assumed eventual-response properties become explicit justice predicates.
+`prove` defaults to ABC PDR. `bmc` defaults to SMTBMC/Yices and searches bounded
+lassos. A bounded passing search is not a liveness proof.
+
+This route requires one synchronous clock, a scalar active-high reset input and
+zero-based descending net ranges. The harness applies one startup reset cycle
+and then keeps reset deasserted. The existing engine still refuses unsupported
+state and black boxes. It snapshots the full converted state, including progress
+monitors. Fairness feasibility and activation are not certified.
+
+Each job retains the native runner's result, proof kind, converted state-bit
+count and limits. An engine pass remains frontend `status=unknown`. A failed
+lasso makes the frontend fail. The default `suprove` route remains available.
+`--backend l2s` requires `--run` because native model export is part of that route.
+The `formal_liveness` MCP tool accepts the same backend, reset and safety options.
+
+
 ## State selection and fair finite models
 
 `rvw formal swarm` accepts `--state-plan PLAN.json` and repeated `--engine-pool`

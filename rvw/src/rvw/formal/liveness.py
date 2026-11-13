@@ -1,4 +1,4 @@
-"""Clocked response liveness passed to SBY's native liveness engine.
+"""Clocked response liveness through native live or liveness-to-safety jobs.
 
 A pending bit retains all outstanding identical Boolean response obligations.
 The live condition requires pending to clear infinitely often. No finite bound
@@ -66,8 +66,7 @@ def lower_live(source, top):
         raise Unsupported('liveness_multiclock')
     for start, end, replacement in sorted(edits, reverse=True):
         source = source[:start] + replacement + source[end:]
-    # Refuse any unsupported statement left in the source. Finite assertions
-    # may coexist and retain their own native safety cells.
+    # Validate the remaining source. Keep finite property jobs separate.
     source, finite = lower(source)
     if finite:
         raise Unsupported('mixed_liveness_safety', 'run finite safety statements in a separate job')
@@ -82,6 +81,12 @@ def script(top, rows):
 
 
 def run(args):
+    from .common import sigterm_raises
+    with sigterm_raises():
+        return _run(args)
+
+
+def _run(args):
     from . import common
     from rvw.common.capture import Capture
     out = common.check_path('--out', args.out)
@@ -100,17 +105,35 @@ def run(args):
                       restrictions=['Single abstract rising-edge clock; no disable iff.',
                                     'Engine results do not certify attribution or non-vacuity.'],
                       input_capture=capture.record())
-        if args.run:
+        backend = getattr(args, 'backend', 'suprove')
+        result['backend'] = backend
+        if args.run and not any(row['kind'] == 'live' for row in rows):
+            result['observation'] = 'no_checks'
+        elif backend == 'l2s':
+            result['restrictions'] += [
+                'One active-high startup reset cycle, then reset remains deasserted.',
+                'Synchronous finite-state canonical-range model; job engine limits still apply.']
+            from . import liveness_safety
+            detail = liveness_safety.run(out, args.top, rows, capture, args)
+            result.update(detail)
+            result['input_capture'] = capture.record()
+            if result['observation'] == 'FAIL':
+                result['status'] = 'fail'
+        elif args.run:
             import shutil
             if not shutil.which('suprove') or not shutil.which('sby'):
                 result['observation'] = 'missing_tool'
             else:
+                status = out / 'job/status'
+                status.unlink(missing_ok=True)
                 with (out / 'run.log').open('w') as log:
                     completed = run_group(['sby', '-f', 'job.sby'], cwd=out, stdout=log,
                                           stderr=log, timeout=args.timeout)
                 status = out / 'job/status'
                 result['observation'] = ('timeout' if completed.timed_out else
                                          status.read_text().split()[0] if status.exists() else 'error')
+                if result['observation'] == 'PASS' and completed.returncode != 0:
+                    result['observation'] = 'error'
                 if result['observation'] == 'FAIL':
                     result['status'] = 'fail'
         (out / 'result.json').write_text(json.dumps(result, indent=2) + '\n')
