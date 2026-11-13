@@ -1,6 +1,6 @@
 # NaxRiscv project example
 
-Current timing limit: the corrected final window model meets the criterion
+Current RV32 timing limit: the corrected final window model meets the criterion
 on 6 of 15 nonzero RTL changes and 15 of 24 total pairs. Training/held-out
 IPC MAE is 7.31%/9.08%. Earlier stage scores remain historical.
 See [the corrected study](../../rvw/src/rvw/ooo/README.md#corrected-resource-study-window)
@@ -15,6 +15,31 @@ out-of-order tools on a small native RTL target. Install the workstation as desc
 [Bring your own core](../../docs/BRING_YOUR_OWN_CORE.md). Set `RVW_HOME` to that
 installation. Keep the core outside the workstation repository. The adapter
 does not change NaxRiscv's source.
+
+## Configuration and result summary
+
+The default remains `rv32imasu`. The extra RV64 configs use the same pinned
+core and SpinalHDL sources. All numbers below are RTL simulation results.
+They do not qualify hardware or a whole core.
+
+| Evidence | RV32 default | RV64 machine | RV64 M/S/U, Sv39 |
+|---|---|---|---|
+| Named config | `rv32imasu` | `rv64ima` | `rv64imasu` |
+| riscv-tests | 59 C1 passes, 59 strict matches | 85 C1 passes, 85 strict matches | 85 C1 passes, 85 strict matches |
+| ACT4 instruction profile | 69 C1 passes, 69 strict matches | 98 C1 passes, 98 strict matches | 98 C1 passes, 98 strict matches |
+| Generated supervisor campaign | NOT RUN here | Not applicable to M-only mode | 179 programs: 163 C1 passes, 16 failures; 157 strict matches and 6 IRQ-synchronized matches |
+| Native MMU observations | NOT RUN here | No MMU | 135 bound files; 26 bounded walks consistent, 109 inconclusive |
+| Probe and top-down results | Retained RV32 study below | NOT RUN | Three benchmarks; retirement counts agree; orphan-event warnings remain |
+| Generated OoO rules | Nine rules, 59 ISA passes, zero firings | NOT RUN | Nine rules, three benchmark passes, zero firings |
+| Timing evidence | Separate retained RV32 calibration and delta studies | NOT RUN | Three unfitted parameter-transfer comparisons; IPC error -10.99% / -0.02% / +11.58% |
+
+The supervisor campaign retains 14 MPRV permission failures and two
+noncanonical-address failures. PMP, ASIDs, hardware A/D updates, H and
+multi-hart shootdown are absent or excluded. The benchmark matches need
+explicit counter synchronization. Standard privileged ACT4, C/F/D configs
+and translated benchmark timing are NOT RUN. Read the detailed
+[supervisor results](rvw/supervisor/README.md) and
+[RV64 tool results](#rv64-out-of-order-tools) before reusing these counts.
 
 ## Setup
 
@@ -171,20 +196,24 @@ caches. Smaller decode widths are not used upstream.
 
 NaxRiscv has no RVFI port. The C2 trace comes from the upstream
 `naxriscv.platform.NaxriscvProbe`, the same probe that NaxRiscv's own
-regression uses with rvls. `rvw/src/main/scala/rvwnax/C2Backend.scala` turns its
+regression uses with rvls. The build generates an integration-owned
+`CommitProbe` from that pinned source. `rvw/src/main/scala/rvwnax/C2Backend.scala` turns its
 events into C2 records:
 
-- The probe does not report the instruction word. `insn` comes from the
-  adapter's architectural memory image: the ELF plus every committed store.
+- Without `--probes`, `insn` comes from the adapter's architectural memory
+  image: the ELF plus every committed store. With `--probes`, the adapter
+  retains the micro-op and privilege at ROB allocation. It can capture
+  instructions fetched through a virtual address.
 - `rd` is the instruction's `rd` field when the probe reported an integer
   write. `rs1`/`rs2` values come from a shadow register file that only committed
   writes update.
-- `mem_*` give the exact byte address and the access width, from the probe's
-  load and store commits.
-- `pc_next` is the pc of the next retirement, or xepc when a trap follows. xepc
-  is the ROB pc (from the probe's own table) of the latest commit-time
-  reschedule with `trap` set. A `satp` write also reschedules with `trap` set
-  without a trap, so only the latest one counts.
+- `mem_*` give the byte address and access width from committed memory
+  operations. With `--probes`, C2 uses the LSU virtual address. Committed
+  memory and tohost use the observed physical address.
+- `pc_next` is the PC of the next retirement, or xepc when a trap follows.
+  With `--probes`, the adapter samples the privileged unit's trap EPC and
+  actual TVAL CSR write. Without probes, it retains the older ROB-based EPC
+  capture. The generated supervisor campaign requires probes.
 - `TapPlugin` exposes the privilege register to simulation. It reads one core
   register and changes no behavior.
 
