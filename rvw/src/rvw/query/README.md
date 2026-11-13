@@ -222,3 +222,10 @@ All nine path queries match the independent emitted-RTL traversal.
 `rvw/tests/data/chisel/QUEUE.md` records generation and source artifact identity.
 Set `RVW_CHISEL_SOURCE` to the matching external library source tree to check
 Counter source mappings as well as wrapper source mappings.
+
+`port-status` includes empty and omitted native instance connections in new
+builds. Their status is `unconnected`, and `width` is the declared port width.
+`coverage=all-instance-ports` identifies the new complete enumeration. Rebuild
+older captures with `coverage=legacy-connections-only` to inspect open ports.
+This describes the lowered netlist. A source-level open connection that the
+compiler replaces with a synthetic wire may still appear connected.

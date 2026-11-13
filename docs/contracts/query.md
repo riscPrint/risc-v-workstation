@@ -88,3 +88,13 @@ intermediate connection between lanes. Memory and synchronous read-state nodes
 remain traversable state boundaries. This applies to navigation through Graph;
 it does not change stored raw edges used by other structural consumers.
 Whole-cell dependencies remain conservative.
+
+## Open instance port bindings
+
+New HDL builds enumerate every declared child port in `hdl/port-connections.json`,
+including an empty or omitted connection. `width` is the declared port width.
+An empty connection has status `unconnected` and an empty `bits_lsb_first` list.
+Meta `hdl_port_connection_coverage=all-instance-ports` identifies complete instance
+port enumeration. `query port-status` reports `coverage=legacy-connections-only`
+for older captures without this marker. Rebuild them to enumerate open ports.
+Unknown constant bits remain `unknown`, not known tie-offs.

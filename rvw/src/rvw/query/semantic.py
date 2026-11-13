@@ -83,4 +83,5 @@ def port_status(db, path=None):
     encoding, content = rows[0]
     values = json.loads(gzip.decompress(content) if encoding == 'gzip' else content)
     return {'component': c['path'] or db.top, 'status': 'captured', 'ports': values.get(c['path'], []),
+            'coverage': db.meta.get('hdl_port_connection_coverage', 'legacy-connections-only'),
             'limit': 'Native lowered connections. Unknown bits do not establish a tie-off or an unconnected source.'}
