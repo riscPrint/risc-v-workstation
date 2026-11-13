@@ -5,6 +5,7 @@ must be complete project observations. Capture order is never global order.
 """
 from itertools import permutations, product
 import json
+import re
 from pathlib import Path
 from rvw.cosim.trace import Trace
 
@@ -212,6 +213,8 @@ def check(trace, reference, model='rvwmo', limit=100000):
             return {'status': 'inconclusive', 'reason': 'all harts must complete'}
         if reader.header.get('memory_dependencies') != 'complete':
             return {'status': 'inconclusive', 'reason': 'complete project dependency observations required'}
+        if reader.header.get('memory_addresses') != 'physical':
+            return {'status': 'inconclusive', 'reason': 'physical memory address observations required'}
         events = []
         for r in records:
             if r.get('event'):
@@ -223,13 +226,23 @@ def check(trace, reference, model='rvwmo', limit=100000):
             insn = r['insn']
             is_fence = insn & 0x7f == 0x0f and (insn >> 12) & 7 == 0
             opcode = insn & 0x7f
+            if opcode == 0x0f and (insn >> 12) & 7 == 2:
+                return {'status': 'inconclusive', 'reason': 'cache-block events are unsupported'}
             failed_sc = opcode == 0x2f and insn >> 27 == 3 and not r['mem_wmask']
-            memory = r['mem_rmask'] or r['mem_wmask'] or is_fence or (opcode in (0x03, 0x23, 0x2f) and not failed_sc)
+            memory = r['mem_rmask'] or r['mem_wmask'] or is_fence or 'memory_model' in r or (opcode in (0x03, 0x23, 0x2f, 0x07, 0x27) and not failed_sc)
             if not memory:
                 continue
             if r['trap'] or r['mem_fault'] or 'memory_model' not in r:
                 return {'status': 'inconclusive', 'reason': 'missing memory event or fault semantics'}
             e = dict(r['memory_model'])
+            for field in ('order', 'address', 'read', 'write'):
+                if field not in e:
+                    continue
+                value = e[field]
+                if isinstance(value, str) and re.fullmatch(r'0|[1-9][0-9]*', value):
+                    e[field] = int(value)
+                elif type(value) is not int or value < 0:
+                    raise ValueError('memory annotations require nonnegative integers or canonical decimal strings')
             if e['hart'] != r['hart'] or e['order'] != int(r['order']):
                 raise ValueError('memory event retirement identity mismatch')
             if e['hart'] not in reader.header['harts']:

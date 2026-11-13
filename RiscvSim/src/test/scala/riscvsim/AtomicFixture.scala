@@ -3,21 +3,22 @@ package riscvsim
 import spinal.core._
 import spinal.core.sim._
 
-/** Round 2 harts with RV32 word atomics and programmable instruction inputs.
+/** Subset harts with RV32 word or RV64 doubleword atomics and programmable instruction inputs.
   * One shared, serialized memory port. N/B/T permissions are a fixture protocol,
   * not TileLink channels or a cache implementation. */
-class AtomicFixture extends Component {
+class AtomicFixture(val xlen: Int = 32) extends Component {
+  require(Set(32, 64)(xlen))
   val io = new Bundle {
     val instructions = in Vec(Bits(32 bits), 2)
     val enable = in Bits(2 bits)
     val fault = in UInt(4 bits)
     val evict = in Bool()
-    val memory = out Vec(Bits(32 bits), 2)
+    val memory = out Vec(Bits(xlen bits), 2)
     val permissions = out Vec(UInt(2 bits), 4) // N=0, B=1, T=2; hart*2+word
     val transfer = out Bool() // dirty-data transfer before downgrade
   }
-  val harts = Seq.fill(2)(new FixtureHart(Seq(0L, 0L), programmable = true))
-  val memory = Vec(Reg(Bits(32 bits)) init 0, 2)
+  val harts = Seq.fill(2)(new FixtureHart(Seq(0L, 0L), programmable = true, xlen = xlen))
+  val memory = Vec(Reg(Bits(xlen bits)) init 0, 2)
   val permissions = Vec(Reg(UInt(2 bits)) init 0, 4)
   val reserved = Vec(Reg(Bool()) init False, 2)
   val reservation = Vec(Reg(UInt(1 bits)) init 0, 2)
@@ -32,16 +33,18 @@ class AtomicFixture extends Component {
     h.io.enable := io.enable(id)
     // Each port has a slot every eight cycles. Faults violate the declared fairness.
     h.io.ready := phase === id*2 && !(io.fault === 5 && Bool(id == 0)) && io.fault =/= 6
-    val word = h.io.address(2).asUInt
+    val word = h.io.address(log2Up(xlen/8)).asUInt
     val old = memory(word)
     val op = h.io.operation
     val sc = h.io.atomic && op === 3
     val lr = h.io.atomic && op === 2
+    val cas = h.io.atomic && op === 5
+    val casMatch = old === h.io.registers(h.io.insn(11 downto 7).asUInt)
     // Mode 10 models three legal spurious failures, then a fair SC service.
     // Mode 11 violates that explicit fixture service bound.
     val spurious = io.fault === 11 || (io.fault === 10 && scFailures(id) =/= 3)
     val success = reserved(id) && reservation(id) === word && !spurious
-    val updated = Bits(32 bits)
+    val updated = Bits(xlen bits)
     updated := h.io.wdata
     switch(op) {
       is(0) { updated := (old.asUInt + h.io.wdata.asUInt).asBits }
@@ -53,18 +56,20 @@ class AtomicFixture extends Component {
       is(24) { updated := Mux(old.asUInt < h.io.wdata.asUInt, old, h.io.wdata) }
       is(28) { updated := Mux(old.asUInt > h.io.wdata.asUInt, old, h.io.wdata) }
     }
-    val write = h.io.write && (!sc || success)
-    h.io.rdata := Mux(sc, Mux(success, B(0,32 bits), B(1,32 bits)), old)
-    when(io.fault === 9 && !h.io.atomic && !h.io.write) { h.io.rdata := B(2,32 bits) }
-    when(io.fault === 3 && h.io.atomic && !sc && !lr) { h.io.rdata := old ^ B(1,32 bits) }
+    val write = h.io.write && (!sc || success) && (!cas || casMatch || io.fault === 13)
+    h.io.rdata := Mux(sc, Mux(success, B(0,xlen bits), B(1,xlen bits)), old)
+    when(io.fault === 9 && !h.io.atomic && !h.io.write) { h.io.rdata := B(2,xlen bits) }
+    when(io.fault === 3 && h.io.atomic && !sc && !lr) { h.io.rdata := old ^ B(1,xlen bits) }
     when(h.io.request && h.io.ready) {
       when(lr) { reserved(id) := True; reservation(id) := word }
       when(sc) { reserved(id) := False; when(scFailures(id) =/= 3) { scFailures(id) := scFailures(id) + 1 } }
       when(write) {
         val data = Mux(h.io.atomic && !sc, updated, h.io.wdata)
         memory(word) := data
+        when(io.fault === 12 && cas) { memory(word) := old }
+        when(io.fault === 15) { memory((!word.asBool).asUInt) := B(1, xlen bits) }
         // Torn AMO: expose only the low half to the independent observer.
-        when(io.fault === 2 && h.io.atomic && !sc) { memory(word) := old(31 downto 16) ## data(15 downto 0) }
+        when(io.fault === 2 && h.io.atomic && !sc) { memory(word) := old(xlen-1 downto xlen/2) ## data(xlen/2-1 downto 0) }
         when(reservation(other) === word && io.fault =/= 1) { reserved(other) := False }
         permissions(U(id*2,2 bits) + word.resize(2)) := U(2,2 bits)
         when(io.fault =/= 4) { permissions(U(other*2,2 bits) + word.resize(2)) := U(0,2 bits) }

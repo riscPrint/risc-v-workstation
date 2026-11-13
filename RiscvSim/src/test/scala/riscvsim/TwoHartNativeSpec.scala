@@ -6,29 +6,30 @@ import spinal.core._
 import spinal.core.sim._
 
 /** Small RTL interpreter shared by the round 2 and atomic fixtures.
-  * ADDI/LW/SW, word atomics, serialized FENCE and the original polling branch.
+  * ADDI/SLLI, XLEN loads/stores/atomics, serialized FENCE and the original polling branch.
   * Not a general RISC-V core. */
-class FixtureHart(program: Seq[Long], programmable: Boolean = false) extends Component {
+class FixtureHart(program: Seq[Long], programmable: Boolean = false, xlen: Int = 32) extends Component {
+  require(Set(32, 64)(xlen))
   val io = new Bundle {
     val enable = in Bool()
     val instruction = in Bits(32 bits)
     val atomic = out Bool()
     val operation = out UInt(5 bits)
-    val registers = out Vec(Bits(32 bits), 32)
+    val registers = out Vec(Bits(xlen bits), 32)
     val request = out Bool()
     val write = out Bool()
-    val address = out UInt(32 bits)
-    val wdata = out Bits(32 bits)
-    val rdata = in Bits(32 bits)
+    val address = out UInt(xlen bits)
+    val wdata = out Bits(xlen bits)
+    val rdata = in Bits(xlen bits)
     val ready = in Bool()
     val retired = out Bool()
     val pc = out UInt(32 bits)
     val insn = out Bits(32 bits)
-    val value = out Bits(32 bits)
+    val value = out Bits(xlen bits)
     val done = out Bool()
   }
   val pc = Reg(UInt(32 bits)) init 0
-  val regs = Vec(Reg(Bits(32 bits)) init 0, 32)
+  val regs = Vec(Reg(Bits(xlen bits)) init 0, 32)
   val x1 = regs(1)
   io.registers := regs
   val rom = Vec(program.map(i => B(BigInt(i), 32 bits)))
@@ -42,10 +43,10 @@ class FixtureHart(program: Seq[Long], programmable: Boolean = false) extends Com
   val rs2 = regs(insn(24 downto 20).asUInt)
   io.atomic := atomic
   io.operation := insn(31 downto 27).asUInt
-  val immediate = insn(31 downto 20).asSInt.resize(32).asBits
+  val immediate = insn(31 downto 20).asSInt.resize(xlen).asBits
   io.request := io.enable && !done && (load || store || atomic)
   io.write := store || (atomic && io.operation =/= 2)
-  io.address := rs1.asUInt + Mux(atomic, U(0, 32 bits), Mux(store, (insn(31 downto 25) ## insn(11 downto 7)).asUInt.resize(32), immediate.asUInt))
+  io.address := rs1.asUInt + Mux(atomic, U(0, xlen bits), Mux(store, (insn(31 downto 25) ## insn(11 downto 7)).asUInt.resize(xlen), immediate.asUInt))
   io.wdata := rs2
   io.retired := io.enable && !done && (!(load || store || atomic) || io.ready)
   io.pc := pc; io.insn := insn; io.value := x1; io.done := done
@@ -54,7 +55,11 @@ class FixtureHart(program: Seq[Long], programmable: Boolean = false) extends Com
     switch(op) {
       is(B(0x13, 7 bits)) {
         when(insn(11 downto 7) =/= 0) {
-          regs(insn(11 downto 7).asUInt) := (rs1.asUInt + immediate.asUInt).asBits
+          when(insn(14 downto 12) === B(1, 3 bits)) {
+            regs(insn(11 downto 7).asUInt) := (rs1.asUInt |<< insn((if (xlen == 64) 25 else 24) downto 20).asUInt).resize(xlen).asBits
+          } otherwise {
+            regs(insn(11 downto 7).asUInt) := (rs1.asUInt + immediate.asUInt).asBits
+          }
         }
       }
       is(B(0x03, 7 bits), B(0x2f, 7 bits)) {

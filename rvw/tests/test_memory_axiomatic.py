@@ -83,7 +83,7 @@ def test_c2_reader_crosschecks_annotation_bytes_and_requires_dependencies(tmp_pa
     from rvw.memory.axiomatic import check
     from rvw.cosim.trace import HEX, INT, BOOL
     header = dict(schema='rvw.rvfi/2', xlen=64, isa='rv64ia', core='example', config='two',
-                  elf='shared', harts=[0, 1], memory_dependencies='complete')
+                  elf='shared', harts=[0, 1], memory_dependencies='complete', memory_addresses='physical')
     record = {k: '0x0' for k in HEX} | {k: 0 for k in INT} | {k: False for k in BOOL}
     record.update(hart=0, epoch=0, order='0', mode=3, insn='0x3003', mem_rmask=255,
                   memory_model=event('r', 0, 0, 'R'))
@@ -98,10 +98,31 @@ def test_c2_reader_crosschecks_annotation_bytes_and_requires_dependencies(tmp_pa
                                                         for i, r in enumerate(rows)))
     save()
     assert check(trace, reference)['status'] == 'allowed'
+    record['memory_model'].update(read='0', address='0', order='0')
+    save()
+    assert check(trace, reference)['status'] == 'allowed'
+    initial = json.loads(reference.read_text())
+    initial['locations'][0]['value'] = '0xffffffffffffffff'
+    reference.write_text(json.dumps(initial))
+    record['mem_rdata'] = '0xffffffffffffffff'
+    record['memory_model']['read'] = str((1 << 64)-1)
+    save()
+    assert check(trace, reference)['status'] == 'allowed'
+    initial['locations'][0]['value'] = '0x0'
+    reference.write_text(json.dumps(initial))
+    record['mem_rdata'] = '0x0'
+    record['memory_model']['read'] = '00'
+    save()
+    with pytest.raises(ValueError, match='canonical'):
+        check(trace, reference)
     record['memory_model']['read'] = 1
     save()
     with pytest.raises(ValueError, match='bytes'):
         check(trace, reference)
+    header.pop('memory_addresses')
+    save()
+    assert check(trace, reference)['status'] == 'inconclusive'
+    header['memory_addresses'] = 'physical'
     header.pop('memory_dependencies')
     save()
     assert check(trace, reference)['status'] == 'inconclusive'
