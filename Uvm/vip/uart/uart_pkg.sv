@@ -62,6 +62,7 @@ package uart_vip;
   endclass
   class monitor extends uvm_component;
     `uvm_component_utils(monitor)
+    int observed_transactions;
     virtual uart_if b; bit observe_tx;
     uvm_analysis_port#(item) ap;
     int state,remaining,index,count;
@@ -99,7 +100,7 @@ package uart_vip;
                 framing_error|=!line; index++;
                 if(index==b.stop_bits) begin
                   t=new(); t.data=data; t.parity_error=parity_error; t.framing_error=framing_error;
-                  traffic.sample(int'(data),parity_error,framing_error); ap.write(t); count++;
+                  traffic.sample(int'(data),parity_error,framing_error); observed_transactions++; ap.write(t); count++;
                   state=framing_error ? 5 : 0;
                 end
               end
@@ -109,6 +110,11 @@ package uart_vip;
         end
       end
     endtask
+    function void check_phase(uvm_phase phase);
+      string idle_reason;
+      if(observed_transactions==0 && (!uvm_config_db#(string)::get(this,"","idle_reason",idle_reason) || idle_reason.len()==0))
+        `uvm_fatal("NO_CHECKS","no_checks: zero observed transactions")
+    endfunction
   endclass
   class subordinate extends uvm_component;
     `uvm_component_utils(subordinate)

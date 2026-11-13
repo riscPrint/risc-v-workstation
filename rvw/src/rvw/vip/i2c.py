@@ -2,7 +2,7 @@
 from collections import Counter, deque
 from dataclasses import dataclass
 import random
-from .apb import ProtocolError
+from .apb import ProtocolError, completion
 
 
 def resolve(*pull_low):
@@ -64,8 +64,9 @@ class Monitor:
                 self.coverage['ack' if byte.ack else 'nack'] += 1
                 self.bits = self.value = 0
 
-    def finish(self):
+    def finish(self, *, idle_reason=None):
         if self.active or self.bits: raise ProtocolError('I2C_UNFINISHED_TRANSFER')
+        return completion(self.coverage['ack']+self.coverage['nack'], idle_reason)
 
 
 class Manager:

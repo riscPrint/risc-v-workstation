@@ -111,6 +111,7 @@ package axi_vip;
     int read_index[16];
     bit lite;
     int count;
+    int completed;
     covergroup traffic with function sample(int ch,int id,int len,int burst_kind,int resp,bit lock);
       channels:coverpoint ch; ids:coverpoint id; lengths:coverpoint len;
       bursts:coverpoint burst_kind; responses:coverpoint resp; exclusives:coverpoint lock;
@@ -138,6 +139,7 @@ package axi_vip;
       return t;
     endfunction
     function void publish(item t);
+      if(t.ch==B || (t.ch==R && t.last)) completed++;
       count++; traffic.sample(int'(t.ch),int'(t.id),int'(t.len),int'(t.burst),int'(t.resp),t.lock); ap.write(t);
     endfunction
     task run_phase(uvm_phase phase);
@@ -185,6 +187,9 @@ package axi_vip;
       end
     endtask
     function void check_phase(uvm_phase phase);
+      string idle_reason;
+      if(completed==0 && (!uvm_config_db#(string)::get(this,"","idle_reason",idle_reason) || idle_reason.len()==0))
+        `uvm_fatal("NO_CHECKS","no_checks: zero completed transactions")
       if(aws.size() || ws.size()) `uvm_fatal("AXI_OUTSTANDING","incomplete write")
       foreach(reads[i]) if(reads[i].size() || writes[i].size()) `uvm_fatal("AXI_OUTSTANDING","missing response")
     endfunction

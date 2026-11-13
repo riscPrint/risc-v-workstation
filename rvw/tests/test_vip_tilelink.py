@@ -76,7 +76,7 @@ def test_message_control_and_drain():
     with pytest.raises(ProtocolError,match='TL_A_MESSAGE_CONTROL'):
         mon.sample(Pins(a_valid=1,a_ready=1,a=replace(a,address=8)))
     with pytest.raises(ProtocolError,match='TL_OUTSTANDING'): mon.finish()
-    mon.sample(Pins(reset_n=0)); mon.finish()
+    mon.sample(Pins(reset_n=0)); mon.finish(idle_reason='reset-only fixture')
 
 
 def test_manager_finishes_a_after_early_ack():
@@ -109,7 +109,7 @@ def test_driven_readiness_and_d_hold():
 def test_zero_latency_valid_without_acceptance():
     mon=Monitor()
     mon.sample(Pins(a_valid=1,d_valid=1))
-    mon.finish()
+    mon.finish(idle_reason='no accepted handshake')
     with pytest.raises(ProtocolError,match='TL_D_BEFORE_A'):
         mon.sample(Pins(a_valid=1,d_valid=1,d_ready=1))
 

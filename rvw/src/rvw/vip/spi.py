@@ -2,7 +2,7 @@
 from collections import Counter,deque
 from dataclasses import dataclass,replace
 import random
-from .apb import ProtocolError
+from .apb import ProtocolError, completion
 
 
 @dataclass(frozen=True)
@@ -72,8 +72,9 @@ class Monitor:
                 self.hook(Word(self.tx,self.rx)); self.coverage['words']+=1
                 self.coverage[('mode',c.polarity,c.phase,c.bits)]+=1
                 self.count=self.tx=self.rx=0
-    def finish(self):
+    def finish(self, *, idle_reason=None):
         if self.count or not self.previous.cs_n: raise ProtocolError('SPI_UNFINISHED_SELECT')
+        return completion(self.coverage['words'], idle_reason)
 
 
 class Subordinate:

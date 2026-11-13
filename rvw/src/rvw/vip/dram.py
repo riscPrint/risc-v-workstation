@@ -1,6 +1,6 @@
 """Optional DRAM model contract with bounded independent bank/timing checks."""
 from dataclasses import dataclass,asdict
-from .apb import ProtocolError
+from .apb import ProtocolError, completion
 
 SCHEMA='rvw.vip.dram-model/1'
 
@@ -63,10 +63,13 @@ class Monitor:
             if self.open.get(c.bank)!=c.row:raise ProtocolError('DRAM_WRONG_ROW')
             if c.cycle-self.activated[c.bank]<t.rcd:raise ProtocolError('DRAM_RCD')
             key=(c.bank,c.row,c.column)
-            if c.op=='WR':self.memory[key]=c.data
+            if c.op=='WR':self.memory[key]=c.data;self.count+=1
             else:self.count+=1;return {'cycle':c.cycle+t.read_latency,'data':self.memory.get(key,0)}
         else:raise ProtocolError('DRAM_UNSUPPORTED_COMMAND')
         return None
+
+    def finish(self, *, idle_reason=None):
+        return completion(self.count, idle_reason)
 
 
 class Adapter:

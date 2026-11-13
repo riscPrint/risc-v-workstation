@@ -36,6 +36,7 @@ package interrupt_vip;
   endclass
   class monitor extends uvm_component;
     `uvm_component_utils(monitor)
+    int observed_transactions;
     virtual interrupt_if b;uvm_analysis_port#(item) ap;bit [7:0] previous;int lengths[8];int min_pulse=1;
     covergroup traffic with function sample(bit [7:0] levels,edges);
       values:coverpoint levels;transitions:coverpoint edges;
@@ -53,10 +54,15 @@ package interrupt_vip;
             if(b.observed[i])lengths[i]++;
             else if(previous[i])begin if(lengths[i]<min_pulse) `uvm_fatal("IRQ_SHORT_PULSE","short pulse") lengths[i]=0;end
           end
-          t=new();t.levels=b.observed;ap.write(t);traffic.sample(t.levels,t.levels^previous);previous=t.levels;
+          t=new();t.levels=b.observed;observed_transactions++; ap.write(t);traffic.sample(t.levels,t.levels^previous);previous=t.levels;
         end
       end
     endtask
+    function void check_phase(uvm_phase phase);
+      string idle_reason;
+      if(observed_transactions==0 && (!uvm_config_db#(string)::get(this,"","idle_reason",idle_reason) || idle_reason.len()==0))
+        `uvm_fatal("NO_CHECKS","no_checks: zero observed transactions")
+    endfunction
   endclass
   class scoreboard extends uvm_component;
     `uvm_component_utils(scoreboard)

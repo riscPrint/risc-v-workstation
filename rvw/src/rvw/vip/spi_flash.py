@@ -5,7 +5,7 @@ explicit project-supplied JEDEC identity (9f). Programming/erase are refused.
 """
 from collections import Counter
 from dataclasses import replace
-from .apb import ProtocolError
+from .apb import ProtocolError, NoChecks
 from .spi import Pins
 
 
@@ -85,6 +85,6 @@ class ReadOnlyNor:
         if not self.previous.cs_n or self.bit:
             raise ProtocolError('SPI_FLASH_UNFINISHED_TRANSACTION')
         if not self.coverage['read_bytes']:
-            raise ProtocolError('SPI_FLASH_NO_READS')
+            raise NoChecks('SPI_FLASH_NO_READS')
         return dict(read_bytes=self.coverage['read_bytes'],transactions=self.coverage['transactions'],
                     words=self.coverage['words'])

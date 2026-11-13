@@ -88,7 +88,7 @@ def test_drain_and_reset():
     mon=Monitor()
     mon.sample(Pins(arvalid=1,arready=1))
     with pytest.raises(ProtocolError,match='AXI_OUTSTANDING'): mon.finish()
-    mon.sample(Pins(reset_n=0)); mon.finish()
+    mon.sample(Pins(reset_n=0)); mon.finish(idle_reason='reset-only fixture')
     with pytest.raises(ProtocolError,match='AXIL_PROFILE'): check_address(Address(id=1),True)
 
 

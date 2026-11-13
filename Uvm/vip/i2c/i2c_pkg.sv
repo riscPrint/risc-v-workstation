@@ -55,6 +55,7 @@ package i2c_vip;
   endclass
   class monitor extends uvm_component;
     `uvm_component_utils(monitor)
+    int observed_transactions;
     virtual i2c_if b; uvm_analysis_port#(item) ap;
     bit old_scl=1,old_sda=1,active; int bits,count; bit [7:0] value;
     covergroup traffic with function sample(bit ack,bit repeated_start);
@@ -77,13 +78,17 @@ package i2c_vip;
             else begin if(!active) `uvm_fatal("I2C_INVALID_STOP","stop without start") active=0; end
           end else if(!old_scl && b.scl && active) begin
             if(bits<8) begin value={value[6:0],b.sda}; bits++; end
-            else begin t=new(); t.data=value; t.ack=!b.sda; ap.write(t); count++; traffic.sample(t.ack,0); bits=0; value=0; end
+            else begin t=new(); t.data=value; t.ack=!b.sda; observed_transactions++; ap.write(t); count++; traffic.sample(t.ack,0); bits=0; value=0; end
           end
           old_scl=b.scl; old_sda=b.sda;
         end
       end
     endtask
     function void check_phase(uvm_phase phase);
+      string idle_reason;
+      if(observed_transactions==0 && (!uvm_config_db#(string)::get(this,"","idle_reason",idle_reason) || idle_reason.len()==0))
+        `uvm_fatal("NO_CHECKS","no_checks: zero observed transactions")
+
       if(active || bits!=0) `uvm_fatal("I2C_UNFINISHED_TRANSFER","missing stop")
     endfunction
   endclass

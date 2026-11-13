@@ -123,6 +123,7 @@ package apb_vip;
 
   class monitor extends uvm_component;
     `uvm_component_utils(monitor)
+    int observed_transactions;
     virtual apb_if b;
     uvm_analysis_port#(item) ap;
     item pending;
@@ -146,11 +147,16 @@ package apb_vip;
           end else if(b.pready) begin
             if(pending==null) `uvm_fatal("APB_SETUP","monitor missing setup")
             pending.response=b.prdata; pending.error=b.pslverr; pending.waits=wait_count;
-            ap.write(pending); pending=null;
+            if(!pending.aborted) observed_transactions++; ap.write(pending); pending=null;
           end else wait_count++;
         end
       end
     endtask
+    function void check_phase(uvm_phase phase);
+      string idle_reason;
+      if(observed_transactions==0 && (!uvm_config_db#(string)::get(this,"","idle_reason",idle_reason) || idle_reason.len()==0))
+        `uvm_fatal("NO_CHECKS","no_checks: zero observed transactions")
+    endfunction
   endclass
 
   class scoreboard extends uvm_subscriber#(item);

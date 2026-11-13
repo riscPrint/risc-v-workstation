@@ -12,6 +12,19 @@ class ProtocolError(AssertionError):
     pass
 
 
+class NoChecks(ProtocolError):
+    status = 'no_checks'
+
+
+def completion(count, idle_reason=None):
+    if not count:
+        if not isinstance(idle_reason, str) or not idle_reason.strip():
+            raise NoChecks('no_checks: zero completed transactions')
+        return {'status': 'idle', 'transactions': 0, 'idle_reason': idle_reason}
+    return {'status': 'checked', 'transactions': count}
+
+
+
 @dataclass(frozen=True)
 class Pins:
     reset_n: int = 1
@@ -102,6 +115,13 @@ class Monitor:
                 self.coverage[('protection', t.protection)] += 1
                 self.hook(t)
                 self.pending = None
+
+    def finish(self, *, idle_reason=None):
+        if self.pending is not None:
+            raise ProtocolError('APB_UNFINISHED')
+        count = sum(v for k, v in self.coverage.items()
+                    if isinstance(k, tuple) and k[0] in ('read', 'write'))
+        return completion(count, idle_reason)
 
 
 class RegisterScoreboard:

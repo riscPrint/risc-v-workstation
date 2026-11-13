@@ -38,6 +38,7 @@ package clock_reset_vip;
   endclass
   class monitor extends uvm_component;
     `uvm_component_utils(monitor)
+    int observed_transactions;
     virtual clock_reset_if b;uvm_analysis_port#(item) ap;
     covergroup traffic with function sample(bit clock,reset_n);
       clocks:coverpoint clock;resets:coverpoint reset_n;
@@ -49,9 +50,14 @@ package clock_reset_vip;
     task run_phase(uvm_phase phase);item t;
       forever begin @(b.observed_clock or b.observed_reset_n);#1ps;t=new();
         t.clock=b.observed_clock;t.reset_n=b.observed_reset_n;t.timestamp=$time;
-        ap.write(t);traffic.sample(t.clock,t.reset_n);
+        observed_transactions++; ap.write(t);traffic.sample(t.clock,t.reset_n);
       end
     endtask
+    function void check_phase(uvm_phase phase);
+      string idle_reason;
+      if(observed_transactions==0 && (!uvm_config_db#(string)::get(this,"","idle_reason",idle_reason) || idle_reason.len()==0))
+        `uvm_fatal("NO_CHECKS","no_checks: zero observed transactions")
+    endfunction
   endclass
   class scoreboard extends uvm_subscriber#(item);
     `uvm_component_utils(scoreboard)

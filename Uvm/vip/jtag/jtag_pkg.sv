@@ -43,6 +43,7 @@ package jtag_vip;
   endclass
   class monitor extends uvm_component;
     `uvm_component_utils(monitor)
+    int observed_transactions;
     virtual jtag_if b;uvm_analysis_port#(item) ap;
     int state,count;bit [63:0] data;
     int next0[16]='{1,1,3,4,4,6,6,4,1,10,11,11,13,13,11,1};
@@ -61,13 +62,18 @@ int next1[16]='{0,2,9,5,5,8,7,8,2,0,12,12,15,14,15,2};
           if(state==4 || state==11)begin
             if(count>=64) `uvm_fatal("JTAG_SCAN_WIDTH","scan exceeds profile")
             data[count]=b.tdo;count++;
-            if(b.tms)begin t=new();t.data=data;t.bits=count;t.ir=state==11;ap.write(t);traffic.sample(state,count);count=0;data=0;end
+            if(b.tms)begin t=new();t.data=data;t.bits=count;t.ir=state==11;observed_transactions++; ap.write(t);traffic.sample(state,count);count=0;data=0;end
           end
           state=b.tms ? next1[state] : next0[state];
         end
       end
     endtask
-    function void check_phase(uvm_phase phase);if(count!=0) `uvm_fatal("JTAG_UNFINISHED_SCAN","partial scan") endfunction
+    function void check_phase(uvm_phase phase);
+      string idle_reason;
+      if(observed_transactions==0 && (!uvm_config_db#(string)::get(this,"","idle_reason",idle_reason) || idle_reason.len()==0))
+        `uvm_fatal("NO_CHECKS","no_checks: zero observed transactions")
+      if(count!=0) `uvm_fatal("JTAG_UNFINISHED_SCAN","partial scan")
+    endfunction
   endclass
   class scoreboard extends uvm_component;
     `uvm_component_utils(scoreboard)

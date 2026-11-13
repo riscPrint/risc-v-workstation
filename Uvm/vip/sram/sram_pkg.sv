@@ -38,6 +38,7 @@ package sram_vip;
   endclass
   class monitor extends uvm_component;
     `uvm_component_utils(monitor)
+    int observed_transactions;
     virtual sram_if b;uvm_analysis_port#(item) ap;
     covergroup traffic with function sample(bit enable,write,valid,bit [3:0] mask);
       enables:coverpoint enable;writes:coverpoint write;responses:coverpoint valid;masks:coverpoint mask;
@@ -49,9 +50,14 @@ package sram_vip;
     task run_phase(uvm_phase phase);item t;
       forever begin @(posedge b.clk);t=new();t.reset_n=b.reset_n;t.enable=b.enable;t.write=b.write;
         t.address=b.address;t.data=b.data;t.mask=b.mask;t.valid=b.valid;t.response=b.response;
-        ap.write(t);traffic.sample(t.enable,t.write,t.valid,t.mask);
+        observed_transactions++; ap.write(t);traffic.sample(t.enable,t.write,t.valid,t.mask);
       end
     endtask
+    function void check_phase(uvm_phase phase);
+      string idle_reason;
+      if(observed_transactions==0 && (!uvm_config_db#(string)::get(this,"","idle_reason",idle_reason) || idle_reason.len()==0))
+        `uvm_fatal("NO_CHECKS","no_checks: zero observed transactions")
+    endfunction
   endclass
   class scoreboard extends uvm_subscriber#(item);
     `uvm_component_utils(scoreboard)

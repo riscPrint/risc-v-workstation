@@ -56,7 +56,7 @@ def test_missing_last_reset_and_drain():
     with pytest.raises(ProtocolError, match='AXIS_UNTERMINATED_PACKET'):
         mon.finish()
     mon.sample(Pins(reset_n=0))
-    mon.finish()
+    mon.finish(idle_reason='reset-only fixture')
     with pytest.raises(ProtocolError, match='AXIS_RESET_VALID'):
         mon.sample(Pins(reset_n=0, valid=1))
     with pytest.raises(ProtocolError, match='AXIS_MISSING_PACKET'):

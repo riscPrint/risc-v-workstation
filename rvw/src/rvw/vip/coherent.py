@@ -1,7 +1,7 @@
 """rvw.chi-like/1: reduced coherent event model. Not an Arm CHI implementation."""
 from collections import Counter
 from dataclasses import dataclass
-from .apb import ProtocolError
+from .apb import ProtocolError, NoChecks
 
 SCHEMA='rvw.chi-like/1'
 
@@ -64,7 +64,7 @@ class Directory:
         self.coverage[e.kind]+=1
     def finish(self):
         if self.pending:raise ProtocolError('COH_MISSING_COMPLETION')
-        if not self.coverage[2]:raise ProtocolError('COH_NO_COMPLETIONS')
+        if not self.coverage[2]:raise NoChecks('COH_NO_COMPLETIONS')
 
 
 class Manager:

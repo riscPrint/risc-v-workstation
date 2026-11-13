@@ -56,7 +56,7 @@ def test_contract_and_partial():
     with pytest.raises(ProtocolError, match='UNKNOWN_LINE'): Monitor().sample(Pins(sda='X'))
     mon = Monitor(); mon.sample(Pins(sda=0)); mon.sample(Pins(0, 0)); mon.sample(Pins(1, 0)); mon.sample(Pins(0, 0)); mon.sample(Pins(1, 0))
     with pytest.raises(ProtocolError, match='INVALID_STOP'): mon.sample(Pins())
-    mon.sample(Pins(reset_n=0)); mon.finish()
+    mon.sample(Pins(reset_n=0)); mon.finish(idle_reason='reset-only fixture')
 
 
 def test_read_and_scoreboard():

@@ -131,6 +131,9 @@ package axis_vip;
       end
     endtask
     function void check_phase(uvm_phase phase);
+      string idle_reason;
+      if(packets==0 && (!uvm_config_db#(string)::get(this,"","idle_reason",idle_reason) || idle_reason.len()==0))
+        `uvm_fatal("NO_CHECKS","no_checks: zero completed transactions")
       foreach(active_packet[i]) if(active_packet[i]) `uvm_fatal("AXIS_UNTERMINATED_PACKET","missing TLAST")
     endfunction
   endclass
