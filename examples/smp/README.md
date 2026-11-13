@@ -182,3 +182,9 @@ clock gating, independent reset or power control.
 `random-results.json`, `ipi-result.json`, `hsm-result.json` and
 `serial-cosim-result.json` hold measured evidence.
 Use `summarize.py RUN...` to validate C1/C2 count and completion consistency.
+
+## Cache and protocol observer scope
+
+See [the cache and coherence scope](COHERENCE.md). Both observer groups are
+unbound because these profiles have no caches or TileLink-C ports. C1 reports
+`cache_coherence: not_present`. Native program passes do not change that limit.
