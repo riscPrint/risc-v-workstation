@@ -108,9 +108,9 @@ object Probe {
   /** A cache event. `event` is a project word such as access, fill, evict or invalidate.
     * `hit` gives the lookup result of an access. `data`/`mask` give bytes for the cache observer. */
   def cacheAccess(cache: String, event: String, valid: Bool, address: Data, hit: Option[Bool] = None,
-      write: Option[Bool] = None, data: Option[Data] = None, mask: Option[Data] = None, way: Option[Data] = None): Unit =
+      write: Option[Bool] = None, data: Option[Data] = None, mask: Option[Data] = None, way: Option[Data] = None, semantics: String = "lookup"): Unit =
     site("cache", s"${cache}_$event", valid, Seq("address" -> address) ++ opt("hit", hit) ++ opt("write", write) ++
-      opt("data", data) ++ opt("mask", mask) ++ opt("way", way), Map("cache" -> cache, "event" -> event))
+      opt("data", data) ++ opt("mask", mask) ++ opt("way", way), Map("cache" -> cache, "event" -> event, "semantics" -> semantics))
 
   /** A TLB event: `fill`, `hit`, `miss` or `invalidate` (va/asid absent means all). */
   def tlb(tlb: String, event: String, valid: Bool, va: Option[Data] = None, pa: Option[Data] = None,

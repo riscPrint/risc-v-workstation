@@ -16,7 +16,7 @@ import vexriscv.plugin._
   *    I$: a miss when a refill of the instruction's line started since the last commit in it.
   *  - `fill` when a line refill completes, with the line address and its bytes.
   *  - `evict` (D$) when a refill replaces a valid line, with the victim line address.
-  *  - `flush` at the cache invalidation request (I$), or at the commit of a data-cache management instruction (D$):
+  *  - `flush` when cache invalidation completes (I$), or at the commit of a data-cache management instruction (D$):
   *    the whole cache is invalidated.
   * Counters: `icache_accesses`, `icache_misses`, `dcache_accesses`, `dcache_misses`,
   * `dcache_load_misses`, `dcache_store_misses`, `icache_fills`, `dcache_fills`. */
@@ -52,6 +52,10 @@ object CacheProbes {
       val beats = cfg.bytePerLine * 8 / cfg.memDataWidth
       val pending = Reg(UInt(32 bits))
       when(bus.cmd.fire) { pending := bus.cmd.address }
+      val beatIndex = Reg(UInt(log2Up(beats) bits)) init(0)
+      when(bus.rsp.valid) { beatIndex := beatIndex + 1 }
+      val beatAddress = ((pending >> lineBits) << lineBits) + (beatIndex.resize(32 bits) << log2Up(cfg.memDataWidth / 8))
+      Probe.cacheAccess("icache", "refill_beat", bus.rsp.valid, beatAddress, data = Some(bus.rsp.data))
       val (filled, line) = lineCapture(bus.rsp.valid, bus.rsp.data, beats)
       Probe.cacheAccess("icache", "fill", filled, (pending >> lineBits) << lineBits, data = Some(line))
       // The line of the last refill, until an instruction of that line commits.
@@ -61,9 +65,12 @@ object CacheProbes {
       val missed = missValid && missLine === (pc >> lineBits)
       when(commit && missed) { missValid := False }
       when(bus.cmd.fire) { missValid := True; missLine := bus.cmd.address >> lineBits }
-      Probe.cacheAccess("icache", "access", commit, pc, hit = Some(!missed))
-      val invalidating = cache.io.flush.pull()
-      Probe.cacheAccess("icache", "flush", invalidating && !RegNext(invalidating).init(False), pc)
+      Probe.cacheAccess("icache", "access", commit, pc, hit = Some(!missed), semantics = "retired-refill-attribution")
+      val invalidated = cache.lineLoader.flushCounter.pull().msb
+      Probe.cacheAccess("icache", "flush", invalidated && !RegNext(invalidated).init(False), pc)
+      val lookup = cache.io.cpu.decode
+      Probe.cacheAccess("icache", "lookup", lookup.isValid.pull() && !lookup.isStuck.pull(),
+        lookup.physicalAddress.pull(), hit = Some(!lookup.cacheMiss.pull()), data = Some(lookup.data.pull()))
       Probe.counter("icache_accesses", commit)
       Probe.counter("icache_misses", commit && missed)
       Probe.counter("icache_fills", filled)
@@ -83,6 +90,7 @@ object CacheProbes {
       when(refillCmd) { pending := bus.cmd.address; refilling := True }
       val (filled, line) = lineCapture(bus.rsp.valid && refilling, bus.rsp.data, beats)
       when(filled) { refilling := False }
+      Probe.stall("memory", "dcache_miss", refilling, evidence = "inferred")
       Probe.cacheAccess("dcache", "fill", filled, (pending >> lineBits) << lineBits, data = Some(line))
       // Victim: the way-0 tag read for the refilling access (pulled out of the cache component).
       val victim = cache.stageB.tagsReadRsp.head.pull()

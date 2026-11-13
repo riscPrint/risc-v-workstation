@@ -39,6 +39,32 @@ class ProbeTapPlugin extends FiberPlugin {
           predictedTarget = if (dynamicDirection) Some(p.ctx(Prediction.ALIGNED_JUMPED_PC)) else None,
           covers = Seq("cond"))
       }
+      val commitId = Reg(UInt(32 bits)) init(0)
+      val commitValid = wb.commits.ports.map(_.valid).orR
+      when(commitValid) { commitId := commitId + 1 }
+      // The named cached config has one commit lane. This is a commit-stage view only.
+      require(wb.commits.ports.size == 1, "commit-stage probes require one lane")
+      val commitPort = wb.commits.ports.head
+      Probe.stage("C", commitPort.valid, commitId, pc = Some(commitPort.pc))
+      Probe.retire("commit", commitPort.valid, commitId)
+      val recovery = RegInit(False)
+      when(commitValid) { recovery := False }
+      when(learns.map(l => l.valid && l.payload.wasWrong).orR) { recovery := True }
+      Probe.stall("frontend", "mispredict_recovery", recovery && !commitValid, evidence = "inferred")
+      host.get[FetchL1Plugin].foreach { f =>
+        Probe.stall("fetch", "icache_miss", f.logic.refill.slots.map(_.valid).orR, evidence = "inferred")
+      }
+      host.get[LsuL1Plugin].foreach { l1 =>
+        val bus = l1.logic.bus
+        val pending = RegInit(False)
+        val beats = Reg(UInt(16 bits)) init(0)
+        when(bus.read.cmd.fire) { pending := True; beats := 0 }
+        when(bus.read.rsp.fire) {
+          beats := beats + 1
+          when(beats === bus.p.lineSize * 8 / bus.p.dataWidth - 1) { pending := False }
+        }
+        Probe.stall("memory", "dcache_miss", pending, evidence = "inferred")
+      }
       val retired = wb.commits.ports.map(_.valid.asUInt.resize(4 bits)).reduce(_ + _)
       Probe.counter("cycles", True)
       Probe.counter("retired", retired)

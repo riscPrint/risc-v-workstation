@@ -24,7 +24,11 @@ read:
   addi t1, t1, 1
   addi s1, s1, -1
   bnez s1, read
+#ifndef RVW_NO_FENCE
   fence.i
+#else
+  nop
+#endif
   li t0, 1
   j finish
 fail:

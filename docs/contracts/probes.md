@@ -67,3 +67,27 @@ bounds of actual sampling, including idle cycles without event rows. Both must
 be present together. The Kanata converter preserves these bounds. Older streams
 without them keep their observed event window; `cycles` alone does not define
 a cycle origin. RiscvSim supplies both bounds after at least one sample.
+
+## Physical cache lookups and retired attribution
+
+Cache metadata can declare `semantics=retired-refill-attribution`. Such an
+`access` attributes a refill to a retired instruction. It is not a physical
+tag lookup. A buffered instruction can retire after its line is invalidated.
+Producers that use this attribution also emit physical `lookup` events with
+actual tag-hit values. The cache checker checks residency on those events.
+It counts retired attribution separately. Attribution without physical lookup
+events is inconclusive. False hits on physical lookups remain violations.
+Whole-cache flush events occur when invalidation completes.
+
+Performance recovery spans are producer declarations. The example spans start
+at a redirect and end at decode occupancy or the next commit. They are
+`inferred`. Cache refill activity and recovery can overlap. Their sum is not
+a total of lost CPU cycles. The VexiiRiscv stage view covers its commit stage
+only. A C1/trace count mismatch remains visible in the performance report.
+
+Instruction caches can restart after one returned word. `refill_beat` events
+carry the physical byte address and returned bytes. The cache checker checks
+each beat against the independent memory image. Before full-line completion,
+a lookup hit requires every requested byte to be present in the beat inventory.
+Its data must match memory. A hit on another word remains a violation. Fill,
+eviction and flush events clear the corresponding partial-byte inventory.

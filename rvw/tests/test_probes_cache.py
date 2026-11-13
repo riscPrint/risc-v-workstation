@@ -93,3 +93,42 @@ def test_geometry_parse():
     assert parse_geometry(["icache=128x1", "dcache=32X2"]) == {"icache": (128, 1), "dcache": (32, 2)}
     with pytest.raises(ValueError):
         parse_geometry(["dcache=32"])
+
+
+
+def test_retired_attribution_needs_real_lookups_and_does_not_mask_false_hits(tmp_path):
+    run(tmp_path, [[5, 0, BASE, line(BASE)], [6, 1, BASE + LINE, 1, 0]])
+    path = tmp_path / "ev.jsonl"
+    rows = [json.loads(x) for x in path.read_text().splitlines()]
+    rows[0]["probes"][1]["meta"]["semantics"] = "retired-refill-attribution"
+    path.write_text("\n".join(json.dumps(x) for x in rows) + "\n")
+    rep = api.run_convert(path, "cache-check", tmp_path / "projected.json", c2=tmp_path / "rvfi.jsonl")
+    assert rep["status"] == "inconclusive" and "physical lookup" in rep["reason"]
+    lookup = dict(rows[0]["probes"][1], id=4, name="dcache_lookup", meta={"cache": "dcache", "event": "lookup"})
+    rows[0]["probes"].append(lookup)
+    rows.insert(-1, [7, 4, BASE + LINE, 1, 0])
+    path.write_text("\n".join(json.dumps(x) for x in rows) + "\n")
+    rep = api.run_convert(path, "cache-check", tmp_path / "lookup.json", c2=tmp_path / "rvfi.jsonl")
+    assert rep["status"] == "mismatch"
+    assert rep["mismatches"][0]["rule"] == "hit on a line that is not resident"
+
+
+def test_early_restart_requires_the_exact_returned_word_and_checks_its_data(tmp_path):
+    run(tmp_path, [])
+    path = tmp_path / "ev.jsonl"
+    rows = [json.loads(x) for x in path.read_text().splitlines()]
+    rows[0]["probes"] += [
+        {"id": 4, "kind": "cache", "name": "dcache_refill_beat",
+         "meta": {"cache": "dcache", "event": "refill_beat"}, "fields": [["address", 32], ["data", 32]]},
+        {"id": 5, "kind": "cache", "name": "dcache_lookup",
+         "meta": {"cache": "dcache", "event": "lookup"}, "fields": [["address", 32], ["hit", 1], ["data", 32]]},
+    ]
+    word = int.from_bytes(DATA[:4], "little")
+    rows[1:1] = [[5, 4, BASE, word], [6, 5, BASE, 1, word],
+                 [7, 5, BASE + 4, 1, 0], [8, 5, BASE, 1, word ^ 1]]
+    path.write_text("\n".join(json.dumps(x) for x in rows) + "\n")
+    rep = api.run_convert(path, "cache-check", tmp_path / "early.json", c2=tmp_path / "rvfi.jsonl")
+    assert rep["status"] == "mismatch"
+    assert rep["caches"]["dcache"]["early_restart_hits_checked"] == 2
+    assert [m["rule"] for m in rep["mismatches"]] == [
+        "hit on a line that is not resident", "early restart data differs from memory"]

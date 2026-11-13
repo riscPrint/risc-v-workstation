@@ -1,0 +1,29 @@
+{
+ "retired": {
+  "model_event": "issued",
+  "rtl_event": "retired",
+  "edge": "rising",
+  "unit": "instructions",
+  "identity": "architectural",
+  "family": "throughput",
+  "region": "whole-program"
+ },
+ "branches": {
+  "model_event": "branches",
+  "rtl_event": "branches",
+  "edge": "rising",
+  "unit": "instructions",
+  "identity": "architectural",
+  "family": "control",
+  "region": "whole-program"
+ },
+ "mispredicts": {
+  "model_event": "branch_misses",
+  "rtl_event": "mispredicts",
+  "edge": "rising",
+  "unit": "events",
+  "identity": "microarchitectural",
+  "family": "prediction",
+  "region": "whole-program"
+ }
+}
