@@ -1079,9 +1079,10 @@ usage: rvw formal shortest [-h] --result RESULT --out OUT [--max-depth
 ### `rvw formal proof-core`
 
 ```text
-usage: rvw formal proof-core [-h] [--smt2 SMT2] [--result RESULT] [--depth
-    DEPTH] [--property PROPERTY] [--mapping MAPPING] [--db DB] [--solver
-    SOLVER] [--timeout TIMEOUT] --out OUT [--json] [--project PROJECT]
+usage: rvw formal proof-core [-h] [--cell-level] [--smt2 SMT2] [--result
+    RESULT] [--depth DEPTH] [--property PROPERTY] [--mapping MAPPING] [--db
+    DB] [--solver SOLVER] [--timeout TIMEOUT] --out OUT [--json] [--project
+    PROJECT]
 ```
 
 ### `rvw formal apps`
@@ -3095,7 +3096,7 @@ Starts a background job: yes.
 
 Extract a deletion-minimal solver core for one named SMT query. Not an RTL proof.
 
-Arguments: `smt2`, `mapping`, `result`, `depth`, `property`, `db`, `solver`, `timeout`, `out` (required).
+Arguments: `cell_level`, `smt2`, `mapping`, `result`, `depth`, `property`, `db`, `solver`, `timeout`, `out` (required).
 
 Starts a background job: yes.
 

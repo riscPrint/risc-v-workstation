@@ -4710,3 +4710,58 @@ Kanata 0004 with `#rvw 1 stall` records, cache observer JSONL (`event` is `CACHE
 events in order). `rvw probes list` writes `rvw.probes-report/1`: `probes`, one `consumers`
 row per tool with `status` `enabled`, `missing`, `unknown` or `no_converter`, and the
 `enabled`/`missing` lists. Probe events are producer claims; no converter adds an event.
+`rvw uvm run` writes C1 with `details.mode: uvm-bench`, null cycle and retirement
+counts, and no ELF claim. A pass requires exit zero, no UVM error/fatal, and one
+`RVW_UVM_DONE TEST checks=N` line with the selected test and positive N.
+`rvw uvm regress` writes one C3 row per test/seed and links the corresponding
+C1 and log. `source.identity_complete` is false. These results are component
+checks, not a core gate identity. Native coverage merging does not merge
+functional coverage plans or establish closure.
+
+
+### Shortest captured counterexamples and explanations
+
+`rvw.shortest-cex/1` records increasing solver sample depths for a captured BMC
+model with one assertion. `shortest=true` requires FAIL at the reported depth
+and PASS at every smaller positive depth. Unknown depths stop the search.
+All-PASS finite searches stay inconclusive. Restrictions and input hashes remain.
+`rvw.cex-explanation/1` contains a `chain` from an actual SpinalTrace dynamic
+graph. Node IDs refer to its vertex order. Each node records source location,
+timestamp, observed value and `causes` with node ID, edge kind and clock flag.
+Trace accuracy is retained. Missing accuracy becomes incomplete. These records
+are not an unbounded proof or a repair certificate.
+
+### Formal app liveness-to-safety
+
+`rvw.liveness-app/1` binds self-contained RTL, top, clock, active-high reset,
+request, response and state-justice fairness expressions. `rvw.liveness-app-result/1`
+retains the full state width, native safety result and captured inputs. Only an
+unbounded safety pass receives `proof_kind=liveness_to_safety`. A bounded pass
+is a bounded lasso search. Justice feasibility and existential CTL deadlock
+freedom are not established. Existing safety assertions are removed from this
+separate job. Original assumptions remain.
+
+### Database app role evidence
+
+Formal app reports retain `database.roles` with role, source database evidence,
+generated check IDs and unsupported reasons. Exact internal enum exposure is
+recorded in the captured generated plan as `internal_ports` with widths.
+`counts` separates generated obligations, unbounded passes, bounded passes,
+solver failures and unsupported discovery records. Reachability failures retain
+their observation semantics. Counts do not grant a design pass.
+
+### Bounded cell core evidence and explicit obligations
+
+The solver-core report can include `cell_coverage` with a mapped Boolean logic
+inventory, `core_cells`, `outside_core`, status and scope. Every cell equation
+is separately named for every bounded sample. `bounded_core` means that a
+feasible bounded environment and an UNSAT assertion-failure query yielded a core.
+It is not an unbounded proof or functional coverage percentage. Testplans can
+list requirement obligations by stable property ID. `discharged_conditional`
+requires every declared obligation's evidence. Missing obligations cannot pass.
+
+Cell-core `logical_vacuity` rows retain exact assertion IDs, atom bits and both
+replacement solver outcomes. Replacements change only the specification Boolean
+expression. `replacement_vacuous_bounded` requires UNSAT for both constant
+replacements in a feasible environment. `sensitive_bounded` requires a SAT
+replacement. State-bit leaves and the finite bound limit the analysis.

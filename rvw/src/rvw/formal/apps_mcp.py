@@ -1,6 +1,16 @@
 """MCP entry points for formal apps and proof coverage."""
 from rvw.mcp.spec import ToolSpec
 
+def _cell_runner(job, **args):
+    from .mcp_tools import _runner
+    cell = args.pop("cell_level", False)
+    class Job:
+        def run(self, argv):
+            return job.run([*argv, "--cell-level"] if cell else argv)
+        def tail(self, count):
+            return job.tail(count)
+    return _runner("proof-core")(Job(), **args)
+
 def mcp_tools():
     from .mcp_tools import ToolSpec, schema, S, I, B, _runner
     return [
@@ -28,9 +38,9 @@ def mcp_tools():
         ToolSpec("formal_shortest", "Search increasing BMC depths for the sole captured assertion. Unknown depths cannot certify minimality.",
                  schema({"result": S, "out": S, "max_depth": I, "timeout": {"type": "number", "exclusiveMinimum": 0}, "engine": S}, ["result", "out"]), _runner("shortest"), long=True),
         ToolSpec("formal_proof_core", "Extract a deletion-minimal solver core for one named SMT query. Not an RTL proof.",
-                 schema({"smt2": S, "mapping": S, "result": S, "depth": I, "property": S, "db": S, "solver": S,
+                 schema({"cell_level": B, "smt2": S, "mapping": S, "result": S, "depth": I, "property": S, "db": S, "solver": S,
                          "timeout": {"type": "number", "exclusiveMinimum": 0}, "out": S},
-                        ["out"]), _runner("proof-core"), long=True),
+                        ["out"]), _cell_runner, long=True),
         ToolSpec("formal_cex", "Replay a captured failing BMC witness with edited inputs through Yosys sim. Not a proof.",
                  schema({"result": S, "out": S, "trace_index": I,
                          "edit": {"type": "array", "items": S},
