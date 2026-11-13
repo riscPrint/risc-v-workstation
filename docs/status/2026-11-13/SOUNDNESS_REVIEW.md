@@ -119,3 +119,120 @@ No realistic false accept was found in this area.
 | C2 | A C2/1 trace (the RiscvSim default unless the header asks for `state`) carries no FP state. On an F/D core a `match` then compares FP effects only where they reach integer registers or memory. The result reports this in `state_coverage.fp: false`. | unusual | Not fixed. Contract C2 states that missing state is unavailable evidence, never a state match. |
 
 No realistic false match was found in this area.
+
+## Area 3: formal
+
+### Files read
+
+| File | Lines |
+|---|---|
+| `rvw/src/rvw/formal/regression.py` | 182 |
+| `rvw/src/rvw/formal/regression_cache.py` | 105 |
+| `rvw/src/rvw/formal/proof_cache.py` | 91 |
+| `rvw/src/rvw/formal/portfolio.py` | 275 |
+| `rvw/src/rvw/formal/cross_proof.py` | 108 |
+| `rvw/src/rvw/formal/flows.py` (`_finish`, `_reachability`, header) | 1019 |
+| `rvw/src/rvw/formal/common.py` (`final_status`, `count_asserts`) | part |
+| `rvw/src/rvw/formal/autocheck.py` | 120 |
+| `rvw/src/rvw/formal/apps.py` | 235 |
+| `rvw/src/rvw/formal/automonitors.py` | 43 |
+| `rvw/src/rvw/formal/equiv.py` (verdict and EQY run) | 428 |
+| `rvw/src/rvw/formal/bus_environment.py` | 58 |
+
+### What holds
+
+- A pass needs matching SBY process and log exit codes and at least one
+  `$assert` in the prepared model. Zero assertions give `no_checks`.
+- Every flow pass (and every `PREUNSAT`) runs a separate cover job on the same
+  prepared model with assertions removed. A pass stays a pass only when a legal
+  path of the full depth exists. This catches assumptions that block all
+  behaviour.
+- `bmc` mode never gives `proven`: the portfolio maps it to `bounded_pass` and
+  takes only `pass` or `fail` as a winner. A portfolio with any source
+  assumption gives `inconclusive` (`activation_not_checked`). Two engines that
+  disagree give `inconclusive`.
+- `rvw formal regress` keeps every engine observation inconclusive at C3 level
+  and reports overall status `unknown` with exit 1. An explicit `PREUNSAT`
+  becomes `vacuous`.
+- Proof caches key on the elaborated model bytes, the SBY script, captured
+  files, tool hashes, environment and the formal and common Python code. A
+  changed RTL or property changes the elaborated model and misses the cache.
+  The regression cache refuses jobs with `` `include ``, `$readmem`, `$fopen`
+  or other script commands, and refuses activation jobs it cannot identify.
+  Only `pass` results with assertions, reachable paths and no capture problems
+  are published.
+- Equivalence needs every EQY partition `PASS` with no cut bits and no
+  unmatched state. Black-box contracts and event models make the result
+  `conditional`.
+- App reports with any waived row, or any reachability-style target (FSM,
+  dead code, toggle, counter wrap), cannot give `pass`.
+
+### Findings
+
+No realistic false proof was found. Not reviewed in depth: the ISA flows
+(`isa.py`, `riscv_proof.py`, Sail subsets), datapath, security apps, IC3
+lemma reuse, deep grids and liveness.
+
+## Area 4: generated checks and dispositions
+
+### Files read
+
+| File | Lines |
+|---|---|
+| `rvw/src/rvw/checks/qualification.py` | 129 |
+| `rvw/src/rvw/checks/dispositions.py` | 38 |
+| `rvw/src/rvw/common/waivers.py` | 23 |
+| `SpinalChecks/src/main/scala/spinalchecks/StreamCancellation.scala` | 74 |
+| `SpinalChecks/src/main/scala/spinalchecks/SpinalChecks.scala` (stream checks) | part |
+
+### What holds
+
+- Qualification status is only `findings` or `inconclusive`. Proven and
+  bounded counts need formal activation of every associated property.
+- Dispositions need a reason, an owner and an unexpired date. A disposition
+  for a check that did not fire in evaluated runs is refused as stale. Waived
+  findings give `reviewed_findings`, never a pass.
+- The automatic cancellation terms (`throwWhen`, `haltWhen`, `continueWhen`,
+  `clearValidWhen`, `m2sPipe` register clears) all force `valid` low in the
+  sample where `cancel` is true. The payload check is `stallPrev && !cancel &&
+  valid && changed`, so a recognised cancel cannot hide a payload change while
+  `valid` stays high. A reviewed project binding can hide one, by design, and
+  the report names it as a reviewed binding.
+
+### Findings
+
+No realistic finding.
+
+## Area 5: coverage, plans and evidence
+
+### Files read
+
+| File | Lines |
+|---|---|
+| `rvw/src/rvw/common/verdicts.py` | 20 |
+| `rvw/src/rvw/plan/model.py` | 221 |
+| `rvw/src/rvw/evidence/index.py` | 70 |
+| `rvw/src/rvw/cov/code.py` (`merge`, `summary`) | 697 |
+| `rvw/src/rvw/cov/proof.py` (`apply_exclusions`) | 1339 |
+| `rvw/src/rvw/cov/campaign.py` | 307 |
+
+### What holds
+
+- `weakest_verdict` puts `fail` first and `pass` last. Plan features give
+  `pass` only when every evidence entry is a pass and there is no hole. Coverage
+  references keep the producer verdict, which is not `pass` for coverage
+  reports, so they never raise a feature to `pass`.
+- Formal plan evidence needs the child `rvw.formal/1` result with a pass,
+  assertions, a reachable path and the required proof kind.
+- Code coverage merge refuses different point universes and different C1
+  provenance. Hit counts use `count > 0`, so a repeated input cannot raise
+  the hit rate.
+- A proof exclusion needs an unbounded `PASS`, no conflicting cover witness, a
+  passing cone cover, a passing sanity cover, unchanged evidence hashes, an
+  unhit point, and a plan rebuilt from hashed inputs.
+- Stimulus closure credits bins only after a single C1 pass with a complete
+  strict Spike match and exactly one retirement of each payload instruction.
+
+### Findings
+
+No realistic finding.
