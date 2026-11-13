@@ -1,0 +1,68 @@
+{
+  "tests": [
+    {
+      "id": "scenario_test.Scenarios1",
+      "status": "pass",
+      "seed": 1,
+      "kind": "cocotb",
+      "signature": null,
+      "wall_s": 0.075
+    },
+    {
+      "id": "scenario_test.Scenarios7",
+      "status": "pass",
+      "seed": 1,
+      "kind": "cocotb",
+      "signature": null,
+      "wall_s": 0.004
+    }
+  ],
+  "rtl_sha256": "2f7421ea3d88a22e9fb9fa33c6cb0a45f2d0972a2c22394efa186581df53f5c6",
+  "source_sha256": {
+    "SpinalSoc/src/main/scala/rvwsoc/Soc.scala": "f98ba66b87aa59dd3e4521357d3da51d50a3ed8d76047cfb2e1349ccde49fe03",
+    "rvw/src/rvw/soc/compose.py": "94d3a249fc114766b7638e8a23d172e196708bc49ef5e012004bda680c16de05",
+    "Uvm/examples/composed/spinal/src/main/scala/ScenarioSoc.scala": "e5b6e652bf802e1f5ff510671e562de0e9822faaa067d25434127e9b6dd5e7bf",
+    "Uvm/examples/composed/compose.json": "3d3e959bf409a8f3227db955d6447ef5430fefe3661456a32593a8fc7ae90e09",
+    "Uvm/examples/composed/map.json": "f0fad658698583dfe01b6474204e899902d9caac3fe77afde11aac13067b3790",
+    "Uvm/examples/composed/scenario_test.py": "41e429c3114d404a296ebddeef865c8f4efccae75e9d98cf8ffa7e90116afd19"
+  },
+  "scenarios": {
+    "1": {
+      "scope": "SpinalSoc APB fabric and peripheral IRQ routing; no CPU execution",
+      "interrupt_storm": {
+        "checks": 32,
+        "interrupts": 32
+      },
+      "bus_error": {
+        "checks": 1,
+        "error": true,
+        "data": 4660
+      },
+      "reset_during_traffic": {
+        "checks": 3,
+        "aborted": true
+      },
+      "cpu_checks": 0
+    },
+    "7": {
+      "scope": "SpinalSoc APB fabric and peripheral IRQ routing; no CPU execution",
+      "interrupt_storm": {
+        "checks": 32,
+        "interrupts": 32
+      },
+      "bus_error": {
+        "checks": 1,
+        "error": true,
+        "data": 4660
+      },
+      "reset_during_traffic": {
+        "checks": 3,
+        "aborted": true
+      },
+      "cpu_checks": 0
+    }
+  },
+  "engine": "Verilator 5.052; SpinalHDL 1.15.0; cocotb 2.1.0",
+  "composer_source_commit": "2f961dde134794c7332f9d002ce76d9ee422f05a",
+  "source_identity_complete": false
+}
