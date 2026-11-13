@@ -21,8 +21,12 @@ def _chain(design, root, clock_key):
     """Register stages that drive `root` as a synchronizer chain with a constant input.
     Returns the stage paths (input first) or None."""
     node, stages = root, []
+    seen = set()
     # Wires and inverters between the last stage and the reset net: one input each.
     while node not in design.regs:
+        if node in seen:
+            return None
+        seen.add(node)
         inputs = design.incoming[node]
         if len(inputs) != 1:
             return None

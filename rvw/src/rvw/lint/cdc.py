@@ -172,10 +172,14 @@ class Crossings:
     def simple_up(self, node):
         """The register that drives `node` through single-input wires, else None."""
         inputs = self.d.incoming[node]
+        seen = {node}
         while len(inputs) == 1:
             n = next(iter(inputs))
             if n in self.d.regs:
                 return n
+            if n in seen:
+                return None
+            seen.add(n)
             if self.d.signals.get(n, {}).get('kind') in ('mem', 'mem_read'):
                 return None
             inputs = self.d.incoming[n]
@@ -183,10 +187,14 @@ class Crossings:
 
     def simple_down(self, node):
         outs = self.d.outgoing[node]
+        seen = {node}
         while len(outs) == 1:
             n = next(iter(outs))
             if n in self.d.regs:
                 return n
+            if n in seen:
+                return None
+            seen.add(n)
             outs = self.d.outgoing[n]
         return None
 
