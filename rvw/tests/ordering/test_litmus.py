@@ -100,3 +100,46 @@ print(json.dumps({'harts': 2, 'complete': True, 'observations': [{'state': state
     run = litmus.run_group(command, timeout=30, capture=True)
     assert run.returncode == 1, run.stdout
     assert json.loads(run.stdout)['dut'] == 'mismatch'
+
+
+def test_recorded_blocks_and_hash(tmp_path, monkeypatch):
+    import hashlib
+    monkeypatch.setattr(litmus, 'validate_tests', lambda tests, pins: None)
+    log = tmp_path / 'herd.logs'
+    log.write_text(OUTPUT)
+    pins = {'cases': {'tests/SB.litmus': 'unused'},
+            'recorded': {'path': 'herd.logs', 'sha256': hashlib.sha256(log.read_bytes()).hexdigest()}}
+    states = litmus.recorded_states(tmp_path, pins)
+    assert states['tests/SB.litmus'] == litmus.parse_states(OUTPUT)
+    log.write_text(OUTPUT.replace('1:x7=1', '1:x7=2'))
+    with pytest.raises(ValueError, match='expectations differ'):
+        litmus.recorded_states(tmp_path, pins)
+
+
+@pytest.mark.parametrize('sample', [[], None, {'observations': 'bad'}, {'observations': [0]}])
+def test_malformed_samples_inconclusive(sample):
+    assert litmus.compare(litmus.parse_states(OUTPUT), sample)['status'] == 'inconclusive'
+
+
+def test_empty_allowed_set_inconclusive():
+    assert litmus.compare(set(), {})['status'] == 'inconclusive'
+
+
+def test_recorded_official_suite(tmp_path):
+    import json
+    import os
+    tests = os.environ.get('RVW_LITMUS_TESTS')
+    if not tests:
+        pytest.skip('set RVW_LITMUS_TESTS for external pinned suite')
+    import sys
+    result = litmus.run_group([sys.executable, str(litmus.PINS.with_name('litmus.py')),
+                               '--tests', tests, '--herd', '/missing/herd7', '--out', str(tmp_path)],
+                              timeout=30, capture=True)
+    assert result.returncode == 0, result.stdout
+    report = json.loads(result.stdout)
+    assert report['reference_source'] == 'suite-recorded'
+    assert report['herd_version'] is None
+    assert report['dut'] == 'not_run'
+    states = {Path(c['test']).stem: {litmus.canonical(s) for s in c['allowed']} for c in report['cases']}
+    zero = litmus.canonical({'0:x7': 0, '1:x7': 0})
+    assert zero in states['SB'] and zero not in states['SB+fence.rw.rws']

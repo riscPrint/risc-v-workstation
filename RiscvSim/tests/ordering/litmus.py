@@ -55,7 +55,11 @@ def parse_states(text):
 
 def compare(allowed, sample):
     result = {'status': 'inconclusive', 'forbidden': [], 'permitted_not_observed': []}
+    if not allowed or not isinstance(sample, dict):
+        return result | {'reason': 'nonempty allowed states and a sample object required'}
     rows = sample.get('observations', [])
+    if not isinstance(rows, list) or any(not isinstance(row, dict) for row in rows):
+        return result | {'reason': 'outcome rows must be objects'}
     if type(sample.get('harts')) is not int or sample['harts'] < 2 or sample.get('complete') is not True or not rows:
         return result | {'reason': 'complete multi-hart samples required'}
     observed = set()
@@ -83,23 +87,46 @@ def checked(command, timeout=120):
     return result.stdout
 
 
+def validate_tests(tests, pins):
+    if checked(['git', '-C', str(tests), 'rev-parse', 'HEAD']).strip() != pins['tests']['rev']:
+        raise ValueError('tests revision differs from pin')
+    for case, digest in pins['cases'].items():
+        if hashlib.sha256((tests / case).read_bytes()).hexdigest() != digest:
+            raise ValueError(f'litmus bytes differ from pin: {case}')
+
+
+def recorded_states(tests, pins):
+    validate_tests(tests, pins)
+    path = tests / pins['recorded']['path']
+    data = path.read_bytes()
+    if hashlib.sha256(data).hexdigest() != pins['recorded']['sha256']:
+        raise ValueError('suite recorded expectations differ from pin')
+    blocks = re.split(r'(?m)(?=^Test )', data.decode())
+    result = {}
+    for case in pins['cases']:
+        name = Path(case).stem
+        matches = [b for b in blocks if b.startswith(f'Test {name} ')]
+        if len(matches) != 1:
+            raise ValueError(f'missing or ambiguous recorded test: {name}')
+        result[case] = parse_states(matches[0])
+    return result
+
+
 def validate_pins(tests, source, pins):
-    for root, key in [(tests, 'tests'), (source, 'herd')]:
+    validate_tests(tests, pins)
+    for root, key in [(source, 'herd')]:
         if checked(['git', '-C', str(root), 'rev-parse', 'HEAD']).strip() != pins[key]['rev']:
             raise ValueError(f'{key} revision differs from pin')
     libdir = source / 'herd/libdir'
     if tree_digest(libdir) != pins['herd']['libdir_sha256']:
         raise ValueError('herd model library bytes differ from pin')
-    for case, digest in pins['cases'].items():
-        if hashlib.sha256((tests / case).read_bytes()).hexdigest() != digest:
-            raise ValueError(f'litmus bytes differ from pin: {case}')
     return libdir
 
 
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('--tests', type=Path, required=True)
-    p.add_argument('--herd-source', type=Path, required=True)
+    p.add_argument('--herd-source', type=Path, help='required when herd7 is installed')
     p.add_argument('--herd', default='herd7')
     p.add_argument('--out', type=Path, required=True)
     p.add_argument('--dut-adapter', type=Path, help='project executable: TEST.litmus -> outcome JSON on stdout')
@@ -107,18 +134,32 @@ def main():
     pins = json.loads(PINS.read_text())
     args.out.mkdir(parents=True, exist_ok=True)
     try:
-        libdir = validate_pins(args.tests, args.herd_source, pins)
-        version = checked([args.herd, '-version']).strip()
-        if not re.match(r'7\.58(?:,|\s|$)', version):
-            raise ValueError('herd executable version differs from pin')
-        executable = Path(shutil.which(args.herd) or args.herd).resolve()
-        report = {'pins': pins, 'herd_version': version,
-                  'herd_executable_sha256': hashlib.sha256(executable.read_bytes()).hexdigest(), 'cases': [], 'dut': 'not_run'}
+        native = shutil.which(args.herd)
+        if native and args.herd_source is None:
+            raise ValueError('--herd-source required for installed herd7')
+        if not native:
+            allowed_sets = recorded_states(args.tests, pins)
+            report = {'pins': pins, 'reference_source': 'suite-recorded',
+                      'herd_version': None, 'herd_executable_sha256': None,
+                      'reference_note': 'Historical suite expectations. Native herd7 NOT RUN.',
+                      'cases': [], 'dut': 'not_run'}
+        else:
+            libdir = validate_pins(args.tests, args.herd_source, pins)
+            version = checked([args.herd, '-version']).strip()
+            if not re.match(r'7\.58(?:,|\s|$)', version):
+                raise ValueError('herd executable version differs from pin')
+            executable = Path(shutil.which(args.herd) or args.herd).resolve()
+            report = {'pins': pins, 'herd_version': version,
+                      'herd_executable_sha256': hashlib.sha256(executable.read_bytes()).hexdigest(), 'cases': [], 'dut': 'not_run'}
         for case in pins['cases']:
             test = args.tests / case
-            output = checked([args.herd, '-I', str(libdir), '-model', str(libdir / 'riscv.cat'), str(test)])
-            (args.out / (test.stem + '.herd.log')).write_text(output)
-            allowed = parse_states(output)
+            if native:
+                output = checked([args.herd, '-I', str(libdir), '-model', str(libdir / 'riscv.cat'), str(test)])
+                (args.out / (test.stem + '.herd.log')).write_text(output)
+                allowed = parse_states(output)
+                report['reference_source'] = 'native-herd7'
+            else:
+                allowed = allowed_sets[case]
             row = {'test': case, 'allowed': [dict(s) for s in sorted(allowed)], 'dut': 'not_run'}
             if args.dut_adapter:
                 row['dut'] = compare(allowed, json.loads(checked([str(args.dut_adapter.resolve()), str(test.resolve())])))
