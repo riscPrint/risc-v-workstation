@@ -27,7 +27,7 @@ always @(posedge clk) begin
    head <= head=={entries-1} ? 0 : head+1;
   end
   if(push) begin data[tail]<=push_data; tail<=tail=={entries-1} ? 0 : tail+1; end
-  case({{push,pop}}) 2'b10: count<=count+1; 2'b01: count<=count-1; endcase
+  case({{push,pop}}) 2'b10: count<=count+1; 2'b01: count<=count-1; default: begin end endcase
  end
 end'''
     elif kind in ('mutex', 'arbiter'):
