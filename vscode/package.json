@@ -1007,6 +1007,7 @@
     "build": "node scripts/manifest.mjs && node build.mjs",
     "vscode:prepublish": "npm run build",
     "typecheck": "tsc --noEmit",
+    "pretest": "npm run build",
     "test": "npm run manifest:check && node --test \"dist/*/test/*.test.js\"",
     "test:integration:spinalblocks": "node features/spinalblocks/test/run.cjs",
     "package": "vsce package",
