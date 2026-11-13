@@ -491,7 +491,7 @@ fi
 # Validate the lock before uv can replace an existing development environment.
 run uv lock --check --no-managed-python --project "$rvw_home/rvw" --python "$python_cmd"
 run uv venv --python "$python_cmd" --no-managed-python --allow-existing "$rvw_home/rvw/.venv"
-run uv sync --locked --no-dev --extra mcp --no-managed-python --project "$rvw_home/rvw" --python "$python_cmd"
+run uv sync --locked --inexact --no-dev --extra mcp --no-managed-python --project "$rvw_home/rvw" --python "$python_cmd"
 export RVW_PYTHON="$rvw_home/rvw/.venv/bin/python"
 export RVW_LOCK_PYTHON="$RVW_PYTHON"
 if [ "${#extra_tools[@]}" -gt 0 ] && [ "$dry" = 0 ]; then
