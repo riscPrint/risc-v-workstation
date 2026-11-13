@@ -228,7 +228,8 @@ class Reducer:
             self.say(f"{lbl}: {rec['signature'] or rec['status']} at {rec['cycles']}"
                      + (" MATCH" if rec["match"] else "") + (f" ({why})" if why else "")
                      + (f" [waited {at.lock_wait:.0f}s for the {self.core} lock]" if at.lock_wait >= 1 else ""))
-            if rec["match"] and (self.best["cycles"] is None or rec["cycles"] < self.best["cycles"]
+            if rec["match"] and (self.best["cycles"] is None
+                                 or (rec["cycles"] is not None and rec["cycles"] < self.best["cycles"])
                                  or self.best["trial"] is None or lbl == "confirm"):
                 self._take(rec)
         self.save()
