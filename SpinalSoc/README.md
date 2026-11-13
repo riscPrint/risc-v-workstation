@@ -367,3 +367,19 @@ directions between 32 and 64 bits. A real composed CPU with an RTL DMA-style
 master passed in 2,135 cycles with 236 CPU retirements and 33 DMA write/read
 pairs. These are finite simulation results. Exclusive accesses and coherent
 TileLink are outside the profile. Native 128-bit conversion was NOT RUN.
+
+## Optional SMP host
+
+[The SMP host example](examples/smp/README.md) uses the unchanged cacheless
+`examples/smp` harts. Its wrapper routes peripheral accesses through the
+composer and retains external RAM/atomic service. Host-owned RAM uses a
+`host` binder. The composer keeps its software map and emits no duplicate
+RTL memory. RV64 metadata with 32 physical address bits is supported.
+The peripheral fabric stays 32 bits. Per-hart IRQ routing, coherence and
+synthesized atomic memory are outside this optional profile.
+
+The optional two-hart host passed its seed-31 Verilator test in 133 cycles.
+Hart retirements were 21 and 22. Both harts completed, each with two RTL GPIO
+accesses and three external RAM data requests. The pinned core dependencies
+were private cached class copies. Their source rebuild and standalone SMP C1
+campaigns were NOT RUN for this change.

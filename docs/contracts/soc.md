@@ -491,3 +491,13 @@ It preserves original IDs and burst responses through ordered boundary
 adapters. Early narrow response errors contribute to the wide response.
 The fabric example records finite VIP endpoint checks and CPU/DMA completion.
 These records are C3 component evidence, not C1 acceptance.
+
+## Host-owned memory
+
+A composition memory binder can select `type = "host"`. The map still exports
+that RAM for software and reference tools. The composer creates no duplicate
+RTL memory or APB endpoint for it. The project host must implement the region
+and load its images. ELF preload into host memory is rejected. Host binders
+accept no domain, export or interrupt options. Composition supports RV32 and
+RV64 platform metadata with 32 physical address bits. The APB fabric remains
+32 bits. RV64 memory access conversion belongs to the host wrapper.

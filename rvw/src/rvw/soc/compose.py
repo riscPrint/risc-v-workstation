@@ -31,8 +31,8 @@ def compose(source, out, elf=None):
     if type(spec['clock_hz']) is not int or spec['clock_hz'] <= 0 or spec['reset'] not in ('sync_high', 'async_high'):
         raise ValueError('positive clock_hz and sync_high or async_high reset required')
     obj = load(source.parent / spec['map'])
-    if obj['address_bits'] != 32 or obj['platform']['xlen'] != 32:
-        raise ValueError('first composition profile requires RV32 and 32 address bits')
+    if obj['address_bits'] != 32:
+        raise ValueError('composition requires 32 physical address bits')
     if not isinstance(spec['devices'], dict):
         raise ValueError('devices must map every region name to a binder')
     if set(spec['devices']) != {r['name'] for r in obj['regions']}:
@@ -92,6 +92,15 @@ def compose(source, out, elf=None):
     memories = []
     for r in obj['regions']:
         name, size = r['name'], r['size']
+        binder = spec['devices'][name]
+        if binder.get('type') == 'host':
+            keys(binder, {'type'}, {'type'})
+            if r['kind'] != 'ram':
+                raise ValueError('host binder requires a RAM region')
+            if name in images:
+                raise ValueError('host memory images must be loaded by the host adapter')
+            memories.append(dict(name=name, host=True, base=r['base'], size=size))
+            continue
         if name in ('core', 'io') or (byte_writes and name == 'fabricBus'):
             raise ValueError('region name conflicts with generated top member')
         if size < 4 or size >= 1 << 32:
@@ -183,12 +192,12 @@ def compose(source, out, elf=None):
         (target / 'registers.ipxact.xml').write_text(ipxact(obj))
         files.append('registers.ipxact.xml')
     (target / 'ComposedSoc.scala').write_text('\n'.join(lines) + '\n')
-    manifest = dict(schema='rvw.soc-composed/1', profile=f'{bus}-rv32-' + ('byte' if byte_writes else 'word'),
+    manifest = dict(schema='rvw.soc-composed/1', profile=f'{bus}-rv{obj["platform"]["xlen"]}-' + ('byte' if byte_writes else 'word'),
                     clock_hz=spec['clock_hz'], reset=spec['reset'], domains=domains, memories=memories,
                     map_sha256=hashlib.sha256((source.parent / spec['map']).read_bytes()).hexdigest(),
                     composition_sha256=hashlib.sha256(source.read_bytes()).hexdigest(), elf_sha256=elf_hash,
                     fragments=fragments, effective_configuration=spec,
-                    validation='generated_only', bus_ports=['core.bus'] + [r['name']+'.io.bus' for r in obj['regions']])
+                    validation='generated_only', bus_ports=['core.bus'] + [r['name']+'.io.bus' for r in obj['regions'] if spec['devices'][r['name']]['type'] != 'host'])
     bindings = [dict(path='core.bus', protocol=bus, domain='default',
                      checks='APB phase and stability' if bus == 'apb3' else 'channel valid and payload stability')]
     if bus in ('axi4', 'tilelink'):
@@ -198,6 +207,8 @@ def compose(source, out, elf=None):
     for region in obj['regions']:
         name = region['name']
         binder = spec['devices'][name]
+        if binder['type'] == 'host':
+            continue
         domain = binder.get('domain', 'default')
         bindings.append(dict(path=name+'.io.bus',protocol='apb3',domain=domain,checks='APB phase and stability'))
         if byte_writes and binder['type'] == 'project':

@@ -947,9 +947,13 @@ N-master/M-target AXI4 and Get/Put TileLink components. Two-master/two-target
 tests passed with independent VIP endpoint models. AXI conversion passed
 from 32 to 64 bits and from 64 to 32 bits. A composed CPU and DMA-style master
 passed in 2,135 cycles with 236 CPU retirements and 33 DMA write/read pairs.
-Composer-hosted SMP, external-IP import and composed debug-module integration
-remain separate work.
-The existing standalone SMP example is unchanged.
+The [optional SMP host](../SpinalSoc/examples/smp/README.md) keeps the existing
+cacheless hart and RAM interfaces. It routes 32-bit peripheral accesses through
+the composer. Host-owned RAM keeps its software map without a duplicate RTL
+memory. External-IP import and composed debug-module integration remain work.
+The existing standalone SMP example is unchanged. The optional two-hart test
+passed in 133 cycles at seed 31. Retirements were 21 and 22. Each hart
+completed two RTL GPIO accesses and a RAM store/load before its own tohost.
 ## Write properties for your core
 
 Keep signal bindings beside your elaboration code. Do not put core signal names
