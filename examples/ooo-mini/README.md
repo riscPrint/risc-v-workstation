@@ -23,7 +23,28 @@ The M/U CSR bank and four PMP entries support the selected tests. Full privilege
 has not been established. The fixture supplied the committed-map recovery pattern;
 its two-register payload interface is not a component of this core.
 
-## Measured results
+## Current M/U PMP measurements
+
+These are finite simulation results on the default core. They are not full
+privileged-ISA qualification, whole-core proof or C4 acceptance.
+
+| Area | Measured result | Remaining work |
+|---|---|---|
+| Precise interrupts | MSIP, MTIP and MEIP pass self-checking programs and strict Spike trap comparisons. One qualified software interrupt enters with eight ROB entries occupied. | CLINT/PLIC plugins and live lockstep are not mapped. Other full-ROB IRQ sources remain open. |
+| U-mode and four-entry PMP | 242 generated cases and one speculative-fault program pass with 243 strict matches. Matcher has 26 native cases. | S-mode, translation, ePMP and full privilege-family qualification are absent. |
+| Isolation | One complete M-to-U PMP pair reports no_leak_observed. Both public windows are 21 cycles and have no denied load on the bus. | Other secrets, channels, policies and positive leakage controls. |
+| Coverage snapshot | One 306-program batch reaches 80.40% line and 85.63% branch coverage. All pass. No exclusion is used. | ACT4, 405 unhit line points, 585 unhit branch points and incomplete logical-region attribution. This snapshot predates the final probe additions. |
+| Formal snapshot | Seven depth-8 BMC goals time out. Two declared-trigger covers reach. ADD, LUI and retirement cover time out at depth 40. | No new property or ISA instruction proof closed. Long retries were not run. |
+| Monitors and probes | Final cohort: 307/307 pass, 24 monitors with zero firings, 304 strict matches, three masked-WFI matches with one IRQ synchronization each. Three directed probe plans qualify. | Complete branch/age/byte/privilege coverage and consecutive-cycle recovery remain open. |
+
+Detailed commands and limits: [interrupts](rvw/interrupts.md),
+[protection](rvw/protection.md), [coverage](rvw/coverage.md),
+[formal](rvw/formal.md), and [probes](rvw/probes.md).
+The coverage snapshot is recorded in [PR #1296](https://github.com/riscPrint/risc-v-workstation/pull/1296).
+The final probe cohort is recorded in [PR #1326](https://github.com/riscPrint/risc-v-workstation/pull/1326).
+Their generated RTL identities differ. Do not merge their code-point universes.
+
+## Initial M-mode measurements
 
 Results apply to the recorded source hashes, configurations and programs.
 They do not establish whole-core proof or release qualification.
@@ -59,7 +80,9 @@ Set `RVW_HOME` to the installed workstation checkout. Use its native-tool setup.
 Put RISC-V GCC and `rvw` on `PATH`. Run from this directory:
 
 ```sh
-"$RVW_HOME/scripts/with-lock.sh" sbt-mem nice -n 10 sbt compile
+export RVW_SBT_LOCK=sbt-ooomini2
+export RVW_OOO_LOCK=ooo-mini-ooomini2
+"$RVW_HOME/scripts/with-lock.sh" "$RVW_SBT_LOCK" nice -n 10 sbt compile
 rvw/build-programs.sh
 rvw regress run --tier quick --rvfi-trace --out rvw/out/quick
 rvw/build-isa.py /path/to/riscv-tests
@@ -69,8 +92,9 @@ rvw/compare-isa.py rvw/out/isa
 
 The tested riscv-tests revision is `d7e86f701b929b5d801f8cda1a4871ab05f452bb`.
 Third-party source stays outside this project. The C1 launcher builds the selected
-source revision and uses `sbt-mem` and `ooo-mini-mem` private locks. It lowers sbt
-and native Java priority. The adapter refuses unsupported observation modes.
+source revision and honors RVW_SBT_LOCK and RVW_OOO_LOCK. Use private lock
+names for your checkout. Keep RVW_OOO_LOCK different from the project lock.
+The launcher lowers sbt and native Java priority. The adapter refuses unsupported observation modes.
 Use probe conversion for Kanata. Native runtime RVFI checking and SpinalTrace
 are not mapped. Complete RTL identity capture is not qualified.
 
@@ -88,12 +112,13 @@ rvw csim compare-rtl predictor-study.json --trace rvw/out/probes/rvfi.jsonl \
 ```
 
 Open the converted log with a Kanata-compatible viewer. Probe reason 1 means a
-trap. Reason 2 means another control redirect, including `FENCE.I`.
+synchronous trap. Reason 2 means a control redirect, including FENCE.I, MRET
+and permission changes. Reason 3 means an interrupt.
 
 Generate formal RTL and the design database before their tools:
 
 ```sh
-"$RVW_HOME/scripts/with-lock.sh" sbt-mem nice -n 10 sbt \
+"$RVW_HOME/scripts/with-lock.sh" "$RVW_SBT_LOCK" nice -n 10 sbt \
   'runMain ooomini.Generate' 'runMain ooomini.BuildDb'
 rvw checks generate --all --out rvw/out/lint-bindings
 rvw lint --settings lint.json --json
@@ -152,6 +177,7 @@ Each workstation problem found during this integration has its own generic fix:
 | [#1196](https://github.com/riscPrint/risc-v-workstation/pull/1196) | Revision checkout tried to clone a core subdirectory as a Git repository. The regression checks historical bytes, sibling dependencies and preservation of the dirty input tree. |
 | [#1200](https://github.com/riscPrint/risc-v-workstation/pull/1200) | Source-scope conditions were reported as established latches for generated temporaries. They remain unresolved and lint stays inconclusive. Named partial-assignment findings remain. |
 | [#1220](https://github.com/riscPrint/risc-v-workstation/pull/1220) | Scalar memory preflight blocked illegal RV32 LD/SD encodings before Spike could trap. Ten native tests cover illegal encodings and retained split-access refusals. |
+| [#1310](https://github.com/riscPrint/risc-v-workstation/pull/1310) | C1 qualification compared retirement count with C2 records that include trapping instructions. The checker now reports a separate nontrapping count. Unit tests and the protection probe run verify the fix. |
 
 Implementation and evidence were merged in
 [#1175](https://github.com/riscPrint/risc-v-workstation/pull/1175),
