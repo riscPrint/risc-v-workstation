@@ -1530,3 +1530,479 @@ Not read: other main changes after `41d6eefa` except these fixes; upstream Spike
 | `rvw/tests/test_cosim_reset_events.py` | 80 |
 | `rvw/tests/test_cosim_retirement_counts.py` | 50 |
 | `rvw/tests/test_vex_cosim_isa.py` | 58 |
+## SpinalChecks and rvw checks review
+
+The review checked assertion timing, reset gates, transfer counts, ghost state and SVA composition.
+It also checked CSR data readers, typed bus bindings, activation preparation and evidence summaries.
+The review read 412 source and test files, with 14078 lines in total.
+This is source review and targeted fixture evidence. It is not core qualification.
+
+Review baseline: `f3606ad0650861a3d8a3764c2ec0cbd8fecf182f`.
+Only the review fixes changed the assigned source paths during rebases.
+
+Confirmed defects:
+
+- Activation jobs corrupted source filenames when one filename was a suffix of another. PR https://github.com/riscPrint/risc-v-workstation/pull/1372.
+- The progress watchdog allowed one extra idle sample. Limits of one and three cycles both missed their deadline. PR https://github.com/riscPrint/risc-v-workstation/pull/1394.
+
+- The OoO adapter published old native C1 results after an unsuccessful rerun. PR https://github.com/riscPrint/risc-v-workstation/pull/1413.
+
+- Activation output names could overwrite a copied input RTL file with the same prefix. PR https://github.com/riscPrint/risc-v-workstation/pull/1431.
+
+Unconfirmed defects: none retained. Suspected items without a failing reproduction were dropped.
+
+Validation:
+
+- Eight connected-formal and proof-group tests passed after both filename fixes. Both filename regressions failed before their respective fixes.
+- 57 targeted checks, dispositions and CSR catalog tests passed.
+- 53 focused native tests passed, including a tiny C-to-RTL proof.
+- Four adapter regression cases passed. The command failure and timeout cases failed before the fix.
+- Both watchdog deadline tests failed before the fix at their exact declared limits.
+- Scala validation after the fix: 6 tests passed: 2 watchdog deadline cases and 4 SVA builder cases.
+- The first fast set had 3293 passed, 4 skipped and 1 failed.
+  The failure was test_mcp_workflow_coverage.py::test_each_tool_has_a_profile_and_workflow.
+  It reported no workflow for cov_mutate_core.
+  Later fast sets passed after rebase, with 3365, 3467 and 3481 tests.
+  Each run skipped 4 tests. Deselected tests were NOT RUN.
+- The report publication fast set had 3540 passed, 4 skipped and 2 unrelated failures.
+  Both test_boot_profile.py::test_launcher_reaches_nice_ten_once cases expected nice 10 and observed inherited nice 15.
+  The review brief requires nice 15. The 52 report and targeted regression tests passed.
+- Initial Icarus simulation was blocked by a syntax error in the installed iverilog-vpi script. The deadline test uses Verilator.
+- All Scala suites except ProgressDeadlineSpec and SvaSpec were NOT RUN.
+- No BOOM build, core simulation or long formal proof was run.
+
+Not read: raw campaign result JSON, full pinned CSR catalog JSON and upstream specification
+sources. Their historical claims and upstream data were not independently qualified.
+The formal transaction generators outside the assigned area were not reviewed completely.
+Configuration and documentation were read where needed for these source paths.
+
+Commands from the checkout root:
+
+```sh
+nice -n 15 rvw/.venv/bin/python -m pytest rvw/tests/test_checks_connected_formal.py rvw/tests/test_checks_proof_group.py rvw/tests/test_checks_ooo_adapter_review.py -q
+nice -n 15 rvw/.venv/bin/python -m pytest rvw/tests/test_ooo_checks.py rvw/tests/formal/test_resource_checks.py rvw/tests/formal/test_simple_bus_checks.py rvw/tests/formal/test_power_checks.py 'rvw/tests/test_c2rtl.py::test_proved[add]' -q
+nice -n 15 rvw/.venv/bin/python -m pytest rvw/tests -m fast --strict-markers -q
+```
+
+Scala command from SpinalChecks, with Verilator make limited to two jobs:
+
+```sh
+../scripts/with-lock.sh sbt-rv-checks nice -n 15 sbt 'testOnly spinalchecks.ProgressDeadlineSpec spinalchecks.SvaSpec'
+```
+
+Source and test files read, with line counts:
+
+| File | Lines |
+|---|---:|
+| `SpinalChecks/boom/freelist-capacity.py` | 38 |
+| `SpinalChecks/boom/from-sim.sh` | 41 |
+| `SpinalChecks/boom/run-suite.sh` | 18 |
+| `SpinalChecks/boom/src/main/scala/spinalchecks/boom/BoomChecks.scala` | 181 |
+| `SpinalChecks/boom/stream-dispositions.py` | 63 |
+| `SpinalChecks/boom/xprop.sh` | 15 |
+| `SpinalChecks/bus-binding/src/main/scala/NativeBusCapture.scala` | 34 |
+| `SpinalChecks/c2rtl/check.py` | 196 |
+| `SpinalChecks/c2rtl/examples/add.c` | 2 |
+| `SpinalChecks/c2rtl/examples/add.v` | 3 |
+| `SpinalChecks/c2rtl/examples/mul.c` | 2 |
+| `SpinalChecks/c2rtl/examples/mul.v` | 3 |
+| `SpinalChecks/c2rtl/examples/shl.c` | 2 |
+| `SpinalChecks/c2rtl/examples/shl.v` | 3 |
+| `SpinalChecks/c2rtl/hardfloat.py` | 126 |
+| `SpinalChecks/c2rtl/models/add_uw64.c` | 2 |
+| `SpinalChecks/c2rtl/models/aes32dsi_bs0.c` | 2 |
+| `SpinalChecks/c2rtl/models/aes32dsi_bs1.c` | 2 |
+| `SpinalChecks/c2rtl/models/aes32dsi_bs2.c` | 2 |
+| `SpinalChecks/c2rtl/models/aes32dsi_bs3.c` | 2 |
+| `SpinalChecks/c2rtl/models/aes32dsmi_bs0.c` | 2 |
+| `SpinalChecks/c2rtl/models/aes32dsmi_bs1.c` | 2 |
+| `SpinalChecks/c2rtl/models/aes32dsmi_bs2.c` | 2 |
+| `SpinalChecks/c2rtl/models/aes32dsmi_bs3.c` | 2 |
+| `SpinalChecks/c2rtl/models/aes32esi_bs0.c` | 2 |
+| `SpinalChecks/c2rtl/models/aes32esi_bs1.c` | 2 |
+| `SpinalChecks/c2rtl/models/aes32esi_bs2.c` | 2 |
+| `SpinalChecks/c2rtl/models/aes32esi_bs3.c` | 2 |
+| `SpinalChecks/c2rtl/models/aes32esmi_bs0.c` | 2 |
+| `SpinalChecks/c2rtl/models/aes32esmi_bs1.c` | 2 |
+| `SpinalChecks/c2rtl/models/aes32esmi_bs2.c` | 2 |
+| `SpinalChecks/c2rtl/models/aes32esmi_bs3.c` | 2 |
+| `SpinalChecks/c2rtl/models/aes64ds.c` | 2 |
+| `SpinalChecks/c2rtl/models/aes64dsm.c` | 2 |
+| `SpinalChecks/c2rtl/models/aes64es.c` | 2 |
+| `SpinalChecks/c2rtl/models/aes64esm.c` | 2 |
+| `SpinalChecks/c2rtl/models/aes64im.c` | 2 |
+| `SpinalChecks/c2rtl/models/aes64ks1i_r0.c` | 2 |
+| `SpinalChecks/c2rtl/models/aes64ks1i_r1.c` | 2 |
+| `SpinalChecks/c2rtl/models/aes64ks1i_r10.c` | 2 |
+| `SpinalChecks/c2rtl/models/aes64ks1i_r2.c` | 2 |
+| `SpinalChecks/c2rtl/models/aes64ks1i_r3.c` | 2 |
+| `SpinalChecks/c2rtl/models/aes64ks1i_r4.c` | 2 |
+| `SpinalChecks/c2rtl/models/aes64ks1i_r5.c` | 2 |
+| `SpinalChecks/c2rtl/models/aes64ks1i_r6.c` | 2 |
+| `SpinalChecks/c2rtl/models/aes64ks1i_r7.c` | 2 |
+| `SpinalChecks/c2rtl/models/aes64ks1i_r8.c` | 2 |
+| `SpinalChecks/c2rtl/models/aes64ks1i_r9.c` | 2 |
+| `SpinalChecks/c2rtl/models/aes64ks2.c` | 2 |
+| `SpinalChecks/c2rtl/models/andn32.c` | 4 |
+| `SpinalChecks/c2rtl/models/andn64.c` | 4 |
+| `SpinalChecks/c2rtl/models/bclr32.c` | 2 |
+| `SpinalChecks/c2rtl/models/bclr64.c` | 2 |
+| `SpinalChecks/c2rtl/models/bext32.c` | 2 |
+| `SpinalChecks/c2rtl/models/bext64.c` | 2 |
+| `SpinalChecks/c2rtl/models/binv32.c` | 2 |
+| `SpinalChecks/c2rtl/models/binv64.c` | 2 |
+| `SpinalChecks/c2rtl/models/brev832.c` | 2 |
+| `SpinalChecks/c2rtl/models/brev864.c` | 2 |
+| `SpinalChecks/c2rtl/models/bset32.c` | 2 |
+| `SpinalChecks/c2rtl/models/bset64.c` | 2 |
+| `SpinalChecks/c2rtl/models/clmul32.c` | 4 |
+| `SpinalChecks/c2rtl/models/clmul64.c` | 4 |
+| `SpinalChecks/c2rtl/models/clmulh32.c` | 4 |
+| `SpinalChecks/c2rtl/models/clmulh64.c` | 4 |
+| `SpinalChecks/c2rtl/models/clmulr32.c` | 4 |
+| `SpinalChecks/c2rtl/models/clmulr64.c` | 4 |
+| `SpinalChecks/c2rtl/models/clz32.c` | 4 |
+| `SpinalChecks/c2rtl/models/clz64.c` | 4 |
+| `SpinalChecks/c2rtl/models/clzw64.c` | 2 |
+| `SpinalChecks/c2rtl/models/cpop32.c` | 4 |
+| `SpinalChecks/c2rtl/models/cpop64.c` | 4 |
+| `SpinalChecks/c2rtl/models/cpopw64.c` | 2 |
+| `SpinalChecks/c2rtl/models/ctz32.c` | 4 |
+| `SpinalChecks/c2rtl/models/ctz64.c` | 4 |
+| `SpinalChecks/c2rtl/models/ctzw64.c` | 2 |
+| `SpinalChecks/c2rtl/models/div16.c` | 4 |
+| `SpinalChecks/c2rtl/models/div32.c` | 4 |
+| `SpinalChecks/c2rtl/models/div64.c` | 4 |
+| `SpinalChecks/c2rtl/models/div8.c` | 4 |
+| `SpinalChecks/c2rtl/models/divu16.c` | 4 |
+| `SpinalChecks/c2rtl/models/divu32.c` | 4 |
+| `SpinalChecks/c2rtl/models/divu64.c` | 4 |
+| `SpinalChecks/c2rtl/models/divu8.c` | 4 |
+| `SpinalChecks/c2rtl/models/f32_add.c` | 15 |
+| `SpinalChecks/c2rtl/models/f32_div.c` | 15 |
+| `SpinalChecks/c2rtl/models/f32_eq.c` | 10 |
+| `SpinalChecks/c2rtl/models/f32_fma.c` | 15 |
+| `SpinalChecks/c2rtl/models/f32_le.c` | 10 |
+| `SpinalChecks/c2rtl/models/f32_lt.c` | 10 |
+| `SpinalChecks/c2rtl/models/f32_mul.c` | 15 |
+| `SpinalChecks/c2rtl/models/f32_sqrt.c` | 15 |
+| `SpinalChecks/c2rtl/models/f32_to_f64.c` | 9 |
+| `SpinalChecks/c2rtl/models/f32_to_i32.c` | 7 |
+| `SpinalChecks/c2rtl/models/f32_to_ui32.c` | 7 |
+| `SpinalChecks/c2rtl/models/f64_add.c` | 15 |
+| `SpinalChecks/c2rtl/models/f64_div.c` | 15 |
+| `SpinalChecks/c2rtl/models/f64_eq.c` | 10 |
+| `SpinalChecks/c2rtl/models/f64_fma.c` | 15 |
+| `SpinalChecks/c2rtl/models/f64_le.c` | 10 |
+| `SpinalChecks/c2rtl/models/f64_lt.c` | 10 |
+| `SpinalChecks/c2rtl/models/f64_mul.c` | 15 |
+| `SpinalChecks/c2rtl/models/f64_sqrt.c` | 15 |
+| `SpinalChecks/c2rtl/models/f64_to_f32.c` | 9 |
+| `SpinalChecks/c2rtl/models/f64_to_i64.c` | 7 |
+| `SpinalChecks/c2rtl/models/f64_to_ui64.c` | 7 |
+| `SpinalChecks/c2rtl/models/i32_to_f32.c` | 7 |
+| `SpinalChecks/c2rtl/models/i64_to_f64.c` | 7 |
+| `SpinalChecks/c2rtl/models/max32.c` | 4 |
+| `SpinalChecks/c2rtl/models/max64.c` | 4 |
+| `SpinalChecks/c2rtl/models/maxu32.c` | 4 |
+| `SpinalChecks/c2rtl/models/maxu64.c` | 4 |
+| `SpinalChecks/c2rtl/models/min32.c` | 4 |
+| `SpinalChecks/c2rtl/models/min64.c` | 4 |
+| `SpinalChecks/c2rtl/models/minu32.c` | 4 |
+| `SpinalChecks/c2rtl/models/minu64.c` | 4 |
+| `SpinalChecks/c2rtl/models/mul16.c` | 4 |
+| `SpinalChecks/c2rtl/models/mul32.c` | 4 |
+| `SpinalChecks/c2rtl/models/mul64.c` | 4 |
+| `SpinalChecks/c2rtl/models/mul8.c` | 4 |
+| `SpinalChecks/c2rtl/models/mulh16.c` | 4 |
+| `SpinalChecks/c2rtl/models/mulh32.c` | 4 |
+| `SpinalChecks/c2rtl/models/mulh64.c` | 4 |
+| `SpinalChecks/c2rtl/models/mulh8.c` | 4 |
+| `SpinalChecks/c2rtl/models/mulhsu16.c` | 4 |
+| `SpinalChecks/c2rtl/models/mulhsu32.c` | 4 |
+| `SpinalChecks/c2rtl/models/mulhsu64.c` | 4 |
+| `SpinalChecks/c2rtl/models/mulhsu8.c` | 4 |
+| `SpinalChecks/c2rtl/models/mulhu16.c` | 4 |
+| `SpinalChecks/c2rtl/models/mulhu32.c` | 4 |
+| `SpinalChecks/c2rtl/models/mulhu64.c` | 4 |
+| `SpinalChecks/c2rtl/models/mulhu8.c` | 4 |
+| `SpinalChecks/c2rtl/models/orcb32.c` | 4 |
+| `SpinalChecks/c2rtl/models/orcb64.c` | 4 |
+| `SpinalChecks/c2rtl/models/orn32.c` | 4 |
+| `SpinalChecks/c2rtl/models/orn64.c` | 4 |
+| `SpinalChecks/c2rtl/models/pack32.c` | 2 |
+| `SpinalChecks/c2rtl/models/pack64.c` | 2 |
+| `SpinalChecks/c2rtl/models/packh32.c` | 2 |
+| `SpinalChecks/c2rtl/models/packh64.c` | 2 |
+| `SpinalChecks/c2rtl/models/packw64.c` | 2 |
+| `SpinalChecks/c2rtl/models/rem16.c` | 4 |
+| `SpinalChecks/c2rtl/models/rem32.c` | 4 |
+| `SpinalChecks/c2rtl/models/rem64.c` | 4 |
+| `SpinalChecks/c2rtl/models/rem8.c` | 4 |
+| `SpinalChecks/c2rtl/models/remu16.c` | 4 |
+| `SpinalChecks/c2rtl/models/remu32.c` | 4 |
+| `SpinalChecks/c2rtl/models/remu64.c` | 4 |
+| `SpinalChecks/c2rtl/models/remu8.c` | 4 |
+| `SpinalChecks/c2rtl/models/rev832.c` | 4 |
+| `SpinalChecks/c2rtl/models/rev864.c` | 4 |
+| `SpinalChecks/c2rtl/models/riscv_aes.h` | 52 |
+| `SpinalChecks/c2rtl/models/riscv_hash.h` | 23 |
+| `SpinalChecks/c2rtl/models/riscv_m.h` | 24 |
+| `SpinalChecks/c2rtl/models/riscv_sha512_split.h` | 15 |
+| `SpinalChecks/c2rtl/models/riscv_sm4.h` | 30 |
+| `SpinalChecks/c2rtl/models/riscv_zb.h` | 67 |
+| `SpinalChecks/c2rtl/models/rol32.c` | 4 |
+| `SpinalChecks/c2rtl/models/rol64.c` | 4 |
+| `SpinalChecks/c2rtl/models/rolw64.c` | 2 |
+| `SpinalChecks/c2rtl/models/ror32.c` | 4 |
+| `SpinalChecks/c2rtl/models/ror64.c` | 4 |
+| `SpinalChecks/c2rtl/models/rorw64.c` | 2 |
+| `SpinalChecks/c2rtl/models/sextb32.c` | 4 |
+| `SpinalChecks/c2rtl/models/sextb64.c` | 4 |
+| `SpinalChecks/c2rtl/models/sexth32.c` | 4 |
+| `SpinalChecks/c2rtl/models/sexth64.c` | 4 |
+| `SpinalChecks/c2rtl/models/sh1add32.c` | 2 |
+| `SpinalChecks/c2rtl/models/sh1add64.c` | 2 |
+| `SpinalChecks/c2rtl/models/sh1add_uw64.c` | 2 |
+| `SpinalChecks/c2rtl/models/sh2add32.c` | 2 |
+| `SpinalChecks/c2rtl/models/sh2add64.c` | 2 |
+| `SpinalChecks/c2rtl/models/sh2add_uw64.c` | 2 |
+| `SpinalChecks/c2rtl/models/sh3add32.c` | 2 |
+| `SpinalChecks/c2rtl/models/sh3add64.c` | 2 |
+| `SpinalChecks/c2rtl/models/sh3add_uw64.c` | 2 |
+| `SpinalChecks/c2rtl/models/sha256sig0_32.c` | 2 |
+| `SpinalChecks/c2rtl/models/sha256sig0_64.c` | 2 |
+| `SpinalChecks/c2rtl/models/sha256sig1_32.c` | 2 |
+| `SpinalChecks/c2rtl/models/sha256sig1_64.c` | 2 |
+| `SpinalChecks/c2rtl/models/sha256sum0_32.c` | 2 |
+| `SpinalChecks/c2rtl/models/sha256sum0_64.c` | 2 |
+| `SpinalChecks/c2rtl/models/sha256sum1_32.c` | 2 |
+| `SpinalChecks/c2rtl/models/sha256sum1_64.c` | 2 |
+| `SpinalChecks/c2rtl/models/sha512sig0_64.c` | 2 |
+| `SpinalChecks/c2rtl/models/sha512sig0h.c` | 2 |
+| `SpinalChecks/c2rtl/models/sha512sig0l.c` | 2 |
+| `SpinalChecks/c2rtl/models/sha512sig1_64.c` | 2 |
+| `SpinalChecks/c2rtl/models/sha512sig1h.c` | 2 |
+| `SpinalChecks/c2rtl/models/sha512sig1l.c` | 2 |
+| `SpinalChecks/c2rtl/models/sha512sum0_64.c` | 2 |
+| `SpinalChecks/c2rtl/models/sha512sum0r.c` | 2 |
+| `SpinalChecks/c2rtl/models/sha512sum1_64.c` | 2 |
+| `SpinalChecks/c2rtl/models/sha512sum1r.c` | 2 |
+| `SpinalChecks/c2rtl/models/slli_uw64.c` | 2 |
+| `SpinalChecks/c2rtl/models/sm3p0_32.c` | 2 |
+| `SpinalChecks/c2rtl/models/sm3p0_64.c` | 2 |
+| `SpinalChecks/c2rtl/models/sm3p1_32.c` | 2 |
+| `SpinalChecks/c2rtl/models/sm3p1_64.c` | 2 |
+| `SpinalChecks/c2rtl/models/sm4ed_32_bs0.c` | 5 |
+| `SpinalChecks/c2rtl/models/sm4ed_32_bs1.c` | 5 |
+| `SpinalChecks/c2rtl/models/sm4ed_32_bs2.c` | 5 |
+| `SpinalChecks/c2rtl/models/sm4ed_32_bs3.c` | 5 |
+| `SpinalChecks/c2rtl/models/sm4ed_64_bs0.c` | 5 |
+| `SpinalChecks/c2rtl/models/sm4ed_64_bs1.c` | 5 |
+| `SpinalChecks/c2rtl/models/sm4ed_64_bs2.c` | 5 |
+| `SpinalChecks/c2rtl/models/sm4ed_64_bs3.c` | 5 |
+| `SpinalChecks/c2rtl/models/sm4ks_32_bs0.c` | 5 |
+| `SpinalChecks/c2rtl/models/sm4ks_32_bs1.c` | 5 |
+| `SpinalChecks/c2rtl/models/sm4ks_32_bs2.c` | 5 |
+| `SpinalChecks/c2rtl/models/sm4ks_32_bs3.c` | 5 |
+| `SpinalChecks/c2rtl/models/sm4ks_64_bs0.c` | 5 |
+| `SpinalChecks/c2rtl/models/sm4ks_64_bs1.c` | 5 |
+| `SpinalChecks/c2rtl/models/sm4ks_64_bs2.c` | 5 |
+| `SpinalChecks/c2rtl/models/sm4ks_64_bs3.c` | 5 |
+| `SpinalChecks/c2rtl/models/ui32_to_f32.c` | 7 |
+| `SpinalChecks/c2rtl/models/ui64_to_f64.c` | 7 |
+| `SpinalChecks/c2rtl/models/unzip32.c` | 2 |
+| `SpinalChecks/c2rtl/models/xnor32.c` | 4 |
+| `SpinalChecks/c2rtl/models/xnor64.c` | 4 |
+| `SpinalChecks/c2rtl/models/xperm432.c` | 2 |
+| `SpinalChecks/c2rtl/models/xperm464.c` | 2 |
+| `SpinalChecks/c2rtl/models/xperm832.c` | 2 |
+| `SpinalChecks/c2rtl/models/xperm864.c` | 2 |
+| `SpinalChecks/c2rtl/models/zexth32.c` | 4 |
+| `SpinalChecks/c2rtl/models/zexth64.c` | 4 |
+| `SpinalChecks/c2rtl/models/zip32.c` | 2 |
+| `SpinalChecks/c2rtl/softfloat.py` | 55 |
+| `SpinalChecks/coherence/directory.py` | 161 |
+| `SpinalChecks/coherence/fair.py` | 106 |
+| `SpinalChecks/coherence/model.py` | 208 |
+| `SpinalChecks/coherence/test_model.py` | 58 |
+| `SpinalChecks/csr/import-aia.py` | 85 |
+| `SpinalChecks/csr/import-udb.py` | 32 |
+| `SpinalChecks/equiv/memory/banked.v` | 14 |
+| `SpinalChecks/equiv/memory/packed.v` | 10 |
+| `SpinalChecks/examples/apps/Contracts.sv` | 8 |
+| `SpinalChecks/examples/apps/export_leaves.py` | 27 |
+| `SpinalChecks/examples/bench/counter.sv` | 9 |
+| `SpinalChecks/examples/bench/counter_fail.sv` | 9 |
+| `SpinalChecks/examples/bench/rv32_add.sv` | 6 |
+| `SpinalChecks/examples/cdc/fifo.sv` | 30 |
+| `SpinalChecks/examples/cdc/fifo_fault.sv` | 33 |
+| `SpinalChecks/examples/cdc/handshake.sv` | 24 |
+| `SpinalChecks/examples/cdc/handshake_fault.sv` | 27 |
+| `SpinalChecks/examples/cdc/pulse.sv` | 19 |
+| `SpinalChecks/examples/cdc/pulse_fault.sv` | 22 |
+| `SpinalChecks/examples/cdc/reconverge.sv` | 15 |
+| `SpinalChecks/examples/cdc/reconverge_fault.sv` | 18 |
+| `SpinalChecks/examples/cdc/reset.sv` | 19 |
+| `SpinalChecks/examples/cdc/reset_fault.sv` | 22 |
+| `SpinalChecks/examples/cdc/sampling.sv` | 19 |
+| `SpinalChecks/examples/events/async_fail.sv` | 9 |
+| `SpinalChecks/examples/events/async_load.sv` | 4 |
+| `SpinalChecks/examples/events/async_low_fail.sv` | 9 |
+| `SpinalChecks/examples/events/async_low_pass.sv` | 9 |
+| `SpinalChecks/examples/events/async_pass.sv` | 9 |
+| `SpinalChecks/examples/events/clocks_fail.sv` | 7 |
+| `SpinalChecks/examples/events/clocks_pass.sv` | 8 |
+| `SpinalChecks/examples/events/falling.sv` | 5 |
+| `SpinalChecks/examples/events/gated.sv` | 6 |
+| `SpinalChecks/examples/events/latch.sv` | 4 |
+| `SpinalChecks/examples/events/raw_async_assert.sv` | 9 |
+| `SpinalChecks/examples/ooo/Run.scala` | 102 |
+| `SpinalChecks/examples/ooo/TinyOoo.scala` | 212 |
+| `SpinalChecks/examples/ooo/adapter.py` | 36 |
+| `SpinalChecks/examples/ooo/prove-conservation.py` | 32 |
+| `SpinalChecks/examples/ooo/run-formal.py` | 63 |
+| `SpinalChecks/scripts/demo.sh` | 42 |
+| `SpinalChecks/scripts/export-portfolio.py` | 49 |
+| `SpinalChecks/scripts/import-map.py` | 127 |
+| `SpinalChecks/scripts/make-j4.sh` | 6 |
+| `SpinalChecks/scripts/prepare-check-group.py` | 82 |
+| `SpinalChecks/scripts/prepare-connected-formal.py` | 117 |
+| `SpinalChecks/security/examples/pair/speculation.v` | 43 |
+| `SpinalChecks/security/examples/pair/zkt.v` | 21 |
+| `SpinalChecks/security/rvw_ift.cc` | 95 |
+| `SpinalChecks/src/main/scala-spinal-1.15/spinalchecks/SpinalApi.scala` | 14 |
+| `SpinalChecks/src/main/scala-spinal-legacy/spinalchecks/SpinalApi.scala` | 23 |
+| `SpinalChecks/src/main/scala/spinalchecks/AxiReadChecks.scala` | 54 |
+| `SpinalChecks/src/main/scala/spinalchecks/AxiWriteChecks.scala` | 67 |
+| `SpinalChecks/src/main/scala/spinalchecks/BusAssertions.scala` | 35 |
+| `SpinalChecks/src/main/scala/spinalchecks/CdcChecks.scala` | 116 |
+| `SpinalChecks/src/main/scala/spinalchecks/ChecksSim.scala` | 71 |
+| `SpinalChecks/src/main/scala/spinalchecks/ConnectivityChecks.scala` | 21 |
+| `SpinalChecks/src/main/scala/spinalchecks/CsrChecks.scala` | 62 |
+| `SpinalChecks/src/main/scala/spinalchecks/DeclaredChecks.scala` | 23 |
+| `SpinalChecks/src/main/scala/spinalchecks/DeviceBusChecks.scala` | 74 |
+| `SpinalChecks/src/main/scala/spinalchecks/ExecutionChecks.scala` | 55 |
+| `SpinalChecks/src/main/scala/spinalchecks/HpmChecks.scala` | 53 |
+| `SpinalChecks/src/main/scala/spinalchecks/HpmControlChecks.scala` | 35 |
+| `SpinalChecks/src/main/scala/spinalchecks/HpmEventChecks.scala` | 35 |
+| `SpinalChecks/src/main/scala/spinalchecks/Model.scala` | 230 |
+| `SpinalChecks/src/main/scala/spinalchecks/ProtocolChecks.scala` | 135 |
+| `SpinalChecks/src/main/scala/spinalchecks/QueueChecks.scala` | 45 |
+| `SpinalChecks/src/main/scala/spinalchecks/RecoveryChecks.scala` | 79 |
+| `SpinalChecks/src/main/scala/spinalchecks/RegisterChecks.scala` | 42 |
+| `SpinalChecks/src/main/scala/spinalchecks/RegisterMap.scala` | 37 |
+| `SpinalChecks/src/main/scala/spinalchecks/Report.scala` | 129 |
+| `SpinalChecks/src/main/scala/spinalchecks/ResetChecks.scala` | 39 |
+| `SpinalChecks/src/main/scala/spinalchecks/SpinalChecks.scala` | 877 |
+| `SpinalChecks/src/main/scala/spinalchecks/SpinalCompat.scala` | 35 |
+| `SpinalChecks/src/main/scala/spinalchecks/StateChecks.scala` | 32 |
+| `SpinalChecks/src/main/scala/spinalchecks/StreamCancellation.scala` | 74 |
+| `SpinalChecks/src/main/scala/spinalchecks/Sva.scala` | 115 |
+| `SpinalChecks/src/main/scala/spinalchecks/TileLinkProbeChecks.scala` | 71 |
+| `SpinalChecks/src/main/scala/spinalchecks/ValueChecks.scala` | 33 |
+| `SpinalChecks/src/main/scala/spinalchecks/coherence/PermissionMonitor.scala` | 19 |
+| `SpinalChecks/src/main/scala/spinalchecks/coherence/PermissionRelation.scala` | 13 |
+| `SpinalChecks/src/main/scala/spinalchecks/demo/CheckedGpio.scala` | 28 |
+| `SpinalChecks/src/main/scala/spinalchecks/demo/Demos.scala` | 126 |
+| `SpinalChecks/src/main/scala/spinalchecks/demo/GenDemo.scala` | 48 |
+| `SpinalChecks/src/main/scala/spinalchecks/sim/AxiReference.scala` | 33 |
+| `SpinalChecks/src/main/scala/spinalchecks/sim/CsrSeed.scala` | 28 |
+| `SpinalChecks/src/main/scala/spinalchecks/sim/TileLinkCacheModel.scala` | 122 |
+| `SpinalChecks/src/main/scala/spinalchecks/sim/TileLinkReference.scala` | 82 |
+| `SpinalChecks/src/test/scala/spinalchecks/ApplicationTest.scala` | 38 |
+| `SpinalChecks/src/test/scala/spinalchecks/ArmingSpec.scala` | 69 |
+| `SpinalChecks/src/test/scala/spinalchecks/AxiReadSpec.scala` | 81 |
+| `SpinalChecks/src/test/scala/spinalchecks/AxiReferenceSpec.scala` | 40 |
+| `SpinalChecks/src/test/scala/spinalchecks/AxiSpec.scala` | 43 |
+| `SpinalChecks/src/test/scala/spinalchecks/AxiWriteSpec.scala` | 58 |
+| `SpinalChecks/src/test/scala/spinalchecks/BusTypeReportSpec.scala` | 25 |
+| `SpinalChecks/src/test/scala/spinalchecks/CdcChecksSpec.scala` | 51 |
+| `SpinalChecks/src/test/scala/spinalchecks/ChecksDemoSpec.scala` | 69 |
+| `SpinalChecks/src/test/scala/spinalchecks/ChecksSimSpec.scala` | 64 |
+| `SpinalChecks/src/test/scala/spinalchecks/ChildMasterSpec.scala` | 162 |
+| `SpinalChecks/src/test/scala/spinalchecks/ClockDomainSpec.scala` | 70 |
+| `SpinalChecks/src/test/scala/spinalchecks/ConnectivityChecksSpec.scala` | 13 |
+| `SpinalChecks/src/test/scala/spinalchecks/CsrChecksSpec.scala` | 32 |
+| `SpinalChecks/src/test/scala/spinalchecks/DeviceBusChecksSpec.scala` | 65 |
+| `SpinalChecks/src/test/scala/spinalchecks/ExecutionChecksSpec.scala` | 70 |
+| `SpinalChecks/src/test/scala/spinalchecks/GpioDeviceSpec.scala` | 42 |
+| `SpinalChecks/src/test/scala/spinalchecks/HpmChecksSpec.scala` | 53 |
+| `SpinalChecks/src/test/scala/spinalchecks/HpmControlChecksSpec.scala` | 49 |
+| `SpinalChecks/src/test/scala/spinalchecks/HpmEventChecksSpec.scala` | 57 |
+| `SpinalChecks/src/test/scala/spinalchecks/IntentChecksSpec.scala` | 155 |
+| `SpinalChecks/src/test/scala/spinalchecks/LocalRulesSpec.scala` | 99 |
+| `SpinalChecks/src/test/scala/spinalchecks/MapChecksSpec.scala` | 139 |
+| `SpinalChecks/src/test/scala/spinalchecks/MemoryScoreboardSpec.scala` | 40 |
+| `SpinalChecks/src/test/scala/spinalchecks/NamingSpec.scala` | 99 |
+| `SpinalChecks/src/test/scala/spinalchecks/ProgressDeadlineSpec.scala` | 37 |
+| `SpinalChecks/src/test/scala/spinalchecks/ReadyWiringSpec.scala` | 108 |
+| `SpinalChecks/src/test/scala/spinalchecks/RecoveryChecksSpec.scala` | 108 |
+| `SpinalChecks/src/test/scala/spinalchecks/RegisterChecksSpec.scala` | 25 |
+| `SpinalChecks/src/test/scala/spinalchecks/ResetChecksSpec.scala` | 41 |
+| `SpinalChecks/src/test/scala/spinalchecks/StreamCancellationSpec.scala` | 95 |
+| `SpinalChecks/src/test/scala/spinalchecks/StreamSemanticsSpec.scala` | 56 |
+| `SpinalChecks/src/test/scala/spinalchecks/SvaSpec.scala` | 87 |
+| `SpinalChecks/src/test/scala/spinalchecks/TileLinkCacheModelSpec.scala` | 48 |
+| `SpinalChecks/src/test/scala/spinalchecks/TileLinkCoherentSpec.scala` | 61 |
+| `SpinalChecks/src/test/scala/spinalchecks/TileLinkProbeSpec.scala` | 75 |
+| `SpinalChecks/src/test/scala/spinalchecks/TileLinkReferenceSpec.scala` | 46 |
+| `SpinalChecks/src/test/scala/spinalchecks/TileLinkSpec.scala` | 98 |
+| `SpinalChecks/src/test/scala/spinalchecks/TileLinkTransactionsSpec.scala` | 66 |
+| `rvw/src/rvw/checks/__init__.py` | 1 |
+| `rvw/src/rvw/checks/bindings.py` | 43 |
+| `rvw/src/rvw/checks/cdc.py` | 30 |
+| `rvw/src/rvw/checks/cli.py` | 48 |
+| `rvw/src/rvw/checks/cli_declarations.py` | 2 |
+| `rvw/src/rvw/checks/commands/__init__.py` | 0 |
+| `rvw/src/rvw/checks/commands/plan.py` | 127 |
+| `rvw/src/rvw/checks/declarations.py` | 28 |
+| `rvw/src/rvw/checks/dispositions.py` | 38 |
+| `rvw/src/rvw/checks/generate.py` | 93 |
+| `rvw/src/rvw/checks/mcp_tools.py` | 30 |
+| `rvw/src/rvw/checks/qualification.py` | 129 |
+| `rvw/src/rvw/checks/soc_registers.py` | 58 |
+| `rvw/src/rvw/checks/streams.py` | 59 |
+| `rvw/src/rvw/csr/catalog.py` | 137 |
+| `rvw/src/rvw/formal/bus_bindings.py` | 202 |
+| `rvw/src/rvw/formal/bus_types.py` | 21 |
+| `rvw/src/rvw/formal/csr.py` | 237 |
+| `rvw/src/rvw/formal/csr_bank.py` | 185 |
+| `rvw/src/rvw/formal/csr_catalog.py` | 4 |
+| `rvw/src/rvw/formal/datapath_binding.py` | 78 |
+| `rvw/src/rvw/formal/generated_checks.py` | 61 |
+| `rvw/src/rvw/formal/invariants.py` | 71 |
+| `rvw/src/rvw/formal/micro_checks.py` | 174 |
+| `rvw/src/rvw/formal/ooo_checks.py` | 116 |
+| `rvw/src/rvw/formal/power_checks.py` | 71 |
+| `rvw/src/rvw/formal/power_intent.py` | 112 |
+| `rvw/src/rvw/formal/resource_checks.py` | 59 |
+| `rvw/src/rvw/formal/simple_bus_checks.py` | 78 |
+| `rvw/src/rvw/formal/typed_bus_checks.py` | 87 |
+| `rvw/src/rvw/formal/upf_clock_gates.py` | 29 |
+| `rvw/src/rvw/formal/upf_subset.py` | 205 |
+| `rvw/tests/formal/test_generated_checks.py` | 40 |
+| `rvw/tests/formal/test_micro_checks.py` | 77 |
+| `rvw/tests/formal/test_power_checks.py` | 93 |
+| `rvw/tests/formal/test_resource_checks.py` | 47 |
+| `rvw/tests/formal/test_simple_bus_checks.py` | 83 |
+| `rvw/tests/formal/test_typed_bus_checks.py` | 60 |
+| `rvw/tests/test_c2rtl.py` | 150 |
+| `rvw/tests/test_checks_activation_evidence.py` | 49 |
+| `rvw/tests/test_checks_activation_followup.py` | 28 |
+| `rvw/tests/test_checks_bindings.py` | 45 |
+| `rvw/tests/test_checks_connected_formal.py` | 112 |
+| `rvw/tests/test_checks_current_summary.py` | 20 |
+| `rvw/tests/test_checks_dispositions.py` | 67 |
+| `rvw/tests/test_checks_generate.py` | 80 |
+| `rvw/tests/test_checks_map_import.py` | 61 |
+| `rvw/tests/test_checks_nax_bindings.py` | 17 |
+| `rvw/tests/test_checks_ooo_adapter_review.py` | 41 |
+| `rvw/tests/test_checks_plan.py` | 62 |
+| `rvw/tests/test_checks_proof_group.py` | 38 |
+| `rvw/tests/test_checks_qualification.py` | 126 |
+| `rvw/tests/test_checks_streams.py` | 55 |
+| `rvw/tests/test_checks_wave_triage.py` | 50 |
+| `rvw/tests/test_csr_catalog.py` | 122 |
+| `rvw/tests/test_ooo_checks.py` | 126 |
+| `scripts/sbt/SpinalAxis.scala` | 56 |
