@@ -46,3 +46,40 @@ project exports. Debug reset is tied inactive until a project binds debug.
 
 On 2026-11-13 the fixture compiled and elaborated with SpinalHDL 1.15.0 and
 JDK 21.0.13. The six composer Python tests passed. No CPU simulation was run.
+
+## Peripheral profiles
+
+`rvw soc peripheral KIND --name NAME --base ADDRESS --out NEW_JSON` exports a
+map region and a composer binder. MCP: `soc_peripheral`. Add the region to the
+software map and the binder to the composition file. The existing SVD and RAL
+exports then use these registers. Autonomous and mixed-side-effect register
+values use unknown reset values where a generic reset read is unsafe.
+
+| Kind | Profile |
+|---|---|
+| `uart16550` | 16550 register subset, reg-shift 2, fixed 8N1, one holding slot per direction. Spinal UartCtrl implements serial timing. |
+| `clint` | One hart, MSIP, 64-bit MTIMECMP and MTIME. MTIME counts input clocks. |
+| `plic` | Seven level sources, one machine context, priorities 0/1, claim/complete. |
+| `gpio` | 32 synchronized inputs, output values/enables and level IRQ mask. |
+| `spi` | Spinal Apb3SpiMasterCtrl, one chip select, 8-bit data, four-entry FIFOs. |
+| `i2c` | Spinal Apb3I2cCtrl with master mode and no address filters. |
+| `timer` | Enable/count/compare and watchdog output. Writing count services it. |
+| `finisher` | Nonzero tohost register asserts done and exports its code. |
+
+Project binders can declare `exports` with peripheral IO member names. These
+become top-level IO with a region prefix. An optional `irq` dictionary maps a
+map interrupt name to a device IO member. For CLINT, select `softwareIrq` for
+MSIP and `irq` for MTIP. PLIC sources must be exported or bound by a project
+wrapper. There is no automatic inference of PLIC source IDs.
+
+These are bounded verification profiles. UART has no modem control, FIFO
+trigger levels, DMA, break or parity support. TEMT is not reported. It is not
+a complete 16550 implementation. SPI/I2C register descriptions cover register
+addresses, not all bit fields and dynamic side effects. Generic register
+checks cannot establish those protocols. VIP pin bindings and behavioral
+scoreboards still need project configuration.
+
+On 2026-11-13 all eight profiles compiled and elaborated with SpinalHDL
+1.15.0. `rvwsoc.PeripheralSmoke` passed in Verilator at seed 17. It checked
+four CLINT conditions and six PLIC claim/complete conditions. It did not
+execute a CPU or qualify UART/SPI/I2C behavior.

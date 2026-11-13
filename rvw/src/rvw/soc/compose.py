@@ -73,7 +73,7 @@ def compose(source, out, elf=None):
         if size < 4 or size >= 1 << 32:
             raise ValueError('APB3 windows must be 4 bytes to 2 GiB')
         binder = spec['devices'][name]
-        keys(binder, {'type', 'class'}, {'type'})
+        keys(binder, {'type', 'class', 'exports', 'irq'}, {'type'})
         if binder['type'] in ('ram', 'rom'):
             if r['kind'] != 'ram' or ('w' in r['permissions']) != (binder['type'] == 'ram'):
                 raise ValueError('memory binder must match map permissions and kind')
@@ -90,9 +90,19 @@ def compose(source, out, elf=None):
             lines += [f'  val {name} = new {scala_name(binder["class"])}()']
         else:
             raise ValueError('unsupported binder type')
+        for port in binder.get('exports', []):
+            if not re.fullmatch('[A-Za-z_][A-Za-z_0-9]*', port) or port in ('bus','irq'):
+                raise ValueError('invalid exported peripheral port')
+            lines += [f'  val {name}_{port} = {name}.io.{port}.toIo()']
         targets.append(f'({name}.io.bus, SizeMapping(BigInt("{r["base"]:x}",16), BigInt("{size:x}",16)))')
     for cause in range(32):
-        sources = [f'{i["region"]}.io.irq' for i in obj['interrupts'] if i['cause'] == cause]
+        sources = []
+        for i in obj['interrupts']:
+            if i['cause'] == cause:
+                port = spec['devices'][i['region']].get('irq', {}).get(i['name'], 'irq')
+                if not re.fullmatch('[A-Za-z_][A-Za-z_0-9]*', port):
+                    raise ValueError('invalid interrupt port')
+                sources.append(f'{i["region"]}.io.{port}')
         irq += [f'  core.interrupts({cause}) := ' + (' || '.join(sources) or 'False')]
     lines += irq + ['  Fabric.connect(core.bus, Seq(' + ','.join(targets) + '))', '}',
                     'object Generate extends App {',
