@@ -81,7 +81,7 @@ The `formal_doctor` MCP tool returns the same report.
 
 `rvw.formal-engine-bench/1` adds `total_wall_s` per row, including preparation,
 and `summary` per engine with solved, bounded passes, cases, and total wall time.
-Only `pass` and `fail` count as solved. Missing tools and unsupported modes do
+Only conclusive problem `pass` and `fail` count as solved. Missing tools and unsupported modes do
 not count. SBY `UNKNOWN` with exit 4 is inconclusive. Inconsistent status and
 exit code pairs are errors.
 
@@ -329,3 +329,13 @@ retain source location, attempt records and the native campaign result path.
 The captured campaign retains the generated sources and witness artifacts.
 CLI `cover-hunt` and MCP `formal_cover_hunt` expose the same budget and timeout.
 No reset, multi-clock scheduling or whole-design coverage result is implied.
+
+## Qualified engine benchmark counts
+
+`rvw.formal-engine-bench/1` rows add `problem_status` and `environment_check`
+from the complete portfolio result. `status` still retains the observed
+native engine answer. Summary `solved` counts only conclusive problem results.
+A native pass with unchecked source assumptions remains inconclusive and does
+not count as solved. `conditional_passes` records native passes that did not
+earn a problem pass. `bounded_passes` remains a separate observation count.
+Agreement compares observed native answers and is not a proof verdict.

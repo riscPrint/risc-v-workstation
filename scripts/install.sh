@@ -16,6 +16,9 @@ Usage: scripts/install.sh [OPTIONS]
   --with-cosim       Spike headers/libraries and the workstation shim.
   --with-ric3        Build pinned rIC3 outside the checkout (Rust nightly).
   --with-ebmc        Build pinned EBMC outside the checkout (make, flex, bison).
+  --with-pono|--with-avy|--with-suprove
+  --with-bitwuzla|--with-cvc5|--with-yices
+                     Enable an installed engine or fetch an external pinned suite.
   --with-formal      OSS CAD Suite plus a pinned native yosys-slang build.
   --with-ooo         Build the optional C integer OoO scheduler.
   --with-gem5        Native RISC-V gem5 v25.1.0.1 (build with two jobs).
@@ -56,6 +59,7 @@ for arg in "$@"; do
 done
 extra_tools=()
 arc=0 ric3=0 ebmc=0
+suite_engines=()
 dv=0 sim=0 gcc=0 cosim=0 formal=0 gem5=0 ooo=0 yes=0 dry=0 check=0
 prefix='' source_dir='' shell_rc=''
 waves=0 lint=0 bundle=0 sail=0 bundle_run='' bundle_dir=''
@@ -77,6 +81,8 @@ while [ "$#" -gt 0 ]; do
     --with-cosim) cosim=1; shift ;;
     --with-ric3) ric3=1; shift ;;
     --with-ebmc) ebmc=1; shift ;;
+    --with-pono|--with-avy|--with-suprove|--with-bitwuzla|--with-cvc5|--with-yices)
+      suite_engines+=("${1#--with-}"); shift ;;
     --with-formal) formal=1; shift ;;
     --with-ooo) ooo=1; shift ;;
     --with-gem5) gem5=1; shift ;;
@@ -342,6 +348,15 @@ PYTHON
   fi
   if [ "$ric3" = 1 ]; then probe rIC3 0 rIC3 --version || failed=1; fi
   if [ "$ebmc" = 1 ]; then probe EBMC 0 ebmc --version || failed=1; fi
+  for suite_engine in "${suite_engines[@]}"; do
+    case "$suite_engine" in yices) suite_executable=yices-smt2 ;; *) suite_executable="$suite_engine" ;; esac
+    if command -v "$suite_executable" >/dev/null 2>&1; then
+      printf 'PRESENT %s; native qualification is separate\n' "$suite_engine"
+    else
+      printf 'MISSING %s\n' "$suite_engine"
+      failed=1
+    fi
+  done
   if [ "$formal" = 1 ]; then
     probe Yosys 0.46 yosys -V || failed=1
     probe SymbiYosys 0 sby --version || failed=1
@@ -616,6 +631,11 @@ for optional_engine in ric3 ebmc; do
     if [ "$dry" = 1 ]; then engine_args+=(--dry-run); fi
     run "$RVW_PYTHON" "$rvw_home/scripts/install-formal-engine.py" "$optional_engine" "${engine_args[@]}"
   fi
+done
+for suite_engine in "${suite_engines[@]}"; do
+  suite_args=()
+  if [ "$dry" = 1 ]; then suite_args+=(--dry-run); fi
+  run "$RVW_PYTHON" "$rvw_home/scripts/install-formal-suite.py" "$suite_engine" "${suite_args[@]}"
 done
 if [ "$formal" = 1 ]; then
   if ! probe Yosys 0.46 yosys -V || ! probe SymbiYosys 0 sby --version || ! probe Yices 2 yices-smt2 --version; then

@@ -21,6 +21,7 @@ def benchmark(plan, root, out, timeout):
             began = time.monotonic()
             report = race({**case, 'engines': [engine]}, root, out / name / engine.replace(':', '_'), timeout=timeout)
             rows.append({'case': name, 'engine': engine, 'total_wall_s': time.monotonic() - began, **(report['rows'][0] if report['rows'] else {'status': report['status'], 'reason': report.get('reason'), 'wall_s': None}),
+                         'problem_status': report['status'], 'environment_check': report.get('environment_check', 'unknown'),
                          'source_sha256': report['source_sha256'], 'mode': report['mode'], 'depth': report['depth']})
     agreement = {}
     for case in seen:
@@ -29,9 +30,12 @@ def benchmark(plan, root, out, timeout):
     summary = {}
     for engine in plan.get('engines', list(ENGINES)):
         selected = [r for r in rows if r['engine'] == engine]
-        summary[engine] = {'solved': sum(r['status'] in ('pass', 'fail') for r in selected),
+        summary[engine] = {'solved': sum(r['problem_status'] in ('pass', 'fail') for r in selected),
+                           'conditional_passes': sum(r['status'] == 'pass' and r['problem_status'] != 'pass' for r in selected),
                            'bounded_passes': sum(r['status'] == 'bounded_pass' for r in selected),
                            'cases': len(selected), 'wall_s': sum(r['total_wall_s'] for r in selected)}
     return {'summary': summary, 'schema': 'rvw.formal-engine-bench/1', 'status': 'pass' if agreement and all(s == 'agree' for s in agreement.values()) else 'inconclusive',
             'rows': rows, 'agreement': agreement,
-            'limits': 'Wall time includes preparation. Requested depth is not measured depth. No capacity or commercial parity claim.'}
+            'limits': 'Wall time includes preparation. Solved counts require conclusive problem_status. '
+                      'Conditional native passes remain separate. Agreement compares native answers. '
+                      'Requested depth is not measured depth. No capacity or commercial parity claim.'}
