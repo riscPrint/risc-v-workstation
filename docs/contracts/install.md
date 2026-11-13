@@ -32,3 +32,11 @@ is its personal-path subset for files touched since `since` in local history.
 `identity_counts` reports distinct author, committer and tagger counts.
 Identity publication approval is a separate owner decision. No approval is
 inferred from a zero-finding report. Archives and remote caches are outside scope.
+
+## Presence probes
+
+Inventory `probes` are executable, module or file checks. Each has a display
+name. Executable/file probes can select an `env` value, a `root_env` plus relative
+path, or ordered `candidates`. Explicit selectors are authoritative. A file
+probe can locate a relative file beside `relative_executable`. Plugin file
+presence does not prove ABI compatibility or native load success.

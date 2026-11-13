@@ -54,7 +54,7 @@ def diagnose(project=None, features='sim,riscv-gcc', install=None, yes=False, dr
         checks.append(dict(name=name, status=status, detail=detail, fix=fix))
     try:
         selected = globals()['features'](features)
-        installing = list(NATIVE_FEATURES) if install == 'all' else globals()['features'](install) if install is not None else []
+        installing = list(tool_inventory()['profiles']['all']) if install == 'all' else globals()['features'](install) if install is not None else []
         if any(x not in NATIVE_FEATURES for x in installing):
             raise ValueError('GUI installation is manual. --install supports native features only.')
         options = smoke_options(smoke_flags)

@@ -4,6 +4,7 @@ import json
 import os
 from pathlib import Path
 import shutil
+from string import Template
 
 
 def load():
@@ -17,23 +18,33 @@ def flags(profile):
     return ['--with-' + flag for flag in data['profiles'][profile]]
 
 
+def probe_path(probe):
+    """Honor an explicit selector. Do not hide invalid selectors with PATH fallback."""
+    if probe['kind'] == 'module':
+        return probe['module'] if importlib.util.find_spec(probe['module']) else None
+    variables = {**os.environ, 'RVW_HOME': os.environ.get('RVW_HOME', str(Path(__file__).resolve().parents[4]))}
+    candidates = probe.get('candidates', [])
+    if probe.get('env') and probe['env'] in os.environ:
+        candidates = [os.environ[probe['env']]]
+    elif probe.get('root_env') and probe['root_env'] in os.environ:
+        candidates = [str(Path(os.environ[probe['root_env']]) / probe['relative'])]
+    if probe.get('relative_executable') and probe.get('env') not in os.environ:
+        executable = shutil.which(probe['relative_executable'])
+        if executable:
+            candidates = [*candidates, str(Path(executable).resolve().parent / probe['relative'])]
+    for candidate in candidates:
+        value = str(Path(Template(candidate).safe_substitute(variables)).expanduser())
+        path = str(Path(value).absolute()) if probe['kind'] == 'file' and Path(value).is_file() else shutil.which(value) if probe['kind'] == 'executable' else None
+        if path:
+            return path
+    return None
+
+
 def report():
     records = []
-    modules = {'cocotb': 'cocotb', 'pyuvm': 'pyuvm', 'wellen': 'pywellen'}
     for tool in load()['tools']:
-        paths = {}
-        for exe in tool['executables']:
-            # Directory and plugin variables cannot stand in for executables.
-            overrides = {'gem5.opt': 'RVW_GEM5', 'sail_riscv_sim': 'RVW_SAIL',
-                         'spinaltrace-cli': 'SPINALTRACE_CLI', 'c++': 'CXX'}
-            value = os.environ.get(overrides.get(exe, ''), exe)
-            paths[exe] = shutil.which(value)
-        if tool['name'] in modules:
-            present = importlib.util.find_spec(modules[tool['name']]) is not None
-        elif tool['name'] == 'native OoO':
-            present = Path(os.environ.get('RVW_OOO_NATIVE', '/nonexistent')).is_file()
-        else:
-            present = bool(paths) and all(paths.values())
+        paths = {probe['name']: probe_path(probe) for probe in tool['probes']}
+        present = bool(paths) and all(paths.values())
         records.append(dict(name=tool['name'], area=tool['area'], paths=paths,
                             status='installed' if present else 'missing',
                             install_flag='--with-' + tool['flag'],

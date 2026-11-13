@@ -106,3 +106,10 @@ and the IDE, which need separate setup. Existing `--all` retains its old scope.
 Use `--dry-run` before installation. Some flags print manual upstream recipes
 and exit nonzero on installation; they do not claim an automated install.
 Sail needs `--with-sail --from-bundle`. GUI sessions are not checked.
+
+The inventory also defines presence probes. Managed CIRCT and riscv-dv prefixes,
+typed-wave executables and the native OoO library need not be on `PATH`.
+Explicit environment selectors are authoritative. Invalid selectors do not fall
+back to another executable. Slang and GHDL need their plugin files; a
+`yosys-config` executable alone does not establish plugin presence. File presence
+still does not establish that a plugin can load into the selected Yosys ABI.

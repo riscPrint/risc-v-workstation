@@ -80,9 +80,9 @@ def main():
             else:
                 recipe = tool['install']['macos' if platform.system() == 'Darwin' else ('dnf' if Path('/etc/fedora-release').exists() else 'apt')]
                 print(tool['name'] + ': ' + (recipe or tool['install']['source']))
-                if not args.dry_run and not (recipe and args.packages_done):
+                if not args.dry_run:
                     # Package approval remains with install.sh. Do not run arbitrary recipes.
-                    print('Manual setup required. See inventory install recipe above.')
+                    print('Manual setup required: ' + tool['install']['source'])
                     failed = True
                 continue
             print(shlex.join(cmd))
