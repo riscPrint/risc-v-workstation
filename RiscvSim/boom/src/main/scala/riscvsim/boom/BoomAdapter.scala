@@ -35,6 +35,7 @@ import riscvsim._
  */
 object BoomAdapter extends CoreAdapter {
   override def freshInstancePerRun = true
+  override def supportsProbes = true
   type Model = SimCompiled[BoomSimTop]
 
   val boomDir: File = new File(sys.props.getOrElse("riscvsim.boom.dir",
@@ -59,7 +60,7 @@ object BoomAdapter extends CoreAdapter {
   private def report(key: ModelKey, work: File): SpinalReport[BoomSimTop] = {
     implicit val p = BoomSim.params(tile(key.config), key.rvfi)
     val formal = new File(boomDir, "formal")
-    RiscvSimConfig.elaborate(key, work, SpinalBoomConfig(),
+    spinalprobes.Probe.enabled(key.probes) { RiscvSimConfig.elaborate(key, work, SpinalBoomConfig(),
       Seq("src/main/scala", "src/test/scala").map(new File(sourceDir, _))) {
       val top = new BoomSimTop(BoomSim.resetVector, if (key.rvfi) Some(formal.getPath) else None, key.konata)
       if (key.rvfi) {
@@ -73,8 +74,9 @@ object BoomAdapter extends CoreAdapter {
         trapCsrs(top).productIterator.foreach { case d: Data => d.simPublic(); case _ => }
         trapEpcs(top).productIterator.foreach { case d: Data => d.simPublic(); case _ => }
       }
+      if (key.probes) BoomProbes.bind(top)
       top
-    }
+    }}
   }
 
   override def elaborate(key: ModelKey, work: File): Seq[File] =
@@ -122,6 +124,7 @@ object BoomAdapter extends CoreAdapter {
       "identity" -> ctx.rvfiHeader, "elf_sha256" -> elf.sha256))))
     var busObservations = Option.empty[BusObservationWriter]
     var tracer: Option[KonataTracer] = None
+    var probes = Option.empty[ProbeCollector]
     var retired = 0L
     var traps = 0L
     var rvfiCode = 0
@@ -132,6 +135,7 @@ object BoomAdapter extends CoreAdapter {
         "this configuration has no SEIP input")
       if (job.rvfiTrace) busObservations = Some(new BusObservationWriter(
         new File(job.out, "memory-bus.jsonl"), ctx.rvfiHeader, dut.io.mem.a.payload.data.getBitsWidth / 8))
+      probes = ProbeCollector.open(spinalprobes.Probe.of(dut), job, ctx.rvfiHeader)
       val cd = dut.clockDomain
       cd.forkStimulus(10)
       dut.io.interrupts.flatten.foreach { case b: Bool => b #= false; case _ => }
@@ -223,6 +227,7 @@ object BoomAdapter extends CoreAdapter {
 
       cd.onSamplings {
         ctl.tick()
+        probes.foreach(_.sample(ctl.cycle))
         busObservations.foreach { w =>
           val a = dut.io.mem.a
           val d = dut.io.mem.d
@@ -343,7 +348,7 @@ object BoomAdapter extends CoreAdapter {
       }
       while (true) cd.waitSampling(100000)
     } catch {
-      case e: Throwable => busObservations.foreach(_.close()); throw e
+      case e: Throwable => probes.foreach(_.abandon()); busObservations.foreach(_.close()); throw e
     } finally {
       for (t <- tracer) t.close()
       observations.foreach(_.close())
@@ -351,6 +356,7 @@ object BoomAdapter extends CoreAdapter {
       capture.foreach(_.close())
     }
 
+    probes.foreach(_.close(cycles))
     busObservations.foreach { w => w.end(cycles, status.name); w.close() }
     for (w <- rvfi) { w.end(cycles, status.name); w.close() } // a trap still waiting for its tval gets 0
     val details = ujson.Obj("traps" -> RvwJson.num(traps), "tohost" -> Hex(tohost.value),

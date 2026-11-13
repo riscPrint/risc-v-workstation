@@ -7,6 +7,7 @@ lazy val boom = (project in file("."))
   .dependsOn(ProjectRef(file("..").getCanonicalFile, "riscvsim"), ProjectRef(spinalBoomDir, "root") % "compile->compile;compile->test")
   .settings(
     name := "riscvsim-boom",
+    libraryDependencies += "org.scalatest" %% "scalatest" % "3.2.19" % Test,
     libraryDependencies += compilerPlugin("com.github.spinalhdl" %% "spinalhdl-idsl-plugin" % spinalVersion),
     scalacOptions ++= Seq("-deprecation", "-feature", "-language:reflectiveCalls"),
     fork := true,
