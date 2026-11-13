@@ -1,6 +1,6 @@
-"""Seeded RV64 trap, delegation and return sequences."""
+"""Seeded RV32/RV64 trap, delegation and return sequences."""
 import random
-from .programs import HEAD, TAIL
+from .programs import HEAD, tail
 
 VERSION = 'privileged-20260120'
 
@@ -13,16 +13,17 @@ def plan(seed, steps, modes):
         operation = rng.choice(('illegal', 'breakpoint', 'ecall'))
         cause = {'illegal': 2, 'breakpoint': 3, 'ecall': {'M': 11, 'S': 9, 'U': 8}[mode]}[operation]
         delegated = mode != 'M' and operation != 'ecall' and bool(rng.getrandbits(1))
+        cookie = rng.randrange(1, 1 << 30)
         rows.append(dict(mode=mode, operation=operation, cause=cause,
-                         delegated=delegated, cookie=rng.randrange(1, 1 << 30)))
+                         delegated=delegated, cookie=cookie, previous_ie=cookie & 1))
     return rows
 
 
 def programs(config):
     if config.get('spec_version') != VERSION:
         raise ValueError('random transitions require privileged-20260120')
-    if not config['isa'].startswith('rv64'):
-        raise ValueError('random transitions require RV64')
+    if not config['isa'].startswith(('rv32', 'rv64')):
+        raise ValueError('random transitions require RV32 or RV64')
     options = config['random_transitions']
     seeds = options['seeds']; steps = options['steps']; modes = config.get('modes', ['M', 'S', 'U'])
     if not seeds or any(type(s) is not int or s < 0 for s in seeds) or len(set(seeds)) != len(seeds):
@@ -36,7 +37,7 @@ def programs(config):
         code = HEAD
         for i, step in enumerate(sequence):
             code += stage(i, step)
-        code += f'step_{steps}:\n j pass\n' + TAIL
+        code += f'step_{steps}:\n j pass\n' + tail(config)
         rows.append(dict(id=f'random-privilege-{seed}', family='random-privilege', bins=bins,
                          assembly=code, spec_version=VERSION, transition_plan=sequence))
     return rows
@@ -47,6 +48,11 @@ def stage(i, step):
     operation = {'illegal': '.word 0', 'breakpoint': 'ebreak', 'ecall': 'ecall'}[step['operation']]
     # Each completed lower-mode probe exits to M through a separate ECALL.
     # ECALL is never delegated. The first trap must return through xRET.
+    resume_check = ''
+    if mode in ('M', 'S'):
+        mask = (0x88 if mode == 'M' else 0x22) if mode == 'M' or delegated else 2
+        value = ((0x80 if mode == 'M' else 0x20) if mode == 'M' or delegated else 0) | ((8 if mode == 'M' else 2) if step['previous_ie'] else 0)
+        resume_check = f' csrr t0, {mode.lower()}status\n andi t0, t0, {mask}\n li t1, {value}\n bne t0, t1, fail\n'
     code = f'''step_{i}:
  la t0, machine_{i}
  csrw mtvec, t0
@@ -60,13 +66,17 @@ def stage(i, step):
  csrc mstatus, t0
  li t0, {dict(M=3, S=1, U=0)[mode] << 11}
  csrs mstatus, t0
+ li t0, 0x82
+ csrc mstatus, t0
+ li t0, {0x82 if step['previous_ie'] else 0}
+ csrs mstatus, t0
  la t0, probe_{i}
  csrw mepc, t0
  mret
 probe_{i}:
  {operation}
 resume_{i}:
- li t0, 1
+{resume_check} li t0, 1
  bne s3, t0, fail
 exit_{i}:
  ecall
@@ -93,8 +103,9 @@ machine_{i}:
 
 
 def check(i, step, level):
-    status_mask = 0x1800 if level == 'm' else 0x100
+    status_mask = 0x1888 if level == 'm' else 0x122
     status_value = (dict(M=3, S=1, U=0)[step['mode']] << 11) if level == 'm' else (0x100 if step['mode'] == 'S' else 0)
+    status_value |= (0x80 if level == 'm' else 0x20) if step['previous_ie'] else 0
     return f''' csrr t0, {level}cause
  li t1, {step['cause']}
  bne t0, t1, fail

@@ -1,0 +1,15 @@
+{
+  "schema": "rvw.privilege/1",
+  "kind": "random-transitions",
+  "isa": "rv32ima_zicsr_zifencei",
+  "spec_version": "privileged-20260120",
+  "random_transitions": {
+    "seeds": [
+      1,
+      7,
+      42,
+      20260120
+    ],
+    "steps": 32
+  }
+}

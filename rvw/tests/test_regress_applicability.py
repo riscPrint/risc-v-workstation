@@ -15,7 +15,7 @@ def test_missing_features_exclude_and_report_all_reasons(tmp_path):
     assert 'xlen:32' not in sv32['missing']
     features.write_text(json.dumps(dict(schema='rvw.regress-features/1', capabilities=['xlen:32', 'mode:S', 'mode:U', 'pmp', 'satp:sv32', 'ad:fault'])))
     result = plan(features)
-    assert [x['name'] for x in result['suites'] if x['applicable']] == ['mmu-sv32', 'fence-rv32']
+    assert [x['name'] for x in result['suites'] if x['applicable']] == ['mmu-sv32', 'fence-rv32', 'random-privilege-rv32']
 
 
 def test_project_catalog_and_invalid_declarations(tmp_path):

@@ -711,12 +711,16 @@ implementations and RV32 high-half state-enable access remain open.
 ## Seeded privilege transitions
 
 `kind = "random-transitions"` uses project `random_transitions.seeds` and
-`steps`. Each seed makes one RV64 program with up to 256 steps. The example
+`steps`. Each seed makes one RV32 or RV64 program with up to 256 steps. The example
 pins the 20260120 privileged ISA and uses four seeds with 32 steps each.
 Each step selects M/S/U, an illegal instruction, EBREAK or ECALL, and legal
 exception delegation to S. It checks cause, exact PC, saved privilege and a
-retained register. The handler returns with MRET or SRET. A second checked
-ECALL returns control to M before the next step. ECALL itself is not delegated.
+retained register. Each step selects the prior interrupt-enable state.
+The handler checks xIE clear and the saved xPIE value. It returns with MRET or
+SRET. M/S resume code checks restored xIE and the updated xPIE when applicable. A second checked
+ECALL returns control to M before the next step. ECALL itself is not delegated. RV32 completion writes both tohost words.
+`random-transitions-rv32.json` selects RV32 with the same seeded plans.
+Both widths are selectable with `rvw regress plan`.
 
 The manifest records the complete transition plan. Functional groups distinguish
 origin mode, operation and destination handler. Native Spike runs the actual
