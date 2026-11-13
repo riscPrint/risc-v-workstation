@@ -3571,6 +3571,17 @@ per-size cycles and per-class signed slope errors. Missing evidence exits 2.
 The report is local timing evidence, not a C4 verdict or complete C8 capture.
 Stock llvm-mca cannot load generated TableGen. The built-in baseline does not
 validate a generated model. See `Arch/SCHED_MODELS.md` for limits.
+### Own-core FP dependency timing
+
+The own engine tracks separate integer and FP register dependency IDs. FP
+operation-family classes use `fp_` plus the mnemonic prefix. FP loads/stores
+retain memory classes. `physical_float_registers` is zero for unbounded
+pressure or a total count of at least 33. `float_register_full` counts rename
+stalls. FP destinations use decoded encoding fields, not integer C2 rd data.
+This is dependency/resource timing. It does not execute FP arithmetic,
+validate rounding or reproduce operand-dependent latency. Traps and vectors
+remain unsupported. These streams use Python and retain inconclusive accuracy.
+
 ### Own-core non-trapping control timing
 
 Projects can declare CSR, fence and system-return latencies. These operations
