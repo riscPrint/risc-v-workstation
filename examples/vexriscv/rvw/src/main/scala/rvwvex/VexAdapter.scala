@@ -21,6 +21,7 @@ object VexAdapter extends CoreAdapter {
     Seq("RVW_COSIM_DPI", "RVW_COSIM_FAULT_ORDER", "RVW_VEX_LOCK", "RVW_VEX_CSR_FULL", "RVW_VEX_CSR_CAPTURE").flatMap(
       name => sys.env.get(name).map(name -> _))
   override def supportsProbes = true
+  override def supportsInstructionPort(config: String) = config == "rv32im"
 
   private def report(key: ModelKey, work: File): SpinalReport[VexTop] = {
     require(!key.konata, "VexRiscv adapter does not support Konata")
@@ -103,10 +104,10 @@ object VexAdapter extends CoreAdapter {
         val cached = dut.icached.nonEmpty
         require(!cached || job.socMap.isEmpty, "cached VexRiscv configs support bare RAM only (no --soc-map)")
         if (!cached) {
-          dut.ibus.cmd.ready #= false
-          dut.ibus.rsp.valid #= false
-          dut.ibus.rsp.error #= false
-          dut.ibus.rsp.inst #= 0
+          if (job.instructionPort.isEmpty) dut.ibus.cmd.ready #= false
+          if (job.instructionPort.isEmpty) dut.ibus.rsp.valid #= false
+          if (job.instructionPort.isEmpty) dut.ibus.rsp.error #= false
+          if (job.instructionPort.isEmpty) dut.ibus.rsp.inst #= 0
           dut.dbus.cmd.ready #= false
           dut.dbus.rsp.ready #= false
           dut.dbus.rsp.error #= false
@@ -119,7 +120,7 @@ object VexAdapter extends CoreAdapter {
         def delay(): Long = job.memLatency.map(_.toLong).getOrElse(random.nextInt(4).toLong) + 1L
         if (cached) CachedBuses.drive(dut, cd, delay, readWord, inRam(_, _, 'r'), memory)
         else {
-          fork {
+          if (job.instructionPort.isEmpty) fork {
             var pending = Option.empty[(Long, BigInt, Boolean)]
             var cycle = 0L
             while (true) {

@@ -1039,3 +1039,35 @@ The upstream final ELF checks Sail's expected signature before tohost success.
 The build manifest binds the discovered ELF set to the build. It does not
 establish certification. Project macros, Sail options and linker settings
 still need review against the adapter.
+
+## Direct instruction injection hook
+
+`rvw regress instruction-feed --elf program --word-bytes 4 --out feed.json
+--json` creates `rvw.instruction-feed/1`. MCP: `regress_instruction_feed`.
+The source packs ELF load bytes into little-endian bus words. It records the
+reference ELF hash. It does not create instructions for BSS or unlisted ranges.
+Generation earns no execution credit. The generator refuses an existing output.
+
+The generic C1 harness accepts `--instruction-port BINDING --instruction-feed
+FEED` together. The adapter must opt in for the selected config. A project
+`rvw.instruction-port/1` file binds actual top-level request/response pins.
+The harness checks directions, widths and paired transaction IDs. It owns one
+outstanding request and applies backpressure. It returns a fetch fault for an
+unlisted address. The normal instruction RAM responder must remain off while
+this hook runs. Data memory keeps its existing responder.
+
+C1 captures the parsed binding, feed and response log. It records input hashes,
+attachment and request/response counts under `details.instruction_injection`.
+A requested injection run cannot pass without attachment and a response.
+Response counts include speculative fetches. They are not retirement counts.
+The reference ELF remains the boot/data image and the independent comparison
+image. A feed can deliberately differ from that image. Strict comparison must
+then expose the retired difference.
+
+Both examples have project bindings and a two-case native sample under
+`rvw/testrig/`. The matching image passes strict Spike comparison. A deliberate
+`addi x5,zero,7` to `addi x5,zero,8` change produces the expected mismatch while
+the reference ELF remains unchanged. These results test the core-side hook.
+The live TestRIG transport, packet protocol and external TestRIG process are
+not implemented or qualified here. The public Scala `InstructionSource` API
+lets a later transport supply words to the same port driver.

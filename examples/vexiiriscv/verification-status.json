@@ -1,7 +1,7 @@
 {
   "schema": "rvw.plan-status/1",
   "status": "reported",
-  "plan_sha256": "33c1108bdf0ddcd2df77447e0b9b0a16b35b9dc4990c7f407e8376edc0fa032c",
+  "plan_sha256": "6594dc2fa531a5107f9ed38e9dda468f02f8bdb0544b072c560fae7e859258d6",
   "features": [
     {
       "id": "integer-execution",
@@ -30728,17 +30728,20 @@
       "requirements": [
         "INJECTION"
       ],
-      "evidence": [],
-      "holes": [
+      "evidence": [
         {
-          "reason": "no evidence checks declared"
+          "role": "tests",
+          "path": "../../rvw/out/dv/injection-v2-vexiiriscv/match/result.json",
+          "status": "recorded_pass",
+          "sha256": "8d2056ec9af3aa790704e614dee2685abf43b95e02f9ea9ddbf62ab7cbbfface"
         }
       ],
+      "holes": [],
       "coverage_hit": 0,
       "coverage_expected": 0,
       "coverage_contexts": [],
-      "status": "open",
-      "hole_count": 1
+      "status": "reported_closed",
+      "hole_count": 0
     }
   ],
   "notes": [
@@ -30748,9 +30751,9 @@
   "unassigned_requirements": [],
   "summary": {
     "features": 7,
-    "reported_closed": 3,
-    "open": 4,
-    "holes": 5083,
+    "reported_closed": 4,
+    "open": 3,
+    "holes": 5082,
     "unassigned_requirements": 0
   },
   "capture": {
@@ -30760,7 +30763,7 @@
       "LANG": "C.UTF-8",
       "LC_ALL": "C.UTF-8",
       "LD_LIBRARY_PATH": null,
-      "PATH": "/opt/homebrew/opt/riscv-gnu-toolchain/bin:$CHECKOUT/rvw/.venv/bin:~/opt/jdk21/bin:~/opt/oss-cad-suite/bin:~/fun/saviour/spinal-boom/../ref/sail/sail-riscv-Mac-arm64/bin:/opt/local/bin:/opt/local/sbin:/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/System/Cryptexes/App/usr/bin:/usr/bin:/bin:/usr/sbin:/sbin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin:/pkg/env/global/bin:/Library/Apple/usr/bin:/Library/TeX/texbin:/opt/homebrew/bin:/opt/homebrew/Caskroom/codex/0.166.0/codex-path:~/.codex/tmp/arg0-macos/codex-arg0fKfHYS:~/.pyenv/shims:~/.local/bin:~/.antigravity/antigravity/bin:~/opt/oss-cad-suite/bin:/opt/homebrew/opt/riscv-gnu-toolchain/bin:/opt/local/bin:/opt/local/sbin:/opt/homebrew/sbin:~/Library/Application Support/Coursier/bin:/usr/local/texlive/2025/bin/universal-darwin:~/Library/Application Support/Coursier/bin",
+      "PATH": "/opt/local/bin:/opt/local/sbin:/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/System/Cryptexes/App/usr/bin:/usr/bin:/bin:/usr/sbin:/sbin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin:/pkg/env/global/bin:/Library/Apple/usr/bin:/Library/TeX/texbin:/opt/homebrew/bin:/opt/homebrew/Caskroom/codex/0.166.0/codex-path:~/.codex/tmp/arg0-macos/codex-arg0fKfHYS:~/.pyenv/shims:~/.local/bin:~/.antigravity/antigravity/bin:~/opt/oss-cad-suite/bin:/opt/homebrew/opt/riscv-gnu-toolchain/bin:/opt/local/bin:/opt/local/sbin:/opt/homebrew/sbin:~/Library/Application Support/Coursier/bin:/usr/local/texlive/2025/bin/universal-darwin:~/Library/Application Support/Coursier/bin",
       "PYTHONHOME": null,
       "PYTHONPATH": null,
       "SYSTEMROOT": null,
@@ -30770,6 +30773,15 @@
       "YOSYS_DATDIR": null
     },
     "files": [
+      {
+        "copy": "files/7da38e9139a0e982042f30e930a6c27e307a577c638d62b7e739653af7824597/result.json",
+        "executable": 0,
+        "resolved": "$CHECKOUT/rvw/out/dv/injection-v2-vexiiriscv/match/result.json",
+        "sha256": "8d2056ec9af3aa790704e614dee2685abf43b95e02f9ea9ddbf62ab7cbbfface",
+        "size": 15972,
+        "source": "$CHECKOUT/examples/vexiiriscv/../../rvw/out/dv/injection-v2-vexiiriscv/match/result.json",
+        "symlinks": []
+      },
       {
         "copy": "files/86d5b634ff9f542a79b1715fb14d0bbc48eeaa63a3f90f083b4ef9cec6cf9881/result.json",
         "executable": 0,
@@ -30855,8 +30867,8 @@
         "copy": "files/524826900a006b7d2305a8478a3c203b747f45f9799d91d855a92b8ba4047bb0/verification-plan.json",
         "executable": 0,
         "resolved": "$CHECKOUT/examples/vexiiriscv/verification-plan.json",
-        "sha256": "33c1108bdf0ddcd2df77447e0b9b0a16b35b9dc4990c7f407e8376edc0fa032c",
-        "size": 3708,
+        "sha256": "6594dc2fa531a5107f9ed38e9dda468f02f8bdb0544b072c560fae7e859258d6",
+        "size": 3921,
         "source": "$CHECKOUT/examples/vexiiriscv/verification-plan.json",
         "symlinks": []
       }

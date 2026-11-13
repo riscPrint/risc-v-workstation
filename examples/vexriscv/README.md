@@ -1093,7 +1093,15 @@ rvw plan status examples/vexriscv/verification-plan.json --json
 
 [The saved status](verification-status.json) comes from real native results.
 It retains unobserved add classes, native counter holes, missing retirement
-pairs, and the pending instruction injection hook. Source path aliases are
+pairs. It also records the tested instruction injection hook. Source path aliases are
 for display. Raw runs remain in the worker checkout. Missing raw runs on a
 clean checkout become explicit evidence holes. The plan covers these bounded
 stimulus samples. It does not qualify the whole core or grant C4 acceptance.
+
+## Instruction injection hook
+
+[The core-side injection sample](rvw/testrig/README.md) binds the instruction
+request/response port from project data. Its matching feed passes strict Spike
+comparison. Its deliberately changed feed produces the expected mismatch.
+The stimulus plan now links the passing native port run. This is a declared
+evidence link for the tested hook, not whole-core or live TestRIG qualification.

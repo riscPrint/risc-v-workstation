@@ -27,6 +27,7 @@ class VexiiAdapter(val xlen: Int) extends CoreAdapter {
   val ramSize = 0x1000000L
 
   override def supportsProbes = true
+  override def supportsInstructionPort(config: String) = config == "rv32im"
   override def supportsStimulus = true
   private def report(key: ModelKey, work: File): SpinalReport[VexiiRiscv] = spinalprobes.Probe.enabled(key.probes) {
     RiscvSimConfig.elaborate(key, work, VexiiTop.spinalConfig,
@@ -132,7 +133,7 @@ class VexiiAdapter(val xlen: Int) extends CoreAdapter {
         priv.int.m.software #= false
         priv.int.m.external #= false
         dut.host[PrivilegedPlugin].logic.rdtime #= 0
-        ibusOpt.foreach { ibus => ibus.cmd.ready #= true; ibus.rsp.valid #= false }
+        ibusOpt.filter(_ => job.instructionPort.isEmpty).foreach { ibus => ibus.cmd.ready #= true; ibus.rsp.valid #= false }
         dbus.cmd.ready #= true
         if (dbus.p.withAmo) dbus.rsp.scMiss #= false
         dbus.rsp.valid #= false
@@ -171,7 +172,7 @@ class VexiiAdapter(val xlen: Int) extends CoreAdapter {
           }
 
           l1.tick(cycle)
-          ibusOpt.foreach { ibus =>
+          ibusOpt.filter(_ => job.instructionPort.isEmpty).foreach { ibus =>
             if (ibus.cmd.valid.toBoolean && ibus.cmd.ready.toBoolean) {
               val addr = ibus.cmd.address.toLong & ~(ibytes - 1L)
               fetch.accept(cycle, read(addr, ibytes), !inRam(addr, ibytes), ibus.cmd.id.toInt)
@@ -224,7 +225,7 @@ class VexiiAdapter(val xlen: Int) extends CoreAdapter {
               lsu.accept(cycle, if (atomic || !cmd.write.toBoolean) old else BigInt(0), !ok, cmd.id.toInt, scMiss)
             }
           }
-          ibusOpt.foreach { ibus =>
+          ibusOpt.filter(_ => job.instructionPort.isEmpty).foreach { ibus =>
             fetch.next(cycle) match {
               case Some((d, e, id, _)) => ibus.rsp.valid #= true; ibus.rsp.word #= d; ibus.rsp.error #= e; ibus.rsp.id #= id
               case None => ibus.rsp.valid #= false

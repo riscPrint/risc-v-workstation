@@ -118,6 +118,12 @@
       "id": "instruction-injection",
       "requirements": [
         "INJECTION"
+      ],
+      "tests": [
+        {
+          "path": "../../rvw/out/dv/injection-v2-vexiiriscv/match/result.json",
+          "sha256": "8d2056ec9af3aa790704e614dee2685abf43b95e02f9ea9ddbf62ab7cbbfface"
+        }
       ]
     }
   ]

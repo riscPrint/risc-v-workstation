@@ -36,7 +36,7 @@ case class RunJob(elf: File, out: File, config: String, seed: Int, seedPicked: B
                   wallTimeoutS: Option[Double] = None, spinaltrace: Boolean = false, irqSchedule: Option[InterruptSchedule] = None, elfLoadBias: Long = 0L, bootPayloads: Option[File] = None, socMap: Option[SimMap] = None, hartImages: Option[File] = None, probes: Boolean = false,
                   fault: Option[FaultFile] = None, debug: Option[DebugMode] = None,
                   traceIngress: Option[IngressBinding] = None, simThreads: Option[Int] = None,
-                  stimulus: Option[StimulusFile] = None) {
+                  stimulus: Option[StimulusFile] = None, instructionPort: Option[InstructionMode] = None) {
   def model: ModelKey = ModelKey(config, rvfi = rvfiTrace || rvfiCheck || hartImages.nonEmpty, wave = wave, coverage = coverage, konata = konata, spinaltrace = spinaltrace, probes = probes, faults = fault.nonEmpty, simThreads = simThreads)
   /** C1 records the selected model and observation flags for regression identity checks. */
   def recordedOptions: ujson.Obj = {
@@ -45,6 +45,10 @@ case class RunJob(elf: File, out: File, config: String, seed: Int, seedPicked: B
     options("rvfi_check") = ujson.Bool(rvfiCheck)
     options("wave_from") = waveFrom.map(RvwJson.num).getOrElse(ujson.Null)
     options("wave_to") = waveTo.map(RvwJson.num).getOrElse(ujson.Null)
+    instructionPort.foreach { mode =>
+      options("instruction_port") = ujson.Str(mode.binding.file.getPath)
+      options("instruction_feed") = ujson.Str(mode.feed.file.getPath)
+    }
     options
   }
 }
@@ -73,6 +77,7 @@ trait CoreAdapter {
   /** True when the adapter elaborates with `spinalprobes.Probe.enabled(key.probes)` and writes
     * `probe-events.jsonl` through `ProbeCollector.open`. */
   def supportsProbes: Boolean = false
+  def supportsInstructionPort(config: String): Boolean = false
   /** Opt in only when the adapter uses shared memory and per-hart RVFI. */
   def hartIds(config: String): Seq[Int] = Nil
   def core: String

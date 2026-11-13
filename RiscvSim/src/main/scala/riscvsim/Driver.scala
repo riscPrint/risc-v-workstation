@@ -195,6 +195,7 @@ class Driver(val adapter: CoreAdapter) {
   // ---------------------------------------------------------------- one run
   val artifactFiles: Seq[(String, String)] = Seq("soc_map" -> "sim-map.json", "soc_transactions" -> "soc-transactions.jsonl", "log" -> "run.log", "rvfi_trace" -> "rvfi.jsonl",
     "wave" -> SimSession.waveFile, "konata" -> "konata.log", "coverage" -> SimSession.coverageFile, "probe_events" -> "probe-events.jsonl",
+    "instruction_port" -> "instruction-port.json", "instruction_feed" -> "instruction-feed.json", "instruction_requests" -> "instruction-requests.jsonl",
     "trace_ingress" -> TraceIngress.file)
 
   private def q(s: String): String = if (s.matches("[A-Za-z0-9_./=:,+@%-]+")) s else "'" + s.replace("'", "'\\''") + "'"
@@ -225,6 +226,7 @@ class Driver(val adapter: CoreAdapter) {
       job.irqSchedule.toSeq.flatMap(s => Seq("--irq-schedule", s.text)) ++
       job.fault.toSeq.flatMap(f => Seq("--fault", f.file.getPath)) ++
       job.debug.toSeq.flatMap(m => Seq("--debug", m.text, "--debug-binding", m.binding.file.getPath)) ++
+      job.instructionPort.toSeq.flatMap(m => Seq("--instruction-port", m.binding.file.getPath, "--instruction-feed", m.feed.file.getPath)) ++
       job.traceIngress.toSeq.flatMap(b => Seq("--trace-ingress", b.file.getPath)) ++
       job.simThreads.toSeq.flatMap(n => Seq("--sim-threads", n.toString)) ++
       job.stimulus.toSeq.flatMap(s => Seq("--stimulus-file", s.file.getPath)) ++
@@ -355,7 +357,7 @@ class Driver(val adapter: CoreAdapter) {
 
     var elfSha: ujson.Value = ujson.Null
     var built: Option[Built] = None
-    val outcome: RunOutcome = try {
+    var outcome: RunOutcome = try {
       log(s"run ${job.elf} config=${job.config} seed=${job.seed}${if (job.seedPicked) " (picked)" else ""} max_cycles=${job.maxCycles}" +
         job.wallTimeoutS.map(w => f" wall_timeout=$w%.0fs").getOrElse(""))
       val elf = capturedElfs.computeIfAbsent((job.elf.getAbsolutePath + ":" + job.elfLoadBias), _ => new ElfFile(job.elf, job.elfLoadBias))
@@ -402,6 +404,11 @@ class Driver(val adapter: CoreAdapter) {
     val details = outcome.details
     FaultInjector.finish(job).foreach(f => details("fault") = f.details(outcome.cycles))
     TraceIngress.finish(job).foreach(t => details("trace_ingress") = t)
+    InstructionPort.finish(job).foreach { receipt =>
+      details("instruction_injection") = receipt
+      if (outcome.status == Status.Pass && (!receipt("attached").bool || receipt("responses").num == 0))
+        outcome = outcome.copy(status = Status.Error, message = Some("instruction injection delivered no response"))
+    }
     if (job.debug.nonEmpty) details("debug") = DebugPort.finish(job).map(_.details)
       .getOrElse(ujson.Obj("mode" -> job.debug.get.text, "attached" -> false))
     Option(capturedHartImages.get(job)).foreach(h => details("hart_images") = h.identity)
