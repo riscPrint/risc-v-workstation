@@ -10,18 +10,20 @@ import subprocess
 from rvw.common.proc import run_group
 
 
-def adapter(operation, divisor, operand_bits):
+def adapter(operation, divisor, operand_bits, implementation='DivRadix2'):
     if operation not in ('divu', 'remu'):
         raise ValueError('unsigned divide or remainder required')
     if not 1 <= operand_bits <= 32:
         raise ValueError('operand bits must be in 1..32')
+    if implementation not in ('DivRadix2', 'DivRadix'):
+        raise ValueError('unknown divider implementation')
     mask = (1 << operand_bits) - 1
     result = 'quotient' if operation == 'divu' else 'remainder'
     denominator = "32'd0" if divisor == 'zero' else f"(b & 32'h{mask:x})"
     return f"""module dut(input clk,reset,start,input [31:0] a,b,output [31:0] y,output done);
 wire [31:0] quotient,remainder;
 assign y={result};
-DivRadix2 unit0(.clk(clk),.reset(reset),.io_flush(reset),
+{implementation} unit0(.clk(clk),.reset(reset),.io_flush(reset),
  .io_cmd_valid(start),.io_cmd_ready(),.io_cmd_payload_a(a & 32'h{mask:x}),
  .io_cmd_payload_b({denominator}),.io_cmd_payload_normalized(1'b0),
  .io_cmd_payload_iterations(5'd31),.io_rsp_valid(done),.io_rsp_ready(1'b1),
@@ -41,9 +43,9 @@ def model(root, operation, divisor, operand_bits):
     return (models / 'riscv_m.h').read_text() + text.replace(old, f'32, (a & {mask}ULL), {b})')
 
 
-def zero_smoke(root, rtl, out):
+def zero_smoke(root, rtl, out, implementation='DivRadix2'):
     source = out / 'zero-smoke.v'
-    source.write_text(rtl.read_text() + adapter('divu', 'zero', 32) + '''
+    source.write_text(rtl.read_text() + adapter('divu', 'zero', 32, implementation) + '''
 module tb;
 reg clk=0,reset=1,start=0;reg[31:0]a=1,b=0;wire[31:0]y;wire done;
 dut d(.*);
@@ -94,6 +96,7 @@ def main():
     p.add_argument('--build-timeout', type=float, default=180)
     p.add_argument('--max-latency', type=int, default=40)
     p.add_argument('--zero-smoke', action='store_true')
+    p.add_argument('--implementation', choices=['DivRadix2', 'DivRadix'], default='DivRadix2')
     a = p.parse_args()
     root = Path(__file__).resolve().parents[3]
     source, out = a.source.resolve(), a.out.resolve()
@@ -103,7 +106,9 @@ def main():
     (build / 'src/main/scala').mkdir(parents=True)
     (build / 'project').mkdir()
     manifest = {'schema': 'rvw.vexii-div-unit/1', 'source_revision': revision,
-                'spinal_version': '1.15.0', 'implementation': 'DivRadix2', 'width': 32, 'low_area': False,
+                'spinal_version': '1.15.0', 'implementation': a.implementation, 'width': 32,
+                'low_area': False if a.implementation == 'DivRadix2' else None,
+                'radix': 2,
                 'scope': 'real source unit; unsigned transactions; stable operands; no pipeline or ISA integration',
                 'operand_bits': a.operand_bits, 'divisor': a.divisor,
                 'max_latency': a.max_latency, 'source_files': {}, 'results': []}
@@ -129,12 +134,13 @@ libraryDependencies ++= Seq(
  compilerPlugin("com.github.spinalhdl" %% "spinalhdl-idsl-plugin" % spinalVersion))
 fork := true
 """)
+    constructor = f'new vexiiriscv.misc.{a.implementation}(32, ' + ('false)' if a.implementation == 'DivRadix2' else '2)')
     (build / 'src/main/scala/Export.scala').write_text("""import spinal.core._
 object Export extends App {
  SpinalConfig(targetDirectory=args(0), defaultConfigForClockDomains=ClockDomainConfig(resetKind=SYNC))
   .generateVerilog(new vexiiriscv.misc.DivRadix2(32, false))
 }
-""")
+""".replace('new vexiiriscv.misc.DivRadix2(32, false)', constructor))
     command = [str(root / 'scripts/with-lock.sh'), 'sbt-equiv', 'nice', '-n', '10',
                'sbt', '-batch', '-J-Xmx2g', '-J-XX:ActiveProcessorCount=2', '-Dsbt.offline=true',
                'runMain Export ' + str(out / 'rtl')]
@@ -145,15 +151,15 @@ object Export extends App {
     if r.returncode:
         print(json.dumps(manifest))
         return 3
-    rtl = out / 'rtl/DivRadix2.v'
+    rtl = out / ('rtl/' + a.implementation + '.v')
     manifest['rtl_sha256'] = hashlib.sha256(rtl.read_bytes()).hexdigest()
     if a.zero_smoke:
-        manifest['zero_smoke'] = zero_smoke(root, rtl, out)
+        manifest['zero_smoke'] = zero_smoke(root, rtl, out, a.implementation)
         (out / 'summary.json').write_text(json.dumps(manifest, indent=2) + '\n')
     for op in a.operations.split(','):
         directory = out / op
         directory.mkdir()
-        (directory / 'dut.v').write_text(rtl.read_text() + adapter(op, a.divisor, a.operand_bits))
+        (directory / 'dut.v').write_text(rtl.read_text() + adapter(op, a.divisor, a.operand_bits, a.implementation))
         (directory / 'model.c').write_text(model(root, op, a.divisor, a.operand_bits))
         command = [str(root / 'scripts/with-lock.sh'), 'vex-equiv', 'nice', '-n', '10',
                    str(root / 'rvw/.venv/bin/rvw'), 'formal', 'datapath',

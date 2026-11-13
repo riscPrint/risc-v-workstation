@@ -1,0 +1,97 @@
+{
+  "schema": "rvw.vexii-default-units/1",
+  "default_divider": {
+    "schema": "rvw.vexii-div-unit/1",
+    "source_revision": "9f70315deb3390b283995c5b8f1bd38215ecf52b",
+    "spinal_version": "1.15.0",
+    "implementation": "DivRadix",
+    "width": 32,
+    "low_area": null,
+    "radix": 2,
+    "scope": "real source unit; unsigned transactions; stable operands; no pipeline or ISA integration",
+    "operand_bits": 32,
+    "divisor": "zero",
+    "max_latency": 40,
+    "source_files": {
+      "src/main/scala/vexiiriscv/misc/DivRadix.scala": {
+        "sha256": "9a0d095aae4868daf825bab6db7e469ef87fa67cf7bf532fed273bdbcfeebede",
+        "component_sha256": "2ea6d26865dbedf1d5b535c331b7bc198e8c503fefc3fe5230c01d421d678d6f"
+      },
+      "src/main/scala/vexiiriscv/misc/DivRadix2.scala": {
+        "sha256": "d4e71d73b9606ceb93c044ebd1aabf27a462cbb5882208cb408708dc6edee68d",
+        "component_sha256": "43f22ee8cf827fffe7b4d674ec002a8f71d6a2a45857c8074f179317d685f34b"
+      }
+    },
+    "results": [
+      {
+        "operation": "divu",
+        "status": "proved",
+        "reason": null,
+        "wall_s": 59.056
+      },
+      {
+        "operation": "remu",
+        "status": "proved",
+        "reason": null,
+        "wall_s": 45.531
+      }
+    ],
+    "export": {
+      "exit": 0,
+      "timed_out": false
+    },
+    "rtl_sha256": "d689559c40e7f96a26b1f9d94f4f2abbc0e1d0aa84f2d40468ef8af47b3571da",
+    "zero_smoke": {
+      "status": "match",
+      "operation": "divu",
+      "a": 1,
+      "b": 0,
+      "observed": 4294967295,
+      "expected": 4294967295,
+      "cycles_after_start_removed": 8,
+      "backend": "icarus",
+      "proof_ran": false
+    }
+  },
+  "multiplier_helpers": {
+    "schema": "rvw.vexii-mul-unit/1",
+    "source_revision": "9f70315deb3390b283995c5b8f1bd38215ecf52b",
+    "source_path": "src/main/scala/vexiiriscv/misc/Utils.scala",
+    "source_sha256": "ad26fe032e70dfcd3acb052e039cb53d31c8f67663e15027ff42e07a46b35c9b",
+    "component_sha256": "d15bdacf1f96eb6b922d6af95855f0d93e4b86e0cf906091b8bd068eb57bd129",
+    "spinal_version": "1.15.0",
+    "operand_bits": 8,
+    "results": [
+      {
+        "operation": "mul",
+        "status": "proved",
+        "reason": null,
+        "wall_s": 108.077
+      },
+      {
+        "operation": "mulh",
+        "status": "proved",
+        "reason": null,
+        "wall_s": 70.451
+      },
+      {
+        "operation": "mulhu",
+        "status": "proved",
+        "reason": null,
+        "wall_s": 25.484
+      },
+      {
+        "operation": "mulhsu",
+        "status": "proved",
+        "reason": null,
+        "wall_s": 28.148
+      }
+    ],
+    "scope": "real MulSpliter and AdderAggregator; default 33-bit inputs, 17-bit splits and two sum steps; combinational arithmetic only; no pipeline control",
+    "export": {
+      "exit": 0,
+      "timed_out": false
+    },
+    "rtl_sha256": "edc05c46807a217cecf2e43fad35ecc56a52aaa6ef01e7b8b9ff767784221063"
+  }
+}

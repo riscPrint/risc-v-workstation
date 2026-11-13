@@ -341,3 +341,19 @@ The compact `rvw.vexii-div-unit-evidence/1` ledger links a campaign, a native
 datapath result summary, failed properties, native sample and a full-result hash.
 It keeps timeout attempts. Full traces stay outside the source repository.
 Neither format certifies an enclosing core or its ISA behavior.
+
+## Default divider and multiplier helper receipts
+
+The divider campaign's `implementation` selects `DivRadix2` or `DivRadix`.
+Both use 32-bit operands and an explicit completion obligation. The optional
+Icarus sample uses the selected implementation.
+
+The example `rvw.vexii-mul-unit/1` campaign records the committed utility source,
+source and extracted-component hashes, SpinalHDL dependency, RTL hash, operand
+projection and per-operation native outcomes. It checks combinational arithmetic
+from the default `MulPlugin` helper settings. It does not include pipeline state.
+Signed projected operands are sign extended. Unsigned operands are zero extended.
+Every selected 32-bit result is compared without result truncation.
+
+`rvw.vexii-default-units/1` groups default-divider and multiplier campaign
+receipts. Each campaign keeps its own domain restrictions and proof outcomes.

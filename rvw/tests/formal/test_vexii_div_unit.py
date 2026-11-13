@@ -39,3 +39,15 @@ def test_zero_divisor_applies_to_both_actual_unit_and_reference():
     wrapper = runner.adapter('divu', 'zero', 32)
     assert ".io_cmd_payload_b(32'd0)" in wrapper
     assert '32, (a & 4294967295ULL), 0ULL)' in runner.model(ROOT, 'divu', 'zero', 32)
+
+
+@pytest.mark.fast
+def test_default_core_divider_can_be_selected():
+    text = runner.adapter('divu', 'full', 32, 'DivRadix')
+    assert 'DivRadix unit0' in text and 'DivRadix2 unit0' not in text
+
+
+@pytest.mark.fast
+def test_unknown_divider_is_refused():
+    with pytest.raises(ValueError):
+        runner.adapter('divu', 'full', 32, 'unknown')
