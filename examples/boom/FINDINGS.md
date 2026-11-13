@@ -66,6 +66,31 @@ value is reported. The Sail expectation gap remains open. Full Sm_F and
 Zicntr CLI runs hit earlier illegal-instruction tval policy differences;
 only their isolated programs establish the Spike outcomes above.
 
+## Generated families, 2026-11-13
+
+The RV64 planner selection and family counts are in the
+[adapter README](../../RiscvSim/boom/README.md#generated-rv64-families-2026-11-13).
+All 15 native failures are `pmp-na4-*-execute` cases where execution is
+permitted: five unlocked M-mode permission settings, locked M-mode X
+settings, and S/U X settings with either lock value. They share the narrow
+PMP execution finding above. The other 379 PMP programs pass.
+
+The initial Sv39 matrix requested nonzero ASID in eight remap/root cases.
+The exact SATP readback check rejected all eight because BOOM has
+ASID_WIDTH=0. The corrected selection uses ASID 0 and keeps the readback
+check. Two hardware A/D controls also fail because this profile implements
+Svade, not Svadu. The selected fault-based A/D cases pass. These are
+platform settings, not TLB or A/D core defects. All 145 selected Sv39 cases
+pass. The first AMO fault run reached only 57 of 72 operations at the
+30,000-cycle limit. The unchanged program passes at cycle 38,498 with its
+200,000-cycle generator budget. No timeout or expectation was masked.
+
+The harness has CLINT and interrupt-generator bindings. PLIC registers,
+claim/complete and multiple-hart atomicity remain unmeasured. Every strict
+comparison in the 588-program selection stops at reset FP state, often
+with mscratch state too. These are execution results without complete
+strict reference qualification.
+
 ## Generated checks, 2026-11-13
 
 Private core revision `0cb0b69`, preset `small`, seed 1, randomized memory
