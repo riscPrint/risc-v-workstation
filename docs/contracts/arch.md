@@ -336,3 +336,12 @@ opcode mappings do not establish native compiler integration or RTL accuracy.
 gem5 version, invocation, CPU parameters and projected issue capacity. Export
 writes `core.json`, `ooo.json`, `model.py` and `report.json` to a new directory.
 It copies the existing adapter. It does not build gem5 or establish timing parity.
+
+## Own-model parameter fitting
+
+`rvw.ooo-fit-plan/1` references a saved calibration plan and candidate parameter
+lists. A grid has at most 32 points. `rvw.ooo-fit/1` records candidate scores,
+the selected config and the final calibration/held-out evidence. Training-only
+cycle and event errors select the winner. Missing training events are errors.
+Probe `counts` exports use the existing C1/C2-bound event-count input. No RTL
+job, continuous service or accuracy qualification is implied.
