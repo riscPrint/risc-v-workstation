@@ -11,7 +11,7 @@ permissions:
   contents: read
 jobs:
   python:
-    runs-on: [self-hosted, macOS, rvw-local]
+    runs-on: [self-hosted, macOS, ARM64, rvw-local]
     timeout-minutes: 90
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
@@ -25,7 +25,7 @@ jobs:
       - name: Run isolated local checks
         run: scripts/ci-local.sh nightly-python
   scala:
-    runs-on: [self-hosted, macOS, rvw-local]
+    runs-on: [self-hosted, macOS, ARM64, rvw-local]
     timeout-minutes: 90
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683

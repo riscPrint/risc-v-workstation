@@ -77,7 +77,7 @@ def test_automatic_workflows_use_only_local_runner():
         runners = [line.strip() for line in text.splitlines()
                    if line.strip().startswith('runs-on:')]
         assert runners, name
-        assert all(line == 'runs-on: [self-hosted, macOS, rvw-local]'
+        assert all(line == 'runs-on: [self-hosted, macOS, ARM64, rvw-local]'
                    for line in runners), name
         assert 'cancel-in-progress:' in text
         assert 'scripts/ci-local.sh ' in text
@@ -111,3 +111,11 @@ exit {exit_code}
                             capture_output=True, text=True)
     assert result.returncode == exit_code, result.stderr
     assert list(tmp_path.iterdir()) == [], result.stderr
+
+
+def test_messages_bypass_dependency_install():
+    text = (REPO / 'scripts/ci-local.sh').read_text()
+    assert text.index('if [ "$mode" = messages ]') < text.index('mktemp')
+    assert 'uv lock --check --project rvw' in text
+    nightly = text.split('  nightly-python)')[1].split('    ;;')[0]
+    assert 'scala ' not in nightly
