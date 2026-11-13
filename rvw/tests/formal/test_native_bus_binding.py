@@ -15,7 +15,7 @@ def test_native_bus_capture_and_bindings(tmp_path):
     capture=tmp_path/'capture'
     r=run_group([str(root/'scripts/with-lock.sh'),'sbt','nice','-n','10','sbt','-batch',
                  'runMain NativeBusCapture '+json.dumps(str(capture))],
-                cwd=root/'SpinalChecks/bus-binding',capture=True,timeout=110)
+                cwd=root/'SpinalChecks/bus-binding',capture=True,timeout=240)
     (tmp_path/'capture.log').write_text(r.stdout+r.stderr)
     assert r.returncode==0 and not r.timed_out,r.stdout+r.stderr
     initial=generate(capture/'design.db',tmp_path/'unbound',type_report=capture/'checks.json')

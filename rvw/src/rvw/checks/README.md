@@ -13,7 +13,8 @@ It has schema `rvw.check-generation/1`. Optional keys `streams`, `buses`,
   pending descriptors and 256 beats. Capacity assertions are instrumentation
   limits. The per-instance report states which transaction checks bind.
   `type_report` can name a matching SpinalChecks report to resolve ambiguous
-  TileLink `Bus` classes.
+  TileLink `Bus` classes. Optional `clocks` names a per-instance clock declaration
+  file when combinational bus ports have no recorded clock domain.
 - `csrs`: a CSR model or catalog selection.
 - `queues`: an `rvw.micro-checks/1` document.
 - `power`: an `rvw.power-intent/1` document.

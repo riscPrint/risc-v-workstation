@@ -26,7 +26,7 @@ def generate(db, out, depth=4, max_beats=256, type_report=None, clocks=None):
     clock_map={}
     if clocks is not None:
         intent=json.loads(Path(clocks).read_text())
-        if intent.get('schema')!='rvw.bus-clocks/1' or not isinstance(intent.get('instances'),dict):
+        if not isinstance(intent,dict) or intent.get('schema')!='rvw.bus-clocks/1' or not isinstance(intent.get('instances'),dict):
             raise ValueError('expected rvw.bus-clocks/1 with instances')
         clock_map=intent['instances']
     rows, sources, binds = [], [], []

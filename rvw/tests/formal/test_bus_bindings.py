@@ -190,3 +190,21 @@ def test_unknown_clock_instance_stays_incomplete(tmp_path):
     assert result['status']=='generated' and not result['complete']
     assert result['buses'][1]['kind']=='clock_binding'
     assert 'no matching bus instance' in result['buses'][1]['reason']
+
+
+def test_repeated_modules_keep_instance_scope(tmp_path):
+    import sqlite3
+    path=tmp_path/'design.db';database(path)
+    c=sqlite3.connect(path)
+    c.execute("INSERT INTO components(id,parent_id,name,path,module,depth) VALUES(2,1,'child','child','Top',1)")
+    c.commit();c.close()
+    result=generate(path,tmp_path/'out')
+    assert result['buses'][0]['bind_scope']=='instance'
+    assert result['buses'][0]['target']=='Top'
+
+
+def test_invalid_clock_document(tmp_path):
+    import pytest
+    clocks=tmp_path/'clocks.json';clocks.write_text('[]')
+    with pytest.raises(ValueError,match='rvw.bus-clocks/1'):
+        generate(tmp_path/'unused.db',tmp_path/'out',clocks=clocks)

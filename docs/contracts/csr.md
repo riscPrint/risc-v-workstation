@@ -211,3 +211,17 @@ eligibility with no candidate or multiple candidates fails. The project
 must supply actual age observations; slot indices do not define age.
 Each data unit can be one byte. Projects can instantiate separate units for
 byte merging. These rules do not infer speculation, fence or recovery state.
+
+## Explicit bus clock declarations
+
+`formal buses --clocks FILE` and the project `buses.clocks` entry accept
+`rvw.bus-clocks/1`. Its `instances` object maps full captured bus paths to
+objects with exactly `clock` and `reset` signal paths. Each pair must match
+one captured clock domain. A declaration cannot replace a conflicting signal
+clock domain. Unknown bus paths remain unsupported in the per-instance report.
+The generator does not infer a clock from bus signal names.
+
+Bus rows record `instance_path`, `clock_source`, `clock_domain_id`,
+`target_instance` and `bind_scope`. A module used once in the captured design
+uses a module bind. A repeated module uses an instance bind so each bus keeps
+its own declared controls. These are generation results, not native test results.
