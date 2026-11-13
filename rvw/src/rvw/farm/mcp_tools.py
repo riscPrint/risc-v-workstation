@@ -30,7 +30,9 @@ def mcp_tools():
     string = {"type": "string"}
     array = {"type": "array", "items": string, "minItems": 1}
     from .service import manage
-    return [ToolSpec("farm_queue", "Manage persistent local jobs. Completion is not DUT pass.",
+    return [ToolSpec("farm_batch", "Render, submit, inspect, cancel or collect explicit local/Kubernetes shards.",
+                 schema({"plan": {"type": "object"}, "action": string, "executor": string, "root": string,
+                         "ids": {"type": "array"}}, ["plan"]), batch_json, long=True), ToolSpec("farm_queue", "Manage persistent local jobs. Completion is not DUT pass.",
                  schema({"root": string, "operation": string, "options": {"type": "object"}}, ["root"]),
                  queue_json, long=True), ToolSpec("farm_run", "Run native SSH shards. Complete is transport completeness, not a gate verdict.",
         schema({"hosts": {"type": "array", "items": {"type": "object"}, "minItems": 1},
@@ -55,3 +57,8 @@ def mcp_tools():
 def queue_json(root, operation="list", options=None):
     from .service import manage
     return manage(root, operation, **(options or {}))
+
+
+def batch_json(**options):
+    from .batch import batch
+    return batch(**options)

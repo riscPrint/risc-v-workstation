@@ -220,3 +220,30 @@ page keeps the token in page memory. Workers must be launched separately with
 Use a TLS reverse proxy for remote access. The API does not supply a sandbox.
 MCP `farm_queue` exposes the same local operations. C3 trends remain available
 through `farm dashboard`. Cluster drill-down is not yet part of the HTTP view.
+
+## Local and Kubernetes batch jobs
+
+`rvw farm batch --plan plan.json --action render` emits a Kubernetes Job List.
+Each shard becomes one Job with zero hidden Kubernetes retries. A plan sets
+`name`, `image`, `shards`, optional `namespace`, `timeout`, `resources`, and PVC
+`volumes`. Each shard sets a `command` argument array and explicit `results`:
+`[{"path":"cell/result.json","contract":"C1","identity":{"elf_sha256":"..."}}]`.
+C3 files use `contract: "C3"`. Identity keys can name nested C1 fields.
+Volumes set `claim`, `mount` and optional `read_only`. Use a read-only model
+cache and a separate writable results PVC. Mount the same paths on collectors.
+Tool images, hashed inputs and model builds are supplied by the project.
+
+Use `--action submit --executor k8s`. Save the returned IDs. Pass them as JSON
+with `--ids` to `status` or `cancel`. Status returns Kubernetes Job conditions;
+an absent condition is not success. Cancellation waits for foreground deletion.
+`--executor local --root DIR` queues the same commands in the persistent local
+service. Run local workers with `farm queue --operation work --root DIR`.
+`--action collect --root SHARED_RESULTS` validates every expected C1/C3 file.
+Missing, invalid or inconclusive results remain inconclusive. Complete collection
+can include DUT failures. MCP exposes these operations as `farm_batch`.
+
+The rendered JSON is a plain Kubernetes manifest. Tests validate its structure
+and exercise a fake kubectl. No cluster or kind execution has run. This does not
+supply tool images, object storage, automatic cache builds, C3 gate publication,
+`regress gate --executor`, or a scale/parity result. Each command and its result
+paths must be supplied in the shard plan. Existing SSH plans remain unchanged.

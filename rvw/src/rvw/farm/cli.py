@@ -25,6 +25,13 @@ def register(sub):
     recovery = commands.add_parser("recover")
     recovery.add_argument("--out", required=True)
     recovery.set_defaults(func=recover_command)
+    batch = commands.add_parser("batch")
+    batch.add_argument("--plan", required=True)
+    batch.add_argument("--action", choices=("render", "submit", "status", "cancel", "collect"), default="render")
+    batch.add_argument("--executor", choices=("local", "k8s"), default="local")
+    batch.add_argument("--root", default=".")
+    batch.add_argument("--ids", default="[]")
+    batch.set_defaults(func=batch_command)
     queue = commands.add_parser("queue")
     queue.add_argument("--root", required=True)
     queue.add_argument("--operation", choices=("submit", "list", "work", "recover", "cancel", "events"), default="list")
@@ -88,3 +95,8 @@ def serve_command(args):
     from .http import server
     with server(args.root, json.loads(Path(args.tokens).read_text()), args.host, args.port) as http:
         http.serve_forever()
+
+
+def batch_command(args):
+    from .batch import batch
+    print(json.dumps(batch(json.loads(Path(args.plan).read_text()), args.action, args.executor, args.root, json.loads(args.ids))))
