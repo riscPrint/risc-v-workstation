@@ -202,3 +202,20 @@ def test_cov_writes_one_error_document_when_the_result_cannot_be_encoded(capsys,
     code, out = _main(capsys, ["cov", "report", "db.json", "--json"])
     assert code == 2
     assert strict_json(out.out)["schema"] == "rvw.coverage-error/1"
+
+
+def test_json_fallback_keeps_a_finding_status_on_exit_1(capsys):
+    from types import SimpleNamespace
+    from rvw.common.cli_json import execute
+    def finding(_):
+        print(json.dumps({"status": "violation", "findings": [{"sink": "dbus_addr"}]}))
+        return 1
+    def failed_text(_):
+        print("something broke")
+        return 1
+    assert execute(finding, SimpleNamespace(command="sec")) == 1
+    out = json.loads(capsys.readouterr().out)
+    assert out["status"] == "violation" and out["verdict"] == "fail" and "code" not in out
+    assert execute(failed_text, SimpleNamespace(command="x")) == 1
+    out = json.loads(capsys.readouterr().out)
+    assert out["status"] == "error" and out["code"] == "command_failed"

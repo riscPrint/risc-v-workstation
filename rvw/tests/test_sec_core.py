@@ -22,10 +22,10 @@ endmodule
 
 def binding(tmp_path, **extra):
     (tmp_path/'core.v').write_text(VERILOG)
+    extra.setdefault('buses', [dict(name='ibus', kind='fetch', cmd_valid='ibus_valid', cmd_ready='ibus_ready',
+                                    cmd_address='ibus_addr', rsp_valid='ibus_rsp', rsp_data='ibus_data')])
     b = dict(schema=rtl.SCHEMA, name='core', rtl=['core.v'], top='Core', clock='clk', reset='reset',
              ram=dict(base='0x80000000', size='0x1000'),
-             buses=[dict(name='ibus', kind='fetch', cmd_valid='ibus_valid', cmd_ready='ibus_ready',
-                         cmd_address='ibus_addr', rsp_valid='ibus_rsp', rsp_data='ibus_data')],
              retire=dict(kind='rvfi'), **extra)
     (tmp_path/'core.json').write_text(json.dumps(b))
     return rtl.load(tmp_path/'core.json')
@@ -57,6 +57,22 @@ def test_testbench_ties_inputs_and_answers_in_order(tmp_path):
     assert '$fdisplay(fd, "B %0d ibus' in tb
     shadow = rtl.testbench(b, rtl.ports(b), ift=('_', [('ibus_addr', 'ibus_valid')]))
     assert 'Core__ift dut' in shadow and '(|ibus_addr__t) && (ibus_valid || (|ibus_valid__t))' in shadow
+
+
+def test_same_cycle_bus_reads_in_drive_and_queues_nothing(tmp_path):
+    b = binding(tmp_path, buses=[dict(name='ibus', kind='fetch', latency=0, cmd_valid='ibus_valid',
+                                      cmd_address='ibus_addr', rsp_data='ibus_data')])
+    tb = rtl.testbench(b, rtl.ports(b))
+    drive = tb[tb.index('task automatic drive;'):tb.index('endtask')]
+    assert 'ibus_data = (ibus_valid && inram(ibus_addr)) ? mem[' in drive
+    assert 'ibus_tail = ibus_tail + 1' not in tb and 'ibus_head = ibus_head + 1' not in tb
+    assert 'if (ibus_valid) $fdisplay(fd, "A %0d ibus"' in tb
+    shadow = rtl.testbench(b, rtl.ports(b), ift=('_', [('ibus_addr', 'ibus_valid')]))
+    assert 'ibus_data__t = (ibus_valid && inram(ibus_addr)) ? taint[' in shadow
+    (tmp_path/'core.json').write_text(json.dumps(dict(json.loads((tmp_path/'core.json').read_text()),
+        buses=[dict(name='ibus', kind='fetch', cmd_valid='ibus_valid', cmd_address='ibus_addr', rsp_data='ibus_data')])))
+    with pytest.raises(ValueError, match='rsp_valid'):
+        rtl.load(tmp_path/'core.json')
 
 
 def rows():

@@ -21,6 +21,10 @@ def execute(func, args):
             result.update(status="error", verdict="error")
         elif rc == 3:
             result["verdict"] = "inconclusive"
+        elif rc == 1 and isinstance(data, dict) and "status" in data and "output" not in data:
+            # Exit 1 is a finding (fail, mismatch, violation). Keep the command's
+            # own status, such as a security violation, and mark the verdict fail.
+            result["verdict"] = "fail"
         elif rc:
             result["status"] = "error"
             result.setdefault("code", "command_failed")

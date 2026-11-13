@@ -56,9 +56,16 @@ def load(path, rtl_required=True):
     for bus in b['buses']:
         if bus.get('kind') not in ('fetch', 'data') or not SIMPLE.fullmatch(bus.get('name', '')):
             raise ValueError('each bus needs a name and kind fetch or data')
-        for f in ('cmd_valid', 'cmd_address', 'rsp_valid', 'rsp_data'):
+        latency = bus.get('latency', 1)
+        if type(latency) is not int or latency < 0:
+            raise ValueError(f'bus {bus["name"]} latency must be a non-negative integer')
+        # Latency 0: the core reads rsp_data in the cycle of its command (an
+        # asynchronous RAM port). It cannot wait, so rsp_valid is optional.
+        for f in ('cmd_valid', 'cmd_address', 'rsp_data') + (('rsp_valid',) if latency else ()):
             if f not in bus:
                 raise ValueError(f'bus {bus["name"]} needs {f}')
+        if latency == 0 and bus.get('cmd_ready'):
+            raise ValueError(f'bus {bus["name"]} with latency 0 cannot back-pressure (no cmd_ready)')
     if b['retire'].get('kind') not in ('rvfi', 'commit'):
         raise ValueError('retire kind must be rvfi or commit')
     return b
@@ -130,7 +137,9 @@ def testbench(binding, widths, ift=None):
               f'reg [31:0] {n}_q_data [0:{depth-1}]; reg [31:0] {n}_q_taint [0:{depth-1}];',
               f'reg [{w_id-1}:0] {n}_q_id [0:{depth-1}]; reg {n}_q_rsp [0:{depth-1}];',
               f'integer {n}_head = 0, {n}_tail = 0;']
-        driven.add(bus['rsp_valid']); driven.add(bus['rsp_data'])
+        driven.add(bus['rsp_data'])
+        if bus.get('rsp_valid'):
+            driven.add(bus['rsp_valid'])
         for f in ('cmd_ready', 'rsp_error', 'rsp_id'):
             if bus.get(f):
                 driven.add(bus[f])
@@ -143,6 +152,17 @@ def testbench(binding, widths, ift=None):
         L.append(f"  {n} = {widths[n][1]}'d{number(v)};")
     for bus in binding['buses']:
         n = bus['name']
+        if int(bus.get('latency', 1)) == 0:
+            # Same-cycle read from the address the core drives now.
+            addr = bus['cmd_address']
+            if bus.get('rsp_valid'):
+                L.append(f'  {bus["rsp_valid"]} = {bus["cmd_valid"]};')
+            if bus.get('rsp_error'):
+                L.append(f'  {bus["rsp_error"]} = {bus["cmd_valid"]} && !inram({addr});')
+            L.append(f'  {bus["rsp_data"]} = ({bus["cmd_valid"]} && inram({addr})) ? mem[{word(addr)}] : 0;')
+            if ift:
+                L.append(f'  {bus["rsp_data"]}__t = ({bus["cmd_valid"]} && inram({addr})) ? taint[{word(addr)}] : 0;')
+            continue
         L += [f'  {bus["rsp_valid"]} = 0; {bus["rsp_data"]} = 0;']
         if bus.get('cmd_ready'):
             L.append(f'  {bus["cmd_ready"]} = 1;')
@@ -176,8 +196,8 @@ def testbench(binding, widths, ift=None):
         ready = bus.get('cmd_ready')
         fire = f'{bus["cmd_valid"]}' + (f' && {ready}' if ready else '')
         wr = bus.get('cmd_write')
-        L += [f'  if ({bus["rsp_valid"]}) {n}_head = {n}_head + 1;',
-              f'  if ({fire}) begin']
+        same_cycle = int(bus.get('latency', 1)) == 0
+        L += ([] if same_cycle else [f'  if ({bus["rsp_valid"]}) {n}_head = {n}_head + 1;']) + [f'  if ({fire}) begin']
         addr = bus['cmd_address']
         L.append(f'    {n}_q_addr[{n}_tail % 16] = {addr}; {n}_q_err[{n}_tail % 16] = !inram({addr});')
         # Read data at acceptance, like the project adapters' bus models.
@@ -186,7 +206,7 @@ def testbench(binding, widths, ift=None):
         L.append(f'    {n}_q_due[{n}_tail % 16] = cycle + {int(bus.get("latency", 1))};')
         L.append(f'    {n}_q_id[{n}_tail % 16] = ' + (bus['cmd_id'] if bus.get('cmd_id') else '0') + ';')
         L.append(f'    {n}_q_rsp[{n}_tail % 16] = ' + (f'!{wr} || 1\'b{int(bool(bus.get("write_response", True)))}' if wr else '1') + ';')
-        L.append(f'    {n}_tail = {n}_tail + 1;')
+        L.append(f'    {n}_tail = {n}_tail + 1;' if not same_cycle else f'    // same-cycle bus: answered in drive, nothing queued')
         L.append(f'    $fdisplay(fd, "B %0d {n} %h %0d", cycle, {addr}, ' + (wr if wr else "1'b0") + ');')
         if wr:
             data = bus.get('cmd_data')
@@ -222,7 +242,8 @@ def testbench(binding, widths, ift=None):
         from .probe_events import discover, testbench_lines
         L += testbench_lines(discover(binding))
     for bus in binding['buses']:
-        L.append(f'  if ({bus["rsp_valid"]}) $fdisplay(fd, "A %0d {bus["name"]}", cycle);')
+        answered = bus['cmd_valid'] if int(bus.get('latency', 1)) == 0 else bus['rsp_valid']
+        L.append(f'  if ({answered}) $fdisplay(fd, "A %0d {bus["name"]}", cycle);')
     if ift:
         for i, (sink, when) in enumerate(ift[1]):
             cond = f'(|{sink}__t)' + (f' && ({when} || (|{when}__t))' if when else '')

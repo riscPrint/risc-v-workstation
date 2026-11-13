@@ -74,6 +74,12 @@ tied to zero or to `ties`. `retire` is `{"kind":"rvfi","prefix":...}` (RVFI
 ports) or `{"kind":"commit","valid":...,"pc":...}` (internal commit signals).
 `trap` optionally names `valid`, `cause`, `tval` and an internal `privilege`.
 A commit-kind core declares only `pc` and `insn` as checked C2 fields.
+`link` (linker script, default `../programs/link.ld` relative to the binding)
+and `march` (default `rv32im_zicsr`) select how `rvw.sec.core_adapter` builds
+case programs. A bus with `latency` 0 is a same-cycle (asynchronous RAM)
+port: the testbench answers `rsp_data` from the current `cmd_address` before
+each edge and queues nothing. Such a bus needs no `rsp_valid` and must not
+name `cmd_ready`.
 
 ## Case request extensions
 
