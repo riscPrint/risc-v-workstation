@@ -172,3 +172,19 @@ prepared_tick, reset_tick, state and complete. Ticks use an independent referenc
 clock. State is captured before the pulse. The checker binds the capture hash
 and still requires reset pulse observations and architectural evidence. C1
 selection matches ELF and requested stimulus/options before checking uniqueness.
+
+## PMA access probes and PMP capabilities
+
+`rvw.privilege/1` adds kind `pma-access`. Project `pma.probes` entries carry
+name, address, width, operation, cause and optional result/value/readback_value.
+Writes require test_writes. The existing PMA expectation gains optional
+`transfers`: the full ordered address/width/write sequence in the probe window.
+An empty list requires no bus transfers. Independent device_state and complete
+capture remain required. The count-only form remains supported for old probes.
+`pma.spike_compatible` requests native execution against the installed Spike
+map. It does not change PMA attributes or waive a reference failure.
+
+Base PMP data may select entries, granularity_bytes and address_modes under
+`pmp`. The matrix requires at least eight entries. Unsupported NA4/granularity
+combinations are rejected. Program generation uses the selected grain and
+honors project mode selection for priority probes too.

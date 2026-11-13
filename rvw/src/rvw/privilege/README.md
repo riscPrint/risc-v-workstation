@@ -449,3 +449,36 @@ compilation and driver fixture checks do not establish reset qualification.
 C1 matching uses ELF hash and requested input identity before checking result
 uniqueness. A result from another stimulus cannot hide a matching failure.
 Multiple results for the same input remain inconclusive.
+
+## PMA crossing and atomic probes
+
+`kind = "pma-access"` takes explicit `pma.probes`. Each probe supplies a name,
+address, width, operation and expected cause. Cause 0 means success. Read/LR/SC
+and AMO success also supply the returned `result`. `readback_value` can check a
+write independently. Supported operations are read, write, amoadd, amoswap, lr
+and sc. Write operations require `test_writes = true`. AMOs require A. Programs
+check exact fault PC and mtval. Projects select misalignment and conflicting
+attribute outcomes. The generator does not invent an overlap-priority rule.
+
+`transfers` declares the complete ordered bus sequence within the single probe
+window. This supports split accesses at different addresses and zero transfers
+on denial. Capture from `pma_probe_start` until `pma_probe_end` or the operation's
+trap. Exclude setup and later readback. The checker compares the whole sequence,
+so an unexpected transfer at another address cannot disappear from the count.
+Independent `device_state` remains required. Missing contracts stay inconclusive.
+
+The Spike CLINT example selects `pma.spike_compatible = true`. It checks scalar
+widths, misalignment and LR/SC versus AMO behavior in Spike's native map. This
+flag requests execution. It cannot configure or change that map. Custom maps
+omit the flag and remain inconclusive on native reference. The crossing example
+is project data for two possible policies. It is not a universal RISC-V rule.
+These tests do not qualify cacheability, idempotency or real device side effects.
+
+Base PMP project data now declares `pmp.entries` and `granularity_bytes`.
+The bootstrap requires at least eight entries. Granularity is a power of two
+from 4 to 4096 bytes. NA4 is selected only at four-byte granularity. Optional
+`address_modes` selects supported TOR/NA4/NAPOT modes. Larger regions use the
+declared grain in alignment and address encoding. Spike smoke tests exercise
+the programs; they do not prove the declared hardware grain. The fallback TOR
+lower bound is initialized explicitly, so a stale pmpaddr6 cannot exclude the
+program from the fallback region.

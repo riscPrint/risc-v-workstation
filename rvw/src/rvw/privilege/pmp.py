@@ -8,8 +8,18 @@ from .disabled import enter
 
 def programs(config):
     rows = []
-    for addressing in ('tor', 'na4', 'napot'):
-        for mode in config.get('modes', ['M', 'S', 'U', 'mprv-s', 'mprv-u']):
+    options=config.get('pmp',{})
+    grain=options.get('granularity_bytes',4)
+    if type(grain) is not int or not 4<=grain<=4096 or grain&(grain-1):
+        raise ValueError('PMP granularity must be a power of two in 4..4096')
+    if options.get('entries',8)<8:
+        raise ValueError('PMP matrix bootstrap requires eight entries')
+    addressing_modes=options.get('address_modes',['tor','na4','napot'] if grain==4 else ['tor','napot'])
+    if not addressing_modes or len(set(addressing_modes))!=len(addressing_modes) or set(addressing_modes)-{'tor','na4','napot'} or ('na4' in addressing_modes and grain!=4):
+        raise ValueError('PMP address modes differ from declared granularity')
+    modes=config.get('modes', ['M', 'S', 'U', 'mprv-s', 'mprv-u'])
+    for addressing in addressing_modes:
+        for mode in modes:
             if mode not in ('M', 'S', 'U', 'mprv-s', 'mprv-u'):
                 raise ValueError('unsupported PMP mode')
             for locked in (False, True):
@@ -20,31 +30,32 @@ def programs(config):
                         ident = f'pmp-{addressing}-{mode.lower()}-{int(locked)}-{permissions}-{access}'
                         rows.append(dict(id=ident, family='pmp',
                             bins=[f'pmp.{addressing}.{mode}.{int(locked)}.{permissions}.{access}'],
-                            assembly=program(addressing, mode, locked, permissions, access)))
-    for mode in ('S', 'U', 'mprv-s', 'mprv-u'):
+                            assembly=program(addressing, mode, locked, permissions, access, grain=grain)))
+    for mode in (m for m in modes if m!='M'):
         rows.append(dict(id='pmp-priority-' + mode, family='pmp', bins=['pmp.priority.' + mode],
-            assembly=program('napot', mode, False, 7, 'read', priority=True)))
+            assembly=program('napot', mode, False, 7, 'read', priority=True, grain=grain)))
     return rows
 
 
-def program(addressing, mode, locked, permissions, access, priority=False):
+def program(addressing, mode, locked, permissions, access, priority=False, grain=4):
     slot = int(addressing == 'tor' or priority)
-    size = 4 if addressing == 'na4' else 16
+    size = 4 if addressing == 'na4' else max(16,grain)
     cfg = {'tor': 8, 'na4': 16, 'napot': 24}[addressing] | permissions | (128 if locked else 0)
     config = (15 << 56) | (cfg << (8 * slot)) | (24 if priority else 0)
     lower = mode != 'M'
     denied = (not (permissions & {'read': 1, 'write': 2, 'execute': 4}[access]) and (lower or locked)) or priority
     physical = 'M' if mode.startswith('mprv') else mode
     text = HEAD + ''' csrw pmpcfg0, zero
+ csrw pmpaddr6, zero
  la t0, handler
  csrw mtvec, t0
  la t0, test_area
  srli t0, t0, 2
 '''
     if addressing == 'tor':
-        text += ' csrw pmpaddr0, t0\n addi t0, t0, 4\n'
+        text += f' csrw pmpaddr0, t0\n addi t0, t0, {size//4}\n'
     elif addressing == 'napot':
-        text += ' ori t0, t0, 1\n'
+        text += f' ori t0, t0, {size//8-1}\n'
     if priority:
         text += ' csrw pmpaddr0, t0\n'
     text += f''' csrw pmpaddr{slot}, t0

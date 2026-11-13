@@ -1,0 +1,43 @@
+{
+  "schema": "rvw.privilege/1",
+  "kind": "pma-access",
+  "isa": "rv64im_zicsr_zifencei",
+  "pma": {
+    "probes": [
+      {
+        "name": "cross-conflicting-attributes",
+        "address": 268435460,
+        "width": 8,
+        "operation": "read",
+        "cause": 5,
+        "transfers": [],
+        "device_state": {
+          "reads": 0
+        }
+      },
+      {
+        "name": "split-crossing-allowed",
+        "address": 268439556,
+        "width": 8,
+        "operation": "read",
+        "cause": 0,
+        "result": 0,
+        "transfers": [
+          {
+            "address": 268439556,
+            "width": 4,
+            "write": false
+          },
+          {
+            "address": 268439560,
+            "width": 4,
+            "write": false
+          }
+        ],
+        "device_state": {
+          "reads": 2
+        }
+      }
+    ]
+  }
+}

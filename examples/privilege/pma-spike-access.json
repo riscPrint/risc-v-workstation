@@ -1,0 +1,242 @@
+{
+  "schema": "rvw.privilege/1",
+  "kind": "pma-access",
+  "isa": "rv64ima_zicsr_zifencei",
+  "pma": {
+    "spike_compatible": true,
+    "probes": [
+      {
+        "name": "msip-read-1",
+        "address": 33554432,
+        "width": 1,
+        "operation": "read",
+        "result": 0,
+        "cause": 0,
+        "transfers": [
+          {
+            "address": 33554432,
+            "width": 1,
+            "write": false
+          }
+        ],
+        "device_state": {
+          "msip": 0
+        }
+      },
+      {
+        "name": "msip-write-1",
+        "address": 33554432,
+        "width": 1,
+        "operation": "write",
+        "value": 1,
+        "cause": 0,
+        "test_writes": true,
+        "readback_value": 1,
+        "transfers": [
+          {
+            "address": 33554432,
+            "width": 1,
+            "write": true
+          }
+        ],
+        "device_state": {
+          "msip": 1
+        }
+      },
+      {
+        "name": "msip-read-2",
+        "address": 33554432,
+        "width": 2,
+        "operation": "read",
+        "result": 0,
+        "cause": 0,
+        "transfers": [
+          {
+            "address": 33554432,
+            "width": 2,
+            "write": false
+          }
+        ],
+        "device_state": {
+          "msip": 0
+        }
+      },
+      {
+        "name": "msip-write-2",
+        "address": 33554432,
+        "width": 2,
+        "operation": "write",
+        "value": 1,
+        "cause": 0,
+        "test_writes": true,
+        "readback_value": 1,
+        "transfers": [
+          {
+            "address": 33554432,
+            "width": 2,
+            "write": true
+          }
+        ],
+        "device_state": {
+          "msip": 1
+        }
+      },
+      {
+        "name": "msip-read-4",
+        "address": 33554432,
+        "width": 4,
+        "operation": "read",
+        "result": 0,
+        "cause": 0,
+        "transfers": [
+          {
+            "address": 33554432,
+            "width": 4,
+            "write": false
+          }
+        ],
+        "device_state": {
+          "msip": 0
+        }
+      },
+      {
+        "name": "msip-write-4",
+        "address": 33554432,
+        "width": 4,
+        "operation": "write",
+        "value": 1,
+        "cause": 0,
+        "test_writes": true,
+        "readback_value": 1,
+        "transfers": [
+          {
+            "address": 33554432,
+            "width": 4,
+            "write": true
+          }
+        ],
+        "device_state": {
+          "msip": 1
+        }
+      },
+      {
+        "name": "msip-read-8",
+        "address": 33554432,
+        "width": 8,
+        "operation": "read",
+        "result": 0,
+        "cause": 0,
+        "transfers": [
+          {
+            "address": 33554432,
+            "width": 8,
+            "write": false
+          }
+        ],
+        "device_state": {
+          "msip": 0
+        }
+      },
+      {
+        "name": "msip-write-8",
+        "address": 33554432,
+        "width": 8,
+        "operation": "write",
+        "value": 1,
+        "cause": 0,
+        "test_writes": true,
+        "readback_value": 1,
+        "transfers": [
+          {
+            "address": 33554432,
+            "width": 8,
+            "write": true
+          }
+        ],
+        "device_state": {
+          "msip": 1
+        }
+      },
+      {
+        "name": "msip-misaligned-read",
+        "address": 33554433,
+        "width": 4,
+        "operation": "read",
+        "value": 1,
+        "cause": 4,
+        "test_writes": false,
+        "transfers": [],
+        "device_state": {
+          "msip": 0
+        }
+      },
+      {
+        "name": "msip-misaligned-write",
+        "address": 33554433,
+        "width": 4,
+        "operation": "write",
+        "value": 1,
+        "cause": 6,
+        "test_writes": true,
+        "transfers": [],
+        "device_state": {
+          "msip": 0
+        }
+      },
+      {
+        "name": "msip-lr",
+        "address": 33554432,
+        "width": 4,
+        "operation": "lr",
+        "value": 1,
+        "cause": 5,
+        "test_writes": false,
+        "result": 0,
+        "device_state": {
+          "msip": 0
+        }
+      },
+      {
+        "name": "msip-sc",
+        "address": 33554432,
+        "width": 4,
+        "operation": "sc",
+        "value": 1,
+        "cause": 7,
+        "test_writes": true,
+        "result": 0,
+        "device_state": {
+          "msip": 0
+        }
+      },
+      {
+        "name": "msip-amoadd",
+        "address": 33554432,
+        "width": 4,
+        "operation": "amoadd",
+        "value": 1,
+        "cause": 0,
+        "test_writes": true,
+        "result": 0,
+        "device_state": {
+          "msip": 1
+        },
+        "readback_value": 1
+      },
+      {
+        "name": "msip-amoswap",
+        "address": 33554432,
+        "width": 4,
+        "operation": "amoswap",
+        "value": 1,
+        "cause": 0,
+        "test_writes": true,
+        "result": 0,
+        "device_state": {
+          "msip": 1
+        },
+        "readback_value": 1
+      }
+    ]
+  }
+}
