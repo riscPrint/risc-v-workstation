@@ -253,7 +253,7 @@ def functional(paths, config=None, platform=None, manifest=None, source_root=Non
             aligned_mem = plat.aligned_mem if plat else None
             traces[file_hash] = {"path": item.resolved, "header": first,
                                  "platform": plat.name if plat else None,
-                                 **({'payload_region': region} if region is not None else {}),
+                                 **({'payload_region': region, 'payload_visits': {}} if region is not None else {}),
                                  "address_convention": {True: "aligned_mem", False: "byte", None: "unknown"}[aligned_mem]}
             previous, order = None, -1
             history = []
@@ -270,6 +270,10 @@ def functional(paths, config=None, platform=None, manifest=None, source_root=Non
                         history.clear()
                         semantic = Observer()
                         continue
+                    if region is not None:
+                        visits = traces[file_hash]['payload_visits']
+                        pc = hex(number(row['pc']))
+                        visits[pc] = visits.get(pc,0)+1
                     records += 1
                 observed, previous = observations(row, first['xlen'], previous, aligned_mem)
                 if sequence_settings is not None:
