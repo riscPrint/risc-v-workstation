@@ -300,3 +300,13 @@ Raw counts, C1 statuses and the findings verdict do not change. A needs_review
 entry does not resolve an open finding. This metadata does not install native
 waivers or certify source intent. The reason, owner, expiry and stale-state
 policy is shared with lint settings version 2.
+
+## Literal UPF command words
+
+The existing UPF subset importer accepts literal quoted and flat braced words,
+semicolon or newline command separators, backslash-newline continuation and
+comments at command starts. Separators inside a grouped word stay literal.
+Substitutions, nested braced lists and other backslash escapes remain errors.
+Each tokenized command still passes the supported UPF command and option checks.
+No Tcl interpreter runs. The normalized UPF schema and monitor bindings do not
+change. Clock-gate import and physical power behavior are not implied.

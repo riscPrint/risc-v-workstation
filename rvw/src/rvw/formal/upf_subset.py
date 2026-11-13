@@ -11,13 +11,8 @@ RTL = re.compile(r'[A-Za-z_][A-Za-z0-9_]*(?:\.[A-Za-z_][A-Za-z0-9_]*)*')
 def parse(source):
     domains, strategies, retention, psts, switches = {}, {}, {}, {}, {}
     version = None
-    source = source.replace('\\\n',' ')
-    for number,line in enumerate(source.splitlines(),1):
-        line=line.strip()
-        if not line or line.startswith('#'): continue
-        if any(c in line for c in '$[];"\\') or not re.fullmatch(r'(?:\s*(?:\{[^{}]*\}|[^{}\s]+))*\s*',line):
-            raise ValueError(f'line {number}: only literal flat Tcl words are supported')
-        words=[w[1:-1] if w.startswith('{') else w for w in re.findall(r'\{[^{}]*\}|[^{}\s]+',line)]
+    from .literal_tcl import commands
+    for number, words in commands(source):
         if words == ['upf_version','2.1'] and version is None and not domains:
             version = '2.1'
             continue
