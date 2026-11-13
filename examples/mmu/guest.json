@@ -1,0 +1,86 @@
+{
+  "schema": "rvw.mmu/1",
+  "scenarios": [
+    {
+      "id": "nested",
+      "mode": "sv39",
+      "level": 0,
+      "flags": "VRWAD",
+      "guest_flags": "VRWXUAD",
+      "guest": true,
+      "access": "load",
+      "expect": "success",
+      "bins": [
+        "hypervisor.nested"
+      ]
+    },
+    {
+      "id": "vs-invalid",
+      "mode": "sv39",
+      "level": 0,
+      "flags": "RWAD",
+      "guest_flags": "VRWXUAD",
+      "guest": true,
+      "access": "load",
+      "expect": "page-fault",
+      "bins": [
+        "hypervisor.vs-invalid"
+      ]
+    },
+    {
+      "id": "vs-no-read",
+      "mode": "sv39",
+      "level": 0,
+      "flags": "VXAD",
+      "guest_flags": "VRWXUAD",
+      "guest": true,
+      "access": "load",
+      "expect": "page-fault",
+      "bins": [
+        "hypervisor.vs-no-read"
+      ]
+    },
+    {
+      "id": "g-invalid",
+      "mode": "sv39",
+      "level": 0,
+      "flags": "VRWAD",
+      "guest_flags": "RWXUAD",
+      "guest": true,
+      "guest_fault": true,
+      "access": "load",
+      "expect": "page-fault",
+      "bins": [
+        "hypervisor.g-invalid"
+      ]
+    },
+    {
+      "id": "g-no-user",
+      "mode": "sv39",
+      "level": 0,
+      "flags": "VRWAD",
+      "guest_flags": "VRWXAD",
+      "guest": true,
+      "guest_fault": true,
+      "access": "load",
+      "expect": "page-fault",
+      "bins": [
+        "hypervisor.g-no-user"
+      ]
+    },
+    {
+      "id": "g-no-read",
+      "mode": "sv39",
+      "level": 0,
+      "flags": "VRWAD",
+      "guest_flags": "VXUAD",
+      "guest": true,
+      "guest_fault": true,
+      "access": "load",
+      "expect": "page-fault",
+      "bins": [
+        "hypervisor.g-no-read"
+      ]
+    }
+  ]
+}

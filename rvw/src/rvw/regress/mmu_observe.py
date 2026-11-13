@@ -1,4 +1,4 @@
-"""Check a bounded, immutable Sv39 walk against scenario data.
+"""Check a bounded, immutable page-table walk against scenario data.
 
 This is independent of retirement comparison. It is not a TLB protocol check.
 """
@@ -14,23 +14,26 @@ def check_walk(s, events):
     Killed requests need no response. A response must follow a matching read.
     Missing observations stay inconclusive, including cache-satisfied targets.
     """
-    limit = 'successful immutable Sv39 mapping with preset A/D bits only'
-    if ('control' in s or s.get('expect') != 'success' or s.get('remap')
+    from .mmu_paging import geometry
+    g = geometry(s)
+    limit = 'successful immutable ' + s.get('mode', 'sv39') + ' mapping with preset A/D bits only'
+    if ('guest' in s or 'shootdown' in s or 'control' in s or s.get('expect') != 'success' or s.get('remap')
             or s.get('satp_mode', 'sv39') != 'sv39' or not s.get('mprv', True)
-            or s.get('walk_deny') or not {'A', 'D'} <= set(s['flags'])):
+            or s.get('walk_deny') or s.get('mode_switch') or 'pbmt' in s or s.get('napot') or not {'A', 'D'} <= set(s['flags'])):
         return dict(status='inconclusive', reason=limit)
     va = number(s.get('va', 0x40000000)) + s.get('offset', 0)
     pa = number(s.get('pa', DATA))
     expected = {}
-    for depth in range(3 - s['level']):
-        level = 2 - depth
-        address = ROOT + depth * 4096 + ((va >> (12 + 9 * level)) & 511) * 8
+    for depth in range(g.levels - s['level']):
+        level = g.levels - 1 - depth
+        address = ROOT + depth * 4096 + ((va >> (12 + g.vpn_bits * level)) & ((1 << g.vpn_bits) - 1)) * g.width
         pte = (((ROOT + (depth + 1) * 4096) >> 12) << 10) | 1 | (FLAGS['G'] if s.get('nonleaf_global') else 0)
         if level == s['level']:
             pte = ((pa >> 12) << 10) | sum(FLAGS[f] for f in set(s['flags']))
         expected[address] = pte
     # A superpage replaces the low PPN bits with the corresponding VPN bits.
-    physical = pa | (va & ((1 << (12 + 9 * s['level'])) - 1))
+    from .mmu_paging import geometry
+    physical = pa | (va & ((1 << (12 + geometry(s).vpn_bits * s['level'])) - 1))
     requests, responses, errors = set(), set(), []
     target = False
     previous = -1
@@ -75,12 +78,13 @@ def check_pma(s, events, regions):
     Declared PMA attributes are the oracle. Capture does not define attributes.
     """
     unknown = dict(status='inconclusive', reason='need one declared non-cacheable device access and independent state')
-    if ('control' in s or s.get('expect') != 'success' or s.get('remap')
+    if ('guest' in s or 'shootdown' in s or 'control' in s or s.get('expect') != 'success' or s.get('remap')
             or s.get('access') not in ('load', 'store') or not regions):
         return unknown
     pa = number(s.get('pa', DATA))
     va = number(s.get('va', 0x40000000)) + s.get('offset', 0)
-    physical = pa | (va & ((1 << (12 + 9 * s['level'])) - 1))
+    from .mmu_paging import geometry
+    physical = pa | (va & ((1 << (12 + geometry(s).vpn_bits * s['level'])) - 1))
     selected = [r for r in regions if number(r['start']) <= physical < number(r['start']) + number(r['size'])]
     if len(selected) != 1 or selected[0]['cacheable']:
         return unknown

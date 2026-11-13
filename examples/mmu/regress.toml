@@ -1,0 +1,9 @@
+# Copy this suite into the selected project's regression configuration.
+# Select only modes that the project implements. C1 run settings are project-owned.
+[suites.vm-matrix]
+description = "project-selected virtual-memory architectural requirements"
+dir = "./out/vm-matrix"
+glob = "*.elf"
+strip_suffix = ".elf"
+max_cycles = 30000
+timeout_s = 30
