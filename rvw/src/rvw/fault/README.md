@@ -31,8 +31,9 @@ It must write C1 `result.json` with `details.fault`: `{"applied": true, ...}` on
 bit was forced, or `{"applied": false, "reason": ...}`. Detection mechanisms that
 fired go in `details.detections` (names). An adapter that does not confirm the
 injection gives `not_injected` for every fault: injection success is measured
-separately from detection. The bundled RiscvSim BOOM adapter does not implement
-`--fault` yet.
+separately from detection. The generic RiscvSim driver implements `--fault` for
+adapters that run through `SimSession` (see `RiscvSim/README.md`, "Fault injection").
+The BOOM adapter runs through `SimSession`, but it is not tested with faults.
 
 ## Classification
 

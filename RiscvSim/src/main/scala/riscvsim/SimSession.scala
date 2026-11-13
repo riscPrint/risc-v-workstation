@@ -63,6 +63,7 @@ object RiscvSimConfig {
         }
       }
     })
+    if (key.faults) cfg.addTransformationPhase(new FaultFile.PublicRegisters)
     cfg.addTransformationPhase(new SimVerilatorPhase)
     val report = if (key.spinaltrace) spinaltrace.SpinalTrace.elaborate(cfg)(rtl) else cfg.generateVerilog(rtl)
     if (key.spinaltrace) {
@@ -107,6 +108,8 @@ object RiscvSimConfig {
       case None => cfg.disableCache
     }
     if (key.wave) cfg.withVcdWave
+    // Fault models write registers from outside; Verilator must re-evaluate their readers.
+    if (key.faults) cfg.addSimulatorFlag("--public-flat-rw")
     if (key.coverage) {
       // Select explicit kinds through the version gate. -DCOVERAGE enables the wrapper writer.
       cfg.addSimulatorFlag("-CFLAGS -DCOVERAGE")
@@ -179,6 +182,7 @@ object SimSession {
       try {
         compiled.doSim(name, job.seed) { dut =>
           ctl.start()
+          FaultInjector.forJob(job).foreach(_.attach(dut, ctl))
           body(dut, ctl)
         }
         None

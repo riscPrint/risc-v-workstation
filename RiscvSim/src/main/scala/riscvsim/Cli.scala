@@ -9,7 +9,7 @@ object Cli {
   /** Flags without a value, and options with one. Dashes and underscores are equivalent. */
   val flags = Set("rvfi-trace", "rvfi-check", "rvfi", "wave", "konata", "coverage", "spinaltrace", "probes", "json", "help", "persistent")
   val options = Set("elf", "out", "config", "seed", "max-cycles", "mem-latency", "wave-from", "wave-to",
-    "manifest", "jobs", "summary", "wall-timeout", "irq-schedule", "elf-load-bias", "boot-payloads", "soc-map", "hart-images")
+    "manifest", "jobs", "summary", "wall-timeout", "irq-schedule", "elf-load-bias", "boot-payloads", "soc-map", "hart-images", "fault")
   private val integerOptions = Set("seed", "max-cycles", "mem-latency", "wave-from", "wave-to", "jobs")
 
   private def booleanValue(k: String, v: String): Boolean = v.toLowerCase(java.util.Locale.ROOT) match {
@@ -125,6 +125,7 @@ object Cli {
       konata = bool(m, "konata"), coverage = bool(m, "coverage"), spinaltrace = bool(m, "spinaltrace"), probes = bool(m, "probes"),
       hartImages = m.get("hart-images").map(file(cwd, _)),
       bootPayloads = m.get("boot-payloads").map(file(cwd, _)), irqSchedule = schedule, elfLoadBias = long(m, "elf-load-bias", min = 0).getOrElse(0L), socMap = m.get("soc-map").map(p => SimMap.load(file(cwd, p))),
+      fault = m.get("fault").map(p => FaultFile.load(file(cwd, p))),
       wallTimeoutS = m.get("wall-timeout").map { v =>
         val d = try v.toDouble catch { case _: NumberFormatException => throw new UsageError(s"--wall-timeout: not a number: $v") }
         if (!java.lang.Double.isFinite(d) || d <= 0)
@@ -138,7 +139,7 @@ object Cli {
       |  run.sh build    --config NAME[,NAME...] [--rvfi] [--wave] [--coverage] [--konata] [--spinaltrace] [--probes] [--json]
       |  run.sh run      --elf PATH --out DIR [--config NAME] [--seed N] [--max-cycles N] [--mem-latency N]
       |                  [--rvfi-trace] [--rvfi-check] [--wave [--wave-from CYCLE] [--wave-to CYCLE]]
-      |                  [--hart-images JSON] [--elf-load-bias BYTES] [--boot-payloads JSON] [--soc-map PATH] [--konata] [--coverage] [--spinaltrace] [--probes] [--wall-timeout SECONDS] [--irq-schedule CYCLE:0xLEVELS,...] [--json]
+      |                  [--hart-images JSON] [--elf-load-bias BYTES] [--boot-payloads JSON] [--soc-map PATH] [--konata] [--coverage] [--spinaltrace] [--probes] [--wall-timeout SECONDS] [--irq-schedule CYCLE:0xLEVELS,...] [--fault rvw.fault/1 JSON] [--json]
       |  run.sh run-many --manifest jobs.jsonl [--jobs N] [--persistent] [--summary FILE] [--json] [defaults for every job...]
       |  run.sh serve    [defaults for every request...] # JSONL stdin; JSONL stdout
       |  run.sh identity [--config NAME] [--options JSON]

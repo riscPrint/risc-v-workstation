@@ -222,6 +222,7 @@ class Driver(val adapter: CoreAdapter) {
       Seq("--elf-load-bias", job.elfLoadBias.toString) ++
       job.socMap.toSeq.flatMap(s => Seq("--soc-map", s.file.getPath)) ++
       job.irqSchedule.toSeq.flatMap(s => Seq("--irq-schedule", s.text)) ++
+      job.fault.toSeq.flatMap(f => Seq("--fault", f.file.getPath)) ++
       job.memLatency.toSeq.flatMap(l => Seq("--mem-latency", l.toString)) ++
       job.wallTimeoutS.toSeq.flatMap(s => Seq("--wall-timeout", s.toString)) ++
       (if (job.rvfiTrace) Seq("--rvfi-trace") else Nil) ++
@@ -390,6 +391,7 @@ class Driver(val adapter: CoreAdapter) {
       artifacts("pdg") = "pdg.json"
     }
     val details = outcome.details
+    FaultInjector.finish(job).foreach(f => details("fault") = f.details(outcome.cycles))
     Option(capturedHartImages.get(job)).foreach(h => details("hart_images") = h.identity)
     Option(capturedBootImages.get(job)).foreach { image =>
       details("boot_loads") = ujson.Arr.from(image.layout.map { case (address, size) =>
@@ -672,7 +674,7 @@ class Driver(val adapter: CoreAdapter) {
 
   def cmdIdentity(o: Map[String, String]): Int = {
     // Identity accepts run-manifest keys. Only model options affect elaboration.
-    val names = Set("rvfi", "rvfi-trace", "rvfi-check", "wave", "wave-from", "wave-to", "coverage", "konata", "spinaltrace", "probes")
+    val names = Set("rvfi", "rvfi-trace", "rvfi-check", "wave", "wave-from", "wave-to", "coverage", "konata", "spinaltrace", "probes", "fault")
     val opts = o.get("options").map { text =>
       val values = ujson.read(text).obj.filter { case (name, _) => names(Cli.norm(name)) }
       Cli.fromJson(ujson.Obj.from(values))
@@ -680,7 +682,8 @@ class Driver(val adapter: CoreAdapter) {
     val key = ModelKey(opts.getOrElse("config", adapter.defaultConfig),
       rvfi = Cli.bool(opts, "rvfi") || Cli.bool(opts, "rvfi-trace") || Cli.bool(opts, "rvfi-check"),
       wave = Cli.bool(opts, "wave") || opts.contains("wave-from") || opts.contains("wave-to"),
-      coverage = Cli.bool(opts, "coverage"), konata = Cli.bool(opts, "konata"), spinaltrace = Cli.bool(opts, "spinaltrace"), probes = Cli.bool(opts, "probes"))
+      coverage = Cli.bool(opts, "coverage"), konata = Cli.bool(opts, "konata"), spinaltrace = Cli.bool(opts, "spinaltrace"), probes = Cli.bool(opts, "probes"),
+      faults = opts.contains("fault"))
     if (!adapter.configs.contains(key.config)) throw new Cli.UsageError(s"unknown config '${key.config}'")
     val (_, sha) = captureRtl(adapter.elaborate(key, workspace))
     if (key.spinaltrace) require(RiscvSimConfig.dependencyGraph(key, workspace).isFile,
