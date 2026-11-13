@@ -216,3 +216,13 @@ binds the captured shim/library and Python sources. It records hardware-error
 model events separately from software status/control writes. This profile has
 no physical RAS signal route and makes no signal-delivery claim. Native PLIC
 and RERI execution share a bounded ISA/MMIO runner; their models stay separate.
+
+## Smrnmi project vectors and state profiles
+
+`rvw.privilege/1` adds `nmi-return` and `nmi-matrix` with `Smrnmi-1.0` pinned
+in spec_version. Entry data selects vector, cause, exception_vector or an
+explicit exception_uses_mtvec flag, pmp_entries and pmp_granularity_bytes.
+Optional ordinary_msip enables pending ordinary-interrupt cases. Entry events
+are gated at rnmi_wait through the existing mailbox driver. Python expected
+frames remain model-based. The native return profile tests MNRET only and does
+not substitute a software CSR setup for hardware RNMI entry.

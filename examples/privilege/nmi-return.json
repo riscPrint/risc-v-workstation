@@ -1,0 +1,16 @@
+{
+  "schema": "rvw.privilege/1",
+  "kind": "nmi-return",
+  "nmi": {
+    "cause": 1,
+    "vector": 2147549184,
+    "exception_vector": 2147557376,
+    "pmp_entries": 8,
+    "ordinary_msip": 33554432,
+    "pmp_granularity_bytes": 4
+  },
+  "isa": "rv64im_zicsr_zifencei_smrnmi",
+  "compiler_isa": "rv64im_zicsr_zifencei",
+  "spec_version": "Smrnmi-1.0",
+  "reference_backend": "spike"
+}
