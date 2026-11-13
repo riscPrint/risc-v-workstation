@@ -286,3 +286,17 @@ registers, input position, CLINT time and deadline, PLIC priorities, enables,
 active levels and claims are retained. The outer envelope must bind device
 implementation bytes and the RTL/harness boundary. Discard the instance after
 a restore error. This does not serialize host handles or the JVM scheduler.
+
+## Native packed-port model API
+
+`rvw.sim.native_models.Model` accepts packed integer ports with widths from 1
+through 65,536 bits. Inputs must fit the declared width. The Arcilator state
+layout supplies byte offsets and widths. Verilator wide ports use explicit
+little-endian byte transfer to generated 32-bit word arrays. High padding
+bits do not become part of a returned value.
+
+Optional `wave=PATH` creates a new public-port two-state VCD. A sample follows
+each model evaluation. Timestamps count evaluation calls. The 1 ps display
+unit is not a timing claim. Files refuse overwrite. Close the model to flush
+the wave. This API supplies no internal-signal, four-state or HDL-delay wave
+guarantee. Project adapters must identify these limits in their run artifacts.
