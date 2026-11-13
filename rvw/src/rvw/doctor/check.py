@@ -14,10 +14,12 @@ from rvw.regress.config import load_config
 from rvw.regress.discover import discover
 
 from . import backends
+from .inventory import load as tool_inventory, report as inventory_report
 from .conformance import smoke_options, artifacts
 
 NATIVE_FEATURES = ('sim', 'riscv-gcc', 'cosim', 'formal', 'gem5')
-FEATURES = (*NATIVE_FEATURES, *backends.GUI)
+NATIVE_FEATURES = tuple(dict.fromkeys([*NATIVE_FEATURES, *[t['flag'] for t in tool_inventory()['tools'] if t['flag'] != 'ide']]))
+FEATURES = tuple(dict.fromkeys([*NATIVE_FEATURES, *backends.GUI]))
 
 
 def features(value):
@@ -68,6 +70,7 @@ def diagnose(project=None, features='sim,riscv-gcc', install=None, yes=False, dr
     script = home / 'scripts/install.sh'
     result = {'schema': 'rvw.doctor/1', 'rvw_version': rvw.__version__,
               'python_version': sys.version.split()[0], 'features': selected, 'checks': checks,
+              'tool_inventory': inventory_report(),
               'qualification': 'No complete native tool combination is qualified by these diagnostics.'}
     add('python', 'ready' if sys.version_info >= (3, 11) else 'error', sys.version.split()[0], 'Install Python 3.11 or later.')
     if install is not None:
@@ -111,7 +114,7 @@ def diagnose(project=None, features='sim,riscv-gcc', install=None, yes=False, dr
             add('backend.' + feature, backend['status'], backend, backend['reason'])
         else:
             backend = dict(feature=feature, status=native_status,
-                           capabilities=capabilities[feature], qualification='version_probe_only',
+                           capabilities=capabilities.get(feature, []), qualification='version_probe_only',
                            reason='Aggregate requested native installer check. See native records.')
         result['backends'].append(backend)
     try:
