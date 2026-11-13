@@ -118,6 +118,38 @@ physical C2/2 events with complete dependencies. The lock loops need declared
 bounded service and a watchdog. `built` means compilation completed. It does
 not mean a DUT ran or that ordering passed.
 
+## Concurrent program campaign
+
+`rvw memory concurrent-run --adapter /project/run.sh --config dual --out seed7
+--seed 7` builds per-hart ELFs, invokes an explicit project C1 adapter and feeds
+its C2 capture to the scalar axiomatic checker. MCP exposes
+`memory_concurrent_run`. The adapter must support the generic `run` command,
+`--hart-images` and RVFI capture. No core is selected by default.
+
+The default model is RVWMO. `--model ztso` selects Ztso. `--harts`, `--length`,
+`--base` and `--shared-base` select the generated inputs. `--max-cycles`
+bounds the RTL run. `--timeout` covers compilation, adapter execution and
+candidate search. It is at most 90 seconds. `--limit` bounds candidates.
+All subprocesses run with `nice -n 10`. The output directory must be fresh.
+
+The adapter must report passing C1 with the requested config, seed, cycle
+limit, primary ELF hash and `details.hart_images`. C2 must contain the same
+hart IDs and `hart_images` hashes. Each hart starts at its generated entry
+and reaches its completion PC. Every retired instruction must match the
+captured pre-launch ELF bytes. The current smoke profile supports at most
+10000 retirements and direct boot into these 32-bit instruction streams.
+Instruction byte checks bind the capture to its input images. Projects still
+need architectural reference comparisons.
+
+A scalar ordering result also requires all harts to complete, complete
+physical memory dependencies, and the axiomatic profile's other limits.
+Missing evidence, timeout or inconsistent process results give `inconclusive`.
+`campaign.json` records the build, adapter command/hash, C1 status, capture
+hash/counts and checker result. Adapter and checker logs remain beside it.
+`allowed` applies only to the captured finite execution and selected model.
+The workflow tests use synthetic C1/C2 adapters. A production multicore run
+still needs a project adapter and is not supplied by those tests.
+
 ## Generated TileLink-C channel monitor
 
 `rvw memory tilelink-bind --database design.sqlite --profile tlc.json --out monitors`
