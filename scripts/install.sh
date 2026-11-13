@@ -415,6 +415,7 @@ if [ "${#extra_tools[@]}" -gt 0 ] && { [ "$check" = 1 ] || [ "$dry" = 1 ]; }; th
   elif [ "$dry" = 1 ]; then inventory_mode+=(--dry-run); fi
   python3 "$script_root/scripts/tool-inventory.py" "${inventory_mode[@]}" --extra "${extra_tools[@]}" || exit $?
 fi
+export RVW_PYTHON="$rvw_home/rvw/.venv/bin/python"
 if [ "$check" = 1 ]; then
   failed=0
   core_check || failed=1
