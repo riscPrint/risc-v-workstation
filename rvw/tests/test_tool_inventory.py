@@ -60,6 +60,7 @@ def test_python_extras_share_one_locked_sync(tmp_path):
     done=subprocess.run(['python3',str(ROOT/'scripts/tool-inventory.py'),'--home',str(tmp_path),'--dry-run','--extra','cocotb','pyuvm'],capture_output=True,text=True)
     assert done.returncode==0
     assert done.stdout.count('uv sync')==1
+    assert '--inexact' in done.stdout
     assert '--extra cocotb' in done.stdout and '--extra pyuvm' in done.stdout
     assert str(tmp_path/'rvw') in done.stdout
 

@@ -76,7 +76,7 @@ def main():
                 if synced:
                     continue
                 synced = True
-                cmd = ['uv', 'sync', '--locked', '--extra', 'mcp', *[arg for value in python_extras for arg in ('--extra', value)], '--project', str(args.home / 'rvw')]
+                cmd = ['uv', 'sync', '--locked', '--inexact', '--extra', 'mcp', *[arg for value in python_extras for arg in ('--extra', value)], '--project', str(args.home / 'rvw')]
             else:
                 recipe = tool['install']['macos' if platform.system() == 'Darwin' else ('dnf' if Path('/etc/fedora-release').exists() else 'apt')]
                 print(tool['name'] + ': ' + (recipe or tool['install']['source']))

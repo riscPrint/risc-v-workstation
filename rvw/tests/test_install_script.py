@@ -505,3 +505,10 @@ def test_cosim_reuses_dtc_on_macos(tmp_path):
     assert result.returncode == 0, result.stderr
     assert 'brew install dtc' not in result.stdout
     assert '--without-boost' in result.stdout
+
+
+@pytest.mark.fast
+def test_install_does_not_prune_existing_extras(tmp_path):
+    result = invoke('--profile', 'minimal', '--dry-run', '--prefix', tmp_path / 'install')
+    assert result.returncode == 0, result.stderr
+    assert 'uv sync --locked --inexact --no-dev --extra mcp' in result.stdout
