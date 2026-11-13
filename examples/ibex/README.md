@@ -55,3 +55,26 @@ test bodies and replaces the privileged bootstrap. It does not qualify Sm.
 The ELF includes a boot jump so tests can keep their required alignment.
 The original standard bootstrap is not used to claim instruction passes.
 See [FINDINGS.md](FINDINGS.md) for limits and measured results.
+
+## Measured results
+
+| Check | Result on 2026-11-13 |
+| --- | --- |
+| Verilator | 5.052; native build passed |
+| Committed riscv-tests instruction profile | 51/51 C1 passes: UI 42, UM 8, UC 1 |
+| Initial strict Spike batch | 50 matches; ma_data differs under the default alignment-trap policy |
+| Corrected ma_data platform | Complete strict match, 344 instructions, zero synchronization and masks |
+| Committed gate control | Accept, 51 tests compared |
+| Committed harness fault | Reject, 51 new failures; fault removed |
+| Fast Python set | 3,098 passed, 4 skipped, 8,096 deselected |
+
+The platform now enables misaligned scalar RAM accesses. A fresh full strict
+batch uses that policy. The initial batch and the corrected single-test run
+remain separate observations. The gate fault changes a completed pass to
+failure in the harness. It does not change Ibex. To repeat it, change
+`finish=read(a);` to `finish=read(a); if(finish==1) finish=3;`, commit, and run
+the ISA suite in a new directory. Compare clean and fault run directories:
+
+```sh
+rvw regress gate --tier full --rvfi-trace --base "$IBEX_WORK/committed"   --cand "$IBEX_WORK/fault" --out "$IBEX_WORK/gate.json" --json
+```

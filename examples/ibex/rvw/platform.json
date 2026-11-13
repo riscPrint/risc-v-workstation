@@ -13,5 +13,13 @@
   "irq_inputs": [],
   "privilege_modes": "MU",
   "pmp_regions": 0,
-  "aligned_mem": false
+  "aligned_mem": false,
+  "misaligned": {
+    "load": "emulate",
+    "store": "emulate",
+    "atomic": "access_fault",
+    "split_page": "refuse",
+    "split_bus": "refuse"
+  },
+  "scalar_split_ram": true
 }
