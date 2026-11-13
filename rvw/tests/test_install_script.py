@@ -529,10 +529,10 @@ def test_optional_python_selection_precedes_install(tmp_path, compatible):
                         f'exec {shlex.quote(sys.executable)} "$@"\n')
         path.chmod(0o755)
     result = invoke('--with-cocotb', '--dry-run', '--prefix', tmp_path / 'install',
-                    env={**os.environ, 'PATH': str(binaries) + ':' + os.environ['PATH']})
+                    env={**os.environ, 'PATH': str(binaries) + ':' + (os.environ['PATH'] if compatible else '/usr/bin:/bin')})
     if compatible:
         assert result.returncode == 0, result.stderr
-        assert '--python python3.11' in result.stdout
+        assert f'--python {binaries / "python3.11"}' in result.stdout
     else:
         assert result.returncode == 2
         assert 'Python 3.11 through 3.14' in result.stderr
@@ -564,3 +564,32 @@ def test_repeat_install_pins_the_existing_base_interpreter(tmp_path):
     # uv resolves an unversioned request against system Python, not this venv.
     assert f'--python {base}' in result.stdout
     assert '--python python3\n' not in result.stdout
+
+
+@pytest.mark.fast
+def test_optional_python_skips_an_incompatible_shadow_alias(tmp_path):
+    import sys
+    shadow = tmp_path / 'shadow'
+    installed = tmp_path / 'installed'
+    shadow.mkdir()
+    installed.mkdir()
+    bad = shadow / 'python3'
+    bad.write_text('#!/bin/sh\n'
+                   'if [ "$1" = --version ]; then echo "Python 3.15.2"; exit 0; fi\n'
+                   'if [ "$1" = -c ]; then exit 1; fi\n'
+                   f'exec {shlex.quote(sys.executable)} "$@"\n')
+    bad.chmod(0o755)
+    for name in ('python3.11', 'python3.12', 'python3.13', 'python3.14'):
+        (shadow / name).symlink_to('python3')
+    good = installed / 'python3.11'
+    good.write_text('#!/bin/sh\n'
+                    'if [ "$1" = --version ]; then echo "Python 3.11.18"; exit 0; fi\n'
+                    'if [ "$1" = -c ]; then exit 0; fi\n'
+                    f'exec {shlex.quote(sys.executable)} "$@"\n')
+    good.chmod(0o755)
+    env = {**os.environ, 'PATH': f'{shadow}:{installed}:' + os.environ['PATH']}
+    result = run_group(['/bin/bash', str(SCRIPT), '--with-cocotb', '--dry-run',
+                        '--prefix', str(tmp_path / 'install')],
+                       cwd=ROOT, env=env, input='', capture=True, timeout=30)
+    assert result.returncode == 0, result.stderr
+    assert f'--python {good}' in result.stdout
