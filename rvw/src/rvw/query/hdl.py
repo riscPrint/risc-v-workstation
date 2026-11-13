@@ -64,6 +64,7 @@ def build_hdl(sources, top, out, *, yosys='yosys', timeout=120):
                 conn.executescript(schema_sql())
                 writer = _Writer(conn, data, {str(i.copy): i.source for i in inputs})
                 writer.instance(top, '', None)
+                writer.domains()
                 meta = {'schema': 'rvw.designdb/20', 'toplevel': top,
                         'frontend': 'yosys-verilog', 'extra_scopes': f'TOP {top}',
                         'emission_config': '$incomplete:hdl-navigation-only',
@@ -94,6 +95,7 @@ class _Writer:
         self.files = {}
         self.sid = self.cid = self.aid = 0
         self.active = set()
+        self.state = []  # (output signal ids, clock id, edge, reset id, reset kind, active high, reset value)
 
     def loc(self, attrs):
         src = attrs.get('src', '').split('|')[0]
@@ -164,6 +166,10 @@ class _Writer:
         bitids = {}
         for b in bits:
             aliases = [nn for nn, net in m['netnames'].items() if b in net['bits']]
+            # Prefer the one visible scalar name; hidden Yosys temporaries stay aliases of it.
+            visible = [nn for nn in aliases if not m['netnames'][nn].get('hide_name')]
+            if len(visible) == 1 and len(aliases) > 1:
+                aliases = visible
             if len(aliases) == 1 and len(m['netnames'][aliases[0]]['bits']) == 1:
                 bitids[b] = named[aliases[0]]
             else:
@@ -199,7 +205,8 @@ class _Writer:
             reads = []
             for port, bb in ports.items():
                 if directions[port]=='input':
-                    if base in STATE and port in {'CLK','C'}:
+                    # Clock and reset pins are clock-domain controls (table clock_domains), not data.
+                    if base in STATE and port in {'CLK','C','ARST','SRST'}:
                         continue
                     kind = 'sel' if port in {'S','EN','E','ARST','SRST','ALOAD'} else 'data'
                     reads.extend((bitids[b],kind) for b in bb if isinstance(b,int))
@@ -211,9 +218,77 @@ class _Writer:
                         continue
                     self.assignment(cid,bitids[b],reads,typ,cell.get('attributes',{}))
                     if base in STATE:
+                        self._state(cell, base, bitids, b, [named[nn] for nn, net in m['netnames'].items()
+                                                            if b in net['bits'] and not net.get('hide_name')])
                         self.c.execute("UPDATE signals SET kind='reg' WHERE id=?",(bitids[b],))
                         for nn, net in m['netnames'].items():
-                            if b in net['bits']:
+                            if b in net['bits'] and not net.get('hide_name'):
                                 self.c.execute("UPDATE signals SET kind='reg' WHERE id=?",(named[nn],))
         self.active.remove(module)
         return bitids
+
+    def _state(self, cell, base, bitids, bit, names):
+        """Record the clock and reset of one flip-flop output bit."""
+        ports, params = cell['connections'], cell.get('parameters', {})
+
+        def one(port):
+            bb = [b for b in ports.get(port, []) if isinstance(b, int)]
+            return bitids[bb[0]] if len(bb) == 1 else None
+
+        def flag(name, default=1):
+            v = params.get(name)
+            return default if v is None else int(str(v), 2) if set(str(v)) <= {'0', '1'} else int(v)
+
+        clock = one('CLK') if 'CLK' in ports else one('EN') if base in {'dlatch', 'adlatch'} else None
+        if base in {'adff', 'adffe', 'adlatch'}:
+            reset, kind, high, value = one('ARST'), 'ASYNC', flag('ARST_POLARITY'), params.get('ARST_VALUE')
+        elif base in {'sdff', 'sdffe', 'sdffce'}:
+            reset, kind, high, value = one('SRST'), 'SYNC', flag('SRST_POLARITY'), params.get('SRST_VALUE')
+        else:
+            reset, kind, high, value = None, 'BOOT', None, None
+        edge = 'RISING' if flag('CLK_POLARITY' if 'CLK' in ports else 'EN_POLARITY') else 'FALLING'
+        self.state.append(([bitids[bit], *names], clock, edge, reset, kind, high, value))
+
+    def _root(self, sid):
+        """The toplevel input behind a control net (through ports and aliases), else the net."""
+        if sid is None:
+            return None
+        pending, seen = [sid], set()
+        while pending:
+            n = pending.pop(0)
+            if n in seen:
+                continue
+            seen.add(n)
+            row = self.c.execute('SELECT s.direction, c.depth FROM signals s JOIN components c '
+                                 'ON c.id=s.component_id WHERE s.id=?', (n,)).fetchone()
+            if row == ('in', 0):
+                return n
+            pending.extend(r[0] for r in self.c.execute('SELECT src FROM edges WHERE dst=?', (n,)))
+        return sid
+
+    def domains(self):
+        """Write clock_domains and register domain ids. Sync resets are recorded only where Yosys
+        made $sdff cells; resets in plain mux logic stay data."""
+        ids, roots = {}, {}
+        path = lambda i: self.c.execute('SELECT path FROM signals WHERE id=?', (i,)).fetchone()[0]
+        for outs, clock, edge, reset, kind, high, value in self.state:
+            for i in (clock, reset):
+                if i is not None and i not in roots:
+                    roots[i] = self._root(i)
+            ck, rk = roots.get(clock), roots.get(reset)
+            key = (ck, edge, rk, kind, high)
+            if key not in ids:
+                ids[key] = len(ids) + 1
+                cp, rp = (path(ck) if ck else None), (path(rk) if rk else None)
+                self.c.execute('INSERT INTO clock_domains(id,clock,reset,reset_kind,reset_active_high,clock_edge,'
+                               'clock_key,reset_key) VALUES (?,?,?,?,?,?,?,?)',
+                               (ids[key], cp, rp, kind if rp else 'BOOT',
+                                None if rp is None else ('true' if high else 'false'), edge,
+                                cp + ':Bool' if cp else None, rp + ':Bool' if rp else None))
+                if ck:
+                    self.c.execute("UPDATE signals SET clock_role='clock' WHERE id=?", (ck,))
+                if rk:
+                    self.c.execute("UPDATE signals SET clock_role='reset' WHERE id=?", (rk,))
+            for o in outs:
+                self.c.execute('UPDATE signals SET clock_domain_id=?, reset_value=? WHERE id=?',
+                               (ids[key], value if rk else None, o))

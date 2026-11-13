@@ -29,6 +29,19 @@ class Design:
             self.incoming[dst].add(src)
             self.outgoing[src].add(dst)
             self.kinds[(src, dst)].add(kind)
+        # HDL imports link hidden Yosys alias nets to their named net in both directions. Such a
+        # pair carries no logic: drop it, so aliases do not look like fan-out or feedback.
+        meta = dict(conn.execute('SELECT key, value FROM meta')) if 'meta' in self.tables else {}
+        if meta.get('frontend') == 'yosys-verilog':
+            for (a, b) in list(self.kinds):
+                if a in self.outgoing[b] and (self.signals.get(a, {}).get('generated') or
+                                              self.signals.get(b, {}).get('generated')):
+                    alias = a if self.signals[a].get('generated') else b
+                    if self.signals[alias]['kind'] == 'wire':
+                        for x, y in ((a, b), (b, a)):
+                            self.outgoing[x].discard(y)
+                            self.incoming[y].discard(x)
+                            self.kinds.pop((x, y), None)
         self._assign = None
 
     # Structure -----------------------------------------------------------------

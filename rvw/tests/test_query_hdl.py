@@ -177,3 +177,30 @@ def test_open_core_oracle(tmp_path, core):
         assert ops.where(db,a)['signal']['loc']
     finally:
         db.close()
+
+
+CDC_SV = '''module top(input clkA, input clkB, input rst_n, input d, output reg q2);
+reg q0, q1;
+always @(posedge clkA or negedge rst_n) if (!rst_n) q0 <= 1'b0; else q0 <= d;
+always @(posedge clkB) begin q1 <= q0; q2 <= q1; end
+endmodule
+'''
+
+
+@pytest.mark.skipif(not YOSYS, reason='native Yosys required')
+def test_clock_domains_for_lint(tmp_path):
+    from rvw.lint import structural
+    from rvw.query.db import run_on
+    source = tmp_path / 'cdc.v'
+    source.write_text(CDC_SV)
+    out = tmp_path / 'cdc.db'
+    build_hdl([source], 'top', out, yosys=YOSYS)
+    r = run_on(out, lambda d: structural.analyze(d, {}))
+    domains = {d['clock']: d for d in r['domains']}
+    assert domains['clkA']['reset'] == 'rst_n' and domains['clkA']['reset_kind'] == 'ASYNC'
+    assert domains['clkA']['reset_active_high'] == 'false'
+    assert domains['clkB']['reset_kind'] == 'BOOT'
+    kinds = {c['destination']: c['kind'] for c in r['crossings']}
+    assert kinds['q1'] == 'sync_2ff'
+    rules = {f['rule'] for f in r['findings']}
+    assert 'rdc.reset_as_data' not in rules and 'rdc.async_release_unsynchronized' in rules

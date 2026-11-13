@@ -15,8 +15,9 @@ CDC analysis from SpinalDB. It does not establish CDC signoff.
 
 Use Verilator and Verible as native backends. Keep diagnostics, tool output,
 configuration identity and waivers. Use SpinalDB edges for structural paths.
-Non-Spinal designs need an importer with the same domain and graph data before
-this analyzer can inspect them. RTL lint alone remains available.
+Non-Spinal designs use `rvw query build-hdl`: it writes clock domains from
+the Yosys flip-flop cells (see the SpinalDB README). Hidden Yosys alias nets are
+removed from the lint graph. Synchronous resets in plain mux logic stay data.
 
 ## Run
 
