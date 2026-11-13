@@ -1,0 +1,63 @@
+{
+  "schema": "rvw.csim-study/1",
+  "name": "tage-sc-l-8kb",
+  "description": "csim TAGE-SC-L sized after the CBP-5 2016 8 KB configuration (15 history lengths 4..1000, 4 Ki-entry bimodal, 2-bit u, 2 allocations, 8-entry loop predictor).",
+  "source": {
+    "fidelity": "approximate",
+    "approximations": [
+      "csim uses one table per history length; the reference uses shared bank-interleaved tables",
+      "the statistical corrector is smaller and simpler than the reference one",
+      "bimodal hysteresis is not shared between entries",
+      "the bimodal table has 2 Ki two-bit entries; the reference has 4 Ki entries with shared hysteresis"
+    ]
+  },
+  "branch": {
+    "model": "tage-sc-l",
+    "num_tables": 15,
+    "table_entries": 256,
+    "min_history": 4,
+    "max_history": 1000,
+    "min_tag_bits": 8,
+    "max_tag_bits": 12,
+    "base_entries": 2048,
+    "u_bits": 2,
+    "max_alloc": 2,
+    "loop": {
+      "entries": 8,
+      "ways": 4,
+      "iter_bits": 10
+    },
+    "sc": {
+      "bias_entries": 128,
+      "local_histories": 64,
+      "global": [
+        {
+          "entries": 128,
+          "history": 0
+        },
+        {
+          "entries": 128,
+          "history": 11
+        },
+        {
+          "entries": 128,
+          "history": 22
+        }
+      ],
+      "local": [
+        {
+          "entries": 128,
+          "history": 0
+        },
+        {
+          "entries": 128,
+          "history": 6
+        },
+        {
+          "entries": 128,
+          "history": 12
+        }
+      ]
+    }
+  }
+}

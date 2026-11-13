@@ -31,15 +31,17 @@ rvw csim budget STUDY.json                        # storage per table, no trace
 rvw csim convert c2 rvfi.jsonl --out t.csim [--values]
 rvw csim convert bt9 trace.bt9.gz --out t.csim
 rvw csim compare-rtl STUDY.json --trace rvfi.jsonl --events EVENTS
+rvw csim qualify TRACE... [--reference cbp2016-tage-sc-l-64kb|cbp2016-tage-sc-l-8kb]
+rvw csim convert spike spike.log --out t.csim     # spike -l --log-commits ELF 2> spike.log
 rvw csim build                                    # engine and library paths
 ```
 
 The same operations are MCP tools: `csim_run`, `csim_sweep`, `csim_budget`,
-`csim_models`, `csim_convert` and `csim_compare_rtl`.
+`csim_models`, `csim_convert`, `csim_qualify` and `csim_compare_rtl`.
 The first `rvw` call compiles the engine with the system C++17 compiler into
 `~/.cache/rvw/csim/<source hash>/` (`RVW_CSIM_CACHE` changes the place).
 
-Traces: C2 `rvfi.jsonl` (converted on the fly), CBP 2016 BT9 text (`.gz`/`.xz`
+Traces: C2 `rvfi.jsonl` and Spike `-l --log-commits` logs (converted on the fly), CBP 2016 BT9 text (`.gz`/`.xz`
 allowed), ChampSim binary traces (`.xz`/`.gz` allowed; read by the engine), the
 native `rvw.csim-trace/1` and the legacy `rvw.branch-trace/1`. `--format auto`
 detects the format from the content.
@@ -79,6 +81,49 @@ done = c.access(cycle, pc, addr)         # completion cycle of a data access
 The C ABI is in `capi.cc` (`csim_create`, `csim_dir_predict`, ...). Tickets
 allow delayed and out-of-order training. Histories follow the actual path.
 
+## Qualification against a pinned reference
+
+`rvw csim qualify` runs an external reference predictor and a csim study on the
+same traces. The references are the CBP-5 (2016) TAGE-SC-L 64 KB and 8 KB
+predictors by A. Seznec (`AndreSeznecLimited.tar.gz` from jilp.org, sha256
+`5ed93324…ace181`). The archive is fetched into the csim cache and checked
+against the pinned hash. It never enters this repository. Our harness
+(`qualify/ref_harness.cc`) and type shim (`qualify/shim/`) build it. One guard
+is added to the cached copy: `if (NOSKIP[i])` becomes
+`if (i <= NHIST && NOSKIP[i])`. The upstream allocation loop reads one entry
+past the arrays (AddressSanitizer, 8 KB predictor); in-range accesses do not
+change. The report records the patch.
+
+Matched studies: [`examples/tage-sc-l-64kb.json`](examples/tage-sc-l-64kb.json)
+(63.8 KiB) and [`examples/tage-sc-l-8kb.json`](examples/tage-sc-l-8kb.json)
+(8.5 KiB). Their `source.approximations` list the structural differences.
+Both models train at once on the actual path with no warmup.
+
+Results on 2026-11-13 (Spike traces of the riscv-tests benchmarks built by
+`rvw arch build`, whole program, `--isa=rv64gc_zba_zbb_zbs_zicntr`). MPKI is
+conditional direction misses per 1000 instructions. Agreement is the fraction
+of conditional branches where both predict the same direction. All rows are
+within the default 10% relative MPKI tolerance.
+
+| Size | Trace | Conditional | Reference MPKI | csim MPKI | Agreement |
+|------|-------|------------:|---------------:|----------:|----------:|
+| 64 KB | qsort | 61124 | 40.86 | 42.08 | 0.924 |
+| 64 KB | dhrystone | 28379 | 0.30 | 0.27 | 1.000 |
+| 64 KB | median | 3132 | 22.73 | 23.93 | 0.941 |
+| 64 KB | rsort | 17601 | 0.20 | 0.21 | 0.999 |
+| 64 KB | towers | 459 | 9.00 | 9.50 | 0.924 |
+| 64 KB | spmv | 6288 | 14.83 | 16.09 | 0.900 |
+| 8 KB | qsort | 61124 | 41.01 | 41.92 | 0.925 |
+| 8 KB | dhrystone | 28379 | 0.32 | 0.27 | 0.999 |
+| 8 KB | median | 3132 | 25.20 | 23.93 | 0.930 |
+| 8 KB | rsort | 17601 | 0.22 | 0.22 | 0.999 |
+| 8 KB | towers | 459 | 9.50 | 10.10 | 0.917 |
+| 8 KB | spmv | 6288 | 17.25 | 18.18 | 0.894 |
+
+These traces are short (0.2–0.23 M instructions) and small in branch
+footprint. They qualify the model shape, not long-run behaviour. The CBP 2016
+trace sets were not reachable from here (the hosting server did not answer).
+
 ## RTL comparison
 
 `compare-rtl` runs the model on the C2 trace of one RTL run and aligns it with
@@ -113,10 +158,11 @@ section. No result is a match or fidelity verdict.
 
 ## Limits
 
-- No model is qualified against a pinned independent reference on published
-  traces yet. Tests check hand-derived cases, a scalar perceptron reference and
-  the legacy bimodal/gshare engine. MPKI numbers are for comparison between
-  models on the same traces, not for RTL claims.
+- TAGE-SC-L is qualified against the pinned CBP 2016 reference on short
+  benchmark traces only (see above). Other models are checked by hand-derived
+  cases, a scalar perceptron reference and the legacy bimodal/gshare engine.
+  MPKI numbers are for comparison between models on the same traces, not for
+  RTL claims.
 - BOOM settings are approximate (see the study file). No RTL fidelity claim.
 - No SMT, no multi-hart traces, no ROI sampling weights (SimPoint) yet.
 - The BT9 reader follows the published format description; it has not been run

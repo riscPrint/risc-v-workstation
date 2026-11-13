@@ -1,0 +1,117 @@
+{
+  "schema": "rvw.csim-study/1",
+  "name": "tage-sc-l-64kb",
+  "description": "csim TAGE-SC-L sized after the CBP-5 2016 64 KB configuration (18 history lengths 6..3000, 8 Ki-entry bimodal, 1-bit u, 2 allocations, 32-entry loop predictor), about 64 KiB.",
+  "source": {
+    "fidelity": "approximate",
+    "approximations": [
+      "csim uses one table per history length; the reference uses two bank-interleaved shared tables with partial associativity",
+      "tag widths grow linearly from 8 to 12 bits; the reference uses 8 and 12",
+      "the statistical corrector has bias, 4 global and 4 local GEHL tables; the reference adds IMLI, path and three local histories",
+      "bimodal hysteresis is not shared between entries"
+    ]
+  },
+  "branch": {
+    "model": "tage-sc-l",
+    "base_entries": 8192,
+    "u_bits": 1,
+    "max_alloc": 2,
+    "loop": {
+      "entries": 32,
+      "ways": 4,
+      "iter_bits": 10
+    },
+    "tables": [
+      {
+        "entries": 2048,
+        "history": 6,
+        "tag_bits": 8
+      },
+      {
+        "entries": 2048,
+        "history": 9,
+        "tag_bits": 8
+      },
+      {
+        "entries": 2048,
+        "history": 12,
+        "tag_bits": 8
+      },
+      {
+        "entries": 2048,
+        "history": 18,
+        "tag_bits": 9
+      },
+      {
+        "entries": 2048,
+        "history": 26,
+        "tag_bits": 9
+      },
+      {
+        "entries": 2048,
+        "history": 37,
+        "tag_bits": 9
+      },
+      {
+        "entries": 2048,
+        "history": 54,
+        "tag_bits": 9
+      },
+      {
+        "entries": 2048,
+        "history": 78,
+        "tag_bits": 10
+      },
+      {
+        "entries": 2048,
+        "history": 112,
+        "tag_bits": 10
+      },
+      {
+        "entries": 2048,
+        "history": 161,
+        "tag_bits": 10
+      },
+      {
+        "entries": 2048,
+        "history": 232,
+        "tag_bits": 10
+      },
+      {
+        "entries": 2048,
+        "history": 335,
+        "tag_bits": 11
+      },
+      {
+        "entries": 2048,
+        "history": 482,
+        "tag_bits": 11
+      },
+      {
+        "entries": 1024,
+        "history": 695,
+        "tag_bits": 11
+      },
+      {
+        "entries": 1024,
+        "history": 1002,
+        "tag_bits": 11
+      },
+      {
+        "entries": 1024,
+        "history": 1444,
+        "tag_bits": 12
+      },
+      {
+        "entries": 1024,
+        "history": 2081,
+        "tag_bits": 12
+      },
+      {
+        "entries": 1024,
+        "history": 3000,
+        "tag_bits": 12
+      }
+    ]
+  }
+}

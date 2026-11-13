@@ -10,6 +10,7 @@ import gzip
 import hashlib
 import json
 import lzma
+import re
 import shutil
 from pathlib import Path
 
@@ -129,6 +130,85 @@ def from_c2(src: Path, dst: Path, values: bool = False) -> dict:
     return {"format": "c2", "instructions": count, "branches": branches, "memory_rows": mem, "traps_skipped": traps}
 
 
+COMMIT = re.compile(r"core\s+(\d+):\s+(\d)\s+0x([0-9a-fA-F]+)\s+\(0x([0-9a-fA-F]+)\)(.*)$")
+_WIDTH = {"b": 1, "h": 2, "w": 4, "d": 8, "q": 16}
+
+
+def _access_size(mnemonic: str) -> int:
+    m = mnemonic.split(".")[-1] if mnemonic.startswith("c.") else mnemonic
+    m = m[1:] if m[:1] == "f" else m          # flw / fsd
+    for suffix in ("sp",):
+        if m.endswith(suffix):
+            m = m[: -len(suffix)]
+    tail = m.rstrip("u")[-1:] if m else ""
+    return _WIDTH.get(tail, 8)
+
+
+def from_spike(src: Path, dst: Path, values: bool = False) -> dict:
+    """Convert a Spike `-l --log-commits` log of one hart. Every commit line is one
+    instruction. A branch whose successor follows an exception line gets no row."""
+    src, dst = Path(src), Path(dst)
+    count = branches = mem = skipped = 0
+    hart = None
+    prev = None  # (ordinal, pc, insn, rd, exception_after)
+    with _open_text(src) as stream, dst.open("x") as out:
+        out.write(HEADER + "\n# source=spike-commits\n")
+
+        def emit_branch(p, nxt):
+            nonlocal branches, skipped
+            ordinal, pc, insn, rd, exc = p
+            kind = branch_kind(insn, rd)
+            if not kind:
+                return
+            if exc:
+                skipped += 1
+                return
+            length = 4 if insn & 3 == 3 else 2
+            taken = nxt != pc + length if kind == "cond" else True
+            out.write(f"B {ordinal} {pc:x} {kind} {int(taken)} {nxt:x} {length}\n")
+            branches += 1
+
+        for line in stream:
+            if "exception" in line or "trap_" in line:
+                if prev is not None:
+                    prev = (*prev[:4], True)
+                continue
+            m = COMMIT.match(line)
+            if not m:
+                continue
+            h = int(m.group(1))
+            if hart is None:
+                hart = h
+            elif h != hart:
+                raise ValueError("multi-hart Spike logs are unsupported")
+            pc, insn, rest = int(m.group(3), 16), int(m.group(4), 16), m.group(5).split()
+            if prev is not None:
+                emit_branch(prev, pc)
+            count += 1
+            d = decode(insn)
+            rd = 0
+            if insn & 127 in (0x6f, 0x67):
+                rd = (insn >> 7) & 31
+            elif d.mnemonic in ("c.jal", "c.jalr"):
+                rd = 1
+            if "mem" in rest:
+                k = rest.index("mem")
+                addr = int(rest[k + 1], 16)
+                size = _access_size(d.mnemonic)
+                is_store = d.cls in ("store", "atomic") and len(rest) > k + 2
+                out.write(f"{'S' if is_store else 'L'} {count} {pc:x} {addr:x} {size}\n")
+                mem += 1
+            if values and len(rest) >= 2 and rest[0].startswith("x") and rest[0][1:].isdigit() and rest[0] != "x0":
+                out.write(f"W {count} {pc:x} {int(rest[0][1:])} {int(rest[1], 16):x} {_flags(insn, 64)}\n")
+            prev = (count, pc, insn, rd, False)
+        if not count:
+            raise ValueError("no commit lines (run Spike with -l --log-commits)")
+        if prev is not None and branch_kind(prev[2], prev[3]):
+            skipped += 1  # final branch without a successor
+        out.write(f"END {count}\n")
+    return {"format": "spike", "instructions": count, "branches": branches, "memory_rows": mem, "branches_skipped": skipped}
+
+
 _BT9_KIND = {("JMP", "DIR", "CND"): "cond", ("JMP", "IND", "CND"): "cond",
              ("JMP", "DIR", "UCD"): "jump", ("JMP", "IND", "UCD"): "ijump",
              ("CALL", "DIR", "UCD"): "call", ("CALL", "IND", "UCD"): "icall",
@@ -225,6 +305,8 @@ def detect(path: Path) -> str:
         return "bt9"
     if head.lstrip().startswith("{") and "rvw.rvfi" in head:
         return "c2"
+    if head.startswith("core "):
+        return "spike"
     return "champsim"
 
 

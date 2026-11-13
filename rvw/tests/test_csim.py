@@ -140,3 +140,48 @@ def test_rtl_compare_kanata_observed_events(tmp_path):
     assert res["event_source"] == "kanata" and res["observed"]["direction"]["events"] == 4
     assert any("counter semantics" in r for r in res["reasons"]) and res["status"] == "inconclusive"
     assert res["inferred"]["basis"].startswith("committed instruction")
+
+
+STAND_IN = r"""
+#pragma once
+#include "utils.h"
+#include "bt9.h"
+// Stand-in reference for the test: a 2-bit bimodal "PREDICTOR" with the CBP 2016 interface.
+class PREDICTOR {
+    unsigned char t[4096];
+ public:
+    PREDICTOR() { for (auto& x : t) x = 1; }
+    bool GetPrediction(UINT64 pc) { return t[(pc >> 1) & 4095] >= 2; }
+    void UpdatePredictor(UINT64 pc, OpType, bool taken, bool, UINT64) {
+        unsigned char& c = t[(pc >> 1) & 4095]; if (taken) { if (c < 3) ++c; } else if (c) --c; }
+    void TrackOtherInst(UINT64, OpType, bool, UINT64) {}
+};
+"""
+
+
+def test_qualify_against_stand_in_reference(tmp_path, monkeypatch):
+    import hashlib
+    import io
+    import tarfile
+    from rvw.csim import qualify
+    buf = io.BytesIO()
+    with tarfile.open(fileobj=buf, mode="w:gz") as tar:
+        data = STAND_IN.encode()
+        info = tarfile.TarInfo("ref/bim/predictor.h"); info.size = len(data)
+        tar.addfile(info, io.BytesIO(data))
+    archive = tmp_path / "ref.tar.gz"; archive.write_bytes(buf.getvalue())
+    sha = hashlib.sha256(archive.read_bytes()).hexdigest()
+    study_file = tmp_path / "bim.json"; study_file.write_text(json.dumps({"name": "bim", "branch": {"model": "bimodal"}}))
+    monkeypatch.setitem(qualify.REFERENCES, "test-bimodal", {"url": "file:///nonexistent", "sha256": sha, "dir": "ref/bim",
+                                                             "study": str(study_file), "paper": "test"})
+    import random
+    rng = random.Random(1)
+    t = trace_file(tmp_path, [f'B {i + 1} {rng.randrange(32) * 4:x} cond {rng.randrange(2)} 0' for i in range(3000)])
+    res = qualify.qualify("test-bimodal", [t], study=study_file, archive=archive)
+    r = res["results"][0]
+    assert r["prediction_agreement"] == 1 and r["reference_misses"] == r["model_misses"] and r["within_tolerance"]
+    assert res["all_within_tolerance"] is True and res["reference_patch"]["with"].startswith("if (i <= NHIST")
+    bad = tmp_path / "bad.tar.gz"; bad.write_bytes(b"x")
+    monkeypatch.setitem(qualify.REFERENCES, "test-bad", {**qualify.REFERENCES["test-bimodal"], "sha256": "0" * 64})
+    with pytest.raises(ValueError, match="does not match the pinned"):
+        qualify.qualify("test-bad", [t], study=study_file, archive=bad)

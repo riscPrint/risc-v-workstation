@@ -388,22 +388,22 @@ usage: rvw cov mutate [-h] [--run] [--baseline BASELINE] [--timeout TIMEOUT]
 
 ```text
 usage: rvw csim [-h] [--project PROJECT]
-    {run,sweep,budget,convert,models,compare-rtl,build} ...
+    {run,sweep,budget,convert,models,compare-rtl,qualify,build} ...
 ```
 
 ### `rvw csim run`
 
 ```text
-usage: rvw csim run [-h] [--format {auto,csim,branch,c2,bt9,champsim}] [--set
-    KEY=VALUE] [--timeout TIMEOUT] [--out OUT] [--json] [--project PROJECT]
-    study traces [traces ...]
+usage: rvw csim run [-h] [--format {auto,csim,branch,c2,bt9,spike,champsim}]
+    [--set KEY=VALUE] [--timeout TIMEOUT] [--out OUT] [--json] [--project
+    PROJECT] study traces [traces ...]
 ```
 
 ### `rvw csim sweep`
 
 ```text
 usage: rvw csim sweep [-h] --param KEY=V1,V2 [--set KEY=VALUE] [--format
-    {auto,csim,branch,c2,bt9,champsim}] [--budget-kib BUDGET_KIB]
+    {auto,csim,branch,c2,bt9,spike,champsim}] [--budget-kib BUDGET_KIB]
     [--budget-scope {metadata,all}] [--metric METRIC] [--jobs JOBS] [--timeout
     TIMEOUT] [--out OUT] [--json] [--project PROJECT] study traces [traces
     ...]
@@ -420,7 +420,7 @@ usage: rvw csim budget [-h] [--set KEY=VALUE] [--json] [--project PROJECT]
 
 ```text
 usage: rvw csim convert [-h] --out OUT [--values] [--json] [--project PROJECT]
-    {c2,bt9} source
+    {c2,spike,bt9} source
 ```
 
 ### `rvw csim models`
@@ -435,6 +435,15 @@ usage: rvw csim models [-h] [--json] [--project PROJECT]
 usage: rvw csim compare-rtl [-h] --trace TRACE --events EVENTS [--roi-start
     ROI_START] [--roi-end ROI_END] [--elf-sha256 ELF_SHA256] [--top TOP]
     [--json] [--project PROJECT] study
+```
+
+### `rvw csim qualify`
+
+```text
+usage: rvw csim qualify [-h] [--reference REFERENCE] [--study STUDY] [--format
+    {auto,csim,branch,c2,bt9,spike,champsim}] [--tolerance TOLERANCE]
+    [--archive ARCHIVE] [--out OUT] [--json] [--project PROJECT] traces
+    [traces ...]
 ```
 
 ### `rvw csim build`
@@ -1928,7 +1937,7 @@ Starts a background job: yes.
 
 ### `csim_convert`
 
-Convert a C2 RVFI trace (optionally with register values) or a CBP 2016 BT9 trace into rvw.csim-trace/1.
+Convert a C2 RVFI trace or a Spike -l --log-commits log (optionally with register values), or a CBP 2016 BT9 trace into rvw.csim-trace/1.
 
 Arguments: `source_format` (required), `source` (required), `out` (required), `values`.
 
@@ -1941,6 +1950,14 @@ List the component models and their study keys.
 Arguments: none.
 
 Starts a background job: no.
+
+### `csim_qualify`
+
+Compare a csim direction model with a pinned external reference predictor (CBP 2016 TAGE-SC-L 64 KB or 8 KB, fetched outside the repository and checked by sha256) on the same traces: MPKI, relative tolerance and per-branch prediction agreement. Runs as a job.
+
+Arguments: `traces` (required), `reference`, `study`, `format`, `tolerance`, `archive`.
+
+Starts a background job: yes.
 
 ### `csim_run`
 

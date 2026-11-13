@@ -3055,6 +3055,9 @@ W ORD PC RD VALUE FLAGS            register write; FLAGS '-' or letters l (load)
 Unconditional kinds must be taken. `LEN` is 2 or 4 for RISC-V; 0 means unknown.
 `rvw csim convert c2` writes it from one-hart C2 traces without order gaps. A
 trapped instruction counts as an instruction but gets no branch row.
+`rvw csim convert spike` reads one-hart Spike `-l --log-commits` logs: each
+commit line is one instruction; a branch followed by an exception line gets no
+row, and access sizes come from the decoded mnemonic.
 
 `rvw.csim-study/1` is a JSON object with the sections `branch`, `btb`, `ras`,
 `indirect`, `wrong_path`, `frontend`, `memory`, `mdp`, `vp`, `report`, the
@@ -3080,7 +3083,16 @@ has the C2 `order` of a retired branch, `pc`, `kind`, `taken`, and optionally
 instructions have no order and are refused. `rvw csim compare-rtl` writes
 `rvw.csim-rtl-compare/1` with status `compared` or `inconclusive`, `reasons`,
 observed direction and target counts, per-branch rows and, for Kanata input, a
-separate `inferred` section. The status is `inconclusive` when the ELF identity,
+separate `inferred` section.
+
+`rvw csim qualify` writes `rvw.csim-qualify/1`: `status=reported`, the
+reference name, URL, pinned `reference_sha256` and `reference_patch`, the study
+hash, the tolerance and, per trace, input hash, conditional branch count,
+reference and model misses and MPKI, `prediction_agreement`,
+`within_tolerance` and the largest per-branch differences. It is a measured gap
+on the given traces, not a fidelity verdict.
+
+The comparison status is `inconclusive` when the ELF identity,
 hart, counter semantics or an event for a conditional branch in the ROI is
 missing, or when an event does not align with the trace. It never reports a match.
 
