@@ -1,0 +1,21 @@
+{
+  "schema": "rvw.privilege/1",
+  "kind": "stateen-rv32",
+  "isa": "rv32imah_zicsr_zifencei_smstateen_sscsrind_zfinx",
+  "spec_version": "Smstateen-1.0",
+  "stateen": {
+    "writable_bits": [
+      1,
+      60,
+      62,
+      63
+    ],
+    "probes": [
+      "stateen",
+      "envcfg",
+      "csrind",
+      "zfinx"
+    ]
+  },
+  "compiler_isa": "rv32ima_zicsr_zifencei"
+}
