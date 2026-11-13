@@ -766,3 +766,13 @@ records six real RTL runs per core. On VexRiscv, fitted held-out IPC errors are
 +3.41% for independent, +11.34% for divide and -6.20% for branch. Divide is
 outside the 10% budget. The linked table also records VexiiRiscv results.
 The sample has insufficient event coverage for an accuracy verdict.
+
+## Workload designer report
+
+`rvw arch ooo-designer PLAN --out NEW_DIRECTORY --json` writes JSON and
+Markdown reports for a workload set. MCP tool: `arch_ooo_designer`.
+It combines IPC, per-function slot attribution, the existing sensitivity
+ranking and the next three improving DSE points. It reports fewer points
+when the declared search finds fewer than three improvements.
+See [the plan and limits](../../../../Arch/ooo/DESIGNER.md) and
+[the six-kernel model sample](../../../../Arch/ooo/DESIGNER_SAMPLE.md).
