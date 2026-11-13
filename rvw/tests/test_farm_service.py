@@ -82,3 +82,20 @@ def test_running_cancel_acknowledged_after_cleanup(tmp_path):
     assert not thread.is_alive()
     assert q.jobs()[0]['state'] == 'cancelled'
     assert q.jobs()[0]['pgid'] is None
+
+
+def test_declared_dut_retry_keeps_failure_and_classifies_flakiness(tmp_path):
+    q = Queue(tmp_path)
+    code = """import json
+from pathlib import Path
+p=Path.cwd()
+status='fail' if p.name=='attempt-1' else 'pass'
+r=dict(schema='rvw.run/1',status=status,core='generic',config='small',elf_sha256='a'*64,rtl_sha256='b'*64,seed=1,tools={'native_build':{'sha256':'c'*64}})
+(p/'result.json').write_text(json.dumps(r))
+"""
+    q.submit('a', [sys.executable, '-c', code], retries=1, retry_on=['dut_failure'])
+    assert q.work_once()['state'] == 'queued'
+    result = q.work_once()
+    assert result['state'] == 'dut_failure'
+    assert result['observed_dut_failure'] and result['unstable']
+    assert [a['dut_status'] for a in result['attempts']] == ['fail', 'pass']

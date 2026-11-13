@@ -713,7 +713,7 @@ usage: rvw evidence query [-h] --db DB [--text TEXT] [--schema SCHEMA]
 
 ```text
 usage: rvw farm [-h] [--project PROJECT]
-    {run,cancel,notifications,classify,recover,workflow,select,triage,budget,batch,queue,serve,dashboard}
+    {run,cancel,notifications,classify,recover,live,workflow,select,triage,budget,batch,queue,serve,dashboard}
     ...
 ```
 
@@ -747,6 +747,12 @@ usage: rvw farm classify [-h] [--project PROJECT] reports [reports ...]
 
 ```text
 usage: rvw farm recover [-h] --out OUT [--project PROJECT]
+```
+
+### `rvw farm live`
+
+```text
+usage: rvw farm live [-h] --root ROOT --owner OWNER [--project PROJECT]
 ```
 
 ### `rvw farm workflow`
@@ -1517,8 +1523,9 @@ usage: rvw query build [-h] [--config CONFIG] [--out OUT] [--json] [--project
 ### `rvw query build-hdl`
 
 ```text
-usage: rvw query build-hdl [-h] --top TOP --out OUT [--frontend {yosys,slang}]
-    [-I INCLUDE_DIRS] [-D DEFINES] [-G PARAMETERS] [--std STD] [--slang SLANG]
+usage: rvw query build-hdl [-h] --top TOP --out OUT [--frontend
+    {yosys,slang,ghdl}] [-I INCLUDE_DIRS] [-D DEFINES] [-G PARAMETERS] [--std
+    STD] [--slang SLANG] [--ghdl-plugin GHDL_PLUGIN] [--library LIBRARY]
     [--yosys YOSYS] [--timeout TIMEOUT] [--json] [--project PROJECT] sources
     [sources ...]
 ```
@@ -2859,6 +2866,14 @@ Arguments: `root` (required), `out` (required), `core`, `suite`, `config`, `gate
 
 Starts a background job: yes.
 
+### `farm_live`
+
+Read owner-scoped runs, trends, test history and failure clusters.
+
+Arguments: `root` (required), `owner` (required).
+
+Starts a background job: yes.
+
 ### `farm_notifications`
 
 Export notification events. No external delivery is attempted.
@@ -3517,9 +3532,9 @@ Starts a background job: yes.
 
 ### `query_build_hdl`
 
-Build a navigation design database from Verilog/SystemVerilog sources so every query_* and lint tool works on a non-Spinal core. frontend 'yosys' takes the native read_verilog -sv subset (self-contained files); 'slang' elaborates full SystemVerilog through yosys-slang with include directories, defines and top parameters, and records per-instance parameters (artifact hdl/parameters.json) and declared SV types.
+Build a navigation design database from Verilog/SystemVerilog sources so every query_* and lint tool works on a non-Spinal core. frontend 'yosys' takes the native read_verilog -sv subset (self-contained files); 'slang' elaborates full SystemVerilog through yosys-slang with include directories, defines and top parameters, and records per-instance parameters (artifact hdl/parameters.json) and declared SV types; 'ghdl' elaborates VHDL through the GHDL Yosys plugin (parameters are top generics, std 93/08, library the work library) with VHDL declaration and assignment lines.
 
-Arguments: `sources` (required), `top` (required), `out` (required), `frontend`, `include_dirs`, `defines`, `parameters`, `std`, `timeout`.
+Arguments: `sources` (required), `top` (required), `out` (required), `frontend`, `include_dirs`, `defines`, `parameters`, `std`, `library`, `timeout`.
 
 Starts a background job: no.
 

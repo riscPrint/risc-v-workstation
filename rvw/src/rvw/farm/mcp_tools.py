@@ -34,7 +34,8 @@ def mcp_tools():
     from .triage import triage
     from .selection import select
     from .workflows import workflow
-    return [ToolSpec("farm_workflow", "Create, resume or inspect a command dependency plan. Completion is execution state, not verification.",
+    return [ToolSpec("farm_live", "Read owner-scoped runs, trends, test history and failure clusters.",
+                 schema({"root": string, "owner": string}, ["root", "owner"]), live_json, long=True), ToolSpec("farm_workflow", "Create, resume or inspect a command dependency plan. Completion is execution state, not verification.",
                  schema({"root": string, "action": string, "plan": {"type": "object"}, "workflow_id": string, "owner": string}, ["root"]),
                  workflow, long=True), ToolSpec("farm_select", "Advisory source-impact selection within a time budget. Unknown impacts keep tests mandatory.",
                  schema({"db": string, "changed": array, "catalogue": {"type": "object"}, "seconds": {"type": "number", "exclusiveMinimum": 0}},
@@ -73,3 +74,9 @@ def queue_json(root, operation="list", options=None):
 def batch_json(**options):
     from .batch import batch
     return batch(**options)
+
+
+def live_json(root, owner):
+    from .live import snapshot
+    from .service import Queue
+    return snapshot(Queue(root), owner)

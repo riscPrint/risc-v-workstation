@@ -150,8 +150,9 @@ artifact and validating its C1 can leave that cell missing in the checkpoint.
 - Workers own temporary directories and bounded process groups. Normal completion
   removes temporary data. SIGTERM and SIGHUP unwind group cleanup. SSH loss can
   leave the worker running until its declared timeout. Use the separate cancel
-  endpoint to request acknowledged cleanup. Crash recovery remains open. SIGKILL
-  can leave temporary data, control records and capacity reservations.
+  endpoint to request acknowledged cleanup. For new workers, it also checks dead
+  worker process identities before cleanup and capacity release. Unverified old
+  records need operator cleanup. SIGKILL can leave temporary artifact data.
 - Every run checks tool identity. This is a C1 execution interface, separate from
   `regress gate`. C8 cache admission and gate verdicts stay in the existing runner.
   Farm artifacts are not automatically imported as accepted C3 generations.
@@ -219,7 +220,7 @@ page keeps the token in page memory. Workers must be launched separately with
 `farm queue --operation work`. Only trusted project users can submit commands.
 Use a TLS reverse proxy for remote access. The API does not supply a sandbox.
 MCP `farm_queue` exposes the same local operations. C3 trends remain available
-through `farm dashboard`. Cluster drill-down is not yet part of the HTTP view.
+through `farm dashboard`. The live HTTP view also exposes owner-scoped C3 history and C5 bundle drill-down.
 
 ## Local and Kubernetes batch jobs
 
@@ -325,3 +326,29 @@ batch; reconnect for later events. No whole-result polling is needed. Sequence
 IDs are persistent. Clients can discard duplicates. Completion is emitted when
 a workflow is next advanced or inspected after its jobs finish. Webhook delivery
 is not implemented. Use SSE or the local queue events API.
+
+## Live dashboard and checked SSH crash cleanup
+
+The service root page now shows runs, recorded C3 pass-rate trends, failure
+clusters, per-test history and C5 bundle buttons. `GET /snapshot` supplies the
+owner-scoped view. `GET /bundle/JOB_ID?path=RELATIVE` reads only C5 summaries
+within an owned job directory. Missing C3 evidence is no_checks. Missing trend
+samples remain gaps. Commands must write C3 output under their job directory
+for this view. Existing external history roots still use `farm dashboard`.
+CLI `farm live --root DIR --owner NAME` and MCP `farm_live` read the same view.
+
+Queue attempts now run in separate `JOB_ID/attempt-N` directories. Commands can
+use `{attempt_dir}` to name that directory in an argument. All prior evidence
+stays recorded. A valid C1 `result.json` records the DUT outcome separately from
+command completion. Set `retry_on: ["dut_failure"]` with a retry bound for
+explicit DUT retries. The default still retries only infrastructure/process
+errors and timeouts. A later pass never erases an observed DUT failure. A mixed
+pass/failure sets unstable only within a matching ELF, RTL, native tool and
+option identity. Unknown identity cannot establish flakiness.
+
+New SSH worker control records capture process start identities. After worker
+death, `farm cancel` kills only checked owned groups, verifies no live members,
+then releases that dead worker's capacity records. A reused PID or an unknown
+live group is not reclaimed. Old records without process identity need operator
+cleanup. Temporary artifact directories and remote artifact reattachment remain
+open. Tests use local fake worker records and real local process groups.

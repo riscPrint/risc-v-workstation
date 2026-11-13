@@ -9,6 +9,7 @@ import sys
 import time
 from .executor import worker
 from .resources import reserve
+from .service import process_stamp
 
 
 def record(root, name, value):
@@ -37,12 +38,17 @@ def stop(signum, frame):
 def serve(request):
     root = control_root(request['token'])
     groups = []
+    stamps = {}
+    worker_stamp = process_stamp(os.getpid())
+    def state():
+        return dict(pid=os.getpid(), groups=groups, group_stamps=stamps, worker_stamp=worker_stamp)
     def started(pid):
         groups.append(pid)
-        record(root, 'state.json', {'pid': os.getpid(), 'groups': groups})
+        stamps[str(pid)] = process_stamp(pid)
+        record(root, 'state.json', state())
         if (root / 'cancel').exists():
             raise KeyboardInterrupt('remote shard cancelled')
-    record(root, 'state.json', {'pid': os.getpid(), 'groups': groups})
+    record(root, 'state.json', state())
     try:
         if (root / 'cancel').exists():
             raise KeyboardInterrupt('remote shard cancelled')
@@ -73,10 +79,13 @@ def cancel_remote(token):
         if not signalled and (root / 'state.json').exists():
             state = json.loads((root / 'state.json').read_text())
             try:
+                if state.get('worker_stamp') and process_stamp(state['pid']) not in ('', state['worker_stamp']):
+                    return {'token': token, 'acknowledged': False, 'cause': 'worker PID identity changed'}
                 os.kill(state['pid'], signal.SIGTERM)
                 signalled = True
             except ProcessLookupError:
-                return {'token': token, 'acknowledged': False, 'cause': 'worker lost before cleanup acknowledgement'}
+                from .recovery import recover_dead
+                return recover_dead(root, state, token)
         time.sleep(.1)
     return {'token': token, 'acknowledged': False, 'cause': 'cleanup acknowledgement timeout'}
 
