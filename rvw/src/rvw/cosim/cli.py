@@ -107,6 +107,10 @@ def calculate(args):
                                                env=inputs.child_env, history=args.history, sync=sync)
                     else:
                         result = check(args.trace, model, platform, args.history, sync=sync)
+                        # Same rule as live and lockstep: a matching prefix of a run that did not
+                        # end is not a match (exit 3). `scope` still names the compared prefix.
+                        if result["status"] == "match" and result.get("trace_complete") is not True:
+                            result.update(status="inconclusive", cause="trace_incomplete")
                 finally:
                     model.close()
                     model = None

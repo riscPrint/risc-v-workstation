@@ -320,3 +320,14 @@ It keeps the reference memory pages. It refuses a multi-hart machine.
 the project schedule and sampled reset contract before it calls the function.
 No values from DUT RAM seed reference memory. Existing shim ABI 8 consumers
 remain valid. A stale source hash requires a rebuild.
+
+## Offline check of an incomplete trace
+
+`rvw cosim check` (CLI and MCP) returns `status: inconclusive`, `cause:
+trace_incomplete` and exit 3 when every compared record matches but the C2
+trace has no end record. `scope` (`trace prefix`) and `instructions` still
+describe the compared prefix. `match` (exit 0) needs `trace_complete: true`.
+This is the rule that `rvw cosim live` and lockstep already apply. The library
+function `rvw.cosim.checker.check` keeps its prefix result for callers that
+check `trace_complete` themselves.
+
