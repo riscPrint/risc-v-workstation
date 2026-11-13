@@ -53,6 +53,7 @@ class Job:
         self.exception: BaseException | None = None
         self.cost_report = None
         self.budget = None
+        self.working_directory = None
 
     # -- for handlers
     def log(self, line: str) -> None:
@@ -100,7 +101,7 @@ class Job:
         p = pump = None
         try:
             with _proc._defer_cancellation():
-                p = subprocess.Popen(cmd, cwd=cwd, env=merged, stdout=subprocess.PIPE,
+                p = subprocess.Popen(cmd, cwd=cwd or self.working_directory, env=merged, stdout=subprocess.PIPE,
                                      stderr=subprocess.STDOUT, text=True, bufsize=1,
                                      start_new_session=True, pass_fds=fds)
                 with self._lock:
@@ -224,13 +225,14 @@ class JobManager:
     """`workers` threads run long jobs; `quick_workers` run isolated short calls (registry), so a
     quick call never queues behind a regression. The newest `keep` finished jobs are kept."""
 
-    def __init__(self, workers: int = 2, quick_workers: int = 4, keep: int = 100, budget=None):
+    def __init__(self, workers: int = 2, quick_workers: int = 4, keep: int = 100, budget=None, working_directory=None):
         self.budget = None
         if budget is not None:
             import json
             from rvw.common.budget import Budget
             Budget(**budget)
             self.budget = json.dumps(budget)
+        self.working_directory = working_directory
         self._pool = ThreadPoolExecutor(max_workers=workers, thread_name_prefix="rvw-job")
         self._quick = ThreadPoolExecutor(max_workers=quick_workers, thread_name_prefix="rvw-quick")
         self._jobs: dict[str, Job] = {}
@@ -241,6 +243,7 @@ class JobManager:
         with self._lock:
             job = Job(f"job-{uuid.uuid4().hex}", tool, arguments)
             job.budget = self.budget
+            job.working_directory = self.working_directory
             self._jobs[job.id] = job
         self._evict()
 

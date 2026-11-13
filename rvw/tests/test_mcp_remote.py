@@ -88,7 +88,7 @@ def test_client_budgets_are_not_global(monkeypatch):
 
 
 def test_default_remote_registry_uses_budgeted_workers(tmp_path):
-    app = Remote({'token': dict(tools=['evidence_query'], read_only=True, budget={'wall_seconds': 2})})
+    app = Remote({'token': dict(tools=['evidence_query'], project=str(tmp_path), read_only=True, budget={'wall_seconds': 2})})
     registry = app.clients['token'][0]
     try:
         assert registry.tools['evidence_query'].long

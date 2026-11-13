@@ -190,3 +190,20 @@ only its own store. A disconnected client does not cancel its jobs. Graceful
 shutdown cancels active jobs. Records are volatile. A query after restart
 reports that the job is unknown, evicted or lost after restart. Abrupt process
 death does not promise native descendant cleanup or job recovery.
+
+## Remote argument paths
+
+The remote registry checks explicit path arguments before job submission.
+Relative paths use the token's bound project directory. Resolved paths must
+stay under that directory or the optional policy `output` directory. Existing
+symlinks are resolved before admission. Traversal and external absolute paths
+return a tool error. A remote path needs a bound project. Stdio is unchanged.
+Workers start in the project directory. The shared argument vocabulary and
+slash-bearing strings receive this check across providers. A provider can
+mark a schema property with `x-rvw-path: true` or `format: path`.
+Structured object and array arguments receive the same recursive check.
+Symbolic selectors retain their bare label form.
+This is argument admission, not an OS sandbox. Trusted project files, tool
+code, command arrays, encoded JSON strings, environment defaults and referenced
+file contents can name other files. C8 still excludes hostile inputs and races.
+Do not expose execution tools to mutually untrusted tenants without OS isolation.

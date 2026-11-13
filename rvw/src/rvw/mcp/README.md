@@ -251,3 +251,13 @@ Python child through the production job supervisor. No core is needed.
 Job records are in memory. Restart does not recover them. Abrupt server death
 can leave native children. Use an external process supervisor for group cleanup.
 These protocol checks do not establish native RTL behavior.
+
+Remote policy `project` binds explicit path arguments to that project directory.
+An optional `output` adds one result root. Traversal, external absolute paths
+and existing symlink escapes fail before dispatch. Workers start in the bound
+project directory. The check walks nested arguments across the registry.
+No per-tool handler opt-in is needed for the shared path vocabulary.
+New argument names can use schema `x-rvw-path: true` or `format: path`.
+Path arguments require a bound project. Local stdio paths are unchanged.
+This is not an OS sandbox. Project data, plugins, commands, encoded JSON and
+environment defaults remain trusted under C8. Use OS isolation for untrusted users.
