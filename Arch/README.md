@@ -803,3 +803,8 @@ RV64 O3 also accepts `rv64i`. Scheduling component descriptions accept both
 base-I selections without an M extension. Define only the core's actual classes
 and resources. These models do not enforce an instruction-extension boundary;
 use the declared ISA to build programs and use RTL/reference checks for behavior.
+
+`rvw arch build` compiles benchmark ELFs without gem5. It needs RISC-V GCC and
+the configured sources. `arch inspect`, `arch compare`, and `rvw ooo` also run
+without gem5. `arch run` and `arch calibrate` need the supported gem5 binary.
+OoO model results describe the supplied model. They do not qualify RTL timing.

@@ -441,3 +441,11 @@ Architecture descriptions and static inspection accept RV32I and RV64I for
 Minor/Timing; RV64I is also accepted for O3. Scheduling descriptions accept
 `rv32i` and `rv64i`. Preserve the declared ISA. This selection does not validate
 instruction behavior or exclude extra instructions supported by the gem5 backend.
+
+## Compiler-only benchmark builds
+
+`rvw arch build` needs the RISC-V compiler and benchmark sources. It does not
+probe or require gem5. Its `rvw.arch-build/1` record has `backend: "riscv-gcc"`
+and compiler identity. gem5 identity belongs to the later model run record.
+`rvw arch run` and `calibrate` still require the supported gem5 binary.
+Inspection, report comparison and the `rvw ooo` trace model do not require it.
