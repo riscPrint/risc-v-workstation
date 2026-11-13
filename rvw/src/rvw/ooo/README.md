@@ -204,8 +204,8 @@ simple model partition is not the hardware top-down method. Counters can be
 compared with RTL only after matching their predicates. The wrong-path fetch
 slot estimate is recovery penalty times fetch width per branch miss. It does
 not consume issue or cache resources. Synthetic tests establish timing rules;
-they do not establish RTL accuracy. Macro-op fusion, move/zero elimination,
-memory renaming, and speculative dependence replay remain open.
+they do not establish RTL accuracy. Full macro-op decode fusion, memory renaming, and speculative dependence
+replay remain open. Bounded rename policies are described below.
 
 ## Optional compiled scheduler
 
@@ -268,3 +268,27 @@ inferred. Missing costs remain unobserved. Uncertainty stays unmeasured.
 A partial failed run can retain completed SQLite points, but has no final
 report. The same committed C2 paths drive every candidate. This cannot model
 changes to the program path or validate a custom instruction's semantics.
+
+## Rename elimination and immediate fusion
+
+The optional `rename` object accepts boolean `move_elimination`,
+`zero_elimination`, and `immediate_fusion`. All default to false. Width remains
+`rename_width`, so projects can select eight or ten lanes without another
+rename stage.
+
+Move elimination covers ADDI with zero immediate, C.MV, and ADD/OR with a
+zero-register input. Zero elimination covers XOR/SUB with equal source
+registers and zero-valued moves. It removes execution work. A move still
+waits for its older source producer. A zero operation breaks that dependency.
+Eliminated destinations do not allocate a new physical register in this
+bounded pressure model. Each instruction still uses a ROB entry and a commit
+slot. This model does not account for alias reference counts in a real free
+list. It is not a full physical-register reclamation model.
+
+Immediate fusion covers an adjacent LUI/AUIPC and ADDI that reads and writes
+the first instruction's destination. Both instructions retire. The pair
+shares one execution completion. Fetch, decode and rename still count both
+instructions. This is execution fusion only. It does not reproduce a core's
+macro-op decode or exception rules. Traps remain unsupported. Other pairs,
+memory renaming and speculative dependence replay remain open. Rename
+policies currently use the Python engine.
