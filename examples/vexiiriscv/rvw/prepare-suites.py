@@ -93,8 +93,10 @@ def main():
             config.pop('priv', None)  # S present: the standard head and S-mode cases apply
         description = out / 'pmp.json'
         description.write_text(json.dumps(config) + '\n')
-        privilege_build(description, out / 'pmp', args.gcc)
-        families.append(dict(family='pmp', source='examples/privilege/pmp-rv32.json', granularity_bytes=granularity))
+        built = privilege_build(description, out / 'pmp', args.gcc)
+        count = len(built['scenarios'])
+        families.append(dict(family='pmp', source='examples/privilege/pmp-rv32.json',
+                             granularity_bytes=granularity, generated=count, applicable=count, excluded=[]))
     if 'pmp' in applicable:
         granularity = next((int(c.split(':')[1]) for c in capabilities if c.startswith('pmp-granularity:')), 4)
         description = out / 'pmp.json'

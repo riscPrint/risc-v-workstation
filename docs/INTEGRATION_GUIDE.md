@@ -324,7 +324,7 @@ Limits can differ within one tool. Read the linked README and PR before use.
 | sim / arcilator | Ran on RTL | [#654](https://github.com/riscPrint/risc-v-workstation/pull/654): bounded VexRiscv C1/C2 comparison; BOOM, checkpoints and broader engine options NOT RUN. |
 | regress privilege extensions | Spike only | [#552](https://github.com/riscPrint/risc-v-workstation/pull/552): 81 programs; RTL and independent nested-pointer model remain open. The base privilege, PMP and WFI families now have RTL rows below. |
 | generated MMU suites on RTL | Ran on RTL (VexiiRiscv Sv39/Sv32) | [VexiiRiscv README](../examples/vexiiriscv/README.md#generated-suites-on-rtl-2026-11-13): Sv39 matrix/fault/random 145/18/2 run, 154 Spike match, 11 finding; Sv32 140/12/2 run, 146 match, 8 finding. All findings: PTE reads ignore PMP. C2 walk check: 92 Sv39 and 89 Sv32 matrix scenarios consistent with the independent walker. Sv48/57, H, NAPOT, PBMT, pointer masking and shootdown have no RTL target. |
-| generated privilege/interrupt suites on RTL | Ran on RTL (VexiiRiscv, VexRiscv M-only) | VexiiRiscv RV64: controls 30/30, PMP 264/264, scheduled WFI 6/6 Spike match; RV32 scheduled WFI 6/6. VexRiscv: scheduled WFI 3/6 match, 3 finding (interrupt keeps old `mtval`, [reproduction](../examples/vexriscv/findings/interrupt-mtval/README.md)). VexiiRiscv RV64 CLINT WFI 4/4 (device model drives the pins; `--allow-sync irq,mmio`). PLIC and PLIC delivery 12/12 C1 pass through the `rvw.stimulus/1` mailbox; Spike comparison inconclusive at the harness-written mailbox word. NMI, AIA, Sstc and state-enable NOT RUN (no target feature). |
+| generated privilege/interrupt suites on RTL | Ran on RTL (VexiiRiscv, VexRiscv M-only) | VexiiRiscv RV64: controls 30/30, PMP 264/264, scheduled WFI 6/6 Spike match; RV32 scheduled WFI 6/6; PMP 394 applicable and run, 394 C1 pass, 0 C1 fail, 394 strict Spike match, 0 findings. VexRiscv: scheduled WFI 3/6 match, 3 finding (interrupt keeps old `mtval`, [reproduction](../examples/vexriscv/findings/interrupt-mtval/README.md)). VexiiRiscv RV64 CLINT WFI 4/4 (device model drives the pins; `--allow-sync irq,mmio`). PLIC and PLIC delivery 12/12 C1 pass through the `rvw.stimulus/1` mailbox; Spike comparison inconclusive at the harness-written mailbox word. NMI, AIA, Sstc and state-enable NOT RUN (no target feature). |
 | generated ordering suites on RTL | Ran on RTL, single hart | VexiiRiscv RV64 and RV32: LR/SC, AMO, AMO fault, FENCE, FENCE.I 5/5 Spike match each; VexRiscv FENCE/FENCE.I 2/2. Zacas, cache-block, litmus and multi-hart NOT RUN. No concurrent ordering evidence. |
 | cosim vector | Spike only | [#608](https://github.com/riscPrint/risc-v-workstation/pull/608): 1,333 instructions, replay match; no vector RTL. |
 | probe collection | Ran on RTL fixture | [#612](https://github.com/riscPrint/risc-v-workstation/pull/612): Verilator collector tests; [#614](https://github.com/riscPrint/risc-v-workstation/pull/614) converters used fixture events. |
@@ -362,6 +362,36 @@ project needs from each tool, and what the example measured:
 | Predictor (`rvw csim compare-rtl`) | A study describing the core's predictor | Direction agreement 80.4 % to 99.8 % against a 16384-counter gshare | qualified study (reversed-PC hash, speculative history) |
 | OoO model (`rvw ooo`, `rvw arch ooo-fit`) | `arch/ooo.json`; probe counts for event mapping | Mean absolute IPC error 14.3 % on three training and 24.9 % on five held-out programs (max 42.7 %, memcpy); `branches` event exact; top-down partitions side by side | memory-heavy code underpredicted; one event family only |
 | Generated checks (`rvw checks generate`) | `rvw.micro-checks/1` bindings; a check model in the adapter | 6 rules bound; 59 ISA runs, 0 firings; control fires | free-list/ROB conservation needs a live-tag mask; SpinalChecks |
+### Generated-suite counts on RTL
+
+These are retained 2026-11-13 results from the suite runs above. The RV32 PMP
+comparison is the resumed run. Counts are programs, not individual assertions.
+The MMU generated counts include all satp modes. Applicability excludes other
+modes and hardware A/D updates. Findings can overlap C1 failures.
+
+| Profile | Family | Generated | Applicable | Run | C1 pass | C1 fail | Spike match | Finding |
+|---|---|---:|---:|---:|---:|---:|---:|---:|
+| Vexii RV64 | MMU matrix | 589 | 145 | 145 | 143 | 2 | 143 | 2 |
+| Vexii RV64 | Fault walks | 84 | 18 | 18 | 9 | 9 | 9 | 9 |
+| Vexii RV64 | MMU random | 8 | 2 | 2 | 2 | 0 | 2 | 0 |
+| Vexii RV64 | Privilege controls | 30 | 30 | 30 | 30 | 0 | 30 | 0 |
+| Vexii RV64 | PMP | 264 | 264 | 264 | 264 | 0 | 264 | 0 |
+| Vexii RV64 | Ordering | 5 | 5 | 5 | 5 | 0 | 5 | 0 |
+| Vexii RV64 | Scheduled WFI | 6 | 6 | 6 | 6 | 0 | 6 | 0 |
+| Vexii RV64 + CLINT | WFI | 4 | 4 | 4 | 4 | 0 | 4 | 0 |
+| Vexii RV64 + PLIC | PLIC and delivery | 12 | 12 | 12 | 12 | 0 | 0 (12 inconclusive) | 0 |
+| Vexii RV32 | MMU matrix | 589 | 140 | 140 | 138 | 2 | 138 | 2 |
+| Vexii RV32 | Fault walks | 84 | 12 | 12 | 6 | 6 | 6 | 6 |
+| Vexii RV32 | MMU random | 8 | 2 | 2 | 2 | 0 | 2 | 0 |
+| Vexii RV32 | PMP | 394 | 394 | 394 | 394 | 0 | 394 | 0 |
+| Vexii RV32 | Ordering | 5 | 5 | 5 | 5 | 0 | 5 | 0 |
+| Vexii RV32 | Scheduled WFI | 6 | 6 | 6 | 6 | 0 | 6 | 0 |
+| VexRiscv RV32 M only | FENCE / FENCE.I | 2 | 2 | 2 | 2 | 0 | 2 | 0 |
+| VexRiscv RV32 M only | Scheduled WFI | 6 | 6 | 6 | 6 | 0 | 3 | 3 |
+
+IRQ, MMIO and unspecified-reset synchronizations retain the limits in the
+linked family READMEs. The PLIC reference cannot observe the harness-written
+acknowledgement. It does not earn a complete Spike match.
 
 ## Fresh Verilog project results
 

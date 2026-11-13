@@ -376,8 +376,16 @@ scenarios of the shared description; the satp-mode subset is in parentheses.
 | MMU matrix | 589 (142) | 140 | 140 | 138 | 2 | 138 | 2 |
 | MMU fault walks | 84 (12) | 12 | 12 | 6 | 6 | 6 | 6 |
 | MMU random programs | 8 (2) | 2 | 2 | 2 | 0 | 2 | 0 |
+| PMP (8 entries, 4-byte grain) | 394 | 394 | 394 | 394 | 0 | 394 | 0 |
 | Ordering | 5 | 5 | 5 | 5 | 0 | 5 | 0 |
 | Scheduled WFI | 6 | 6 | 6 | 6 | 0 | 6 | 0 |
+
+The RV32 PMP run generated 394 applicable programs. All 394 passed C1 and
+matched Spike in strict replay, with zero synchronizations. The completed RTL
+capture was retained from the interrupted worker. The resumed comparison used
+a rebuilt Spike shim. See [the per-program hashes and results](pmp32-results.json).
+This covers standard PMP accesses, locks, priority and MPRV. It does not cover
+page-table accesses by the walker.
 
 The two paging matrices exclude only the hardware A/D scenarios. Every C1
 failure is one finding: the page walker reads PTEs that PMP denies (all
