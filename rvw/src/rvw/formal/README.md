@@ -878,9 +878,11 @@ path cannot hide an alternate opaque path. Required value-transfer endpoints
 must have equal widths. A dependency path is a candidate, not a temporal proof.
 A missing path does not discharge mode, enable or latency conditions.
 
-`--run` checks bounded top-port contracts with the existing native BMC runner.
-It requires a source input, destination output, one-bit clock and synchronous
-active-high reset. Mode and enable must be common inputs distinct from source.
+`--run` checks observed RTL contracts with the native formal runner.
+The default is bounded. Select `--proof-mode prove` for an unbounded proof.
+The clock must be one bit with synchronous active-high reset. Required
+transfers can observe internal signals. Forbidden source, mode and enable
+remain top inputs; its conditions must be distinct from source.
 Required transfers compare the destination with the delayed source. The harness
 delays mode and enable with that source. Reset clears delayed-valid state.
 Forbidden influence uses two DUT copies. All inputs except source are shared.
@@ -891,8 +893,10 @@ source-influence bug. The mode/enable sample selects the comparison after the
 declared latency; it does not constrain source differences at earlier cycles.
 
 Each campaign retains separate transfer and activation jobs. Activation must
-produce a counterexample to `assert(!delayed_enable)` after reset. A transfer
-pass without this activation witness remains incomplete. Both jobs must retain
+produce a counterexample after reset. Required transfers witness delayed
+enable. Forbidden influence must also witness distinct source values sampled
+with that enable. The source difference is delayed with the condition. A
+transfer pass without this activation witness remains incomplete. Both jobs must retain
 exactly one assertion. The BMC runner also checks bounded reachability before
 it reports a pass. Each RTL file must match its database content hash. The
 runner retains copied inputs, native tool identities, logs and counterexamples.
@@ -905,9 +909,10 @@ two-state bound under captured DUT assumptions. Overall `status` remains
 `incomplete`, and exit code is 1. This command supplies no design acceptance verdict.
 Invalid input exits 2. Use a fresh output directory for each campaign.
 
-General internal RTL binding and core qualification remain open. Inouts,
-asynchronous resets and multiple clocks need another backend. No whole-core
-proof, commercial parity or unbounded connectivity result is claimed.
+Internal forbidden influence and core qualification remain open. Inouts,
+asynchronous resets and multiple clocks need another backend. Unbounded
+results apply only to the stated connection contract and captured assumptions.
+No whole-core proof or commercial parity is claimed.
 
 ## Capacity templates and contracts
 
@@ -1864,3 +1869,71 @@ Raw rows, errors, missing dependencies, hashes and commands:
 absent. ABC BMC3 returned errors on these AIGER imports. Pono and BTORMC
 returned bounded passes. This small subset is not a capacity qualification.
 No small-open-core property campaign or licensed comparison ran.
+
+Connection tables (#107)
+------------------------
+
+`rvw formal connectivity connections.csv --db design.db --out report` reads
+project-owned CSV, JSON or TOML declarations. JSON uses a `connection` array.
+TOML uses `[[connection]]` rows. CSV uses a header row:
+
+```csv
+id,kind,source,destination,condition,delay,inversion
+payload,required,io_source,io_destination,io_enable,1,false
+```
+
+`condition` aliases `enable`. It names one active-high Boolean signal.
+`delay` aliases `latency` in clock cycles. `inversion` selects a bitwise inverse
+of the source before delay. The default kind is `required`. The default delay
+is zero. `mode` is a second Boolean condition. Both conditions are sampled with
+the source. Delayed valid state clears on synchronous active-high reset.
+
+The structural pre-check resolves endpoints in the captured database. The
+reverse check walks each declared destination back to declared source and
+condition boundaries. It lists other top input influences. Clock, reset and
+initialization edges are excluded from this data influence inventory. Missing
+endpoints, opaque logic and truncated cones remain incomplete. The reverse
+check also inventories every top output. Outputs with no required source
+declaration are reported. It does not prove transfer semantics.
+
+Add `--run` for bounded checks. Add `--proof-mode prove --engine smtbmc:yices`
+for an unbounded safety proof and a separate bounded activation witness.
+The campaign binds captured RTL hashes to the database. Required transfers can
+report `contradicted` from a counterexample. Only an unbounded pass with an
+activation witness reports a row as `proven`. Forbidden influence uses two DUT
+copies with independent initial state. Its failures remain incomplete because
+state differences need review. Proofs retain source RTL assumptions. Required internal endpoints can use captured Yosys observation ports.
+Internal forbidden influence and inout ports remain unsupported.
+The overall report remains incomplete and exits 1. It lists `unproven` and
+`contradicted` row IDs. It never grants design acceptance.
+
+MCP tool `formal_connectivity` runs the same command and returns its report.
+
+Internal connectivity observations
+---------------------------------
+
+Required connections can observe internal RTL source, destination and condition
+signals. The backend flattens captured RTL with Yosys. It resolves the exact
+SpinalDB RTL path in the flattened netlist and checks the width. It exposes
+observation outputs without cutting or replacing drivers. Top port names,
+directions and widths must match the captured database. Unmatched internal
+names and widths remain incomplete. The report records original RTL hashes,
+the transformed RTL hash, observation bindings and reproducible Yosys scripts.
+
+Both the transfer proof and activation witness use the same transformed RTL.
+Top output condition signals can also guard required transfers. Internal
+forbidden influence still needs a state-coupling backend and stays incomplete.
+The reverse inventory includes all top outputs, including those with no
+required source declaration. Source assumptions and the single-clock/reset
+restrictions of the native formal flow still apply. No design acceptance is
+inferred from these observations.
+
+Forbidden-source activation requires legal variation
+--------------------------------------------------
+
+A DUT assumption can force the source input to one value in both copies.
+A noninterference proof in that environment cannot witness source variation.
+The activation job now samples source inequality with mode and enable, then
+delays the combined predicate by the declared latency. A proved safety relation
+without this witness remains incomplete. This check does not remove source
+assumptions or convert them into unrestricted influence evidence.

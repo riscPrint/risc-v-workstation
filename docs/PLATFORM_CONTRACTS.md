@@ -4205,3 +4205,38 @@ uses its own `aiger::main` transition system. The engine row records
 captured Verilog translation. `source_transforms` describes that preparation
 translation; it is not EBMC's verification input. The importer rejects justice,
 fairness and mixed ordinary-output/bad-state models before native execution.
+
+### Project connection tables
+
+`rvw.connectivity/1` also accepts CSV and JSON connection inputs. JSON contains
+one `connection` array. CSV columns match the TOML row keys. `condition` aliases
+`enable`; `delay` aliases `latency`. `inversion` is Boolean and applies to
+required transfers only. Conditions are active-high one-bit signal names.
+The reverse report inventories undeclared top input influence at declared
+destinations, stopping at declared source and condition boundaries. It excludes
+clock, reset and initialization edges. Opaque and truncated cones are incomplete.
+Per-row `proven` requires an unbounded safety pass and a reachable activation.
+`contradicted` requires a required-transfer counterexample and activation.
+`bounded_pass` is a campaign observation, never an unbounded proof. Report fields
+`unproven` and `contradicted` list row IDs. Overall acceptance remains incomplete.
+
+`rvw soc check --connections TABLE` embeds structural connection results under
+`connectivity` in `rvw.soc-check/1`. It retains connection-table and database
+SHA-256 values. This option does not launch a solver or change the existing
+map/bridge transaction verdict. Missing proof remains an explicit gap.
+
+Required connectivity campaigns can bind internal RTL observations with Yosys
+flatten/expose. No driver is cut or replaced. Database RTL paths and widths
+must match the flattened netlist. Top port names/types must match. Campaign
+`binding` records source hashes, transformed RTL hash and observation aliases.
+Internal forbidden influence remains incomplete. The reverse inventory also
+checks every top output and reports outputs with no required source declaration.
+
+A proved value contract cannot replace a missing required structural dependency.
+Such a row retains its semantic observation but remains incomplete. Native
+campaign observations retain and check the child result's proof kind.
+
+Forbidden connectivity activation requires distinct legal source values in the
+two DUT copies, sampled with mode/enable and delayed by the declared latency.
+A source fixed by assumptions cannot satisfy this witness. Its safety proof
+alone remains incomplete. `activation_requirement` states this obligation.

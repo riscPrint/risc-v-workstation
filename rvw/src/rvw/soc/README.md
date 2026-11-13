@@ -229,3 +229,12 @@ Hardware events can change state during a failed bus access. Supply independent
 hardware observations for the full transaction interval. The checker does not
 infer them from the observed final register value. These paired observations
 do not establish behavior between transactions or under concurrent bus masters.
+
+Use `rvw soc check MAP --bindings BINDINGS --db DB --connections TABLE` to
+include structural connectivity checks in the memory-map report. TABLE uses
+the CSV, JSON or TOML format of `rvw formal connectivity`. The report retains
+map/bridge transaction checks and adds endpoint resolution, input influence
+and input hashes. Structural paths do not prove bridge behavior. Run the same
+table with `rvw formal connectivity --run --proof-mode prove` to request
+value-transfer proofs. Real retirement/bus pairing and source provenance are
+still required for a mapped DUT integration claim.
