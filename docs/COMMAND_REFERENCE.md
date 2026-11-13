@@ -42,8 +42,14 @@ usage: rvw agent-bench serve [-h] --pack PACK --out OUT --task TASK [--project
 
 ```text
 usage: rvw arch [-h] [--project PROJECT]
-    {ooo-search,ooo-calibrate,ooo-predict,ooo-score,warmup-bias,sample,sched-generate,sched-measure,search,predict,score-prediction,memory-extract,pareto,memory-report,sweep,build,run,calibrate,compare,fit,inspect,measure,linux}
+    {traffic,ooo-search,ooo-calibrate,ooo-predict,ooo-score,warmup-bias,sample,sched-generate,sched-measure,search,predict,score-prediction,memory-extract,pareto,memory-report,sweep,build,run,calibrate,compare,fit,inspect,measure,linux}
     ...
+```
+
+### `rvw arch traffic`
+
+```text
+usage: rvw arch traffic [-h] --out OUT [--json] [--project PROJECT] plan
 ```
 
 ### `rvw arch ooo-search`
@@ -1987,6 +1993,14 @@ Starts a background job: yes.
 Run a bounded serial gem5 sweep. Retain model-only identities and SQLite results.
 
 Arguments: `spec` (required), `out` (required), `project`, `bench`.
+
+Starts a background job: yes.
+
+### `arch_traffic`
+
+Model declared multi-agent memory traffic and abstract power-state costs.
+
+Arguments: `plan` (required), `out` (required), `project`.
 
 Starts a background job: yes.
 
