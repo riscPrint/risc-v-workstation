@@ -80,7 +80,7 @@ Exit codes: **0** matching recorded execution, **1** first architectural mismatc
 first mismatch's index, order, cycle, PC, disassembly, expected/actual effects,
 last `--history K` matching instructions and integer register-file diff.
 A match does not mean the program passed; `end_status` preserves the trace's
-termination status. A trace without an end event is explicitly a matching prefix.
+termination status. A trace without an end event returns `inconclusive` with exit 3. The report still identifies the compared prefix.
 
 ### What "match" guarantees
 
@@ -91,8 +91,8 @@ Version 2 compares raw FP writes and post-instruction `fflags`/`fcsr` with Spike
 Sail refuses these fields because its effect interface lacks them. Version 2 also checks
 the declared post-instruction CSR snapshots with Spike, including unread writes and trap entry.
 Undeclared CSR state, memory that no traced instruction reads, and timing remain unchecked. A matching
-**prefix** (no end event, `trace_complete: false`) also exits 0, and so does a trace that
-ended in `fail` or `timeout`. Agents must check `trace_complete` and `end_status`, and read
+**prefix** with no end event (`trace_complete: false`) returns `inconclusive` with exit 3.
+A complete matching trace can still end in `fail` or `timeout` and exit 0. Agents must check `trace_complete` and `end_status`, and read
 `recent_synchronizations` and `recent_quirks` for what was taken from the core.
 
 ## Platform configuration
@@ -514,8 +514,8 @@ Both return a job ID. `job_status(wait_s=60)` returns the same JSON as the corre
 `--json` command, including reproduction metadata and mismatch/error or prefix/end status.
 `job_cancel` stops the worker and model subprocesses. Matching execution still has the scope
 and synchronization limits described in the main README ("What match guarantees"):
-version 1 excludes FP state and unread CSR state. Unread memory remains unchecked; a matching prefix also returns
-`match`. It is not proof that the program passed: check `trace_complete` and `end_status`.
+version 1 excludes FP state and unread CSR state. Unread memory remains unchecked; a matching prefix returns
+`inconclusive` with exit 3. It is not proof that the program passed: check `trace_complete` and `end_status`.
 
 ## Architectural comparison coverage
 
