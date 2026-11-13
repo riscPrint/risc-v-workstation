@@ -1,0 +1,1005 @@
+{
+  "schema": "rvw.vex-instruction-portfolio/1",
+  "rows": [
+    {
+      "check": "insn_add_ch0",
+      "status": "inconclusive",
+      "conditional_native_proof": false,
+      "reason": "conditional_engine_result",
+      "engines": [
+        {
+          "engine": "smtbmc:bitwuzla",
+          "status": "timeout",
+          "reason": null
+        },
+        {
+          "engine": "abc:pdr",
+          "status": "timeout",
+          "reason": null
+        }
+      ],
+      "cover": {
+        "status": "reached",
+        "evidence": "insn_add_ch0-single-flight-cover"
+      },
+      "evidence": "insn_add_ch0/result.json",
+      "historical_bound": 20,
+      "capture_sha256": "473ed4254e18d15b0720743a8ed31ef9eeb33d9103519c4c557e6ad9ee420d35",
+      "settings_sha256": "5d2fe3b01e01eb0edeb8d6b803746fec1b94c202e00c0e52b6a29e4408640be1"
+    },
+    {
+      "check": "insn_addi_ch0",
+      "status": "inconclusive",
+      "conditional_native_proof": false,
+      "reason": "conditional_engine_result",
+      "engines": [
+        {
+          "engine": "abc:pdr",
+          "status": "timeout",
+          "reason": null
+        },
+        {
+          "engine": "smtbmc:bitwuzla",
+          "status": "timeout",
+          "reason": null
+        }
+      ],
+      "cover": {
+        "status": "reached",
+        "evidence": "insn_addi_ch0-single-flight-cover"
+      },
+      "evidence": "insn_addi_ch0/result.json",
+      "historical_bound": 20,
+      "capture_sha256": "e1582b3745d13d5f733022062ba0effefd52c9eb5cd6098c4b9c919a789d01f9",
+      "settings_sha256": "ba7003427cb6883123a026c8fedea3c1da48c331c555dcf1519ddee5dd26f6ea"
+    },
+    {
+      "check": "insn_and_ch0",
+      "status": "inconclusive",
+      "conditional_native_proof": false,
+      "reason": "conditional_engine_result",
+      "engines": [
+        {
+          "engine": "abc:pdr",
+          "status": "timeout",
+          "reason": null
+        },
+        {
+          "engine": "smtbmc:bitwuzla",
+          "status": "timeout",
+          "reason": null
+        }
+      ],
+      "cover": {
+        "status": "reached",
+        "evidence": "insn_and_ch0-single-flight-cover"
+      },
+      "evidence": "insn_and_ch0/result.json",
+      "historical_bound": 20,
+      "capture_sha256": "ec44220448c314543b8afe4f5a55e6a6547113e1c6e23851589b7ed12f7b5767",
+      "settings_sha256": "7bcd03aa20e03031c996200fd774f1b3eafdeca111f94cd7793c1b3abe0a0dac"
+    },
+    {
+      "check": "insn_andi_ch0",
+      "status": "inconclusive",
+      "conditional_native_proof": false,
+      "reason": "conditional_engine_result",
+      "engines": [
+        {
+          "engine": "abc:pdr",
+          "status": "timeout",
+          "reason": null
+        },
+        {
+          "engine": "smtbmc:bitwuzla",
+          "status": "timeout",
+          "reason": null
+        }
+      ],
+      "cover": {
+        "status": "reached",
+        "evidence": "insn_andi_ch0-single-flight-cover"
+      },
+      "evidence": "insn_andi_ch0/result.json",
+      "historical_bound": 20,
+      "capture_sha256": "ab0e6efa78a8a28b596a3d519fca3f9cd403bed992fd7995c369e82a32c04b08",
+      "settings_sha256": "9bab8a6b3103a7a12f653453035fe3273628e62c30d257a136893c6da0f78dc1"
+    },
+    {
+      "check": "insn_auipc_ch0",
+      "status": "inconclusive",
+      "conditional_native_proof": false,
+      "reason": "conditional_engine_result",
+      "engines": [
+        {
+          "engine": "abc:pdr",
+          "status": "timeout",
+          "reason": null
+        },
+        {
+          "engine": "smtbmc:bitwuzla",
+          "status": "timeout",
+          "reason": null
+        }
+      ],
+      "cover": {
+        "status": "reached",
+        "evidence": "insn_auipc_ch0-single-flight-cover"
+      },
+      "evidence": "insn_auipc_ch0/result.json",
+      "historical_bound": 20,
+      "capture_sha256": "f54cbd886e89efa982396bff8637598dc75308521c4bd1667ec92411d7f3ba92",
+      "settings_sha256": "38955141abdd19b1ec316363dae758aab7c0005c1bda185ad700a729023d9247"
+    },
+    {
+      "check": "insn_beq_ch0",
+      "status": "inconclusive",
+      "conditional_native_proof": false,
+      "reason": "conditional_engine_result",
+      "engines": [
+        {
+          "engine": "abc:pdr",
+          "status": "timeout",
+          "reason": null
+        },
+        {
+          "engine": "smtbmc:bitwuzla",
+          "status": "timeout",
+          "reason": null
+        }
+      ],
+      "cover": {
+        "status": "reached",
+        "evidence": "insn_beq_ch0-single-flight-cover"
+      },
+      "evidence": "insn_beq_ch0/result.json",
+      "historical_bound": 20,
+      "capture_sha256": "9daf51fd557658644d55f128fb80dbfdc9515ecc1d174c4d3f79daa266b42a17",
+      "settings_sha256": "7e8bf3c80c02031a39b17d8190bb50a9908955ab23ffc14b4691f539f67d542b"
+    },
+    {
+      "check": "insn_bge_ch0",
+      "status": "inconclusive",
+      "conditional_native_proof": false,
+      "reason": "conditional_engine_result",
+      "engines": [
+        {
+          "engine": "abc:pdr",
+          "status": "timeout",
+          "reason": null
+        },
+        {
+          "engine": "smtbmc:bitwuzla",
+          "status": "timeout",
+          "reason": null
+        }
+      ],
+      "cover": {
+        "status": "reached",
+        "evidence": "insn_bge_ch0-single-flight-cover"
+      },
+      "evidence": "insn_bge_ch0/result.json",
+      "historical_bound": 20,
+      "capture_sha256": "dd59dcdf0fa3954da90ad65de857f685cffc52348cfcbbdf2bc36ac06bc76ea5",
+      "settings_sha256": "2e5abc2e9374f5a3f5442850e17d521a2df9bfb750e0d00b7da6e162fdfe9a30"
+    },
+    {
+      "check": "insn_bgeu_ch0",
+      "status": "inconclusive",
+      "conditional_native_proof": false,
+      "reason": "conditional_engine_result",
+      "engines": [
+        {
+          "engine": "smtbmc:bitwuzla",
+          "status": "timeout",
+          "reason": null
+        },
+        {
+          "engine": "abc:pdr",
+          "status": "timeout",
+          "reason": null
+        }
+      ],
+      "cover": {
+        "status": "reached",
+        "evidence": "insn_bgeu_ch0-single-flight-cover"
+      },
+      "evidence": "insn_bgeu_ch0/result.json",
+      "historical_bound": 20,
+      "capture_sha256": "782c6caca78850b0cebaad94a5b96f9d35ae4ab239baa55c23b38883746aeea8",
+      "settings_sha256": "20656fd21a5ec8e33412a721f35f30908dd439fd9c00960347feebd6c4fa3c7b"
+    },
+    {
+      "check": "insn_blt_ch0",
+      "status": "inconclusive",
+      "conditional_native_proof": false,
+      "reason": "conditional_engine_result",
+      "engines": [
+        {
+          "engine": "smtbmc:bitwuzla",
+          "status": "timeout",
+          "reason": null
+        },
+        {
+          "engine": "abc:pdr",
+          "status": "timeout",
+          "reason": null
+        }
+      ],
+      "cover": {
+        "status": "reached",
+        "evidence": "insn_blt_ch0-single-flight-cover"
+      },
+      "evidence": "insn_blt_ch0/result.json",
+      "historical_bound": 20,
+      "capture_sha256": "a0eaa941e4692ed103ffeb3e452b46689a6ef129321be57fa5874fd4ee4db63c",
+      "settings_sha256": "104ba1195d974b465e9e1c64e8ba7d25ba148b9d71cd8e28b4faaadc27648936"
+    },
+    {
+      "check": "insn_bltu_ch0",
+      "status": "inconclusive",
+      "conditional_native_proof": false,
+      "reason": "conditional_engine_result",
+      "engines": [
+        {
+          "engine": "smtbmc:bitwuzla",
+          "status": "timeout",
+          "reason": null
+        },
+        {
+          "engine": "abc:pdr",
+          "status": "timeout",
+          "reason": null
+        }
+      ],
+      "cover": {
+        "status": "reached",
+        "evidence": "insn_bltu_ch0-single-flight-cover"
+      },
+      "evidence": "insn_bltu_ch0/result.json",
+      "historical_bound": 20,
+      "capture_sha256": "097713657412550116e27b35f6a031de6a6efb20be4954fd68ea56b80e0f3734",
+      "settings_sha256": "ccaad20b849a06c3738bca63d5913ec7d7ca3fafc55e030ec8d37a211ee83a63"
+    },
+    {
+      "check": "insn_bne_ch0",
+      "status": "inconclusive",
+      "conditional_native_proof": false,
+      "reason": "conditional_engine_result",
+      "engines": [
+        {
+          "engine": "abc:pdr",
+          "status": "timeout",
+          "reason": null
+        },
+        {
+          "engine": "smtbmc:bitwuzla",
+          "status": "timeout",
+          "reason": null
+        }
+      ],
+      "cover": {
+        "status": "reached",
+        "evidence": "insn_bne_ch0-single-flight-cover"
+      },
+      "evidence": "insn_bne_ch0/result.json",
+      "historical_bound": 20,
+      "capture_sha256": "95415fafdd3f578cbd6e2b06804d00218549384975a82112b107575a96ff7bbf",
+      "settings_sha256": "fafc975e7e70c10134ce3bcbbe391c564abe04a956e1622cbd9b30fcf2105cac"
+    },
+    {
+      "check": "insn_jal_ch0",
+      "status": "inconclusive",
+      "conditional_native_proof": false,
+      "reason": "conditional_engine_result",
+      "engines": [
+        {
+          "engine": "smtbmc:bitwuzla",
+          "status": "timeout",
+          "reason": null
+        },
+        {
+          "engine": "abc:pdr",
+          "status": "timeout",
+          "reason": null
+        }
+      ],
+      "cover": {
+        "status": "reached",
+        "evidence": "insn_jal_ch0-single-flight-cover"
+      },
+      "evidence": "insn_jal_ch0/result.json",
+      "historical_bound": 20,
+      "capture_sha256": "038a17ac1978fcc448d93ebedfe4cd13374ffa7f711c19adce7cad23f887d990",
+      "settings_sha256": "294a31912bd7050951ad8ee6a586d064a2ce1ba922fda657b87eadc638b71dfd"
+    },
+    {
+      "check": "insn_jalr_ch0",
+      "status": "inconclusive",
+      "conditional_native_proof": false,
+      "reason": "conditional_engine_result",
+      "engines": [
+        {
+          "engine": "abc:pdr",
+          "status": "timeout",
+          "reason": null
+        },
+        {
+          "engine": "smtbmc:bitwuzla",
+          "status": "timeout",
+          "reason": null
+        }
+      ],
+      "cover": {
+        "status": "reached",
+        "evidence": "insn_jalr_ch0-single-flight-cover"
+      },
+      "evidence": "insn_jalr_ch0/result.json",
+      "historical_bound": 20,
+      "capture_sha256": "e4ec2c01674f0c39d15cc72c03c0868232c1d2908c0d217358e26cdf9e589e73",
+      "settings_sha256": "544e589f89cdfff15fcdcce240efa476654c67483681051cda609578746919ea"
+    },
+    {
+      "check": "insn_lb_ch0",
+      "status": "inconclusive",
+      "conditional_native_proof": false,
+      "reason": "conditional_engine_result",
+      "engines": [
+        {
+          "engine": "abc:pdr",
+          "status": "timeout",
+          "reason": null
+        },
+        {
+          "engine": "smtbmc:bitwuzla",
+          "status": "timeout",
+          "reason": null
+        }
+      ],
+      "cover": {
+        "status": "reached",
+        "evidence": "insn_lb_ch0-single-flight-cover"
+      },
+      "evidence": "insn_lb_ch0/result.json",
+      "historical_bound": 20,
+      "capture_sha256": "a35813f31f51229dfd76af8e265693db4a0ecba1ef5e97548521fc1f6f45ae09",
+      "settings_sha256": "16097880e2a29eae63564f0ad90e5649d7352375efe8b3eda9be4b75e6d8d4eb"
+    },
+    {
+      "check": "insn_lbu_ch0",
+      "status": "inconclusive",
+      "conditional_native_proof": false,
+      "reason": "conditional_engine_result",
+      "engines": [
+        {
+          "engine": "abc:pdr",
+          "status": "timeout",
+          "reason": null
+        },
+        {
+          "engine": "smtbmc:bitwuzla",
+          "status": "timeout",
+          "reason": null
+        }
+      ],
+      "cover": {
+        "status": "reached",
+        "evidence": "insn_lbu_ch0-single-flight-cover"
+      },
+      "evidence": "insn_lbu_ch0/result.json",
+      "historical_bound": 20,
+      "capture_sha256": "7384692606a1658c183bd8e4c2393a0786a2f60fec8a8a96216fdea7c7b13c1e",
+      "settings_sha256": "c5c6121d87e387ec50087ce9f27e16ef80e4b06f25bde6de711f515bfbef9723"
+    },
+    {
+      "check": "insn_lh_ch0",
+      "status": "inconclusive",
+      "conditional_native_proof": false,
+      "reason": "conditional_engine_result",
+      "engines": [
+        {
+          "engine": "abc:pdr",
+          "status": "timeout",
+          "reason": null
+        },
+        {
+          "engine": "smtbmc:bitwuzla",
+          "status": "timeout",
+          "reason": null
+        }
+      ],
+      "cover": {
+        "status": "reached",
+        "evidence": "insn_lh_ch0-single-flight-cover"
+      },
+      "evidence": "insn_lh_ch0/result.json",
+      "historical_bound": 20,
+      "capture_sha256": "5a92590d2105a50160e2e0944a0159e7c68c9601714b38f44e0d7aab63409319",
+      "settings_sha256": "33b311405f99f9d867b8c584627d913618b10ecaf773bb04b7ced9f6b9937530"
+    },
+    {
+      "check": "insn_lhu_ch0",
+      "status": "inconclusive",
+      "conditional_native_proof": false,
+      "reason": "conditional_engine_result",
+      "engines": [
+        {
+          "engine": "abc:pdr",
+          "status": "timeout",
+          "reason": null
+        },
+        {
+          "engine": "smtbmc:bitwuzla",
+          "status": "timeout",
+          "reason": null
+        }
+      ],
+      "cover": {
+        "status": "reached",
+        "evidence": "insn_lhu_ch0-single-flight-cover"
+      },
+      "evidence": "insn_lhu_ch0/result.json",
+      "historical_bound": 20,
+      "capture_sha256": "9259c74a55b7fb53668d5abf7a623cdd32a917eece0112aa34deed58ea28387c",
+      "settings_sha256": "b1316c4083a6b55473d3de241285ff9371e51aa7cff876470f63f25858c9178d"
+    },
+    {
+      "check": "insn_lui_ch0",
+      "status": "inconclusive",
+      "conditional_native_proof": false,
+      "reason": "conditional_engine_result",
+      "engines": [
+        {
+          "engine": "smtbmc:bitwuzla",
+          "status": "timeout",
+          "reason": null
+        },
+        {
+          "engine": "abc:pdr",
+          "status": "timeout",
+          "reason": null
+        }
+      ],
+      "cover": {
+        "status": "reached",
+        "evidence": "insn_lui_ch0-single-flight-cover"
+      },
+      "evidence": "insn_lui_ch0/result.json",
+      "historical_bound": 20,
+      "capture_sha256": "35a8a3e48835a87b0e9b4e3aafe379bcaa11277096f073bb0c0ac3241c162ccf",
+      "settings_sha256": "b190742d1182ae6a1830b85ff6819599307d5e43091eaadf51469a57be2250de"
+    },
+    {
+      "check": "insn_lw_ch0",
+      "status": "inconclusive",
+      "conditional_native_proof": false,
+      "reason": "conditional_engine_result",
+      "engines": [
+        {
+          "engine": "abc:pdr",
+          "status": "timeout",
+          "reason": null
+        },
+        {
+          "engine": "smtbmc:bitwuzla",
+          "status": "timeout",
+          "reason": null
+        }
+      ],
+      "cover": {
+        "status": "reached",
+        "evidence": "insn_lw_ch0-single-flight-cover"
+      },
+      "evidence": "insn_lw_ch0/result.json",
+      "historical_bound": 20,
+      "capture_sha256": "692966e15cc844c39844fa26c36233dfbee227a07a0a94cac71f28c9f25cbd49",
+      "settings_sha256": "78d32fd19aced364015507a1d059d79905a97cf78d3e53b35836a9c0d35e474e"
+    },
+    {
+      "check": "insn_or_ch0",
+      "status": "inconclusive",
+      "conditional_native_proof": false,
+      "reason": "conditional_engine_result",
+      "engines": [
+        {
+          "engine": "smtbmc:bitwuzla",
+          "status": "timeout",
+          "reason": null
+        },
+        {
+          "engine": "abc:pdr",
+          "status": "timeout",
+          "reason": null
+        }
+      ],
+      "cover": {
+        "status": "reached",
+        "evidence": "insn_or_ch0-single-flight-cover"
+      },
+      "evidence": "insn_or_ch0/result.json",
+      "historical_bound": 20,
+      "capture_sha256": "74c308445fe9f16209dc67b875fd7c79924ae2a72236bb2aff1b4a09c5f090df",
+      "settings_sha256": "39ff5a7176b813d6ea8071cfbfcd21bd4d63d9ebe29a640c730c73f2e4e63935"
+    },
+    {
+      "check": "insn_ori_ch0",
+      "status": "inconclusive",
+      "conditional_native_proof": false,
+      "reason": "conditional_engine_result",
+      "engines": [
+        {
+          "engine": "abc:pdr",
+          "status": "timeout",
+          "reason": null
+        },
+        {
+          "engine": "smtbmc:bitwuzla",
+          "status": "timeout",
+          "reason": null
+        }
+      ],
+      "cover": {
+        "status": "reached",
+        "evidence": "insn_ori_ch0-single-flight-cover"
+      },
+      "evidence": "insn_ori_ch0/result.json",
+      "historical_bound": 20,
+      "capture_sha256": "63f17322d9a0963230f06046d8714499b2491bc82fa438cf0d5d6b5666bb479b",
+      "settings_sha256": "3dcaa3fb986b4bca67351912f67f9b737acb11ceb3fce25792916aaac34714bf"
+    },
+    {
+      "check": "insn_sb_ch0",
+      "status": "inconclusive",
+      "conditional_native_proof": false,
+      "reason": "conditional_engine_result",
+      "engines": [
+        {
+          "engine": "smtbmc:bitwuzla",
+          "status": "timeout",
+          "reason": null
+        },
+        {
+          "engine": "abc:pdr",
+          "status": "timeout",
+          "reason": null
+        }
+      ],
+      "cover": {
+        "status": "reached",
+        "evidence": "insn_sb_ch0-single-flight-cover"
+      },
+      "evidence": "insn_sb_ch0/result.json",
+      "historical_bound": 20,
+      "capture_sha256": "c4f5666318894fa49885c410430cec5d24e17940dc6b10640368273765609784",
+      "settings_sha256": "73ebfc336503cf4fd602ead38f37668b8df887c4c40b3354c1b054425b9afbc5"
+    },
+    {
+      "check": "insn_sh_ch0",
+      "status": "inconclusive",
+      "conditional_native_proof": false,
+      "reason": "conditional_engine_result",
+      "engines": [
+        {
+          "engine": "smtbmc:bitwuzla",
+          "status": "timeout",
+          "reason": null
+        },
+        {
+          "engine": "abc:pdr",
+          "status": "timeout",
+          "reason": null
+        }
+      ],
+      "cover": {
+        "status": "reached",
+        "evidence": "insn_sh_ch0-single-flight-cover"
+      },
+      "evidence": "insn_sh_ch0/result.json",
+      "historical_bound": 20,
+      "capture_sha256": "bdb044050414d49b0420661dec2b3757026b0f603c553c2026b2f281589ff449",
+      "settings_sha256": "9101208a2a38ee8ec0ae31c57413ce78ab02426e2f2634181045aa85e3246ada"
+    },
+    {
+      "check": "insn_sll_ch0",
+      "status": "inconclusive",
+      "conditional_native_proof": false,
+      "reason": "conditional_engine_result",
+      "engines": [
+        {
+          "engine": "smtbmc:bitwuzla",
+          "status": "timeout",
+          "reason": null
+        },
+        {
+          "engine": "abc:pdr",
+          "status": "timeout",
+          "reason": null
+        }
+      ],
+      "cover": {
+        "status": "reached",
+        "evidence": "insn_sll_ch0-single-flight-cover"
+      },
+      "evidence": "insn_sll_ch0/result.json",
+      "historical_bound": 20,
+      "capture_sha256": "e62e89ddd700142c75f81c2d942d76838dab20ed9e88f4ecc174af81c1bfca1a",
+      "settings_sha256": "0098562940ff88e3d08a5ccf22ada80d312789f069859c18fccb335705c19701"
+    },
+    {
+      "check": "insn_slli_ch0",
+      "status": "inconclusive",
+      "conditional_native_proof": false,
+      "reason": "conditional_engine_result",
+      "engines": [
+        {
+          "engine": "smtbmc:bitwuzla",
+          "status": "timeout",
+          "reason": null
+        },
+        {
+          "engine": "abc:pdr",
+          "status": "timeout",
+          "reason": null
+        }
+      ],
+      "cover": {
+        "status": "reached",
+        "evidence": "insn_slli_ch0-single-flight-cover"
+      },
+      "evidence": "insn_slli_ch0/result.json",
+      "historical_bound": 20,
+      "capture_sha256": "8937ae7f648ddbf215baf3a5b781b3365f3c03bc2ee067448478faab86ae2a27",
+      "settings_sha256": "630d3e90b3a2593fb49dd595ad9734f2df3b5b5844caa88004c2cf2f4a164727"
+    },
+    {
+      "check": "insn_slt_ch0",
+      "status": "inconclusive",
+      "conditional_native_proof": false,
+      "reason": "conditional_engine_result",
+      "engines": [
+        {
+          "engine": "abc:pdr",
+          "status": "timeout",
+          "reason": null
+        },
+        {
+          "engine": "smtbmc:bitwuzla",
+          "status": "timeout",
+          "reason": null
+        }
+      ],
+      "cover": {
+        "status": "reached",
+        "evidence": "insn_slt_ch0-single-flight-cover"
+      },
+      "evidence": "insn_slt_ch0/result.json",
+      "historical_bound": 20,
+      "capture_sha256": "3a3961649be650c87e9e2dbbafce3b2f2ae09817cbb4f492ebd8c5a02f7c8210",
+      "settings_sha256": "303657474fe07ef31c47919ca6335db2831232fd26e7b1566d068dd57ca16255"
+    },
+    {
+      "check": "insn_slti_ch0",
+      "status": "inconclusive",
+      "conditional_native_proof": false,
+      "reason": "conditional_engine_result",
+      "engines": [
+        {
+          "engine": "abc:pdr",
+          "status": "timeout",
+          "reason": null
+        },
+        {
+          "engine": "smtbmc:bitwuzla",
+          "status": "timeout",
+          "reason": null
+        }
+      ],
+      "cover": {
+        "status": "reached",
+        "evidence": "insn_slti_ch0-single-flight-cover"
+      },
+      "evidence": "insn_slti_ch0/result.json",
+      "historical_bound": 20,
+      "capture_sha256": "26393f5258b8cb8faf79c344776e92bbee18141086187f00e48b1e71205217db",
+      "settings_sha256": "2d0d2926b3150d23b2b6ec6254774235deac6d78618611ce60377080c5914ffd"
+    },
+    {
+      "check": "insn_sltiu_ch0",
+      "status": "inconclusive",
+      "conditional_native_proof": false,
+      "reason": "conditional_engine_result",
+      "engines": [
+        {
+          "engine": "abc:pdr",
+          "status": "timeout",
+          "reason": null
+        },
+        {
+          "engine": "smtbmc:bitwuzla",
+          "status": "timeout",
+          "reason": null
+        }
+      ],
+      "cover": {
+        "status": "reached",
+        "evidence": "insn_sltiu_ch0-single-flight-cover"
+      },
+      "evidence": "insn_sltiu_ch0/result.json",
+      "historical_bound": 20,
+      "capture_sha256": "3407e5ee96f193ccba58f9101e3c5605f301362d73a1f59ec6c7819ed76f462e",
+      "settings_sha256": "616f9ef7222947f2eec97f1d3f6f0f095b237f75dae44f421c3f337989f41876"
+    },
+    {
+      "check": "insn_sltu_ch0",
+      "status": "inconclusive",
+      "conditional_native_proof": false,
+      "reason": "conditional_engine_result",
+      "engines": [
+        {
+          "engine": "abc:pdr",
+          "status": "timeout",
+          "reason": null
+        },
+        {
+          "engine": "smtbmc:bitwuzla",
+          "status": "timeout",
+          "reason": null
+        }
+      ],
+      "cover": {
+        "status": "reached",
+        "evidence": "insn_sltu_ch0-single-flight-cover"
+      },
+      "evidence": "insn_sltu_ch0/result.json",
+      "historical_bound": 20,
+      "capture_sha256": "323cf734e5085c6c9a392925372e6ad464eb9d719ca0119374dde9e47105107d",
+      "settings_sha256": "b1dde9975ccc5675ce588ed3d94eeac86e7927a08970a7af2320efb74a4ddbcc"
+    },
+    {
+      "check": "insn_sra_ch0",
+      "status": "inconclusive",
+      "conditional_native_proof": false,
+      "reason": "conditional_engine_result",
+      "engines": [
+        {
+          "engine": "abc:pdr",
+          "status": "timeout",
+          "reason": null
+        },
+        {
+          "engine": "smtbmc:bitwuzla",
+          "status": "timeout",
+          "reason": null
+        }
+      ],
+      "cover": {
+        "status": "reached",
+        "evidence": "insn_sra_ch0-single-flight-cover"
+      },
+      "evidence": "insn_sra_ch0/result.json",
+      "historical_bound": 20,
+      "capture_sha256": "ecbb43f7e33d62ef30ab00009b8d318bfaf927881a8ccdbc5d2b03912fc29243",
+      "settings_sha256": "4f86f59bb9b14d293a8298216d08a4ce310721a81a7c29076b06bbbd09d3a853"
+    },
+    {
+      "check": "insn_srai_ch0",
+      "status": "inconclusive",
+      "conditional_native_proof": false,
+      "reason": "conditional_engine_result",
+      "engines": [
+        {
+          "engine": "abc:pdr",
+          "status": "timeout",
+          "reason": null
+        },
+        {
+          "engine": "smtbmc:bitwuzla",
+          "status": "timeout",
+          "reason": null
+        }
+      ],
+      "cover": {
+        "status": "reached",
+        "evidence": "insn_srai_ch0-single-flight-cover"
+      },
+      "evidence": "insn_srai_ch0/result.json",
+      "historical_bound": 20,
+      "capture_sha256": "7f636c9cccb1500b00705575676ab43e4965531ec0de09005195fcd2e0e86f5e",
+      "settings_sha256": "5ab92411287fe9484f9da5b6cdfba71e097f84eb56dc35fc5cc48d3c032533b6"
+    },
+    {
+      "check": "insn_srl_ch0",
+      "status": "inconclusive",
+      "conditional_native_proof": false,
+      "reason": "conditional_engine_result",
+      "engines": [
+        {
+          "engine": "abc:pdr",
+          "status": "timeout",
+          "reason": null
+        },
+        {
+          "engine": "smtbmc:bitwuzla",
+          "status": "timeout",
+          "reason": null
+        }
+      ],
+      "cover": {
+        "status": "reached",
+        "evidence": "insn_srl_ch0-single-flight-cover"
+      },
+      "evidence": "insn_srl_ch0/result.json",
+      "historical_bound": 20,
+      "capture_sha256": "e743a5c424dd78970ad846c251e3700a688acd1b9cb99318467976c6fb513c6b",
+      "settings_sha256": "f00db4a18e6016672648360165e8aaf9f6b0a35d650d4b908c787588315d7767"
+    },
+    {
+      "check": "insn_srli_ch0",
+      "status": "inconclusive",
+      "conditional_native_proof": false,
+      "reason": "conditional_engine_result",
+      "engines": [
+        {
+          "engine": "abc:pdr",
+          "status": "timeout",
+          "reason": null
+        },
+        {
+          "engine": "smtbmc:bitwuzla",
+          "status": "timeout",
+          "reason": null
+        }
+      ],
+      "cover": {
+        "status": "reached",
+        "evidence": "insn_srli_ch0-single-flight-cover"
+      },
+      "evidence": "insn_srli_ch0/result.json",
+      "historical_bound": 20,
+      "capture_sha256": "9789245f9f91d8913e7a9531717c0af1ab8e60e25272655b2d72e11df850c498",
+      "settings_sha256": "3bc3fa22ad2056e731e77e150cd6f4959fe8a716bd304ecc680a1b69cbffb76f"
+    },
+    {
+      "check": "insn_sub_ch0",
+      "status": "inconclusive",
+      "conditional_native_proof": false,
+      "reason": "conditional_engine_result",
+      "engines": [
+        {
+          "engine": "smtbmc:bitwuzla",
+          "status": "timeout",
+          "reason": null
+        },
+        {
+          "engine": "abc:pdr",
+          "status": "timeout",
+          "reason": null
+        }
+      ],
+      "cover": {
+        "status": "reached",
+        "evidence": "insn_sub_ch0-single-flight-cover"
+      },
+      "evidence": "insn_sub_ch0/result.json",
+      "historical_bound": 20,
+      "capture_sha256": "9b10f675c185735007f7c2852a1a1c2f3b4afd075a0979203d601c8bc562e498",
+      "settings_sha256": "e6b22b2ac435e61f973b6044399461e432503fe2efc0343a3bed1eb768c93997"
+    },
+    {
+      "check": "insn_sw_ch0",
+      "status": "inconclusive",
+      "conditional_native_proof": false,
+      "reason": "conditional_engine_result",
+      "engines": [
+        {
+          "engine": "smtbmc:bitwuzla",
+          "status": "timeout",
+          "reason": null
+        },
+        {
+          "engine": "abc:pdr",
+          "status": "timeout",
+          "reason": null
+        }
+      ],
+      "cover": {
+        "status": "reached",
+        "evidence": "insn_sw_ch0-single-flight-cover"
+      },
+      "evidence": "insn_sw_ch0/result.json",
+      "historical_bound": 20,
+      "capture_sha256": "5added35f5ee44d1fcad1188e43aaceac1da1f0b37668eb519076ca36519e512",
+      "settings_sha256": "efdb1b962c16f42dad1e601b12a9fc4e75e78a8a072401133a9c34257ad452cb"
+    },
+    {
+      "check": "insn_xor_ch0",
+      "status": "inconclusive",
+      "conditional_native_proof": false,
+      "reason": "conditional_engine_result",
+      "engines": [
+        {
+          "engine": "smtbmc:bitwuzla",
+          "status": "timeout",
+          "reason": null
+        },
+        {
+          "engine": "abc:pdr",
+          "status": "timeout",
+          "reason": null
+        }
+      ],
+      "cover": {
+        "status": "reached",
+        "evidence": "insn_xor_ch0-single-flight-cover"
+      },
+      "evidence": "insn_xor_ch0/result.json",
+      "historical_bound": 20,
+      "capture_sha256": "05255b9a0a299d9cfdd6672b611ecec23dace729f125e3e5d9ee5c9b3ef216aa",
+      "settings_sha256": "b1c7ca5f8b8a20289d4032a703e9d643823dc9165ec89df43004028bbd012e2c"
+    },
+    {
+      "check": "insn_xori_ch0",
+      "status": "inconclusive",
+      "conditional_native_proof": false,
+      "reason": "conditional_engine_result",
+      "engines": [
+        {
+          "engine": "smtbmc:bitwuzla",
+          "status": "timeout",
+          "reason": null
+        },
+        {
+          "engine": "abc:pdr",
+          "status": "timeout",
+          "reason": null
+        }
+      ],
+      "cover": {
+        "status": "reached",
+        "evidence": "insn_xori_ch0-single-flight-cover"
+      },
+      "evidence": "insn_xori_ch0/result.json",
+      "historical_bound": 20,
+      "capture_sha256": "6c383869857b9f4814aa4930b726918843179e9788b85cc3fc544166174d171d",
+      "settings_sha256": "79fe6745980c77fcdbcc55c67e99c5a4dee21b5319484ffb406a503aa3bf5c28"
+    }
+  ],
+  "engines": [
+    "abc:pdr",
+    "smtbmc:bitwuzla"
+  ],
+  "timeout_s": 15.0,
+  "budget_s": 40.0,
+  "abstraction": {
+    "schema": "rvw.riscv-abstraction/1",
+    "module": "VexRiscv",
+    "clock": "clk",
+    "reset": "reset",
+    "in_flight": [
+      "decode_arbitration_isValid",
+      "execute_arbitration_isValid",
+      "memory_arbitration_isValid",
+      "writeBack_arbitration_isValid"
+    ],
+    "memory": "wrapper.uut.RegFilePlugin_regFile",
+    "engines": [
+      "abc:pdr",
+      "smtbmc:bitwuzla"
+    ],
+    "keep_words": [
+      0
+    ]
+  },
+  "limits": [
+    "Single-flight is a restriction, not a proven invariant.",
+    "Regfile word zero is retained. Other words are overapproximated.",
+    "Conditional native proof does not certify full pipeline or observer."
+  ],
+  "rtl_sha256": "545c0864dec04e72a7b74480464866c8af876c21ff7833f8f7d67dba6aa9e7c1",
+  "historical_bounded_evidence": {
+    "result_sha256": "dd439d3f29efcb6c2790eb1fb1be1f4d3308b17a6018f94f9c607a5447501746",
+    "wrapper_sha256": "e79be08f1ba3cfe34775207b09dd8b382debae7ad705b564638e3295d5bd765a",
+    "settings_sha256": "59d46d365adb0555d038d8f865d42e4af52a1e527ef23b885e2d4e2771f3dbf6",
+    "reference": "GENERATED_RESULTS.md; initial generated-wrapper campaign, not the new abstract model"
+  }
+}

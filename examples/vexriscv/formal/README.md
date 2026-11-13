@@ -57,3 +57,8 @@ The older results above remain historical attempts.
 See [M_ROUTE.md](M_ROUTE.md) for the product-mode adapter, reduced divider
 operand domains and pinned Sail MUL/MULHU checks with abstract multiplication.
 Reduced-domain proofs do not establish unrestricted RV32 instruction signoff.
+
+## Instruction portfolio
+
+See [PORTFOLIO.md](PORTFOLIO.md) for the per-instruction campaign with the
+single-flight restriction, retained x0 storage and two proof engines.
