@@ -29,15 +29,15 @@ def mcp_tools():
     return [
         ToolSpec("bugmem_add", "Store a failure report (bundle summary or C1 result) with its root cause, fix and "
                  "verified scope in the bug-pattern memory.",
-                 schema({**REPORT, "cause": S, "fix": S, "scope": S, "label": S, **STORE}, ["report", "cause"]), _add),
+                 schema({**REPORT, "cause": S, "fix": S, "scope": S, "label": S, **STORE}, ["report", "cause"]), _add, side_effects='writes files to the selected store or the user bug-memory store', native_tools=()),
         ToolSpec("bugmem_match", "Rank stored failures by signature similarity to a new failure report; returns "
                  "shared features and the stored cause/fix. A candidate is a lead, not a diagnosis.",
                  schema({**REPORT, "top": {"type": "integer", "minimum": 1, "default": 5},
                          "min_score": {"type": "number", "minimum": 0, "default": 0.2}, **STORE}, ["report"]),
-                 _match, annotations={"readOnlyHint": True}),
+                 _match, annotations={"readOnlyHint": True}, side_effects='read-only', native_tools=()),
         ToolSpec("bugmem_list", "List the stored failure signatures and causes.", schema({**STORE}, []), _list,
-                 annotations={"readOnlyHint": True}),
+                 annotations={"readOnlyHint": True}, side_effects='read-only', native_tools=()),
         ToolSpec("bugmem_evaluate", "Leave-one-out matching accuracy over labelled stored failures.",
                  schema({"top": {"type": "integer", "minimum": 1, "default": 3}, **STORE}, []), _evaluate,
-                 annotations={"readOnlyHint": True}),
+                 annotations={"readOnlyHint": True}, side_effects='read-only', native_tools=()),
     ]

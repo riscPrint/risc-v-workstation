@@ -22,10 +22,10 @@ def mcp_tools():
         ToolSpec("perf_report", "Measure pipeline stage residence, IPC windows, discarded work and inferred retirement bubbles "
                  "from a Kanata 0004 log (or load a saved report). Large logs run as a job. Stage names are explicit options.",
                  schema({"path": S, **OPTIONS, "result": {**S, "description": "C1 result.json for counter cross-check"}}, ["path"]),
-                 _report, long=True, annotations={"readOnlyHint": True}),
+                 _report, long=True, annotations={"readOnlyHint": True}, side_effects='read-only; long-running', native_tools=()),
         ToolSpec("perf_compare", "Compare two pipeline logs or rvw.perf/1 reports to find performance changes above tolerance. "
                  "Analysis settings must match; differences are magnitudes, not statistical significance. Runs as a job.",
                  schema({"base": S, "candidate": S, **OPTIONS,
                          "tolerance": {"type": "number", "minimum": 0, "default": .05}}, ["base", "candidate"]),
-                 _compare, long=True, annotations={"readOnlyHint": True}),
+                 _compare, long=True, annotations={"readOnlyHint": True}, side_effects='read-only; long-running', native_tools=()),
     ]
