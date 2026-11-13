@@ -1,16 +1,16 @@
 """Clocked response liveness through native live or liveness-to-safety jobs.
 
-A pending bit retains all outstanding identical Boolean response obligations.
-The live condition requires pending to clear infinitely often. No finite bound
-is substituted for an eventual response.
+Progress automata retain overlapping obligations. The acceptance predicate
+must hold infinitely often. No finite deadline substitutes for eventuality.
 """
 import json
 from pathlib import Path
 import re
 
 from rvw.common.proc import run_group
-from .temporal import Unsupported, lower, split, unwrap
-from .sva import _expression, _group
+from .temporal import Unsupported, lower, unwrap
+from .sva import _group
+from .unbounded import MARKER, emit
 
 
 def lower_live(source, top):
@@ -25,25 +25,13 @@ def lower_live(source, top):
     for index, match in enumerate(re.finditer(r'\b(assert|assume)\s+property\s*\(', module[0])):
         start = module.start() + match.start()
         body, end = _group(text, module.start() + match.end() - 1)
-        if not re.search(r'\bs_eventually\b', body):
+        if not MARKER.search(body):
             continue
         clock = re.match(r'\s*@\(\s*posedge\s+(\w+)\s*\)\s*', body)
         if not clock:
             raise Unsupported('liveness_clock')
         clocks.add(clock[1])
         expr = unwrap(body[clock.end():])
-        parts = split(expr, r'\|->')
-        if len(parts) not in (1, 3):
-            raise Unsupported('liveness_implication')
-        request = parts[0] if len(parts) == 3 else '1'
-        event = re.fullmatch(r's_eventually\s+(.+)', unwrap(parts[-1]), re.S)
-        if not event:
-            raise Unsupported('liveness_form')
-        response = unwrap(event[1])
-        for value in (request, response):
-            _expression(value)
-            if '$' in value:
-                raise Unsupported('liveness_sampled_function')
         semi = re.match(r'\s*;', text[end:])
         if not semi:
             raise Unsupported('action_block')
@@ -53,19 +41,19 @@ def lower_live(source, top):
         if label:
             start = module.start() + label.start()
         prefix = f'rvw_live_{index}'
-        emitted = (f'reg {prefix}_pending = 0;\n'
-                   f'always @(posedge {clock[1]}) {prefix}_pending <= '
-                   f'({prefix}_pending || ({request})) && !({response});\n'
-                   f'(* keep *) wire {prefix} = !{prefix}_pending;\n')
+        emitted, details = emit(expr, clock[1], prefix)
         edits.append((start, end + semi.end(), emitted))
         rows.append(dict(id=name, wire=prefix, clock=clock[1],
-                         kind='live' if match[1] == 'assert' else 'fair'))
+                         kind='live' if match[1] == 'assert' else 'fair', **details))
     if not rows:
-        raise Unsupported('liveness_form', 'no supported eventual response properties')
+        raise Unsupported('liveness_form', 'no supported unbounded temporal properties')
     if len(clocks) != 1:
         raise Unsupported('liveness_multiclock')
     for start, end, replacement in sorted(edits, reverse=True):
         source = source[:start] + replacement + source[end:]
+    remaining = re.sub(r'//[^\n]*|/\*.*?\*/', ' ', source, flags=re.S)
+    if re.search(r'\b(assert|assume|cover)\s*\(', remaining):
+        raise Unsupported('mixed_liveness_safety', 'native checks need a separate job')
     # Validate the remaining source. Keep finite property jobs separate.
     source, finite = lower(source)
     if finite:

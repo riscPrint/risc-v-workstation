@@ -98,6 +98,24 @@ and canonical net ranges. It applies one startup reset cycle, then deasserts
 reset permanently. Fairness is conditional. Feasibility, activation and full
 attribution remain unqualified. The underlying runner's state refusals remain.
 
+## Unbounded SVA progress automata
+
+`rvw.formal-live/1` accepts Boolean strong/weak until operators and a tested
+single-clock unbounded sequence subset. Extended property rows record
+`operator`; sequence rows also record `strength`, a `minimum` or `count`, and
+`completion` where applicable. Assert and assume sequence consequents default to
+weak. Explicit strong sequences require finite completion for every request.
+A latched fatal predicate records finite impossibility. Count buckets retain
+overlapping attempts. A separate owed set gives acceptance when each old group
+finishes, even when requests continue. It never resets an old attempt on a new
+request. Both native-live and liveness-to-safety routes use these predicates.
+
+The supported syntax and tested capacity limits are in the formal README and
+generated support table. No finite cutoff replaces an unbounded endpoint.
+Finite checks, general sequence composition, multi-clock sequences and reset
+cancellation remain separate or unsupported. Native engine evidence keeps the
+same conditional and inconclusive limits as the Boolean response adapter.
+
 ## Eventual-response liveness jobs
 
 `rvw.formal-live/1` records `status`, `observation`, property ids, clock names,

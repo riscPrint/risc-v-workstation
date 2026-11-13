@@ -14,3 +14,15 @@
 | `$stable` | positive and negative native case | finite, single clock |
 | `$changed` | positive and negative native case | finite, single clock |
 | `local variables` | positive and negative native case | finite, single clock |
+| `s_eventually` | positive and negative native case | infinite trace, single clock; `formal liveness` |
+| `until` | positive and negative native case | infinite trace, single clock; `formal liveness` |
+| `until_with` | positive and negative native case | infinite trace, single clock; `formal liveness` |
+| `s_until` | positive and negative native case | infinite trace, single clock; `formal liveness` |
+| `s_until_with` | positive and negative native case | infinite trace, single clock; `formal liveness` |
+| `##[M:$]` | positive and negative native case | infinite trace, single clock; `formal liveness` |
+| `[*M:$]` | positive and negative native case | infinite trace, single clock; `formal liveness` |
+| `[*]` | positive and negative native case | infinite trace, single clock; `formal liveness` |
+| `[->N]` | positive and negative native case | infinite trace, single clock; `formal liveness` |
+| `[=N]` | positive and negative native case | infinite trace, single clock; `formal liveness` |
+| `strong / weak` | positive and negative native case | infinite trace, single clock; `formal liveness` |
+| `unbounded first_match` | positive and negative native case | infinite trace, single clock; `formal liveness` |

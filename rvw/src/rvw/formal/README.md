@@ -1711,7 +1711,7 @@ Avy crashed. Induction exhaustion stays inconclusive. Missing engines were
 not run. No licensed comparison or open-core property campaign ran.
 
 
-### Eventual-response liveness
+### Unbounded temporal properties
 
 ```sh
 rvw formal liveness response.sv --top dut --out live-job
@@ -1724,8 +1724,8 @@ request. Each pending request remains pending until a sampled acknowledgement.
 The generated SBY job uses native `$live` or `$fair` cells and `aiger suprove`.
 The same response can discharge all earlier identical response obligations.
 No finite deadline replaces eventuality. The clock is one abstract rising-edge
-clock. Reset cancellation, cross-clock properties, nested temporal response
-expressions and mixed safety/liveness jobs remain refused.
+clock. Reset cancellation, cross-clock properties and mixed finite/liveness jobs remain
+refused. The additional temporal forms below use dedicated progress automata.
 
 Without `--run`, the command writes a job and reports `observation=not_run`.
 With `--run --backend suprove`, a missing SBY or suprove gives `missing_tool`. Engine passes remain
@@ -1733,6 +1733,32 @@ With `--run --backend suprove`, a missing SBY or suprove gives `missing_tool`. E
 An engine failure is recorded as a failure. `formal_liveness` exposes the same
 operation through MCP. Native lowering tests check `$live` creation. Those tests
 do not qualify an engine. The `l2s` route below has separate native checks.
+The same command accepts Boolean `until`, `until_with`, `s_until` and
+`s_until_with`. Exclusive `until` does not test the left operand at the completion
+sample. Inclusive `until_with` does. The `s_` forms require eventual completion.
+Both `|->` and `|=>` are supported for a Boolean antecedent.
+
+Supported unbounded sequences are `a ##[M:$] b`, `a[*M:$] ##1 b`,
+`a[*] ##1 b`, `a[->N]` and `a[=N]`. Goto and nonconsecutive repetition can have
+one `##1 b` completion. Operands must be Boolean expressions. Counts are positive
+decimal literals and state or delay limits are 64. A consecutive repetition with
+no completion must have a positive minimum. An optional outer `first_match`
+selects the same existence condition for these standalone consequents.
+
+Sequence consequents in assert and assume default to `weak(...)`.
+Use `strong(...)` to require a match. The lowering preserves this distinction.
+For example, `req |-> b[->2]` can wait forever. `req |-> strong(b[->2])`
+requires two sampled `b` events for every request. Overlapping requests use
+count buckets. A separate set tracks old obligations until they complete.
+New requests cannot erase those obligations or prevent acceptance forever.
+
+The rules follow IEEE 1800-2017 clauses 16.9 and 16.12, including the weak default
+for sequence properties. The [IEEE language reference](https://rfsoc.mit.edu/6S965/_static/F25/documentation/1800-2017.pdf)
+gives the operator definitions. The generated support table includes paired native
+cases for each listed form. General nested sequence composition, count ranges,
+reset cancellation, local captures and sampled functions in this unbounded
+frontend remain refused. Native finite checks need a separate job.
+
 ### SVA liveness through safety engines
 
 ```sh

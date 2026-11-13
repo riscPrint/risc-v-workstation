@@ -41,7 +41,6 @@ def test_periodic_semantics(req_loop, response):
 
 
 @pytest.mark.parametrize('expr', [
-    'req |=> s_eventually ack',
     'req |-> s_eventually $past(ack)',
     'disable iff(rst) req |-> s_eventually ack',
     'req |-> s_eventually (ack ##1 ack)',
