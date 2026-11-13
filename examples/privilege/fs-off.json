@@ -1,0 +1,6 @@
+{
+  "schema": "rvw.privilege/1",
+  "kind": "disabled",
+  "priv": "msu",
+  "isa": "rv64imf_zicsr_zifencei"
+}

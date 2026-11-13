@@ -69,3 +69,16 @@ Builds also write `functional-groups.json` for `rvw cov functional --config`.
 It describes CSR/mode, trap and interrupt observation domains. Observed bins
 measure trace activity. Use `privilege check` for architectural pass groups.
 An observed hit alone never establishes a correct outcome.
+
+## Disabled features
+
+`kind = "disabled"` selects two matrices. With `priv = "msu"`, declare F in
+`isa`. The 36 programs keep FS Off and cross all six privilege controls with
+M/S/U entry and both control values. Each floating-point operation must trap
+with cause 2 at its exact PC. With `priv = "mu"`, 72 programs cross the same
+controls with M/U entry and absent satp, SFENCE.VMA and SRET. Supervisor setup
+CSRs are not accessed. The reference uses the configured privilege string.
+See `examples/privilege/fs-off.json` and `no-supervisor.json`.
+
+These programs check disabled state and absent supervisor operations. They do
+not establish all possible disabled-extension combinations or DUT qualification.
