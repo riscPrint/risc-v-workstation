@@ -28,3 +28,19 @@ but their automatic runnable wiring is not implemented. They produce an
 explicit profile diagnostic. CPU/SoC virtual sequences, SV scaffold output,
 multiple regions and complete automatic peripheral behavior remain open.
 This register-reset smoke does not establish CPU or C4 acceptance.
+
+## Required engine features
+
+`rvw uvm build bench.json --out DIR --require-feature hdl_backdoor`
+refuses a requirement outside the qualified runner profile before it creates
+output or starts tools. Repeat `--require-feature` for each requirement.
+The MCP build tool takes the equivalent `required_features` string array.
+Unsupported requirements include Accellera HDL backdoor/VPI polling,
+four-state behavior, advanced constraints/coverage and commercial VIP.
+The error gives a specific diagnostic and a workaround. Use
+`rvw uvm features RESULTS` for measured C3 evidence. Passing the requirement
+filter alone is not a feature qualification result.
+
+Accellera DPI remains disabled. A project DPI bridge needs separate ABI and
+behavior checks. Imported VIP still requires usable licenses and qualified
+engine support. The profile does not bypass those requirements.

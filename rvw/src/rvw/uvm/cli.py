@@ -12,7 +12,7 @@ def command(a):
             print(markdown(report))
             return 0
         if a.action == 'build':
-            report = flow.build(a.manifest, a.out, archive=a.archive, verilator=a.verilator, timeout=a.timeout)
+            report = flow.build(a.manifest, a.out, archive=a.archive, verilator=a.verilator, timeout=a.timeout, required_features=a.require_feature)
         elif a.action == 'list':
             report = {'tests': flow.load(a.manifest)['tests']}
         elif a.action == 'run':
@@ -45,6 +45,7 @@ def register(sub):
             c.add_argument('--timeout', type=float, default=600)
         if name == 'build':
             c.add_argument('--archive', type=Path)
+            c.add_argument('--require-feature', action='append', default=[], help='refuse features outside the qualified runner profile')
             c.add_argument('--verilator', default='verilator')
         if name in ('run', 'regress'):
             c.add_argument('--build', type=Path, required=True)

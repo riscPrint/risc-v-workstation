@@ -47,8 +47,10 @@ def limit(timeout):
         raise ValueError('timeout must be positive and finite')
 
 
-def build(manifest, out, *, archive=None, verilator='verilator', timeout=600):
+def build(manifest, out, *, archive=None, verilator='verilator', timeout=600, required_features=()):
     limit(timeout)
+    from rvw.sim.uvm_features import require
+    require(required_features)
     data = load(manifest)
     executable = shutil.which(verilator)
     if not executable:
