@@ -3,6 +3,7 @@ import json
 import os
 from pathlib import Path
 import sys
+import shutil
 
 
 def backend_args(backend):
@@ -20,6 +21,8 @@ def main():
     for key in list(os.environ):
         if key.startswith(('COCOTB_', 'GPI_')) or key in {'SIM_CMD_PREFIX', 'SIM_CMD_SUFFIX', 'WAVES'}:
             os.environ.pop(key)
+    for source in request.get('data_files', []):
+        shutil.copyfile(source, out / Path(source).name)
     runner = get_runner(request['backend'])
     build_args = backend_args(request['backend'])
     runner.build(sources=request['sources'], hdl_toplevel=request['top'],

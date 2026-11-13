@@ -534,3 +534,9 @@ MCP: `soc_import_ip`. It captures declared RTL with hashes and generates an
 APB3 wrapper, Scala binder and map region. It does not download or qualify IP.
 See [the contract](../../../../docs/contracts/soc-ip.md) and
 [the OpenCores UART example](../../../../SpinalSoc/examples/import/README.md).
+
+`soc new` selects the current project's core-map when present. One mapped
+RV32 Spinal req/rsp memory bus gets a real `SimpleCoreWrapper`, core build
+dependency and RVFI exports. The default map contains RAM at the declared
+address and size. Other protocols need a project wrapper. The unselected
+project path still creates an explicitly labelled idle scaffold.
