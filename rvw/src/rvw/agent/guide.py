@@ -29,6 +29,9 @@ def validate(data):
         problems.append(f'schema must be {SCHEMA}')
     workflows = {w['id'] for w in data['workflows']}
     for workflow in data['workflows']:
+        tools = workflow.get('tools', [])
+        if not isinstance(tools, list) or any(not isinstance(t, str) for t in tools) or len(set(tools)) != len(tools):
+            problems.append(f'{workflow["id"]}: tool names must be a unique list')
         steps = [s['id'] for s in workflow['steps']]
         if len(set(steps)) != len(steps):
             problems.append(f'{workflow["id"]}: duplicate step ids')
@@ -69,6 +72,11 @@ def markdown(data=None):
         lines.append(f'- {key.replace("_", " ").capitalize()}: {text}')
     for workflow in data['workflows']:
         lines += ['', f'### {workflow["title"]} (`{workflow["id"]}`)', '', workflow['when'], '']
+        if workflow.get('tools'):
+            lines += [f'Optional tool set: {len(workflow["tools"])} tools. '
+                      f'Load MCP profile `{workflow["profile"]}` with `rvw_tools_load`. '
+                      'Read the tool names in `rvw agent guide --json`. '
+                      'Use `rvw_tools_describe` before a call.', '']
         for number, step in enumerate(workflow['steps'], 1):
             optional = ' (optional)' if step.get('optional') else ''
             lines.append(f'{number}. **{step["id"]}**{optional}: {step["do"]} {_call(step)}')

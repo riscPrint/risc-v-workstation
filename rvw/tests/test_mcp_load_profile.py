@@ -15,11 +15,11 @@ def tool(name):
 
 
 def test_load_profile_adds_only_new_tools_and_refuses_unknown():
-    r = Registry([tool("regress_run"), tool("query_drivers"), tool("agent_guide")], profile="core")
-    assert "regress_run" not in r.tools and "agent_guide" in r.tools
-    assert r.load_profile("verification") == ["regress_run"]
+    r = Registry([tool("cov_report"), tool("query_drivers"), tool("agent_guide")], profile="core")
+    assert "cov_report" not in r.tools and "agent_guide" in r.tools
+    assert r.load_profile("verification") == ["cov_report"]
     assert r.load_profile("verification") == []
-    assert r.call("regress_run", {}) == {"ok": "regress_run"}
+    assert r.call("cov_report", {}) == {"ok": "cov_report"}
     out = json.loads(r.call_json("rvw_tools_load", {"profile": "debug"})[0])
     assert out["added"] == ["query_drivers"] or out.get("data", {}).get("added") == ["query_drivers"]
     with pytest.raises(ToolError, match="unknown profile"):
@@ -44,9 +44,9 @@ def test_stdio_core_profile_loads_verification_and_notifies():
                 caps = init.capabilities.tools
                 assert caps and (getattr(caps, "list_changed", None) or getattr(caps, "listChanged", None))
                 before = {t.name for t in (await s.list_tools()).tools}
-                assert "rvw_tools_load" in before and "regress_run" not in before
+                assert "rvw_tools_load" in before and "cov_report" not in before
                 await s.call_tool("rvw_tools_load", {"profile": "verification"})
                 after = {t.name for t in (await s.list_tools()).tools}
-                assert "regress_run" in after and "cosim_check" in after
+                assert "cov_report" in after and "cosim_check" in after
     anyio.run(session)
     assert any("tools/list_changed" in str(m) or "ToolListChanged" in str(m) for m in seen), seen

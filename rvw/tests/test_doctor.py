@@ -54,11 +54,16 @@ def test_cli_json(capsys):
     assert json.loads(capsys.readouterr().out)['schema'] == 'rvw.doctor/1'
 
 
-def test_mcp_is_diagnostic_only():
+def test_diagnostic_mcp_stays_read_only_and_smoke_is_explicit():
     tools, problems = discover({'doctor'})
     assert not problems
-    tool, = tools
-    assert tool.name == 'rvw_doctor'
+    tools = {tool.name: tool for tool in tools}
+    assert set(tools) == {'rvw_doctor', 'doctor_smoke'}
+    tool = tools['rvw_doctor']
+    assert 'smoke_elf' not in tool.input_schema['properties']
+    assert 'elf' not in tool.input_schema['properties']
+    assert tools['doctor_smoke'].long
+    assert not tools['doctor_smoke'].annotations.get('readOnlyHint', False)
     assert 'install' not in tool.input_schema['properties']
     assert tool.annotations['readOnlyHint']
 

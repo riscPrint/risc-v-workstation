@@ -20,7 +20,7 @@ def mcp_tools():
                      'Verilator, Spike). A setup test, not core evidence.',
                      schema({'out': {'type': 'string'}, 'timeout': {'type': 'number'},
                              'bring_up_only': {'type': 'boolean'}}, ['out']), _bringup, long=True,
-                     side_effects='writes-files', native_tools=()),
+                     side_effects='long-running; launches Git, sbt, compiler, Verilator and Spike; writes a disposable core and evidence under out', native_tools=('JDK', 'sbt', 'RISC-V GCC', 'Verilator', 'Spike', 'SpinalTrace')),
             ToolSpec('agent_guide', 'Agent playbook: workflows (bring-up, a test fails, add coverage, prove a '
                      'property, performance question) as ordered rvw CLI and MCP calls with decision points. '
                      'Start here when you do not know which tool to call.',

@@ -12,7 +12,7 @@ from rvw.cli import build_parser
 from rvw.mcp.registry import Registry
 
 ROOT = Path(__file__).resolve().parents[2]
-WORKFLOWS = {'bring-up', 'test-fails', 'add-coverage', 'prove-property', 'performance-question'}
+WORKFLOWS = {'bring-up', 'test-fails', 'add-coverage', 'prove-property', 'performance-question', 'soc-integration', 'agent-evaluation'}
 
 
 def test_playbook_is_valid_and_complete():

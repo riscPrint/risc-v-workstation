@@ -513,20 +513,22 @@ Machine-readable form: `rvw agent guide --json`, MCP tool `agent_guide`, MCP res
 
 A Spinal core repository has no rvw.toml yet, or `rvw doctor` is not ready.
 
+Optional tool set: 22 tools. Load MCP profile `core` with `rvw_tools_load`. Read the tool names in `rvw agent guide --json`. Use `rvw_tools_describe` before a call.
+
 1. **doctor**: Check the installation and the native tools. `rvw doctor --features sim,riscv-gcc,cosim --json` / MCP `rvw_doctor`
    - If exit 1 and a native tool is missing: go to `install`.
    - If project missing: go to `init-plan`.
    - If exit 0: go to `regress-list`.
 2. **install**: Inspect the installer actions, then run them without --dry-run. `rvw doctor --install sim,riscv-gcc,cosim --dry-run --json`
    - If the plan is acceptable: go to `doctor`.
-3. **init-plan**: Plan the project files. Read every planned file. `rvw init --isa <ISA> --wire-build --dry-run --json`
+3. **init-plan**: Plan the project files. Read every planned file. `rvw init --isa <ISA> --wire-build --dry-run --json` / MCP `init_scaffold`
    - If exit 2: go to `stop`. Fix the reported input (ISA, sbt project, linker script).
    - If exit 0: go to `init`.
-4. **init**: Write rvw.toml, rvw/run.sh, the adapter skeleton and the core playbook. `rvw init --isa <ISA> --wire-build --json`
+4. **init**: Write rvw.toml, rvw/run.sh, the adapter skeleton and the core playbook. `rvw init --isa <ISA> --wire-build --json` / MCP `init_scaffold`
    - If exit 0: go to `map-adapter`.
 5. **map-adapter**: Map clock, reset, accepted memory transactions, completion and committed RVFI fields in the core adapter. Follow docs/INTEGRATION_GUIDE.md sections 2 to 4. Review the ISA and memory map. Build a smoke ELF. (manual)
    - If the adapter compiles: go to `smoke`.
-6. **smoke**: Build the model and run one ELF through C1. `rvw doctor --smoke-elf <ELF> --smoke-options rvfi --json` / MCP `rvw_doctor`
+6. **smoke**: Build the model and run one ELF through C1. `rvw doctor --smoke-elf <ELF> --smoke-options rvfi --json` / MCP `doctor_smoke`
    - If smoke run fails: go to `test-fails`.
    - If smoke run passes: go to `regress-list`.
 7. **regress-list**: List the suites and tests the project declares. `rvw regress list --json` / MCP `regress_list`
@@ -548,6 +550,8 @@ A Spinal core repository has no rvw.toml yet, or `rvw doctor` is not ready.
 ### A test fails (`test-fails`)
 
 A C1 run or a regression test reports fail, assert, timeout or rvfi_error.
+
+Optional tool set: 55 tools. Load MCP profile `debug` with `rvw_tools_load`. Read the tool names in `rvw agent guide --json`. Use `rvw_tools_describe` before a call.
 
 1. **identity**: Check the source revision, RTL hash, ELF hash, config and seed of the failing run and each cited artifact. Reject stale waves, wrong ELFs and incomplete runs before cause analysis. (manual)
    - If identities match and the failure is reproduced: go to `bundle`.
@@ -585,6 +589,8 @@ A C1 run or a regression test reports fail, assert, timeout or rvfi_error.
 
 Tests pass, and the next question is what they do not exercise.
 
+Optional tool set: 76 tools. Load MCP profile `verification` with `rvw_tools_load`. Read the tool names in `rvw agent guide --json`. Use `rvw_tools_describe` before a call.
+
 1. **run**: Run the suite with coverage collection. `rvw regress run --tier full --rvfi-trace --out <RUN> --json` / MCP `regress_run`
    - If runs complete: go to `functional`.
 2. **functional**: Measure instruction and event coverage from the C2 traces. `rvw cov functional <RUN> --json --out <COV>` / MCP `cov_functional`
@@ -602,6 +608,8 @@ Tests pass, and the next question is what they do not exercise.
 ### Prove a property (`prove-property`)
 
 A rule must hold for all inputs within a bound, not only for the tests.
+
+Optional tool set: 74 tools. Load MCP profile `formal` with `rvw_tools_load`. Read the tool names in `rvw agent guide --json`. Use `rvw_tools_describe` before a call.
 
 1. **doctor**: Check the formal tools. `rvw formal doctor --out <OUT> --json` / MCP `formal_doctor`
    - If a solver is missing: go to `stop`. Install with scripts/install.sh --with-formal.
@@ -621,6 +629,8 @@ A rule must hold for all inputs within a bound, not only for the tests.
 
 The question is cycles, IPC or where a pipeline stalls.
 
+Optional tool set: 53 tools. Load MCP profile `arch` with `rvw_tools_load`. Read the tool names in `rvw agent guide --json`. Use `rvw_tools_describe` before a call.
+
 1. **konata**: Run the workload with a Konata pipeline log (adapter option --konata). (manual)
    - If a Konata log: go to `report`.
 2. **report**: Report IPC, stalls and the top stall causes. `rvw perf <LOG> --json` / MCP `perf_report`
@@ -630,6 +640,24 @@ The question is cycles, IPC or where a pipeline stalls.
    - If a difference over tolerance: go to `done`.
 4. **calibrate** (optional): Optional: fit the gem5 model to RTL results and explore trends. `rvw arch calibrate --out <OUT> --json` / MCP `arch_calibrate`
    - If a calibrated model: go to `done`. Model results show trends. RTL is the truth.
+
+### SoC and execution infrastructure (`soc-integration`)
+
+A project needs peripheral, lint, multi-run or simulation infrastructure checks.
+
+Optional tool set: 39 tools. Load MCP profile `soc` with `rvw_tools_load`. Read the tool names in `rvw agent guide --json`. Use `rvw_tools_describe` before a call.
+
+1. **review**: Review the project map, adapter and required evidence. Choose the tools listed for this workflow. (manual)
+2. **discover**: Describe the selected tool. Load its profile. Keep transport completion separate from verification. MCP `rvw_tools_search`
+
+### Agent evaluation (`agent-evaluation`)
+
+Measure a bounded fixture or native repair task with independent checks.
+
+Optional tool set: 4 tools. Load MCP profile `verification` with `rvw_tools_load`. Read the tool names in `rvw agent guide --json`. Use `rvw_tools_describe` before a call.
+
+1. **select**: Select a task pack and its independent checks. Keep fixture scores separate from native repair evidence. (manual)
+2. **inspect**: Describe the benchmark tool before a trial. Record budgets, partial attempts and evidence limits. MCP `rvw_tools_search`
 
 <!-- rvw agent guide: end -->
 

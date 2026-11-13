@@ -56,3 +56,7 @@ the outcome the guide expects, what happened (`works` or `rough_edge`) and its l
 Exit 0 means every step worked. The check needs sbt, Verilator, the RISC-V compiler
 and the Spike shim; the tiny core runs under the `tinycore` lock. It is a setup test,
 not core evidence.
+
+## MCP workflow calls
+
+Every MCP tool belongs to a profile and an optional tool set in a guide workflow. The core profile includes each named bring-up call and stays at most 40 tools. Install tools through the CLI. Map the core adapter in the core project. Load another profile when a decision enters another workflow.

@@ -159,3 +159,7 @@ Declare `hdl = "sv"` or `hdl = "vhdl"` in `[project]` for pure HDL projects.
 The HDL scaffold writes this field. Doctor marks the JDK, javac and sbt checks
 `not_applicable`. Applicable native checks still run. The raw installer output
 is retained. An installed version does not prove that the adapter runs.
+
+## MCP workflow calls
+
+MCP `rvw_doctor` stays read-only. Use `doctor_smoke` for the native `rvw doctor --smoke-elf` job. Supply `elf`, the selected project and optional `options` or `platform`.

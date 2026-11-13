@@ -223,3 +223,7 @@ VHDL simulation builds use `ghdl --synth --out=verilog`. This avoids the
 Yosys plugin ABI for simulation. Database extraction still needs a matching
 GHDL Yosys plugin. Set `RVW_GHDL_PLUGIN` to a rebuilt plugin if a bundled
 plugin reports invalid memory-cell parameters. See `scripts/build-ghdl-plugin.py`.
+
+## MCP workflow calls
+
+MCP `init_scaffold` uses the existing Spinal/sbt scaffold generator. Set `out` to the core repository and supply `isa`. Use `dry_run` to inspect the plan. `wire_build` writes build inputs. It does not build the core.
