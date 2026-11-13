@@ -11,6 +11,8 @@ def sample(s):
     if 'enum' in s:
         return s['enum'][0]
     kind = s['type']
+    if isinstance(kind, list):
+        kind = kind[0]
     return {'string': 'fixture', 'integer': 1, 'number': 1.0, 'boolean': False,
             'array': [sample(s['items'])] if kind == 'array' else None}.get(kind)
 
@@ -38,7 +40,8 @@ def test_every_tool_rejects_wrong_types_before_dispatch(name, monkeypatch):
         # job_list has no properties: reject a non-object rather than normalizing it to {}.
         bad_calls = [[]] if not props else []
         for key, prop in props.items():
-            wrong = 'false' if prop.get('type') != 'string' else False
+            kinds = prop.get('type')
+            wrong = False if 'string' in ([kinds] if isinstance(kinds, str) else kinds or []) else 'false'
             bad_calls.append({**valid, key: wrong})
         bad_calls.append({**valid, 'unknown_argument': True})
         bad_calls.extend({k: v for k, v in valid.items() if k != missing} for missing in valid)
@@ -85,7 +88,8 @@ def test_boolean_string_cannot_allow_missing_tests(tmp_path):
     args = {'base': str(tmp_path / 'base'), 'candidate': str(tmp_path / 'candidate')}
     try:
         _, result, error = r.call_json('regress_compare', {**args, 'allow_missing': False})
-        assert not error and result['verdict'] == 'reject', result
+        assert not error and result['legacy_verdict'] == 'reject', result
+        assert result['verdict'] == 'inconclusive' and result['missing'], result
         output = tmp_path / 'verdict.json'
         _, result, error = r.call_json('regress_compare', {**args, 'allow_missing': 'false', 'out': str(output)})
         assert error and 'allow_missing' in result['error'], result
