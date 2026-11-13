@@ -239,14 +239,8 @@ def test_neorv32_uart(tmp_path):
     try:
         assert ops.where(db, 'uart_rxd_i')['signal']['loc'].endswith('neorv32_uart.vhd:36')
         assert db.q('SELECT count(*) FROM memories')[0][0] == 2
-        extra = []
         for a in ('uart_rxd_i', 'uart_ctsn_i', 'bus_req_i[data]', 'clkgen_i'):
             for b in ('uart_txd_o', 'uart_rtsn_o', 'irq_o', 'bus_rsp_o[data]'):
-                found, expected = ops.path(db, a, b)['found'], oracle(a, b)
-                assert found or not expected, ('missing native path', a, b)
-                if found and not expected:
-                    extra.append((a, b))
-        if extra:
-            pytest.xfail('inconclusive exact connectivity: conservative packed-vector aliases add paths: ' + str(extra))
+                assert ops.path(db, a, b)['found'] == oracle(a, b), (a, b)
     finally:
         db.close()

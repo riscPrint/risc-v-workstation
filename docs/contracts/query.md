@@ -79,3 +79,12 @@ requires native rebuild. Output publication uses a temporary file and rename.
 The result reports cache key, status (`hit` or `rebuilt`) and scope
 (`whole-design`). This is build reuse, not semantic equivalence or per-module
 incremental elaboration. The cache directory must be outside source directories.
+
+## Packed HDL endpoint views
+
+In `yosys-*` databases, a multi-bit signal is a view over bit nodes. Query
+traversal can start or end at that view. It does not use the view as an
+intermediate connection between lanes. Memory and synchronous read-state nodes
+remain traversable state boundaries. This applies to navigation through Graph;
+it does not change stored raw edges used by other structural consumers.
+Whole-cell dependencies remain conservative.
