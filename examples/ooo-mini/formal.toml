@@ -1,0 +1,43 @@
+[project]
+schema = "rvw.project/1"
+root = "."
+[core]
+name = "ooo-mini"
+adapter = "./rvw/run.sh"
+configs = ["default"]
+default_config = "default"
+source_repo = "."
+source_env = "OOO_MINI_SOURCE"
+lock = "ooo-mini-mem"
+
+[riscv_formal]
+root = "${RISCV_FORMAL}"
+wrapper = "rvw/rvfi-wrapper.v"
+verilog = ["rvw/out/rtl/Core.v"]
+isa = "rv32im"
+nret = 1
+depth = 8
+solver = "yices"
+checks = ["insn_add_ch0", "insn_lui_ch0", "cover"]
+[riscv_formal.ports]
+valid = "io_retire_valid"
+order = "io_retire_order"
+insn = "io_retire_insn"
+trap = "io_retire_trap"
+halt = "io_retire_halt"
+intr = "io_retire_intr"
+mode = "io_retire_mode"
+ixl = "io_retire_ixl"
+rs1_addr = "io_retire_rs1_addr"
+rs2_addr = "io_retire_rs2_addr"
+rs1_rdata = "io_retire_rs1_rdata"
+rs2_rdata = "io_retire_rs2_rdata"
+rd_addr = "io_retire_rd_addr"
+rd_wdata = "io_retire_rd_wdata"
+pc_rdata = "io_retire_pc_rdata"
+pc_wdata = "io_retire_pc_wdata"
+mem_addr = "io_retire_mem_addr"
+mem_rmask = "io_retire_mem_rmask"
+mem_wmask = "io_retire_mem_wmask"
+mem_rdata = "io_retire_mem_rdata"
+mem_wdata = "io_retire_mem_wdata"

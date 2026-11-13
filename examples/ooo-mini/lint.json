@@ -1,0 +1,17 @@
+{
+  "schema": "rvw.lint-settings/1",
+  "config": "default",
+  "top": "Core",
+  "files": [
+    "rvw/out/rtl/Core.v",
+    "rvw/out/lint-bindings/queues/monitors.sv",
+    "rvw/out/lint-bindings/queues/binds.sv"
+  ],
+  "backends": [
+    "verilator",
+    "rules",
+    "structural"
+  ],
+  "timeout_s": 60,
+  "db": "rvw/out/design.db"
+}

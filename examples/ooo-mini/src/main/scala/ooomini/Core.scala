@@ -33,7 +33,7 @@ class Core(val entries: Int = 8, val physicalCount: Int = 48) extends Component 
     val fetch = out UInt(32 bits)
     val instruction = in Bits(32 bits)
     val loadAddress = out UInt(32 bits)
-    val loadData = in Bits(32 bits) // aligned little-endian word
+    val loadData = in Bits(32 bits) // four little-endian bytes at loadAddress
     val store = out Bool()
     val storeAddress = out UInt(32 bits)
     val storeMask = out Bits(4 bits)
@@ -52,6 +52,7 @@ class Core(val entries: Int = 8, val physicalCount: Int = 48) extends Component 
   val predictedDirections = Vec.fill(entries)(Reg(Bool()).init(False))
   val takenDirections = Vec.fill(entries)(Reg(Bool()).init(False))
   val sequence = Reg(UInt(64 bits)).init(0)
+  val retiredCount = Reg(UInt(64 bits)).init(0)
   val map = Vec((0 until 32).map(i => Reg(UInt(tagWidth bits)).init(i)))
   val committed = Vec((0 until 32).map(i => Reg(UInt(tagWidth bits)).init(i)))
   val free = Reg(Bits(physicalCount bits)).init(((BigInt(1) << physicalCount) - 1) ^ ((BigInt(1) << 32) - 1))
@@ -75,7 +76,8 @@ class Core(val entries: Int = 8, val physicalCount: Int = 48) extends Component 
   val csrAddress = Vec.fill(entries)(Reg(UInt(12 bits)).init(0))
   val csrData = Vec.fill(entries)(Reg(Bits(32 bits)).init(0))
   val csrWrite = Vec.fill(entries)(Reg(Bool()).init(False))
-  val mstatus, mtvec, mepc, mcause, mtval, mscratch, mie = Reg(Bits(32 bits)).init(0)
+  val mstatus = Reg(Bits(32 bits)).init(0x1800)
+  val mtvec, mepc, mcause, mtval, mscratch, mie = Reg(Bits(32 bits)).init(0)
   val cycles = Reg(UInt(64 bits)).init(0)
   cycles := cycles + 1
 
@@ -97,7 +99,8 @@ class Core(val entries: Int = 8, val physicalCount: Int = 48) extends Component 
   val read2 = opcode === B(0x33,7 bits) || opcode === B(0x23,7 bits) || opcode === B(0x63,7 bits)
   val writeRd = rd =/= 0 && (opcode === B(0x33,7 bits) || opcode === B(0x13,7 bits) || opcode === B(3,7 bits) || opcode === B(0x37,7 bits) || opcode === B(0x17,7 bits) || opcode === B(0x6f,7 bits) || opcode === B(0x67,7 bits) || (opcode === B(0x73,7 bits) && instruction(14 downto 12) =/= 0))
   val pop = started && count =/= 0 && done(head)
-  val redirect = pop && (faults(head) || nextPc(head) =/= predicted(head))
+  val fenceInstruction = insn(head)(6 downto 0) === B(0xf,7 bits) && insn(head)(14 downto 12) === B(1,3 bits)
+  val redirect = pop && (faults(head) || nextPc(head) =/= predicted(head) || fenceInstruction)
   val push = started && count < entries && (!writeRd || free.orR) && !redirect
   val allocatedMask = Mux(push && writeRd, B(1,physicalCount bits) |<< allocation, B(0,physicalCount bits))
   val releasedMask = Mux(pop && writes(head) && !faults(head), B(1,physicalCount bits) |<< old(head), B(0,physicalCount bits))
@@ -249,8 +252,8 @@ class Core(val entries: Int = 8, val physicalCount: Int = 48) extends Component 
     is(0x344,0xf11,0xf12,0xf13,0xf14,0x3a0,0x3a1,0x3a2,0x3a3,0x3b0,0x3b1,0x3b2,0x3b3,0x3b4,0x3b5,0x3b6,0x3b7,0x3b8,0x3b9,0x3ba,0x3bb,0x3bc,0x3bd,0x3be,0x3bf) { csrRead := 0 }
     is(0xc00,0xb00) { csrRead := cycles(31 downto 0).asBits }
     is(0xc80,0xb80) { csrRead := cycles(63 downto 32).asBits }
-    is(0xc02,0xb02) { csrRead := sequence(31 downto 0).asBits }
-    is(0xc82,0xb82) { csrRead := sequence(63 downto 32).asBits }
+    is(0xc02,0xb02) { csrRead := retiredCount(31 downto 0).asBits }
+    is(0xc82,0xb82) { csrRead := retiredCount(63 downto 32).asBits }
     default { csrKnown := False }
   }
   val csrSource = Mux(inst(14), inst(19 downto 15).resize(32), a)
@@ -268,7 +271,7 @@ class Core(val entries: Int = 8, val physicalCount: Int = 48) extends Component 
       execution := loaded
       
     }
-    is(0xf) { } // No caches or speculative instruction buffer.
+    is(0xf) { } // FENCE.I discards younger ROB slots at commit.
     is(0x73) {
       execution := csrRead
       when(funct === 0) {
@@ -282,6 +285,27 @@ class Core(val entries: Int = 8, val physicalCount: Int = 48) extends Component 
     default { exception := True; cause := 2; tval := inst }
   }
   when(target(1 downto 0) =/= 0 && isBranch(selected)) { exception := True; cause := 0; tval := target.asBits }
+  val legalEncoding = Bool()
+  legalEncoding := True
+  val function7 = inst(31 downto 25)
+  switch(op) {
+    is(0x33) { legalEncoding := function7 === B(0,7 bits) || function7 === B(1,7 bits) || (function7 === B(0x20,7 bits) && (funct === 0 || funct === 5)) }
+    is(0x13) {
+      when(funct === 1) { legalEncoding := function7 === B(0,7 bits) }
+      when(funct === 5) { legalEncoding := function7 === B(0,7 bits) || function7 === B(0x20,7 bits) }
+    }
+    is(3) { legalEncoding := funct === 0 || funct === 1 || funct === 2 || funct === 4 || funct === 5 }
+    is(0x23) { legalEncoding := funct === 0 || funct === 1 || funct === 2 }
+    is(0x63) { legalEncoding := funct === 0 || funct === 1 || funct === 4 || funct === 5 || funct === 6 || funct === 7 }
+    is(0x67) { legalEncoding := funct === 0 }
+    is(0xf) { legalEncoding := funct === 0 || funct === 1 }
+    is(0x73) {
+      legalEncoding := funct =/= 4
+      when(funct === 0) { legalEncoding := inst === B(0x73,32 bits) || inst === B(0x100073,32 bits) || inst === B(0x30200073,32 bits) || inst === B(0x10500073,32 bits) }
+      when(inst === B(0x100073,32 bits)) { tval := pcs(selected).asBits }
+    }
+  }
+  when(!legalEncoding) { exception := True; cause := 2; tval := inst }
   val multiply = op === B(0x33,7 bits) && inst(31 downto 25) === B(1,7 bits)
   mulDiv.io.start := issue && multiply
   mulDiv.io.flush := redirect
@@ -330,6 +354,7 @@ class Core(val entries: Int = 8, val physicalCount: Int = 48) extends Component 
   r.mem_wmask := Mux(isStore(head) && !faults(head),masks(head),B(0,4 bits))
   r.mem_rdata := memoryData(head)
   r.mem_wdata := operand2(head)
+  when(pop && !faults(head)) { retiredCount := retiredCount + 1 }
   when(pop) {
     valid(head) := False; head := head+1; sequence := sequence+1
     handlerPending := faults(head)
@@ -343,13 +368,19 @@ class Core(val entries: Int = 8, val physicalCount: Int = 48) extends Component 
     }
     when(csrWrite(head) && !faults(head)) {
       switch(csrAddress(head)) {
-        is(0x300) { mstatus := csrData(head) }; is(0x304) { mie := csrData(head) }
+        is(0x300) { mstatus := (csrData(head) & B(0x88,32 bits)) | B(0x1800,32 bits) }; is(0x304) { mie := csrData(head) }
         is(0x305) { mtvec := csrData(head) }; is(0x340) { mscratch := csrData(head) }
         is(0x341) { mepc := csrData(head) & B(0xfffffffcL,32 bits) }
         is(0x342) { mcause := csrData(head) }; is(0x343) { mtval := csrData(head) }
       }
     }
-    when(faults(head)) { mepc := pcs(head).asBits; mcause := causes(head).asBits.resize(32); mtval := tvals(head) }
+    when(faults(head)) {
+      mepc := pcs(head).asBits; mcause := causes(head).asBits.resize(32); mtval := tvals(head)
+      mstatus(7) := mstatus(3); mstatus(3) := False
+    }
+    when(!faults(head) && insn(head) === B(0x30200073,32 bits)) {
+      mstatus(3) := mstatus(7); mstatus(7) := True
+    }
   }
   when(push && !pop) { count := count+1 }
   when(pop && !push) { count := count-1 }
@@ -404,8 +435,8 @@ class Core(val entries: Int = 8, val physicalCount: Int = 48) extends Component 
   Probe.stageAt("rename","Rn",push,nextId,Some(pc),first = true)
   Probe.stageAt("issue","Is",issue,ids(selected),Some(pcs(selected)))
   Probe.stageAt("commit","Cm",pop,ids(head),Some(pcs(head)))
-  Probe.retire("commit",pop,ids(head))
-  Probe.flushYounger("recovery",redirect,ids(head),False)
+  Probe.retire("commit",pop && !faults(head),ids(head))
+  Probe.flushYounger("recovery",redirect,ids(head),faults(head))
   Probe.custom("flush_reason",redirect,"reason" -> Mux(faults(head),U(1,2 bits),U(2,2 bits)))
   Probe.branch("predictor",pop && isBranch(head) && !faults(head),pcs(head),takenDirections(head),nextPc(head),
     predictedTaken = Some(predictedDirections(head)),predictedTarget = Some(predicted(head)),id = Some(ids(head)))
