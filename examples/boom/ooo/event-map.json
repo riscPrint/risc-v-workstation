@@ -6,7 +6,7 @@
     "unit": "instructions",
     "identity": "architectural",
     "family": "throughput",
-    "region": "whole-program; trap-free timing loop only"
+    "region": "whole-program"
   },
   "branch_corrections": {
     "model_event": "branch_misses",
@@ -15,6 +15,6 @@
     "unit": "events",
     "identity": "microarchitectural",
     "family": "prediction",
-    "region": "whole-program; includes all RTL correction pulses"
+    "region": "whole-program"
   }
 }
