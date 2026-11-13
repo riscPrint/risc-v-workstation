@@ -868,3 +868,13 @@ The generic Spinal/Verilator harness can link `lockstep_dpi.cc` with
 its `observe` callback while the core clock is stopped. See the VexRiscv native
 lockstep test in `examples/vexriscv/rvw/tests/test_lockstep_native.py`.
 The existing Scala socket transport remains the default.
+
+## In-memory diagnostics for workload capture
+
+Set `RVW_SPIKE_MEMORY_LOG=1` to keep Spike's per-instruction diagnostic text in
+an `open_memstream` buffer. The default temporary-file path is unchanged.
+Both paths parse the current step's diagnostic bytes for trap detection.
+The memory path uses the current write position, so a shorter step cannot
+reuse stale text from an earlier step. Rebuild the shim after source changes.
+Native controls compare complete C2 bytes for a chain and an actual ECALL trap.
+This option changes diagnostic storage. It adds no architectural state restore.

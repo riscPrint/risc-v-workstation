@@ -435,3 +435,29 @@ points that improve aggregate cycles. Fewer improvements remain explicit.
 All evidence is model-only. Function attribution uses the supplied ELF
 symbols. It is not hardware top-down measurement or a physical feasibility
 claim. Report creation supplies no fidelity verdict.
+
+## Default workload evaluation
+
+`rvw.workload-evaluation/1` groups pinned workload recipes and model paths.
+`rvw workloads evaluate` and `workloads_evaluate` build or reuse those recipes,
+check outputs on Spike, capture complete C2, select shared SimPoint-style
+intervals and report sampled model IPC. The new output directory contains
+`rvw.workload-evaluation-report/1` JSON and Markdown. Its per-workload rows
+retain ELF, C2 and model-source hashes. A supplied C2 must name the verified
+ELF path. An available producer ELF hash must match too. Missing hash binding
+is explicit as `producer_path`. These reports are approximate model evidence.
+They do not issue a correctness gate or qualify commercial CPU performance.
+
+`rvw.csim-simpoints/1` can supply `source_c2_sha256` for direct byte identity
+with a complete C2 source. The own-model sampler validates that hash and C2
+instruction count instead of converting the trace again for the normalized
+hash. Older point files retain the normalized-hash check. The whole C2 stream
+gets structural validation. Only selected warmup and measurement windows get
+instruction decoding. Unsupported instructions outside those windows do not
+supply modeled timing. An explicit full run still decodes the complete stream.
+
+The own-model C2 readers accept shifted contiguous RVFI byte masks. They
+convert the mask's first set bit to a byte offset from `mem_addr`, then use
+the contiguous byte count as the access size. Sparse masks with holes remain
+unsupported. A byte access with mask `0x20` at base `0x1000` therefore reaches
+`0x1005`. This applies to Python window decoding and native C2 packing.

@@ -1,0 +1,35 @@
+{
+  "schema": "rvw.workload-evaluation/1",
+  "groups": [
+    {
+      "recipe": "embench",
+      "bench": "crc32,matmult-int,slre"
+    },
+    {
+      "recipe": "coremark",
+      "bench": "coremark-smoke"
+    },
+    {
+      "recipe": "riscv-tests",
+      "bench": "qsort,rsort"
+    },
+    {
+      "recipe": "zstd",
+      "bench": "zstd-roundtrip"
+    }
+  ],
+  "models": {
+    "zen5-like": "Arch/reference/zen5-like.json",
+    "m1-like": "Arch/reference/m1-like.json"
+  },
+  "interval": 2000,
+  "max_k": 3,
+  "warmup": 200,
+  "seed": 1,
+  "max_instructions": 50000000,
+  "limits": [
+    "approximate RISC-V timing references, not commercial CPU emulation",
+    "CoreMark algorithm check, not a compliant score",
+    "slre is a regular-expression interpreter-style kernel"
+  ]
+}

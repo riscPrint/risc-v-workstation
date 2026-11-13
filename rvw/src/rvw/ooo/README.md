@@ -51,8 +51,9 @@ budgets in the design note are targets.
 
 The default engine uses fixed latencies. Optional pipeline structures are
 described below. Wrong-path execution and replay remain unsupported.
-It retains the full trace in memory. Core elaboration export, calibration, held-out RTL correlation and prediction
-ledgers remain separate work.
+It retains the full trace in memory. Core elaboration export and general application accuracy remain open.
+Saved calibration and prediction ledgers are described below. The native
+in-order correlation sample covers six small programs per core.
 Do not use the existing gem5 report readers to certify this model.
 
 Run targeted tests from the workstation root:
@@ -232,7 +233,7 @@ validate and pack integer streams directly. Other inputs use Python.
 
 Parity tests check 100 seeded integer and 150 seeded mixed schedules, including
 queue limits, dependencies, physical-register capacity, branch recovery and
-speculation. This is parity with the reference. RTL accuracy is unmeasured.
+speculation. This is parity with the reference. These parity tests do not measure RTL accuracy.
 
 Run `nice -n 10 rvw/.venv/bin/python Arch/ooo/benchmark.py` from the repository
 root for warmed alternating trials. The saved `Arch/ooo/benchmark-results.json`
@@ -776,3 +777,8 @@ ranking and the next three improving DSE points. It reports fewer points
 when the declared search finds fewer than three improvements.
 See [the plan and limits](../../../../Arch/ooo/DESIGNER.md) and
 [the six-kernel model sample](../../../../Arch/ooo/DESIGNER_SAMPLE.md).
+
+Shifted contiguous RVFI memory masks are normalized to their actual byte
+address and byte count. Sparse masks with holes are still refused. The
+bounded sampler checks the complete C2 structure but decodes only selected
+warmup and measurement windows. An explicit full run still decodes all rows.

@@ -36,7 +36,7 @@ class Frontend:
     FIFO replacement is deliberately fixed. Keys describe decoded operations.
     Self-modifying code and context changes are unsupported.
     """
-    def __init__(self, config, fetch_width, fetch_entries):
+    def __init__(self, config, fetch_width, fetch_entries, guard_branches=False):
         self.config = FrontendConfig(**config)
         self.width, self.capacity = fetch_width, fetch_entries
         self.fetch = deque()
@@ -45,6 +45,7 @@ class Frontend:
         self.fills = {}
         self.blocked_until = 0
         self.events = Counter()
+        self.guard_branches, self.guard = guard_branches, None
         self.position = 0
         self.predicted_position = 0
         self.targets = deque()
@@ -69,6 +70,10 @@ class Frontend:
         self.targets.append((end, cycle + self.config.predictor_latency))
         self.predicted_position = end
         self.events['fdip_targets'] += 1
+
+    def release(self, op):
+        if self.guard is op:
+            self.guard = None
 
     def advance(self, cycle, instructions, blocked=False, memory=None):
         c = self.config
@@ -106,6 +111,9 @@ class Frontend:
                 if block not in self.cache and len(self.cache) >= c.uop_cache_entries:
                     del self.cache[next(iter(self.cache))]
                 self.cache[block] = signature
+        if self.guard is not None:
+            self.events["wrong_path_branch_guard"] += 1
+            return
         if cycle < self.blocked_until:
             self.events['predictor_latency_cycles'] += 1
             return
@@ -148,6 +156,8 @@ class Frontend:
             if last:
                 del self.fills[block]
             if op.kind in ('branch', 'jump'):
+                if self.guard_branches:
+                    self.guard = op
                 if not c.fdip:
                     self.blocked_until = cycle + c.predictor_latency
                 break
