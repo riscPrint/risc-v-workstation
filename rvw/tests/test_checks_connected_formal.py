@@ -91,3 +91,22 @@ def test_activation_preserves_source_names_that_share_a_suffix(tmp_path):
     job = (directory/'activation.sby').read_text()
     assert 'activation_A.v activation_BA.v' in job
     assert all((directory/name).exists() for name in job.split('[files]\n')[1].split())
+
+
+def test_activation_does_not_overwrite_an_input_with_the_same_prefix(tmp_path):
+    rtl = tmp_path/'rtl'
+    rtl.mkdir()
+    (rtl/'Unit.v').write_text('module Unit(input clk,reset);\nwire bad=0, trigger=1;\nendmodule\n')
+    other = 'module Other;\nwire sentinel=1;\nendmodule\n'
+    (rtl/'activation_Unit.v').write_text(other)
+    inventory = tmp_path/'checks.json'
+    inventory.write_text(json.dumps(dict(schema='rvw.checks/1',formal=True,toplevel='Unit',checks=[
+        dict(id='enum.legal:x',status='inserted',path='',fail_signal='bad',trigger_signal='trigger',
+             clock_domain=dict(clock='clk',reset='reset',edge='RISING',reset_active='HIGH'))])))
+    helper.prepare(rtl, inventory, tmp_path/'out', ['enum.legal:x'])
+    directory = tmp_path/'out/0'
+    assert (directory/'activation_Unit.v').read_text() == other
+    files = (directory/'activation.sby').read_text().split('[files]\n')[1].split()
+    sources = [(directory/name).read_text() for name in files if name.endswith('.v')]
+    assert sum('module Unit(' in source for source in sources) == 1
+    assert sum('module Other;' in source for source in sources) == 1
