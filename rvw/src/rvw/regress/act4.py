@@ -38,8 +38,8 @@ def description(path):
         raise ValueError('privileged extensions require supervisor support')
     if data['halt'] != 'tohost-1-3':
         raise ValueError('only tohost pass=1/fail=3 is supported')
-    if len(platform.ram) != 1 or platform.reset_pc != platform.ram[0][0]:
-        raise ValueError('ACT4 requires one RAM range beginning at reset_pc')
+    if len(platform.ram) != 1 or not (platform.ram[0][0] <= platform.reset_pc < sum(platform.ram[0])):
+        raise ValueError('ACT4 requires one RAM range containing reset_pc')
     if data['params']['MXLEN'] != platform.xlen:
         raise ValueError('ACT4 MXLEN differs from platform')
     if data.get('all_applicable') and 'test_extensions' in data:
