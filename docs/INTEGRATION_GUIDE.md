@@ -1071,6 +1071,31 @@ unsupported row before claiming signoff.
 
 ### Measured kit status
 
+The idle-machine capacity table is NOT yet measured. The historical rows
+below did not retain per-check host load. Their load field is `not recorded`.
+The owner reports machine load of 60 to 120 during the earlier campaigns.
+This does not assign a specific load to any one check. A missing historical
+time limit is also `not recorded` here. Do not infer it from current defaults.
+Treat historical
+timeouts as inconclusive. Do not call them real capacity limits.
+
+Use the [retained timeout replay](../rvw/src/rvw/formal/timeout-rerun.md)
+to produce the later comparison. It preserves each captured mode, depth,
+source and assumption set, and gives each selected timeout check 30 minutes:
+
+```sh
+export RUN_ROOT=/path/to/retained/runs
+scripts/with-lock.sh vex-formal2 nice -n 5 rvw/.venv/bin/python \
+  -m rvw.formal.timeout_rerun examples/formal/isa-timeouts.json \
+  --time-limit 30m --out /path/to/new-comparison
+```
+
+The command writes `comparison.md` and `result.json`. Missing historical
+receipts and source captures stay explicit errors. Do not replace them with
+current RTL and call the result a load comparison. Keep the full output
+outside the repository. No core has a qualified idle-machine capacity
+measurement from this continuation.
+
 These results were measured on 2026-11-13. They apply to the named snapshots
 and checks. Full core ISA signoff remains incomplete.
 
@@ -1471,6 +1496,11 @@ pass or an unsupported-profile result.
 
 ### Measured results, 2026-11-13
 
+All historical results in this table have per-check load `not recorded`.
+The loaded-host continuation below states its measured loads separately.
+These tables do not establish a real capacity limit or a new time/depth
+default for any core size.
+
 This table reports selected profiles and bindings. It does not certify a whole
 core. `Unsupported` means the selected kit has no qualified binding or selected
 check. The profile limits below distinguish missing bindings from disabled
@@ -1489,6 +1519,71 @@ features. `Proven` applies only to the stated arithmetic domain or transaction.
 | MEPC readback | Failed: bit 0 reads as 1 after an odd write | Unsupported: no machine-state binding selected | Unsupported in the selected profile |
 | Instruction memory and retirement history | Instruction-memory pairing bounded 15; live pipeline history bounded 25 | LW/SW formal attempts inconclusive; directed memory records matched | Forty finite program stream matches; no formal memory signoff |
 | Independent observer equivalence | Unsupported: not certified by instruction checks | Unsupported: finite 15-record alignment check is not formal equivalence | Failed at cycle 10 in the depth-35 miter; fourth-retirement cover reached at cycle 18 |
+
+### Loaded-host continuation, 2026-11-13
+
+These short runs test the tools and separate reduction effects. They are not
+the 30-minute idle-machine capacity campaign. Recorded endpoint loads exceeded
+130 during the proof diagnostics. No result below establishes a real capacity
+limit. No new unbounded instruction proof closed. Default time limits and
+project depths stay unchanged until longer comparable measurements exist.
+
+| Core and check | Instruction cycle / SBY depth | Limit per job or engine | New result | One-minute load start / end |
+| --- | --- | --- | --- | --- |
+| VexRiscv LUI, original unbounded checker | 20 / 20 | 15 s | PDR timeout; Bitwuzla timeout | 151.57 / 147.75 at engine execution |
+| VexRiscv LUI, RAM only with word zero retained | 20 / 20 | 15 s; RAM phase budget 45 s | Both engines timed out; general retirement cover reached | 146.31 / 137.01 for check and cover |
+| VexRiscv LUI, single-flight only with concrete RAM | 20 / 20 | 15 s | Both engines timed out; general retirement cover reached | 141.49 / 141.93 for check and cover |
+| ooo-mini ADD assertion, Yices | 8 / 9 | 20 s | Timeout, 20.088 s | 179.23 / 183.41 |
+| ooo-mini LUI assertion, Yices | 8 / 9 | 20 s | Timeout, 20.194 s | 183.41 / 174.94 |
+| ooo-mini general retirement cover, Yices | 8 / 9 | 20 s | Timeout, 20.033 s | 174.94 / 165.99 |
+| ooo-mini ADD activation, Yices | 8 / 9 | 20 s | Timeout, 20.052 s | 165.99 / 166.16 |
+| ooo-mini LUI activation, Yices | 8 / 9 | 20 s | Timeout, 20.086 s | 166.16 / 163.77 |
+| ooo-mini retirement cover, replay portfolio | 8 / 9 | 10 s | Timeout, 10.146 s | 141.93 / 144.11 |
+| ooo-mini ADD assertion, replay portfolio | 8 / 9 | 10 s | Timeout, 10.139 s | 144.11 / 142.62 |
+| ooo-mini ADD activation, replay portfolio | 8 / 9 | 10 s | Timeout, 10.111 s | 142.62 / 143.45 |
+| ooo-mini LUI assertion, replay portfolio | 8 / 9 | 10 s | Timeout, 10.091 s | 143.45 / 141.01 |
+| ooo-mini LUI activation, replay portfolio | 8 / 9 | 10 s | Timeout, 10.159 s | 141.01 / 141.37 |
+
+Replay used Bitwuzla and Yices for the ooo-mini checks. Their nonzero SBY
+`skip` setting is not supported by ABC BMC. An earlier incompatible-engine
+attempt returned configuration errors. It is not substituted for the corrected
+replay above. SBY depth 9 preserves the instruction assertion cycle 8.
+The first 1,800-second VexRiscv ADD attempt was cancelled when the task changed.
+It is not a completed timeout or a capacity result.
+
+The VexRiscv reduction options and exact commands are in the
+[reduction guide](../rvw/src/rvw/formal/riscv-abstract-options.md).
+All native proof attempts used nice priority 5 and at most two engines.
+The ooo-mini RTL export used `sbt-formal2`, a 600-second build limit, and
+completed in 329.189 seconds. Its ending load was 172.14. The build did not
+record its starting load. Build completion is not an ISA proof.
+Proofs used `vex-formal2`. Raw data stays in the private `formal2` run tree.
+
+| Check kind | VexRiscv | VexiiRiscv | ooo-mini | PicoRV32 state-map profile |
+| --- | --- | --- | --- | --- |
+| Instruction assertions | Historical bounded 20 for 37 RV32I checks; new LUI unbounded attempts inconclusive | Historical five-check selection inconclusive; new native runs NOT RUN | New ADD and LUI attempts inconclusive at cycle 8 | No qualified ISA bound; state-map equivalence failed |
+| Unbounded instruction proof | Historical conditional LUI model proof only; no new closure | No qualified instruction proof | No qualified instruction proof | No qualified instruction proof |
+| Sail M semantics | Historical concrete arithmetic timeouts; fresh runs NOT RUN | Not selected | Not selected | M disabled in the selected profile |
+| CSR and fetch pairing | Historical bounded 15 and timeouts at 25; fresh runs NOT RUN | No qualified machine-state binding in this selection | Not selected | No qualified binding in this selection |
+| Observer equivalence | Not certified by instruction checks | Not certified by finite alignment samples | Not measured in this continuation | Retained failure at cycle 10 in the depth-35 comparison |
+| Real capacity limit | NOT measured on an idle machine | NOT measured on an idle machine | NOT measured on an idle machine | NOT measured on an idle machine |
+
+The historical conditional LUI proof used PDR, all 32 RAM words abstract,
+and at most one active decode, execute, memory or writeback stage-valid bit.
+Fetch queues were outside that restriction. Source reset, checker and bus
+assumptions remained. Its 107.4-second native pass did not discharge those
+assumptions or certify the observer. Its host load was not recorded.
+Retaining word zero is a different model. Its later timeout does not invalidate
+the older conditional result. No smallest closing change was identified by
+the new short attempts. No helper invariant was added or assumed.
+
+PicoRV32's failed trap-frame comparison stays failed. Its two former finite
+program timeouts were diagnosed as unsupported-profile instructions. They
+are not formal solver capacity limits. The replay plan does not turn them
+into new formal timeout jobs. New VexiiRiscv and PicoRV32 native proofs were
+NOT RUN in this continuation. Their historical loads remain not recorded.
+
+### Historical profile details
 
 The VexRiscv instruction bounds use the older FormalSimple RV32IC export at
 SHA-256 `545c0864dec04e72a7b74480464866c8af876c21ff7833f8f7d67dba6aa9e7c1`.
