@@ -263,3 +263,9 @@ non-pruned registers. It wrote PDG, SpinalBlocks and HGLDD artifacts.
 Dependency coverage remains partial. No new CPU simulation was run for this
 extraction check. An initial 180-second compile limit expired; the cached
 retry completed within its 240-second active limit.
+### Hardware formal observer prototype
+
+The opt-in `rvwvexii.FormalRvfi` elaboration uses a project-owned hardware plugin.
+It is separate from the simulation probe. It is not qualified for ISA signoff.
+See [the observer status](formal-observer.md) for the source pins, interface
+limits and diagnostic instruction campaign.

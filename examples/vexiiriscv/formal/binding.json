@@ -1,0 +1,88 @@
+{
+  "schema": "rvw.rvfi-binding/1",
+  "name": "vexii-formal-prototype",
+  "top": "VexiiRiscv",
+  "clock": "clk",
+  "reset": "reset",
+  "root": "${RISCV_FORMAL}",
+  "verilog": [
+    "${VEXII_RVFI_RTL}"
+  ],
+  "isa": "rv32im",
+  "nret": 1,
+  "depth": 60,
+  "solver": "bitwuzla",
+  "ports": {
+    "valid": "rvfi_valid",
+    "order": "rvfi_order",
+    "insn": "rvfi_insn",
+    "trap": "rvfi_trap",
+    "halt": "rvfi_halt",
+    "intr": "rvfi_intr",
+    "mode": "rvfi_mode",
+    "ixl": "rvfi_ixl",
+    "rs1_addr": "rvfi_rs1_addr",
+    "rs2_addr": "rvfi_rs2_addr",
+    "rs1_rdata": "rvfi_rs1_rdata",
+    "rs2_rdata": "rvfi_rs2_rdata",
+    "rd_addr": "rvfi_rd_addr",
+    "rd_wdata": "rvfi_rd_wdata",
+    "pc_rdata": "rvfi_pc_rdata",
+    "pc_wdata": "rvfi_pc_wdata",
+    "mem_addr": "rvfi_mem_addr",
+    "mem_rmask": "rvfi_mem_rmask",
+    "mem_wmask": "rvfi_mem_wmask",
+    "mem_rdata": "rvfi_mem_rdata",
+    "mem_wdata": "rvfi_mem_wdata"
+  },
+  "checks": [
+    "insn_add_ch0",
+    "insn_lui_ch0",
+    "cover"
+  ],
+  "check_options": {
+    "insn_add_ch0": {
+      "engine": "abc bmc3",
+      "cycles": [
+        60
+      ]
+    },
+    "insn_lui_ch0": {
+      "engine": "abc bmc3",
+      "cycles": [
+        60
+      ]
+    }
+  },
+  "inputs": {
+    "PrivilegedPlugin_logic_rdtime": 64,
+    "PrivilegedPlugin_logic_harts_0_int_m_timer": 1,
+    "PrivilegedPlugin_logic_harts_0_int_m_software": 1,
+    "PrivilegedPlugin_logic_harts_0_int_m_external": 1,
+    "FetchCachelessPlugin_logic_bus_cmd_ready": 1,
+    "FetchCachelessPlugin_logic_bus_rsp_valid": 1,
+    "FetchCachelessPlugin_logic_bus_rsp_payload_id": 1,
+    "FetchCachelessPlugin_logic_bus_rsp_payload_error": 1,
+    "FetchCachelessPlugin_logic_bus_rsp_payload_word": 32,
+    "LsuCachelessPlugin_logic_bus_cmd_ready": 1,
+    "LsuCachelessPlugin_logic_bus_rsp_valid": 1,
+    "LsuCachelessPlugin_logic_bus_rsp_payload_id": 1,
+    "LsuCachelessPlugin_logic_bus_rsp_payload_error": 1,
+    "LsuCachelessPlugin_logic_bus_rsp_payload_data": 32
+  },
+  "outputs": {
+    "FetchCachelessPlugin_logic_bus_cmd_valid": 1,
+    "FetchCachelessPlugin_logic_bus_cmd_payload_id": 1,
+    "FetchCachelessPlugin_logic_bus_cmd_payload_address": 32,
+    "LsuCachelessPlugin_logic_bus_cmd_valid": 1,
+    "LsuCachelessPlugin_logic_bus_cmd_payload_id": 1,
+    "LsuCachelessPlugin_logic_bus_cmd_payload_write": 1,
+    "LsuCachelessPlugin_logic_bus_cmd_payload_address": 32,
+    "LsuCachelessPlugin_logic_bus_cmd_payload_data": 32,
+    "LsuCachelessPlugin_logic_bus_cmd_payload_size": 2,
+    "LsuCachelessPlugin_logic_bus_cmd_payload_mask": 4,
+    "LsuCachelessPlugin_logic_bus_cmd_payload_io": 1,
+    "LsuCachelessPlugin_logic_bus_cmd_payload_fromHart": 1,
+    "LsuCachelessPlugin_logic_bus_cmd_payload_uopId": 16
+  }
+}
