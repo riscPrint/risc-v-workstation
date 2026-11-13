@@ -42,9 +42,9 @@ core finding. Device and C2 capture bugs fixed in #1147 are tool defects.
 Alias: VEXII-ACT4-SM-CSR-001. Both IDs refer to the same bootstrap finding.
 
 Confirmed profile compatibility finding, not a confirmed hardware defect.
-The selected RV32 supervisor scaffold writes `mhpmevent3` (CSR `0x323`).
+The selected RV32 and RV64 supervisor scaffolds write `mhpmevent3` (CSR `0x323`).
 The profile omits the counter plugin that supplies this event selector.
-The core traps on `csrw mhpmevent3, zero`; Spike accepts it. All 270 ACT4
+The core traps on `csrw mhpmevent3, zero`; Spike accepts it. The RV32 campaign has 270 ACT4
 programs stop in this bootstrap. No test body earns a pass. The final
 campaign checks all 270 first differences against Spike, with zero masks
 and synchronizations. Earlier #1148 compared only 37 representative cases.
@@ -75,3 +75,41 @@ four measured division/remainder programs. No upstream patch was applied.
 
 [Minimal assembly, runner and native receipts](findings/bitpasta-div-zero/README.md).
 Source: [#1170](https://github.com/riscPrint/risc-v-workstation/pull/1170).
+
+## RV64 follow-up to VEXII-CSR-BOOT-001
+
+The RV64 standard-boot ACT4 campaign has 302 built and 302 run programs.
+All 302 fail before their test bodies. Each first trap has cause 2 and
+`mtval=0x32301073`. The encoding matches the ELF instruction at the fault PC.
+This is the same selected-profile counter-plugin gap as the RV32 finding.
+It is one compatibility cause across 302 cases. No failure is waived.
+
+[The minimal event-CSR write](rvw/act4-64su/missing-event-csr.S) fails on RTL.
+Spike accepts that write. [The menvcfg control](rvw/act4-64su/envcfg-control.S)
+passes and matches Spike. The last retired instruction before the bootstrap
+trap writes menvcfg. It is not the faulting instruction. The captured mtval
+and ELF bytes identify the fault. See [all case identities](rvw/act4-64su/results.json)
+and [the directed results](rvw/act4-64su/minimal-results.json).
+
+## RV64 divider timing witness
+
+The default RV64IMA divider has an operand-dependent timing witness.
+The fixed-length setup gives `x6=7, x7=3` on one side and
+`x6=9223372036854775807, x7=1` on the other. Both execute DIV then DIVU.
+Both raw traces match Spike strictly, with zero masks and synchronization.
+The declared case-window observations are 42 and 138 cycles. The security
+contract reports a violation in `cycles` and `retire_cycles`.
+
+This is not an ISA defect or a claim that the upstream divider promises
+constant time. It is separate from VEXII-DIVZERO-IPC-001, which affects a
+non-default RV32 bitpasta configuration. The [RV64 manifest](rvw/sec/constant-time64.json)
+and [tool evidence](rvw/rv64/tool-results.json) retain the program and scope.
+
+## RV64 tool assumptions removed
+
+The [tool report](rvw/rv64/TOOLS.md) lists the formal observer's RV32 data,
+mask and IXL constants, missing W-opcode operand mapping, the CSR runtime's
+32-bit restriction, forced security ILP32 and truncated secret setup.
+Each fix has targeted tests. RV32 defaults remain unchanged. The mapped RTL
+security harness remains RV32-only; the generic C1 path runs the RV64 pair.
+No incomplete formal result is promoted to a proof.

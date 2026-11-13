@@ -9,6 +9,10 @@ import vexiiriscv.test.WhiteboxerPlugin
 
 /** Actual elaboration catches data truncation and memory-mask width errors. */
 class FormalWidthSpec extends AnyFunSuite {
+  test("extra configs preserve standalone launcher defaults") {
+    assert(new VexiiAdapter(32).defaultConfig == "rv32im")
+    assert(new VexiiAdapter(64).defaultConfig == "rv64imasu")
+  }
   for ((config, width) <- Seq("rv32im" -> 32, "rv64ima" -> 64, "rv64imasu" -> 64)) {
     test(s"$config formal observer preserves XLEN data and byte masks") {
       val output = Files.createTempDirectory(new java.io.File("target").toPath, "rvw-observer-width").toFile

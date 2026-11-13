@@ -1203,5 +1203,12 @@
         }
       ]
     }
-  ]
+  ],
+  "instrumented_divw": {
+    "strict_spike_match": "match",
+    "compared_instructions": 140,
+    "synchronized": 0,
+    "applied_masks": [],
+    "trace_sha256": "617f19cdcc4e714d1336b6cd5bebfbf4b705e4d93d5b08ec31d55f0a04a95966"
+  }
 }

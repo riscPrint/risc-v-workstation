@@ -5,6 +5,7 @@ The config is the unchanged upstream core with the `rv64ima` adapter profile.
 
 - Functional coverage: 85 strict-matched ISA traces, 33,733 instructions,
   zero unknown encodings. Word bins include ADDW 52, MULW 43 and DIVW 10.
+- Instrumented DIVW has 140 complete strict-compared instructions.
 - DIVW code coverage: 747/878 line points and 656/796 branch points hit.
   This is one instrumented program. It does not establish whole-core coverage.
 - DIVW probes: typed commit count 138. Konata reports 140 retirements over

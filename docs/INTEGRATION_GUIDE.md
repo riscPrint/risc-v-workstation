@@ -166,6 +166,36 @@ accepted. Read [regress](../rvw/src/rvw/regress/README.md). Generated privilege
 and MMU programs often have Spike-only evidence. Run them on the new RTL before
 claiming DUT coverage. No optional generator is needed for an existing ELF suite.
 
+### VexiiRiscv RV32 and RV64 status
+
+The native core revision is `9f70315deb3390b283995c5b8f1bd38215ecf52b`.
+The RV32 default is unchanged. Counts below apply to the named profiles
+and workloads. Different workloads do not isolate the effect of XLEN.
+
+| Check | RV32 | RV64 | Evidence |
+|---|---|---|---|
+| riscv-tests ISA | RV32IM machine and supervisor: 49 strict matches each | RV64IMA machine and supervisor: 85 strict matches each, UI 53 / UM 13 / UA 19 | [ISA record](../examples/vexiiriscv/rvw/rv64/isa-results.json) |
+| ACT4 instruction profile, reduced CSR boot | Machine: 58 strict matches | Machine: 98 strict matches | [RV64 ACT4](../examples/vexiiriscv/rvw/act4-64m/results.json) |
+| ACT4 supervisor, standard boot | 270 failures before bodies | 302 failures before bodies; zero complete strict matches | [Shared CSR compatibility cause](../examples/vexiiriscv/rvw/act4-64su/README.md) |
+| MMU matrix / fault / random | Sv32: 140 / 12 / 2 run, 146 strict matches and 8 PMP-walk findings | Sv39: 145 / 18 / 2 run, 154 strict matches and 11 PMP-walk findings | [Retained counts](../examples/vexiiriscv/rvw/rv64/generated-results.json) |
+| Independent DUT walk replay | Sv32 matrix: 89 consistent in retained audit | Sv39 matrix: 92 consistent, 2 mismatch, 51 inconclusive; fault walks: 9 consistent, 9 mismatch | [Fresh Sv39 replay](../examples/vexiiriscv/rvw/rv64/walk-replay.json) |
+| PMP generated programs | 394 strict matches | 264 strict matches on supervisor | [Family audit](../examples/vexiiriscv/suite-family-audit.json) |
+| Generated single-hart ordering | Supervisor: 5 strict matches | Supervisor: 5 strict matches; new machine profile: 4 strict matches, PMP-dependent fault case excluded | [Machine record](../examples/vexiiriscv/rvw/rv64/ordering-results.json) |
+| Scheduled WFI | 6 C1 pass; 3 strict and 3 IRQ-synchronized matches | 6 C1 pass; 3 strict and 3 IRQ-synchronized matches | [Strict RV64 replay](../examples/vexiiriscv/rvw/rv64/irq-replay.json) |
+| Probes / perf / code coverage | Existing RV32 records remain separate | Machine DIVW: 138 typed commits; Konata 140 retirement events / 855 cycles; lines 747/878 and branches 656/796 hit | [Tool scope](../examples/vexiiriscv/rvw/rv64/TOOLS.md) |
+| Functional coverage | Existing RV32 manifests and corpora remain separate | 85 ISA traces, 33,733 instructions, zero unknown encodings; RV64 W bins observed | [Tool record](../examples/vexiiriscv/rvw/rv64/tool-results.json) |
+| Generated checks | Existing RV32 qualification remains separate | Two machine CSR programs: 25 checks each, zero firings; 49 and 26 strict-compared instructions | [Instrumented native runs](../examples/vexiiriscv/rvw/rv64/tool-results.json) |
+| CSR catalog | RV32 layouts | RV64 mstatus SD/SXL/UXL and satp MODE/ASID/PPN layouts; metadata only | [Views](../examples/vexiiriscv/rvw/rv64/tool-results.json) |
+| Formal observer | RV32 width unit passes | RV64 width unit passes; ADDW / SLLIW / MULW at 32 cycles are inconclusive, not proven | [Formal attempts](../examples/vexiiriscv/rvw/rv64/tool-results.json) |
+| Divider constant-time pair | Existing RV32 security results remain separate | Strictly matched pair: 42 versus 138 case-window cycles; timing violation under the declared contract | [Pair and scope](../examples/vexiiriscv/rvw/rv64/TOOLS.md) |
+
+C/F/D ISA suites are not qualified by these RV64 profiles. The mapped security
+RTL harness and CSR bank remain RV32-only. The RV64 pair uses the generic C1
+adapter. The ACT4 bootstrap finding is a selected-profile CSR compatibility
+gap. The divider timing witness is not an ISA defect. The independent walk
+findings remain core findings. No upstream core source was changed.
+
+
 ### ACT4 suite integration measured on 2026-11-13
 
 Use a project-owned ACT4 description, then build Sail signatures and run
@@ -177,6 +207,8 @@ source pins, per-extension records and minimal reproductions.
 | --- | ---: | ---: | ---: | ---: |
 | VexRiscv RV32IM instruction profile | 58 / 58 | 52 / 6 | 52 | 6 |
 | VexiiRiscv RV32IM instruction profile | 58 / 58 | 58 / 0 | 58 | 0 |
+| VexiiRiscv RV64IMA machine instruction profile | 98 / 98 | 98 / 0 | 98 | 0 |
+| VexiiRiscv RV64IMA M/S/U, standard boot | 302 / 302 | 0 / 302 | 0 | 302 |
 | VexiiRiscv RV32IMA M/S/U, standard boot | 270 / 270 | 0 / 270 | 0 | 270 |
 | NaxRiscv RV32IMA instruction profile | 69 / 69 | 69 / 0 | 69 | 0 |
 | PicoRV32 mapped RV32IM instruction profile | 51 / 51 | 50 / 1 | 50 | 1 |
@@ -184,7 +216,7 @@ source pins, per-extension records and minimal reproductions.
 
 The instruction profiles use project bootstraps. They do not establish
 standard Sm compatibility. VexRiscv's six Zicsr failures retain MEPC alignment bits.
-The supervisor suite includes 201 privileged-directory tests and 69
+The RV32 supervisor suite includes 201 privileged-directory tests and 69
 instruction tests. All 270 fail on the mhpmevent3 bootstrap write before
 their test bodies. The fresh rerun confirms 270 strict first differences.
 The shared catalog and project CSR model locate one declared Sm contract
