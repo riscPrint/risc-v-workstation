@@ -212,6 +212,9 @@ class VPlan:
     def check(self,data,ref,row,entry):
         kind=ref.get('kind')
         if kind=='gate':
+            if data.get('scope') == 'filtered' or (data.get('gate') or {}).get('filter'):
+                entry['cause'] = 'filtered_gate'
+                raise ValueError('filtered_gate: subset acceptance does not cover the tier')
             if not Verdict.from_dict(data).accepted: raise ValueError('C4 gate did not accept')
         elif kind=='block':
             if data.get('schema')!='rvw.block-reuse/1' or data.get('status')!='eligible_for_reuse' or data.get('holes'):

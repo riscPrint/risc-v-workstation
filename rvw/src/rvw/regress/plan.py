@@ -228,9 +228,22 @@ def gate(core: CoreConfig, tier: str, base_rev: str | None, cand_rev: str | None
                 v.tests = "incomplete"
         v.extra["reference_capture"] = {"git_refs": capture.record()["git_refs"],
                                         "tools": capture.record()["tools"]}
-        v.extra["gate"] = {"tier": tier, "base": sides["base"], "candidate": sides["candidate"],
+        selected, total = selection_counts(plan, opts)
+        if opts.include:
+            v.extra['scope'] = 'filtered'
+        v.extra["gate"] = {"filter": list(opts.include) if opts.include else None,
+                           "selected_tests": selected, "total_tests": total, "tier": tier, "base": sides["base"], "candidate": sides["candidate"],
                            "known_failures_file": str(known_path) if known_path else None}
         dest = out or Path(sides["candidate"]["path"]) / "verdict.json"
         v.extra["verdict_file"] = str(dest)
         write_json(dest, v.to_dict())
         return {"verdict": v, "file": dest}
+
+
+def selection_counts(plan, opts):
+    """Count suite/config test cells before seed expansion, within the tier."""
+    selected = total = 0
+    for item in plan:
+        total += len(discover(item.suite, item.include))
+        selected += len(discover(item.suite, item.include + opts.include))
+    return selected, total
