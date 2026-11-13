@@ -112,6 +112,11 @@ class Trace:
                             raise ValueError("missing external source")
                         for key in ("address", "data", "mask"):
                             hexnum(obj[key], xlen)
+                    elif obj["event"] == "debug":
+                        if not self.header.get("debug") or obj.get("action") not in ("halt", "observe"):
+                            raise ValueError("debug event requires declared debug state and halt/observe action")
+                        from .debug_state import validate
+                        validate(obj["debug"], xlen)
                     elif obj["event"] == "trap":
                         obj["cause"] = hexnum(obj["cause"], xlen)
                         obj["tval"] = hexnum(obj["tval"], xlen)

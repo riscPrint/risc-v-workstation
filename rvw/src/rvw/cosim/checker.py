@@ -60,7 +60,7 @@ def c2_view(values):
         result["fault_access"] = {k: hex(v) if k in ("addr", "rdata", "wdata") and v is not None else v
                                   for k, v in result["fault_access"].items()}
     from .extensions import serialize
-    for name in ("vector", "hypervisor"):
+    for name in ("vector", "hypervisor", "debug"):
         if name in result:
             result[name] = serialize(result[name])
     return result
@@ -188,6 +188,15 @@ def check(trace_path, model, platform, history=10, sync=SYNC_KINDS, *, ordered_e
                 if irq_inputs is None:
                     irq_inputs = {}
                 irq_level(actual["cycle"], actual["levels"])
+                continue
+            if actual.get("event") == "debug":
+                if not hasattr(model, 'debug_event'):
+                    raise ValueError('reference cannot check debug transitions')
+                expected = model.debug_event(actual['action'])
+                from .debug_state import differences as debug_diff
+                diff = debug_diff(actual['debug'], expected['debug'])
+                if diff:
+                    return mismatch(actual, expected, diff, count)
                 continue
             if actual.get("event") == "trap":
                 represented = last_trap is not None

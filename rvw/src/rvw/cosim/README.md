@@ -25,7 +25,7 @@ blocks until the reference checks it. A mismatch stops the run and returns the
 usual `rvw.cosim/1` report with reproduction data and the first difference.
 Write interrupt input events before the affected retirements. Write taken trap
 events at the instruction boundary where the DUT takes the trap. Spike receives
-the interrupt cause at that boundary. Debug requests are not yet supported.
+the interrupt cause at that boundary. Declared C2/2 debug halt events use the same instruction boundary.
 
 SystemVerilog adapters can link `Cosim/lockstep_dpi.cc` and import
 `int rvw_cosim_observe(input string c2)` through DPI-C. Send a header first.
@@ -66,3 +66,16 @@ Missing libraries, unknown extensions and unsupported reference state give
 errors. Sail does not load these libraries. C2 reference generation still refuses
 unknown custom operand layouts. This does not establish custom ISA compliance.
 Native extension dependencies must use the same installed Spike ABI.
+
+### Debug entry state
+
+C2/2 adapters can declare `debug: true` and emit complete `debug` snapshots
+with `mode`, `dpc`, `dcsr` and `step` on every retirement. Emit a separate
+`event: debug`, `action: halt` record at the taken halt boundary. Spike takes a
+halt request without executing debug ROM. The checker compares all four fields.
+Use `action: observe` for a snapshot without an injected request. Ordinary trap
+events remain separate. This also works through the blocking DPI transport.
+
+Resume, debug ROM execution, triggers and automatic single-step transitions
+remain unsupported. The step bit is compared as state. A full halt/step campaign
+around WFI, interrupts and exceptions is not claimed.
