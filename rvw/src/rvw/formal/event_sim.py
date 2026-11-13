@@ -47,34 +47,52 @@ def testbench(top, ports, observed, scale, rows, raw_pulses=None, state=None, cr
     outputs = [p for p in ports if p.direction == 'output']
     lines += ['reg ' + p.decl() + ';' for p in inputs]
     lines += ['wire ' + p.decl() + ';' for p in outputs]
-    lines += [f'{top} dut(' + ', '.join(f'.{common.vid(p.name)}({common.vid(p.name)})' for p in ports) + ');',
-              'initial begin']
+    prefix='rvw_event_control'
+    while any(p.name.startswith(prefix) for p in ports):
+        prefix+='_'
+    cache={p.name:prefix+'_next'+str(i) for i,p in enumerate(inputs)}
+    clocks=sorted({name for row in raw_pulses or [] for name in row}
+                  | {name for _,ticks in cross_steps or [] for name in ticks})
+    controls=sorted({name for signals,_ in cross_steps or [] for name in signals})
+    fire={name:prefix+'_fire'+str(i) for i,name in enumerate(clocks)}
+    flags={name:prefix+'_flag'+str(i) for i,name in enumerate(controls)}
+    lines += ['reg '+common.Port(cache[p.name],'input',p.width,p.signed).decl()+';' for p in inputs]
+    lines += [f'reg {name}=0;' for name in [*fire.values(),*flags.values()]]
+    lines += [f'reg {prefix}_drive=0, {prefix}_apply=0, {prefix}_enable=0;',
+              f'{top} dut(' + ', '.join(f'.{common.vid(p.name)}({common.vid(p.name)})' for p in ports) + ');']
+    # Runtime nonblocking assignments are required here. Verilator converts
+    # nonblocking assignments in initial blocks to blocking assignments.
+    # Phase one fires monitors. Phase two applies design inputs in a later NBA
+    # round. Monitor processes therefore sample the preceding settled values.
+    lines += [f'always @({prefix}_drive) if ({prefix}_enable) begin']
+    lines += [f'  dut.{name} <= {flags[name]};' for name in controls]
+    lines += [f'  if ({fire[name]}) dut.{name} <= 1;' for name in clocks]
+    lines += [f'  {prefix}_apply <= !{prefix}_apply;', 'end']
+    lines += [f'always @(posedge dut.{name}) dut.{name} <= 0;' for name in clocks]
+    lines += [f'always @({prefix}_apply) if ({prefix}_enable) begin']
+    lines += [f'  {common.vid(p.name)} <= {cache[p.name]};' for p in inputs]
+    lines += ['end', 'initial begin']
     previous = 0
     for index, (at, changes) in enumerate(rows):
         if at > previous:
             lines.append(f'#{at-previous};')
-        # Pulse before updating design inputs. #0 lets all monitors sample the
-        # preceding settled values, including the old value of the event input.
         triggered = list(raw_pulses[index]) if raw_pulses else []
+        signals={}
         if cross_steps:
             signals,ticks=cross_steps[index]
-            lines += [f'dut.{name} = {value};' for name,value in signals.items()]
             triggered += ticks
-        if triggered:
-            lines += [f'dut.{name} = 1;' for name in triggered]
-            lines += ['#0;']
-            lines += [f'dut.{name} = 0;' for name in triggered]
+        for name in clocks:
+            lines.append(f'{fire[name]} = {int(name in triggered)};')
+        for name in controls:
+            lines.append(f'{flags[name]} = {signals.get(name,0)};')
         for name, value in changes.items():
-            lines.append(f"{common.vid(name)} <= {len(value)}'b{value};")
+            lines.append(f"{cache[name]} = {len(value)}'b{value};")
+        lines += [f'{prefix}_enable = 1;', f'{prefix}_drive = !{prefix}_drive;']
         if index == 0 and state:
-            # Let initialization and input-triggered NBA updates finish before
-            # depositing the recorded state. Logical replay time starts here.
             lines.append('#1;')
             for register in state['registers']:
                 signal='.'.join(common.vid(part) for part in register['signal'].split('.'))
                 lines.append(f"force dut.{signal} = {register['width']}'b{register['value']};")
-            # Forces protect all state while derived clocks or async controls
-            # react to the loaded values. Release only after those events settle.
             lines.append('#1;')
             for register in state['registers']:
                 signal='.'.join(common.vid(part) for part in register['signal'].split('.'))
@@ -123,8 +141,6 @@ def run(args):
         bindings = snap.raw_events
         from .raw_events import validate, rewrite, pulses
         validate(bindings, inputs)
-        if (bindings or cross) and args.backend != 'icarus':
-            raise ValueError('raw property event replay requires Icarus')
         clocks = {p['clock'] for p in snap.temporal_properties} - {b['clock'] for b in bindings} | set(event_data.get('clocks', []))
         clocks |= {p['target_clock'] for p in cross}
         clocks |= {term['signal'] for binding in bindings for term in binding['terms'] if term['edge'] != 'change'}

@@ -696,7 +696,8 @@ The time-zero event row initializes inputs. Each later row fires matching
 monitor pulses once before updating design inputs. Monitors sample preceding
 settled values. Output observations use post-update settled values.
 
-Raw events require Icarus four-state semantics. Rising edges include 0 to X/Z
+Raw events use four-state semantics on Icarus. Verilator accepts only two-state
+inputs and refuses X checks. Icarus rising edges include 0 to X/Z
 and X/Z to 1. Falling edges include 1 to X/Z and X/Z to 0. Change events compare
 all vector bits. This scope refuses internal events, event expressions,
 same-event disable cancellation and properties outside the top module.
@@ -723,10 +724,11 @@ kernel oracle does not prove a core instruction implementation.
 
 ## Boolean two-clock assertion replay
 
-Timed Icarus replay accepts top-module Boolean implication from one
+Timed Icarus and two-state Verilator replay accept top-module Boolean implication from one
 explicit input-clock edge to another. `|->` selects the nearest target event,
 including a simultaneous event. `|=>` selects the nearest strictly later event.
 The replay coordinator samples both domains before the timestamp input update.
+Runtime nonblocking driver phases preserve this ordering on both backends.
 Its pending counter retains every request. One target event can check several
 obligations and produces one assertion observation per activated request.
 
