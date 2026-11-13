@@ -25,3 +25,10 @@ and done. Operand pairs bind all data inputs and vary only declared operands.
 Samples count rising edges from a one-cycle start pulse to first done, after two
 reset cycles. Missing completion is inconclusive. Operation names are declarations,
 not independent instruction decoding evidence.
+
+## Isolation observation window
+
+Isolation manifests declare isolation_kind, boundary, policy and contract_start_pc.
+The reference contract starts at the first occurrence of that PC. The adapter
+must restrict microarchitectural samples to the same post-boundary window.
+Setup remains subject to complete per-case RTL/reference architectural agreement.

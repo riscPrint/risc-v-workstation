@@ -144,3 +144,29 @@ functional crypto results, instruction decode, all possible operand values,
 backpressure, warm pipelines or physical leakage. Declaring a Zkt operation is
 not evidence that a wrapper implements it. Whole-core retirement timing can be
 checked through `sec contract` with a project timing observation channel.
+
+## Isolation across a boundary
+
+`rvw sec isolation --manifest isolation.json --out out/isolation` uses the paired
+runner for `pmp`, `epmp`, `register-state`, `predictor-state` or `cache-state`.
+MCP tool: `sec_isolation`. Use the contract manifest above with these extra fields:
+
+```
+{"isolation_kind":"epmp", "boundary":"M to U", "contract":"sandboxing",
+ "contract_start_pc":"0x80001000",
+ "policy":{"denied_region":"project secret region", "cleanup":"project rule"}}
+```
+
+Supply a project program that sets protection, warms private state, crosses the
+boundary and measures the public observer. `program`, `boundary` and `policy`
+are required. `contract_start_pc` selects the first retired PC of the public
+region in both reference traces. The contract compares that suffix. Every RTL
+trace must still match its complete independent reference trace. The adapter
+must restrict observation channels to the same public region and confirm reset.
+
+The native fixture checks a private register that affects public latency after
+a mode boundary, with a clearing control. It is a small digital state model.
+It is not native PMP/ePMP, predictor or cache validation. The tool does not infer
+CSR encodings, implement a PMP policy model, verify the selected privilege mode,
+or verify that a project flushes all relevant state. The project program and
+policy binding must establish these conditions. A missing boundary is an error.

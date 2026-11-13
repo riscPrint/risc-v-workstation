@@ -17,6 +17,17 @@ always @(posedge clk) begin
 end
 endmodule
 '''.replace('LIMIT',str(2+(secret if leak else 0))))
+if r['public'].get('isolation'):
+    (out/'toy.sv').write_text("""module tb;
+reg clk=0; reg privileged=1; integer private_state=SECRET; integer count=0;
+always #1 clk=~clk;
+initial begin #2; privileged=0; if(FLUSH) private_state=0; end
+always @(posedge clk) if(!privileged) begin
+ count<=count+1;
+ if(count==2+private_state) begin $display("CYCLES %0d",count+1); $finish; end
+end
+endmodule
+""".replace('SECRET',str(secret)).replace('FLUSH',str(int(not leak))))
 native(['verilator','--binary','--timing','-Wno-fatal','--top-module','tb','toy.sv'],out)
 log=native([str(out/'obj_dir/Vtb')],out)
 cycles=int(next(line.split()[1] for line in log.splitlines() if line.startswith('CYCLES ')))
