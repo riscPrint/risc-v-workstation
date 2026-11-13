@@ -21,12 +21,15 @@ def main():
     p.add_argument('--linker', type=Path, help='project link script; default RAM starts at 0x80000000')
     p.add_argument('--adapter', type=Path, help='C1 run-many executable; omit for reference-only checks')
     p.add_argument('--timeout', type=float, default=120)
+    p.add_argument('--cache-block-size', type=int, help='required for cbo; passed to native Spike')
     args = p.parse_args()
+    if args.suite and 'cbo' in args.suite and args.cache_block_size is None:
+        p.error('--cache-block-size required for cbo')
     if args.timeout <= 0 or not math.isfinite(args.timeout):
         p.error('--timeout must be finite and positive')
     if len(set(args.seeds)) != len(args.seeds):
         p.error('seeds must be distinct')
-    jobs = [j for seed in args.seeds for j in generate(args.out, args.xlen, seed, args.suite)]
+    jobs = [j for seed in args.seeds for j in generate(args.out, args.xlen, seed, args.suite, args.cache_block_size)]
     if args.adapter and any(Path(j['out']).exists() for j in jobs):
         p.error('DUT output directories exist; use a fresh --out directory')
     base_isa = f'rv{args.xlen}ima_zicsr_zifencei'
@@ -35,14 +38,21 @@ def main():
     args.out.mkdir(parents=True, exist_ok=True)
     for job in jobs:
         isa = base_isa + ('_zacas' if job['name'].startswith('zacas') else '')
+        if job['name'] == 'cbo':
+            isa += '_zicbom_zicboz_zicbop'
         cmd = [args.gcc, f'-march={isa}', '-mabi=' + ('lp64' if args.xlen == 64 else 'ilp32'),
                '-nostdlib', '-nostartfiles', '-Wl,--no-relax', '-Wl,--build-id=none',
                '-T', str(args.linker or args.out / 'link.ld'), job['source'], '-o', job['elf']]
         build = run_group(cmd, timeout=args.timeout, capture=True)
         if build.returncode:
             raise RuntimeError(f'compile failed: {build.stderr}')
-        ref = run_group([args.spike, '--isa=' + isa, job['elf']], timeout=args.timeout, capture=True)
+        reference_command = [args.spike, '--isa=' + isa]
+        if job['name'] == 'cbo':
+            reference_command.append(f'--blocksz={args.cache_block_size}')
+        ref = run_group([*reference_command, job['elf']], timeout=args.timeout, capture=True)
         report['reference'].append({'elf': job['elf'], 'seed': job['seed'],
+                                    'isa': isa,
+                                    'cache_block_size': args.cache_block_size if job['name'] == 'cbo' else None,
                                     'status': 'pass' if ref.returncode == 0 else 'error',
                                     'exit': ref.returncode})
         (args.out / (Path(job['elf']).stem + '.spike.log')).write_text((ref.stdout or '') + (ref.stderr or ''))
