@@ -1,0 +1,1 @@
+{"devices":[{"base":"0x0c000000","size":"0x400000","irq_map":[[0,11]],"initial_levels":[1],"config":{"model":"plic","map":{"priority":0,"pending":4096,"enable":8192,"enable_stride":128,"context":2097152,"context_stride":4096,"sources":2,"contexts":1},"levels":[]}}]}

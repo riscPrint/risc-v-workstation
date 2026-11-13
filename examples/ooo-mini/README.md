@@ -30,15 +30,15 @@ privileged-ISA qualification, whole-core proof or C4 acceptance.
 
 | Area | Measured result | Remaining work |
 |---|---|---|
-| Precise interrupts | MSIP, MTIP and MEIP pass self-checking programs and strict Spike trap comparisons. One qualified software interrupt enters with eight ROB entries occupied. | CLINT/PLIC plugins and live lockstep are not mapped. Other full-ROB IRQ sources remain open. |
+| Precise interrupts | MSIP, MTIP and MEIP pass self-checking programs and strict Spike trap comparisons. One qualified software interrupt enters with eight ROB entries occupied. | CLINT WFI passes 4/4 with declared synchronization. Directed PLIC passes strict offline and socket lockstep comparison with checked device evidence. Dynamic PLIC stimulus and other full-ROB IRQ sources remain open. |
 | U-mode and four-entry PMP | 242 generated cases and one speculative-fault program pass with 243 strict matches. Matcher has 26 native cases. | S-mode, translation, ePMP and full privilege-family qualification are absent. |
 | Isolation | One complete M-to-U PMP pair reports no_leak_observed. Both public windows are 21 cycles and have no denied load on the bus. | Other secrets, channels, policies and positive leakage controls. |
 | Coverage snapshot | One 306-program batch reaches 80.40% line and 85.63% branch coverage. All pass. No exclusion is used. | ACT4, 405 unhit line points, 585 unhit branch points and incomplete logical-region attribution. This snapshot predates the final probe additions. |
 | Formal snapshot | Seven depth-8 BMC goals time out. Two declared-trigger covers reach. ADD, LUI and retirement cover time out at depth 40. | No new property or ISA instruction proof closed. Long retries were not run. |
-| Monitors and probes | Final cohort: 307/307 pass, 24 monitors with zero firings, 304 strict matches, three masked-WFI matches with one IRQ synchronization each. Three directed probe plans qualify. | Complete branch/age/byte/privilege coverage and consecutive-cycle recovery remain open. |
+| Monitors and probes | Device-enabled cohort: 307/307 base cases and five device cases pass, 25 monitors with zero firings. Base has 304 strict matches and three explicit IRQ-synchronized matches. PLIC also passes strict socket lockstep. Three directed probe plans qualify. | Complete branch/age/byte/privilege coverage and consecutive-cycle recovery remain open. |
 
 Detailed commands and limits: [interrupts](rvw/interrupts.md),
-[protection](rvw/protection.md), [coverage](rvw/coverage.md),
+[devices and live comparison](rvw/devices.md), [protection](rvw/protection.md), [coverage](rvw/coverage.md),
 [formal](rvw/formal.md), and [probes](rvw/probes.md).
 The coverage snapshot is recorded in [PR #1296](https://github.com/riscPrint/risc-v-workstation/pull/1296).
 The final probe cohort is recorded in [PR #1326](https://github.com/riscPrint/risc-v-workstation/pull/1326).
@@ -177,6 +177,7 @@ Each workstation problem found during this integration has its own generic fix:
 | [#1196](https://github.com/riscPrint/risc-v-workstation/pull/1196) | Revision checkout tried to clone a core subdirectory as a Git repository. The regression checks historical bytes, sibling dependencies and preservation of the dirty input tree. |
 | [#1200](https://github.com/riscPrint/risc-v-workstation/pull/1200) | Source-scope conditions were reported as established latches for generated temporaries. They remain unresolved and lint stays inconclusive. Named partial-assignment findings remain. |
 | [#1220](https://github.com/riscPrint/risc-v-workstation/pull/1220) | Scalar memory preflight blocked illegal RV32 LD/SD encodings before Spike could trap. Ten native tests cover illegal encodings and retained split-access refusals. |
+| [#1373](https://github.com/riscPrint/risc-v-workstation/pull/1373) | External PLIC evidence required dynamic mailboxes for a held source. Generic initial_levels supports this case. Unit tests retain pin, claim, completion and taken-event checks. |
 | [#1310](https://github.com/riscPrint/risc-v-workstation/pull/1310) | C1 qualification compared retirement count with C2 records that include trapping instructions. The checker now reports a separate nontrapping count. Unit tests and the protection probe run verify the fix. |
 
 Implementation and evidence were merged in

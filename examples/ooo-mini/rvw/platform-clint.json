@@ -1,0 +1,65 @@
+{
+  "name": "ooo-mini",
+  "xlen": 32,
+  "isa": "rv32im_zicsr_zifencei",
+  "reference_isa": "rv32im_zicsr_zifencei_zicntr_zihpm",
+  "reset_pc": "0x80000000",
+  "ram": [
+    {
+      "base": "0x80000000",
+      "size": "0x1000000"
+    }
+  ],
+  "mmio": [
+    {
+      "base": "0x02000000",
+      "size": "0x10000"
+    }
+  ],
+  "pmp_regions": 4,
+  "aligned_mem": false,
+  "irq_inputs": [
+    3,
+    7,
+    11
+  ],
+  "privilege_modes": "MU",
+  "misaligned": {
+    "load": "emulate",
+    "store": "emulate",
+    "atomic": "access_fault",
+    "split_page": "refuse",
+    "split_bus": "refuse"
+  },
+  "endianness": {
+    "instruction": "little",
+    "data": "little",
+    "page_table": "little",
+    "device": "little"
+  },
+  "ecall_tval": "zero",
+  "sail_overrides": {
+    "platform": {
+      "clint": {
+        "supported": false
+      },
+      "simple_interrupt_generator": {
+        "supported": false
+      }
+    },
+    "extensions": {
+      "M": {
+        "mutable_misa": false
+      }
+    },
+    "base": {
+      "mtvec": {
+        "vectored": {
+          "supported": true
+        }
+      }
+    }
+  },
+  "sail_reference_isa": "rv32im_zicsr_zifencei",
+  "scalar_split_ram": true
+}

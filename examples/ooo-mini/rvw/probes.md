@@ -1,6 +1,8 @@
 # Protection and recovery probe campaign
 
-The core now has 24 native monitors. The new checks require privilege 0 or 3
+This snapshot has 24 native monitors. The later device increment adds a
+head-only MMIO load monitor, for 25 total. See [device checks](devices.md)
+for its full regression and repeated goal qualification. The new checks require privilege 0 or 3
 and recheck store permission at commit. Probe-only state measures recovery
 spacing. It is absent when probes are disabled. Default dimensions and module
 names remain unchanged.
