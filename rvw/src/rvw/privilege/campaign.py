@@ -81,9 +81,10 @@ def build(description, out, gcc='riscv64-unknown-elf-gcc'):
     if config.get('kind')=='plic-delivery':irq_causes.append(9);irq_modes.append('S')
     if config.get('kind') in ('fast-preemption','fast-vector'):
         irq_causes.extend([1,2,(1<<63)-3,(1<<63)-7])
+    state_csrs=([f'0x{base+i:03x}' for base in (0x10c,0x30c,0x60c) for i in range(4)]+['0x017','0xdb0','0x5a8']) if config.get('kind') in ('stateen','stateen-hierarchy') else []
     (out / 'functional-groups.json').write_text(json.dumps({'replace_defaults': True, 'groups': [
         {'name': 'privilege_csr_mode', 'fields': ['csr', 'mode'], 'when': {'class': 'csr'},
-         'domains': [['0x180', '0x300', '0x341', '0x342', '0x307', '0x346', '0x347', '0x348', '0x350', '0x351', '0x352', '0x353', '0x355', '0x35c', '0x150', '0x151', '0x15c', '0x250', '0x251', '0x25c', '0x600', '0x011', '0x14d', '0x15d', '0x24d', '0x25d', '0x30a', '0x31a', '0x60a', '0x61a', '0x605', '0x615', '0x606', '0x306', '0x344', '0x644'], ['M', 'S', 'U']]},
+         'domains': [['0x180', '0x300', '0x341', '0x342', '0x307', '0x346', '0x347', '0x348', '0x350', '0x351', '0x352', '0x353', '0x355', '0x35c', '0x150', '0x151', '0x15c', '0x250', '0x251', '0x25c', '0x600', '0x011', '0x14d', '0x15d', '0x24d', '0x25d', '0x30a', '0x31a', '0x60a', '0x61a', '0x605', '0x615', '0x606', '0x306', '0x344', '0x644']+state_csrs, ['M', 'S', 'U']]},
         {'name': 'privilege_trap', 'fields': ['cause', 'mode'],
          'when': {'event': 'trap', 'interrupt': False}, 'domains': [[1, 2, 5, 7, 8, 9, 10, 11, 15, 18, 22], ['M']]},
         {'name': 'privilege_irq', 'fields': ['cause', 'mode'],
@@ -111,7 +112,7 @@ def reference(directory, spike='spike', timeout=2):
         from importlib import import_module
         modules={'imsic':'aia','aplic':'aia','aplic-msi':'aplic_gateway',
                  'aclint':'fast_interrupts','smnip':'fast_interrupts',
-                 'fast-preemption':'fast_preemption','fast-vector':'fast_vector','rnmi':'rnmi','reri':'reri','reri-transactions':'reri_transactions','dvfs':'dvfs','plic-delivery':'plic_delivery'}
+                 'stateen-access':'state_hierarchy','fast-preemption':'fast_preemption','fast-vector':'fast_vector','rnmi':'rnmi','reri':'reri','reri-transactions':'reri_transactions','dvfs':'dvfs','plic-delivery':'plic_delivery'}
         models=[import_module('rvw.privilege.controllers')];rows=[]
         backend=manifest['config']['reference_backend']
         native=backend!='python'

@@ -645,3 +645,22 @@ Native Spike/Python-device runs also write `*.reference.jsonl` C2 traces with
 explicit reference/model-based tags. They support oracle smoke tests. They
 cannot earn C1 observation groups. Native backend registration is kept separate
 from campaign-kind lists and has routing regression tests.
+
+
+## Extension-state access probes
+
+The state-enable hierarchy also selects `jvt`, `aia`, `csrind`, `imsic`,
+`context` and `zfinx-op`. The gates are bits 2, 59, 60, 58, 57 and 1.
+Projects must declare these gates writable and declare each required extension.
+Context probes require `context_supported = true`. The Zfinx instruction probe
+checks the FADD.S result in an integer register. Other probes check CSR access.
+`guest_index` selects the VS IMSIC file. Zero requires a virtual-instruction
+exception. A nonzero guest file has no native Spike CLI reference in this profile.
+
+The extension examples pin Smstateen 1.0. The Python reference checks the access
+and trap expectations. C2 model observations check the exact cause/PC, successful
+instruction mode and virtual state, and absence of retirement for denied access.
+A zero read mask checks CSR access only, with no claim about WARL data values.
+These groups remain model-based. Native examples select the subset supported by
+the installed Spike. Neither result establishes DUT coverage. Ssstateen-only
+implementations and RV32 high-half state-enable access remain open.

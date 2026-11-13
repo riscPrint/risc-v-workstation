@@ -1,0 +1,19 @@
+{
+  "schema": "rvw.privilege/1",
+  "kind": "stateen-hierarchy",
+  "isa": "rv64imach_zicsr_zifencei_zfinx_zcmt_smstateen_smcsrind_sscsrind",
+  "compiler_isa": "rv64ima_zicsr_zifencei",
+  "stateen": {
+    "probes": [
+      "jvt",
+      "csrind",
+      "zfinx-op"
+    ],
+    "writable_bits": [
+      2,
+      60,
+      1
+    ]
+  },
+  "spec_version": "Smstateen-1.0"
+}

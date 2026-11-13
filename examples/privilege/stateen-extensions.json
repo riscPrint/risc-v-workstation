@@ -1,0 +1,28 @@
+{
+  "schema": "rvw.privilege/1",
+  "kind": "stateen-hierarchy",
+  "isa": "rv64imac_zicsr_zifencei_zcmt_smstateen_smaia_ssaia_smcsrind_sscsrind_zfinx",
+  "compiler_isa": "rv64ima_zicsr_zifencei",
+  "stateen": {
+    "probes": [
+      "jvt",
+      "aia",
+      "csrind",
+      "imsic",
+      "context",
+      "zfinx-op"
+    ],
+    "writable_bits": [
+      2,
+      59,
+      60,
+      58,
+      57,
+      1
+    ],
+    "context_supported": true,
+    "guest_index": 0
+  },
+  "reference_backend": "python",
+  "spec_version": "Smstateen-1.0"
+}
