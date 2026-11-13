@@ -38,3 +38,8 @@ def test_failed_lock_preflight_does_not_create_environment(tmp_path):
         text=True, capture_output=True, timeout=20)
     assert result.returncode == 42, (result.stdout, result.stderr)
     assert not marker.exists(), result.stdout
+
+
+@pytest.fixture
+def tmp_path(external_tmp_path):
+    return external_tmp_path

@@ -49,9 +49,9 @@ def test_micro_checks_bind_every_rule(tmp_path):
     from rvw.formal.micro_checks import generate
     spec = json.loads((EXAMPLE / 'rvw/micro-checks.json').read_text())
     result = generate(spec, tmp_path / 'queues')
-    assert result['complete'] and len(result['rules']) == 6
+    assert result['complete'] and len(result['rules']) == 9
     binds = (tmp_path / 'queues/binds.sv').read_text()
-    assert binds.count('bind NaxRiscv ') == 6
+    assert binds.count('bind NaxRiscv ') == 9
     control = generate(json.loads((EXAMPLE / 'rvw/micro-checks-control.json').read_text()), tmp_path / 'control')
     assert control['complete'] and control['rules'][0]['id'] == 'control_lq_free_le_8'
 

@@ -274,3 +274,8 @@ def test_bundle_core_is_captured_for_rerun_and_replay(tmp_path, monkeypatch, rac
     replay = adapter.parse_replay(report['replay'])
     assert Path(replay.env['FAKE_CORE']) != repo
     assert adapter.execute(replay, tmp_path / 'replay').run.get('status') == 'assert'
+
+
+@pytest.fixture
+def tmp_path(external_tmp_path):
+    return external_tmp_path

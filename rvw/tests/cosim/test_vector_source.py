@@ -23,3 +23,8 @@ def test_prepare_pins_both_sources(tmp_path, monkeypatch):
 def test_refuse_inside_repository():
     with pytest.raises(ValueError, match='outside'):
         source.fetch(source.ROOT/'vendor-vector')
+
+
+@pytest.fixture
+def tmp_path(external_tmp_path):
+    return external_tmp_path

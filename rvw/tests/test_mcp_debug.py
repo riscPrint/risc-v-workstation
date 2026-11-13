@@ -229,3 +229,8 @@ def test_annotations_and_errors(registry, tmp_path):
         assert not error and status["status"] == "failed" and "missing" in status["error"]
     _, data, error = registry.call_json("wave_sample", {"wave": "/missing.vcd", "regex": ".", "at": "1"})
     assert error and "missing.vcd" in data["error"]
+
+
+@pytest.fixture
+def tmp_path(external_tmp_path):
+    return external_tmp_path

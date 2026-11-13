@@ -211,3 +211,11 @@ def pytest_collection_modifyitems(items):
             continue
         relative = item.path.relative_to(HERE).as_posix()
         item.add_marker("fast" if relative in FAST_MODULES else "slow")
+
+
+@pytest.fixture
+def external_tmp_path():
+    """Use an external directory for repository-boundary tests."""
+    from tempfile import TemporaryDirectory
+    with TemporaryDirectory(prefix="rvw-test-external-") as directory:
+        yield Path(directory).resolve()

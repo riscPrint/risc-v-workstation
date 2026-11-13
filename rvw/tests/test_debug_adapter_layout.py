@@ -47,3 +47,8 @@ def test_adapter_keeps_siblings(tmp_path, monkeypatch, in_core, language):
     saved_helper.write_text('changed')
     with pytest.raises(CaptureError, match='captured source changed'):
         inputs.verify()
+
+
+@pytest.fixture
+def tmp_path(external_tmp_path):
+    return external_tmp_path

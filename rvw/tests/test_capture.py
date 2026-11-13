@@ -536,3 +536,8 @@ def test_partial_file_enumeration_disables_caching(tmp_path):
     with pytest.raises(CaptureError, match='input_not_captured:files'):
         cap.files(paths())
     assert cap.cache_key({}, complete=True) is None
+
+
+@pytest.fixture
+def tmp_path(external_tmp_path):
+    return external_tmp_path
