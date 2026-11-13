@@ -76,3 +76,31 @@ This is a complete result for this small module and these export settings.
 It does not prove square-root arithmetic, IEEE behavior, a hardware parameter
 change, or the larger mantissa case. The four-bit timeouts remain in the ledger.
 See `two-bit-results.json`.
+
+## Real multiplier hardware configurations
+
+`prepare-mul-configs.py` copies the committed `MulSpliter` and
+`AdderAggregator` helpers from VexiiRiscv `Utils.scala`. It creates two private
+source revisions. The first uses 17-bit partial products. The second uses 9-bit
+partial products. Both retain the default arithmetic sum settings, `(44,8)`
+and `(1000,1000)`. Only the split size changes between the revisions.
+
+```sh
+rvw/.venv/bin/python examples/formal/equiv-real/prepare-mul-configs.py \
+  --source /path/to/private/VexiiRiscv --out /path/to/mul-cases
+rvw/.venv/bin/python examples/formal/equiv-real/run.py \
+  --cases /path/to/mul-cases/cases.json --out /path/to/mul-proofs --timeout 240
+```
+
+Both eight-bit inputs are signed and extended to 33 bits inside the wrapper.
+EQY compares the full 64-bit product. It does not assume internal matches.
+The helpers are combinational. The clock and reset ports serve the revision
+flow's interface. This check covers neither full-width input space nor the
+core's multiplier pipeline and control.
+
+The pinned native run proved the output equivalent in 230.351 seconds,
+including both exports. The source revision was `9f70315d`. The full revision,
+source hashes, RTL hashes, private comparison revisions and proof restrictions
+are in `mul-config-results.json`. The public recipe produces the same Scala
+component and exporter bytes as the native run. Its provenance records the
+hash of the exact upstream source bytes, including trailing whitespace.

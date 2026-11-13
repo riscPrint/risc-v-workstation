@@ -365,3 +365,12 @@ the exported RTL hash, model-refusal attempts and local qualification controls.
 An `unsupported` attempt with `solver_ran: false` is not a proof.
 The default asynchronous-reset source and all its assertions remain unchanged.
 The failed guard-relaxation experiment is not a supported model extension.
+
+## Real multiplier split configuration qualification
+
+The real revision example records native equivalence for 17-bit and 9-bit
+partial-product configurations of VexiiRiscv's arithmetic helpers. Inputs are
+signed bytes extended to 33 bits. The complete 64-bit output is compared.
+This is combinational helper equivalence, not full-width or pipeline proof.
+The recipe uses committed private source revisions and the public revision
+export flow. Its ledger records source and exported module hashes.
