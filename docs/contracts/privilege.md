@@ -444,3 +444,17 @@ not assign an event number. Hardware rows carry `hardware_event` metadata and
 `reference_unavailable`; native Spike cannot earn their reference pass.
 Software-pending delivery and scountovf probes use normal strict C1 checking.
 The Python Counter unit model is model-based evidence only.
+
+## Seeded trap entry frames on RV32 and RV64
+
+`random-transitions` accepts RV32 and RV64 ISA strings. Each recorded transition
+has `previous_ie` equal to 0 or 1. It sets the pre-trap interrupt-enable state.
+The program checks xIE clear, xPIE equal to that state and saved privilege on
+entry. M/S resume checks restored xIE and xPIE set after the matching xRET.
+U-mode completion uses an ECALL because U cannot read supervisor status.
+RV32 completion uses two word stores. The operation sequence is the same for
+a seed at either XLEN. Generated plans remain bounded, not exhaustive.
+
+For a row with both `hardware_event` and `reference_unavailable`, a conclusive
+C1 self-check failure still fails. A passing C1 result stays inconclusive.
+The checker does not call Spike for an unsupported HPM event selector.

@@ -262,6 +262,10 @@ def check(directory, results, platform, timeout=10):
                 if 'model_subset' in row:row['model_subset'].update(status='fail',reason='C1 self-check failed')
                 rows.append(row)
                 continue
+            if scenario.get('hardware_event') and scenario.get('reference_unavailable'):
+                row['reason'] = scenario['reference_unavailable']
+                rows.append(row)
+                continue
             if scenario.get('timer_contract'):
                 from .timer_observe import check as timer_check
                 artifact = run.artifacts.get('privilege_timer')

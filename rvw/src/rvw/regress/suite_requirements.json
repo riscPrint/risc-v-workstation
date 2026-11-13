@@ -298,5 +298,25 @@
       "ext:sscofpmf",
       "ext:zihpm"
     ]
+  },
+  {
+    "name": "random-privilege-rv32",
+    "source": "examples/privilege/random-transitions-rv32.json",
+    "requires": [
+      "xlen:32",
+      "mode:S",
+      "mode:U",
+      "pmp"
+    ]
+  },
+  {
+    "name": "random-privilege-rv64",
+    "source": "examples/privilege/random-transitions.json",
+    "requires": [
+      "xlen:64",
+      "mode:S",
+      "mode:U",
+      "pmp"
+    ]
   }
 ]

@@ -95,3 +95,25 @@ def test_planner_catalogue():
     rows = json.loads(Path('rvw/src/rvw/regress/suite_requirements.json').read_text())
     r = next(r for r in rows if r['name'] == 'sscofpmf')
     assert {'xlen:64','ext:sscofpmf','ext:zihpm'} <= set(r['requires'])
+
+
+@pytest.mark.parametrize('status,why,expected', [('pass',None,'inconclusive'),
+    ('fail',None,'fail'), ('pass','incomplete trace','inconclusive')])
+def test_hardware_c1_does_not_use_an_unavailable_isa_reference(tmp_path,monkeypatch,status,why,expected):
+    from types import SimpleNamespace
+    import rvw.results
+    c = config(); c['cofpmf'].update(event_selector=7,counter_bits=64)
+    row = next(r for r in campaign.scenarios(c) if r.get('hardware_event'))
+    row.pop('assembly'); row['elf'] = 'one.elf'
+    elf = tmp_path / row['elf']; elf.write_bytes(b'fixture')
+    row['elf_sha256'] = campaign.digest(elf)
+    (tmp_path/'manifest.json').write_text(json.dumps(dict(schema='rvw.privilege-build/1',config=c,scenarios=[row])))
+    (tmp_path/'result.json').write_text('{}')
+    (tmp_path/'trace.jsonl').write_text('fixture')
+    run = SimpleNamespace(elf_sha256=row['elf_sha256'],path=tmp_path,why_inconclusive=why,
+                          status=status,artifacts={'rvfi_trace':'trace.jsonl'})
+    monkeypatch.setattr(rvw.results,'load_run',lambda _:run)
+    monkeypatch.setattr(campaign,'run_group',lambda *a,**k: pytest.fail('unavailable reference executed'))
+    checked = campaign.check(tmp_path,tmp_path,'platform.json')
+    assert checked['status'] == expected
+    assert checked['counts']['pass'] == 0
