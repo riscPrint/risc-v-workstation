@@ -47,15 +47,12 @@ class InputSnapshot:
         self.sources = [self._copy(Path(f), 'source') for f in args.verilog]
         if self.frontend == 'temporal':
             from .temporal import lower
-            self.temporal_properties = []
-            for record in self.files:
-                if 'frontend' not in record:
-                    continue
-                path = out / record['frontend']
-                lowered, properties = lower(path.read_text())
-                path.write_text(lowered)
-                record['frontend_sha256'] = digest(path)
-                self.temporal_properties.extend(properties)
+            # Bind files and checker declarations can refer to another source.
+            # Keep each original captured file and seal the combined proof input.
+            combined = self.directory / 'temporal.sv'
+            lowered, self.temporal_properties = lower('\n'.join(path.read_text() for path in self.sources))
+            combined.write_text(lowered)
+            self.sources = [self.seal(combined)]
         if self.frontend == 'slang':
             from .sva import validate_sources
             if getattr(args, 'event_model', False):
@@ -125,6 +122,8 @@ class InputSnapshot:
     def check_frontend(self) -> None:
         """No frontend read may escape the copied RTL or introduce an untracked dependency."""
         allowed = {str(self.out / r['frontend']) for r in self.files if 'frontend' in r}
+        if self.frontend == 'temporal':
+            allowed.add(str(self.directory / 'temporal.sv'))
         script = str(self.out / 'module_ports.ys')
         try:
             if self.frontend == 'slang':

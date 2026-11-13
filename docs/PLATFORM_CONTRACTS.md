@@ -3314,3 +3314,12 @@ The primary `--elf` remains the legacy C1 identity. `details.hart_images` holds
 all captured identities and entries. Replay includes the manifest path.
 `MultiHartSession` writes one C2/2 trace with per-hart retirement orders,
 reset epochs and completion. It does not infer a memory order from capture.
+
+
+The temporal frontend can combine captured source files for module-target
+checker bindings. Original source records remain in the input snapshot. The
+combined `inputs/temporal.sv` is a sealed generated proof artifact. Module-local
+argument-free named properties resolve before monitor generation. Recursive or
+unused named properties are refused. Only explicit ANSI input checker ports and
+named-port module-target bindings are supported. Instance-target bindings and
+checker scheduling extensions remain unsupported.
