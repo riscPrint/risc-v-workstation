@@ -25,8 +25,11 @@ def _convert(events, to, out, c2=None, c1=None, probe=None, roi_start=None, roi_
 def mcp_tools():
     from .check import check
     return [
-        ToolSpec('probes_check', 'Name missing required probe kinds or kind/name bindings. Presence is not runtime correctness.',
-                 schema({'db': S, 'events': S, 'require': {'type':'array','items':S}}, []), check,
+        ToolSpec('probes_check', 'Name missing required probe kinds or kind/name bindings. With validate (or c2), also '
+                 'validate an event stream against the contract (fields, end record, counters, instruction IDs, walk '
+                 'grouping; retired-event probes against C2) and name each misplaced probe. Clean is not a wiring proof.',
+                 schema({'db': S, 'events': S, 'require': {'type':'array','items':S}, 'c2': S,
+                         'validate': {'type': 'boolean'}}, []), check,
                  annotations={'readOnlyHint': True}, side_effects='read-only', native_tools=()),
         ToolSpec('probes_list', 'List simulation probes from a design database (db) or a probe event stream '
                  '(events), and for each consumer tool whether the probes enable it or which events are missing.',
