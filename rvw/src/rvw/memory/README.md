@@ -91,6 +91,31 @@ captured C2/2 execution to the axiomatic checker. Generation does not run a
 DUT. The lock loops need declared fairness and a bounded watchdog. The project
 must collect complete dependencies to earn an axiomatic result.
 
+## Concurrent ELF inputs
+
+`rvw memory concurrent-build --out seed7 --seed 7 --harts 3 --length 20`
+compiles one RV64 ELF per hart. MCP exposes `memory_concurrent_build`.
+The output directory must be fresh. RISC-V GCC must be installed. `--gcc`
+selects its executable. `--timeout` is a total compiler budget of at most
+60 seconds. Each compiler process runs with `nice -n 10`.
+
+The build writes `hart-images.json` for `--hart-images` and `initial.json`
+for `rvw memory axiomatic`. `build.json` records entry PCs, completion PCs,
+private tohost addresses, source hashes and linker hashes. Each hart writes
+one to its private tohost before it reaches its completion PC. `programs.json`
+keeps the generated assembly fragments. Build logs and linker scripts remain
+beside each ELF.
+
+Private regions start at `--base`, default `0x80000000`, with 128 KiB per hart.
+The shared 40-byte zeroed region starts at `--shared-base`, default
+`0x81000000`. The linker emits the same shared BSS segment in every ELF.
+Private ELF segments are disjoint. The initial-state file includes the five
+shared doublewords and each private tohost. The adapter must load all images
+before it releases the harts. It must finish each hart separately and capture
+physical C2/2 events with complete dependencies. The lock loops need declared
+bounded service and a watchdog. `built` means compilation completed. It does
+not mean a DUT ran or that ordering passed.
+
 ## Generated TileLink-C channel monitor
 
 `rvw memory tilelink-bind --database design.sqlite --profile tlc.json --out monitors`
