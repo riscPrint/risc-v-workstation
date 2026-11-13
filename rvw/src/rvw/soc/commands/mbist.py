@@ -1,3 +1,4 @@
+from rvw.mcp.aliases import with_aliases
 import json
 from rvw.query.db import QueryError
 from rvw.soc.mbist import requirements
@@ -23,4 +24,4 @@ def run(args):
 
 def mcp_tools():
     from rvw.mcp.spec import ToolSpec,schema
-    return [ToolSpec('soc_mbist','Export memory BIST intent and unrun functional isolation obligations.',schema({k:{'type':'string'} for k in ('db_path','source','out')},['db_path','source','out']),requirements)]
+    return [with_aliases(ToolSpec('soc_mbist','Export memory BIST intent and unrun functional isolation obligations.',schema({k:{'type':'string'} for k in ('db_path','source','out')},['db_path','source','out']),requirements), db='db_path')]

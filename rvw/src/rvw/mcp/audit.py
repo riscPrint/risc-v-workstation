@@ -26,7 +26,8 @@ def audit(registry, problems=()):
             if key not in s:
                 add("schema_field", key)
         for name, prop in s.get("properties", {}).items():
-            if name in ALIASES:
+            if (name in ALIASES and not prop.get('x-alias-for')
+                    and not (name == 'run' and prop.get('type') == 'boolean')):
                 add("argument_alias", f"{name}: prefer {ALIASES[name]} for new tools.")
             if not any(k in prop for k in ("type", "$ref", "anyOf", "oneOf", "enum")):
                 add("argument_schema", name)

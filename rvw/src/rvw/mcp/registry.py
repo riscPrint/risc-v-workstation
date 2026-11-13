@@ -164,6 +164,7 @@ class Registry:
             args = {} if arguments is None else arguments
             check = dict(spec.input_schema)
             check["required"] = []
+            check.pop("allOf", None)  # Alias alternatives impose required names only on execution.
             try:
                 json.dumps(args, allow_nan=False)
                 validator_for(check)(check).validate(args)
