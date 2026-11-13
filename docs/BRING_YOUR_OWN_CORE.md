@@ -255,7 +255,7 @@ Keep signal names and completion rules in your adapter.
 
 ## Declare enough inputs for a gate
 
-The initial config sets `input_complete = false` on purpose. It lets you develop
+The unwired skeleton config sets `input_complete = false` on purpose. It lets you develop
 the adapter without claiming that all dependencies are covered. Such evidence
 cannot earn gate acceptance or passing-result reuse.
 
@@ -595,3 +595,54 @@ establish vector correctness. Add the missing capture to the core adapter.
 claim a match. Next run `rvw cosim check --elf ELF --trace OUT/rvfi.jsonl --json`.
 Read its actual state coverage and applied masks. Use the `cosim_doctor` MCP
 tool for the same inspection from an agent.
+
+
+## Development path vs gate path
+
+Use direct adapter runs to develop the signal, reset, memory and RVFI mapping.
+Then use `rvw regress run --rvfi-trace` for the intended ELF inventory. Filter
+out `.dump` files. Compare traces with `rvw cosim check`. Test passes on a dirty
+core do not earn gate acceptance. Gate runs also require reviewed input capture,
+clean commits and matching identities.
+
+Wired Spinal init projects declare standard launcher inputs and both RTL hooks:
+`elaborate` and `generatedVerilog(model)`. Review custom sources, external data,
+environment and tools before regression. Keep mismatch refusal enabled.
+The generated launcher compiles once, saves `rvw/target/rvw-classpath.json`,
+and reuses Java while sources, build settings and runtime files match.
+It uses `sbt-<project-name>` for private build trees. Use the shared `sbt` lock
+only when the build writes shared outputs.
+
+Use one project-owned `Elaboration.top()` and `Elaboration.config` for simulation
+and SpinalDB. The generated database entry uses them. Formal and lint consume
+the database's RTL. Rebuild that database after configuration changes.
+Constant-value ASYNC reset FFs need the event BMC selection
+`--event-model --async-reset` in formal BMC, apps or autocheck. Other unsupported
+state stops early with a fix hint. IFT currently requires public rising-edge
+SYNC state. If the project selects SYNC, change the shared entry and rebuild
+all flows. IFT models X/Z constants as Boolean uncertainty with taint set.
+It does not model electrical high impedance.
+
+Architecture Minor/Timing and scheduling descriptions accept `rv32i` and
+`rv64i` without M. RV64 O3 also accepts `rv64i`. Model selection does not prove
+that the instruction behavior matches RTL. Gem5 remains an optional backend.
+
+For a simple CPU memory interface, use `SimpleCpuBus` and `SimpleCoreWrapper`
+from [SpinalSoc](../SpinalSoc/README.md). `core.bus = "simple"` inserts the APB3
+bridge with byte strobes. The CPU must hold requests through completion.
+A project wrapper must map reset, interrupts and memory waits. AXI4-Lite
+wrappers retain the existing ingress. Run software on the composed core before
+claiming CPU integration.
+
+Use `rvw uvm new --adapter adapter.json` for a custom typed bus. Its
+`rvw.uvm-adapter/1` file names a database bus, an agent profile, explicit pin
+bindings and a project scenario. The generated bench requires positive checks.
+`rvw vip list`, `vip buses` and `vip bench` expose the agent inventory and
+bench skeletons. Their MCP names are `vip_list`, `vip_buses` and `vip_bench`.
+Generation is not native qualification.
+
+The init probe stub shows fetch/decode flushes and measured fetch/data stalls.
+Bind actual pipeline slot IDs. After a `--probes` run, use `rvw probes check`
+with `--require flush/fetch --require flush/decode --require stall` and an
+`--events` file. The command names missing declarations. Presence does not
+prove activation or complete pipeline accounting.

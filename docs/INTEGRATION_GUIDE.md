@@ -99,7 +99,7 @@ a pass. Doctor checks one config and ELF. It does not qualify all options.
 
 ## 5. Add regression and gate inputs
 
-The initial `input_complete = false` also prevents `regress run` from starting
+Unwired scaffolds use `input_complete = false`. That setting prevents `regress run` from starting
 simulations. Use the adapter's direct `run` command while developing the
 integration. Audit its sources, build products, scripts, tools and environment.
 Declare `cache_paths`, `input_env`, `input_tools` and the required command/toolchain
@@ -245,8 +245,11 @@ evidence. Full imported VIP, native debug and HDL DPI/VPI backdoor support
 remain unqualified. DRAM, PCIe and Ethernet optional model contracts have mock
 callback tests; projects still supply their native models and bridges.
 See [UVM](../Uvm/README.md) and [VIP](../rvw/src/rvw/vip/README.md).
-There is no standalone `rvw vip` command. VIP agents are library APIs and
-SV/cocotb assets. Bind a supported protocol before using them on a custom bus.
+Use `rvw vip list`, `rvw vip buses --db design.db` and
+`rvw vip bench --db design.db --out bench.py`. MCP exposes `vip_list`,
+`vip_buses` and `vip_bench`. The bench remains a skeleton until it has project
+reset, stimulus and expected results. For a custom typed bus, use
+`rvw uvm new --adapter adapter.json` with a project scenario and explicit pins.
 
 ## 14. Scale to a farm
 
@@ -378,5 +381,58 @@ refusals and open integration work. It does not transfer whole-core support.
 | Query and diagrams | Database and export worked | A shared project config resolved the reset mismatch; viewer rendering was not checked. |
 | Probes, perf, waves and coverage | Native capture and C1-based coverage worked | One short program; missing probe events remain explicit. No coverage closure. |
 | Regression, formal, security | Four ISA passes; bounded formal; IFT blocked | Final four-test regression exited 0. One formal property passed to depth 6 with overall inconclusive. IFT refused X/Z constants. |
-| UVM, VIP, SoC and architecture | Partial or unsupported | Custom bus bridge required; no VIP CLI; RV32I model selection refused. |
+| UVM, VIP, SoC and architecture | Partial or unsupported | Historical first pass. The second pass adds a simple bus bridge, verifies the VIP CLI and accepts base-I model selections. |
 | MCP | Twenty stdio calls exercised | Successful results and the architecture/UVM/security refusals are recorded in the report; job completion is not a DUT pass. |
+
+
+## Development path vs gate path
+
+Start with direct adapter runs while mapping the core. Build a smoke ELF.
+Check C1 completion and the C2 stream. Then run a regression suite with
+`--rvfi-trace` and compare each trace with the independent reference.
+Exclude build side products such as `.dump` from the suite's ELF pattern.
+A smoke match does not establish full ISA correctness.
+
+`rvw init --wire-build --sbt-project ID --db-top PACKAGE.Top` now declares the
+standard external launcher inputs. It supplies both `elaborate` and
+`generatedVerilog(model)`. Extend `cache_paths` and `input_env` for custom
+inputs. Keep the RTL mismatch check. An unwired stub still refuses execution.
+The launcher caches its compiled classpath in `rvw/target/rvw-classpath.json`.
+It rebuilds after source, build, environment or runtime file changes. Its sbt
+lock is `sbt-<project-name>`. Use unique project names for private build trees.
+
+Gate runs also need reviewed complete inputs, clean commits and exact identity
+capture. A dirty development run can pass its tests without earning gate
+acceptance. Do not turn an incomplete declaration on to bypass a refusal.
+
+Use the generated `Elaboration.top()` and `Elaboration.config` for simulation
+and SpinalDB. Formal and lint use the RTL recorded by that database. Rebuild
+it after edits. This carries the selected clock/reset policy into each flow.
+Default single-clock formal refuses ASYNC state. Constant-value ASYNC reset
+FFs can use `--event-model --async-reset` with BMC, apps or autocheck.
+IFT gives an early fix hint for unsupported state. A project that selects SYNC
+must rebuild every flow from the shared entry. IFT treats X/Z as either Boolean
+value with taint set. It does not model electrical high impedance.
+
+Minor/Timing architecture descriptions and scheduling component models accept
+RV32I and RV64I without M. RV64 O3 also accepts RV64I. Select actual core
+resources. Static compatibility does not validate behavior. Gem5 execution
+still needs its installed backend.
+
+For a one-outstanding memory interface, bind a project `SimpleCoreWrapper` and
+select `core.bus = "simple"` in the SoC composition. The APB3 bridge preserves
+wait states, errors and write byte masks. The project must hold the CPU until
+completion. Existing AXI4-Lite wrappers have their own ingress. An idle wrapper
+is not evidence that the core executes a program. See [SpinalSoc](../SpinalSoc/README.md).
+
+The init probe stub flushes both younger slots on redirect. Bind actual IDs
+and measured stall causes. Check exact declarations after an instrumented run:
+
+```sh
+rvw probes check --events run/probe-events.jsonl --require flush/fetch --require flush/decode --require stall
+```
+
+Presence does not establish activation or correct wiring. A core that cannot
+wait can declare inactive wait probes. Keep that limit in its report.
+The [second pass](DRY_RUN_2026-11-13.md#second-pass) records native evidence and
+remaining limits for the independent scratch core.
