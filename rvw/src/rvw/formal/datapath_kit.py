@@ -1,6 +1,8 @@
 """Suggest designer-reviewed datapath bindings from captured design structure."""
+from copy import copy
 import json
 import re
+import sys
 from pathlib import Path
 
 UNITS = ('mul','mulh','mulhu','mulhsu','div','divu','rem','remu',
@@ -42,7 +44,7 @@ def propose(db, unit, width=None):
         if floating:
             required += ['rm','flags']
         roles = required + ['clk','reset','start','done']
-        bindings, ambiguous = {}, {}
+        bindings, ambiguous, port_matches = {}, {}, {}
         for role in roles:
             direction = ('out','output') if role in ('y','flags','done') else ('in','input')
             names = []
@@ -58,6 +60,9 @@ def propose(db, unit, width=None):
                     names.append(port['name'])
             if len(names)==1:
                 bindings[role]=names[0]
+                port = next(p for p in ports if p['name']==names[0])
+                port_matches[role] = dict(port=names[0], path=port['path'], direction=port['direction'],
+                                          width=port['width'], criterion=('exact alias and direction; width unconstrained' if expected is None else 'exact alias, direction and requested width'))
             elif names:
                 ambiguous[role]=names
         # Never assign one physical port to two reference arguments.
@@ -69,7 +74,7 @@ def propose(db, unit, width=None):
         missing = [r for r in required if r not in bindings]
         widths = {p['width'] for p in ports if p['name'] in [bindings.get(r) for r in ('a','b','c','y')]}
         rows.append({'component':path,'module':module,'evidence':{'name_hints':matches,'areas':areas,'ports':ports},
-            'binding':{'top':module,'ports':bindings},'missing_roles':missing,
+            'binding':{'top':module,'ports':bindings},'port_matches':{r:v for r,v in port_matches.items() if r in bindings},'missing_roles':missing,
             'ambiguous_roles':ambiguous,'unbound_ports':extras,
             'width_consistent':len(widths)==1,'requires_confirmation':True,
             'review':['operation and signedness','operand/result formats','reset polarity',
@@ -79,18 +84,59 @@ def propose(db, unit, width=None):
             'scope':'name and port structure hints only; no operation or protocol is inferred'}
 
 
+def select(report, component=None):
+    candidates = [c for c in report['candidates'] if component is None or c['component']==component]
+    if len(candidates) != 1:
+        raise ValueError('confirmation needs one candidate; select its --component path or supply an edited --binding')
+    candidate = candidates[0]
+    if candidate['missing_roles'] or candidate['ambiguous_roles']:
+        raise ValueError('missing or ambiguous required roles need an edited --binding')
+    return candidate['binding']
+
+
+def describe(report):
+    lines = [f"datapath: {report['status']}"]
+    for c in report['candidates']:
+        lines.append(f"component {c['component']} (top {c['module']})")
+        for role, match in c['port_matches'].items():
+            lines.append(f"  {role} <- {match['port']}: {match['direction']} {match['width']} bits; "
+                         f"{match['criterion']}; {match['path']}")
+        for label in ('missing_roles', 'ambiguous_roles', 'unbound_ports'):
+            if c[label]: lines.append(f"  {label}: {c[label]}")
+    return '\n'.join(lines)
+
+
 def run(args):
     from rvw.query.db import run_on, QueryError, default_db
     import sqlite3
     try:
-        if any(getattr(args,n,None) for n in ('rtl','model','binding')):
-            raise ValueError('--unit proposes a binding; it excludes --rtl, --model and --binding')
+        confirm = getattr(args, 'confirm', False)
+        if not confirm and any(getattr(args,n,None) for n in ('rtl','model','binding')):
+            raise ValueError('--unit proposes a binding; proof inputs require --confirm')
+        if confirm and (not args.rtl or not args.model or args.width is None):
+            raise ValueError('--confirm requires --rtl, --model and --width')
         report=run_on(args.db or default_db(),lambda db:propose(db,args.unit,args.width))
+        binding = None
+        if confirm:
+            binding = json.loads(Path(args.binding).read_text()) if args.binding else select(report, getattr(args,'component',None))
+            if not isinstance(binding, dict) or 'top' not in binding or 'ports' not in binding:
+                raise ValueError('edited binding needs top and ports')
+            report['confirmation'] = {'binding': binding, 'source': 'edited binding' if args.binding else 'selected proposal'}
         out=Path(args.out)
         out.mkdir(parents=True,exist_ok=False)
         (out/'proposal.json').write_text(json.dumps(report,indent=2)+'\n')
-        print(json.dumps(report,indent=2) if args.json else f"datapath: {report['status']} ({out/'proposal.json'})")
-        return 0
+        if not confirm:
+            print(json.dumps(report,indent=2) if args.json else describe(report))
+            return 0
+        print(describe(report), file=sys.stderr if args.json else sys.stdout)
+        print('confirmed binding: ' + json.dumps(binding, sort_keys=True), file=sys.stderr if args.json else sys.stdout)
+        path = out/'confirmed-binding.json'
+        path.write_text(json.dumps(binding,indent=2)+'\n')
+        proof = copy(args)
+        proof.unit = None; proof.confirm = False; proof.component = None
+        proof.binding = str(path.resolve()); proof.out = str(out/'proof')
+        from .datapath import run as prove
+        return prove(proof)
     except (ValueError,OSError,QueryError,sqlite3.DatabaseError) as exc:
         print(f'datapath kit: {exc}')
         return 2

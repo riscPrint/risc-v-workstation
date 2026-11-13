@@ -420,3 +420,18 @@ binding, fresh RTL hash and bounded observation results. Each case includes
 its depth and proof kind. A deeper counterexample is retained beside any
 shorter pass. These results do not establish a CSR-programmed PMP permission
 proof.
+
+## Confirmed datapath proposals
+
+`rvw.datapath-kit/1` candidates include `port_matches`: each canonical role
+records the physical port, source path, direction, width and match criterion.
+`--confirm` requires explicit RTL, C model and width. It selects one candidate
+or uses the edited `--binding`. `confirmation` records the selected binding
+and its source. `confirmed-binding.json` is the proof input. The existing
+`rvw.datapath/1` result is under `proof/`. A confirmation is not a proof pass.
+
+The example `rvw.nax-datapath/1` ledger records source component hashes and
+per-width arithmetic proof outcomes. `rvw.confirmed-datapaths/1` records the
+reviewed Vex binding, input domain, proof-input hashes and native outcome.
+Restricted operand domains and result slices remain explicit. Neither ledger
+establishes instruction control or whole-core correctness.

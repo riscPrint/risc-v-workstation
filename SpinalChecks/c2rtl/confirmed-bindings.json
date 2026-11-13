@@ -1,0 +1,98 @@
+{
+  "schema": "rvw.confirmed-datapaths/1",
+  "cases": [
+    {
+      "case": "vex-mul",
+      "domain": "8-bit zero-extended operands; low 8 result bits",
+      "status": "proved",
+      "width": 8,
+      "wall_s": 2.636,
+      "rtl_definedness": "proved",
+      "inputs": {
+        "dut.v": "47e3d00efe250c3bd5bdefd6b95b7854757db42ffc61a62db8f8c5ddccdcbebb",
+        "reference.c": "cce8a96dda31939e0e16a2b055d03a8db60072308ddb56081c6eb0d5ed58e422",
+        "binding.json": "95f8ad3b6445f9ef746704cead4fbbdb6890b507bbe47bf05061ac72f9383021"
+      },
+      "binding": {
+        "top": "ReviewedVexmulMul",
+        "ports": {
+          "a": "a",
+          "y": "y",
+          "b": "b"
+        }
+      }
+    },
+    {
+      "case": "vex-div",
+      "domain": "all 32-bit dividends; divisor zero",
+      "status": "proved",
+      "width": 32,
+      "wall_s": 31.965,
+      "rtl_definedness": "proved",
+      "inputs": {
+        "dut.v": "510724cde56a01da2af13771b2a792fab2e0a0b6dd9869e7b0074ec3a0491081",
+        "reference.c": "bf2195001a8bb81387b583713bf5eb0581dbffa19a6f2e3392cef2d92690b2c2",
+        "binding.json": "e36169a9865cf3e013997af88de7fd28c65fadc2065928acc9f4f0c1d5b38893"
+      },
+      "binding": {
+        "top": "ReviewedVexdivDivu",
+        "ports": {
+          "a": "a",
+          "y": "y",
+          "b": "b",
+          "clk": "clk",
+          "reset": "reset",
+          "start": "start",
+          "done": "done"
+        }
+      }
+    },
+    {
+      "case": "vexii-div",
+      "domain": "all 32-bit dividends; divisor zero",
+      "status": "proved",
+      "width": 32,
+      "wall_s": 17.35,
+      "rtl_definedness": "proved",
+      "inputs": {
+        "dut.v": "97b320b484590e76b32cf12ba0e7862350be551ed51c9abd8d59c276015bc038",
+        "reference.c": "8cca00955b40b50fa9cc22c690faac276ac884426006a814c4e20f0c2486f1a2",
+        "binding.json": "c2f391137ea226c3b6a5446e9c12dfa36692b90c3b3566d64d2d4f05dd2f7f95"
+      },
+      "binding": {
+        "top": "ReviewedVexiidivDivu",
+        "ports": {
+          "a": "a",
+          "y": "y",
+          "b": "b",
+          "clk": "clk",
+          "reset": "reset",
+          "start": "start",
+          "done": "done"
+        }
+      }
+    },
+    {
+      "case": "vexii-mul",
+      "domain": "signed 8-bit operand projection; all 32 result bits",
+      "status": "proved",
+      "width": 32,
+      "wall_s": 44.123,
+      "rtl_definedness": "proved",
+      "inputs": {
+        "dut.v": "83eedc09be49611fb62d45cff93f13f5a1ab2d4baadfaeabb3f858034c3d8604",
+        "reference.c": "2ac8f6f38c669550acca1ab85c4a58ee6573d7c96318b0fd407161abf292468b",
+        "binding.json": "5bc14314bec204da81d7600b74b1e1305a38b572800ed3020a2c1a99241e1e8c"
+      },
+      "binding": {
+        "top": "VexiiMulLow",
+        "ports": {
+          "a": "a",
+          "y": "y",
+          "b": "b"
+        }
+      }
+    }
+  ],
+  "scope": "reviewed arithmetic boundaries only; no complete-core or instruction control proof"
+}

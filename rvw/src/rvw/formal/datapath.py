@@ -14,7 +14,9 @@ from .bitc import translate
 def register(sub):
     p = sub.add_parser('datapath', help='symbolic C reference against mapped RTL with CBMC')
     from .datapath_kit import UNITS
-    p.add_argument('--unit', choices=UNITS, help='propose a designer-reviewed binding from SpinalDB; no proof')
+    p.add_argument('--unit', choices=UNITS, help='propose a binding from SpinalDB; --confirm permits a proof')
+    p.add_argument('--confirm', action='store_true', help='confirm the selected proposal or edited binding and run its proof')
+    p.add_argument('--component', help='component path to select when a proposal has multiple candidates')
     p.add_argument('--db', help='design database for --unit')
     p.add_argument('--binding', help='JSON with project top and canonical-to-project port names')
     p.add_argument('--rtl')
@@ -54,6 +56,9 @@ def run(args):
     if getattr(args, 'unit', None):
         from .datapath_kit import run as propose
         return propose(args)
+    if getattr(args, 'confirm', False) or getattr(args, 'component', None):
+        print('--confirm and --component require --unit', file=sys.stderr)
+        return 2
     if not args.rtl or not args.model or args.width is None:
         print('datapath proof requires --rtl, --model and --width', file=sys.stderr)
         return 2
