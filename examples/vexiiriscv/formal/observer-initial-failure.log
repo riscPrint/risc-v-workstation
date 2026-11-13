@@ -1,0 +1,17 @@
+RVFI 0 pc=80000000 next=80000004 insn=800000b7 rd=1 data=80000000 trap=0 intr=0 mem=00000000 rmask=0 wmask=0 rdata=00000000 wdata=00000000
+RVFI 1 pc=80000004 next=80000008 insn=10008093 rd=1 data=80000100 trap=0 intr=0 mem=00000000 rmask=0 wmask=0 rdata=00000000 wdata=00000000
+RVFI 2 pc=80000008 next=8000000c insn=00700113 rd=2 data=00000007 trap=0 intr=0 mem=00000000 rmask=0 wmask=0 rdata=00000000 wdata=00000000
+RVFI 3 pc=8000000c next=80000010 insn=0020a023 rd=0 data=00000000 trap=0 intr=0 mem=80000100 rmask=0 wmask=f rdata=00000000 wdata=00000007
+RVFI 4 pc=80000010 next=80000014 insn=0000a183 rd=3 data=00000007 trap=0 intr=0 mem=80000100 rmask=f wmask=0 rdata=00000007 wdata=00000000
+RVFI 5 pc=80000014 next=80000018 insn=00218233 rd=4 data=0000000e trap=0 intr=0 mem=00000000 rmask=0 wmask=0 rdata=00000000 wdata=00000000
+RVFI 6 pc=80000018 next=8000001c insn=00000297 rd=5 data=80000018 trap=0 intr=0 mem=00000000 rmask=0 wmask=0 rdata=00000000 wdata=00000000
+RVFI 7 pc=8000001c next=80000020 insn=02828293 rd=5 data=80000040 trap=0 intr=0 mem=00000000 rmask=0 wmask=0 rdata=00000000 wdata=00000000
+RVFI 8 pc=80000020 next=80000024 insn=30529073 rd=0 data=00000000 trap=0 intr=0 mem=00000000 rmask=0 wmask=0 rdata=00000000 wdata=00000000
+RVFI 9 pc=80000040 next=80000044 insn=341023f3 rd=7 data=80000024 trap=0 intr=1 mem=00000000 rmask=0 wmask=0 rdata=00000000 wdata=00000000
+RVFI 10 pc=80000044 next=80000048 insn=00438393 rd=7 data=80000028 trap=0 intr=0 mem=00000000 rmask=0 wmask=0 rdata=00000000 wdata=00000000
+RVFI 11 pc=80000048 next=8000004c insn=34139073 rd=0 data=00000000 trap=0 intr=0 mem=00000000 rmask=0 wmask=0 rdata=00000000 wdata=00000000
+RVFI 12 pc=8000004c next=80000028 insn=30200073 rd=0 data=00000000 trap=1 intr=0 mem=00000000 rmask=0 wmask=0 rdata=00000000 wdata=00000000
+RVFI 13 pc=8000004c next=80000028 insn=30200073 rd=0 data=00000000 trap=0 intr=0 mem=00000000 rmask=0 wmask=0 rdata=00000000 wdata=00000000
+RVFI 14 pc=80000028 next=8000002c insn=00100313 rd=6 data=00000001 trap=0 intr=0 mem=00000000 rmask=0 wmask=0 rdata=00000000 wdata=00000000
+FATAL: positive.sv:114: missing observations
+       Time: 1235000  Scope: tb

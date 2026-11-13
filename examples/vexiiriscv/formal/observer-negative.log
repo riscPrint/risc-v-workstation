@@ -1,0 +1,6 @@
+RVFI 0 pc=80000000 next=80000004 insn=800000b7 rd=1 data=80000000 trap=0 intr=0 mem=00000000 rmask=0 wmask=0 rdata=00000000 wdata=00000000
+RVFI 1 pc=80000004 next=80000008 insn=10008093 rd=1 data=80000100 trap=0 intr=0 mem=00000000 rmask=0 wmask=0 rdata=00000000 wdata=00000000
+RVFI 2 pc=80000008 next=8000000c insn=00700113 rd=2 data=00000007 trap=0 intr=0 mem=00000000 rmask=0 wmask=0 rdata=00000000 wdata=00000000
+RVFI 3 pc=8000000c next=80000010 insn=0020a023 rd=0 data=00000000 trap=0 intr=0 mem=80000100 rmask=0 wmask=f rdata=00000000 wdata=00000000
+FATAL: negative.sv:245: store mismatch
+       Time: 575000  Scope: tb
