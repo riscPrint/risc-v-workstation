@@ -721,7 +721,7 @@ usage: rvw evidence query [-h] --db DB [--text TEXT] [--schema SCHEMA]
 
 ```text
 usage: rvw farm [-h] [--project PROJECT]
-    {run,cancel,notifications,classify,recover,live,workflow,select,triage,budget,batch,queue,serve,dashboard}
+    {run,cancel,notifications,classify,recover,plan,live,workflow,select,triage,budget,batch,queue,serve,dashboard}
     ...
 ```
 
@@ -755,6 +755,14 @@ usage: rvw farm classify [-h] [--project PROJECT] reports [reports ...]
 
 ```text
 usage: rvw farm recover [-h] --out OUT [--project PROJECT]
+```
+
+### `rvw farm plan`
+
+```text
+usage: rvw farm plan [-h] --manifest MANIFEST --adapter ADAPTER --root ROOT
+    --image IMAGE --claim CLAIM [--shards SHARDS] [--jobs JOBS] [--identity
+    IDENTITY] [--project PROJECT]
 ```
 
 ### `rvw farm live`
@@ -2910,6 +2918,14 @@ Starts a background job: yes.
 Export notification events. No external delivery is attempted.
 
 Arguments: `out` (required).
+
+Starts a background job: yes.
+
+### `farm_plan`
+
+Build one local/Kubernetes shard plan from a C1 manifest with hashed ELF inputs and expected cells.
+
+Arguments: `manifest` (required), `adapter` (required), `root` (required), `image` (required), `claim` (required), `shards`, `jobs`, `identity`, `resources`, `timeout`.
 
 Starts a background job: yes.
 

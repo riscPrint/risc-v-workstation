@@ -352,3 +352,21 @@ then releases that dead worker's capacity records. A reused PID or an unknown
 live group is not reclaimed. Old records without process identity need operator
 cleanup. Temporary artifact directories and remote artifact reattachment remain
 open. Tests use local fake worker records and real local process groups.
+
+## Build a shared shard plan from C1 inputs
+
+`rvw farm plan --manifest manifest.jsonl --adapter '["/tools/run.sh"]'
+--root /shared/campaign --image toolset@sha256:DIGEST --claim results --shards 8`
+writes a fresh campaign directory with hashed ELF copies, per-shard run-many
+manifests and `plan.json`. Every input needs explicit config and seed. Expected
+C1 cells bind the ELF hash and those options. `--identity` can add native tool,
+RTL and source claims. Conflicting claims are refused. MCP exposes `farm_plan`.
+
+Submit that same plan with `farm batch --plan /shared/campaign/plan.json` and
+`--action submit --executor local` or `--executor k8s`. The PVC must expose the
+campaign directory at the same absolute path. The adapter must exist in both
+execution environments. Other adapter stimulus dependencies must be mounted
+and captured by the project. Collect with `--action collect --root
+/shared/campaign`. A local fake-adapter test executes both planned shards,
+collects both C1 cells and renders their cluster Jobs. No cluster or native RTL
+parity is claimed. Gate publication and automatic tool-image builds remain open.

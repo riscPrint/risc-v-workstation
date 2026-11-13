@@ -62,3 +62,12 @@ attempt directories separate retry evidence. Explicit C1 DUT retries retain
 all failures; identity-matched mixed outcomes can mark instability but cannot
 waive a failure. SSH crash cleanup requires checked process start identities
 and no live owned groups before releasing the dead worker's reservations.
+
+## Shared C1 batch shard plans
+
+`farm plan` copies ELF inputs by hash and writes one run-many manifest per shard.
+Every expected cell binds its ELF hash, config, seed and declared options.
+Additional identity claims cannot override manifest identities. Local and cluster
+executors consume the same command/result plan. Shared PVC paths must match the
+collector path. Collection never promotes process success to a DUT/gate verdict.
+
