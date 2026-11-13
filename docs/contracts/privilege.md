@@ -290,3 +290,17 @@ An instruction-result binding uses `kind = "writeback"` and an exact `insn`.
 at such a PC fails. Trap records do not count as successful retirement.
 Missing required observations stay inconclusive. These checks earn only the
 existing model-based subset groups, not complete architectural comparison.
+
+Denied state-enable PCs also bind the expected instruction encoding. The ELF
+must contain that encoding even when the instruction never retires. A changed
+instruction gives an inconclusive model observation result.
+
+
+## Seeded privilege-transition input
+
+The `random-transitions` campaign requires `spec_version = "privileged-20260120"`.
+`random_transitions.seeds` contains distinct nonnegative integers. `steps` is
+an integer from 1 to 256. Each manifest row records `transition_plan` with the
+selected mode, operation, cause, delegation and retained-register cookie.
+The plan is reproducible from project inputs. It is not DUT evidence.
+Existing strict architectural groups apply without a model-subset substitute.

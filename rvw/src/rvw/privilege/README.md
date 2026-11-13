@@ -664,3 +664,20 @@ A zero read mask checks CSR access only, with no claim about WARL data values.
 These groups remain model-based. Native examples select the subset supported by
 the installed Spike. Neither result establishes DUT coverage. Ssstateen-only
 implementations and RV32 high-half state-enable access remain open.
+
+
+## Seeded privilege transitions
+
+`kind = "random-transitions"` uses project `random_transitions.seeds` and
+`steps`. Each seed makes one RV64 program with up to 256 steps. The example
+pins the 20260120 privileged ISA and uses four seeds with 32 steps each.
+Each step selects M/S/U, an illegal instruction, EBREAK or ECALL, and legal
+exception delegation to S. It checks cause, exact PC, saved privilege and a
+retained register. The handler returns with MRET or SRET. A second checked
+ECALL returns control to M before the next step. ECALL itself is not delegated.
+
+The manifest records the complete transition plan. Functional groups distinguish
+origin mode, operation and destination handler. Native Spike runs the actual
+self-checking programs. DUT use follows the existing C1 suite and strict
+reference path. This bounded generator does not cover interrupts, guest modes,
+nested handlers, page translation or arbitrary CSR writes.
