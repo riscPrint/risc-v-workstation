@@ -924,3 +924,20 @@ C2 writer state and counters. It must restore these before the next edge.
 Do not use this API for latches, blackboxes or asynchronous clocks.
 The API does not save a Scala scheduler. See the VexRiscv checkpoint probe for
 an explicit cycle loop that needs no saved threads.
+
+### Hart lifecycle and shared interrupt resources
+
+`HartLifecycleObserver` checks project-normalized HSM-style start, started,
+stop and stopped events. A start declares the entry PC and opaque argument.
+Both must match the observed start. Pending transitions retain a bounded
+watchdog. Independent reset advances only that hart's epoch and invokes the
+project callback for local observer reset. `startedAfterReset` states the
+project reset policy. Shared IPI state remains pending across hart reset by
+default. Set `resetClearsIpi` only when the platform declares that behavior.
+
+IPI sends coalesce per target. Observe each hart's MSIP input separately.
+Shared interrupt claims have one owner. Completion must come from that owner.
+`requireClaimsDrained` is a project stop/reset policy, not an SBI architectural
+requirement. Finish requires all expected hart states and no incomplete claims
+or transitions. The tests drive observer events. SBI firmware, CLINT timer
+comparators, PLIC arbitration RTL and real hotplug campaigns remain open.
