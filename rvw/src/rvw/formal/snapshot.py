@@ -53,7 +53,7 @@ class InputSnapshot:
             text = '\n'.join(path.read_text() for path in self.sources)
             if getattr(args, 'raw_events', False):
                 from .raw_events import rewrite
-                text, self.raw_events = rewrite(text, args.top)
+                text, self.raw_events = rewrite(text, args.top, force=getattr(args, 'raw_events_force', False))
             lowered, self.temporal_properties = lower(text)
             combined.write_text(lowered)
             self.sources = [self.seal(combined)]
