@@ -1,0 +1,87 @@
+{
+  "schema": "rvw.server-reset-thread-sample/1",
+  "core_revision": "a62c145aa042a5de874344e0a7683bd7c8c8c870",
+  "mode": "one JVM; explicit Verilator thread builds; fixed memory latency 0; seed 1",
+  "requests": [
+    {
+      "name": "poison",
+      "status": "fail",
+      "fail_code": 3,
+      "cycles": 4097,
+      "instret": 1033,
+      "sim_threads": 1,
+      "model_name": "rv32im_rvfi_simt1",
+      "model_run": 1,
+      "initial_device_state_sha256": "58cb337a0e06e1c627745e34f80110914da10d4dfd811f43bce98fea01873099",
+      "output": {
+        "uart": "P"
+      },
+      "c2_sha256": "fe25dff42df8b3ce643d26a91e7eb797490488fa279a758f7173595a336030ad"
+    },
+    {
+      "name": "check-two",
+      "status": "pass",
+      "fail_code": null,
+      "cycles": 158,
+      "instret": 51,
+      "sim_threads": 2,
+      "model_name": "rv32im_rvfi_simt2",
+      "model_run": 1,
+      "initial_device_state_sha256": "58cb337a0e06e1c627745e34f80110914da10d4dfd811f43bce98fea01873099",
+      "output": {
+        "uart": ""
+      },
+      "c2_sha256": "ad8192379b8be81d7da8ff4d3f7a0e815111259acd6964fd270aaa98e61a6c68"
+    },
+    {
+      "name": "echo-one",
+      "status": "pass",
+      "fail_code": null,
+      "cycles": 4079,
+      "instret": 868,
+      "sim_threads": 1,
+      "model_name": "rv32im_rvfi_simt1",
+      "model_run": 2,
+      "initial_device_state_sha256": "58cb337a0e06e1c627745e34f80110914da10d4dfd811f43bce98fea01873099",
+      "output": {
+        "uart": "echo\n"
+      },
+      "c2_sha256": "bc062b1f7436129cd09f9a24d419def1dba726e9e93bd774136a87840192b745"
+    },
+    {
+      "name": "echo-two",
+      "status": "pass",
+      "fail_code": null,
+      "cycles": 4079,
+      "instret": 868,
+      "sim_threads": 2,
+      "model_name": "rv32im_rvfi_simt2",
+      "model_run": 2,
+      "initial_device_state_sha256": "58cb337a0e06e1c627745e34f80110914da10d4dfd811f43bce98fea01873099",
+      "output": {
+        "uart": "echo\n"
+      },
+      "c2_sha256": "bc062b1f7436129cd09f9a24d419def1dba726e9e93bd774136a87840192b745"
+    },
+    {
+      "name": "check-one",
+      "status": "pass",
+      "fail_code": null,
+      "cycles": 158,
+      "instret": 51,
+      "sim_threads": 1,
+      "model_name": "rv32im_rvfi_simt1",
+      "model_run": 3,
+      "initial_device_state_sha256": "58cb337a0e06e1c627745e34f80110914da10d4dfd811f43bce98fea01873099",
+      "output": {
+        "uart": ""
+      },
+      "c2_sha256": "ad8192379b8be81d7da8ff4d3f7a0e815111259acd6964fd270aaa98e61a6c68"
+    }
+  ],
+  "limits": [
+    "no thread-speed gain claimed",
+    "only these UART CLINT PLIC models qualified",
+    "compiled thread flags, not sampled OS-thread counts"
+  ]
+}

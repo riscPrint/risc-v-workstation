@@ -80,7 +80,7 @@ def pack(run_dir, recipe, out, *, checkpoint_cycle=None):
     job = adapter._manifest_entry(command)
     for name in ('out', 'json'):
         job.pop(name, None)
-    for name in ('boot_payloads', 'hart_images', 'fault'):
+    for name in ('boot_payloads', 'hart_images', 'fault', 'debug', 'debug_binding', 'trace_ingress'):
         if name in job:
             raise ValueError('portable replay does not capture structured input: ' + name)
     elf = Path(raw['elf']).resolve(strict=True)
@@ -148,7 +148,7 @@ def pack(run_dir, recipe, out, *, checkpoint_cycle=None):
             environment[key] = portable
         manifest = dict(schema='rvw.portable-replay/1', revisions=revisions, refs=refs, job=job,
                         environment=environment, host_environment=host_environment, original_dirty={k: source.get(k + '_dirty') for k in repos}, failure_signature=signature(raw),
-                        expected={k: raw.get(k) for k in ('core', 'config', 'status', 'cycles', 'instret', 'fail_code', 'rtl_sha256', 'elf_sha256', 'seed', 'max_cycles', 'mem_latency')},
+                        expected={k: raw.get(k) for k in ('core', 'config', 'status', 'cycles', 'instret', 'fail_code', 'rtl_sha256', 'elf_sha256', 'seed', 'max_cycles', 'mem_latency', 'sim_threads')},
                         files={name: dict(sha256=digest(payload), mode=mode) for name, (payload, mode) in blobs.items()})
         Path(out).parent.mkdir(parents=True, exist_ok=True)
         with zipfile.ZipFile(out, 'x', compression=zipfile.ZIP_DEFLATED) as archive:

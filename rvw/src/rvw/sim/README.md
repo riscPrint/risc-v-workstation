@@ -461,3 +461,10 @@ Generic RiscvSim now captures FST by default. C1 `artifacts.wave` names
 selected window in the bundle format. The original and rerun session IDs must
 match. A different server cannot supply reproduced evidence. The requested
 ELF, seed and run options still pass the normal C1 checks.
+
+Live RiscvSim requests can set `sim_threads` on adapters that opt in. The
+VexRiscv fixture switches explicit one-/two-thread builds in the same server.
+It checks device-wide reset after deliberate dirty state and requires complete
+C2 equality. See [the fixture](../../../../examples/vexriscv/README.md#device-wide-reset-and-per-request-threads).
+An absent override preserves the original profile. No thread-speed gain is
+implied by a selected count.

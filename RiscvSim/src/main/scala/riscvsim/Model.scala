@@ -20,12 +20,13 @@ object Status {
  */
 case class ModelKey(config: String, rvfi: Boolean = false, wave: Boolean = false, coverage: Boolean = false,
                     konata: Boolean = false, spinaltrace: Boolean = false, probes: Boolean = false,
-                    faults: Boolean = false) {
+                    faults: Boolean = false, simThreads: Option[Int] = None) {
+  require(simThreads.forall(n => n >= 1 && n <= 64), "simulation thread count must be 1..64")
   def name: String = config + (if (rvfi) "_rvfi" else "") + (if (konata) "_konata" else "") +
     (if (wave) "_wave_fst" else "") + (if (coverage) "_cov" else "") + (if (spinaltrace) "_spinaltrace" else "") +
-    (if (probes) "_probes" else "") + (if (faults) "_fault" else "")
+    (if (probes) "_probes" else "") + (if (faults) "_fault" else "") + simThreads.map(n => s"_simt$n").getOrElse("")
   def toJson: ujson.Obj = ujson.Obj("config" -> config, "rvfi" -> rvfi, "wave" -> wave, "wave_format" -> (if (wave) ujson.Str("fst") else ujson.Null), "coverage" -> coverage,
-    "coverage_types" -> (if (coverage) ujson.Arr.from(RiscvSimConfig.coverageTypes) else ujson.Arr()), "konata" -> konata, "spinaltrace" -> spinaltrace, "probes" -> probes, "faults" -> faults, "name" -> name)
+    "coverage_types" -> (if (coverage) ujson.Arr.from(RiscvSimConfig.coverageTypes) else ujson.Arr()), "konata" -> konata, "spinaltrace" -> spinaltrace, "probes" -> probes, "faults" -> faults, "sim_threads" -> simThreads.map(n => ujson.Num(n)).getOrElse(ujson.Null), "name" -> name)
 }
 
 /** One simulation job (the options of `run`, or one line of a `run-many` manifest). */
@@ -34,8 +35,8 @@ case class RunJob(elf: File, out: File, config: String, seed: Int, seedPicked: B
                   waveFrom: Option[Long], waveTo: Option[Long], konata: Boolean, coverage: Boolean,
                   wallTimeoutS: Option[Double] = None, spinaltrace: Boolean = false, irqSchedule: Option[InterruptSchedule] = None, elfLoadBias: Long = 0L, bootPayloads: Option[File] = None, socMap: Option[SimMap] = None, hartImages: Option[File] = None, probes: Boolean = false,
                   fault: Option[FaultFile] = None, debug: Option[DebugMode] = None,
-                  traceIngress: Option[IngressBinding] = None) {
-  def model: ModelKey = ModelKey(config, rvfi = rvfiTrace || rvfiCheck || hartImages.nonEmpty, wave = wave, coverage = coverage, konata = konata, spinaltrace = spinaltrace, probes = probes, faults = fault.nonEmpty)
+                  traceIngress: Option[IngressBinding] = None, simThreads: Option[Int] = None) {
+  def model: ModelKey = ModelKey(config, rvfi = rvfiTrace || rvfiCheck || hartImages.nonEmpty, wave = wave, coverage = coverage, konata = konata, spinaltrace = spinaltrace, probes = probes, faults = fault.nonEmpty, simThreads = simThreads)
 }
 
 /** What an adapter's run loop reports back. `metrics` (optional, C1) holds named numbers such as roi_cycles. */
@@ -54,6 +55,8 @@ trait CoreAdapter {
   /** True only when run constructs a fresh native instance and fresh harness state.
     * Persistent serve refuses adapters that do not make this declaration. */
   def freshInstancePerRun: Boolean = false
+  /** Opt in when compile uses RiscvSimConfig and honors its explicit thread override. */
+  def supportsSimThreads: Boolean = false
   def supportsBootPayloads: Boolean = false
   /** True when the adapter elaborates with `spinalprobes.Probe.enabled(key.probes)` and writes
     * `probe-events.jsonl` through `ProbeCollector.open`. */

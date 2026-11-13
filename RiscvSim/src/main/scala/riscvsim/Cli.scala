@@ -8,9 +8,9 @@ object Cli {
 
   /** Flags without a value, and options with one. Dashes and underscores are equivalent. */
   val flags = Set("rvfi-trace", "rvfi-check", "rvfi", "wave", "konata", "coverage", "spinaltrace", "probes", "json", "help", "persistent")
-  val options = Set("elf", "out", "config", "seed", "max-cycles", "mem-latency", "wave-from", "wave-to",
+  val options = Set("elf", "out", "config", "seed", "max-cycles", "mem-latency", "sim-threads", "wave-from", "wave-to",
     "manifest", "jobs", "summary", "wall-timeout", "irq-schedule", "elf-load-bias", "boot-payloads", "soc-map", "hart-images", "fault", "debug", "debug-binding", "trace-ingress")
-  private val integerOptions = Set("seed", "max-cycles", "mem-latency", "wave-from", "wave-to", "jobs")
+  private val integerOptions = Set("seed", "max-cycles", "mem-latency", "sim-threads", "wave-from", "wave-to", "jobs")
 
   private def booleanValue(k: String, v: String): Boolean = v.toLowerCase(java.util.Locale.ROOT) match {
     case "true" | "1" => true
@@ -87,6 +87,18 @@ object Cli {
   def int(m: Map[String, String], k: String, min: Int = Int.MinValue, max: Int = Int.MaxValue): Option[Int] =
     long(m, k, min, max).map(_.toInt)
 
+  def simThreads(m: Map[String, String], adapter: CoreAdapter,
+                 inheritedFlags: String = sys.env.getOrElse("SPINAL_VERILATOR_FLAGS", "")): Option[Int] = {
+    val threads = int(m, "sim-threads", min = 1)
+    threads.foreach { n =>
+      if (n > 64) throw new UsageError("--sim-threads must be 1..64")
+      if (!adapter.supportsSimThreads) throw new UsageError("adapter does not support --sim-threads")
+      if ("(?:^|\\s)--threads(?:=|\\s)".r.findFirstIn(inheritedFlags).nonEmpty)
+        throw new UsageError("unset inherited --threads before selecting --sim-threads")
+    }
+    threads
+  }
+
   /** Builds a job from options; `cwd` resolves relative paths. */
   def job(m: Map[String, String], adapter: CoreAdapter, cwd: File): RunJob = {
     // Validate even a flag bypassed by short-circuit evaluation in the model selection.
@@ -119,7 +131,7 @@ object Cli {
       throw new UsageError("hart images and boot payloads cannot be combined")
     RunJob(
       elf = file(cwd, need("elf")), out = file(cwd, need("out")), config = config, seed = seed, seedPicked = picked,
-      maxCycles = maxCycles, memLatency = memLatency,
+      maxCycles = maxCycles, memLatency = memLatency, simThreads = simThreads(m, adapter),
       rvfiTrace = bool(m, "rvfi-trace"), rvfiCheck = bool(m, "rvfi-check") || bool(m, "rvfi"),
       wave = bool(m, "wave") || waveFrom.isDefined || waveTo.isDefined, waveFrom = waveFrom, waveTo = waveTo,
       konata = bool(m, "konata"), coverage = bool(m, "coverage"), spinaltrace = bool(m, "spinaltrace"), probes = bool(m, "probes"),
@@ -142,7 +154,7 @@ object Cli {
   val usage: String =
     """usage:
       |  run.sh build    --config NAME[,NAME...] [--rvfi] [--wave] [--coverage] [--konata] [--spinaltrace] [--probes] [--json]
-      |  run.sh run      --elf PATH --out DIR [--config NAME] [--seed N] [--max-cycles N] [--mem-latency N]
+      |  run.sh run      --elf PATH --out DIR [--config NAME] [--seed N] [--max-cycles N] [--mem-latency N] [--sim-threads N]
       |                  [--rvfi-trace] [--rvfi-check] [--wave [--wave-from CYCLE] [--wave-to CYCLE]]
       |                  [--hart-images JSON] [--elf-load-bias BYTES] [--boot-payloads JSON] [--soc-map PATH] [--konata] [--coverage] [--spinaltrace] [--probes] [--wall-timeout SECONDS] [--irq-schedule CYCLE:0xLEVELS,...] [--fault rvw.fault/1 JSON]
       |                  [--debug dmi|jtag:PORT --debug-binding rvw.debug-binding/1 JSON]

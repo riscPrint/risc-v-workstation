@@ -47,7 +47,8 @@ A successful replay reports reproduced behavior. It does not earn C4 acceptance.
 The checkpoint is a deterministic trace bookmark. Replay starts from reset
 and checks both sides of that boundary. It does not restore live RTL state.
 Live bridge checkpoints have a separate same-build contract. Boot-payload,
-hart-image and fault-file inputs currently refuse packaging. Recipes must
+hart-image, fault-file, interactive debug and trace-ingress inputs currently
+refuse packaging. Recipes must
 name all untracked source inputs that affect the adapter. Original Git dirty
 flags remain in the manifest. Patched sources are identified by their patch
 hashes as well as the baseline revision.
