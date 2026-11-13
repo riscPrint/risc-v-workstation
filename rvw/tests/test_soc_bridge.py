@@ -83,3 +83,41 @@ def test_refuse_unsupported(change):
     change(t)
     with pytest.raises(ValueError):
         checked(t, b, r)
+
+
+@pytest.mark.parametrize('error', [False, True])
+@pytest.mark.parametrize('action', ['normal', 'one_to_clear'])
+def test_hardware_updates_and_masked_writes(error, action):
+    t, b, r = inputs()
+    t['error'] = error
+    for beat in t['beats']:
+        beat['error'] = error
+    r['registers'][0]['write_action'] = action
+    before, mask, clear, set_bits = 0xFF, 0xF, 0x80, 0x88
+    software = before if error else (before & ~(t['data'] & mask) if action == 'one_to_clear'
+                                     else (before & ~mask) | (t['data'] & mask))
+    target = (software & ~clear) | set_bits
+    t['register'] = dict(before=before, after=target, write_mask=mask, hw_clear=clear, hw_set=set_bits)
+    assert all(checked(t, b, r).values())
+    t['register']['after'] ^= 1
+    assert not all(checked(t, b, r).values())
+
+
+def test_hardware_set_wins_read_clear():
+    t, b, r = inputs()
+    t['write'] = False
+    for beat in t['beats']:
+        beat['write'] = False
+    t['register'] = dict(before=t['data'], after=3, hw_set=3)
+    assert all(checked(t, b, r).values())
+    t['register']['after'] = 0
+    assert not all(checked(t, b, r).values())
+
+
+@pytest.mark.parametrize('key', ['write_mask', 'hw_clear', 'hw_set'])
+def test_reject_hardware_observation_width(key):
+    t, b, r = inputs()
+    t['register'] = dict(before=0, after=0)
+    t['register'][key] = 1 << 32
+    with pytest.raises(ValueError):
+        checked(t, b, r)

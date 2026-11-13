@@ -196,3 +196,11 @@ These fields do not establish capture provenance. Fixture tests check comparison
 rules only. The supplied BOOM and VexRiscv captures do not yet emit these fields.
 A matching sample remains inconclusive. Real decoder bindings, source freshness
 and complete decode coverage remain open under #134.
+
+Register observations can also declare expanded bit `write_mask`, `hw_clear`
+and `hw_set`. Missing masks select all write bits; missing hardware masks are
+zero. The checker applies software effects, hardware clear, then hardware set.
+Hardware events can change state during a failed bus access. Supply independent
+hardware observations for the full transaction interval. The checker does not
+infer them from the observed final register value. These paired observations
+do not establish behavior between transactions or under concurrent bus masters.
