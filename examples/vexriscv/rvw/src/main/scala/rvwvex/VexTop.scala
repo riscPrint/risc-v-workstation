@@ -22,7 +22,13 @@ object VexTop {
     new MulSimplePlugin,
     new DivPlugin,
     new CsrPlugin(CsrPluginConfig.all2(0x80000000L).copy(userGen = false, supervisorGen = false,
-      misaExtensionsInit = 0x1100, misaAccess = CsrAccess.READ_ONLY, ebreakGen = true)),
+      misaExtensionsInit = 0x1100, misaAccess = CsrAccess.READ_ONLY, ebreakGen = true,
+      // all2 enables these independently of supervisorGen. M-only must trap on access.
+      sscratchGen = false, stvecAccess = CsrAccess.NONE, sepcAccess = CsrAccess.NONE,
+      scauseAccess = CsrAccess.NONE, sbadaddrAccess = CsrAccess.NONE,
+      scycleAccess = CsrAccess.NONE, sinstretAccess = CsrAccess.NONE,
+      satpAccess = CsrAccess.NONE, medelegAccess = CsrAccess.NONE,
+      midelegAccess = CsrAccess.NONE)),
     new BranchPlugin(earlyBranch = false, catchAddressMisaligned = true),
     new FormalPlugin,
     new TrapProbePlugin))
