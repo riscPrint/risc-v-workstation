@@ -170,7 +170,7 @@ def verify(source, out, manifest=None, timeout=120):
         for entry in settings.values():
             if not isinstance(entry, dict):
                 raise ValueError('check settings must be dictionaries')
-            for key in ('database', 'clocks', 'manifest'):
+            for key in ('database', 'clocks', 'manifest', 'classpath_file'):
                 if key in entry:
                     entry[key] = str((root/entry[key]).resolve())
     rows = generate(source, out, settings)
@@ -190,6 +190,11 @@ def verify(source, out, manifest=None, timeout=120):
     for row in rows:
         try:
             entry = settings.get(row['kind'], {})
+            if row['kind'] == 'decode' and entry.get('classpath_file'):
+                from .decode_proof import prove
+                report = prove(source, out/'decode-proof', Path(entry['classpath_file']).read_text().strip(), min(timeout,60))
+                row.update(generated=report['generated'], ran=report.get('ran',False), result=report['status'], details=report)
+                row.pop('reason',None)
             if entry.get('capture') and row['kind'] in ('protocol', 'registers', 'vip'):
                 from .apb_capture import check
                 try:

@@ -352,3 +352,11 @@ Composition `core.bus = "simple"` selects `SimpleCoreWrapper` and `SimpleToApb`.
 One valid/ready transaction completes at a time. Requests remain stable until
 ready. Read data and error accompany completion. Write byte masks become APB
 strobes. RAM byte writes are enabled. This does not infer a CPU pin binding.
+
+## Fabric decode proof target
+
+A verification `decode` entry can set `classpath_file`. The consumer uses
+`FabricProofGenerate` to elaborate `Fabric.connect` for the map's base/size
+pairs. It runs `rvw formal prove`. It reports `proven` only after an unbounded
+pass with at least one assertion per window plus one-hot and unmapped-error
+assertions. Report scope is the fabric instance, not the whole composed SoC.

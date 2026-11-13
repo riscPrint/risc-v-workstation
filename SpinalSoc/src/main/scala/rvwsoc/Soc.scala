@@ -35,7 +35,7 @@ class WordMemory(addressBits: Int, words: Int, readOnly: Boolean,
 }
 
 object Fabric {
-  def connect(master: Apb3, targets: Seq[(Apb3, SizeMapping)]): Unit = {
+  def connect(master: Apb3, targets: Seq[(Apb3, SizeMapping)], checkProtocol: Boolean = true): Unit = {
     val decoder = new Apb3Decoder(master.config, targets.map(_._2))
     val router = new Apb3Router(decoder.io.output.config)
     decoder.io.input <> master
@@ -53,8 +53,10 @@ object Fabric {
         if(master.config.useProt) output.PPROT := router.io.input.PPROT
       }
     }
-    ApbChecks(master)
-    targets.foreach(t => ApbChecks(t._1))
+    if(checkProtocol) {
+      ApbChecks(master)
+      targets.foreach(t => ApbChecks(t._1))
+    }
     val selected = decoder.io.output.PSEL
     assert(CountOne(selected) <= 1, "SoC decode windows must be disjoint")
     for (((_, mapping), index) <- targets.zipWithIndex) {
