@@ -556,3 +556,11 @@ Compacting line reuse waits one registered cycle after completion.
 Optional `frontend.fetch_blocks_per_cycle` is a nonnegative integer.
 Zero preserves unlimited PC-block selection. A positive value limits distinct
 PC blocks per fetch cycle. It does not change instruction fetch width.
+
+## Statistical speculative occupancy
+
+The own-model configuration accepts `wrong_path_occupancy` (Boolean, default
+false). True enables deterministic committed-mix speculative filler on the
+Python scheduler. Explicit functional path providers take precedence. Filler
+uses shared queue capacity, never retires, and makes no cache transactions.
+This option does not claim that captured wrong-path instructions were used.

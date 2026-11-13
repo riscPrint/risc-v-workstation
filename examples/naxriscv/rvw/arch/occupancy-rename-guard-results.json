@@ -1,0 +1,428 @@
+{
+  "schema": "rvw.nax-resource-study/1",
+  "stage": "occupancy",
+  "summary": {
+    "pairs": 24,
+    "wrong_deltas": 14
+  },
+  "within": 10,
+  "nonzero_within": 1,
+  "absolute": {
+    "heldout": {
+      "mae_percent": 40.5470512817271,
+      "samples": [
+        {
+          "program": "towers",
+          "rtl_ipc": 0.8190315315315315,
+          "model_ipc": 0.7979155238617663,
+          "ipc_error_percent": -2.578167855183755
+        },
+        {
+          "program": "vvadd",
+          "rtl_ipc": 1.2432950191570882,
+          "model_ipc": 0.631138772731693,
+          "ipc_error_percent": -49.23660410386075
+        },
+        {
+          "program": "rsort",
+          "rtl_ipc": 1.7350943001535617,
+          "model_ipc": 1.2847150596493204,
+          "ipc_error_percent": -25.95704685701412
+        },
+        {
+          "program": "memcpy",
+          "rtl_ipc": 1.2289655172413794,
+          "model_ipc": 0.557044102674026,
+          "ipc_error_percent": -54.67374024257364
+        },
+        {
+          "program": "dhrystone",
+          "rtl_ipc": 1.4287673985187443,
+          "model_ipc": 0.565193916787485,
+          "ipc_error_percent": -60.44185237055084
+        },
+        {
+          "program": "spmv",
+          "rtl_ipc": 1.5784577028711577,
+          "model_ipc": 0.7829955809826407,
+          "ipc_error_percent": -50.39489626117951
+        }
+      ]
+    },
+    "training": {
+      "mae_percent": 51.047748163371665,
+      "samples": [
+        {
+          "program": "median",
+          "rtl_ipc": 0.5898344499197166,
+          "model_ipc": 0.31313012551071395,
+          "ipc_error_percent": -46.91220128744011
+        },
+        {
+          "program": "qsort",
+          "rtl_ipc": 0.7703587335448409,
+          "model_ipc": 0.32267922777718305,
+          "ipc_error_percent": -58.11312136459337
+        },
+        {
+          "program": "multiply",
+          "rtl_ipc": 1.4211008453948228,
+          "model_ipc": 0.7372966513674262,
+          "ipc_error_percent": -48.11792183808152
+        }
+      ]
+    }
+  },
+  "rank": {
+    "rows": [
+      {
+        "variant": "iq16",
+        "measured": 0.032341647518004724,
+        "predicted": 0.003824640352779518
+      },
+      {
+        "variant": "rob128",
+        "measured": 0.0,
+        "predicted": 0.0
+      },
+      {
+        "variant": "lq8",
+        "measured": 0.019041414185115624,
+        "predicted": 0.0003485057814620607
+      },
+      {
+        "variant": "sq8",
+        "measured": 0.022242605489761536,
+        "predicted": 0.0002444193738564415
+      }
+    ],
+    "kendall_tau_b": 0.6666666666666666,
+    "model_ties": 0,
+    "method": "same large steps as RTL; pooled cycles; not local sensitivity"
+  },
+  "rows": [
+    {
+      "program": "median",
+      "variant": "iq16",
+      "measured_delta": -0.016820903647250973,
+      "predicted_delta": 0.0,
+      "wrong_delta": true,
+      "absolute_error_pp": 1.6820903647250973
+    },
+    {
+      "program": "median",
+      "variant": "rob128",
+      "measured_delta": 0.0,
+      "predicted_delta": 0.0,
+      "wrong_delta": false,
+      "absolute_error_pp": 0.0
+    },
+    {
+      "program": "median",
+      "variant": "lq8",
+      "measured_delta": -0.010573025090391153,
+      "predicted_delta": 0.0,
+      "wrong_delta": true,
+      "absolute_error_pp": 1.0573025090391153
+    },
+    {
+      "program": "median",
+      "variant": "sq8",
+      "measured_delta": 0.0,
+      "predicted_delta": 0.0,
+      "wrong_delta": false,
+      "absolute_error_pp": 0.0
+    },
+    {
+      "program": "qsort",
+      "variant": "iq16",
+      "measured_delta": -0.006173968408789143,
+      "predicted_delta": 0.0,
+      "wrong_delta": true,
+      "absolute_error_pp": 0.6173968408789143
+    },
+    {
+      "program": "qsort",
+      "variant": "rob128",
+      "measured_delta": 0.0,
+      "predicted_delta": 0.0,
+      "wrong_delta": false,
+      "absolute_error_pp": 0.0
+    },
+    {
+      "program": "qsort",
+      "variant": "lq8",
+      "measured_delta": -0.003585677662518494,
+      "predicted_delta": 0.0,
+      "wrong_delta": true,
+      "absolute_error_pp": 0.3585677662518494
+    },
+    {
+      "program": "qsort",
+      "variant": "sq8",
+      "measured_delta": -0.0029356501411762492,
+      "predicted_delta": 0.0,
+      "wrong_delta": true,
+      "absolute_error_pp": 0.2935650141176249
+    },
+    {
+      "program": "multiply",
+      "variant": "iq16",
+      "measured_delta": -0.0030269029042611084,
+      "predicted_delta": -0.0001629239416732764,
+      "wrong_delta": true,
+      "absolute_error_pp": 0.2863978962587832
+    },
+    {
+      "program": "multiply",
+      "variant": "rob128",
+      "measured_delta": 0.0,
+      "predicted_delta": 0.0,
+      "wrong_delta": false,
+      "absolute_error_pp": 0.0
+    },
+    {
+      "program": "multiply",
+      "variant": "lq8",
+      "measured_delta": -0.00020934188146015664,
+      "predicted_delta": 0.0,
+      "wrong_delta": true,
+      "absolute_error_pp": 0.020934188146015664
+    },
+    {
+      "program": "multiply",
+      "variant": "sq8",
+      "measured_delta": 0.0,
+      "predicted_delta": 0.0,
+      "wrong_delta": false,
+      "absolute_error_pp": 0.0
+    },
+    {
+      "program": "towers",
+      "variant": "iq16",
+      "measured_delta": -0.006266786034019645,
+      "predicted_delta": -0.044749528400754524,
+      "wrong_delta": true,
+      "absolute_error_pp": 3.848274236673488
+    },
+    {
+      "program": "towers",
+      "variant": "rob128",
+      "measured_delta": 0.0,
+      "predicted_delta": 0.0,
+      "wrong_delta": false,
+      "absolute_error_pp": 0.0
+    },
+    {
+      "program": "towers",
+      "variant": "lq8",
+      "measured_delta": -0.013881177123820088,
+      "predicted_delta": -0.016614521523357406,
+      "wrong_delta": false,
+      "absolute_error_pp": 0.27333443995373186
+    },
+    {
+      "program": "towers",
+      "variant": "sq8",
+      "measured_delta": -0.043927648578811374,
+      "predicted_delta": -0.011709855795294377,
+      "wrong_delta": true,
+      "absolute_error_pp": 3.2217792783516996
+    },
+    {
+      "program": "vvadd",
+      "variant": "iq16",
+      "measured_delta": -0.08243979609773244,
+      "predicted_delta": -0.0018443020772664909,
+      "wrong_delta": true,
+      "absolute_error_pp": 8.059549402046596
+    },
+    {
+      "program": "vvadd",
+      "variant": "rob128",
+      "measured_delta": 0.0,
+      "predicted_delta": 0.0,
+      "wrong_delta": false,
+      "absolute_error_pp": 0.0
+    },
+    {
+      "program": "vvadd",
+      "variant": "lq8",
+      "measured_delta": -0.029017857142857095,
+      "predicted_delta": 0.0,
+      "wrong_delta": true,
+      "absolute_error_pp": 2.9017857142857095
+    },
+    {
+      "program": "vvadd",
+      "variant": "sq8",
+      "measured_delta": 0.0,
+      "predicted_delta": 0.0,
+      "wrong_delta": false,
+      "absolute_error_pp": 0.0
+    },
+    {
+      "program": "memcpy",
+      "variant": "iq16",
+      "measured_delta": -0.12496982654574296,
+      "predicted_delta": -0.02158411688629458,
+      "wrong_delta": true,
+      "absolute_error_pp": 10.338570965944838
+    },
+    {
+      "program": "memcpy",
+      "variant": "rob128",
+      "measured_delta": 0.0,
+      "predicted_delta": 0.0,
+      "wrong_delta": false,
+      "absolute_error_pp": 0.0
+    },
+    {
+      "program": "memcpy",
+      "variant": "lq8",
+      "measured_delta": -0.07988251504822685,
+      "predicted_delta": 0.0,
+      "wrong_delta": true,
+      "absolute_error_pp": 7.988251504822685
+    },
+    {
+      "program": "memcpy",
+      "variant": "sq8",
+      "measured_delta": -0.1090238764044944,
+      "predicted_delta": 0.0,
+      "wrong_delta": true,
+      "absolute_error_pp": 10.90238764044944
+    }
+  ],
+  "config": {
+    "branch_penalty": 10,
+    "branch_prediction": "sequential",
+    "branch_speculation": true,
+    "commit_width": 2,
+    "components": {
+      "branch": {
+        "entries": 16384,
+        "history": 13,
+        "model": "gshare"
+      },
+      "btb": {
+        "levels": [
+          {
+            "entries": 512,
+            "latency": 1,
+            "ways": 1
+          }
+        ]
+      },
+      "memory": {
+        "dram_latency": 10,
+        "l1d": {
+          "latency": 1,
+          "size_kib": 16,
+          "ways": 4
+        },
+        "l1i": {
+          "latency": 1,
+          "size_kib": 16,
+          "ways": 4
+        }
+      },
+      "ras": {
+        "entries": 16
+      }
+    },
+    "custom_instructions": [],
+    "dependence_entries": 1024,
+    "execution": {
+      "bindings": {
+        "alu": [
+          "alu0",
+          "alu1"
+        ],
+        "branch": [
+          "alu0",
+          "alu1"
+        ],
+        "csr": [
+          "eu0"
+        ],
+        "divide": [
+          "eu0"
+        ],
+        "jump": [
+          "alu0",
+          "alu1"
+        ],
+        "load": [
+          "eu0"
+        ],
+        "multiply": [
+          "eu0"
+        ],
+        "store": [
+          "eu0"
+        ]
+      },
+      "ports": {
+        "alu0": 1,
+        "alu1": 1,
+        "eu0": 1
+      }
+    },
+    "fetch_entries": 8,
+    "fetch_width": 2,
+    "forwarding_latency": 1,
+    "frontend": {
+      "block_bytes": 8,
+      "decode_entries": 8,
+      "decode_latency": 2,
+      "decode_width": 2,
+      "fetch_blocks_per_cycle": 1,
+      "fetch_latency": 3,
+      "ftq_entries": 8,
+      "predictor_latency": 1
+    },
+    "issue_entries": 32,
+    "issue_order": "out_of_order",
+    "issue_queue_policy": "compacting",
+    "issue_width": 3,
+    "latencies": {
+      "alu": 1,
+      "branch": 2,
+      "csr": 4,
+      "divide": 18,
+      "fence": 4,
+      "jump": 2,
+      "load": 2,
+      "multiply": 3,
+      "store": 4,
+      "system": 4
+    },
+    "load_entries": 16,
+    "memory_policy": "speculate",
+    "memory_rename": {},
+    "physical_float_registers": 0,
+    "physical_registers": 64,
+    "ports": {
+      "alu": 2,
+      "branch": 2,
+      "csr": 1,
+      "divide": 1,
+      "fence": 1,
+      "jump": 2,
+      "load": 1,
+      "multiply": 1,
+      "store": 1,
+      "system": 1
+    },
+    "rename": {},
+    "rename_width": 2,
+    "replay_penalty": 5,
+    "rob_entries": 64,
+    "store_entries": 16,
+    "store_policy": "buffered",
+    "translation": {},
+    "wrong_path_occupancy": true
+  },
+  "engine_sha256": "7615f590f6415c56afb83438a06f13e1eac746a7944f9759f59069a919b35202"
+}

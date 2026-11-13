@@ -34,6 +34,7 @@ class Config:
     issue_queue_policy: str = "associative"
     memory_policy: str = "ordered"
     store_policy: str = "ordered"
+    wrong_path_occupancy: bool = False
     dependence_entries: int = 1024
     replay_penalty: int = 5
     forwarding_latency: int = 1
@@ -103,6 +104,8 @@ class Config:
             raise ValueError("unsupported branch_prediction")
         if self.branch_prediction != "sequential" and any(k in self.components for k in ("branch", "btb", "ras", "indirect")):
             raise ValueError("select static prediction or component prediction")
+        if type(self.wrong_path_occupancy) is not bool:
+            raise ValueError("wrong_path_occupancy must be boolean")
         if type(self.branch_speculation) is not bool:
             raise ValueError("branch_speculation must be boolean")
         if type(self.branch_penalty) is not int or self.branch_penalty < 0:
@@ -145,6 +148,9 @@ class Entry:
     predicted_correct: bool | None = None
     data_producer: object = None
     wrong_parent: object = None
+    prediction: int | None = None
+    prediction_ticket: object = None
+    prediction_delay: int = 0
 
 
 def simulate(instructions, config, max_cycles=1_000_000, predictor=None, memory=None, backend="auto", observer=None, wrong_path=None):
@@ -216,7 +222,10 @@ def _simulate(instructions, config, max_cycles=1_000_000, predictor=None, memory
     from .execution import Execution
     from .translation import Translation
     from .attribution import Attribution
-    frontend = Frontend(config.frontend, config.fetch_width, config.fetch_entries, guard_branches=wrong_path is not None) if config.frontend else None
+    if config.wrong_path_occupancy and wrong_path is None:
+        from .speculative import MixWork
+        wrong_path = MixWork(instructions)
+    frontend = Frontend(config.frontend, config.fetch_width, config.fetch_entries, guard_branches=wrong_path is not None and not getattr(wrong_path, "occupancy_only", False)) if config.frontend else None
     execution = Execution(config.execution)
     translation = Translation(config.translation) if config.translation else None
     attribution = Attribution(config.commit_width)
@@ -376,7 +385,7 @@ def _simulate(instructions, config, max_cycles=1_000_000, predictor=None, memory
                 events["forwarded_loads"] += 1
             if entry.wrong_parent is not None and kind == "store":
                 events["wrong_path_store_requests_suppressed"] += 1
-            if kind in ("load", "store") and memory is not None and not forwarded and not (entry.wrong_parent is not None and kind == "store"):
+            if kind in ("load", "store") and memory is not None and not forwarded and not (entry.wrong_parent is not None and (kind == "store" or getattr(wrong_path, "occupancy_only", False))):
                 # The component owner supplies access(address, size, write, cycle).
                 # It returns an additional service delay in model cycles.
                 if entry.wrong_parent is not None:
@@ -391,7 +400,18 @@ def _simulate(instructions, config, max_cycles=1_000_000, predictor=None, memory
                 else:
                     latency += service
             if kind in ("branch", "jump", "system") and entry.wrong_parent is None:
-                if hasattr(predictor, "predict_instruction"):
+                if entry.prediction is not None:
+                    predicted = entry.prediction
+                    latency += entry.prediction_delay
+                    if hasattr(predictor, "pending"):
+                        predictor.pending = entry.prediction_ticket
+                    if hasattr(predictor, "update_instruction"):
+                        predictor.update_instruction(entry.insn)
+                    else:
+                        predictor.update(entry.insn.pc, entry.insn.next_pc)
+                    entry.prediction = None
+                    entry.prediction_ticket = None
+                elif hasattr(predictor, "predict_instruction"):
                     predicted = predictor.predict_instruction(entry.insn)
                     latency += predictor.last_delay
                     predictor.update_instruction(entry.insn)
@@ -404,7 +424,7 @@ def _simulate(instructions, config, max_cycles=1_000_000, predictor=None, memory
                 if fetch_guard is entry.insn: fetch_guard = None
                 if predicted != entry.insn.next_pc:
                     events["branch_misses"] += 1
-                    if wrong_path is not None:
+                    if wrong_path is not None and wrong_parent is not entry:
                         wrong_parent = entry
                         wrong_fetched = deque(wrong_path.begin(entry.insn, cycle, latency, config, instruction_memory))
                     blocked_until = max(blocked_until, cycle + latency + config.branch_penalty)
@@ -472,7 +492,7 @@ def _simulate(instructions, config, max_cycles=1_000_000, predictor=None, memory
             loads += op.kind == 'load'; stores += op.kind == 'store'
             events['wrong_path_renamed'] += 1
         for _ in range(config.rename_width):
-            if cycle < blocked_until or unresolved_branch is not None:
+            if cycle < blocked_until or unresolved_branch is not None or wrong_parent is not None:
                 break
             if frontend:
                 if not frontend.ready(cycle):
@@ -523,6 +543,23 @@ def _simulate(instructions, config, max_cycles=1_000_000, predictor=None, memory
                 else:
                     writers[op.dest] = entry
             rob.append(entry)
+            if getattr(wrong_path, 'occupancy_only', False) and op.kind in ('branch', 'jump'):
+                # Predict at rename. Resolve and update at execution. This allows
+                # allocation while the branch waits for its operands or a port.
+                if hasattr(predictor, 'predict_instruction'):
+                    entry.prediction = predictor.predict_instruction(op)
+                    entry.prediction_ticket = getattr(predictor, "pending", None)
+                    entry.prediction_delay = predictor.last_delay
+                else:
+                    entry.prediction = predictor.predict(op.pc, op.pc + op.length)
+                entry.predicted_correct = entry.prediction == op.next_pc
+                if frontend:
+                    frontend.release(op)
+                if fetch_guard is op:
+                    fetch_guard = None
+                if not entry.predicted_correct:
+                    wrong_parent = entry
+                    wrong_fetched = deque(wrong_path.begin(op, cycle, config.rob_entries, config, None))
             if bypass:
                 events["fused_immediates" if fused else eliminated + "_eliminated"] += 1
             else:
@@ -532,14 +569,14 @@ def _simulate(instructions, config, max_cycles=1_000_000, predictor=None, memory
             loads += op.kind == "load"
             stores += op.kind == "store"
         if frontend:
-            frontend.advance(cycle, instructions, cycle < blocked_until or unresolved_branch is not None, memory=instruction_memory)
+            frontend.advance(cycle, instructions, cycle < blocked_until or unresolved_branch is not None or wrong_parent is not None, memory=instruction_memory)
         for _ in range(0 if frontend else config.fetch_width):
-            if cycle < blocked_until or unresolved_branch is not None or fetch_guard is not None:
+            if cycle < blocked_until or unresolved_branch is not None or fetch_guard is not None or wrong_parent is not None:
                 break
             if pc == len(instructions) or len(fetched) == config.fetch_entries:
                 break
             fetched.append(instructions[pc])
-            if wrong_path is not None and instructions[pc].kind in ("branch", "jump"):
+            if wrong_path is not None and not getattr(wrong_path, "occupancy_only", False) and instructions[pc].kind in ("branch", "jump"):
                 fetch_guard = instructions[pc]
             pc += 1
         for name, count in dict(rob_entries=len(rob), issue_entries=len(waiting),
@@ -638,7 +675,7 @@ def run(config_path, trace_path, max_cycles=1_000_000, effective_config=None):
     import rvw.common.riscv as decoder
     import rvw.cosim.trace as parser
     engine = b"".join(Path(p).read_bytes() for p in (__file__, str(Path(__file__).with_name("structures.py")), decoder.__file__, parser.__file__))
-    engine += b"".join(Path(__file__).with_name(name + ".py").read_bytes() for name in ("frontend", "execution", "translation", "attribution", "native", "rename", "dependence", "custom", "project", "components", "control", "floating", "component_events", "regions", "memory_rename", "windows", "issue_window"))
+    engine += b"".join(Path(__file__).with_name(name + ".py").read_bytes() for name in ("frontend", "execution", "translation", "attribution", "native", "rename", "dependence", "custom", "project", "components", "control", "floating", "component_events", "regions", "memory_rename", "windows", "issue_window", "speculative"))
     engine += Path(__file__).with_name("native.c").read_bytes()
     engine += Path(__file__).with_name("native_c2.c").read_bytes()
     engine += Path(__file__).with_name("native_decode.c").read_bytes()
