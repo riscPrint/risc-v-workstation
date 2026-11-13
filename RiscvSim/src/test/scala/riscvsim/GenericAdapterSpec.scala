@@ -16,6 +16,7 @@ class GenericAdapterSpec extends AnyFunSuite {
     def sourceDir = new File(".")
     def compile(key: ModelKey, work: File, cache: File): Unit = { compiled += 1 }
     def run(model: Unit, job: RunJob, ctx: RunContext): RunOutcome = {
+      assert(ctx.rvfiHeader("xlen").num.toInt == xlen(job.config))
       executed += 1
       RunOutcome(Status.Fail, 1, 1, Some(7))
     }
@@ -51,7 +52,7 @@ class GenericAdapterSpec extends AnyFunSuite {
       assert(pass.onStore(0x2000, Integer.numberOfTrailingZeros(width), 1).contains(ToHost.Pass))
       assert(pass.onStore(0x3000, 0, 7).isEmpty)
     }
-    for (elfXlen <- Seq(32, 64)) test(s"RV$xlen driver checks ELF$elfXlen before compile and execution") {
+    for (elfXlen <- Seq(32, 64); selected <- Seq(false, true)) test(s"RV$xlen driver checks ELF$elfXlen before compile and execution (config override $selected)") {
       val dir = Files.createTempDirectory("xlen-check").toFile
       try {
         val file = new File(dir, "input.elf")
@@ -61,7 +62,10 @@ class GenericAdapterSpec extends AnyFunSuite {
         header.putShort(0x10, 2.toShort)
         header.putShort(0x12, 243.toShort)
         Files.write(file.toPath, header.array())
-        val adapter = new Adapter(xlen)
+        val expectedXlen = xlen
+        val adapter = if (selected) new Adapter(if (xlen == 32) 64 else 32) {
+          override def xlen(config: String): Int = expectedXlen
+        } else new Adapter(xlen)
         val job = RunJob(file, new File(dir, "out"), "test", 1, false, 100, None,
           false, false, false, None, None, false, false)
         val driver = new Driver(adapter)

@@ -931,3 +931,54 @@ charge. This fixes one source of compensation in the cost. It does not fix
 all prediction errors. Local cache retry reaches 7.29% held-out MAE, but only
 11/24 deltas meet the criterion. Cache retry remains disabled. No individual
 variant receives a different parameter value.
+
+
+## Extra RV64 configurations
+
+| Config | XLEN | Modes | Translation | ISA |
+|---|---:|---|---|---|
+| `rv32imasu` (unchanged default) | 32 | M/S/U | Sv32 | IMA, Zicsr, Zifencei |
+| `rv64ima` | 64 | M | Bare | IMA, Zicsr, Zifencei |
+| `rv64imasu` | 64 | M/S/U | Sv39 | IMA, Zicsr, Zifencei |
+
+Both RV64 configs use the pinned upstream `Config.plugins` parameters.
+No core source change is needed. Sv39 physical addresses remain 32 bits.
+The M-only static translator uses its public 64-bit physical-width parameter.
+See [the elaboration findings](FINDINGS.md).
+PMP, compressed instructions and floating point are absent.
+Use a private pinned checkout and private locks:
+
+```sh
+export NAXRISCV="$SAVIOUR/wt/.nax/nax64/NaxRiscv"
+export RVW_NAX_LOCK=nax-nax64 RVW_NAX_SBT_LOCK=sbt-nax64
+export RISCV_TESTS_SOURCE="$SAVIOUR/ref/riscv-tests"
+examples/naxriscv/rvw/build-tests.sh 64
+nice -n 10 rvw --project examples/naxriscv regress run --suite isa64 \
+  --config rv64ima --source "$NAXRISCV" --rvfi-trace --jobs 4 \
+  --no-index --out "$RUN_ROOT/isa-rv64ima"
+nice -n 10 rvw regress cosim "$RUN_ROOT/isa-rv64ima" \
+  --platform examples/naxriscv/rvw/platform-rv64ima.json
+```
+
+Repeat with `rv64imasu` and `platform-rv64imasu.json` for Sv39.
+The suite excludes `ma_data`, which requires misaligned data support.
+The remaining UI, UM and UA tests keep their self-checks.
+The build generates an integration-owned `CommitProbe` from the pinned
+upstream observer. It guards the absent S interrupt pin for M-only RTL.
+It reads wire values through `SimEncoding.longBits` because the pinned
+SpinalHDL rejects 64-bit UInt `.toLong` calls. Commit events and their
+ordering keep the upstream implementation. No generated source is committed.
+Strict comparison has no synchronization or output mask.
+Keep full results outside Git.
+
+
+RV64 ISA results on 2026-11-13, seed 1, zero added memory wait:
+
+| Config | UI / UM / UA | C1 pass | Complete strict Spike match | Cycles | Instructions |
+|---|---|---:|---:|---:|---:|
+| `rv64ima` | 53 / 13 / 19 | 85 | 85 | 107,393 | 33,733 |
+| `rv64imasu` | 53 / 13 / 19 | 85 | 85 | 107,772 | 33,648 |
+
+Both comparisons have zero synchronization and no output masks.
+These are physical-memory ISA tests. They do not qualify Sv39 translation,
+interrupts or a whole core. C/F/D configurations are NOT RUN.

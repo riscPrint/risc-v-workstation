@@ -7,6 +7,22 @@ import spinal.core.sim._
 import spinal.lib.bus.tilelink.Opcode
 
 class SimEncodingSpec extends AnyFunSuite {
+  test("read all 64 unsigned wire bits without signed-Long range checks") {
+    class Top extends Component {
+      val io = new Bundle { val address = in UInt(64 bits) }
+    }
+    val work = Files.createTempDirectory("rv64-wire").toFile
+    try {
+      SimConfig.withVerilator.workspacePath(work.getPath).compile(new Top).doSim { dut =>
+        for (value <- Seq(BigInt(0), BigInt("80000000", 16), BigInt(1) << 63, (BigInt(1) << 64) - 1)) {
+          dut.io.address #= value
+          sleep(1)
+          assert(SimEncoding.longBits(dut.io.address) == value.toLong)
+        }
+      }
+    } finally org.apache.commons.io.FileUtils.deleteDirectory(work)
+  }
+
   test("capture TileLink wire opcodes rather than enum ordinals") {
     class Top extends Component {
       val io = new Bundle { val opcode = in(Opcode.A()) }

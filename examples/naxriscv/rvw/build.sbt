@@ -44,3 +44,28 @@ lazy val db = (project in file("db"))
     name := "rvw-naxriscv-db",
     fork := true,
     run / javaOptions ++= Seq("-Xss64m", "-Xmx3g"))
+
+// Reuse the pinned upstream simulation observer without changing the core checkout.
+// Its supervisor interrupt checker assumes S exists. Guard that optional pin for M-only RTL.
+root / Compile / sourceGenerators += Def.task {
+  val source = IO.read(nax / "src/main/scala/naxriscv/platform/NaxriscvProbe.scala")
+  val header = source.substring(0, source.indexOf("class NaxriscvTilelinkProbe"))
+    .replace("package naxriscv.platform", "package rvwnax\nimport naxriscv.platform.{TraceBackend, TraceIo}")
+  val pin = "val intSupervisorExternal = new InterruptChecker(ioInt.supervisor.external, 9)"
+  val check = "intSupervisorExternal.check()"
+  require(source.contains(pin) && source.contains(check), "pinned commit observer changed")
+  val body0 = source.substring(source.indexOf("class NaxriscvProbe("))
+    .replace("class NaxriscvProbe(", "class CommitProbe(")
+    .replace(pin, "val intSupervisorExternal = if (privPlugin.p.withSupervisor) Some(new InterruptChecker(ioInt.supervisor.external, 9)) else None")
+    .replace(check, "intSupervisorExternal.foreach(_.check())")
+  // The pinned UInt simulation API rejects toLong on a 64-bit wire.
+  val wires = Seq("port.data", "csrAccess.write", "csrAccess.read",
+    "trapWb.trap.tval", "ioBus.cmd.address", "ioBus.cmd.data", "ioBus.rsp.data",
+    "lsuWb.address", "lsuWb.readData", "aguWb.data", "amoLoadWb.readData", "amoStoreWb.storeData")
+  val body = wires.foldLeft(body0.replace("commitRobToPcValue(i).toLong", "riscvsim.SimEncoding.longBits(commitWb.robToPc.pc(i))")) { (text, wire) =>
+    text.replace(wire + ".toLong", "riscvsim.SimEncoding.longBits(" + wire + ")")
+  }
+  val out = (root / Compile / sourceManaged).value / "rvwnax" / "CommitProbe.scala"
+  IO.write(out, header + body)
+  Seq(out)
+}.taskValue
