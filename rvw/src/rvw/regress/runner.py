@@ -1075,11 +1075,14 @@ os.execvpe(command[0], command, os.environ)
             for j in pending:
                 self.inputs.elf(j.test.elf)
 
+            worker_locks = locks.thread_context()
+
             def worker(number, batch, cancel):
                 directory = rdir / f"worker-{number}"
                 directory.mkdir(exist_ok=True)
                 budget = self.startup_s + per_test * len(batch)
-                return self._run_many(batch, directory, config, budget, "all", cancel=cancel)
+                with worker_locks():
+                    return self._run_many(batch, directory, config, budget, "all", cancel=cancel)
 
             results = run_workers(pending, self.jobs, worker)
             rc = next((code for code, _ in results if code != 0), 0)

@@ -1,0 +1,69 @@
+{
+  "schema": "rvw.paired-curves/1",
+  "supported_bins": 170,
+  "axis": "candidate attempt wall seconds; excludes initial suite and evidence publication",
+  "arms": {
+    "directed": {
+      "campaign_sha256": "a8b3e3cfca2b055a8781daf8265247bda58ba713d6d9455e2ce2d38644647a67",
+      "status": "inconclusive",
+      "points": [
+        {
+          "attempt": 0,
+          "elapsed_s": 0.0,
+          "bins": 20
+        },
+        {
+          "attempt": 1,
+          "elapsed_s": 121.89261441596318,
+          "bins": 21
+        },
+        {
+          "attempt": 2,
+          "elapsed_s": 443.5626033319859,
+          "bins": 22
+        },
+        {
+          "attempt": 3,
+          "elapsed_s": 735.8970098319696,
+          "bins": 23
+        },
+        {
+          "attempt": 4,
+          "elapsed_s": 907.551802289905,
+          "bins": 24
+        }
+      ]
+    },
+    "random": {
+      "campaign_sha256": "2ddec926f842178f8c5d765bc383d0188c36443900077313c3ef380d4af12156",
+      "status": "inconclusive",
+      "points": [
+        {
+          "attempt": 0,
+          "elapsed_s": 0.0,
+          "bins": 20
+        },
+        {
+          "attempt": 1,
+          "elapsed_s": 293.8857253330061,
+          "bins": 22
+        },
+        {
+          "attempt": 2,
+          "elapsed_s": 469.2618717920268,
+          "bins": 22
+        },
+        {
+          "attempt": 3,
+          "elapsed_s": 560.9356419999385,
+          "bins": 24
+        },
+        {
+          "attempt": 4,
+          "elapsed_s": 597.1931903328514,
+          "bins": 26
+        }
+      ]
+    }
+  }
+}

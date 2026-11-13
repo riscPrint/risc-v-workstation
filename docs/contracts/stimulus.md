@@ -33,3 +33,22 @@ attempt status names. The values count attempts with each status. Missing keys
 mean zero attempts with that status. `pass` requires a complete, nonempty strict
 Spike comparison and passing C1 completion. A synchronized match earns no credit.
 Generator and compiler errors remain separate from a core failure or mismatch.
+
+## Integer control and initial suite
+
+`rvw.stimulus-loop/1` settings accept optional `strategy` (`directed`, the
+default, or `random`) and `initial_results` (nonempty C1 result path list).
+Random selection ignores holes and keeps the attempt budget. It supports only
+the integer candidate profile. Initial runs must have complete strict Spike
+matches and the selected core/config. Reports retain their hashes, comparisons,
+coverage and common execution identity under `initial`. Initial hit credit is
+restricted to the declared supported denominator. Candidate runs must retain
+the initial execution identity. Settings and qualified initial evidence enter
+resume identity. These fields do not grant C4 acceptance or a closure-rate claim.
+
+Loop reports also record `initial_hits`, `strategy`, `attempt_budget` and
+`pair_context`. The common context hash covers declared inputs, pinned plan,
+control settings and implementation. The curve exporter requires equal common
+context and qualified execution identity. Its `rvw.paired-curves/1` output
+contains credited-bin histories by attempt wall time. It retains failed-attempt
+cost and excludes initial-suite and publication cost.
