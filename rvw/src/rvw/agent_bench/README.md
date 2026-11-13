@@ -281,3 +281,20 @@ source byte. It refuses a seeded or edited workspace. Each attempt reruns the
 baseline and selected tasks. It archives the previous report and uses a fresh
 output subdirectory. It reuses compilation state, not a passing verdict. A
 changed pack gets a separate recorded digest. Keep each adapter budget short.
+
+## Reproduce native tool measurements
+
+`examples/agent-bench/measure-native-tools.py` verifies a clean private native
+workspace before each campaign. It seeds one task at a time. It builds the
+mutated design database through MCP, then starts the bounded external reference
+client. The client runs the five-tool workflow through MCP. It selects the
+observable mismatch field and finds its retirement order in the waveform.
+The example supplies signal names. It supplies no mutated source line to the
+client. Evaluator truth scores returned locations after the trial.
+
+The helper retains the database build time outside the client budget. Each
+client has 110 seconds and 32 calls. All source changes stay in the private
+workspace. The helper restores the original source bytes on exit. Use the
+measured result table for tool limits. Source-line rank does not grant repair
+credit. The benchmark-owned OoO debug description supplies bundle metadata.
+It does not change the pinned core.

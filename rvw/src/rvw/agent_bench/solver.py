@@ -56,10 +56,36 @@ async def solve(call, steps, *, max_calls=32, budget_s=110):
     with anyio.move_on_after(budget_s) as scope:
         for step in steps:
             before = time.monotonic()
-            record = {'tool': step['tool'], 'arguments': step['arguments']}
+            arguments = dict(step['arguments'])
+            record = {'tool': step['tool'], 'arguments': arguments}
             transcript.append(record)
             try:
-                result = await bounded(step['tool'], step['arguments'])
+                previous = next((r.get('result', {}) for r in transcript if r['tool'] == 'cosim_check'), {})
+                mismatch = previous.get('mismatch') or {}
+                for field, signal in step.get('mismatch_signals', {}).items():
+                    if field in mismatch.get('differences', {}):
+                        arguments['signal'] = signal
+                        break
+                if step['tool'] == 'wave_why' and step.get('wave_time'):
+                    binding = step['wave_time']
+                    if mismatch.get('order') is not None:
+                        query = {'wave': arguments['wave'],
+                                 'expr': f"({binding['order_signal']} == {int(mismatch['order'])}) && ({binding['valid_signal']} == 1)",
+                                 'limit': 1}
+                        timing = await bounded('wave_find', query)
+                        record['time_query'] = {'tool': 'wave_find', 'arguments': query, 'result': timing}
+                        if timing.get('first') is None:
+                            raise ValueError('mismatching retirement is absent from the waveform')
+                        arguments['at'] = str(timing['first'])
+                        record['time_basis'] = 'first waveform sample with the mismatching C2 order and valid'
+                    else:
+                        timing = await bounded('wave_info', {'wave': arguments['wave']})
+                        record['time_query'] = {'tool': 'wave_info', 'result': timing}
+                        if timing.get('end') is None:
+                            raise ValueError('waveform end is unknown')
+                        arguments['at'] = str(timing['end'])
+                        record['time_basis'] = 'waveform end; no architectural mismatch was returned'
+                result = await bounded(step['tool'], arguments)
                 while isinstance(result, dict) and result.get('job_id') and result.get('status') in ('queued', 'running'):
                     result = await bounded('job_status', {'job_id': result['job_id'], 'wait_s': 30})
                 if isinstance(result, dict) and result.get('job_id') and result.get('status') in ('failed', 'cancelled'):
