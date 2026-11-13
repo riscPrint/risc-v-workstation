@@ -41,7 +41,7 @@ def install(engine, prefix, dry=False):
             run('git', 'clone', '--no-checkout', 'https://github.com/diffblue/hw-cbmc.git', src)
         run('git', '-C', src, 'fetch', 'origin', EBMC_REV)
         run('git', '-C', src, 'checkout', '--detach', EBMC_REV)
-        run('git', '-C', src, 'submodule', 'update', '--init', '--recursive')
+        run('git', '-C', src, 'submodule', 'update', '--init', '--recursive', '--depth', '1')
         run('nice', '-n', '10', 'make', '-C', src / 'lib/cbmc/src', 'minisat2-download')
         run('nice', '-n', '10', 'make', '-C', src / 'src', '-j2')
         run('mkdir', '-p', prefix / 'bin')

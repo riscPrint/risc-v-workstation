@@ -32,6 +32,11 @@ def run(args):
     out.mkdir(parents=True, exist_ok=False)
     # Freeze source/include/check/trace bytes once for the complete campaign.
     snapshot = InputSnapshot(args, out)
+    selection = {'method': 'uniform_cycle_interval', 'cycles': cycles}
+    if getattr(args, 'state_plan', None):
+        from .state_selection import select
+        cycles, selection = select(args.state_plan, snapshot.trace, args.start_cycle, args.end_cycle, args.samples)
+    engine_pool = getattr(args, 'engine_pool', None) or [args.engine]
     deadline = time.monotonic() + args.budget
     attempts = []
     stop = 'selection_complete'
@@ -44,6 +49,7 @@ def run(args):
         child.verilog = list(map(str, snapshot.sources))
         child.trace = str(snapshot.trace)
         child.checks = str(snapshot.checks) if snapshot.checks else None
+        child.engine = engine_pool[len(attempts) % len(engine_pool)]
         child.cycle, child.time = cycle, None
         child.out = str(out / f'cycle-{cycle}')
         child.timeout = min(left, args.timeout) if args.timeout is not None else left
@@ -53,19 +59,19 @@ def run(args):
                 _flow('from_sim', child)
             path = Path(child.out) / 'result.json'
             result = json.loads(path.read_text())
-            attempts.append({'cycle': cycle, 'status': result['status'],
+            attempts.append({'cycle': cycle, 'engine': child.engine, 'status': result['status'],
                              'result': str(path.relative_to(out)),
                              'restrictions': result.get('restrictions', []),
                              'state_coverage': result.get('state')})
         except (OSError, ValueError, SystemExit) as exc:
             if isinstance(exc, SystemExit) and exc.code not in (1, 2):
                 raise
-            attempts.append({'cycle': cycle, 'status': 'error', 'reason': str(exc)})
+            attempts.append({'cycle': cycle, 'engine': child.engine, 'status': 'error', 'reason': str(exc)})
         # Keep other selected states even if one task fails or is inconclusive.
     result = {'schema': 'rvw.formal-swarm/1', 'status': 'inconclusive',
               'scope': 'bounded observations from selected trace states; reset reachability is unproved',
-              'selection': {'method': 'uniform_cycle_interval', 'cycles': cycles},
-              'depth': args.depth, 'engine': args.engine, 'stop_reason': stop,
+              'selection': selection,
+              'depth': args.depth, 'engine': args.engine, 'engine_pool': engine_pool, 'stop_reason': stop,
               'attempts': attempts, 'missing_cycles': cycles[len(attempts):],
               'bounded_passes': sum(a['status'] == 'pass' for a in attempts),
               'conditional_failures': sum(a['status'] == 'fail' for a in attempts),

@@ -124,3 +124,31 @@ def test_swarm_budget_keeps_unstarted_cycles(tmp_path, monkeypatch):
     assert result['stop_reason'] == 'budget_exhausted'
     assert result['missing_cycles'] == [1, 3]
     assert result['attempts'] == []
+
+
+def test_coverage_selection_rotates_engines(tmp_path, monkeypatch):
+    import hashlib
+    source = tmp_path / 'top.sv'
+    source.write_text('module top; endmodule')
+    trace = tmp_path / 'trace.vcd'
+    trace.write_text('trace')
+    state_plan = tmp_path / 'states.json'
+    state_plan.write_text(json.dumps({'trace_sha256': hashlib.sha256(trace.read_bytes()).hexdigest(),
+        'holes': ['wrap', 'full'], 'states': [{'cycle': 1, 'targets': []},
+        {'cycle': 5, 'targets': ['wrap']}, {'cycle': 9, 'targets': ['full']}]}))
+    engines = []
+    def flow(name, child):
+        engines.append(child.engine)
+        out = Path(child.out)
+        out.mkdir()
+        (out / 'result.json').write_text('{"status":"pass"}')
+    monkeypatch.setattr(cli, '_flow', flow)
+    args = Namespace(out=tmp_path / 'out', start_cycle=1, end_cycle=9, samples=2,
+                     top='top', depth=4, budget=30, timeout=3, json=False,
+                     verilog=[str(source)], trace=str(trace), checks=None, engine='smtbmc:yices',
+                     engine_pool=['smtbmc:yices', 'abc:bmc3'], state_plan=state_plan)
+    assert swarm.run(args) == 1
+    r = json.loads((args.out / 'result.json').read_text())
+    assert r['selection']['cycles'] == [5, 9]
+    assert engines == ['smtbmc:yices', 'abc:bmc3']
+    assert r['status'] == 'inconclusive'

@@ -16,7 +16,14 @@ def run(args):
         path = Path(args.manifest).resolve()
         plan = json.loads(path.read_text())
         out = Path(args.out)
-        if args.deep_action == 'rtl-grid':
+        if args.deep_action == 'model-live':
+            from .fair_live import check
+            data = check(plan, plan['progress'], plan.get('fairness', []))
+            out.mkdir(parents=True, exist_ok=False)
+            from hashlib import sha256
+            data['model_sha256'] = sha256(path.read_bytes()).hexdigest()
+            (out / 'model.json').write_bytes(path.read_bytes())
+        elif args.deep_action == 'rtl-grid':
             from .rtl_grid import bundle, local
             model = bundle(plan, path.parent)
             if args.hosts:
@@ -50,6 +57,7 @@ def run(args):
 
 def register(sub):
     for name, help_text in (
+        ('model-live', 'check recurrent progress with justice fairness on an explicit finite graph'),
         ('rtl-grid', 'split exported RTL properties over local and farm workers'),
         ('rtl-refine', 'select RTL state and RAM cuts, then refine abstract failures'),
         ('relation-strengthen', 'mine trace relations and certify them with unbounded native proofs'),
@@ -93,7 +101,16 @@ def mcp_tools():
     from .mcp_tools import _runner
     s = {'type': 'string'}
     common = {'out': s, 'manifest': s}
-    return [ToolSpec('formal_doctor', 'List installed native engines, dependencies and enabled adapter features.',
+    return [ToolSpec('formal_model_live', 'Check fair recurrent progress on an explicit finite graph. No RTL translation claim.',
+                    schema(common, ['out', 'manifest']), _runner('model-live'), long=True),
+            ToolSpec('formal_swarm', 'Run bounded replay checks from sampled trace states with coverage-hole priorities and engine diversity.',
+                    schema({'out': s, 'verilog': {'type': 'array', 'items': s}, 'top': s, 'trace': s,
+                            'end_cycle': {'type': 'integer', 'minimum': 1}, 'start_cycle': {'type': 'integer', 'minimum': 1},
+                            'samples': {'type': 'integer', 'minimum': 1}, 'budget': {'type': 'number', 'exclusiveMinimum': 0},
+                            'timeout': {'type': 'number', 'exclusiveMinimum': 0}, 'depth': {'type': 'integer', 'minimum': 2},
+                            'engine': s, 'engine_pool': {'type': 'array', 'items': s}, 'state_plan': s, 'scope': s},
+                           ['out', 'verilog', 'top', 'trace', 'end_cycle', 'budget']), _runner('swarm'), long=True),
+            ToolSpec('formal_doctor', 'List installed native engines, dependencies and enabled adapter features.',
                     schema({'out': s}, ['out']), _runner('doctor'), long=True),
             ToolSpec('formal_rtl_grid', 'Split pinned exported RTL properties across local and farm workers.',
                     schema({**common, 'hosts': s, 'timeout': {'type': 'number', 'exclusiveMinimum': 0},
