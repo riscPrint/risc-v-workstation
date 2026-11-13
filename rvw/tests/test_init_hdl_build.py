@@ -3,6 +3,7 @@ import json
 import os
 from pathlib import Path
 import subprocess
+import sys
 import pytest
 from rvw.init.hdl import scaffold_hdl
 
@@ -18,6 +19,9 @@ def test_build_creates_output_and_uses_absolute_harness(tmp_path):
     verilator.write_text("""#!/usr/bin/env python3
 import pathlib, sys
 args = sys.argv[1:]
+if '-E' in args:
+    print('module top; endmodule')
+    sys.exit(0)
 out = pathlib.Path(args[args.index('-Mdir') + 1])
 assert out.is_dir()
 harness = pathlib.Path(args[args.index('-o') - 1])
@@ -25,7 +29,7 @@ assert harness.is_absolute() and harness.is_file()
 """)
     verilator.chmod(0o755)
     result = subprocess.run([str(tmp_path / "rvw/run.sh"), "build"],
-                            env={**os.environ, "PATH": str(tools) + os.pathsep + os.environ["PATH"]},
+                            env={**os.environ, "RVW_PYTHON": sys.executable, "PATH": str(tools) + os.pathsep + os.environ["PATH"]},
                             capture_output=True, text=True)
     assert result.returncode == 0, result.stderr
     assert json.loads(result.stdout)["status"] == "built"

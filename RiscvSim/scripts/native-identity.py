@@ -55,7 +55,7 @@ def digest(value):
     return hashlib.sha256(canonical(value).encode()).hexdigest()
 
 
-def collect():
+def collect(*, include_java=True):
     reasons = []
     inherited = dict(os.environ)
     # The runner declares the core checkout selector. Emitted RTL identifies its content;
@@ -203,7 +203,8 @@ def collect():
     make_wrapper, _ = file(wrapper)
     result["make_wrapper_path"] = make_wrapper["path"]
     result["make_wrapper_sha256"] = make_wrapper["sha256"]
-    tool("java", str(Path(os.environ["JAVA_HOME"]) / "bin/java") if os.environ.get("JAVA_HOME") else "java")
+    if include_java:
+        tool("java", str(Path(os.environ["JAVA_HOME"]) / "bin/java") if os.environ.get("JAVA_HOME") else "java")
     make_command = os.environ.get("SPINAL_MAKE_CMD", "make")
     if make_command != "make" and Path(make_command).resolve() != Path(make_wrapper["path"]):
         reasons.append("cannot enumerate SPINAL_MAKE_CMD inputs")
