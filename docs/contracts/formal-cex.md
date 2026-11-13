@@ -54,3 +54,34 @@ graph. Node IDs refer to its vertex order. Each node records source location,
 timestamp, observed value and `causes` with node ID, edge kind and clock flag.
 Trace accuracy is retained. Missing accuracy becomes incomplete. These records
 are not an unbounded proof or a repair certificate.
+
+## Bounded cell core evidence and explicit obligations
+
+The solver-core report can include `cell_coverage` with a mapped Boolean logic
+inventory, `core_cells`, `outside_core`, status and scope. Every cell equation
+is separately named for every bounded sample. `bounded_core` means that a
+feasible bounded environment and an UNSAT assertion-failure query yielded a core.
+It is not an unbounded proof or functional coverage percentage. Testplans can
+list requirement obligations by stable property ID. `discharged_conditional`
+requires every declared obligation's evidence. Missing obligations cannot pass.
+
+Cell-core `logical_vacuity` rows retain exact assertion IDs, atom bits and both
+replacement solver outcomes. Replacements change only the specification Boolean
+expression. `replacement_vacuous_bounded` requires UNSAT for both constant
+replacements in a feasible environment. `sensitive_bounded` requires a SAT
+replacement. State-bit leaves and the finite bound limit the analysis.
+`farm batch` accepts one explicit command and expected C1/C3 result paths per
+shard. The same commands run locally or as batch/v1 Jobs. Project-supplied PVCs
+hold inputs, caches and results. Collection validates schemas and declared C1
+identity claims. Missing cells are explicit and inconclusive. Job process success
+and collection completeness do not establish C4 acceptance. Kubernetes retries
+are disabled; retry policy belongs to the controller.
+
+## Multiple shortest counterexamples
+
+`rvw.shortest-cex/1` can contain `properties`, with one independent shortest-depth
+search per captured assertion. Other assertions are removed from each search;
+assumptions remain. A shared timeout limits all searches. Single-property outputs
+retain the scalar depth and shortest fields. Optional `typed_output` records
+SpinalWaves conversion separately from solver evidence. Missing conversion tools
+cannot produce a completed typed-output result.

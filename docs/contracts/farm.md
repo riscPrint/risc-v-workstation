@@ -45,3 +45,20 @@ hold inputs, caches and results. Collection validates schemas and declared C1
 identity claims. Missing cells are explicit and inconclusive. Job process success
 and collection completeness do not establish C4 acceptance. Kubernetes retries
 are disabled; retry policy belongs to the controller.
+
+## Persistent agent workflow plans
+
+Farm workflow plans retain node IDs, command arrays and dependency IDs separately
+from verification evidence. Queue jobs bind workflow/node IDs for resume. Only
+completed dependencies admit a node. The SQLite event sequence supports SSE
+replay by Last-Event-ID. HTTP event access is restricted to the token owner.
+Workflow completion means execution complete, not a C4 acceptance or DUT pass.
+
+## Live farm views and checked crash cleanup
+
+The owner-scoped live view reads validated C3 observations from owned job
+folders. C5 reads stay within that job. Trends retain absent samples. Queue
+attempt directories separate retry evidence. Explicit C1 DUT retries retain
+all failures; identity-matched mixed outcomes can mark instability but cannot
+waive a failure. SSH crash cleanup requires checked process start identities
+and no live owned groups before releasing the dead worker's reservations.
