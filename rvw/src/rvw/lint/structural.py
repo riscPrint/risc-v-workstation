@@ -101,6 +101,7 @@ def analyze(db, intent=None):
                    'Blackbox internal crossings are not analyzed.']
     if blackbox or warnings or not regs:
         limitations.append('Incomplete structural evidence: blackbox edges, extractor warnings or no registers.')
+    findings = group_findings(design, findings)
     return dict(status='inconclusive', scope='register-boundary structural inventory',
                 registers=len(regs), domains=list(domains.values()), clock_count=len({clock(domains[i]) for i in used if i in domains}),
                 depth=details, rdc=reset_report, cdc=clock_report, crossings=crossings, reset_crossings=reset_crossings, reset_trees=reset_trees,
@@ -108,3 +109,26 @@ def analyze(db, intent=None):
                 unclassified_inputs=unknown_inputs, limitations=limitations,
                 rules=[{'id': rule, 'status': 'not_run'} for rule in UNRUN],
                 structural_status='findings' if findings else ('no_checks' if not regs else 'no_crossings_found'))
+
+
+def group_findings(design, findings):
+    """One diagnostic per rule and effective domain pair; retain every endpoint."""
+    groups = {}
+    for finding in findings:
+        def signature(path):
+            node = design.by_path.get(path)
+            signal = design.signals.get(node, {})
+            domain = design.domains.get(signal.get('clock_domain_id'), {})
+            reset = rdc.reset_domain(design, signal) if node in design.regs else None
+            return (domain.get('clock_key'), domain.get('clock_edge'), reset)
+        # Domain-level checks without a source keep their distinct endpoint.
+        key = (finding['rule'], finding['severity'], signature(finding.get('source')),
+               signature(finding['endpoint']), finding.get('library'),
+               finding['endpoint'] if not finding.get('source') else None)
+        if key not in groups:
+            groups[key] = dict(finding, count=0, members=[])
+        group = groups[key]
+        group['count'] += 1
+        group['members'].append({k: finding.get(k) for k in
+                                 ('source', 'endpoint', 'file', 'line', 'source_file', 'source_line')})
+    return list(groups.values())

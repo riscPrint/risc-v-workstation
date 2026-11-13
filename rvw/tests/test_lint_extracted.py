@@ -107,3 +107,11 @@ def test_extracted_complete_mux():
     result = run_on(Path(root) / 'design.db', lint_rules)
     assert not [f for f in result['findings'] if f['rule'] == 'lint.latch']
 
+
+def test_extracted_reset_bank():
+    root = os.environ.get('RVW_LINT_BANK')
+    if not root:
+        pytest.skip('set RVW_LINT_BANK to the LintBankFixture output')
+    result = run_on(Path(root) / 'design.db', analyze)
+    groups = [f for f in result['findings'] if f['rule'] == 'rdc.async_assert_crossing']
+    assert len(groups) == 1 and groups[0]['count'] == 4

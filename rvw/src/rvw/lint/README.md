@@ -556,3 +556,14 @@ Regenerate the minimal Spinal test with `Test/runMain
 spinaldb.LintMuxFixture OUTPUT` in `SpinalDB/spinaldb`. Run
 `RVW_LINT_MUX=OUTPUT rvw/.venv/bin/python -m pytest
 rvw/tests/test_lint_extracted.py -k complete_mux -q` from the checkout root.
+
+### Counted structural findings
+
+Repeated paths now give one diagnostic per rule and effective clock/reset
+pair, with a `count` and `members`. The report retains all endpoint locations.
+A grouped warning is a review item, not a safety verdict. Different reset
+signatures remain separate, including resetless receivers. Domain checks with
+no source retain their separate endpoints. Existing waiver IDs must be reviewed.
+
+The extracted bank test uses `Test/runMain spinaldb.LintBankFixture OUTPUT`
+and `RVW_LINT_BANK=OUTPUT` with `test_lint_extracted.py -k reset_bank`.

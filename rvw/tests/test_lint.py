@@ -207,8 +207,11 @@ def test_waiver_does_not_hide_another_source(tmp_path):
         c.execute("INSERT INTO edges VALUES(3,2,'data')")
     result = report(p)
     findings = result['backends']['structural']['findings']
-    assert [(f['source'], f['disposition']) for f in findings] == [('r1', 'waived'), ('r3', 'active')]
-    assert result['waivers'][0]['matches'] == 1
+    assert len(findings) == 1 and findings[0]['disposition'] == 'active'
+    assert findings[0]['count'] == 2
+    assert {m['source'] for m in findings[0]['members']} == {'r1', 'r3'}
+    assert result['waivers'][0]['stale'] is True
+    assert result['waivers'][0]['matches'] == 0
 
 
 def test_waiver_does_not_hide_changed_native_message(tmp_path, monkeypatch):

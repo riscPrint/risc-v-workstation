@@ -145,3 +145,20 @@ object LintFixtures {
   }
 }
 
+/** A bank has four paths but one reset-domain review item. */
+class ResetBankReference extends Component {
+  val data = in Bits(4 bits)
+  val result = out Bits(4 bits)
+  val sources = Vec.fill(4)(Reg(Bool()) init(False))
+  val samples = Vec.fill(4)(Reg(Bool()))
+  for (i <- 0 until 4) { sources(i) := data(i); samples(i) := sources(i) }
+  result := samples.asBits
+}
+object LintBankFixture {
+  def main(args: Array[String]): Unit = {
+    val dir = Paths.get(args(0)); Files.createDirectories(dir)
+    SpinalDB.generate(SpinalConfig(targetDirectory=dir.resolve("rtl").toString),
+      dir.resolve("design.db").toFile, DbOptions(pdg=false, blocks=false, hgldd=false))(
+      new ResetBankReference)
+  }
+}
