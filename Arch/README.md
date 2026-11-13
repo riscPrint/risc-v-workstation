@@ -637,3 +637,29 @@ The tool checks exact names and object paths. The project still owns counter
 semantics and unit scales. Missing counters stay unobserved. Request latency
 sums do not establish an outstanding-request integral. Retry time does not
 establish queue-full time. Neither establishes a cause of contention.
+
+## BBV phase selection from C2
+
+`rvw arch sample TRACE --interval 1000000 --clusters 8 --warmup 100000 --out PLAN --json`
+selects representative intervals from a complete passing single-hart C2 trace.
+The matching cancellable MCP job is `arch_sample`. No gem5 or RTL job starts.
+
+Basic blocks end at control flow or a nonsequential next PC. BBV entries count
+instructions in each block, including interval fragments. K-means uses
+instruction-normalized vectors, instruction-weighted centers and deterministic
+farthest-first initialization. It retains at most the requested cluster count.
+Identical phases share one cluster. The nearest actual interval represents
+each cluster. A short final interval retains its actual instruction count.
+
+The exclusive `rvw.arch-sampling/1` plan retains the trace hash, every interval,
+cluster membership, representative bounds, represented instruction fractions
+and planned warmup capture bounds. `actual_warmup` is truncated at trace start.
+The `sampled_cpi` Python helper aggregates measured CPI by represented
+instruction fractions and reports bias against a declared full-run cycle count.
+It requires every representative's exact instruction count. It never averages
+IPC directly.
+
+Tests check deterministic phases and weighted CPI on small synthetic traces.
+Full native validation, checkpoint restore, warmup bias and cache/predictor
+state qualification remain open. BBV similarity does not establish timing
+similarity. This is SimPoint-style clustering, not a SimPoint implementation.

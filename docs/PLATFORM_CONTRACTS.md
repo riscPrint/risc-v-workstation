@@ -2885,6 +2885,16 @@ config, engine, identity and local creation time. `rvw.ooo-prediction-score/1`
 binds its hash and the later conclusive C1 hash in a separate exclusive file.
 Scoring rechecks captures and exact identities. Local timestamp checks are
 not trusted chronology. No native speed qualification is established.
+### C2 BBV sampling plans
+
+`rvw.arch-sampling/1` binds a complete single-hart C2 trace hash to fixed
+instruction intervals, BBV counts, deterministic clusters and selected actual
+intervals. Each sample gives `[start,end)`, capture order, actual planned
+warmup, represented instruction count and its instruction fraction `weight`.
+The final short interval uses its actual length. Weights sum to one.
+`accuracy_status` remains inconclusive. Phase selection is not checkpoint
+restore or timing qualification. The CPI helper checks each measured sample's
+instruction count and weights CPI by represented instructions.
 
 ### Experimental trace-driven OoO timing reports
 

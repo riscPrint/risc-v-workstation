@@ -16,6 +16,12 @@ def mcp_tools():
     common = {'project': {'type': 'string'}, 'bench': {'type': 'string'}}
     runs = {**common, 'out': {'type': 'string'}, 'timeout': {'type': 'number', 'exclusiveMinimum': 0}}
     return [
+        ToolSpec('arch_sample', 'Select instruction-weighted BBV phases from complete C2. No restore or fidelity claim.',
+                 schema({'trace': {'type': 'string'}, 'out': {'type': 'string'},
+                         'project': {'type': 'string'}, 'interval': {'type': 'integer', 'minimum': 1},
+                         'clusters': {'type': 'integer', 'minimum': 1, 'maximum': 256},
+                         'warmup': {'type': 'integer', 'minimum': 0}}, ['trace', 'out']),
+                 handler('rvw.arch.cli', 'sample'), long=True),
         *[ToolSpec("arch_" + action.replace("-", "_"), description,
                    schema({k: {"type": "string"} for k in (*fields, "out", "project")}, [*fields, "out"]),
                    handler("rvw.arch.cli", action), long=True)
