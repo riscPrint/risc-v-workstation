@@ -120,3 +120,31 @@ def test_sequence_settings_use_same_verifier_and_keep_denominator(tmp_path,monke
     assert result['attempts'][0]['goal']=='sequence:["RAW",1]'
     assert len(seen[0]['instructions'])==2
     assert result['full_plan_bins']==4 and result['supported_bins']==3
+
+
+def test_rtl_pending_goal_retries_after_isa_saturation(tmp_path,monkeypatch):
+    from rvw.cov import feedback_campaign as feedback
+    from rvw.cov.rtl import identity
+    settings=setup(tmp_path,monkeypatch)
+    plan={'schema':'rvw.rtl-plan/1','design':'a'*64,
+          'clock':{'signal':'TOP.c','edge':'rising','sampling':'pre-edge'},
+          'reset':{'signal':'TOP.r','active':1,'rule':'disable-clear'},
+          'signals':{s:{'width':1,'type':'Bool','scala':None} for s in ('TOP.c','TOP.r')},
+          'bins':[{'id':'event','kind':'event','domain':'speculative','when':{'TOP.r':[0]}}]}
+    recipes={'schema':'rvw.event-recipes/1','plan_id':identity(plan),'design':plan['design'],
+             'recipes':[{'goal':'g:[1]','targets':['event']}]}
+    (tmp_path/'rtl.json').write_text(json.dumps(plan));(tmp_path/'recipes.json').write_text(json.dumps(recipes))
+    data=json.loads(settings.read_text());data.update(rtl_plan='rtl.json',recipes='recipes.json')
+    settings.write_text(json.dumps(data))
+    monkeypatch.setattr(c,'qualify',lambda *a:{'status':'qualified','coverage':{'groups':{'g':{
+        'hits':[{'bin':[1],'count':1},{'bin':[2],'count':1}]}}}})
+    def collect(guide,goal,*args):
+        record={'goal':goal,'samples':[str(len(guide.history))],
+                'new_events':['event'] if guide.history else []}
+        guide.history.append(record)
+        return record
+    monkeypatch.setattr(feedback,'collect',collect)
+    result=c.campaign(settings,tmp_path/'out')
+    assert len(result['attempts'])==2
+    assert [a['goal'] for a in result['attempts']]==['g:[1]','g:[1]']
+    assert result['guidance_history'][-1]['new_events']==['event']

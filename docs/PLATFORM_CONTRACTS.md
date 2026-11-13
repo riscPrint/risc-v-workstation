@@ -156,6 +156,21 @@ through an absolute `RVW_HOME`. Keep core adapter sources in the core repository
 Use offline sbt after toolchain dependencies are installed. Source-directory settings
 in reusable builds must resolve from `baseDirectory.value`, not the caller's cwd.
 
+### Measured RTL recipe feedback
+
+Stimulus-loop settings may bind `rtl_plan` and `recipes` together. Recipes use
+`rvw.event-recipes/1`, the exact sampling `plan_id`, generated RTL `design` hash,
+and a list of generator `goal` to RTL `targets` mappings. Generic code contains
+no core signal paths. The UCB controller records new observed events separately
+from ISA bins. It accepts only complete `rtl_samples` artifacts from unique
+C1 ELF results that passed strict full Spike qualification. The C1 `rtl_sha256`
+must match the recipe and sampling plan. C1 `details.rtl_samples` must contain
+exactly `elf_sha256`, `rvfi_sha256`, `samples_sha256`, `plan_id` and `rtl_sha256`,
+matching that run and its attached files. A missing or stale receipt earns none. Reused sample hashes cannot earn reward.
+Missing hooks and stale, incomplete or incompatible samples are unsupported.
+Guidance history and sample hashes persist in the checked resume state. This
+bounded policy grants no reachability proof or measured performance improvement.
+
 ### Bounded sequence candidates
 
 `rvw cov actions` and `cov_actions` emit `rvw.sequence-candidate/1` reports.

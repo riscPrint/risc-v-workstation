@@ -121,3 +121,13 @@ def test_cli_mcp_parity(tmp_path):
     assert cli['status'] == mcp['status'] == 'generated'
     assert cli['source_sha256'] == mcp['source_sha256']
     assert cli['plan_sha256'] == mcp['plan_sha256']
+
+
+def test_seed_varies_free_operand_without_changing_goal(tmp_path):
+    pytest.importorskip('z3')
+    manifest=source(tmp_path)
+    a=stimulus.generate(manifest,tmp_path,'sem_add_rs1:["zero"]',tmp_path/'a',[5,6,7],seed=1)
+    b=stimulus.generate(manifest,tmp_path,'sem_add_rs1:["zero"]',tmp_path/'b',[5,6,7],seed=2)
+    assert a['model']['rs1']==b['model']['rs1']==0
+    assert a['model']['rs2']!=b['model']['rs2']
+    assert a['source_sha256']!=b['source_sha256']
