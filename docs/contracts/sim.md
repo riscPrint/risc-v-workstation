@@ -308,3 +308,13 @@ each model evaluation. Timestamps count evaluation calls. The 1 ps display
 unit is not a timing claim. Files refuse overwrite. Close the model to flush
 the wave. This API supplies no internal-signal, four-state or HDL-delay wave
 guarantee. Project adapters must identify these limits in their run artifacts.
+
+## Settled native port snapshots
+
+`Model(..., port_snapshot=True)` refreshes scalar Verilator port values after
+`eval()`. Arcilator captures its state bytes at that boundary. Input writes
+invalidate the snapshot. Reads before the next evaluation use current native
+storage. Wide Verilator reads retain the byte interface. Set the option to
+false for a measured control. Public wave capture uses the same settled values.
+Execution CPU time, when present in the example's C1 details, includes the
+Python adapter and C2 write/validation. It does not isolate generated RTL code.

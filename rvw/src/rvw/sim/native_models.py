@@ -24,13 +24,15 @@ def step(argv, out, timeout=90, env=None):
 
 
 class Model:
-    def __init__(self, backend, sources, top, ports, out, *, circt=None, profile=None, wave=None):
+    def __init__(self, backend, sources, top, ports, out, *, circt=None, profile=None, wave=None, port_snapshot=True):
         if backend not in ('arcilator', 'verilator') or not IDENT.fullmatch(top):
             raise ValueError('unsupported engine or top identifier')
         if not ports or any(not IDENT.fullmatch(n) or d not in ('input','output') or type(w) is not int or not 1 <= w <= 65536
                             for n, (d,w) in ports.items()):
             raise ValueError('ports must have scalar names, directions and widths in 1..65536')
         started=time.monotonic()
+        self.port_snapshot = port_snapshot
+        self._snapshot_valid = False
         self.profile=None
         self.ports = ports
         self.backend = backend
@@ -92,6 +94,7 @@ class Model:
             wrapper = self.out/'wrapper.cpp'
             getters = ''.join(f'case {i}: return m->{name};' for i,(name,(d,w)) in enumerate(ports.items()) if w<=64)
             setters = ''.join(f'case {i}: m->{name}=v; break;' for i,(name,(d,w)) in enumerate(ports.items()) if d=='input' and w<=64)
+            snapshots = ''.join(f'v[{i}]=m->{n};' for i,(n,(d,w)) in enumerate(ports.items()) if w<=64)
             wide_getters = ''.join(f'case {i}: for(unsigned j=0;j<{(w+7)//8};++j) b[j]=m->{n}[j/4]>>(8*(j%4)); break;'
                                    for i,(n,(d,w)) in enumerate(ports.items()) if w>64)
             wide_setters = ''.join(f'case {i}: for(unsigned j=0;j<{(w+31)//32};++j) m->{n}[j]=0; for(unsigned j=0;j<{(w+7)//8};++j) m->{n}[j/4]|=uint32_t(b[j])<<(8*(j%4)); break;'
@@ -103,6 +106,7 @@ extern "C" {
 void* model_create(){return new RVWModel;}
 void model_delete(void* p){delete static_cast<RVWModel*>(p);}
 void model_eval(void* p){static_cast<RVWModel*>(p)->eval();}
+void model_eval_read(void* p,uint64_t* v){auto* m=static_cast<RVWModel*>(p);m->eval();'''+snapshots+'''}
 uint64_t model_read(void* p,unsigned id){auto* m=static_cast<RVWModel*>(p);switch(id){'''+getters+'''default:return 0;}}
 void model_write(void* p,unsigned id,uint64_t v){auto* m=static_cast<RVWModel*>(p);switch(id){'''+setters+'''default:break;}}
 void model_read_wide(void* p,unsigned id,uint8_t* b){auto* m=static_cast<RVWModel*>(p);switch(id){'''+wide_getters+'''default:break;}}
@@ -129,7 +133,7 @@ void model_write_wide(void* p,unsigned id,const uint8_t* b){auto* m=static_cast<
             if self.profile.raw:os.environ['LLVM_PROFILE_FILE']=str(self.profile.raw)
             self.library=ctypes.CDLL(str(library))
             signatures={'model_create':([],ctypes.c_void_p),'model_delete':([ctypes.c_void_p],None),
-                'model_eval':([ctypes.c_void_p],None),'model_read':([ctypes.c_void_p,ctypes.c_uint],ctypes.c_uint64),
+                'model_eval':([ctypes.c_void_p],None),'model_eval_read':([ctypes.c_void_p,ctypes.c_void_p],None),'model_read':([ctypes.c_void_p,ctypes.c_uint],ctypes.c_uint64),
                 'model_write':([ctypes.c_void_p,ctypes.c_uint,ctypes.c_uint64],None),
                 'model_read_wide':([ctypes.c_void_p,ctypes.c_uint,ctypes.c_void_p],None),
                 'model_write_wide':([ctypes.c_void_p,ctypes.c_uint,ctypes.c_void_p],None)}
@@ -137,6 +141,7 @@ void model_write_wide(void* p,unsigned id,const uint8_t* b){auto* m=static_cast<
                 f=getattr(self.library,name);f.argtypes=args;f.restype=result
             self.memory=self.library.model_create()
             self.ids={n:i for i,n in enumerate(ports)}
+            self._port_values=(ctypes.c_uint64*len(ports))()
         from .native_wave import PortWave
         self.wave = PortWave(wave, ports) if wave is not None else None
         self.evaluations = 0
@@ -146,6 +151,7 @@ void model_write_wide(void* p,unsigned id,const uint8_t* b){auto* m=static_cast<
         (self.out/'identity.json').write_text(json.dumps(self.identity,indent=2)+'\n')
 
     def write(self,name,value):
+        self._snapshot_valid = False
         direction,width=self.ports[name]
         if direction!='input' or not 0 <= value < 1<<width: raise ValueError('invalid native input: '+name)
         if self.backend=='arcilator':
@@ -160,7 +166,10 @@ void model_write_wide(void* p,unsigned id,const uint8_t* b){auto* m=static_cast<
         width=self.ports[name][1]
         if self.backend=='arcilator':
             s=self.states[name];size=(width+7)//8
-            return int.from_bytes(ctypes.string_at(ctypes.addressof(self.memory)+s['offset'],size),'little') & ((1<<width)-1)
+            data=self._state_bytes[s['offset']:s['offset']+size] if self._snapshot_valid else ctypes.string_at(ctypes.addressof(self.memory)+s['offset'],size)
+            return int.from_bytes(data,'little') & ((1<<width)-1)
+        if self._snapshot_valid and width<=64:
+            return self._port_values[self.ids[name]]
         if width>64:
             data=ctypes.create_string_buffer((width+7)//8)
             self.library.model_read_wide(self.memory,self.ids[name],data)
@@ -168,8 +177,12 @@ void model_write_wide(void* p,unsigned id,const uint8_t* b){auto* m=static_cast<
         return self.library.model_read(self.memory,self.ids[name])
 
     def eval(self):
-        if self.backend=='arcilator':self.function(self.memory)
+        if self.backend=='arcilator':
+            self.function(self.memory)
+            if self.port_snapshot:self._state_bytes=self.memory.raw
+        elif self.port_snapshot:self.library.model_eval_read(self.memory,self._port_values)
         else:self.library.model_eval(self.memory)
+        self._snapshot_valid=self.port_snapshot
         if self.wave:self.wave.sample(self.evaluations,self.read)
         self.evaluations+=1
 

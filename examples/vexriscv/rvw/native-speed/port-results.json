@@ -1,0 +1,114 @@
+{
+  "median_cpu_instructions_per_s": {
+    "False": 16448.659182729512,
+    "True": 20093.51175189929
+  },
+  "snapshot_cpu_ratio": 1.2215896462245832,
+  "schema": "rvw.native-port-speed/1",
+  "rows": [
+    {
+      "repeat": 0,
+      "warmup": true,
+      "snapshot": false,
+      "cycles": 40307,
+      "instructions": 15007,
+      "execution_s": 2.9522217920748517,
+      "cpu_s": 0.9236329999999999,
+      "cpu_instructions_per_s": 16247.795390593452,
+      "instructions_per_s": 5083.290164812762,
+      "trace_sha256": "ccf0db6711e377f96faa3ae56eac7fbfae843a476881cac66441c652840f4af7"
+    },
+    {
+      "repeat": 0,
+      "warmup": true,
+      "snapshot": true,
+      "cycles": 40307,
+      "instructions": 15007,
+      "execution_s": 3.006071125040762,
+      "cpu_s": 0.753025,
+      "cpu_instructions_per_s": 19928.95322200458,
+      "instructions_per_s": 4992.230514770839,
+      "trace_sha256": "ccf0db6711e377f96faa3ae56eac7fbfae843a476881cac66441c652840f4af7"
+    },
+    {
+      "repeat": 1,
+      "warmup": false,
+      "snapshot": true,
+      "cycles": 40307,
+      "instructions": 15007,
+      "execution_s": 2.342823375016451,
+      "cpu_s": 0.7640880000000001,
+      "cpu_instructions_per_s": 19640.407911130653,
+      "instructions_per_s": 6405.519152673907,
+      "trace_sha256": "ccf0db6711e377f96faa3ae56eac7fbfae843a476881cac66441c652840f4af7"
+    },
+    {
+      "repeat": 1,
+      "warmup": false,
+      "snapshot": false,
+      "cycles": 40307,
+      "instructions": 15007,
+      "execution_s": 1.8161015410441905,
+      "cpu_s": 0.912354,
+      "cpu_instructions_per_s": 16448.659182729512,
+      "instructions_per_s": 8263.304479864895,
+      "trace_sha256": "ccf0db6711e377f96faa3ae56eac7fbfae843a476881cac66441c652840f4af7"
+    },
+    {
+      "repeat": 2,
+      "warmup": false,
+      "snapshot": false,
+      "cycles": 40307,
+      "instructions": 15007,
+      "execution_s": 1.4722772920504212,
+      "cpu_s": 0.9109330000000001,
+      "cpu_instructions_per_s": 16474.31808925574,
+      "instructions_per_s": 10193.052681740373,
+      "trace_sha256": "ccf0db6711e377f96faa3ae56eac7fbfae843a476881cac66441c652840f4af7"
+    },
+    {
+      "repeat": 2,
+      "warmup": false,
+      "snapshot": true,
+      "cycles": 40307,
+      "instructions": 15007,
+      "execution_s": 1.5426416660193354,
+      "cpu_s": 0.7413420000000001,
+      "cpu_instructions_per_s": 20243.01874168737,
+      "instructions_per_s": 9728.11789709037,
+      "trace_sha256": "ccf0db6711e377f96faa3ae56eac7fbfae843a476881cac66441c652840f4af7"
+    },
+    {
+      "repeat": 3,
+      "warmup": false,
+      "snapshot": true,
+      "cycles": 40307,
+      "instructions": 15007,
+      "execution_s": 2.1059817919740453,
+      "cpu_s": 0.746858,
+      "cpu_instructions_per_s": 20093.51175189929,
+      "instructions_per_s": 7125.892568108657,
+      "trace_sha256": "ccf0db6711e377f96faa3ae56eac7fbfae843a476881cac66441c652840f4af7"
+    },
+    {
+      "repeat": 3,
+      "warmup": false,
+      "snapshot": false,
+      "cycles": 40307,
+      "instructions": 15007,
+      "execution_s": 2.225879875011742,
+      "cpu_s": 0.913716,
+      "cpu_instructions_per_s": 16424.14054257559,
+      "instructions_per_s": 6742.052960032641,
+      "trace_sha256": "ccf0db6711e377f96faa3ae56eac7fbfae843a476881cac66441c652840f4af7"
+    }
+  ],
+  "median_instructions_per_s": {
+    "False": 8263.304479864895,
+    "True": 7125.892568108657
+  },
+  "snapshot_over_control": 0.8623538664794747,
+  "rtl_sha256": "361c0dc2afa470a76628b0d3e2620a8d6f03ba95d26034062d7e4eaafa67b0e8",
+  "elf_sha256": "df90843cf1e3628d7ba037798989c4dda604a331aaed1002406b23f5c0dc8260",
+  "scope": "Verilator Python adapter execution plus C2 write/validation; compilation excluded"
+}

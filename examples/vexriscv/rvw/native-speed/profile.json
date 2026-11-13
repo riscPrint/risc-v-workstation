@@ -1,0 +1,25 @@
+{
+  "schema": "rvw.native-adapter-profile/1",
+  "method": "cProfile on VexRiscv loop under Verilator before settled-port snapshots",
+  "entries": [
+    {
+      "function": "write",
+      "calls": 401655,
+      "self_s": 0.828667398,
+      "cumulative_s": 0.828667398
+    },
+    {
+      "function": "read",
+      "calls": 525969,
+      "self_s": 0.7875765650000001,
+      "cumulative_s": 0.7875765650000001
+    },
+    {
+      "function": "eval",
+      "calls": 120497,
+      "self_s": 0.23937232400000003,
+      "cumulative_s": 0.23937232400000003
+    }
+  ],
+  "limits": "profiled times include Python and ctypes; subprocess build wait excluded from listed functions; no isolated native kernel claim"
+}

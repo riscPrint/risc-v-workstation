@@ -1,0 +1,359 @@
+{
+  "schema": "rvw.persistent-isa-speed/1",
+  "rows": [
+    {
+      "test": "rv32ui-p-add",
+      "cycles": 1703,
+      "instructions": 504,
+      "elf_sha256": "3ee5d0f2f9e283705b787c3ea2b763bca979e9d23ad35660e4f0e6e766d49b13",
+      "c2_sha256": "0ffb7315efd29a9f5030791d399b82d4d8f90e0719755c33512d5c69eb5650b5"
+    },
+    {
+      "test": "rv32ui-p-addi",
+      "cycles": 953,
+      "instructions": 281,
+      "elf_sha256": "dae6d0f1e016bb74cb90ec3237649cc5a7da6188631ace3c2b13d223ac4bb727",
+      "c2_sha256": "3981e711d6aaa1735e0d455b5e39cdc7ef2f9e7242b37d1cb462b79be1123f25"
+    },
+    {
+      "test": "rv32ui-p-and",
+      "cycles": 1763,
+      "instructions": 524,
+      "elf_sha256": "06e557f1d2343cf9582880352dc2cd13789f7f51132b7ec5b0136409b58d86aa",
+      "c2_sha256": "3bb1a1736e4be47df4b081565b2f8cd461a173b4399715e42fc6f6c9d65b5069"
+    },
+    {
+      "test": "rv32ui-p-andi",
+      "cycles": 821,
+      "instructions": 237,
+      "elf_sha256": "1f5c119f78c8f9266ffb390714365b9fdb35ce169b40774e1134cd50a0ae9037",
+      "c2_sha256": "029967e3f24d9ea0a37c4e82b75d9fd0cbe5559563df1e1df6eceb2f7ec8852c"
+    },
+    {
+      "test": "rv32ui-p-auipc",
+      "cycles": 353,
+      "instructions": 97,
+      "elf_sha256": "00d326d0e923e9c7c00a0e90427f7c445f3ba7ee0b87c08b1379565a878b20f2",
+      "c2_sha256": "4389104c749320b0e5a040d85377cddf971c9f747455a2bd4cd794cc4896605c"
+    },
+    {
+      "test": "rv32ui-p-beq",
+      "cycles": 1220,
+      "instructions": 330,
+      "elf_sha256": "2eafc6611ba6a92e92579de5bb59b88cd994374856d1f165674a830f4e85b6c2",
+      "c2_sha256": "cbe69afdc40a700a49e022c4623d8f20a3b8aff07c323f979955d5b4edeebcba"
+    },
+    {
+      "test": "rv32ui-p-bge",
+      "cycles": 1301,
+      "instructions": 348,
+      "elf_sha256": "1b78f7530c9ad103ed4eab5d9286322a847e5b8929f111603c9baf690ff2ee99",
+      "c2_sha256": "4d74c83410a2f2d22937a3cad53682c3a7bede0e51b11a8b23f047bb50790f3b"
+    },
+    {
+      "test": "rv32ui-p-bgeu",
+      "cycles": 1376,
+      "instructions": 373,
+      "elf_sha256": "b153747cacbbe594f289a154ed350dc8972ef296418d3dd70acc52d2c508f78b",
+      "c2_sha256": "6d05badb96123cc1ff80e442f17e97cf7aa57ae94f9f68dd2519986b2ef62481"
+    },
+    {
+      "test": "rv32ui-p-blt",
+      "cycles": 1220,
+      "instructions": 330,
+      "elf_sha256": "dc7d8631796dfb55c122abbdec2cb3ccddafc83d2396b8649d5c90e4819fb981",
+      "c2_sha256": "0f749bcb0db0089fa25741054c99f008287beb0ebc6ebcd10d8dddea149569dc"
+    },
+    {
+      "test": "rv32ui-p-bltu",
+      "cycles": 1295,
+      "instructions": 355,
+      "elf_sha256": "8a90b31c4fdce017f5302a973579dccab624596c78a57ef181f1a67b814ab8cc",
+      "c2_sha256": "c13f376f0b9aec2220798f421bd92288b85c99877398c1ab7780b0c955c299da"
+    },
+    {
+      "test": "rv32ui-p-bne",
+      "cycles": 1220,
+      "instructions": 330,
+      "elf_sha256": "c082a889c11e7c7459086eda4e84c4de13eb10055fe5d9ceade20dec463cd003",
+      "c2_sha256": "e0164b7ac84793774ae87c4d9645994e38a42035a0eb6baffdf38d3217759d73"
+    },
+    {
+      "test": "rv32ui-p-fence_i",
+      "cycles": 1376,
+      "instructions": 335,
+      "elf_sha256": "4706192a19c817479d977061c4f38864258df2ccf3cbfdff634612f3e4f179db",
+      "c2_sha256": "a7c0ec3bd7f96a134d4a262d5991ed71472d4df9622187a4cc211b5f6fd7039c"
+    },
+    {
+      "test": "rv32ui-p-jal",
+      "cycles": 344,
+      "instructions": 94,
+      "elf_sha256": "90554472bc8926d7dd1ac3ec40403f3d7db26778f10b86b55146dd01cefc6e8b",
+      "c2_sha256": "8036807b0cb994136a88092402f074f3b0ea79ad81900db375977cfef8bd91d0"
+    },
+    {
+      "test": "rv32ui-p-jalr",
+      "cycles": 572,
+      "instructions": 154,
+      "elf_sha256": "e1a34297dbf567f1b419cf510e3d7c171679ecc85b7130147270e452b6ca6eba",
+      "c2_sha256": "8166cba47fbd934cd2dbe4c5eecff85c04694142bcbcd8c358799b3e958e1282"
+    },
+    {
+      "test": "rv32ui-p-lb",
+      "cycles": 986,
+      "instructions": 292,
+      "elf_sha256": "342e05928c43b1ca0c7bce049b1b66580908748becf9655f50a971f791ce1432",
+      "c2_sha256": "27f225c9975683d776844520e9fee1632c692e396dba7624fdcef645a4c8b0a8"
+    },
+    {
+      "test": "rv32ui-p-lbu",
+      "cycles": 986,
+      "instructions": 292,
+      "elf_sha256": "be2086ff2e7742f2c03a9fd1eeeb6965f6b99fc8b2bde83fbb8c6d6dbe78e38e",
+      "c2_sha256": "fa3ef2ba24c362f57caa4ea24d5c17ed705521770f220b9bada9384d181f1963"
+    },
+    {
+      "test": "rv32ui-p-ld_st",
+      "cycles": 3065,
+      "instructions": 1002,
+      "elf_sha256": "fac78258031771f32d7738fa22865b30fdae5c41367b79e40bd687801a5ff910",
+      "c2_sha256": "db333d49904c5ddd6a0acff71f314fb5bb1256eda0cd12905cbc2d8f7447d05f"
+    },
+    {
+      "test": "rv32ui-p-lh",
+      "cycles": 1034,
+      "instructions": 308,
+      "elf_sha256": "7cdbb6b374a6498b446797d0d7106a5a0636587c93ade5d07c0c28b8eb52ee63",
+      "c2_sha256": "2a3fc6a2db996dc787dd0c764b2391b77377d30d0ae8ee492ffed76470829c1b"
+    },
+    {
+      "test": "rv32ui-p-lhu",
+      "cycles": 1061,
+      "instructions": 317,
+      "elf_sha256": "3d8cc84ffa93ae8adbdfbd1279a23e2a540d1ca7d60577952c8536cbcbf92685",
+      "c2_sha256": "880343b5aa53637a59554170dc97f8a2188459782747c61abce6a3d94ddffe9e"
+    },
+    {
+      "test": "rv32ui-p-lui",
+      "cycles": 368,
+      "instructions": 104,
+      "elf_sha256": "88a631227de0f1f789b1003d1a19e487f5d4d9b8a38094d0d5eff61f9bdebe3d",
+      "c2_sha256": "50d95bb6d297828ecbcc2e366fc59614dd4201b2d06cdca70ffd783cf8d43722"
+    },
+    {
+      "test": "rv32ui-p-lw",
+      "cycles": 1076,
+      "instructions": 322,
+      "elf_sha256": "f91acd0c6dd3f6b9d36783606ca3bc863af37d8261501c03db97b87a6cfee19f",
+      "c2_sha256": "604299d42f73459dc7733701cdc3f2ba0ca50b64ce66a429ee96f435d8083618"
+    },
+    {
+      "test": "rv32ui-p-or",
+      "cycles": 1772,
+      "instructions": 527,
+      "elf_sha256": "f0f63809a5039cd89bc7c34a25974566f292006f199277d6a97282811e5a4624",
+      "c2_sha256": "16448397b1ba5cdcb4e0461f1579cf09f5772ec44afb349ed1c8094c862365a5"
+    },
+    {
+      "test": "rv32ui-p-ori",
+      "cycles": 842,
+      "instructions": 244,
+      "elf_sha256": "5923e63ee347c388d6764de44ac8c138012ba49cd1c68ebea9d1e984e18ff2d6",
+      "c2_sha256": "4a179f5e5dcc7a27926d31f08b9fd4798edd5b012b496d9f75d18da29437b150"
+    },
+    {
+      "test": "rv32ui-p-sb",
+      "cycles": 1667,
+      "instructions": 493,
+      "elf_sha256": "cd055c986060794483c029b252a284970961a4e20d235ba07460983e3258b2f6",
+      "c2_sha256": "b1fdf2a8f666bf5a5745ac2dd891a0cfc95a2d7bdd5aee99567d36bc409ec8dc"
+    },
+    {
+      "test": "rv32ui-p-sh",
+      "cycles": 1826,
+      "instructions": 546,
+      "elf_sha256": "106eabf6e4724e20565268f40218be79ca98898b974f21d203a57b1996c61191",
+      "c2_sha256": "e5db6f012508bd7e650062d1194694973ec4cdb187eb7c62964ada39c30e83cf"
+    },
+    {
+      "test": "rv32ui-p-simple",
+      "cycles": 293,
+      "instructions": 80,
+      "elf_sha256": "77a6b23a30e1927b8c19d2d23a413509a44061812157182073db6404464159a5",
+      "c2_sha256": "99e051018da7f32bcb4622f1033a8fdeb0a080e09a19ae239ed285df3e22e45b"
+    },
+    {
+      "test": "rv32ui-p-sll",
+      "cycles": 1787,
+      "instructions": 532,
+      "elf_sha256": "b9939be5de60815f203f7e1aa083ccae90af2719ed8a42b3b645333f3e2204b8",
+      "c2_sha256": "565afdc28735abe2f2a460ecfffffca7edfd097f8dffd0880e3cf39c05d406bb"
+    },
+    {
+      "test": "rv32ui-p-slli",
+      "cycles": 950,
+      "instructions": 280,
+      "elf_sha256": "388c908f9b55085357f0f128d66f2599dca322314cf5cc34f4f2d507e75219ac",
+      "c2_sha256": "b07a6270f4fb014bbc0ad9e68e0aadfceca42ac48588e279959b86f51c1158ec"
+    },
+    {
+      "test": "rv32ui-p-slt",
+      "cycles": 1685,
+      "instructions": 498,
+      "elf_sha256": "4952942bc4bf60db847bd2ce1adb26f60c15899f070f6886ec2d81db9bfe6e9d",
+      "c2_sha256": "6d7d5bdaa12f36a30b4ddd7e73393dec9a8aae1b7b529748d9f5a276c4064f9a"
+    },
+    {
+      "test": "rv32ui-p-slti",
+      "cycles": 938,
+      "instructions": 276,
+      "elf_sha256": "22bdcfc595f4f745f8845553f0d17c9eb4e980bc6975142d4799a47150a57e81",
+      "c2_sha256": "1bbaccbd035eaace97021de24242d58a7ab3f578d4c82b658257c8f5d2b954c8"
+    },
+    {
+      "test": "rv32ui-p-sltiu",
+      "cycles": 938,
+      "instructions": 276,
+      "elf_sha256": "0028d30d790435be317ebd0c2d524fbd023f4110d54a9f652d52827fac293e1a",
+      "c2_sha256": "d5fbf0754cf69c0774cc4343d988ecfb7c62fa310db08add21c3fed953fd3044"
+    },
+    {
+      "test": "rv32ui-p-sltu",
+      "cycles": 1685,
+      "instructions": 498,
+      "elf_sha256": "b4c337022a42877aaba729c1efc78c01647165c8c3ffa6ed09fff290b8a81751",
+      "c2_sha256": "8c714be4839da5b65b3710b340808b21f096f5453263e181f3b798ddf7922aad"
+    },
+    {
+      "test": "rv32ui-p-sra",
+      "cycles": 1844,
+      "instructions": 551,
+      "elf_sha256": "8a293ffcacbbf30540b74c87963286781ca2aac5f893ae70918f62cc654d6d3d",
+      "c2_sha256": "5bd4f605552bdb23abb811158cce840cd8bfddeccf70c782ab1c1fb5f9ad3160"
+    },
+    {
+      "test": "rv32ui-p-srai",
+      "cycles": 995,
+      "instructions": 295,
+      "elf_sha256": "b232dda7f70280410e2828205642d81a1556cc483bfd48f93fc7670c08b301d8",
+      "c2_sha256": "3be1d3bb6017f9a288ec1833e4ac20e145f7622626ca78b4e2804ba275a88d22"
+    },
+    {
+      "test": "rv32ui-p-srl",
+      "cycles": 1826,
+      "instructions": 545,
+      "elf_sha256": "03f7e7a81c1d7a79c2da571cf43f6c49bbc4b97052a894f112714336fa847a3c",
+      "c2_sha256": "799190c14d59663381c7a5c3aff2b73ca8fbd28de32176b9d4a77565ce8f2fc9"
+    },
+    {
+      "test": "rv32ui-p-srli",
+      "cycles": 977,
+      "instructions": 289,
+      "elf_sha256": "13f115bc10ef1563762771f8650b48a5543ef4649ab8412e0fd99bf1efb0f5d8",
+      "c2_sha256": "8d41c9ad028b556e5903a0da53afbc43b50e480876fc446aaf39ab8e588a4080"
+    },
+    {
+      "test": "rv32ui-p-st_ld",
+      "cycles": 1625,
+      "instructions": 522,
+      "elf_sha256": "35a37a21fea432a3d539ece81ecf8feff988ffbf9263a024f8f7c20aa47f6ad3",
+      "c2_sha256": "ec309fd77c15b3ac98f4431cb1bfdb40c443758cc679a8ab28bdc74111684b3d"
+    },
+    {
+      "test": "rv32ui-p-sub",
+      "cycles": 1679,
+      "instructions": 496,
+      "elf_sha256": "cc339c7b55ee862c3f34bb39b1733e148a41ec3f6e2b2e39f06125e4ab562c20",
+      "c2_sha256": "5853df64004c4ab411c8e82c2eab8578a9321954ee5fe57673e72e30863e755e"
+    },
+    {
+      "test": "rv32ui-p-sw",
+      "cycles": 1847,
+      "instructions": 553,
+      "elf_sha256": "c13ab3247e947dfe2a5b3fe1162d08dd2749d894ae536d51a3f667f0b917acca",
+      "c2_sha256": "489e9bb68ef1584637519730a8cedce1a2a26fed43cc34eccc2ad34dd8baec60"
+    },
+    {
+      "test": "rv32ui-p-xor",
+      "cycles": 1769,
+      "instructions": 526,
+      "elf_sha256": "b6114ad65b7788de4f0f987ba63c3167c11da2f8ab758a1126c550e2014e3918",
+      "c2_sha256": "7e1deb76ad0a2a38936ad63ca72a18cbaad0fa057e933e4a187d270addc3b62e"
+    },
+    {
+      "test": "rv32ui-p-xori",
+      "cycles": 848,
+      "instructions": 246,
+      "elf_sha256": "971349de8b07b668f66393f98015cc81119272f885d393943bcb12862f27eaff",
+      "c2_sha256": "52a6078510a5021181d1df8734312a5cb697098b7ad42119cfa3675f977cc945"
+    },
+    {
+      "test": "rv32um-p-div",
+      "cycles": 749,
+      "instructions": 135,
+      "elf_sha256": "ea0733676c6556a0c5d5e3efb856d66e6a9d40544832a78fd0da867271d64cce",
+      "c2_sha256": "bf6a790ad6aff26474d32d1678908c16e0b30a34143f9090db88d35f1e35dc5b"
+    },
+    {
+      "test": "rv32um-p-divu",
+      "cycles": 752,
+      "instructions": 136,
+      "elf_sha256": "981ce172954fc5ee00dd724d17ce6a04cc4716d1070bbdb50c1bf40de87d18a7",
+      "c2_sha256": "c3755278294164511c493c4425a611db2c8cd194e8939e4a465af8d78050fc1a"
+    },
+    {
+      "test": "rv32um-p-mul",
+      "cycles": 1685,
+      "instructions": 498,
+      "elf_sha256": "3ddb396fc0da0db5376ba8a3c1f7280d1e3eff142e3966c8605e8ebb2a8503c7",
+      "c2_sha256": "cfe2f01e17a6a9ce07a3536fd7438a492873151ca3988b2590a35fa7a8b74ff3"
+    },
+    {
+      "test": "rv32um-p-mulh",
+      "cycles": 1685,
+      "instructions": 498,
+      "elf_sha256": "3f84243723e01c1608e127e3168b7e3ab88b930ec185691c90ec2af5ccac5986",
+      "c2_sha256": "116d0e1e67d3a8e9bda81e13c988570e0c6155fa7b869fad0d473681d593219d"
+    },
+    {
+      "test": "rv32um-p-mulhsu",
+      "cycles": 1685,
+      "instructions": 498,
+      "elf_sha256": "6039c8b5157d7e0acb082a744c0abfed62015da38e82a409e850145cffedf389",
+      "c2_sha256": "e5f895731adcf67e7f0126ead0f2670f70071093349a0c74dd24305ff9865d66"
+    },
+    {
+      "test": "rv32um-p-mulhu",
+      "cycles": 1685,
+      "instructions": 498,
+      "elf_sha256": "9730eb24c8e18927e7449c8f40bd26a39e9dfa188be56fadc0d115064dc6090e",
+      "c2_sha256": "7bf6b20e79a81e74f6bbe848215b2dc7e162a46544c278184d4008b57cffbd1d"
+    },
+    {
+      "test": "rv32um-p-rem",
+      "cycles": 749,
+      "instructions": 135,
+      "elf_sha256": "c8c79659f3236fdae1a6a4ae71fd34a439c5aa8bae8d32b559dea17c3964cce2",
+      "c2_sha256": "e056c52f86ab37a196f70130c0b0b396f154cfd7a313298fdcbe247128338e3a"
+    },
+    {
+      "test": "rv32um-p-remu",
+      "cycles": 749,
+      "instructions": 135,
+      "elf_sha256": "f50da825265edf09f6d40c2260e3a272d5fc4fdc8b494261f2ac55beef31fcba",
+      "c2_sha256": "5d41278ed3c6b821f8f10d217c6545bf037ed6fa6208c699732c11ab02b74f69"
+    }
+  ],
+  "tests": 49,
+  "persistent_s": 16.840877790935338,
+  "process_s": 422.4101320420159,
+  "speedup": 25.082429626642124,
+  "persistent_tests_per_s": 2.909587054088975,
+  "process_tests_per_s": 0.1160010053810123,
+  "scope": "one warmed suite; includes JVM launch, elaboration, run and C2 capture; excludes Scala compilation and shared tool/source capture",
+  "core_revision": "a62c145aa042a5de874344e0a7683bd7c8c8c870",
+  "total_instructions": 17735,
+  "persistent_instructions_per_s": 1053.0923755973056,
+  "process_instructions_per_s": 41.98526184555618
+}
