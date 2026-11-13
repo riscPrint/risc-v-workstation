@@ -212,3 +212,31 @@ upstream checkout. Run `rvw formal rvfi-generate formal/binding.json --out OUT`
 from this directory. The generated wrapper has unconstrained bus inputs.
 Review its environment before a formal campaign. The existing
 `formal/rvw.toml` and `formal/wrapper.sv.in` retain their separate bus assumptions.
+## Live checkpoint probe
+
+Run the project-owned probe with `RVW_HOME`, `VEXRISCV` and the native tool
+environment set. It holds the `vex` lock. Each command starts a separate JVM.
+
+```sh
+examples/vexriscv/rvw/checkpoint-probe.sh /path/to/smoke /tmp/vex-save /tmp/vex-state.json save 8
+examples/vexriscv/rvw/checkpoint-probe.sh /path/to/smoke /tmp/vex-resume /tmp/vex-state.json restore 8
+cmp /tmp/vex-save/rvfi.jsonl /tmp/vex-resume/rvfi.jsonl
+```
+
+The first run saves state after eight retired instructions and runs to `tohost`.
+The second run resets an empty native instance, installs the saved live state,
+and executes only the suffix. It restores the C2 prefix and counters too.
+The comparison includes all C2 bytes, including cycle numbers. The probe uses
+fixed single-cycle responses and no interrupts. It saves pending fetch and load
+responses, sparse RAM and the complete exposed synchronous RTL state. It has a
+5000-cycle limit. It does not implement the generic Python snapshot port or C1
+publication. The general adapter's random memory latency, SoC capture, ROI,
+wave and coverage modes are outside this probe.
+
+Native validation on 2026-11-13 used core revision
+`a62c145aa042a5de874344e0a7683bd7c8c8c870`, SpinalHDL 1.15.0 and Verilator.
+`test_checkpoint_probe.py` passed with a checkpoint after retirement 8 in the
+RV32IM smoke program. The complete resumed C2 file equalled the original.
+The generic register/RAM fixture also passed. BOOM validation, random-latency
+continuation, native `--savable` serialization and throughput measurements
+remain open under #346. This probe does not close that issue.
