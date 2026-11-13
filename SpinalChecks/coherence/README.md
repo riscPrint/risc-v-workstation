@@ -64,3 +64,23 @@ Spinal assertions and the existing fixture. Keep the generator deterministic.
 The initial checker is Python because this graph is small and needs no solver.
 A second independent TLC or Murphi encoding remains necessary before broader
 protocol claims. MESI/MOESI profiles and real TL-C RTL bindings are follow-up work.
+
+## Named weak-fairness progress
+
+`python3 SpinalChecks/coherence/model.py --fair` exhausts the finite request
+model and checks each hart's completion target in turn. `fair.py` finds
+strongly connected components in the subgraph where that target remains
+incomplete. Each pending state has an environment stutter edge. Named
+assumptions cover per-hart issue, arbitration, probe, response and acknowledgment
+steps. An action set that stays enabled throughout a component must have an
+edge within it. A tour can then satisfy every named weak-fairness condition.
+A fair component without completion is a counterexample. A missing response
+can therefore fail even when unrelated harts keep completing work.
+
+The report lists assumptions, bounds, a prefix to the failing component and
+its internal action labels. State-budget exhaustion is inconclusive. Retry
+cycles and lost acknowledgments fail. The unmutated finite graph passes under
+its declared fairness assumptions. This is weak fairness on the finite model.
+It does not establish unbounded RTL liveness. Channel queues, multiple active
+transactions, MESI/MOESI directory profiles, TLC/Murphi cross-checks and actual
+TileLink-C refinement remain open.

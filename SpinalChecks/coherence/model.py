@@ -179,7 +179,22 @@ def main():
     parser.add_argument('--bug', choices=['grant_conflict', 'stale_data', 'lost_ack', 'retry'])
     parser.add_argument('--limit', type=int, default=100000)
     parser.add_argument('--generate', type=Path)
+    parser.add_argument('--fair', action='store_true', help='check finite request completion under named weak fairness')
     args = parser.parse_args()
+    if args.fair:
+        if args.generate:
+            parser.error('--fair cannot generate the permission projection')
+        import fair
+        assumptions = {'internal_no_probe': {'home.no_probe'}}
+        for i in range(2):
+            assumptions[f'environment_issue_{i}'] = {f'A.acquire.{i}.1', f'A.acquire.{i}.2'}
+            for action in ('home.select', 'B.probe', 'C.probe_ack', 'D.grant', 'E.grant_ack'):
+                assumptions[f'{action}.{i}'] = {f'{action}.{i}'}
+        result = fair.explore(State(), lambda s: successors(s, args.bug), invariant, terminal,
+                              {f'hart-{i}': lambda s, i=i: s.life[i] != 2 for i in range(2)},
+                              assumptions, args.limit)
+        print(json.dumps(result, indent=2))
+        return {'pass': 0, 'fail': 1, 'inconclusive': 3}[result['status']]
     result, graph = explore(args.bug, args.limit)
     if args.generate:
         if args.bug or result['verdict'] != 'pass':
