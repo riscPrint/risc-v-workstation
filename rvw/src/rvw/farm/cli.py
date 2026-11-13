@@ -25,6 +25,13 @@ def register(sub):
     recovery = commands.add_parser("recover")
     recovery.add_argument("--out", required=True)
     recovery.set_defaults(func=recover_command)
+    workflow = commands.add_parser("workflow")
+    workflow.add_argument("--root", required=True)
+    workflow.add_argument("--action", choices=("create", "status", "advance", "capabilities"), default="status")
+    workflow.add_argument("--plan")
+    workflow.add_argument("--workflow-id")
+    workflow.add_argument("--owner", default="local")
+    workflow.set_defaults(func=workflow_command)
     selection = commands.add_parser("select")
     selection.add_argument("--db", required=True)
     selection.add_argument("--changed", required=True, help="JSON array of changed source paths")
@@ -133,3 +140,8 @@ def triage_command(args):
 def selection_command(args):
     from .selection import select
     print(json.dumps(select(args.db, json.loads(args.changed), json.loads(Path(args.catalogue).read_text()), args.seconds)))
+
+
+def workflow_command(args):
+    from .workflows import workflow
+    print(json.dumps(workflow(args.root, args.action, json.loads(Path(args.plan).read_text()) if args.plan else None, args.workflow_id, args.owner)))

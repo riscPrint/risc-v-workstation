@@ -33,7 +33,10 @@ def mcp_tools():
     from .costs import budget
     from .triage import triage
     from .selection import select
-    return [ToolSpec("farm_select", "Advisory source-impact selection within a time budget. Unknown impacts keep tests mandatory.",
+    from .workflows import workflow
+    return [ToolSpec("farm_workflow", "Create, resume or inspect a command dependency plan. Completion is execution state, not verification.",
+                 schema({"root": string, "action": string, "plan": {"type": "object"}, "workflow_id": string, "owner": string}, ["root"]),
+                 workflow, long=True), ToolSpec("farm_select", "Advisory source-impact selection within a time budget. Unknown impacts keep tests mandatory.",
                  schema({"db": string, "changed": array, "catalogue": {"type": "object"}, "seconds": {"type": "number", "exclusiveMinimum": 0}},
                         ["db", "changed", "catalogue"]), select, long=True), ToolSpec("farm_triage", "Cluster recorded failures, compare regressions and bundle one representative. Never waive failures.",
                  schema({"root": string, "baseline": string, "known": string, "bundles": string}, ["root"]), triage, long=True), ToolSpec("farm_budget", "Set cumulative queue budgets or report costs. CPU charge is declared cores times wall time.",

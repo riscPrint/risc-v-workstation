@@ -713,7 +713,7 @@ usage: rvw evidence query [-h] --db DB [--text TEXT] [--schema SCHEMA]
 
 ```text
 usage: rvw farm [-h] [--project PROJECT]
-    {run,cancel,notifications,classify,recover,select,triage,budget,batch,queue,serve,dashboard}
+    {run,cancel,notifications,classify,recover,workflow,select,triage,budget,batch,queue,serve,dashboard}
     ...
 ```
 
@@ -747,6 +747,14 @@ usage: rvw farm classify [-h] [--project PROJECT] reports [reports ...]
 
 ```text
 usage: rvw farm recover [-h] --out OUT [--project PROJECT]
+```
+
+### `rvw farm workflow`
+
+```text
+usage: rvw farm workflow [-h] --root ROOT [--action
+    {create,status,advance,capabilities}] [--plan PLAN] [--workflow-id
+    WORKFLOW_ID] [--owner OWNER] [--project PROJECT]
 ```
 
 ### `rvw farm select`
@@ -2836,6 +2844,14 @@ Starts a background job: yes.
 Cluster recorded failures, compare regressions and bundle one representative. Never waive failures.
 
 Arguments: `root` (required), `baseline`, `known`, `bundles`.
+
+Starts a background job: yes.
+
+### `farm_workflow`
+
+Create, resume or inspect a command dependency plan. Completion is execution state, not verification.
+
+Arguments: `root` (required), `action`, `plan`, `workflow_id`, `owner`.
 
 Starts a background job: yes.
 
