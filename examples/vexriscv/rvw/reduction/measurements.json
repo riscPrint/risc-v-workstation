@@ -1,0 +1,273 @@
+{
+  "schema": "rvw.native-reduction-evidence/1",
+  "instructions": {
+    "report_sha256": "9409a7ef0e422980d17c3abb2441d8aa9566a427dba67005704e660f77b4ed10",
+    "signature": "fail:1",
+    "streams": {
+      "instructions:fault_region": {
+        "original": 8,
+        "remaining": 1,
+        "kept": [
+          3
+        ],
+        "completion": "one_minimal",
+        "one_minimal": true,
+        "global_minimum": false
+      }
+    },
+    "wall_s": 9.6,
+    "trials": [
+      {
+        "id": 0,
+        "status": "fail",
+        "cycles": 40,
+        "wall_s": 1.2072450830601156,
+        "match": true,
+        "conclusive": true,
+        "instret": 15,
+        "elf_sha256": "eff178ac9b80066156beed082db7713628ef3a2bd0b5accf26775ac5103e9637",
+        "trace_sha256": "8f5e68a986645415f42d7ecc63dbcf84aa0a2fb0d77381ee880ed33bc3d676f7",
+        "c2_schema_validated": true,
+        "trap_events": 0,
+        "instructions_kept": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7
+        ]
+      },
+      {
+        "id": 1,
+        "status": "pass",
+        "cycles": 41,
+        "wall_s": 1.256923042004928,
+        "match": false,
+        "conclusive": true,
+        "instret": 14,
+        "elf_sha256": "dbe2a1918eac6e3d734faa7d4e2c628ec173cf93d7704c31691c49bff2877fbc",
+        "trace_sha256": "8593cf1a43662f44e4345daf105f19bef372d77fd35071fb5bf1bcd11268738f",
+        "c2_schema_validated": true,
+        "trap_events": 0,
+        "instructions_kept": [
+          4,
+          5,
+          6,
+          7
+        ]
+      },
+      {
+        "id": 2,
+        "status": "fail",
+        "cycles": 40,
+        "wall_s": 1.1175547499442473,
+        "match": true,
+        "conclusive": true,
+        "instret": 15,
+        "elf_sha256": "1a0107ac3df3171bc3d90a66f8ad137cab94f8838b16c4cdba4868afd742d26b",
+        "trace_sha256": "797258057e2d68bcc83c0c846a16869eda818220ee9fa4a51b0bbf84656c5bd2",
+        "c2_schema_validated": true,
+        "trap_events": 0,
+        "instructions_kept": [
+          0,
+          1,
+          2,
+          3
+        ]
+      },
+      {
+        "id": 3,
+        "status": "fail",
+        "cycles": 40,
+        "wall_s": 1.144114541937597,
+        "match": true,
+        "conclusive": true,
+        "instret": 15,
+        "elf_sha256": "82eeeee893b962c89a47dbcfa616145a9362220545029a873bd88227bc531b68",
+        "trace_sha256": "88e825a2a2705a521d94b3eff6a31bfc4fbe45ba52b1a68d126b2cc915774510",
+        "c2_schema_validated": true,
+        "trap_events": 0,
+        "instructions_kept": [
+          2,
+          3
+        ]
+      },
+      {
+        "id": 4,
+        "status": "fail",
+        "cycles": 40,
+        "wall_s": 1.1065919999964535,
+        "match": true,
+        "conclusive": true,
+        "instret": 15,
+        "elf_sha256": "572589bb1fdb4903afa346f0cac96f5c2dd793c63337e781896f7ee1ce11442b",
+        "trace_sha256": "7d309217b868e917558efb7b829013c4c38c961eebda71371598b2feff0e836f",
+        "c2_schema_validated": true,
+        "trap_events": 0,
+        "instructions_kept": [
+          3
+        ]
+      },
+      {
+        "id": 5,
+        "status": "pass",
+        "cycles": 41,
+        "wall_s": 1.1722314580110833,
+        "match": false,
+        "conclusive": true,
+        "instret": 14,
+        "elf_sha256": "98a391185c8fc9a2529d80d4fd53805cb15039ddb23490dfb79f968f7977026e",
+        "trace_sha256": "38ff12d8a30171f167fe3bd9ec6c107bdf103e9ac1b080d03e2e8bed2a4a3883",
+        "c2_schema_validated": true,
+        "trap_events": 0,
+        "instructions_kept": []
+      },
+      {
+        "id": 6,
+        "status": "fail",
+        "cycles": 40,
+        "wall_s": 1.1062866250285879,
+        "match": true,
+        "conclusive": true,
+        "instret": 15,
+        "elf_sha256": "572589bb1fdb4903afa346f0cac96f5c2dd793c63337e781896f7ee1ce11442b",
+        "trace_sha256": "7d309217b868e917558efb7b829013c4c38c961eebda71371598b2feff0e836f",
+        "c2_schema_validated": true,
+        "trap_events": 0
+      }
+    ],
+    "best_trial": 6,
+    "source": {
+      "core_capture": "/Users/mahir/.cache/rvw/debug-inputs/inputs-8c8553d28c76424383727c8fd3e964ab/capture/trees/aebf3ed1f37a4a41229d9f81dbdf3def57940f2fc1fd86a5ea6ea9af41bc1ac3",
+      "core_tree_sha256": "9b8ae5c9761c612f4d5ef5e86fc55e830629a749ed831f3038726046ae3d8a5b"
+    },
+    "cache_key": null,
+    "scope": "intentional failing software and IRQ fixtures on captured whole-core RTL; no new core defect or global minimum"
+  },
+  "irq": {
+    "report_sha256": "17675b5adf4bc34d26f5a47cc1fac220677b7434e1c8b0ff26152efe55c09fa9",
+    "signature": "fail:1",
+    "streams": {
+      "irq": {
+        "original": 6,
+        "remaining": 1,
+        "kept": [
+          5
+        ],
+        "completion": "one_minimal",
+        "one_minimal": true,
+        "global_minimum": false
+      }
+    },
+    "wall_s": 10.9,
+    "trials": [
+      {
+        "id": 0,
+        "status": "fail",
+        "cycles": 96,
+        "wall_s": 1.2314180000685155,
+        "match": true,
+        "conclusive": true,
+        "instret": 32,
+        "elf_sha256": "30090d2028a0d3f194bebdac688ff3de2937de1a8e10045c9b35364b61328ac9",
+        "trace_sha256": "423ee1dd6f6f63183c6fbfe41cd7f43dc9eb6d40cce0449f836130ee82c44c32",
+        "c2_schema_validated": true,
+        "trap_events": 1,
+        "irq_schedule": "1:0x0,80:0x8,100:0x0,120:0x8,140:0x0,160:0x8,180:0x0"
+      },
+      {
+        "id": 1,
+        "status": "fail",
+        "cycles": 180,
+        "wall_s": 1.2932127909734845,
+        "match": true,
+        "conclusive": true,
+        "instret": 56,
+        "elf_sha256": "30090d2028a0d3f194bebdac688ff3de2937de1a8e10045c9b35364b61328ac9",
+        "trace_sha256": "2889ca7893f41a899a156a324280542d8426d277114d0e91dec05b0b4d0eae47",
+        "c2_schema_validated": true,
+        "trap_events": 1,
+        "irq_schedule": "1:0x0,140:0x0,160:0x8,180:0x0"
+      },
+      {
+        "id": 2,
+        "status": "pass",
+        "cycles": 1576,
+        "wall_s": 1.15673791593872,
+        "match": false,
+        "conclusive": true,
+        "instret": 512,
+        "elf_sha256": "30090d2028a0d3f194bebdac688ff3de2937de1a8e10045c9b35364b61328ac9",
+        "trace_sha256": "a47d2fe071a5651c763386eb5c31576cf2c34e20e95f6548f561bfa0c64879dd",
+        "c2_schema_validated": true,
+        "trap_events": 0,
+        "irq_schedule": "1:0x0,180:0x0"
+      },
+      {
+        "id": 3,
+        "status": "fail",
+        "cycles": 180,
+        "wall_s": 1.3446068749763072,
+        "match": true,
+        "conclusive": true,
+        "instret": 56,
+        "elf_sha256": "30090d2028a0d3f194bebdac688ff3de2937de1a8e10045c9b35364b61328ac9",
+        "trace_sha256": "79981ed421ebf1571227494a0ecf9289d68ad75c8b2ee1e05c31edbc9329c543",
+        "c2_schema_validated": true,
+        "trap_events": 1,
+        "irq_schedule": "1:0x0,140:0x0,160:0x8"
+      },
+      {
+        "id": 4,
+        "status": "fail",
+        "cycles": 180,
+        "wall_s": 1.5701219160109758,
+        "match": true,
+        "conclusive": true,
+        "instret": 56,
+        "elf_sha256": "30090d2028a0d3f194bebdac688ff3de2937de1a8e10045c9b35364b61328ac9",
+        "trace_sha256": "79981ed421ebf1571227494a0ecf9289d68ad75c8b2ee1e05c31edbc9329c543",
+        "c2_schema_validated": true,
+        "trap_events": 1,
+        "irq_schedule": "1:0x0,160:0x8"
+      },
+      {
+        "id": 5,
+        "status": "pass",
+        "cycles": 1576,
+        "wall_s": 1.2213779999874532,
+        "match": false,
+        "conclusive": true,
+        "instret": 512,
+        "elf_sha256": "30090d2028a0d3f194bebdac688ff3de2937de1a8e10045c9b35364b61328ac9",
+        "trace_sha256": "a47d2fe071a5651c763386eb5c31576cf2c34e20e95f6548f561bfa0c64879dd",
+        "c2_schema_validated": true,
+        "trap_events": 0,
+        "irq_schedule": "1:0x0"
+      },
+      {
+        "id": 6,
+        "status": "fail",
+        "cycles": 180,
+        "wall_s": 1.2328150420216843,
+        "match": true,
+        "conclusive": true,
+        "instret": 56,
+        "elf_sha256": "30090d2028a0d3f194bebdac688ff3de2937de1a8e10045c9b35364b61328ac9",
+        "trace_sha256": "79981ed421ebf1571227494a0ecf9289d68ad75c8b2ee1e05c31edbc9329c543",
+        "c2_schema_validated": true,
+        "trap_events": 1
+      }
+    ],
+    "best_trial": 6,
+    "source": {
+      "core_capture": "/Users/mahir/.cache/rvw/debug-inputs/inputs-516a443da2064fd3a66eedbb7b929352/capture/trees/aebf3ed1f37a4a41229d9f81dbdf3def57940f2fc1fd86a5ea6ea9af41bc1ac3",
+      "core_tree_sha256": "9b8ae5c9761c612f4d5ef5e86fc55e830629a749ed831f3038726046ae3d8a5b"
+    },
+    "cache_key": null,
+    "scope": "intentional failing software and IRQ fixtures on captured whole-core RTL; no new core defect or global minimum"
+  }
+}

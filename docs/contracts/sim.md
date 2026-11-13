@@ -222,3 +222,22 @@ build. It is not total concurrent memory. `details.native_profile` records the
 captured request and binding. The existing `rvw.sim-profile/1` report exposes
 these fields as `native_probe_profile`, `peak_rss_bytes` and `peak_rss_scope`.
 A report never applies a profile or establishes a throughput improvement.
+
+## Project scalar IRQ reduction probe
+
+The project scalar probe can consume the existing ordered `--irq-schedule`
+format. Each `CYCLE:0xLEVELS` event changes input levels before that cycle.
+Levels persist until the next event. The first event must be at cycle 1.
+The project port map determines supported interrupt inputs. Unsupported bits
+fail before a native build. C2 records level changes as `irq` events and
+observed traps with the canonical `intr` boolean. C2 headers include `config`
+and `elf`. Completed Python scalar traces pass the shared C2 parser before
+C1 publication. No C2 format change or C4 reuse identity is introduced.
+
+The project reduction adapter accepts an existing output directory and writes
+native artifacts below `native-run/`. Its C1 replay preserves the selected
+private lock, CIRCT path, ELF, seed and IRQ schedule. C8 captures its project
+assets. Instruction reduction retains code addresses through NOP replacement.
+IRQ reduction retains the required initial event. A conclusive native pass
+after removing the final retained item supports `one_minimal`, never a global
+minimum claim. Deliberate fixture failures do not establish a core defect.

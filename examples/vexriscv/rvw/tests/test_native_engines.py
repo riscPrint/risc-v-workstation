@@ -4,6 +4,7 @@ import os
 from pathlib import Path
 import pytest
 from rvw.common.proc import run_group
+from rvw.cosim.trace import Trace
 from rvw.results import load_run
 
 
@@ -18,5 +19,12 @@ def test_real_core_c1_and_bit_identical_c2(tmp_path):
             '--rtl',rtl,'--elf',elf,'--seed','7','--out',str(out)],timeout=120,capture=True)
         assert result.returncode==0,result.stdout+result.stderr
         run=load_run(out)
+        checked=Trace(out/'rvfi.jsonl')
+        try:
+            records=list(checked)
+            assert len([row for row in records if 'event' not in row])==17
+            assert records[-1]['event']=='end' and records[-1]['status']=='pass'
+        finally:checked.close()
+        assert run.details['c2_schema_validated']
         assert run.status=='pass' and run.instret==17 and run.cycles==81
     assert (tmp_path/'arcilator/rvfi.jsonl').read_bytes()==(tmp_path/'verilator/rvfi.jsonl').read_bytes()
