@@ -68,6 +68,8 @@ The setup tasks are [integration model #34](https://github.com/riscPrint/risc-v-
 | [`rvw init`](rvw/src/rvw/init/) | Create safe setup stubs for a Spinal/sbt core. CLI-only. |
 | [`rvw farm`](rvw/src/rvw/farm/) | Run native SSH shards and write a static results dashboard. |
 | [`rvw lint`](rvw/src/rvw/lint/) | Native lint diagnostics and structural CDC/RDC inventory. |
+| [`rvw debug`](rvw/src/rvw/debug/) | Debug Module reference model, JTAG/DMI drivers, Debug Specification, OpenOCD/GDB, E-Trace and N-Trace checks. |
+| [`rvw fault`](rvw/src/rvw/fault/) | Fault injection campaigns: stuck-at and transient faults classified against the golden C2 trace. |
 | [`rvw soc`](rvw/src/rvw/soc/) | Export project maps and check bounded database bindings. CLI-only. |
 | [`rvw mcp`](rvw/src/rvw/mcp/) | One stdio MCP server exposing all of the above to agents, with background jobs. |
 
