@@ -16,6 +16,24 @@ def step(args):
     return result.stdout
 
 
+def python_library(config=sysconfig.get_config_var):
+    name = config('LDLIBRARY')
+    if name:
+        for key in ('LIBDIR', 'PYTHONFRAMEWORKPREFIX'):
+            directory = config(key)
+            if directory and (library := Path(directory) / name).is_file():
+                return library
+    raise ValueError('shared CPython library required')
+
+
+def python_load_name(listing, library):
+    for line in listing.splitlines()[1:]:
+        name = line.strip().split(' (')[0]
+        if Path(name).name == library.name:
+            return name
+    raise ValueError('Python library is absent from the linked dependencies')
+
+
 def main():
     p = argparse.ArgumentParser(__doc__)
     p.add_argument('--out', type=Path, required=True)
@@ -25,8 +43,7 @@ def main():
     cc = shutil.which('c++')
     if not cc: raise ValueError('missing C++ compiler')
     header = Path(__file__).resolve().parents[1] / 'src/main/cpp'
-    library = Path(sysconfig.get_config_var('LIBDIR')) / sysconfig.get_config_var('LDLIBRARY')
-    if not library.is_file(): raise ValueError('shared CPython library required')
+    library = python_library()
     output.parent.mkdir(parents=True, exist_ok=True)
     darwin = platform.system() == 'Darwin'
     step([cc, '-std=c++17', '-shared', '-fPIC', '-I'+sysconfig.get_path('include'),
@@ -35,7 +52,7 @@ def main():
           *(['-Wl,-headerpad_max_install_names'] if darwin else []), '-o', str(output)])
     if darwin:
         linked = step(['otool', '-L', str(output)])
-        name = next(line.strip().split(' (')[0] for line in linked.splitlines() if 'libpython' in line)
+        name = python_load_name(linked, library)
         step(['install_name_tool', '-change', name, str(library), str(output)])
     print('Library: '+str(output))
     print('PYTHONHOME: '+sys.base_prefix)
