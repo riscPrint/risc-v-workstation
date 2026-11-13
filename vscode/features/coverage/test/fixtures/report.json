@@ -1,1 +1,106 @@
-{"schema": "rvw.coverage-report/1", "summary": {"hit": 1, "total": 2}, "never_hit": [{"id": "hole", "scala": {"file": "Unit.scala", "line": 9, "confidence": "inferred"}}], "exclusions": [{"reason": "waived", "scope": "fixture"}], "unmapped_scala_points": 1, "warnings": ["incompatible configuration bins"], "sources": {"Unit.v": {"status": "stale"}}}
+{
+  "schema": "rvw.coverage-report/1",
+  "instance_scope": {
+    "TOP.unit": {
+      "scope": "instance",
+      "instrumented_points": 1,
+      "mapped_scala_points": 1,
+      "unmapped_scala_points": 0,
+      "exact_instance_denominator": 1
+    }
+  },
+  "scala_line_metrics": {
+    "Unit.scala:3": {
+      "metrics": {
+        "unknown": {
+          "total": 1,
+          "excluded": 0,
+          "eligible": 1,
+          "hit": 1,
+          "never_hit": 0,
+          "percent": 100.0
+        }
+      },
+      "statement_hit_status": "undetermined",
+      "unit": "native instrumented points linked to this line"
+    }
+  },
+  "scala_mapping": {
+    "denominator": 1,
+    "mapped": 1,
+    "methods": {
+      "same-line-comment": 1
+    },
+    "statement_hit_status": "undetermined",
+    "note": "Source links navigate to declarations or assignments. Point hits do not establish individual source statement hits.",
+    "unit": "instrumented points; a point can link to several source lines"
+  },
+  "summary": {
+    "total": 1,
+    "excluded": 0,
+    "eligible": 1,
+    "hit": 1,
+    "never_hit": 0,
+    "percent": 100.0
+  },
+  "modules": {
+    "Unit": {
+      "total": 1,
+      "excluded": 0,
+      "eligible": 1,
+      "hit": 1,
+      "never_hit": 0,
+      "percent": 100.0
+    }
+  },
+  "instances": {
+    "TOP.unit": {
+      "total": 1,
+      "excluded": 0,
+      "eligible": 1,
+      "hit": 1,
+      "never_hit": 0,
+      "percent": 100.0
+    }
+  },
+  "scala": {
+    "Unit.scala:3": {
+      "total": 1,
+      "excluded": 0,
+      "eligible": 1,
+      "hit": 1,
+      "never_hit": 0,
+      "percent": 100.0
+    }
+  },
+  "types": {
+    "unknown": {
+      "total": 1,
+      "excluded": 0,
+      "eligible": 1,
+      "hit": 1,
+      "never_hit": 0,
+      "percent": 100.0
+    }
+  },
+  "module_types": {
+    "Unit": {
+      "unknown": {
+        "total": 1,
+        "excluded": 0,
+        "eligible": 1,
+        "hit": 1,
+        "never_hit": 0,
+        "percent": 100.0
+      }
+    }
+  },
+  "unmapped_scala_points": 0,
+  "sources": {
+    "Unit.v": "unchanged"
+  },
+  "never_hit": [],
+  "warnings": [],
+  "exclusions": [],
+  "cache_key": null
+}

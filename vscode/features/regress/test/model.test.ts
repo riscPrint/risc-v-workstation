@@ -39,3 +39,19 @@ test('row navigation uses explicit signal and run fields only',()=>{
   assert.equal(runResultPath('/tmp/results.json',{key:'job',value:{run:'/other/a/result.json'}}),'/other/a/result.json');
   assert.equal(runResultPath('/tmp/results.json',{key:'job',value:{run:null}}),undefined);
 });
+
+import {execFileSync} from 'node:child_process';
+import {resolve} from 'node:path';
+import {summary as projectSummary} from '../../project/src/model';
+test('C4 summaries preserve real C7 producer decisions', () => {
+  const python=resolve(process.cwd(),'../rvw/.venv/bin/python');
+  const results=JSON.parse(execFileSync(python,['-c',
+    "import json; from rvw.results.schema import Verdict; from rvw.mcp.envelope import envelope; print(json.dumps([envelope(Verdict(verdict=v,tests=t).to_dict()) for v,t in [('accept','pass'),('reject','fail'),('inconclusive','incomplete')]]))"],{encoding:'utf8'}));
+  for(const [i,decision] of ['accept','reject','inconclusive'].entries()) {
+    const report=parseReport('regress',JSON.stringify(results[i]));
+    assert.match(headline('regress',report),new RegExp(`Reported verdict: ${decision};`));
+    assert.match(projectSummary(report),new RegExp(`rvw.verdict/2: ${decision}`));
+  }
+  assert.match(headline('regress',{schema:'rvw.verdict/2',verdict:'pass'}),/inconclusive/);
+  assert.match(headline('regress',{schema:'rvw.verdict/2',legacy_verdict:'accept',status:'error'}),/inconclusive/);
+});

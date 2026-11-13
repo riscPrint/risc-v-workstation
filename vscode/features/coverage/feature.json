@@ -161,7 +161,8 @@
   "tests": {
     "unit": [
       "test/model.test.ts",
-      "test/lines.test.ts"
+      "test/lines.test.ts",
+      "test/producers.test.ts"
     ]
   },
   "assets": {
