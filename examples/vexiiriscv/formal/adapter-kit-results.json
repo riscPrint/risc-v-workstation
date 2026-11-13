@@ -119,10 +119,10 @@
       {
         "copy": "files/0c3ff79285235e2ab9feb9974264ecf2b9a0dd772b25841f80e4986091352385/design.db",
         "executable": 0,
-        "resolved": "/Users/mahir/fun/saviour/wt/.vex/equiv/kit-native-1113/design.db",
+        "resolved": "$RUN_ROOT/kit-native-1113/design.db",
         "sha256": "171e98801a1df365c50e3509464716480d6af48043137482dbcd0bc34c4cc808",
         "size": 634880,
-        "source": "/Users/mahir/fun/saviour/wt/.vex/equiv/kit-native-1113/design.db",
+        "source": "$RUN_ROOT/kit-native-1113/design.db",
         "symlinks": []
       }
     ],
