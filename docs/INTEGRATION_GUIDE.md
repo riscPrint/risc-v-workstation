@@ -1637,6 +1637,17 @@ the effective byte address and unshifted masks and data. Validate byte and
 halfword accesses with Spike before expanding the suite. Do not change the
 platform to hide a mismatch in the observer.
 
+If the core completes scalar misaligned loads and stores in bare RAM, declare
+`misaligned` as `{"load":"emulate","store":"emulate","atomic":"access_fault","split_page":"refuse","split_bus":"refuse"}`.
+For completed accesses across an XLEN word, also set `scalar_split_ram: true`.
+This opt-in requires effective M-mode, or U-mode without S-mode, uniform PMP
+permission, one RAM region, one 4 KiB page and no MMIO overlap. The reference
+checks complete byte coverage. Partial faults, page splits and bus transaction
+verification remain unsupported. Keep the default refusal for other designs.
+Set `pmp_regions` to the core's actual count. Rebuild the shim after a workstation
+update. A split-access refusal can indicate a missing opt-in or an unsupported
+access. Inspect the access and these conditions before changing the platform.
+
 The mapped adapter supports probe capture. It does not support `--konata`.
 Bind actual stage and retirement events, run with `--probes`, then convert:
 
