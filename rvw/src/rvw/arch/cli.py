@@ -12,6 +12,9 @@ def execute_json(action, **kw):
     if action in ('sched-generate', 'sched-measure'):
         from .sched import generate, measure
         return (generate if action == 'sched-generate' else measure)(**kw)
+    if action == 'warmup-bias':
+        from .warmup import warmup_bias
+        return warmup_bias(**kw)
     if action == 'sample':
         from .sampling import sample
         return sample(**kw)
@@ -74,6 +77,11 @@ def register(subparsers):
             p.add_argument(field)
         p.add_argument('--out', required=True)
         p.add_argument('--json', action='store_true')
+    p = sub.add_parser('warmup-bias')
+    p.set_defaults(func=_run)
+    p.add_argument('plan')
+    p.add_argument('--out', required=True)
+    p.add_argument('--json', action='store_true')
     p = sub.add_parser('sample')
     p.set_defaults(func=_run)
     p.add_argument('trace')

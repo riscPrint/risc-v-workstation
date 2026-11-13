@@ -663,3 +663,28 @@ Tests check deterministic phases and weighted CPI on small synthetic traces.
 Full native validation, checkpoint restore, warmup bias and cache/predictor
 state qualification remain open. BBV similarity does not establish timing
 similarity. This is SimPoint-style clustering, not a SimPoint implementation.
+
+## Saved warmup bias observations
+
+`rvw arch warmup-bias PLAN --out REPORT --json` compares saved C1/C2 observations.
+The cancellable MCP job is `arch_warmup_bias`. No RTL job starts.
+PLAN has schema `rvw.arch-warmup-plan/1`, an `elf` path, fixed `start` and
+`length` instruction bounds, a declared `target_percent`, a `baseline` object
+with `c1` and `trace` paths, and `samples` with those paths plus `warmup` W.
+All paths resolve beside PLAN. W must be unique and in zero through start.
+Each sample represents capture at start minus W. Its actual warmup is W.
+
+C1 `metrics` must contain `roi_start_order`, `roi_instret` and `roi_cycles`.
+The baseline ROI starts at start; each restored trace ROI starts at W.
+Complete passing C2 and conclusive C1 must agree on whole-trace instruction
+counts and core/config/ELF identity. Each C1 must bind the captured ELF hash.
+The tool checks equal architectural suffix records after excluding order and
+cycle. It requires paired seeds and equal memory timing. Region cycles must
+be measured counters. Retirement timestamps do not replace them.
+
+`rvw.arch-warmup-bias/1` retains captures, raw cycles, CPI, IPC, signed and
+absolute CPI bias, and per-sample observed budget results. Missing baselines
+or counters cause an error. The report does not select a qualified W.
+Tests use synthetic saved observations. Cached-core and learned-predictor
+qualification, uncached-core startup measurements and native restore remain
+NOT RUN. Trace association and ROI counters remain producer declarations.

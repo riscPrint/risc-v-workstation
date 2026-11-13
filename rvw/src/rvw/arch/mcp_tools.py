@@ -16,6 +16,9 @@ def mcp_tools():
     common = {'project': {'type': 'string'}, 'bench': {'type': 'string'}}
     runs = {**common, 'out': {'type': 'string'}, 'timeout': {'type': 'number', 'exclusiveMinimum': 0}}
     return [
+        ToolSpec('arch_warmup_bias', 'Compare saved fixed-ROI warmup observations after architectural suffix checks.',
+                 schema({k: {'type': 'string'} for k in ('plan', 'out', 'project')}, ['plan', 'out']),
+                 handler('rvw.arch.cli', 'warmup-bias'), long=True),
         ToolSpec('arch_sample', 'Select instruction-weighted BBV phases from complete C2. No restore or fidelity claim.',
                  schema({'trace': {'type': 'string'}, 'out': {'type': 'string'},
                          'project': {'type': 'string'}, 'interval': {'type': 'integer', 'minimum': 1},
