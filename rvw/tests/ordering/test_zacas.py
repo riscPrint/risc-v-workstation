@@ -60,3 +60,24 @@ def test_native_checker_faults(tmp_path, fault):
     assert result.returncode == 0, result.stderr
     result = run_group(['spike', '--isa=rv64ima_zicsr_zifencei_zacas', str(elf)], timeout=10, capture=True)
     assert not result.timed_out and result.returncode != 0
+
+
+@pytest.mark.parametrize('protection', [True, False])
+@pytest.mark.parametrize('value,passes', [(0, True), (0x77, False)])
+def test_platform_trap_values(tmp_path, protection, value, passes):
+    """Inject permitted zero and bad nonzero values into the checker observation.
+
+    Spike still executes every real fault. This does not claim its mtval is zero.
+    """
+    if not shutil.which('spike') or not shutil.which('riscv64-unknown-elf-gcc'):
+        pytest.skip('native Spike and RISC-V GCC required')
+    text = suite.zacas_traps(64, 7, protection).replace('csrr t4, mtval', f'li t4, {value}')
+    source = tmp_path/'trap.S'; source.write_text(text)
+    linker = tmp_path/'link.ld'; linker.write_text(suite.LINK)
+    elf = tmp_path/'trap.elf'
+    isa = 'rv64ima_zicsr_zifencei_zacas'
+    result = run_group(['riscv64-unknown-elf-gcc', '-march='+isa, '-mabi=lp64', '-nostdlib',
+                        '-Wl,--no-relax', '-T', str(linker), str(source), '-o', str(elf)], timeout=30, capture=True)
+    assert result.returncode == 0, result.stderr
+    result = run_group(['spike', '--isa='+isa, str(elf)], timeout=10, capture=True)
+    assert not result.timed_out and (result.returncode == 0) == passes
