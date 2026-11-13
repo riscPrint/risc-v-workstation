@@ -87,3 +87,17 @@ def test_native_literal_catalog_does_not_scan_each_pattern(tmp_path,monkeypatch)
     result=module.closure(r,c)
     assert len(result['unhit'])==100
     assert all(h['candidate_tests'][0]['id']=='candidate' for h in result['unhit'])
+
+
+@pytest.mark.fast
+def test_literal_functional_bin_target_keeps_json_brackets(tmp_path):
+    report, candidates = tmp_path/'report.json', tmp_path/'candidates.json'
+    report.write_text(json.dumps({'schema': 'rvw.functional-coverage/1',
+        'qualification_policy': 'c1-pass-complete-c2-v1',
+        'groups': {'sem_add_rs1': {'holes': [['zero'], ['one']]}}}))
+    candidates.write_text(json.dumps({'schema': 'rvw.coverage-candidates/1', 'tests': [
+        {'id': 'zero', 'targets': ['sem_add_rs1:["zero"]'], 'priority': 1, 'reason': 'Zero operand'},
+        {'id': 'all', 'targets': ['sem_add*'], 'priority': 0, 'reason': 'All add operands'}]}))
+    holes = execute_json('closure', database=report, candidates=candidates)['unhit']
+    assert [t['id'] for t in holes[0]['candidate_tests']] == ['zero', 'all']
+    assert [t['id'] for t in holes[1]['candidate_tests']] == ['all']

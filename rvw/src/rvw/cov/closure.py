@@ -64,8 +64,8 @@ def closure(report_path, candidates_path, exclusions=None):
     # Index literals once; retain fnmatch behavior for all wildcard patterns.
     indexed = []
     for test in sorted(candidates, key=lambda t: (-t['priority'], t['id'])):
-        exact = {p for p in test['targets'] if not any(c in p for c in '*?[')}
-        patterns = [p for p in test['targets'] if p not in exact]
+        exact = set(test['targets'])
+        patterns = [p for p in test['targets'] if any(c in p for c in '*?[')]
         indexed.append((test, exact, patterns))
     for hole in holes:
         hole['candidate_tests'] = [dict(t, evidence='declared suggestion; not measured')
