@@ -1,0 +1,13 @@
+{
+  "schema": "ooo-mini.adapter-control/1",
+  "status": "identical",
+  "records_including_end": 10654,
+  "canonical_records_sha256": "9539aeace64dce5eb1ecd0b1021adfdacb3cb4a3fc4dff600a7cd56588635f42",
+  "cycles": 12910,
+  "instret": 10653,
+  "inputs": {
+    "no-probes-control": "dc479d76ecf3cd9742c1c103ffa6f7998abf4dd57823c50e8905371b6c271c97",
+    "adapter-control": "576abde6e009c2b1097c625e1c4c54b57c09e6faf61172141946b12228437fbf"
+  },
+  "scope": "median seed 1; all C2 records and the end marker; headers differ with capture identity"
+}

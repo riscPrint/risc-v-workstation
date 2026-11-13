@@ -5,7 +5,7 @@ root = "."
 name = "ooo-mini"
 backend = "riscvsim-verilator"
 adapter = "./rvw/run.sh"
-configs = ["default", "rob16"]
+configs = ["default", "rob16", "iq4", "sq4", "predictor4"]
 default_config = "default"
 source_repo = "."
 source_env = "OOO_MINI_SOURCE"
@@ -41,7 +41,7 @@ input_env = [
   "SBT_JAVA_OPTS", "SBT_OPTS", "SDKROOT", "OOO_MINI_SOURCE", "RVW_HOME", "SPINAL_MAKE_CMD",
   "SPINAL_VERILATOR_FLAGS", "USER_CPPFLAGS", "USER_LDFLAGS", "USER_LDLIBS", "VERILATOR_BIN",
   "VERILATOR_FLAGS", "VERILATOR_GDB", "VERILATOR_GDBBT", "VERILATOR_NO_OPT", "VERILATOR_ROOT",
-  "VFLAGS", "_JAVA_OPTIONS", "RVW_OOO_LOCK", "RVW_COSIM_DPI", "RVW_COSIM_FAULT_ORDER",
+  "VFLAGS", "_JAVA_OPTIONS", "RVW_OOO_LOCK", "RVW_NICE", "RVW_SBT_LOCK", "RVW_COSIM_DPI", "RVW_COSIM_FAULT_ORDER",
 ]
 
 wall_timeout = true

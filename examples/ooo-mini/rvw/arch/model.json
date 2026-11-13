@@ -1,0 +1,56 @@
+{
+  "fetch_width": 1,
+  "fetch_entries": 1,
+  "rename_width": 1,
+  "rob_entries": 8,
+  "issue_width": 1,
+  "issue_entries": 8,
+  "load_entries": 8,
+  "store_entries": 8,
+  "commit_width": 1,
+  "physical_registers": 48,
+  "memory_policy": "disambiguate",
+  "forwarding_latency": 1,
+  "branch_penalty": 3,
+  "latencies": {
+    "alu": 1,
+    "multiply": 4,
+    "divide": 33,
+    "load": 1,
+    "store": 1,
+    "branch": 1,
+    "jump": 1,
+    "csr": 1,
+    "fence": 1,
+    "system": 1
+  },
+  "branch_speculation": true,
+  "components": {
+    "branch": {
+      "model": "bimodal",
+      "entries": 16
+    },
+    "btb": {
+      "entries": 16,
+      "ways": 1,
+      "latency": 0
+    }
+  },
+  "execution": {
+    "ports": {
+      "md": 1
+    },
+    "bindings": {
+      "multiply": [
+        "md"
+      ],
+      "divide": [
+        "md"
+      ]
+    },
+    "intervals": {
+      "multiply": 4,
+      "divide": 33
+    }
+  }
+}

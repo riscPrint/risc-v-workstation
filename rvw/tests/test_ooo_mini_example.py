@@ -11,7 +11,7 @@ ROOT = Path(__file__).resolve().parents[2] / 'examples/ooo-mini'
 def test_project_owns_sources_and_configs():
     project = tomllib.loads((ROOT / 'rvw.toml').read_text())
     assert project['core']['source_repo'] == '.'
-    assert project['core']['configs'] == ['default', 'rob16']
+    assert project['core']['configs'] == ['default', 'rob16', 'iq4', 'sq4', 'predictor4']
     assert project['core']['jobs'] <= 3
     assert project['core']['input_complete']
     assert project['core']['cache_paths']
