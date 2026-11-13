@@ -810,8 +810,8 @@ wire-source transitions during reassignment or complete interrupt delivery.
 
 ## Native ISA execution with APLIC MMIO
 
-`reference_backend = "spike-python-aplic"` runs actual `aplic` and
-`aplic-delegation` programs through the captured Spike library. Set
+`reference_backend = "spike-python-aplic"` runs actual `aplic`,
+`aplic-delegation` and `aplic-priority` programs through the captured Spike library. Set
 `reference_shim` to the project's built shim library. The existing capture
 records the library and manifest hashes. The shared runner writes normalized
 reference C2 traces, program status and instruction counts. Programs without
@@ -821,7 +821,8 @@ Python supplies the APLIC registers. This model supports little-endian aligned
 32-bit accesses, Inactive/Detached sources, direct delivery register state,
 per-context priorities/thresholds, claims and one parent/child domain. It checks
 target context, masks unowned state and resets new child configuration. It uses
-8-bit priority and threshold fields and supports context indices 0..511 within
+project `priority_bits` from 1 to 8 for priority and threshold fields, with
+a default of 8. It supports context indices 0..511 within
 a 32-KiB control map per domain. Unsupported wire modes, MSI mode, access shapes,
 child indices and uninitialized target fields fail closed. Claim preview does
 not consume a source when a load has not executed.
@@ -831,3 +832,25 @@ makes no IRQ-line delivery claim. A native pass checks ISA execution and the
 Python register behavior. It is not a hardware APLIC or DUT pass. Reference-tagged
 C2 traces cannot earn C1 model groups. The normal DUT checker still requires a
 separate C1 result with matching input identity and actual DUT observations.
+
+
+## APLIC implemented priority width
+
+`aplic.priority_bits` selects IPRIOLEN from 1 to 8. It defaults to 8. The
+normal direct-delivery cases select priorities and legal thresholds that fit
+that width. With one bit, all source priorities are 1. The threshold case
+therefore uses threshold 1, which suppresses all eligible source priorities.
+
+`kind = "aplic-priority"` checks target-field conversion and readback. It writes
+zero, normal values, high bits and the implemented limit. Zero low bits must
+read back as priority 1. Unimplemented high bits must not remain in IPRIO.
+The program also checks legal threshold equality, zero unmasking and claim
+clearing at priority 1 and the maximum supported priority. Delivery controls
+remain clear, since TOPI/claim state is independent of delivery enables.
+
+The project supplies the base, context, implemented source count and selected
+`source_id`. The example pins AIA 1.0 document revision 20250312. Programs
+clear all declared root source configurations before using a Detached source.
+Python and native Spike/Python-APLIC backends are available. Named MMIO
+observations and all results remain model-based. Reserved WLRL threshold writes,
+IRQ-line delivery, wired inputs and DUT qualification remain open.

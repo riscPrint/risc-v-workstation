@@ -5,7 +5,8 @@
   "aplic": {
     "base": 218103808,
     "context": 0,
-    "poll_iterations": 1000
+    "poll_iterations": 1000,
+    "priority_bits": 8
   },
   "spec_version": "AIA-1.0",
   "spec_revision": "20318d1b03f0ac8253458b82f8244d0d0db074e9",
