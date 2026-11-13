@@ -99,8 +99,8 @@ def check(trace_path, model, platform, history=10, sync=SYNC_KINDS, *, ordered_e
     scratch = ResetScratch(xmask if "csr" in enabled and platform.trace_from_reset else 0)
     trace = Trace(trace_path)
     if trace.multihart:
-        trace.close()
-        raise ValueError("multi-hart reference comparison is unsupported")
+        from .multihart import check_multihart
+        return check_multihart(trace, model, platform, history=history, sync=sync)
     recent = deque(maxlen=history)
     core_regs = [0] * 32
     count, trap_events, sync_count = 0, 0, 0
