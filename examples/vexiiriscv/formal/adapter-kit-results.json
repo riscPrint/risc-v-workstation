@@ -1,0 +1,137 @@
+{
+  "schema": "rvw.datapath-kit/1",
+  "status": "needs_confirmation",
+  "unit": "mul",
+  "width": 32,
+  "candidates": [
+    {
+      "component": "",
+      "module": "VexiiMulLow",
+      "evidence": {
+        "name_hints": [
+          "mul"
+        ],
+        "areas": [],
+        "ports": [
+          {
+            "name": "a",
+            "direction": "in",
+            "width": 32,
+            "path": "a"
+          },
+          {
+            "name": "b",
+            "direction": "in",
+            "width": 32,
+            "path": "b"
+          },
+          {
+            "name": "y",
+            "direction": "out",
+            "width": 32,
+            "path": "y"
+          }
+        ]
+      },
+      "binding": {
+        "top": "VexiiMulLow",
+        "ports": {
+          "a": "a",
+          "y": "y",
+          "b": "b"
+        }
+      },
+      "missing_roles": [],
+      "ambiguous_roles": {},
+      "unbound_ports": [],
+      "width_consistent": true,
+      "requires_confirmation": true,
+      "review": [
+        "operation and signedness",
+        "operand/result formats",
+        "reset polarity",
+        "transaction protocol and latency",
+        "extra ports and constants",
+        "reference model and FP flags"
+      ]
+    },
+    {
+      "component": "unit0",
+      "module": "VexiiMul",
+      "evidence": {
+        "name_hints": [
+          "mul"
+        ],
+        "areas": [],
+        "ports": [
+          {
+            "name": "a",
+            "direction": "in",
+            "width": 33,
+            "path": "unit0.a"
+          },
+          {
+            "name": "b",
+            "direction": "in",
+            "width": 33,
+            "path": "unit0.b"
+          },
+          {
+            "name": "y",
+            "direction": "out",
+            "width": 64,
+            "path": "unit0.y"
+          }
+        ]
+      },
+      "binding": {
+        "top": "VexiiMul",
+        "ports": {}
+      },
+      "missing_roles": [
+        "a",
+        "y",
+        "b"
+      ],
+      "ambiguous_roles": {},
+      "unbound_ports": [
+        "a",
+        "b",
+        "y"
+      ],
+      "width_consistent": false,
+      "requires_confirmation": true,
+      "review": [
+        "operation and signedness",
+        "operand/result formats",
+        "reset polarity",
+        "transaction protocol and latency",
+        "extra ports and constants",
+        "reference model and FP flags"
+      ]
+    }
+  ],
+  "proof_ran": false,
+  "scope": "name and port structure hints only; no operation or protocol is inferred",
+  "input_capture": {
+    "env": {},
+    "files": [
+      {
+        "copy": "files/0c3ff79285235e2ab9feb9974264ecf2b9a0dd772b25841f80e4986091352385/design.db",
+        "executable": 0,
+        "resolved": "/Users/mahir/fun/saviour/wt/.vex/equiv/kit-native-1113/design.db",
+        "sha256": "171e98801a1df365c50e3509464716480d6af48043137482dbcd0bc34c4cc808",
+        "size": 634880,
+        "source": "/Users/mahir/fun/saviour/wt/.vex/equiv/kit-native-1113/design.db",
+        "symlinks": []
+      }
+    ],
+    "git_refs": [],
+    "problems": [],
+    "schema": "rvw.capture/1",
+    "tools": [],
+    "trees": []
+  },
+  "frontend": "yosys-verilog",
+  "graph_semantics": "conservative signal and whole-cell dependencies; register stage counts can include state aliases"
+}
