@@ -11,6 +11,7 @@ def skeleton(db, out, port_map, bus=None, uvm=False):
     config=dict(declaration=spec,bus=selected[0])
     text='''"""Project-owned reset, stimulus and expected results are required."""
 import cocotb
+from rvw.sim.uvm import require_evidence
 from rvw.vip.ready_valid import CocotbAgent
 CONFIG = CONFIG_JSON
 
@@ -21,8 +22,8 @@ async def declared_bus(dut):
     try:
         from scenario import run
         checks = await run(dut, agent)
-        assert isinstance(checks, int) and checks > 0, 'scenario must check positive expected results'
-        assert agent.monitor.transfers > 0, 'scenario must complete a transfer'
+        require_evidence(isinstance(checks, int) and checks > 0, 'scenario must check positive expected results')
+        require_evidence(agent.monitor.transfers > 0, 'scenario must complete a transfer')
     finally:
         task.cancel()
 '''.replace('CONFIG_JSON',repr(config))

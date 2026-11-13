@@ -1,3 +1,4 @@
+from rvw.sim.uvm import require_evidence
 import os
 import random
 import cocotb
@@ -21,4 +22,4 @@ async def read_words(dut):
         address=rng.randrange(256)*4
         if proto in ('axi','axilite'): response=await agent.transfer(Address(address,id=0 if proto=='axilite' else i))
         else: response=await agent.transfer([Request(address=address,source=i)])
-        assert len(response)==1 and response[0].data==address^0x1937ABCD,proto.upper()+'_RTL_DATA'
+        require_evidence(len(response)==1 and response[0].data==address^0x1937ABCD, proto.upper()+'_RTL_DATA')

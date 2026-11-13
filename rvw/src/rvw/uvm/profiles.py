@@ -105,6 +105,7 @@ import importlib
 from pathlib import Path
 import cocotb
 import pyuvm
+from rvw.sim.uvm import require_evidence
 from scenario import run
 
 class Services:
@@ -113,7 +114,7 @@ class Services:
         self.agent_module = importlib.import_module('AGENT_MODULE')
         self.checks = 0
     def checked(self, condition, message):
-        assert condition, message
+        require_evidence(condition, message)
         self.checks += 1
 
 @pyuvm.test()
@@ -124,7 +125,7 @@ class GeneratedProfile(pyuvm.uvm_test):
             config=json.loads((Path(__file__).parent/'bindings.json').read_text())
             services=Services(cocotb.top,config)
             await run(services)
-            assert services.checks > 0, 'PROJECT_NO_CHECKS'
+            require_evidence(services.checks > 0, 'PROJECT_NO_CHECKS')
         finally:
             self.drop_objection()
 '''

@@ -530,3 +530,123 @@ in `state_coverage.fp: false`. Proposed text for
   input rules, concurrent memory campaigns, VexiiRiscv
   and arch-model areas.
 - VIP agents other than the monitors' `finish()` checks; Uvm/ conformance.
+
+# Part 3
+
+Date: 2026-11-13. This part follows the same method and labels as Parts 1
+and 2. It also implements the four recorded findings and the two owner
+decisions with compatible scope fields.
+
+## Changes from the earlier findings
+
+| ID | Result | PR |
+|---|---|---|
+| F2 | Functional coverage credits only a conclusive C1 pass with a bound, complete passing C2 trace. Other observations remain `unqualified`. All four trace callers bind C1 evidence. Merge, closure and plan roll-up refuse legacy reports without run qualification. | [#1309](https://github.com/riscPrint/risc-v-workstation/pull/1309) |
+| F3 | Empty Python monitors raise `NoChecks`. All 16 UVM protocol monitors reject empty observations unless the agent has an explicit idle reason. Pending transfers still fail. UVM changes have static tests only. | [#1316](https://github.com/riscPrint/risc-v-workstation/pull/1316) |
+| F4 | Restricted datapath jobs keep `part_status` and return top-level `partial`, exit 3. `open_parts` lists the complement and any unproved selected part. Only an unrestricted successful job can return `proved`. Saved part reports are not composed. | [#1324](https://github.com/riscPrint/risc-v-workstation/pull/1324) |
+| F5 | Before search, independent scalar checks validate register values, load bytes, dependency edges and per-hart order. Declared read-from identities must match store values and locations. Both search engines honor those identities. Contradictions are errors. Unsupported dataflow stays inconclusive. | [#1335](https://github.com/riscPrint/risc-v-workstation/pull/1335) |
+| D4 | C4 gate reports record filters and selected/total test counts. Filtered reports carry `scope: filtered`. Plan and farm tier consumers refuse subset acceptance. Unfiltered verdict behavior stays unchanged. | [#1342](https://github.com/riscPrint/risc-v-workstation/pull/1342) |
+| C2 | F/D comparisons without FP trace state carry `state_coverage.fp: false` and `scope: no_fp_state`. A project can set `require_fp_state: true` in its cosim platform JSON to make missing FP evidence inconclusive. | [#1350](https://github.com/riscPrint/risc-v-workstation/pull/1350) |
+
+Each implementation has a regression test that failed before its fix.
+Only unit tests ran. No core builds, simulations, native UVM compilation or
+proofs ran. The PRs record the targeted tests and fast-set counts.
+
+## Additional review: VIP agents and UVM conformance
+
+I re-read the unread lists in both parts after the six fixes. I compared
+source envelopes for the named areas. Counts include earlier partial reads;
+they select an area and do not claim every line was previously unread.
+
+| Source envelope | Files | Lines |
+|---|---:|---:|
+| `rvw/src/rvw/vip/*.py` and `Uvm/vip/**/*.py`, `**/*.sv` | 148 | 9248 |
+| `SpinalChecks/**/*.scala` | 81 | 6336 |
+| `rvw/src/rvw/arch/**/*.py` | 34 | 3048 |
+| Named remaining formal families: Sail, SVA, liveness, equivalence, memory refinement, deep flows and IFT | 26 | 3024 |
+| `regress/mmu_*.py` | 17 | 1984 |
+| `cov/proof.py` | 1 | 1339 |
+| Privilege PLIC/APLIC/AIA and timer modules | 11 | 1074 |
+
+I selected VIP/UVM, the largest envelope. I read its verdict paths beyond
+`finish()`: Python monitor and scoreboard comparisons, SV scoreboard and
+completion checks, conformance wrappers, and generated Python bench checks.
+I also read `sim/uvm.py`, `uvm/flow.py`, `uvm/qualification.py`, and the
+relevant templates in `uvm/profiles.py`, `scaffold.py` and `composed.py`.
+The source counts describe the area. They are not a claim of line-by-line
+review of every driver, fixture or signal declaration.
+
+### Findings
+
+| ID | Finding | Label | Action |
+|---|---|---|---|
+| P3-1 | With `PYTHONOPTIMIZE=1` or `python -O`, standalone VIP smoke scripts skip their Python `assert` checks. A unit fixture supplies empty logs and zero exits for every mocked tool call. All 16 protocol wrappers then print success, including claims that negative tests detected faults. Generated `Services.checked(False, ...)` also increments its check count without failing. Mapped CPU completion and other generated benches use the same assertion pattern. | unusual, fixed | Replace verdict assertions in the reviewed VIP/UVM Python paths with `require_evidence`, whose explicit failure branch remains active under optimization. Normal and optimized controls with complete mocked receipts still pass. Seventeen regression cases failed before the fix. No native tool ran. |
+
+This finding needs an uncommon but honest Python setting. It is not a
+fabricated-evidence or hostile-input case. The fix also covers the cocotb
+qualification scripts and their test modules, generated declared-bus and
+UVM profile checks, APB reset checks, composed-bus checks, and mapped CPU
+`tohost` and output checks.
+
+### What holds
+
+- Protocol scoreboards compare observations against stored expectations.
+  Empty or undrained expected streams refuse completion. The F3 changes
+  separately reject empty monitor observations.
+- `uvm/flow.py` requires one named completion marker with a positive check
+  count. A nonzero exit, timeout or UVM error/fatal report prevents pass.
+- `sim/uvm.py` requires the complete declared feature-marker set. Negative
+  cases need their diagnostic, a failing exit and no completion marker.
+- Project build inputs and native dependencies are checked again before
+  execution. Missing optional backends are errors, not substitute models.
+- PCIe and Ethernet Python adapters check observed data or host-memory
+  effects. RNM remains an interface stub with an inconclusive evaluation.
+- The optimization regression uses mocked process receipts only. It does
+  not qualify Verilator, cocotb, UVM, Spike, any bus or any core.
+
+### Limits and unread work
+
+The TileLink serial fixture and scoreboard use the same `Memory` helper.
+The SV fixture also instantiates the package's subordinate model. Thus a
+transport fixture pass does not independently qualify the shared memory or
+atomic semantics. This is a scope limit inferred from the source, not a
+new native failure reproduction.
+
+I did not run native compilation or simulations. I did not exhaustively
+review every driver timing path, all protocol specifications, the licensed
+native backends, or every project-owned scenario. Python assertions in
+external project hooks remain the project's responsibility; generated
+services now provide checks that work under optimization.
+
+As supplementary work, I read all 1,339 lines of `cov/proof.py`. Three unit
+fixtures confirm refusal with missing elaboration, constant or undriven
+cones, and preservation of assumptions/assertions during cover isolation.
+No new false verdict was reproduced there. This is not solver validation.
+The other unread areas from Parts 1 and 2 remain unread. Fabricated
+artifacts and races were not pursued under C8.
+
+
+### Part 3 validation
+
+```sh
+rvw/.venv/bin/python -m pytest \
+  rvw/tests/test_sound3_vip_review.py rvw/tests/test_sound3_proof_review.py \
+  rvw/tests/test_uvm_profiles.py rvw/tests/test_uvm_scaffold.py \
+  rvw/tests/test_soc_uvm_composed.py rvw/tests/test_vip_catalog.py \
+  rvw/tests/test_hdl_declared_ports.py rvw/tests/test_mapped_cpu_bench.py -q
+```
+
+Result: 70 passed, 1 skipped.
+The new checks include `-O` and `-OO` subprocess fixtures. The subprocesses
+use mocked receipts and do not start native tools. Full native protocol
+qualification remains NOT RUN.
+
+The first fast-set run found three unit-fixture failures. The fixture
+extracted `Frontdoor` from a generated template without its new guard import.
+It now executes that generated import too. The template guard is unchanged.
+The recheck command below passed all 45 cases:
+
+```sh
+rvw/.venv/bin/python -m pytest rvw/tests/test_soc_binding_help.py \
+  rvw/tests/test_sound3_vip_review.py rvw/tests/test_sound3_proof_review.py -q
+```

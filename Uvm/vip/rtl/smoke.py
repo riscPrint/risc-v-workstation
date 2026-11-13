@@ -1,4 +1,5 @@
 """Bounded standalone RTL qualification. No UVM runtime build."""
+from rvw.sim.uvm import require_evidence
 import argparse
 import os
 from pathlib import Path
@@ -23,10 +24,10 @@ def main():
             seed=17,extra_env={'VIP_PROTOCOL':a.protocol,'VIP_SEED':'17','VIP_BAD':str(bad)},
             results_xml=str(run/'results.xml'))
         root=ET.parse(run/'results.xml'); failures=list(root.iter('failure'))+list(root.iter('error'))
-        if bad: assert failures and diagnostic in ''.join(ET.tostring(f,encoding='unicode') for f in failures)
-        else: assert not failures
+        if bad: require_evidence(failures and diagnostic in ''.join(ET.tostring(f,encoding='unicode') for f in failures), "missing conformance evidence")
+        else: require_evidence(not failures, "missing conformance evidence")
     elapsed=time.monotonic()-started
-    assert elapsed<60,f'qualification exceeded one minute: {elapsed:.1f}s'
+    require_evidence(elapsed<60, f'qualification exceeded one minute: {elapsed:.1f}s')
     print(f'{a.protocol}: seeded good RTL passed; bad RTL detected; {elapsed:.1f}s')
 
 

@@ -59,6 +59,12 @@ def unpack(archive: Path, destination: Path) -> Path:
     return root
 
 
+def require_evidence(condition, message="missing conformance evidence"):
+    """Keep verdict checks active when Python runs with -O or -OO."""
+    if not condition:
+        raise AssertionError(message)
+
+
 def evidence(log: str, returncode: int, timed_out: bool, *, negative=False) -> bool:
     if timed_out:
         return False

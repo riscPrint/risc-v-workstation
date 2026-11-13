@@ -1,3 +1,4 @@
+from rvw.sim.uvm import require_evidence
 import os
 import cocotb
 from cocotb.clock import Clock
@@ -31,7 +32,7 @@ async def ram(dut):
     await FallingEdge(dut.clk)
     dut.reset_n.value = 1
     sc.reset()
-    assert agent.monitor.coverage['reset_abort'] == 1
+    require_evidence(agent.monitor.coverage['reset_abort'] == 1, "missing conformance evidence")
     count = 0
     try:
         for burst in [*sequences(int(os.environ.get('AHB_SEED', '1'))),
@@ -41,7 +42,7 @@ async def ram(dut):
         await RisingEdge(dut.clk)
         if monitor.done():
             monitor.result()
-        assert not os.environ.get('AHB_BUGGY'), 'corrupted DUT escaped checker'
-        assert sc.count == count
+        require_evidence(not os.environ.get('AHB_BUGGY'), 'corrupted DUT escaped checker')
+        require_evidence(sc.count == count, "missing conformance evidence")
     finally:
         monitor.cancel()

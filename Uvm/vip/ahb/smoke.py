@@ -6,7 +6,7 @@ import argparse
 from pathlib import Path
 import urllib.request
 from rvw.common.proc import run_group
-from rvw.sim.uvm import unpack, URL
+from rvw.sim.uvm import unpack, URL, require_evidence
 
 
 def main():
@@ -41,12 +41,12 @@ def main():
             with (out / f'{seed}-{fault or "good"}.log').open('w') as log:
                 result = run_group(cmd, cwd=out, stdout=log, stderr=log, timeout=10)
             text = (out / f'{seed}-{fault or "good"}.log').read_text()
-            assert not result.timed_out and diagnostic in text, text
+            require_evidence(not result.timed_out and diagnostic in text, text)
             negative = fault in ('buggy', 'bad_manager')
-            assert (result.returncode != 0) == negative, text
-            assert ('RVW_AHB_DONE' in text) != negative, text
+            require_evidence((result.returncode != 0) == negative, text)
+            require_evidence(('RVW_AHB_DONE' in text) != negative, text)
             if not negative:
-                assert 'UVM_ERROR :    0' in text and 'UVM_FATAL :    0' in text, text
+                require_evidence('UVM_ERROR :    0' in text and 'UVM_FATAL :    0' in text, text)
     print('AHB native: 3 good runs and 6 expected diagnostic failures')
 
 

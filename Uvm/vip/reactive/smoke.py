@@ -1,4 +1,5 @@
 """Qualify Python reactive roles against small RTL managers with Icarus."""
+from rvw.sim.uvm import require_evidence
 import argparse
 import os
 from pathlib import Path
@@ -18,9 +19,9 @@ def main():
         runner.test(hdl_toplevel=top,test_module='reactive_test',test_dir=run,seed=17,
             extra_env={'VIP_PROTOCOL':a.protocol,'VIP_BAD':str(bad),'VIP_SEED':'17'},results_xml=str(run/'results.xml'))
         root=ET.parse(run/'results.xml');failures=list(root.iter('failure'))+list(root.iter('error'))
-        if bad:assert failures and a.protocol.upper()+'_REACTIVE_DATA' in ''.join(ET.tostring(f,encoding='unicode') for f in failures)
-        else:assert not failures
-    elapsed=time.monotonic()-start;assert elapsed<60
+        if bad:require_evidence(failures and a.protocol.upper()+'_REACTIVE_DATA' in ''.join(ET.tostring(f,encoding='unicode') for f in failures), "missing conformance evidence")
+        else:require_evidence(not failures, "missing conformance evidence")
+    elapsed=time.monotonic()-start;require_evidence(elapsed<60, "missing conformance evidence")
     print(f'{a.protocol}: reactive good passed; bad subordinate detected; {elapsed:.1f}s')
 
 

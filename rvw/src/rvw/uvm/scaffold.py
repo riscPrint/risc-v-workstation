@@ -109,6 +109,7 @@ TEST = '''import json
 from pathlib import Path
 from types import SimpleNamespace
 import cocotb
+from rvw.sim.uvm import require_evidence
 import pyuvm
 from rvw.sim.bench import start
 from rvw.sim.uvm_models import RegisterModel
@@ -125,9 +126,9 @@ class Reset:
 class Frontdoor:
     def __init__(self, agent): self.agent = agent
     async def read(self, address, width):
-        assert width == 32
+        require_evidence(width == 32, 'missing conformance evidence')
         response = await self.agent.transfer(Transfer(address))
-        assert not response.error and not response.aborted, 'APB reset read failed'
+        require_evidence(not response.error and not response.aborted, 'APB reset read failed')
         return response.response
 
 @pyuvm.test()
@@ -151,7 +152,7 @@ class RegisterReset(pyuvm.uvm_test):
             for name in cfg['registers']:
                 await ral.read(name,check=True)
                 checks += 1
-            assert checks > 0
+            require_evidence(checks > 0, 'missing conformance evidence')
         finally:
             self.drop_objection()
 '''

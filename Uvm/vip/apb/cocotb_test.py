@@ -1,4 +1,5 @@
 """Pin-level conformance; called by cocotb_smoke.py."""
+from rvw.sim.uvm import require_evidence
 import os
 import cocotb
 from cocotb.clock import Clock
@@ -24,7 +25,7 @@ async def ram(dut):
         await RisingEdge(dut.clk)
         if monitor.done():
             monitor.result()
-        assert not os.environ.get('APB_BUGGY'), 'corrupted DUT escaped checker'
-        assert sc.count == 98
+        require_evidence(not os.environ.get('APB_BUGGY'), 'corrupted DUT escaped checker')
+        require_evidence(sc.count == 98, "missing conformance evidence")
     finally:
         monitor.cancel()
