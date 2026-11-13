@@ -85,6 +85,7 @@ def check_address(a, lite=False, data_bytes=4):
     if any(x // 4096 != a.address // 4096 for x in addresses(a)):
         raise ProtocolError('AXI_4K_BOUNDARY')
     if a.lock and (a.length not in (0, 1, 3, 7, 15) or
+                   (1 << a.size) * (a.length + 1) > 128 or
                    a.address % ((1 << a.size) * (a.length + 1))):
         raise ProtocolError('AXI_EXCLUSIVE_ALIGNMENT')
     if lite and (data_bytes != 4 or a.id or a.length or a.lock or a.size != 2 or a.burst != 1 or a.cache):
