@@ -21,7 +21,7 @@ def cfg(tmp_path):
                 ports={f:'io_'+f for f in FIELDS})
 
 
-@pytest.mark.parametrize('key,value', [('isa','rv64gc'), ('nret',2), ('nret',True), ('depth',0),
+@pytest.mark.parametrize('key,value', [('isa','rv64gc'), ('nret',0), ('nret',True), ('depth',0),
     ('solver','unknown'), ('checks',[]), ('checks',['insn_add_ch0']),
     ('checks',['cover_ch1']), ('checks',['cover','../../escape']),
     ('checks',['cover','cover']), ('ports',{}), ('defines',['x\ny'])])

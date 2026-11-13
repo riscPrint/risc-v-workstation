@@ -4240,3 +4240,21 @@ Forbidden connectivity activation requires distinct legal source values in the
 two DUT copies, sampled with mode/enable and delayed by the declared latency.
 A source fixed by assumptions cannot satisfy this witness. Its safety proof
 alone remains incomplete. `activation_requirement` states this obligation.
+
+
+
+### RVFI binding generation
+
+`rvw.rvfi-binding/1` is project-owned JSON input to `rvw formal rvfi-generate`.
+It supplies the DUT top, clock/reset port names, RVFI field port names, auxiliary
+input/output widths and the riscv-formal runner settings. Relative RTL and
+checker paths resolve against this file. The generated template uses the
+upstream `RVFI_OUTPUTS` macro and the runner's `@RVFI_CONNECTIONS@` placeholder.
+Auxiliary inputs have independent `anyseq` values. No bus assumptions are added.
+`rvw.rvfi-generation/1` reports generated paths, the manifest SHA-256 and limits.
+Generation status `generated` is not a proof result.
+
+The riscv-formal runner accepts NRET 1..16 and checks channel-index bounds.
+Its cover task includes one retirement cover per channel. Every channel must
+reach retirement before bounded passing checks become conclusive observations.
+These observations retain the existing C3/C4 limits and cannot accept a core.

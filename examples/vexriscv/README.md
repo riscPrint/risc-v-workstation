@@ -206,3 +206,9 @@ from the workstation root. The model declares `mscratch` reset zero and absent
 `sscratch`. It generates the existing independent monitor and assembly tests.
 An RTL wrapper must still bind completed accesses and actual scratch storage.
 This file is not evidence of a VexRiscv CSR run or a real-core binding.
+
+To generate a minimal RVFI wrapper from port data, set `RISCV_FORMAL` to the
+upstream checkout. Run `rvw formal rvfi-generate formal/binding.json --out OUT`
+from this directory. The generated wrapper has unconstrained bus inputs.
+Review its environment before a formal campaign. The existing
+`formal/rvw.toml` and `formal/wrapper.sv.in` retain their separate bus assumptions.

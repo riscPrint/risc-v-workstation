@@ -26,8 +26,8 @@ def validate(cfg):
         raise ValueError(f"[riscv_formal] needs {sorted(required - cfg.keys())}")
     if not isinstance(cfg["isa"], str) or cfg["isa"] not in {f"rv{x}{e}" for x in (32, 64) for e in ("i", "im", "ic", "imc")}:
         raise ValueError("unsupported ISA: only RV32/64 I, IM, IC, IMC")
-    if type(cfg["nret"]) is not int or cfg["nret"] != 1:
-        raise ValueError("unsupported NRET: this increment supports one retirement channel")
+    if type(cfg["nret"]) is not int or not 1 <= cfg["nret"] <= 16:
+        raise ValueError("unsupported NRET: expected 1..16 retirement channels")
     if type(cfg["depth"]) is not int or not 2 <= cfg["depth"] <= 200:
         raise ValueError("depth must be 2..200")
     if not isinstance(cfg["solver"], str) or cfg["solver"] not in {"bitwuzla", "yices", "z3", "boolector"}:
@@ -36,8 +36,10 @@ def validate(cfg):
     if not isinstance(checks, list) or not checks or not all(isinstance(c, str) for c in checks) or len(set(checks)) != len(checks):
         raise ValueError("checks must be a nonempty unique list")
     for check in checks:
-        if not isinstance(check, str) or not re.fullmatch(r"(?:(?:insn_[a-z0-9_]+|reg|pc_fwd|pc_bwd|liveness|causal|unique)_ch0|cover)", check):
+        if not isinstance(check, str) or not re.fullmatch(r"(?:(?:insn_[a-z0-9_]+|reg|pc_fwd|pc_bwd|liveness|causal|unique)_ch[0-9]+|cover)", check):
             raise ValueError(f"unsupported check {check!r}")
+        if check != 'cover' and int(check.rsplit('_ch', 1)[1]) >= cfg['nret']:
+            raise ValueError('check channel exceeds NRET')
     if "cover" not in checks:
         raise ValueError("checks must include cover to test retirement reachability")
     options = cfg.get('check_options', {})
@@ -137,11 +139,11 @@ def prepare(cfg, out):
     depth_lines = '\n'.join(name + ' ' + ' '.join(map(str, check_settings(cfg, name)['cycles'])) for name in cfg['checks'])
     # Exact check names avoid accidentally enabling other upstream checks.
     (core / 'checks.cfg').write_text(
-        f"[options]\nisa {cfg['isa']}\nnret 1\nsolver {cfg['solver']}\n"
+        f"[options]\nisa {cfg['isa']}\nnret {cfg['nret']}\nsolver {cfg['solver']}\n"
         f"[depth]\n{depth_lines}\n"
         '[defines]\n' + '\n'.join(cfg.get('defines', [])) + '\n'
         f'[verilog-files]\n{verilog}\n'
-        '[cover]\nalways @* if (!reset) cover (channel[0].cnt_insns > 0);\n')
+        '[cover]\n' + ''.join(f'always @* if (!reset) cover (channel[{i}].cnt_insns > 0);\n' for i in range(cfg['nret'])))
     return core, identity
 
 

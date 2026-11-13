@@ -273,6 +273,12 @@ def register(sub) -> None:
     search.add_argument("--first-failure", action="store_true")
     from .search import depth_search
     search.set_defaults(func=depth_search)
+    binding = s.add_parser("rvfi-generate", help="generate a project RVFI wrapper from a JSON port binding")
+    binding.add_argument("manifest")
+    binding.add_argument("--out", required=True)
+    binding.add_argument("--json", action="store_true")
+    from .rvfi_binding import main as binding_main
+    binding.set_defaults(func=binding_main)
     r = s.add_parser("riscv", help="bounded riscv-formal checks from project RVFI settings")
     r.add_argument("--out", required=True)
     r.add_argument("--timeout", type=float, default=60, help="seconds per check")
