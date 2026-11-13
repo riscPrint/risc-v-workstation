@@ -17,7 +17,9 @@ def commit(root, message):
     return git(root, 'rev-parse', 'HEAD')
 
 
-def prepare(out, spinal, vex, workstation):
+def prepare(out, spinal, vex, workstation, *, sqrt_width=4):
+    if type(sqrt_width) is not int or sqrt_width < 2:
+        raise ValueError("square-root mantissa width must be at least two")
     out.mkdir(parents=True, exist_ok=False)
     generator = out / 'generator'
     generator.mkdir()
@@ -62,7 +64,7 @@ fork := true
             revision = '7445c66b'
             text = git(vex, 'show', revision + ':' + path) + '\n'
             top = 'FpuSqrt'
-            construct = 'new vexriscv.ip.fpu.FpuSqrt(4)'
+            construct = f'new vexriscv.ip.fpu.FpuSqrt({sqrt_width})'
         src.write_text(text)
         (repo / 'src/main/scala/RealExport.scala').write_text(f'''import spinal.core._
 object RealExport extends App {{
@@ -114,5 +116,6 @@ if __name__ == '__main__':
     p.add_argument('--out', type=Path, required=True)
     p.add_argument('--spinal', type=Path, required=True)
     p.add_argument('--vex', type=Path, required=True)
+    p.add_argument('--sqrt-width', type=int, default=4)
     a = p.parse_args()
-    print(json.dumps(prepare(a.out.resolve(), a.spinal.resolve(), a.vex.resolve(), Path(__file__).resolve().parents[3]),indent=2))
+    print(json.dumps(prepare(a.out.resolve(), a.spinal.resolve(), a.vex.resolve(), Path(__file__).resolve().parents[3], sqrt_width=a.sqrt_width),indent=2))
