@@ -12,7 +12,7 @@ permissions:
 jobs:
   messages:
     if: github.event.deleted != true
-    runs-on: [self-hosted, macOS, rvw-local]
+    runs-on: [self-hosted, macOS, ARM64, rvw-local]
     timeout-minutes: 90
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683

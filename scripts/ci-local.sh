@@ -4,6 +4,10 @@ set -euo pipefail
 mode="${1:-fast}"
 case "$mode" in fast|nightly-python|nightly-scala|messages) ;; *) echo "usage: $0 [fast|nightly-python|nightly-scala|messages]" >&2; exit 2 ;; esac
 root="$(cd "$(dirname "$0")/.." && pwd)"
+# Commit policy needs only the standard library and the event's Git history.
+if [ "$mode" = messages ]; then
+  exec "${CI_PYTHON:-python3}" "$root/scripts/check-conventional.py"
+fi
 job="$(mktemp -d "${TMPDIR:-/tmp}/rvw-ci.XXXXXXXX")"
 cleanup() {
   status=$?
@@ -53,6 +57,8 @@ export RVW_RESULTS="$job/results" RVW_SRC_CACHE="$job/src-cache"
 export PATH="$PWD/rvw/.venv/bin:$PATH"
 export RVW_LOCK_PYTHON="$PWD/rvw/.venv/bin/python"
 lock() { scripts/with-lock.sh "$1" nice -n 10 "${@:2}"; }
+# Fail before test setup if metadata changed without its lock.
+lock suite uv lock --check --project rvw
 lock suite uv sync --locked --extra dev --extra mcp --project rvw --no-managed-python --python "$PWD/rvw/.venv/bin/python"
 export CARGO_BUILD_JOBS=2
 export SBT_OPTS="${SBT_OPTS:-} -Dsbt.task.cpus=2"
@@ -83,7 +89,6 @@ case "$mode" in
     scala SpinalWaves/spinalwaves 'testOnly spinalwaves.NamingSpec spinalwaves.EmitterSpec'
     ;;
   nightly-python)
-    scala SpinalDB/spinaldb Test/compile
     pytest_report nightly-results.xml "" --strict-markers -q -ra --durations=20
     ;;
   nightly-scala)
