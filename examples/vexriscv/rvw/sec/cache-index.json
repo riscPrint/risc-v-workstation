@@ -1,0 +1,13 @@
+{
+  "contract": "constant-time",
+  "clauses": ["pc", "memory", "branch"],
+  "observations": ["cycles", "retire_cycles", "cache_events", "probe_counters"],
+  "public": {"reset": "cold"},
+  "contract_start_pc": "0x8000001c",
+  "program": ["la a1, table", "andi t0, x6, 32", "add t0, a1, t0", "lw t1, 0(t0)",
+              "lw t2, 32(a1)", "lw t3, 0(a1)", "add t4, t2, t3"],
+  "secrets": [{"x6": 0}, {"x6": 32}],
+  "minimize_runs": 0,
+  "timeout": 600,
+  "adapter_command": ["{python}", "-m", "rvw.sec.core_adapter", "--binding", "core-cached.json", "--template", "cache.S", "{request}", "{out}"]
+}

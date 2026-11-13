@@ -80,6 +80,11 @@ case programs. A bus with `latency` 0 is a same-cycle (asynchronous RAM)
 port: the testbench answers `rsp_data` from the current `cmd_address` before
 each edge and queues nothing. Such a bus needs no `rsp_valid` and must not
 name `cmd_ready`.
+A bus with `burst: true` (cache refill ports) answers a read of `2^cmd_size`
+bytes as word beats from the size-aligned base, one beat per cycle after
+`latency`; a write is one beat. Optional `rsp_last` marks the last beat.
+A commit-kind `retire` may name `mode`, an internal privilege signal sampled
+at each commit; `mode` is then also a checked C2 field.
 
 ## Case request extensions
 
@@ -99,7 +104,9 @@ SpinalProbes wires or the binding declares `events` (`kind`, `name`, `valid`,
 `KIND:NAME` to the probe's elaboration metadata. The stream ends at the cycle of
 the retirement of the `tohost` store, like the C2 trace. Case observation
 channels `branch_events`, `cache_events`, `tlb_events` and `probe_events` are
-lists of `{cycle, kind, name, field...}` with window-relative cycles;
+lists of `{cycle, kind, name, field...}` with window-relative cycles (cache
+events without their `data` field: line contents are architectural data, not
+a side channel);
 `probe_counters` is `{name: total}`; `bus_handshakes` is a sorted list of
 `[cycle, bus, "cmd"|"rsp"]`.
 

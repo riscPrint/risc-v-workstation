@@ -14,8 +14,8 @@ example revisions (details in the sections below).
 | Technique | Command | It can show | It cannot show | Real result |
 |---|---|---|---|---|
 | Unit IFT | `ift` | a secret input or register reaches a sink of a small unit under given stimulus | whole-core behavior; source-level provenance | seeded Verilog units |
-| Whole-core IFT | `ift-core` | a secret memory word or CSR reaches a bus address or handshake in one program, with the cycle; which RAM words received tainted data | leaks outside the chosen sinks and program; exact causes (gate taint can over-taint) | both cores: constant-time XOR clean; secret branch and secret table index flagged; `mscratch` binding on VexRiscv |
-| Contract pairs | `contract` | a timing, bus or probe difference between two secrets with equal architectural traces, reduced to a short witness | absence of leaks for other secrets or programs | VexiiRiscv `remu` latency depends on operands (14 vs 38 cycles); VexRiscv divide is fixed (34) |
+| Whole-core IFT | `ift-core` | a secret memory word or CSR reaches a bus address or handshake in one program, with the cycle; which RAM words received tainted data | leaks outside the chosen sinks and program; exact causes (gate taint can over-taint) | both cores: constant-time XOR clean; secret branch and secret table index flagged; `mscratch` binding on VexRiscv; cached VexRiscv: the same two results through the cache refill bus |
+| Contract pairs | `contract` | a timing, bus or probe difference between two secrets with equal architectural traces, reduced to a short witness | absence of leaks for other secrets or programs | VexiiRiscv `remu` latency depends on operands (14 vs 38 cycles); VexRiscv divide is fixed (34); cached VexRiscv: a secret-indexed table lookup found through cache hit/miss events of public probe loads, a constant-time lookup clean |
 | Isolation | `isolation` | timing a lower privilege observes across a privilege switch (`observer_mode`); with `pmp`, what a denied access exposes | ePMP; state cleanup outside the observed channels | VexRiscv M/U: constant-time handler clean; secret-dependent handler flagged (48 vs 84 cycles). VexRiscv with PMP: a denied U-mode load never reaches the bus; a dependent load sees no secret (pairs and IFT clean) |
 | Speculative self-tests | `spec-suite` | a wrong-path access with a secret-derived address on the bus or in timing | that a core never speculates; cache receivers on cacheless cores | both in-order paths clean; a patched VexRiscv that issues flushed loads is flagged for v1, v2 and rsb |
 | Campaign | `campaign` | new leak signatures from generated and mutated pairs, deduplicated | coverage of the whole input space; a clean campaign is bounded by its budget | VexiiRiscv: `remu` and `div` signatures in 24 pairs; VexRiscv: none in 24 pairs |
@@ -295,8 +295,13 @@ probes. On VexiiRiscv the binding declares the upstream Whiteboxer
 prediction-learn port as a `branch` event. The VexRiscv stream converts to
 `rvw.bp-events/1` with matching C2 order. The VexiiRiscv learn port fires
 before commit (4 events for 3 retired branches in one run), so that converter
-refuses it. It still serves as an observation channel. Neither example core has caches or
-a TLB, so `cache_events` and `tlb_events` are only tested with synthetic sites.
+refuses it. It still serves as an observation channel. The cached VexRiscv
+configuration (`core-cached.json`, `rv32im_cached`) has cache probes (`CacheProbes`):
+I$ and D$ accesses with hit, lookups, refill beats, fills, evictions and counters.
+`cache_events` keep the address, hit and write fields and drop `data`: line
+contents are architectural data, and the fetched lines hold the secret setup
+immediates (the first constant-time run differed only there). Cache refill ports
+use `burst: true` buses (see `docs/contracts/sec.md`).
 With `probe-ct.json` (a loop of divides): VexRiscv gives `no_leak_observed` on
 cycles, handshakes, branch events and counters. VexiiRiscv differs in cycles,
 handshakes and branch-event timing, reduced to one `remu`.
@@ -353,6 +358,9 @@ compared case (all C2 fields on VexRiscv; `pc` and `insn` on VexiiRiscv).
 | `ift-core` keystore | VexRiscv `rv32imu-pmp` | same sequence, keystore words as secrets | `no_leak_observed`; no tainted data left the keystore |
 | `spec-suite` | VexRiscv | v1, v2, rsb, v4 | `no_leak_observed` for all four |
 | `spec-suite` | VexRiscv patched | same | violation in `dbus_trace` for v1, v2 and rsb; v4 `no_leak_observed` |
+| `contract` constant-time, cache channel | VexRiscv `rv32im_cached` | `cache-index.json`: a load from table line `secret & 32`, then public probe loads of both lines; window from the first probe | **violation** in `cache_events`, `probe_counters`, `cycles`, `retire_cycles`: for secret 0 the probe of line 1 misses and line 0 hits (8 cycles); for 32 the reverse (19 cycles, one fill) |
+| `contract` constant-time, cache channel | VexRiscv `rv32im_cached` | `cache-ct.json`: both lines loaded, the value selected with a mask; whole program | `no_leak_observed` (214 cycles, 3 D$ misses each) |
+| `ift-core`, secret memory words | VexRiscv `rv32im_cached` | `ct-xor` / `leak-index` with `ift/cache-policy.json` | `no_leak_observed`, 247 cycles / violation: D$ refill address tainted at cycle 167, then the fetch command at 178 (the secret decides hit or miss, so the stall timing) |
 
 The VexiiRiscv result is a true positive: its radix-2 divider (`DivRadix2`)
 skips zero quotient bits, so divide and remainder latency depends on the
@@ -453,8 +461,12 @@ prediction on RTL with `sec contract` when RTL exists.
 
 ## Remaining integration work
 
-- Cache and TLB observation channels exist but no example core has caches or a
-  TLB. They need a core with them and its probes.
+- The cached VexiiRiscv configuration is not bound: its LSU L1 is write-back,
+  so the `tohost` store does not reach the bus, and its write bus sends
+  multi-beat bursts. VexRiscv `rv32im_cached` is the cached core here.
+- Whole-core IFT on a cached core is costly: 250,514 cells and a 109 MB shadow;
+  the cold Yosys and Verilator build took 339 s, above the 120 s flow budget.
+  A run after the build cache is warm finishes within the budget.
 - The VexRiscv `rv32imu-pmp` variant has a NAPOT-only PMP (upstream
   `PmpPluginNapot`, 32-byte granularity). The general `PmpPlugin` makes a
   combinational loop with `DBusSimplePlugin`. ePMP and supervisor isolation

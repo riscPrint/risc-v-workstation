@@ -73,6 +73,14 @@ def window(result, start_pc):
     raise ValueError('contract start PC was not retired by the RTL')
 
 
+def side_channel(event):
+    """A cache event without its line or word contents. Contents are architectural data, not a
+    side channel, and the fetched lines hold the secret setup immediates."""
+    if event['kind'] == 'cache':
+        event.pop('data', None)
+    return event
+
+
 def observe(result, names, start_pc=None, probe=None, mode=None):
     rows, origin = window(result, start_pc)
     if mode is not None:
@@ -111,7 +119,7 @@ def observe(result, names, start_pc=None, probe=None, mode=None):
                 obs[name] = totals
                 continue
             kind = {'branch_events': 'branch', 'cache_events': 'cache', 'tlb_events': 'tlb'}.get(name)
-            obs[name] = [dict(e, cycle=e['cycle']-origin) for e in events
+            obs[name] = [side_channel(dict(e, cycle=e['cycle']-origin)) for e in events
                          if (e['kind'] == kind if kind else e['kind'] != 'counter')]
         else:
             raise ValueError(f'unknown observation channel {name}; choose from {", ".join(CHANNELS)}')
@@ -132,7 +140,8 @@ def run_case(binding_path, template, request_path, out, work=None):
     probe = None
     observations = observe(result, request.get('observations', ['cycles']), request.get('contract_start_pc'), probe,
                            request.get('observer_mode'))
-    keys = ['pc', 'insn'] if binding['retire']['kind'] == 'commit' else None
+    commit = binding['retire']
+    keys = (['pc', 'insn'] + (['mode'] if commit.get('mode') else [])) if commit['kind'] == 'commit' else None
     response = dict(complete=status == 'pass', reset_complete=True, reference_c2='reference.jsonl',
                     rtl_c2='rtl.jsonl', observations=observations, rtl_status=status,
                     cycles=result['cycles'], core=binding.get('name'))
