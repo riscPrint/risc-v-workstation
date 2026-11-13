@@ -1,0 +1,11 @@
+{
+  "schema": "rvw.sec-run/1",
+  "name": "naxriscv",
+  "adapter": ["../run.sh"],
+  "config": "rv32imasu",
+  "run_args": ["--mem-latency", "0", "--max-cycles", "200000", "--seed", "1"],
+  "platform": "../platform.json",
+  "link": "../programs/link.ld",
+  "march": "rv32ima_zicsr",
+  "timeout": 900
+}

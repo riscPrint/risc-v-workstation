@@ -913,3 +913,8 @@ The base capture supplies one cycle from flush to rename. A targeted schedule
 changes an older instruction's latency by 30 cycles. Predicted commit waiting
 also changes by 30 cycles, with the restart cost held fixed. This is a
 mechanism check. Full matrix and absolute-error results remain separate.
+
+## Security runs
+
+`rvw/sec/` holds `rvw sec` project data. It runs cases through `rvw/run.sh` with the
+C1-run case adapter. Results: [`FINDINGS.md`](FINDINGS.md) and `rvw/sec/README.md`.

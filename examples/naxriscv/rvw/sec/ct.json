@@ -1,0 +1,12 @@
+{
+  "contract": "constant-time",
+  "clauses": ["pc", "memory", "branch"],
+  "observations": ["cycles", "retire_cycles", "branch_events", "cache_events", "probe_counters"],
+  "public": {"reset": "cold"},
+  "program": ["div x10, x6, x7", "divu x11, x6, x7", "rem x12, x6, x7", "remu x13, x6, x7",
+              "mul x14, x6, x7", "mulh x15, x6, x7", "mulhu x16, x6, x7", "add x17, x10, x14"],
+  "secrets": [{"x6": 7, "x7": 3}, {"x6": 2147483647, "x7": 1}],
+  "minimize_runs": 16,
+  "timeout": 1800,
+  "adapter_command": ["{python}", "-m", "rvw.sec.run_adapter", "--binding", "run.json", "--template", "case.S", "{request}", "{out}"]
+}

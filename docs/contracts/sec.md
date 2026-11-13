@@ -89,6 +89,19 @@ bytes as word beats from the size-aligned base, one beat per cycle after
 A commit-kind `retire` may name `mode`, an internal privilege signal sampled
 at each commit; `mode` is then also a checked C2 field.
 
+## Run binding for C1 adapters
+
+`rvw.sec-run/1` is project data for `python -m rvw.sec.run_adapter`. It names
+`name`, `adapter` (argv; a relative first element is relative to the file),
+`platform` (Spike platform JSON), optional `config`, `run_args` (appended to
+`run`), `link`, `march` and `timeout`. The adapter runs
+`ADAPTER run --elf ELF --out DIR --rvfi-trace --probes --json [--config C] ARGS`
+and reads `DIR/result.json` (`status`, `cycles`), `DIR/rvfi.jsonl` (C2) and
+`DIR/probe-events.jsonl`. The C2 trace is cut after the first store to
+`tohost` (`DIR/cut.jsonl`), like the Spike reference. Observation channels are
+`cycles`, `retire_cycles`, the probe event channels and `probe_counters`
+(whole-run totals). Bus channels are an error.
+
 ## Case request extensions
 
 `rvw.sec-case/1` requests also carry `observations` (the declared channel
