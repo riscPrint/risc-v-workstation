@@ -26,6 +26,13 @@ def peripheral(kind, name, base):
     elif kind == 'timer':
         size, cls = 0x100, 'Timer'
         regs = [register('control',0), register('count',4,reset=None), register('compare',8,reset=0xffffffff)]
+    elif kind == 'block':
+        size, cls = 0x100, 'BlockDevice'
+        status = register('status',8,reset=None)
+        status['write_action'] = 'one_to_clear'
+        regs = [register('lba',0), register('command',4,'w',None), status,
+                register('sectors',12,'r',8), register('data',16,reset=None),
+                register('index',20,'r',None)]
     elif kind == 'watchdog':
         size, cls = 0x100, 'Watchdog'
         status = register('status',16,reset=None)

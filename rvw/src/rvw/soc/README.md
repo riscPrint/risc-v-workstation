@@ -500,3 +500,7 @@ The `watchdog` peripheral profile supplies a keyed-service countdown device,
 W1C expiry status, an IRQ and an explicit reset-request output. Its composer
 example runs a directed bus-master test through the generated fabric. See
 [SpinalSoc](../../../../SpinalSoc/README.md#watchdog) for register semantics.
+
+The `block` peripheral profile exports an eight-sector volatile verification
+store and its register map. The directed composed example checks sector data,
+completion, IRQ and error handling. See SpinalSoc's block-device section.
