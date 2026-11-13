@@ -3063,6 +3063,16 @@ per-size cycles and per-class signed slope errors. Missing evidence exits 2.
 The report is local timing evidence, not a C4 verdict or complete C8 capture.
 Stock llvm-mca cannot load generated TableGen. The built-in baseline does not
 validate a generated model. See `Arch/SCHED_MODELS.md` for limits.
+### Own-core rename policies
+
+The optional `rename` configuration object enables bounded move elimination,
+zero elimination and adjacent immediate execution fusion. All flags default
+to false. Eliminated operations retain ROB entries and architectural commit
+slots. Events `move_eliminated`, `zero_eliminated`, and `fused_immediates`
+count these operations. `issued` counts execution requests. Full free-list
+alias reclamation, macro-op decode fusion, faults and memory renaming remain
+unsupported. These policies run in Python. See `rvw/ooo/README.md`.
+
 ### Own-core model search
 
 `rvw.ooo-search-plan/1` selects a project model, complete C2 traces, numeric

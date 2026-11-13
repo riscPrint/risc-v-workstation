@@ -31,8 +31,11 @@ class Config:
     frontend: dict = field(default_factory=dict)
     execution: dict = field(default_factory=dict)
     translation: dict = field(default_factory=dict)
+    rename: dict = field(default_factory=dict)
 
     def __post_init__(self):
+        from .rename import validate
+        validate(self.rename)
         from .frontend import FrontendConfig
         from .execution import Execution
         from .translation import Translation
@@ -80,6 +83,8 @@ class Instruction:
     length: int = 4
     address: int | None = None
     size: int = 0
+    encoding: int = 0
+    mnemonic: str = ""
 
 
 @dataclass(eq=False)
@@ -87,6 +92,8 @@ class Entry:
     insn: Instruction
     deps: tuple
     done: int | None = None
+    bypass_ready: int = 0
+    register: bool = True
 
 
 def simulate(instructions, config, max_cycles=1_000_000, predictor=None, memory=None, backend="auto"):
@@ -136,7 +143,11 @@ def simulate(instructions, config, max_cycles=1_000_000, predictor=None, memory=
     from .structures import StaticPredictor
     predictor = predictor or StaticPredictor()
 
+    from .rename import elimination, fuses
     for cycle in range(max_cycles):
+        for entry in rob:
+            if entry.bypass_ready and entry.done is None and all(dep.done is not None for dep in entry.deps):
+                entry.done = max([entry.bypass_ready] + [dep.done for dep in entry.deps])
         committed = 0
         for _ in range(config.commit_width):
             if not rob or rob[0].done is None or rob[0].done > cycle:
@@ -144,7 +155,7 @@ def simulate(instructions, config, max_cycles=1_000_000, predictor=None, memory=
             entry = rob.popleft()
             retired += 1
             committed += 1
-            allocated -= bool(entry.insn.dest)
+            allocated -= entry.register and bool(entry.insn.dest)
             loads -= entry.insn.kind == "load"
             stores -= entry.insn.kind == "store"
         attribution.observe(committed, cycle < blocked_until, bool(rob))
@@ -259,12 +270,15 @@ def simulate(instructions, config, max_cycles=1_000_000, predictor=None, memory=
                 if not fetched:
                     break
                 op = fetched[0]
+            eliminated = elimination(op, config.rename)
+            fused = fuses(rob[-1].insn if rob else None, op, config.rename)
+            bypass = eliminated is not None or fused
             blocked = ("rob_full" if len(rob) >= config.rob_entries else
-                       "issue_full" if len(waiting) >= config.issue_entries else
-                       "distributed_issue_full" if execution.queue_full(op.kind, waiting) else
+                       "issue_full" if not bypass and len(waiting) >= config.issue_entries else
+                       "distributed_issue_full" if not bypass and execution.queue_full(op.kind, waiting) else
                        "load_full" if op.kind == "load" and loads >= config.load_entries else
                        "store_full" if op.kind == "store" and stores >= config.store_entries else
-                       "register_full" if op.dest and config.physical_registers and allocated >= config.physical_registers - 32 else None)
+                       "register_full" if not bypass and op.dest and config.physical_registers and allocated >= config.physical_registers - 32 else None)
             if blocked:
                 events[blocked] += 1
                 break
@@ -273,12 +287,19 @@ def simulate(instructions, config, max_cycles=1_000_000, predictor=None, memory=
             else:
                 fetched.popleft()
             deps = tuple(writers[r] for r in op.sources if r and r in writers)
-            entry = Entry(op, deps)
-            allocated += bool(op.dest)
+            if eliminated == "zero":
+                deps = ()
+            if fused:
+                deps = (rob[-1],)
+            entry = Entry(op, deps, bypass_ready=cycle + 1 if bypass else 0, register=not bypass)
+            allocated += not bypass and bool(op.dest)
             if op.dest:
                 writers[op.dest] = entry
             rob.append(entry)
-            waiting.append(entry)
+            if bypass:
+                events["fused_immediates" if fused else eliminated + "_eliminated"] += 1
+            else:
+                waiting.append(entry)
             loads += op.kind == "load"
             stores += op.kind == "store"
         if frontend:
@@ -320,7 +341,7 @@ def _instructions(data):
                 raise ValueError("noncontiguous memory mask is unsupported")
             ops.append(Instruction(decoded.cls, tuple(r for _, r in decoded.sources), row["rd"],
                                    row["pc"], row["pc_next"], decoded.length,
-                                   row["mem_addr"], mask.bit_length()))
+                                   row["mem_addr"], mask.bit_length(), row["insn"], decoded.mnemonic))
         if not ended:
             raise ValueError("missing C2 end marker")
         return ops
@@ -344,7 +365,7 @@ def run(config_path, trace_path, max_cycles=1_000_000, effective_config=None):
     import rvw.common.riscv as decoder
     import rvw.cosim.trace as parser
     engine = b"".join(Path(p).read_bytes() for p in (__file__, str(Path(__file__).with_name("structures.py")), decoder.__file__, parser.__file__))
-    engine += b"".join(Path(__file__).with_name(name + ".py").read_bytes() for name in ("frontend", "execution", "translation", "attribution", "native"))
+    engine += b"".join(Path(__file__).with_name(name + ".py").read_bytes() for name in ("frontend", "execution", "translation", "attribution", "native", "rename"))
     engine += Path(__file__).with_name("native.c").read_bytes()
     if result["backend"] == "native":
         from .native import library_path
