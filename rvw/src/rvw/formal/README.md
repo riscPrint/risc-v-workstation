@@ -3262,3 +3262,27 @@ original conditional result and bound. It does not establish non-vacuity.
 Only restricted self-contained Verilog jobs qualify. Read the
 [cache contract](../../../../docs/contracts/formal.md#exact-regression-observation-cache)
 for the input closure and artifact checks.
+## Sail RV32 M checks
+
+`rvw formal sail-m --model MODEL --compiler SAIL --out MODELS` compiles all eight
+RV32 multiply, divide and remainder expressions. MCP tool `formal_sail_m`
+returns the generation manifest. The model and helper files are pinned by hash.
+The compiler is Sail 0.20.1. Select these models with
+`riscv_formal.instruction_models`. Keep `RISCV_FORMAL_ALTOPS` disabled.
+
+The rules retain Sail signedness, zero-divisor results and signed overflow.
+The generated shell supplies the R-type decode and RVFI wiring. Packed aggregate
+syntax and signedness casts have bit-preserving Yosys lowerings. Sail's
+`quot_round_zero` and `rem_round_zero` externs have explicit signed 128-bit
+SystemVerilog `/` and `%` bindings. These primitives are part of the trusted
+compiler boundary. The manifest records the final model hashes and lowerings.
+It does not claim full Sail-machine translation or extension-disabled traps.
+
+The ISA front command now runs an activation cover for each instruction at its
+assertion cycle. A successful native cover needs a trace. A timeout or missing
+trace makes the instruction row inconclusive. General retirement cover alone
+cannot qualify these rows. Each activation job retains the original reset and
+bus assumptions. Consistency checks retain their separate retirement cover.
+
+See `examples/vexriscv/formal/SAIL_M.md` for the RV32IM profile, corner tests and
+native campaign. Preparation and simulation results are separate from proof.

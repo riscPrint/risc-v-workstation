@@ -17,7 +17,7 @@ def bounded_rows(suite):
                    else 'inconclusive')
         rows.append(dict(check=test['id'], status=outcome, depth=depth,
                          reason=why or ('' if outcome == 'bounded' else status),
-                         evidence='bounded/results.json'))
+                         evidence='bounded/results.json', instruction_activation=test.get('instruction_activation')))
     return rows
 
 
@@ -30,6 +30,8 @@ def run(cfg, out, timeout, core_name, *, unbounded=False, engines=('abc:pdr',), 
     rows = []
     if cfg:
         bounded(cfg, out / 'bounded', timeout, core_name)
+        from .isa_activation import run as activation
+        activation(cfg, out / 'bounded', timeout)
         rows.extend(bounded_rows(json.loads((out / 'bounded/results.json').read_text())))
         if unbounded:
             from .riscv_proof import run as prove

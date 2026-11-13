@@ -137,3 +137,13 @@ The reset assumption is `reset == $initstate`.
 false. `signals.halt` is optional. If present, it is a one-bit aligned observation.
 Without it, generated RVFI halt remains zero. Trap write suppression and frame
 assertions remain in force. A generated map is not an equivalence certificate.
+
+## Sail M expressions and instruction activation
+
+`rvw.sail-m/1` records pinned rule and helper hashes, Sail compiler identity,
+final generated model hashes, primitive bindings and backend lowerings. It
+covers RV32 M arithmetic only. `formal_isa` adds `instruction_activation` to
+instruction rows. A reached activation needs native cover PASS and a trace.
+A missing activation changes a passing bounded instruction to inconclusive.
+The native cycle settings remain unchanged. Standalone `formal riscv` retains
+its earlier general retirement-cover policy.
