@@ -2068,7 +2068,7 @@ usage: rvw reduce [-h] [--out OUT] [--signature SIGNATURE] [--modes MODES]
 
 ```text
 usage: rvw regress [-h] [--project PROJECT] [--json]
-    {sim,speed-compare,speed-sweep,backends,uvm,uvm-ral,uvm-cpu,hdl,cocotb,random,sail-tests,privilege,mmu,vector,run,compare,gate,known,history,list,plan}
+    {sim,speed-compare,speed-sweep,backends,uvm,uvm-ral,uvm-cpu,hdl,cocotb,random,sail-tests,privilege,mmu,vector,run,compare,gate,known,history,list,plan,cosim}
     ...
 ```
 
@@ -2372,6 +2372,13 @@ usage: rvw regress list [-h] [--core CORE] [--suite SUITE] [--json] [--project
 ```text
 usage: rvw regress plan [-h] --features FEATURES [--catalog CATALOG] [--json]
     [--project PROJECT]
+```
+
+### `rvw regress cosim`
+
+```text
+usage: rvw regress cosim [-h] --platform PLATFORM [--model MODEL]
+    [--allow-sync ALLOW_SYNC] [--out OUT] [--json] [--project PROJECT] run
 ```
 
 ### `rvw replay-pack`
@@ -4803,6 +4810,14 @@ Starts a background job: yes.
 Decide accept/reject/inconclusive from stored base and candidate results, known failures and performance tolerance. C4 /2 separates tests (pass/fail/incomplete) from verdict. Accept requires clean committed source identities on both sides. Inconclusive means harness errors, wall-clock timeouts or no shared tests: rerun, do not accept. Writes verdict.json beside the candidate unless out is given. Inputs accept directories, run IDs/prefixes or latest.
 
 Arguments: `project`, `core`, `known`, `perf_tolerance`, `allow_missing`, `seed_policy`, `base` (required), `candidate` (required), `out`.
+
+Starts a background job: no.
+
+### `regress_cosim`
+
+Strictly compare every C1 result of one regress run with the reference. Statuses: match, mismatch, fail, error, inconclusive. Nothing is masked or promoted.
+
+Arguments: `run_dir` (required), `platform` (required), `model`, `allow_sync`.
 
 Starts a background job: no.
 
