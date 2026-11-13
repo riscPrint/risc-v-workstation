@@ -1,0 +1,68 @@
+{
+  "schema": "rvw.native-farm-example/1",
+  "core": "vexriscv",
+  "configuration": "rv32im",
+  "seed": 1,
+  "max_parallel_simulations": 1,
+  "shards": [
+    {
+      "collection": {
+        "schema": "rvw.native-shard/1",
+        "status": "complete",
+        "expected": 25,
+        "collected": 25,
+        "errors": [],
+        "wall_seconds": 65.79913891700562,
+        "tests_per_second": 0.3799441818157109,
+        "adapter_returncode": 0
+      },
+      "counts": {
+        "pass": 25
+      },
+      "source_revision": "a62c145aa042a5de874344e0a7683bd7c8c8c870",
+      "sessions": 1,
+      "rtl_sha256": [
+        "80b1dfec5f3dde68a490dbf05cbee620b4ae3cc4e627ffff045d1a25e0856159"
+      ]
+    },
+    {
+      "collection": {
+        "schema": "rvw.native-shard/1",
+        "status": "complete",
+        "expected": 24,
+        "collected": 24,
+        "errors": [],
+        "wall_seconds": 130.71333350008354,
+        "tests_per_second": 0.18360789490526352,
+        "adapter_returncode": 0
+      },
+      "counts": {
+        "pass": 24
+      },
+      "source_revision": "a62c145aa042a5de874344e0a7683bd7c8c8c870",
+      "sessions": 1,
+      "rtl_sha256": [
+        "80b1dfec5f3dde68a490dbf05cbee620b4ae3cc4e627ffff045d1a25e0856159"
+      ]
+    }
+  ],
+  "gate": "not_run",
+  "spike": "not_run",
+  "harness_dirty": true,
+  "startup_crash_control": {
+    "injection": "SIGKILL queue controller after adapter launch, before first native C1",
+    "recovery": "queued",
+    "attempt_statuses": [
+      "infrastructure_error",
+      "complete"
+    ],
+    "final_state": "complete",
+    "collected": 25
+  },
+  "startup_cancel_control": {
+    "final_state": "cancelled",
+    "group_live": false
+  },
+  "throughput_basis": "49 cells / sum of two serial shard collection wall times; includes startup and private-lock wait; excludes prior invalid-manifest attempts and the separate controls",
+  "tests_per_second": 0.24934804085106432
+}
