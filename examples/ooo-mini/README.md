@@ -18,7 +18,7 @@ at commit. `FENCE.I` discards younger fetched instructions at commit.
 The instruction port supplies one word at `fetch`. The data port supplies four
 little-endian bytes starting at `loadAddress`, including unaligned addresses.
 RAM must respond without a wait state. There are no caches, translation,
-interrupt inputs, compressed instructions, atomics or floating-point instructions.
+compressed instructions, atomics or floating-point instructions.
 The machine CSR bank supports the selected tests. Full privileged ISA compliance
 has not been established. The fixture supplied the committed-map recovery pattern;
 its two-register payload interface is not a component of this core.
@@ -170,3 +170,10 @@ rejected LSU attempts. Zero activation is not exercised retry behavior.
 Only the NaxRiscv cache cause activates in these two short runs. Other
 causes still need directed captures. Completion spans include queue and
 service time. They are not isolated replay penalties.
+
+## Machine interrupt extension
+
+The core now has MSIP, MTIP and MEIP inputs with commit-boundary recovery.
+See [interrupt checks](rvw/interrupts.md) for the commands and limits.
+The measured tables above predate this extension. New runtime measurements
+are separate from those historical results.

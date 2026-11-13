@@ -16,6 +16,7 @@ object Adapter extends CoreAdapter {
   def sourceDir = new File(sys.env("OOO_MINI_SOURCE"))
   override def freshInstancePerRun = true
   override def supportsProbes = true
+  override def irqInputMask: BigInt = 0x888
   def report(key: ModelKey, work: File) = Probe.enabled(key.probes) {
     val (config,_) = SpinalChecks.install(SpinalConfig(defaultConfigForClockDomains = ClockDomainConfig(resetKind = SYNC)),
       ChecksConfig(mode = Mode.Monitor,enable = Seq("ooo.*","queue.*","freelist.*","execution.*")))
@@ -54,6 +55,7 @@ object Adapter extends CoreAdapter {
     var retired = 0L
     try model.doSim(job.out.getAbsolutePath,job.seed) { dut =>
       dut.io.boot #= ctx.elf.entry
+      dut.io.interrupts #= 0
       dut.io.instruction #= 0; dut.io.loadData #= 0
       dut.clockDomain.forkStimulus(10)
       dut.clockDomain.waitSampling()
@@ -63,15 +65,27 @@ object Adapter extends CoreAdapter {
       val rvfi = new RvfiProbe(Seq(dut.io.retire))
       val writer = if(job.rvfiTrace) Some(new RvfiTraceWriter(new File(job.out,"rvfi.jsonl"),ctx.rvfiHeader)) else None
       val probes = ProbeCollector.open(Probe.of(dut),job,ctx.rvfiHeader)
+      var previousLevels = BigInt(-1)
       var stop = false
       try {
         while(cycle < job.maxCycles && !stop && !ctx.wallClock.over()) {
           dut.clockDomain.waitFallingEdge()
+          val levels = job.irqSchedule.map(_.levelsAt(cycle)).getOrElse(BigInt(0))
+          require((levels & ~BigInt(0x888)) == 0,"only machine software, timer and external interrupts are mapped")
+          dut.io.interrupts #= levels
+          if(levels != previousLevels) {
+            writer.foreach(_.irq(cycle,levels))
+            previousLevels = levels
+          }
           dut.io.instruction #= word(dut.io.fetch.toLong)
           sleep(1)
           dut.io.loadData #= word(dut.io.loadAddress.toLong)
           sleep(1)
           // Sample pre-edge commit signals. Apply stores after the same edge.
+          if(dut.io.interruptTaken.toBoolean) {
+            val cause = dut.io.interruptCause.toBigInt
+            writer.foreach(_.trap(cycle,cause,BigInt(0),true))
+          }
           val records = rvfi.sample(cycle)
           val store = dut.io.store.toBoolean
           val addr = dut.io.storeAddress.toLong
