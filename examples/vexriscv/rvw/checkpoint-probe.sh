@@ -9,8 +9,10 @@ fi
 shift
 export SPINAL_MAKE_CMD="$repo/RiscvSim/scripts/make-jobs.sh"
 export VEXRISCV="${VEXRISCV:-$here/..}"
-output="$(cd "$here" && "$repo/scripts/with-lock.sh" sbt nice -n 10 sbt -batch \
-  compile 'export Runtime/fullClasspath' 2>&1)" || { echo "$output" >&2; exit 2; }
+mkdir -p "$2"
+build_log="$(cd "$2" && pwd)/sbt-build.log"
+output="$(cd "$here" && "$repo/scripts/with-lock.sh" "${RVW_SBT_LOCK:-sbt}" nice -n 10 sbt -batch \
+  compile 'export Runtime/fullClasspath' 2>&1 | tee "$build_log")" || { echo "$output" >&2; exit 2; }
 cp="$(printf '%s\n' "$output" | grep -v '^\[' | grep scala-library | tail -1)"
 [[ -n "$cp" ]] || { echo "$output" >&2; exit 2; }
 exec nice -n 10 java -Xmx3g -cp "$cp" rvwvex.CheckpointProbe "$@"

@@ -26,6 +26,7 @@ keep the issue list in `TODO.md` in step with them.
 
 | Path | What |
 |------|------|
+| `rvw/src/rvw/sample/` | Spike BBV selection and checked checkpoint RTL sampling. See its `README.md`. |
 | `rvw/src/rvw/sec/` | Digital security tests in simulation. See its `README.md`. |
 | `rvw/src/rvw/plan/` | Project-owned verification plans, evidence holes and trends. See its `README.md`. |
 | `rvw/src/rvw/init/` | Minimal Spinal/sbt core project scaffold. See its `README.md`. |

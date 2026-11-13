@@ -5,18 +5,20 @@ from .injection import plan
 def capture(model, mapping, *, instructions):
     """Read complete declared physical RAM and profile CSRs after K retirements.
 
+    A zero-instruction capture requires a fresh model at reset.
     The project must supply the complete mutable CSR inventory. This helper
     refuses interrupts, traps, FP, multiple RAM regions and non-M-mode state.
     It does not claim C1 capture or pre-fetch readback on a bootstrap target.
     """
     platform = model.platform
-    if (type(instructions) is not int or instructions <= 0 or platform.xlen != 32
+    if (type(instructions) is not int or instructions < 0 or platform.xlen != 32
             or platform.isa.lower() != 'rv32im_zicsr_zifencei'
             or platform.mmio or len(platform.ram) != 1 or mapping['flen']):
-        raise ValueError('capture requires a positive RV32IM RAM-only sample')
+        raise ValueError('capture requires a nonnegative RV32IM RAM-only sample')
     base, size = platform.ram[0]
     if base % 8 or size % 8 or not 0 < size <= 16 * 1024 * 1024:
         raise ValueError('capture needs aligned bounded physical RAM')
+    effect = {"pc_next": platform.reset_pc} if instructions == 0 else None
     for _ in range(instructions):
         effect = model.step()
         if effect['trap'] or effect['intr'] or effect['halted'] or model.mode() != 3:

@@ -1212,7 +1212,8 @@
         "workloads_evaluate",
         "workloads_list",
         "workloads_run",
-        "workloads_verify"
+        "workloads_verify",
+        "sample_run"
       ]
     },
     {

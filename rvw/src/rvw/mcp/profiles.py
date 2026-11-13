@@ -4,7 +4,7 @@ PROFILES = {
     "verification": {"regress", "cosim", "cov", "stimulus", "csr", "privilege",
                      "memory", "verification", "verification_plan", "uvm", "vip", "checks", "sec", "fault"},
     "formal": {"formal", "equiv", "connectivity"},
-    "arch": {"arch", "csim", "ooo", "workloads", "perf"},
+    "arch": {"arch", "csim", "ooo", "workloads", "perf", "sample"},
     "debug": {"wave", "query", "trace", "debug", "bundle", "reduce", "bisect", "bugmem", "lsp", "replay"},
     "soc": {"soc", "sim", "server", "farm", "lint", "probes"},
 }

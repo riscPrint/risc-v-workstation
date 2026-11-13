@@ -14,7 +14,7 @@ object CheckpointProbe {
     require(args.length >= 5 && args.length <= 7, "ELF OUT CHECKPOINT save|restore|replay|bootstrap RETIREMENT [BOOT-IMAGE|-] [SIM-MAP]")
     val elfFile = new File(args(0)); val out = new File(args(1)); out.mkdirs()
     val checkpoint = new File(args(2)); val mode = args(3); val at = args(4).toLong
-    require(Set("save", "restore", "replay", "bootstrap")(mode) && at > 0)
+    require(Set("save", "restore", "replay", "bootstrap", "sample")(mode) && at > 0)
     val map = if (args.length == 7) Some(SimMap.load(new File(args(6)))) else None
     val devices = map.map(new LiveDevices(_))
     val maxCycles = sys.env.getOrElse("RVW_BOOT_MAX_CYCLES", "5000").toLong
@@ -63,6 +63,8 @@ object CheckpointProbe {
         bytes.indices.foreach(i => memory(a + i) = bytes(i))
       }
     }
+    val stopAfter = sys.env.get("RVW_BOOT_STOP").map(_.toLong)
+    var bootstrapSeen = false
     var transferred = boot.isEmpty
     var nativeOrder = saved.map(_("retired").str.toLong).getOrElse(0L)
     try compiled.doSim(seed = 1) { dut =>
@@ -126,11 +128,13 @@ object CheckpointProbe {
         if (dut.rvfi.valid.toBoolean) {
           val r = VexAdapter.record(dut.rvfi, cycle, handler); handler = false
           require(r.order == nativeOrder, s"order ${r.order} expected $nativeOrder"); nativeOrder += 1
-          if (boot.exists(b => BigInt(b("pc").str) == r.pc)) transferred = true
+          if (boot.nonEmpty && r.pc != BigInt("80000000", 16)) bootstrapSeen = true
+          if (bootstrapSeen && boot.exists(b => BigInt(b("pc").str) == r.pc)) transferred = true
           if (transferred) {
             require(boot.nonEmpty || r.order == retired, s"order ${r.order} expected $retired")
             writer.write(r.copy(order = BigInt(retired))); retired += 1
           }
+          if (stopAfter.exists(retired >= _)) finished = true
           if (r.memWmask != 0 && r.memAddr == BigInt(ToHost.find(elf).get)) {
             require(r.memWdata == 1, "program failed"); finished = true
           }

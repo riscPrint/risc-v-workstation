@@ -71,6 +71,7 @@ Principles (from `ROADMAP.md`):
 - [Design queries](contracts/query.md)
 - [Strict reference mismatch reduction](contracts/reduce-reference.md)
 - [Generated-suite selection](contracts/regress.md)
+- [Sampled RTL flow](contracts/sample.md)
 - [Simulation security](contracts/sec.md)
 - [Setup and adapter selection](contracts/setup.md)
 - [Simulation server and native ports](contracts/sim.md)
