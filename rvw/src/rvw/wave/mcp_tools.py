@@ -32,12 +32,15 @@ def _list(wave, regex=None):
 
 @captured
 def _changes(wave, regex, t0=None, t1=None, limit=ops.DEFAULT_CHANGES_LIMIT, dec=False, period=None,
-             clock=ops.CLOCK_RX, db=None):
+             clock=ops.CLOCK_RX, db=None, elf=None, pc=r"(?i)pc"):
     page = ops.changes_page(wave, regex, time_at(wave, t0, period, clock) or 0,
                             time_at(wave, t1, period, clock), limit, "dec" if dec else "hex")
     if db:
         from .typed import annotate_changes, enums
         annotate_changes(page, enums(db))
+    if elf:
+        from .symbols import annotate_changes as name_pcs
+        name_pcs(page, elf, pc)
     return page
 
 
@@ -167,6 +170,12 @@ def _bench(tasks, vars=None, only=None, timeout=600):
     return run(tasks, vars or {}, only, timeout)
 
 
+def _profile(wave, pc, elf, valid=None, t0=None, t1=None, phases=50, period=None, clock=ops.CLOCK_RX):
+    from .symbols import profile
+    return profile(wave, pc, elf, valid, time_at(wave, t0, period, clock) or 0, time_at(wave, t1, period, clock),
+                   clock, phases)
+
+
 def mcp_tools():
     return [
         ToolSpec("wave_info", "Inspect timescale, signal count, time range and clock period of a waveform.",
@@ -177,7 +186,9 @@ def mcp_tools():
                  "truncated, limit}; limit defaults to 10000 (0 = no limit) and truncated says more matched.",
                  schema({**WAVE, **REGEX, **TIME, **WINDOW,
                          "limit": {"type": "integer", "minimum": 0, "default": ops.DEFAULT_CHANGES_LIMIT},
-                         "dec": B, **DB}, ["wave", "regex"]), _indexed(_changes), annotations=RO),
+                         "dec": B, **DB, "elf": {**S, "description": "ELF: name PC values by symbol"},
+                         "pc": {**S, "description": "regex of PC-valued signals for elf"}},
+                        ["wave", "regex"]), _indexed(_changes), annotations=RO),
         ToolSpec("wave_sample", "Read matching signal values at a wave time, cycle Nc, or end.",
                  schema({**WAVE, **REGEX, **TIME, "at": S, "dec": B, **DB}, ["wave", "regex", "at"]),
                  _indexed(_sample), annotations=RO),
@@ -232,6 +243,11 @@ def mcp_tools():
                  schema({"tasks": S, "vars": {"type": "object", "additionalProperties": S},
                          "only": {"type": "array", "items": S}, "timeout": {"type": "number", "default": 600}},
                         ["tasks"]), _bench, long=True),
+        ToolSpec("wave_profile", "Clock edges per ELF function from a PC signal, counting edges where valid holds "
+                 "(e.g. commit valid), with time-aligned phases (runs of one function).",
+                 schema({**WAVE, **TIME, **WINDOW, "pc": S, "elf": S, "valid": S,
+                         "phases": {"type": "integer", "minimum": 0, "default": 50}}, ["wave", "pc", "elf"]),
+                 _indexed(_profile), annotations=RO),
         ToolSpec("wave_index", "Build an identity-bound .rvwi index of a VCD/FST wave for fast window, sample and search queries.",
                  schema({"wave": WAVE["wave"], "out": S,
                          "reader": {"enum": ["auto", "vcd", "wellen"], "default": "auto"}}, ["wave", "out"]), _index),

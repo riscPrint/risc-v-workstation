@@ -1923,7 +1923,7 @@ usage: rvw verification-plan check [-h] --out OUT [--project PROJECT] plan
 
 ```text
 usage: rvw wave [-h] [--project PROJECT]
-    {index,verify,list,changes,sample,cut,find,edges,why,seq,txn,diff,session,value,bench,info}
+    {index,verify,list,changes,sample,cut,find,edges,why,seq,txn,diff,session,value,bench,profile,info}
     ...
 ```
 
@@ -1952,8 +1952,8 @@ usage: rvw wave list [-h] [--json] [--period PERIOD] [--clock CLOCK]
 
 ```text
 usage: rvw wave changes [-h] [--json] [--period PERIOD] [--clock CLOCK]
-    [--indexed] [--from T0] [--to T1] [--limit LIMIT] [--dec] [--db DB]
-    [--project PROJECT] wave regex
+    [--indexed] [--from T0] [--to T1] [--limit LIMIT] [--dec] [--db DB] [--elf
+    ELF] [--pc PC] [--project PROJECT] wave regex
 ```
 
 ### `rvw wave sample`
@@ -2053,6 +2053,14 @@ usage: rvw wave value [-h] [--json] [--period PERIOD] [--clock CLOCK]
 ```text
 usage: rvw wave bench [-h] [--var VAR] [--task TASK] [--timeout TIMEOUT]
     [--json] [--project PROJECT] tasks
+```
+
+### `rvw wave profile`
+
+```text
+usage: rvw wave profile [-h] [--json] [--period PERIOD] [--clock CLOCK]
+    [--indexed] --elf ELF [--valid VALID] [--from T0] [--to T1] [--phases
+    PHASES] [--project PROJECT] wave pc
 ```
 
 ### `rvw wave info`
@@ -3455,7 +3463,7 @@ Starts a background job: yes.
 
 Read changes of matching signals within a time window. Returns {changes, truncated, limit}; limit defaults to 10000 (0 = no limit) and truncated says more matched.
 
-Arguments: `wave` (required), `indexed`, `regex` (required), `period`, `clock`, `t0`, `t1`, `limit`, `dec`, `db`.
+Arguments: `wave` (required), `indexed`, `regex` (required), `period`, `clock`, `t0`, `t1`, `limit`, `dec`, `db`, `elf`, `pc`.
 
 Starts a background job: no.
 
@@ -3520,6 +3528,14 @@ Starts a background job: no.
 List waveform signal paths, widths, kinds and codes, optionally matching a regex.
 
 Arguments: `wave` (required), `indexed`, `regex`.
+
+Starts a background job: no.
+
+### `wave_profile`
+
+Clock edges per ELF function from a PC signal, counting edges where valid holds (e.g. commit valid), with time-aligned phases (runs of one function).
+
+Arguments: `wave` (required), `indexed`, `period`, `clock`, `t0`, `t1`, `pc` (required), `elf` (required), `valid`, `phases`.
 
 Starts a background job: no.
 

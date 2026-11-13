@@ -95,6 +95,16 @@ signal, Bundle, Stream/Flow, Vec or Area: leaves nested by Spinal path below NAM
 `fire` (valid && ready; null when either is unknown). Leaves absent from the wave are listed
 in `missing_in_wave`.
 
+## ELF symbols (`--elf`, `profile`)
+
+`changes --elf PROG.elf [--pc RX]` (MCP `elf`, `pc`) names the values of PC-like signals
+(default: names containing `pc`) by symbol: rows get `symbol: name+0xoff`. `profile WAVE PC
+--elf PROG.elf [--valid EXPR]` (MCP `wave_profile`) counts rising clock edges per function:
+at each edge where `--valid` holds (for example a commit valid), the PC's pre-edge value maps
+to its symbol. It also lists time-aligned `phases` (runs of edges in one function). Symbols
+come from the ELF symbol table; a PC maps only to a sized symbol that contains it, else
+`(no symbol)`; x/z PCs count as `unknown`. Edge counts are not stall attribution.
+
 ## Active drivers (`why`)
 
 `why` joins the wave with a SpinalDB database (`--db` or `RVW_DESIGNDB`). For the signal it
