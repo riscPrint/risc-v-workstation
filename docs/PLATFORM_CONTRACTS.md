@@ -3959,6 +3959,13 @@ project states. Digital sequencing never implies analog voltage or PLL proof.
 Known C1 self-check failures remain failures when optional observations are
 missing.
 
+Kinds `sstc`, `stateen`, `envcfg`, `landing` and `shadow` select RV64
+extension campaigns. Sstc requires Zicntr in the reference ISA. Optional
+`sstc.virtualization` requires H and adds VS control cases. `envcfg` declares
+`implemented_mask` and optional `henvcfg_mask`; these are implemented-bit
+expectations, not permissive WARL guesses. The existing strict C1 check is
+required before any architectural group passes.
+
 Kinds `imsic`, `aplic`, `aclint` and `smnip` select versioned controller
 programs. `spec_version` pins the implemented version; `spec_revision` records
 an optional immutable source revision. `reference_backend = "python"` selects

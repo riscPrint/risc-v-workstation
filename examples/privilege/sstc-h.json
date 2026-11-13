@@ -1,0 +1,8 @@
+{
+  "schema": "rvw.privilege/1",
+  "kind": "sstc",
+  "isa": "rv64imah_zicsr_zifencei_zicntr_sstc",
+  "sstc": {
+    "virtualization": true
+  }
+}

@@ -1,0 +1,5 @@
+{
+  "schema": "rvw.privilege/1",
+  "kind": "landing",
+  "isa": "rv64im_zicsr_zifencei_zicfilp"
+}
