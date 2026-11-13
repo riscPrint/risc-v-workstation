@@ -404,3 +404,9 @@ seed, cycle count and source hashes. `rvw.ooo-fixture-formal/1` records each
 selected check's bounded outcome and activation observation. A matched
 negative control requires the expected failed check. Timeouts are inconclusive.
 Neither record establishes whole-core correctness or unbounded closure.
+
+## NaxRiscv binding review
+
+`rvw.nax-check-binding-review/1` records the project binding source hash and
+fresh generation output. Its limits distinguish generation from historical
+native results. It does not transfer fixture proof or activation to NaxRiscv.
