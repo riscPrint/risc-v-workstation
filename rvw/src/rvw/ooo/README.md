@@ -869,3 +869,32 @@ records all 24 program/variant pairs. Fourteen fail the sign or half-size
 criterion. All nine zero RTL changes are predicted correctly. Only one
 of the 15 nonzero changes meets the criterion. This table uses one fixed
 base fit. It does not establish reliable structure-size predictions.
+
+## Compacting issue queue
+
+Optional `issue_queue_policy: compacting` allocates a line of
+`rename_width` slots for each rename group. A line stays allocated until
+all its operations complete. Only complete oldest lines can be reused.
+This represents age-ordered queue compaction and delayed wakeup reuse.
+Younger empty slots cannot admit another group while the oldest line is
+busy. Partial rename groups still use a whole line. Capacity must be a
+multiple of rename width. The default `associative` policy keeps the
+existing individual slot reuse at issue.
+
+This policy runs in Python. It approximates wakeup with operation
+completion. It does not reproduce every registered queue handshake.
+The RTL adapter selects this policy in project data. The generic model
+contains no core signal names.
+
+The compacting policy includes one registered cycle between completion and
+line reuse. It shares queue capacity with captured wrong-path operations.
+Replay can keep pending operations while rename waits for queue capacity.
+
+Optional `frontend.fetch_blocks_per_cycle` limits the number of distinct
+PC blocks fetched in one cycle. Zero is the default and keeps the existing
+unlimited block policy. One models a single fetch-block port. The
+`block_bytes` field sets the block size. An entry point in the last lane
+can therefore use only one instruction slot from that block. The next
+block waits for another cycle. `fetch_block_limit_cycles` counts this
+restriction. Instruction count width remains a separate limit.
+

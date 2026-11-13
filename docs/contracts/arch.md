@@ -544,3 +544,15 @@ Relative change is variant IPC divided by base IPC minus one.
 A wrong delta has a wrong sign or an error greater than half the measured
 change. Zero measured changes have null relative error.
 The report does not claim a Spike match or a fidelity pass.
+
+## OoO issue queue reuse
+
+Optional `issue_queue_policy` selects `associative` or `compacting`.
+The default remains `associative`. Compacting queues allocate whole rename
+lines. Only completed oldest lines can be released. Capacity must contain
+whole lines. Completion approximates the hardware wakeup event.
+
+Compacting line reuse waits one registered cycle after completion.
+Optional `frontend.fetch_blocks_per_cycle` is a nonnegative integer.
+Zero preserves unlimited PC-block selection. A positive value limits distinct
+PC blocks per fetch cycle. It does not change instruction fetch width.

@@ -1,0 +1,1169 @@
+{
+  "schema": "rvw.nax-delta-mechanisms/1",
+  "samples": [
+    {
+      "variant": "iq16",
+      "program": "median",
+      "initial_wrong": true,
+      "final_wrong": true,
+      "measured_delta": -0.016820903647250973,
+      "initial_predicted_delta": -7.475517679600419e-05,
+      "final_predicted_delta": -0.001547787953050439,
+      "counter_base": {
+        "iq_push_blocked": 132,
+        "iq_full_cycles": 0,
+        "lq_full_cycles": 0,
+        "sq_full_cycles": 0,
+        "rob_occupancy": 204000,
+        "lq_occupancy": 41276,
+        "sq_occupancy": 17109,
+        "reschedule_execute": 1158,
+        "reschedule_commit": 1042,
+        "dcache_refills": 80,
+        "icache_refills": 22
+      },
+      "counter_variant": {
+        "iq_push_blocked": 525,
+        "iq_full_cycles": 0,
+        "lq_full_cycles": 0,
+        "sq_full_cycles": 0,
+        "rob_occupancy": 187036,
+        "lq_occupancy": 35235,
+        "sq_occupancy": 16763,
+        "reschedule_execute": 1157,
+        "reschedule_commit": 1049,
+        "dcache_refills": 80,
+        "icache_refills": 22
+      },
+      "topdown_base": {
+        "retiring": 0.2949172249598583,
+        "bad_speculation": 0.20148386025137036,
+        "backend_bound": 0.4946846796965838,
+        "frontend_bound": 0.008914235092187587
+      },
+      "topdown_variant": {
+        "retiring": 0.28995645073489384,
+        "bad_speculation": 0.19880239520958085,
+        "backend_bound": 0.5024768644529124,
+        "frontend_bound": 0.008764289602612956
+      },
+      "mechanism_inference": "Age-ordered line reuse and registered wakeup affect dispatch. Wrong-path queue pressure is still absent."
+    },
+    {
+      "variant": "iq16",
+      "program": "qsort",
+      "initial_wrong": true,
+      "final_wrong": true,
+      "measured_delta": -0.006173968408789143,
+      "initial_predicted_delta": -0.0001711076367686415,
+      "final_predicted_delta": -0.002756678734530671,
+      "counter_base": {
+        "iq_push_blocked": 1419,
+        "iq_full_cycles": 0,
+        "lq_full_cycles": 0,
+        "sq_full_cycles": 0,
+        "rob_occupancy": 3688864,
+        "lq_occupancy": 651282,
+        "sq_occupancy": 366646,
+        "reschedule_execute": 14915,
+        "reschedule_commit": 14042,
+        "dcache_refills": 272,
+        "icache_refills": 27
+      },
+      "counter_variant": {
+        "iq_push_blocked": 5649,
+        "iq_full_cycles": 0,
+        "lq_full_cycles": 0,
+        "sq_full_cycles": 0,
+        "rob_occupancy": 3464434,
+        "lq_occupancy": 596423,
+        "sq_occupancy": 363353,
+        "reschedule_execute": 14905,
+        "reschedule_commit": 14047,
+        "dcache_refills": 272,
+        "icache_refills": 27
+      },
+      "topdown_base": {
+        "retiring": 0.38517936677242043,
+        "bad_speculation": 0.14954557691455755,
+        "backend_bound": 0.4646309920974343,
+        "frontend_bound": 0.0006440642155877171
+      },
+      "topdown_variant": {
+        "retiring": 0.38280128153025006,
+        "bad_speculation": 0.1482531360914682,
+        "backend_bound": 0.4682885610555691,
+        "frontend_bound": 0.0006570213227126175
+      },
+      "mechanism_inference": "Age-ordered line reuse and registered wakeup affect dispatch. Wrong-path queue pressure is still absent."
+    },
+    {
+      "variant": "iq16",
+      "program": "multiply",
+      "initial_wrong": true,
+      "final_wrong": true,
+      "measured_delta": -0.0030269029042611084,
+      "initial_predicted_delta": -0.00026304540821364686,
+      "final_predicted_delta": -0.00088346317564858,
+      "counter_base": {
+        "iq_push_blocked": 17,
+        "iq_full_cycles": 0,
+        "lq_full_cycles": 0,
+        "sq_full_cycles": 0,
+        "rob_occupancy": 462214,
+        "lq_occupancy": 7123,
+        "sq_occupancy": 2767,
+        "reschedule_execute": 286,
+        "reschedule_commit": 285,
+        "dcache_refills": 29,
+        "icache_refills": 26
+      },
+      "counter_variant": {
+        "iq_push_blocked": 153,
+        "iq_full_cycles": 0,
+        "lq_full_cycles": 0,
+        "sq_full_cycles": 0,
+        "rob_occupancy": 435854,
+        "lq_occupancy": 6810,
+        "sq_occupancy": 2767,
+        "reschedule_execute": 292,
+        "reschedule_commit": 291,
+        "dcache_refills": 29,
+        "icache_refills": 26
+      },
+      "topdown_base": {
+        "retiring": 0.7105504226974114,
+        "bad_speculation": 0.027809040228230428,
+        "backend_bound": 0.2570863977805114,
+        "frontend_bound": 0.0045541392938466775
+      },
+      "topdown_variant": {
+        "retiring": 0.7083996555593247,
+        "bad_speculation": 0.02892518852908175,
+        "backend_bound": 0.25813480155520185,
+        "frontend_bound": 0.004540354356391723
+      },
+      "mechanism_inference": "Age-ordered line reuse and registered wakeup affect dispatch. Wrong-path queue pressure is still absent."
+    },
+    {
+      "variant": "iq16",
+      "program": "towers",
+      "initial_wrong": true,
+      "final_wrong": false,
+      "measured_delta": -0.006266786034019645,
+      "initial_predicted_delta": -0.0013668671405140387,
+      "final_predicted_delta": -0.008598683326615508,
+      "counter_base": {
+        "iq_push_blocked": 498,
+        "iq_full_cycles": 0,
+        "lq_full_cycles": 130,
+        "sq_full_cycles": 124,
+        "rob_occupancy": 178498,
+        "lq_occupancy": 48081,
+        "sq_occupancy": 64434,
+        "reschedule_execute": 208,
+        "reschedule_commit": 207,
+        "dcache_refills": 10,
+        "icache_refills": 52
+      },
+      "counter_variant": {
+        "iq_push_blocked": 1672,
+        "iq_full_cycles": 3,
+        "lq_full_cycles": 0,
+        "sq_full_cycles": 38,
+        "rob_occupancy": 132630,
+        "lq_occupancy": 40559,
+        "sq_occupancy": 50051,
+        "reschedule_execute": 220,
+        "reschedule_commit": 218,
+        "dcache_refills": 10,
+        "icache_refills": 52
+      },
+      "topdown_base": {
+        "retiring": 0.40951576576576576,
+        "bad_speculation": 0.09684684684684684,
+        "backend_bound": 0.46998873873873875,
+        "frontend_bound": 0.02364864864864865
+      },
+      "topdown_variant": {
+        "retiring": 0.40694941808415397,
+        "bad_speculation": 0.08398612354521039,
+        "backend_bound": 0.48545210384959714,
+        "frontend_bound": 0.023612354521038496
+      },
+      "mechanism_inference": "Age-ordered line reuse and registered wakeup affect dispatch. Wrong-path queue pressure is still absent."
+    },
+    {
+      "variant": "iq16",
+      "program": "vvadd",
+      "initial_wrong": true,
+      "final_wrong": false,
+      "measured_delta": -0.08243979609773244,
+      "initial_predicted_delta": -0.0018390804597702148,
+      "final_predicted_delta": -0.0797639444127165,
+      "counter_base": {
+        "iq_push_blocked": 285,
+        "iq_full_cycles": 0,
+        "lq_full_cycles": 0,
+        "sq_full_cycles": 0,
+        "rob_occupancy": 125714,
+        "lq_occupancy": 29810,
+        "sq_occupancy": 13110,
+        "reschedule_execute": 51,
+        "reschedule_commit": 51,
+        "dcache_refills": 79,
+        "icache_refills": 25
+      },
+      "counter_variant": {
+        "iq_push_blocked": 818,
+        "iq_full_cycles": 0,
+        "lq_full_cycles": 0,
+        "sq_full_cycles": 0,
+        "rob_occupancy": 101300,
+        "lq_occupancy": 22114,
+        "sq_occupancy": 11489,
+        "reschedule_execute": 52,
+        "reschedule_commit": 52,
+        "dcache_refills": 79,
+        "icache_refills": 25
+      },
+      "topdown_base": {
+        "retiring": 0.6216475095785441,
+        "bad_speculation": 0.06264367816091954,
+        "backend_bound": 0.28218390804597704,
+        "frontend_bound": 0.033524904214559385
+      },
+      "topdown_variant": {
+        "retiring": 0.5703990156442257,
+        "bad_speculation": 0.059676568817015295,
+        "backend_bound": 0.3391632975918439,
+        "frontend_bound": 0.0307611179469151
+      },
+      "mechanism_inference": "Age-ordered line reuse and registered wakeup affect dispatch. Wrong-path queue pressure is still absent."
+    },
+    {
+      "variant": "iq16",
+      "program": "memcpy",
+      "initial_wrong": true,
+      "final_wrong": true,
+      "measured_delta": -0.12496982654574296,
+      "initial_predicted_delta": -3.658581202203859e-05,
+      "final_predicted_delta": -0.05890168290522568,
+      "counter_base": {
+        "iq_push_blocked": 5731,
+        "iq_full_cycles": 0,
+        "lq_full_cycles": 0,
+        "sq_full_cycles": 2982,
+        "rob_occupancy": 819512,
+        "lq_occupancy": 298024,
+        "sq_occupancy": 139598,
+        "reschedule_execute": 48,
+        "reschedule_commit": 47,
+        "dcache_refills": 1009,
+        "icache_refills": 24
+      },
+      "counter_variant": {
+        "iq_push_blocked": 11187,
+        "iq_full_cycles": 0,
+        "lq_full_cycles": 0,
+        "sq_full_cycles": 0,
+        "rob_occupancy": 533630,
+        "lq_occupancy": 176373,
+        "sq_occupancy": 99251,
+        "reschedule_execute": 54,
+        "reschedule_commit": 53,
+        "dcache_refills": 1009,
+        "icache_refills": 24
+      },
+      "topdown_base": {
+        "retiring": 0.6144827586206897,
+        "bad_speculation": 0.01534975369458128,
+        "backend_bound": 0.3629950738916256,
+        "frontend_bound": 0.007172413793103448
+      },
+      "topdown_variant": {
+        "retiring": 0.5376909548605124,
+        "bad_speculation": 0.015224662919411014,
+        "backend_bound": 0.44080830373461155,
+        "frontend_bound": 0.006276078485465016
+      },
+      "mechanism_inference": "Age-ordered line reuse and registered wakeup affect dispatch. Wrong-path queue pressure is still absent."
+    },
+    {
+      "variant": "rob128",
+      "program": "median",
+      "initial_wrong": false,
+      "final_wrong": false,
+      "measured_delta": 0.0,
+      "initial_predicted_delta": 0.0,
+      "final_predicted_delta": 0.0,
+      "counter_base": {
+        "iq_push_blocked": 132,
+        "iq_full_cycles": 0,
+        "lq_full_cycles": 0,
+        "sq_full_cycles": 0,
+        "rob_occupancy": 204000,
+        "lq_occupancy": 41276,
+        "sq_occupancy": 17109,
+        "reschedule_execute": 1158,
+        "reschedule_commit": 1042,
+        "dcache_refills": 80,
+        "icache_refills": 22
+      },
+      "counter_variant": {
+        "iq_push_blocked": 132,
+        "iq_full_cycles": 0,
+        "lq_full_cycles": 0,
+        "sq_full_cycles": 0,
+        "rob_occupancy": 204000,
+        "lq_occupancy": 41276,
+        "sq_occupancy": 17109,
+        "reschedule_execute": 1158,
+        "reschedule_commit": 1042,
+        "dcache_refills": 80,
+        "icache_refills": 22
+      },
+      "topdown_base": {
+        "retiring": 0.2949172249598583,
+        "bad_speculation": 0.20148386025137036,
+        "backend_bound": 0.4946846796965838,
+        "frontend_bound": 0.008914235092187587
+      },
+      "topdown_variant": {
+        "retiring": 0.2949172249598583,
+        "bad_speculation": 0.20148386025137036,
+        "backend_bound": 0.4946846796965838,
+        "frontend_bound": 0.008914235092187587
+      },
+      "mechanism_inference": "Both measurements are unchanged; register and other resource limits can hide the larger ROB."
+    },
+    {
+      "variant": "rob128",
+      "program": "qsort",
+      "initial_wrong": false,
+      "final_wrong": false,
+      "measured_delta": 0.0,
+      "initial_predicted_delta": 0.0,
+      "final_predicted_delta": 0.0,
+      "counter_base": {
+        "iq_push_blocked": 1419,
+        "iq_full_cycles": 0,
+        "lq_full_cycles": 0,
+        "sq_full_cycles": 0,
+        "rob_occupancy": 3688864,
+        "lq_occupancy": 651282,
+        "sq_occupancy": 366646,
+        "reschedule_execute": 14915,
+        "reschedule_commit": 14042,
+        "dcache_refills": 272,
+        "icache_refills": 27
+      },
+      "counter_variant": {
+        "iq_push_blocked": 1419,
+        "iq_full_cycles": 0,
+        "lq_full_cycles": 0,
+        "sq_full_cycles": 0,
+        "rob_occupancy": 3688864,
+        "lq_occupancy": 651282,
+        "sq_occupancy": 366646,
+        "reschedule_execute": 14915,
+        "reschedule_commit": 14042,
+        "dcache_refills": 272,
+        "icache_refills": 27
+      },
+      "topdown_base": {
+        "retiring": 0.38517936677242043,
+        "bad_speculation": 0.14954557691455755,
+        "backend_bound": 0.4646309920974343,
+        "frontend_bound": 0.0006440642155877171
+      },
+      "topdown_variant": {
+        "retiring": 0.38517936677242043,
+        "bad_speculation": 0.14954557691455755,
+        "backend_bound": 0.4646309920974343,
+        "frontend_bound": 0.0006440642155877171
+      },
+      "mechanism_inference": "Both measurements are unchanged; register and other resource limits can hide the larger ROB."
+    },
+    {
+      "variant": "rob128",
+      "program": "multiply",
+      "initial_wrong": false,
+      "final_wrong": false,
+      "measured_delta": 0.0,
+      "initial_predicted_delta": 0.0,
+      "final_predicted_delta": 0.0,
+      "counter_base": {
+        "iq_push_blocked": 17,
+        "iq_full_cycles": 0,
+        "lq_full_cycles": 0,
+        "sq_full_cycles": 0,
+        "rob_occupancy": 462214,
+        "lq_occupancy": 7123,
+        "sq_occupancy": 2767,
+        "reschedule_execute": 286,
+        "reschedule_commit": 285,
+        "dcache_refills": 29,
+        "icache_refills": 26
+      },
+      "counter_variant": {
+        "iq_push_blocked": 17,
+        "iq_full_cycles": 0,
+        "lq_full_cycles": 0,
+        "sq_full_cycles": 0,
+        "rob_occupancy": 462214,
+        "lq_occupancy": 7123,
+        "sq_occupancy": 2767,
+        "reschedule_execute": 286,
+        "reschedule_commit": 285,
+        "dcache_refills": 29,
+        "icache_refills": 26
+      },
+      "topdown_base": {
+        "retiring": 0.7105504226974114,
+        "bad_speculation": 0.027809040228230428,
+        "backend_bound": 0.2570863977805114,
+        "frontend_bound": 0.0045541392938466775
+      },
+      "topdown_variant": {
+        "retiring": 0.7105504226974114,
+        "bad_speculation": 0.027809040228230428,
+        "backend_bound": 0.2570863977805114,
+        "frontend_bound": 0.0045541392938466775
+      },
+      "mechanism_inference": "Both measurements are unchanged; register and other resource limits can hide the larger ROB."
+    },
+    {
+      "variant": "rob128",
+      "program": "towers",
+      "initial_wrong": false,
+      "final_wrong": false,
+      "measured_delta": 0.0,
+      "initial_predicted_delta": 0.0,
+      "final_predicted_delta": 0.0,
+      "counter_base": {
+        "iq_push_blocked": 498,
+        "iq_full_cycles": 0,
+        "lq_full_cycles": 130,
+        "sq_full_cycles": 124,
+        "rob_occupancy": 178498,
+        "lq_occupancy": 48081,
+        "sq_occupancy": 64434,
+        "reschedule_execute": 208,
+        "reschedule_commit": 207,
+        "dcache_refills": 10,
+        "icache_refills": 52
+      },
+      "counter_variant": {
+        "iq_push_blocked": 498,
+        "iq_full_cycles": 0,
+        "lq_full_cycles": 130,
+        "sq_full_cycles": 124,
+        "rob_occupancy": 178498,
+        "lq_occupancy": 48081,
+        "sq_occupancy": 64434,
+        "reschedule_execute": 208,
+        "reschedule_commit": 207,
+        "dcache_refills": 10,
+        "icache_refills": 52
+      },
+      "topdown_base": {
+        "retiring": 0.40951576576576576,
+        "bad_speculation": 0.09684684684684684,
+        "backend_bound": 0.46998873873873875,
+        "frontend_bound": 0.02364864864864865
+      },
+      "topdown_variant": {
+        "retiring": 0.40951576576576576,
+        "bad_speculation": 0.09684684684684684,
+        "backend_bound": 0.46998873873873875,
+        "frontend_bound": 0.02364864864864865
+      },
+      "mechanism_inference": "Both measurements are unchanged; register and other resource limits can hide the larger ROB."
+    },
+    {
+      "variant": "rob128",
+      "program": "vvadd",
+      "initial_wrong": false,
+      "final_wrong": false,
+      "measured_delta": 0.0,
+      "initial_predicted_delta": 0.0,
+      "final_predicted_delta": 0.0,
+      "counter_base": {
+        "iq_push_blocked": 285,
+        "iq_full_cycles": 0,
+        "lq_full_cycles": 0,
+        "sq_full_cycles": 0,
+        "rob_occupancy": 125714,
+        "lq_occupancy": 29810,
+        "sq_occupancy": 13110,
+        "reschedule_execute": 51,
+        "reschedule_commit": 51,
+        "dcache_refills": 79,
+        "icache_refills": 25
+      },
+      "counter_variant": {
+        "iq_push_blocked": 285,
+        "iq_full_cycles": 0,
+        "lq_full_cycles": 0,
+        "sq_full_cycles": 0,
+        "rob_occupancy": 125714,
+        "lq_occupancy": 29810,
+        "sq_occupancy": 13110,
+        "reschedule_execute": 51,
+        "reschedule_commit": 51,
+        "dcache_refills": 79,
+        "icache_refills": 25
+      },
+      "topdown_base": {
+        "retiring": 0.6216475095785441,
+        "bad_speculation": 0.06264367816091954,
+        "backend_bound": 0.28218390804597704,
+        "frontend_bound": 0.033524904214559385
+      },
+      "topdown_variant": {
+        "retiring": 0.6216475095785441,
+        "bad_speculation": 0.06264367816091954,
+        "backend_bound": 0.28218390804597704,
+        "frontend_bound": 0.033524904214559385
+      },
+      "mechanism_inference": "Both measurements are unchanged; register and other resource limits can hide the larger ROB."
+    },
+    {
+      "variant": "rob128",
+      "program": "memcpy",
+      "initial_wrong": false,
+      "final_wrong": false,
+      "measured_delta": 0.0,
+      "initial_predicted_delta": 0.0,
+      "final_predicted_delta": 0.0,
+      "counter_base": {
+        "iq_push_blocked": 5731,
+        "iq_full_cycles": 0,
+        "lq_full_cycles": 0,
+        "sq_full_cycles": 2982,
+        "rob_occupancy": 819512,
+        "lq_occupancy": 298024,
+        "sq_occupancy": 139598,
+        "reschedule_execute": 48,
+        "reschedule_commit": 47,
+        "dcache_refills": 1009,
+        "icache_refills": 24
+      },
+      "counter_variant": {
+        "iq_push_blocked": 5731,
+        "iq_full_cycles": 0,
+        "lq_full_cycles": 0,
+        "sq_full_cycles": 2982,
+        "rob_occupancy": 819512,
+        "lq_occupancy": 298024,
+        "sq_occupancy": 139598,
+        "reschedule_execute": 48,
+        "reschedule_commit": 47,
+        "dcache_refills": 1009,
+        "icache_refills": 24
+      },
+      "topdown_base": {
+        "retiring": 0.6144827586206897,
+        "bad_speculation": 0.01534975369458128,
+        "backend_bound": 0.3629950738916256,
+        "frontend_bound": 0.007172413793103448
+      },
+      "topdown_variant": {
+        "retiring": 0.6144827586206897,
+        "bad_speculation": 0.01534975369458128,
+        "backend_bound": 0.3629950738916256,
+        "frontend_bound": 0.007172413793103448
+      },
+      "mechanism_inference": "Both measurements are unchanged; register and other resource limits can hide the larger ROB."
+    },
+    {
+      "variant": "lq8",
+      "program": "median",
+      "initial_wrong": true,
+      "final_wrong": true,
+      "measured_delta": -0.010573025090391153,
+      "initial_predicted_delta": 0.0,
+      "final_predicted_delta": 0.0,
+      "counter_base": {
+        "iq_push_blocked": 132,
+        "iq_full_cycles": 0,
+        "lq_full_cycles": 0,
+        "sq_full_cycles": 0,
+        "rob_occupancy": 204000,
+        "lq_occupancy": 41276,
+        "sq_occupancy": 17109,
+        "reschedule_execute": 1158,
+        "reschedule_commit": 1042,
+        "dcache_refills": 80,
+        "icache_refills": 22
+      },
+      "counter_variant": {
+        "iq_push_blocked": 0,
+        "iq_full_cycles": 0,
+        "lq_full_cycles": 483,
+        "sq_full_cycles": 0,
+        "rob_occupancy": 192156,
+        "lq_occupancy": 36127,
+        "sq_occupancy": 17102,
+        "reschedule_execute": 1159,
+        "reschedule_commit": 1042,
+        "dcache_refills": 80,
+        "icache_refills": 22
+      },
+      "topdown_base": {
+        "retiring": 0.2949172249598583,
+        "bad_speculation": 0.20148386025137036,
+        "backend_bound": 0.4946846796965838,
+        "frontend_bound": 0.008914235092187587
+      },
+      "topdown_variant": {
+        "retiring": 0.29179905774076914,
+        "bad_speculation": 0.1995726963953106,
+        "backend_bound": 0.499808261203024,
+        "frontend_bound": 0.008819984660896242
+      },
+      "mechanism_inference": "The model lacks RTL wrong-path load occupancy and faithful LSU reschedules. Local load-capacity sensitivity is zero."
+    },
+    {
+      "variant": "lq8",
+      "program": "qsort",
+      "initial_wrong": true,
+      "final_wrong": true,
+      "measured_delta": -0.003585677662518494,
+      "initial_predicted_delta": 0.0,
+      "final_predicted_delta": 0.0,
+      "counter_base": {
+        "iq_push_blocked": 1419,
+        "iq_full_cycles": 0,
+        "lq_full_cycles": 0,
+        "sq_full_cycles": 0,
+        "rob_occupancy": 3688864,
+        "lq_occupancy": 651282,
+        "sq_occupancy": 366646,
+        "reschedule_execute": 14915,
+        "reschedule_commit": 14042,
+        "dcache_refills": 272,
+        "icache_refills": 27
+      },
+      "counter_variant": {
+        "iq_push_blocked": 508,
+        "iq_full_cycles": 0,
+        "lq_full_cycles": 6681,
+        "sq_full_cycles": 0,
+        "rob_occupancy": 3613594,
+        "lq_occupancy": 626236,
+        "sq_occupancy": 366564,
+        "reschedule_execute": 14914,
+        "reschedule_commit": 14041,
+        "dcache_refills": 272,
+        "icache_refills": 27
+      },
+      "topdown_base": {
+        "retiring": 0.38517936677242043,
+        "bad_speculation": 0.14954557691455755,
+        "backend_bound": 0.4646309920974343,
+        "frontend_bound": 0.0006440642155877171
+      },
+      "topdown_variant": {
+        "retiring": 0.38379823772092153,
+        "bad_speculation": 0.14896011952258875,
+        "backend_bound": 0.46659988794757307,
+        "frontend_bound": 0.0006417548089166568
+      },
+      "mechanism_inference": "The model lacks RTL wrong-path load occupancy and faithful LSU reschedules. Local load-capacity sensitivity is zero."
+    },
+    {
+      "variant": "lq8",
+      "program": "multiply",
+      "initial_wrong": true,
+      "final_wrong": true,
+      "measured_delta": -0.00020934188146015664,
+      "initial_predicted_delta": 0.0,
+      "final_predicted_delta": 0.0,
+      "counter_base": {
+        "iq_push_blocked": 17,
+        "iq_full_cycles": 0,
+        "lq_full_cycles": 0,
+        "sq_full_cycles": 0,
+        "rob_occupancy": 462214,
+        "lq_occupancy": 7123,
+        "sq_occupancy": 2767,
+        "reschedule_execute": 286,
+        "reschedule_commit": 285,
+        "dcache_refills": 29,
+        "icache_refills": 26
+      },
+      "counter_variant": {
+        "iq_push_blocked": 11,
+        "iq_full_cycles": 0,
+        "lq_full_cycles": 92,
+        "sq_full_cycles": 0,
+        "rob_occupancy": 460818,
+        "lq_occupancy": 6272,
+        "sq_occupancy": 2767,
+        "reschedule_execute": 286,
+        "reschedule_commit": 285,
+        "dcache_refills": 29,
+        "icache_refills": 26
+      },
+      "topdown_base": {
+        "retiring": 0.7105504226974114,
+        "bad_speculation": 0.027809040228230428,
+        "backend_bound": 0.2570863977805114,
+        "frontend_bound": 0.0045541392938466775
+      },
+      "topdown_variant": {
+        "retiring": 0.7104016747350517,
+        "bad_speculation": 0.02777705089624493,
+        "backend_bound": 0.25726808844694493,
+        "frontend_bound": 0.004553185921758472
+      },
+      "mechanism_inference": "The model lacks RTL wrong-path load occupancy and faithful LSU reschedules. Local load-capacity sensitivity is zero."
+    },
+    {
+      "variant": "lq8",
+      "program": "towers",
+      "initial_wrong": true,
+      "final_wrong": true,
+      "measured_delta": -0.013881177123820088,
+      "initial_predicted_delta": -0.000957199507725992,
+      "final_predicted_delta": -0.0010829836198726905,
+      "counter_base": {
+        "iq_push_blocked": 498,
+        "iq_full_cycles": 0,
+        "lq_full_cycles": 130,
+        "sq_full_cycles": 124,
+        "rob_occupancy": 178498,
+        "lq_occupancy": 48081,
+        "sq_occupancy": 64434,
+        "reschedule_execute": 208,
+        "reschedule_commit": 207,
+        "dcache_refills": 10,
+        "icache_refills": 52
+      },
+      "counter_variant": {
+        "iq_push_blocked": 127,
+        "iq_full_cycles": 0,
+        "lq_full_cycles": 1213,
+        "sq_full_cycles": 6,
+        "rob_occupancy": 142882,
+        "lq_occupancy": 37355,
+        "sq_occupancy": 53241,
+        "reschedule_execute": 209,
+        "reschedule_commit": 207,
+        "dcache_refills": 10,
+        "icache_refills": 52
+      },
+      "topdown_base": {
+        "retiring": 0.40951576576576576,
+        "bad_speculation": 0.09684684684684684,
+        "backend_bound": 0.46998873873873875,
+        "frontend_bound": 0.02364864864864865
+      },
+      "topdown_variant": {
+        "retiring": 0.40383120488617436,
+        "bad_speculation": 0.08928373126041088,
+        "backend_bound": 0.4834536368684064,
+        "frontend_bound": 0.02343142698500833
+      },
+      "mechanism_inference": "The model lacks RTL wrong-path load occupancy and faithful LSU reschedules. Local load-capacity sensitivity is zero."
+    },
+    {
+      "variant": "lq8",
+      "program": "vvadd",
+      "initial_wrong": true,
+      "final_wrong": true,
+      "measured_delta": -0.029017857142857095,
+      "initial_predicted_delta": -0.00023025558369804688,
+      "final_predicted_delta": 0.0,
+      "counter_base": {
+        "iq_push_blocked": 285,
+        "iq_full_cycles": 0,
+        "lq_full_cycles": 0,
+        "sq_full_cycles": 0,
+        "rob_occupancy": 125714,
+        "lq_occupancy": 29810,
+        "sq_occupancy": 13110,
+        "reschedule_execute": 51,
+        "reschedule_commit": 51,
+        "dcache_refills": 79,
+        "icache_refills": 25
+      },
+      "counter_variant": {
+        "iq_push_blocked": 154,
+        "iq_full_cycles": 0,
+        "lq_full_cycles": 1545,
+        "sq_full_cycles": 0,
+        "rob_occupancy": 111516,
+        "lq_occupancy": 25403,
+        "sq_occupancy": 12520,
+        "reschedule_execute": 51,
+        "reschedule_commit": 51,
+        "dcache_refills": 79,
+        "icache_refills": 25
+      },
+      "topdown_base": {
+        "retiring": 0.6216475095785441,
+        "bad_speculation": 0.06264367816091954,
+        "backend_bound": 0.28218390804597704,
+        "frontend_bound": 0.033524904214559385
+      },
+      "topdown_variant": {
+        "retiring": 0.6036086309523809,
+        "bad_speculation": 0.06101190476190476,
+        "backend_bound": 0.30282738095238093,
+        "frontend_bound": 0.032552083333333336
+      },
+      "mechanism_inference": "The model lacks RTL wrong-path load occupancy and faithful LSU reschedules. Local load-capacity sensitivity is zero."
+    },
+    {
+      "variant": "lq8",
+      "program": "memcpy",
+      "initial_wrong": false,
+      "final_wrong": true,
+      "measured_delta": -0.07988251504822685,
+      "initial_predicted_delta": -0.04329868038783291,
+      "final_predicted_delta": -0.03490078256008933,
+      "counter_base": {
+        "iq_push_blocked": 5731,
+        "iq_full_cycles": 0,
+        "lq_full_cycles": 0,
+        "sq_full_cycles": 2982,
+        "rob_occupancy": 819512,
+        "lq_occupancy": 298024,
+        "sq_occupancy": 139598,
+        "reschedule_execute": 48,
+        "reschedule_commit": 47,
+        "dcache_refills": 1009,
+        "icache_refills": 24
+      },
+      "counter_variant": {
+        "iq_push_blocked": 0,
+        "iq_full_cycles": 0,
+        "lq_full_cycles": 17122,
+        "sq_full_cycles": 457,
+        "rob_occupancy": 580116,
+        "lq_occupancy": 198366,
+        "sq_occupancy": 110325,
+        "reschedule_execute": 48,
+        "reschedule_commit": 47,
+        "dcache_refills": 1009,
+        "icache_refills": 24
+      },
+      "topdown_base": {
+        "retiring": 0.6144827586206897,
+        "bad_speculation": 0.01534975369458128,
+        "backend_bound": 0.3629950738916256,
+        "frontend_bound": 0.007172413793103448
+      },
+      "topdown_variant": {
+        "retiring": 0.5653963304082965,
+        "bad_speculation": 0.01368844731307564,
+        "backend_bound": 0.41431575893828415,
+        "frontend_bound": 0.006599463340343752
+      },
+      "mechanism_inference": "The model lacks RTL wrong-path load occupancy and faithful LSU reschedules. Local load-capacity sensitivity is zero."
+    },
+    {
+      "variant": "sq8",
+      "program": "median",
+      "initial_wrong": false,
+      "final_wrong": false,
+      "measured_delta": 0.0,
+      "initial_predicted_delta": 0.0,
+      "final_predicted_delta": 0.0,
+      "counter_base": {
+        "iq_push_blocked": 132,
+        "iq_full_cycles": 0,
+        "lq_full_cycles": 0,
+        "sq_full_cycles": 0,
+        "rob_occupancy": 204000,
+        "lq_occupancy": 41276,
+        "sq_occupancy": 17109,
+        "reschedule_execute": 1158,
+        "reschedule_commit": 1042,
+        "dcache_refills": 80,
+        "icache_refills": 22
+      },
+      "counter_variant": {
+        "iq_push_blocked": 132,
+        "iq_full_cycles": 0,
+        "lq_full_cycles": 0,
+        "sq_full_cycles": 0,
+        "rob_occupancy": 204000,
+        "lq_occupancy": 41276,
+        "sq_occupancy": 17109,
+        "reschedule_execute": 1158,
+        "reschedule_commit": 1042,
+        "dcache_refills": 80,
+        "icache_refills": 22
+      },
+      "topdown_base": {
+        "retiring": 0.2949172249598583,
+        "bad_speculation": 0.20148386025137036,
+        "backend_bound": 0.4946846796965838,
+        "frontend_bound": 0.008914235092187587
+      },
+      "topdown_variant": {
+        "retiring": 0.2949172249598583,
+        "bad_speculation": 0.20148386025137036,
+        "backend_bound": 0.4946846796965838,
+        "frontend_bound": 0.008914235092187587
+      },
+      "mechanism_inference": "The RTL store queue includes committed stores waiting for drain. The model releases buffered stores at commit."
+    },
+    {
+      "variant": "sq8",
+      "program": "qsort",
+      "initial_wrong": true,
+      "final_wrong": true,
+      "measured_delta": -0.0029356501411762492,
+      "initial_predicted_delta": 0.0,
+      "final_predicted_delta": 0.0,
+      "counter_base": {
+        "iq_push_blocked": 1419,
+        "iq_full_cycles": 0,
+        "lq_full_cycles": 0,
+        "sq_full_cycles": 0,
+        "rob_occupancy": 3688864,
+        "lq_occupancy": 651282,
+        "sq_occupancy": 366646,
+        "reschedule_execute": 14915,
+        "reschedule_commit": 14042,
+        "dcache_refills": 272,
+        "icache_refills": 27
+      },
+      "counter_variant": {
+        "iq_push_blocked": 1384,
+        "iq_full_cycles": 0,
+        "lq_full_cycles": 0,
+        "sq_full_cycles": 1180,
+        "rob_occupancy": 3751158,
+        "lq_occupancy": 664426,
+        "sq_occupancy": 365877,
+        "reschedule_execute": 14909,
+        "reschedule_commit": 14040,
+        "dcache_refills": 272,
+        "icache_refills": 27
+      },
+      "topdown_base": {
+        "retiring": 0.38517936677242043,
+        "bad_speculation": 0.14954557691455755,
+        "backend_bound": 0.4646309920974343,
+        "frontend_bound": 0.0006440642155877171
+      },
+      "topdown_variant": {
+        "retiring": 0.38404861490997677,
+        "bad_speculation": 0.14876848797029013,
+        "backend_bound": 0.4665407236513508,
+        "frontend_bound": 0.0006421734683823005
+      },
+      "mechanism_inference": "The RTL store queue includes committed stores waiting for drain. The model releases buffered stores at commit."
+    },
+    {
+      "variant": "sq8",
+      "program": "multiply",
+      "initial_wrong": false,
+      "final_wrong": false,
+      "measured_delta": 0.0,
+      "initial_predicted_delta": 0.0,
+      "final_predicted_delta": 0.0,
+      "counter_base": {
+        "iq_push_blocked": 17,
+        "iq_full_cycles": 0,
+        "lq_full_cycles": 0,
+        "sq_full_cycles": 0,
+        "rob_occupancy": 462214,
+        "lq_occupancy": 7123,
+        "sq_occupancy": 2767,
+        "reschedule_execute": 286,
+        "reschedule_commit": 285,
+        "dcache_refills": 29,
+        "icache_refills": 26
+      },
+      "counter_variant": {
+        "iq_push_blocked": 17,
+        "iq_full_cycles": 0,
+        "lq_full_cycles": 0,
+        "sq_full_cycles": 0,
+        "rob_occupancy": 462214,
+        "lq_occupancy": 7123,
+        "sq_occupancy": 2767,
+        "reschedule_execute": 286,
+        "reschedule_commit": 285,
+        "dcache_refills": 29,
+        "icache_refills": 26
+      },
+      "topdown_base": {
+        "retiring": 0.7105504226974114,
+        "bad_speculation": 0.027809040228230428,
+        "backend_bound": 0.2570863977805114,
+        "frontend_bound": 0.0045541392938466775
+      },
+      "topdown_variant": {
+        "retiring": 0.7105504226974114,
+        "bad_speculation": 0.027809040228230428,
+        "backend_bound": 0.2570863977805114,
+        "frontend_bound": 0.0045541392938466775
+      },
+      "mechanism_inference": "The RTL store queue includes committed stores waiting for drain. The model releases buffered stores at commit."
+    },
+    {
+      "variant": "sq8",
+      "program": "towers",
+      "initial_wrong": true,
+      "final_wrong": true,
+      "measured_delta": -0.043927648578811374,
+      "initial_predicted_delta": -0.0010937927262784086,
+      "final_predicted_delta": -0.0005417851821752917,
+      "counter_base": {
+        "iq_push_blocked": 498,
+        "iq_full_cycles": 0,
+        "lq_full_cycles": 130,
+        "sq_full_cycles": 124,
+        "rob_occupancy": 178498,
+        "lq_occupancy": 48081,
+        "sq_occupancy": 64434,
+        "reschedule_execute": 208,
+        "reschedule_commit": 207,
+        "dcache_refills": 10,
+        "icache_refills": 52
+      },
+      "counter_variant": {
+        "iq_push_blocked": 15,
+        "iq_full_cycles": 0,
+        "lq_full_cycles": 0,
+        "sq_full_cycles": 2432,
+        "rob_occupancy": 127048,
+        "lq_occupancy": 37997,
+        "sq_occupancy": 45793,
+        "reschedule_execute": 211,
+        "reschedule_commit": 210,
+        "dcache_refills": 10,
+        "icache_refills": 52
+      },
+      "topdown_base": {
+        "retiring": 0.40951576576576576,
+        "bad_speculation": 0.09684684684684684,
+        "backend_bound": 0.46998873873873875,
+        "frontend_bound": 0.02364864864864865
+      },
+      "topdown_variant": {
+        "retiring": 0.3915267011197244,
+        "bad_speculation": 0.08882428940568475,
+        "backend_bound": 0.4968238587424634,
+        "frontend_bound": 0.022825150732127476
+      },
+      "mechanism_inference": "The RTL store queue includes committed stores waiting for drain. The model releases buffered stores at commit."
+    },
+    {
+      "variant": "sq8",
+      "program": "vvadd",
+      "initial_wrong": false,
+      "final_wrong": false,
+      "measured_delta": 0.0,
+      "initial_predicted_delta": 0.0,
+      "final_predicted_delta": 0.0,
+      "counter_base": {
+        "iq_push_blocked": 285,
+        "iq_full_cycles": 0,
+        "lq_full_cycles": 0,
+        "sq_full_cycles": 0,
+        "rob_occupancy": 125714,
+        "lq_occupancy": 29810,
+        "sq_occupancy": 13110,
+        "reschedule_execute": 51,
+        "reschedule_commit": 51,
+        "dcache_refills": 79,
+        "icache_refills": 25
+      },
+      "counter_variant": {
+        "iq_push_blocked": 285,
+        "iq_full_cycles": 0,
+        "lq_full_cycles": 0,
+        "sq_full_cycles": 66,
+        "rob_occupancy": 125714,
+        "lq_occupancy": 29810,
+        "sq_occupancy": 13110,
+        "reschedule_execute": 51,
+        "reschedule_commit": 51,
+        "dcache_refills": 79,
+        "icache_refills": 25
+      },
+      "topdown_base": {
+        "retiring": 0.6216475095785441,
+        "bad_speculation": 0.06264367816091954,
+        "backend_bound": 0.28218390804597704,
+        "frontend_bound": 0.033524904214559385
+      },
+      "topdown_variant": {
+        "retiring": 0.6216475095785441,
+        "bad_speculation": 0.06264367816091954,
+        "backend_bound": 0.28218390804597704,
+        "frontend_bound": 0.033524904214559385
+      },
+      "mechanism_inference": "The RTL store queue includes committed stores waiting for drain. The model releases buffered stores at commit."
+    },
+    {
+      "variant": "sq8",
+      "program": "memcpy",
+      "initial_wrong": true,
+      "final_wrong": true,
+      "measured_delta": -0.1090238764044944,
+      "initial_predicted_delta": -0.03515955944648397,
+      "final_predicted_delta": -0.0260198145471211,
+      "counter_base": {
+        "iq_push_blocked": 5731,
+        "iq_full_cycles": 0,
+        "lq_full_cycles": 0,
+        "sq_full_cycles": 2982,
+        "rob_occupancy": 819512,
+        "lq_occupancy": 298024,
+        "sq_occupancy": 139598,
+        "reschedule_execute": 48,
+        "reschedule_commit": 47,
+        "dcache_refills": 1009,
+        "icache_refills": 24
+      },
+      "counter_variant": {
+        "iq_push_blocked": 3807,
+        "iq_full_cycles": 0,
+        "lq_full_cycles": 0,
+        "sq_full_cycles": 8768,
+        "rob_occupancy": 717882,
+        "lq_occupancy": 259086,
+        "sq_occupancy": 99347,
+        "reschedule_execute": 48,
+        "reschedule_commit": 47,
+        "dcache_refills": 1009,
+        "icache_refills": 24
+      },
+      "topdown_base": {
+        "retiring": 0.6144827586206897,
+        "bad_speculation": 0.01534975369458128,
+        "backend_bound": 0.3629950738916256,
+        "frontend_bound": 0.007172413793103448
+      },
+      "topdown_variant": {
+        "retiring": 0.5474894662921348,
+        "bad_speculation": 0.013535814606741574,
+        "backend_bound": 0.43258426966292135,
+        "frontend_bound": 0.006390449438202247
+      },
+      "mechanism_inference": "The RTL store queue includes committed stores waiting for drain. The model releases buffered stores at commit."
+    }
+  ],
+  "fixes": [
+    "generic age-ordered issue-line reuse with one registered reuse cycle",
+    "generic distinct fetch-block limit",
+    "project return stack, ALU/branch port sharing and measured completion priors",
+    "base-only IPC fit; no per-variant calibration"
+  ],
+  "limits": [
+    "counter changes support hypotheses; they are not isolated causal interventions",
+    "counter predicates overlap and do not sum to a cycle budget",
+    "finite store drain, wrong-path occupancy and exact LSU replay remain open",
+    "initial 14 wrong pairs; final 13; only 2 of 15 nonzero deltas meet the criterion"
+  ]
+}

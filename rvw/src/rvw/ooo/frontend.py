@@ -6,6 +6,7 @@ from dataclasses import dataclass
 @dataclass(frozen=True)
 class FrontendConfig:
     fdip: bool = False
+    fetch_blocks_per_cycle: int = 0
     decode_width: int = 4
     decode_entries: int = 32
     decode_latency: int = 1
@@ -23,7 +24,7 @@ class FrontendConfig:
         for key, value in vars(self).items():
             if key == 'fdip':
                 continue
-            if type(value) is not int or value < (0 if key == 'uop_cache_entries' else 1):
+            if type(value) is not int or value < (0 if key in ('uop_cache_entries', 'fetch_blocks_per_cycle') else 1):
                 raise ValueError(f'frontend {key} must be a valid integer capacity or delay')
         if self.block_bytes & (self.block_bytes - 1):
             raise ValueError('frontend block_bytes must be a power of two')
@@ -120,6 +121,7 @@ class Frontend:
         if self.position < len(instructions) and len(self.fetch) >= self.capacity:
             self.events["fetch_buffer_full"] += 1
         active = {op.pc // c.block_bytes for op, *_ in self.fetch}
+        fetched_blocks = set()
         for _ in range(self.width):
             if self.position == len(instructions) or len(self.fetch) >= self.capacity:
                 break
@@ -128,6 +130,9 @@ class Frontend:
                 break
             op = instructions[self.position]
             block = op.pc // c.block_bytes
+            if c.fetch_blocks_per_cycle and block not in fetched_blocks and len(fetched_blocks) >= c.fetch_blocks_per_cycle:
+                self.events["fetch_block_limit_cycles"] += 1
+                break
             if not c.fdip and block not in active and len(active) >= c.ftq_entries:
                 self.events['ftq_full'] += 1
                 break
@@ -153,6 +158,7 @@ class Frontend:
             cache_delay = memory.fetch(op, cycle) if memory is not None else 0
             self.fetch.append((op, cycle + c.fetch_latency + cache_delay, hit, last, signature))
             active.add(block)
+            fetched_blocks.add(block)
             if last:
                 del self.fills[block]
             if op.kind in ('branch', 'jump'):
