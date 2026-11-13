@@ -128,6 +128,10 @@ def generate(plan, prop):
         from .automonitors import generate as auto_monitor
         extra, assertion = auto_monitor(prop, ports, signal, expr, clock, reset)
         body.extend(extra)
+    elif kind == 'pmp':
+        from .security.pmp import generate as pmp_monitor
+        extra, assertion = pmp_monitor(prop, ports, signal, clock, reset)
+        body.extend(extra)
     elif kind == 'entropy':
         from .security.entropy import generate as entropy_monitor
         extra, assertion = entropy_monitor(prop, ports, signal, clock, reset)

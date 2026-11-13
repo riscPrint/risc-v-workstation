@@ -2472,6 +2472,19 @@ Signal names are relative to the design top. Unavailable signal names are null.
 This field records the check's Spinal domain, not a relationship constraint.
 Older reports without this field remain readable.
 
+### Dynamic PMP access monitor
+
+`rvw.formal-apps/1` kind `pmp` binds request, grant, physical address, log2 size,
+effective privilege, access operation, MML, MMWP and an ordered `entries` list of
+config/address port names. Config width is 8. PMP address width is physical width
+minus 2. Modes OFF/TOR/NA4/NAPOT use four-byte granularity. The monitor checks
+first-touch priority and full access containment with base and MML permissions.
+Latency 0 uses current policy. Latency 1..64 stores request-time permission and
+valid bits. Grant safety does not imply completion or correct denial behavior.
+CSR-bank identity is a reviewed project binding. CSR updates, lock rules,
+WARL legalization, variable response ordering and other initiators are outside
+this monitor unless checked separately. Native app proof results retain C7 scope.
+
 ### Digital entropy monitor
 
 `rvw.formal-apps/1` property kind `entropy` binds a 32/64-bit `seed` output,
