@@ -32,3 +32,27 @@ The bring-up workflow follows [the integration guide](../../../../docs/INTEGRATI
 The failure workflow checks artifact identities before cause analysis. It requires
 a reproduced failure, repair runs and a committed gate result. Missing dynamic
 evidence leaves the cause unknown.
+
+## End-to-end bring-up check
+
+```sh
+rvw agent bringup-check --out /tmp/bringup      # MCP: agent_bringup_check (long job)
+```
+
+The check copies a tiny multi-cycle RV32I Spinal core (`bringup/core`, one memory
+port, RVFI outputs, four self-checking programs) into a new Git repository and
+seeds a `sub` defect in the copy. It then walks the guide:
+
+- `bring-up`: `rvw doctor` before any project file, `rvw init` (plan, then write,
+  with `--wire-build`, `--linker-script` and `--db-top`), doctor again, the manual
+  mapping step (it copies `bringup/CoreAdapter.scala`, builds the programs, reviews
+  `rvw/cosim.json` and commits), the doctor smoke run, `regress list`, the quick tier,
+  `cosim check`, the committed gate and `query build`;
+- `test-fails`: the failing `arith` run, `bundle`, `cosim check` (first difference),
+  `query drivers`, the one-line fix and the gate on the fixed revision.
+
+`report.json` (`rvw.agent-bringup/1`) lists each step with its command, exit code,
+the outcome the guide expects, what happened (`works` or `rough_edge`) and its log.
+Exit 0 means every step worked. The check needs sbt, Verilator, the RISC-V compiler
+and the Spike shim; the tiny core runs under the `tinycore` lock. It is a setup test,
+not core evidence.

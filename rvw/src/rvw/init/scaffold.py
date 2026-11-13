@@ -104,19 +104,28 @@ object Adapter extends CoreAdapter {{
     throw new UnsupportedOperationException("Map reset, memory, retired completion and C2 RVFI; load ctx.elf")
 }}
 
-// Edit this entry for every flow. Do not create a separate database top/config.
-object Elaboration {{
-  def config: SpinalConfig = SpinalConfig(
-    defaultConfigForClockDomains = ClockDomainConfig(resetKind = SYNC))
-  def top(): Component = {('new ' + db_top) if db_top else 'throw new UnsupportedOperationException("Map the core top")'}
-}}
-
 object Main {{
   def main(args: Array[String]): Unit = new Driver(Adapter).main(args)
 }}
 '''
+    # Keep the shared elaboration entry out of the adapter file: replacing the adapter
+    # while mapping signals must not remove the database entry.
+    top = ('new ' + db_top) if db_top else 'throw new UnsupportedOperationException("Map the core top")'
+    elaboration = '''package rvwcore
+
+import java.io.File
+import spinal.core._
+
+// Edit this entry for every flow. Do not create a separate database top/config.
+object Elaboration {
+  def config: SpinalConfig = SpinalConfig(
+    defaultConfigForClockDomains = ClockDomainConfig(resetKind = SYNC))
+  def top(): Component = ''' + top + '''
+}
+'''
     files = {'rvw.toml': config, 'rvw/run.sh': launcher,
              'rvw/src/main/scala/rvwcore/CoreAdapter.scala': adapter,
+             'rvw/src/main/scala/rvwcore/Elaboration.scala': elaboration,
              'rvw/.gitignore': '/out/\n/target/\n/project/target/\n/project/project/\n',
              'rvw/README.md': '''# Core setup playbook
 
@@ -178,7 +187,7 @@ No integration-model policy is selected.
         files['rvw.toml'] += '\n[cosim]\nplatform = "rvw/cosim.json"\n'
         files['rvw/README.md'] += "\nReview rvw/cosim.json against the core specification. The linker supplies\nonly the selected RAM region. Check MMIO, PMP, IRQ, privilege and fault policies.\nRemove review_required only after this review. The cosim loader refuses it.\n"
     if db_top:
-        files['rvw/src/main/scala/rvwcore/CoreAdapter.scala'] += '''
+        files['rvw/src/main/scala/rvwcore/Elaboration.scala'] += '''
 object Database {
   def main(args: Array[String]): Unit = {
     val (opts, rtl, pos) = spinaldb.Main.parse(args.toSeq)
@@ -192,6 +201,25 @@ object Database {
         files['rvw/build-db.sh'] = db_script(db_top, name)
         files['rvw.toml'] += '\n[query]\nbuild = ["./rvw/build-db.sh"]\ndb = "rvw/out/design.db"\n'
         files['rvw/README.md'] += "\nThe query entry uses Elaboration.top and Elaboration.config. Check --db-top against\nthe actual source. Run rvw query build --config default after dependency setup.\n"
+    # bundle, reduce and bisect read the core's debug description (docs/contracts/project.md).
+    files['rvw/debug.toml'] = (f'[core]\nname = {q(name)}\nsource_env = "RVW_CORE_SOURCE"\n'
+                               '# Simulation time units per clock cycle: the period the adapter passes to forkStimulus.\n'
+                               'period = 10\n')
+    files['rvw.toml'] += '\n[debug]\nconfig = "rvw/debug.toml"\n'
+    advice = []
+    if wire_build:
+        # The wired build compiles the core project into its own target/ directories. Untracked
+        # build outputs make the core tree dirty, and a dirty tree cannot earn a gate verdict.
+        ignores = ['/target/', '/project/target/', '/project/project/']
+        gitignore = root / '.gitignore'
+        if not gitignore.exists():
+            files['.gitignore'] = '\n'.join(ignores) + '\n'
+        else:
+            text = gitignore.read_text()
+            missing = [i for i in ignores if i not in text and i.strip('/') not in text]
+            if missing:
+                advice.append('Add ' + ', '.join(missing) + ' to .gitignore: the wired sbt build writes them '
+                              'and an untracked output makes the core tree dirty for the gate.')
     conflicts = [key for key in files if (root / key).exists() or (root / key).is_symlink()]
     if conflicts and not force:
         raise ValueError('Refusing to overwrite: ' + ', '.join(conflicts) + '. Use --force only for intended replacement.')
@@ -217,4 +245,4 @@ object Database {
                 root=str(root), isa=isa, xlen=width, spinal_versions=versions, candidate_tops=tops, build_wired=wire_build,
                 files=files, overwritten=conflicts if force else [],
                 next=['Run rvw doctor --json. Project parsing should be ready; adapter, tests and gate remain not ready.',
-                      'Map the adapter signals and RVFI. Follow rvw/README.md.'])
+                      'Map the adapter signals and RVFI. Follow rvw/README.md.', *advice])

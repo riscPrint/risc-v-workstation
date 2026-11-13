@@ -12,6 +12,11 @@ def register(subparsers):
     g.add_argument('--markdown', action='store_true', help='the generated docs/AGENT_SETUP.md block')
     g.add_argument('--write', type=Path, help='with --markdown: replace the block in this file')
     g.set_defaults(func=_guide)
+    b = sub.add_parser('bringup-check', help='walk the guide on a scratch copy of a tiny seeded Spinal core')
+    b.add_argument('--out', required=True, type=Path, help='new output directory (core copy, logs, report.json)')
+    b.add_argument('--timeout', type=float, default=1800, help='seconds per step')
+    b.add_argument('--bring-up-only', action='store_true', help='skip the test-fails workflow')
+    b.set_defaults(func=_bringup)
 
 
 def _guide(args):
@@ -31,3 +36,14 @@ def _guide(args):
             for s in w['steps']:
                 print(f'  {s["id"]}: rvw {" ".join(s["cli"])}' if s.get('cli') else f'  {s["id"]}: (manual) {s["do"]}')
     return 0
+
+
+def _bringup(args):
+    from . import bringup
+    workflows = ('bring-up',) if args.bring_up_only else ('bring-up', 'test-fails')
+    report = bringup.run_check(args.out, timeout=args.timeout, workflows=workflows)
+    for step in report['steps']:
+        extra = f' ({step["observed"]})' if step.get('observed') else ''
+        print(f'{step["status"]:10} {step["workflow"]}/{step["step"]}{extra}')
+    print(json.dumps(report['summary']))
+    return 0 if report['status'] == 'works' else 1
