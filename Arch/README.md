@@ -772,3 +772,28 @@ in state power. The tool does not propagate activity through topology links,
 simulate wake latency, infer sleep states or predict cell-level power. Declared
 state residency is not a hardware observation. Abstract system energy remains
 separate from physical PPA. Measurement-based calibration under #201 stays open.
+
+## Custom-instruction trade-offs
+
+Run `rvw arch custom-tradeoff PLAN --out NEW_REPORT.json --json`, or use
+`arch_custom_tradeoff`. A `rvw.custom-tradeoff-plan/1` object contains a
+`workload_id`, `baseline`, `candidate` and `software_cost`. Each case names
+`config`, `trace` and `elf` paths. The model's existing custom instruction rules
+apply. Software cost has numeric `baseline`, `candidate`, a `unit` and a `source`.
+Paths are relative to the plan. Model cycles give predicted speedup.
+
+A case can name a saved `c1` result. It must be a conclusive pass with matching
+ELF hash, C2 header identity and retired count. Two such results give a separate
+RTL speedup. This command launches no RTL and does not infer semantic correctness
+from C1 timing. A case's optional `checks` list names independent-check artifacts.
+The report hashes them. It does not infer a combined pass or prove independence.
+
+A case can also name a `ppa` JSON file with schema `rvw.early-ppa/1`, `source`,
+`rtl_revision` and any of `area_mm2`, `delay_ns` and `power_mw`. These are producer
+reports with stated units. The command records their hashes and compares common
+metrics. It does not infer physical measurements from model counters. Software
+cost remains a declared estimate. Missing RTL or PPA gives `no_checks`.
+
+Different baseline and extension ELFs can share a declared workload identity,
+but the command does not prove their program outputs equivalent. Independent
+extension execution and RTL/PPA measurements remain necessary under #196.

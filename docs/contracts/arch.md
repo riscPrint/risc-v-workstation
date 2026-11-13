@@ -364,3 +364,14 @@ partition the run cycles. Missing model activity counts are errors.
 `rvw.system-energy/1` reports input hashes, per-component pJ, total pJ and
 average mW. Calibration is not performed. State residency and coefficients
 remain producer declarations. This is abstract system energy, not cell power.
+
+## Custom-instruction trade-off report
+
+`rvw.custom-tradeoff-plan/1` joins a declared workload identity, two model
+config/trace/ELF inputs and source-labelled software cost. Optional C1 evidence
+must pass identity and retired-count checks. Optional `rvw.early-ppa/1` files
+provide source, RTL revision and area_mm2/delay_ns/power_mw metrics.
+`rvw.custom-tradeoff/1` separates model speedup, RTL speedup, software cost and
+PPA deltas. It hashes check references but gives no aggregate correctness pass.
+Missing RTL and PPA remain `no_checks`. Workload equivalence and PPA provenance
+are producer declarations, not independent proofs made by this tool.
