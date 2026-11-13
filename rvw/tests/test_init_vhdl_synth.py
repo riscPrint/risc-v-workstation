@@ -24,7 +24,7 @@ def test_vhdl_build_uses_standalone_ghdl_and_preserves_paths(tmp_path):
     for tool in (ghdl, verilator):
         tool.chmod(0o755)
     env = {**os.environ, 'PATH': str(tools) + os.pathsep + os.environ['PATH']}
-    result = subprocess.run(['bash', 'rvw/run.sh', 'build'], cwd=tmp_path,
+    result = subprocess.run(['/bin/bash', 'rvw/run.sh', 'build'], cwd=tmp_path,
                             env=env, capture_output=True, text=True, timeout=10)
     assert result.returncode == 0, result.stderr
     assert '"status":"built"' in result.stdout
