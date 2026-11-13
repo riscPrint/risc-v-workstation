@@ -8,15 +8,20 @@ from rvw.common.proc import run_group
 def query(model, top, depth, property_name=None):
     if not re.fullmatch(r'[A-Za-z_][A-Za-z0-9_.$]*', top) or not 1 <= depth <= 10000:
         raise ValueError('unsupported top or depth')
-    available = {name: index for index, name in re.findall(r"^; yosys-smt2-assert (\d+) (\S+)", model, re.M)}
+    from .activation import metadata
+    available = {name: index for index, name in metadata(model, top, 'assert').items()}
     accessor = top + "_a"
     if property_name is not None:
         if property_name not in available:
             raise ValueError("property missing from captured top: " + property_name)
         accessor += " " + available[property_name]
-    assumptions = {index: name for index, name in re.findall(r"^; yosys-smt2-assume (\d+) (\S+)", model, re.M)}
+    assumptions = metadata(model, top, 'assume')
     constraints = {}
-    lines = [model]
+    from .activation import guards
+    activation = guards(model, top)
+    if property_name is not None:
+        activation = [g for g in activation if g['property_id'] == f'{top}:{property_name}']
+    lines = [model, *(g['definition'] for g in activation)]
     def add(label, term, kind, sample):
         lines.append(f'(assert (! {term} :named {label}))')
         constraints[label] = {'kind': kind, 'sample': sample, 'signals': []}
@@ -40,7 +45,9 @@ def query(model, top, depth, property_name=None):
     failures = ' '.join(f'(not (|{accessor}| s{i}))' for i in range(depth))
     add('failure', f'(or {failures})', 'any_assertion_failure', None)
     return '\n'.join(lines), {'schema': 'rvw.smt-bindings/1', 'property_id': f'{top}:{property_name or "all_assertions"}',
-                              'constraints': constraints, 'depth': depth, 'top': top}
+                              'constraints': constraints, 'depth': depth, 'top': top,
+                              'activation_queries': [dict(property_id=g['property_id'], scope=g['scope'],
+                                  term='(or ' + ' '.join(f'({g["function"]} s{i})' for i in range(depth)) + ')') for g in activation]}
 
 
 def export(result, out, capture, timeout, depth=None, property_name=None):

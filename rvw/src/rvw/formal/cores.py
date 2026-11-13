@@ -140,6 +140,21 @@ def run(args):
         selected = set(report.get('environment_core', report['labels']))
         report['assumptions'] = [dict(binding, label=label, in_core=(label in selected if report["status"] == "pass" or "environment_core" in report and report["solver_status"] == "unsat" else None))
             for label, binding in bindings['constraints'].items() if binding.get('kind') == 'assumption']
+        report['property_activation'] = []
+        for guard in exported.get('activation_queries', []):
+            status = 'not_checked'
+            blocking = None
+            if feasibility == 'sat':
+                selected = {k: v for k, v in assertions.items() if k != 'failure'}
+                selected['activation'] = '(assert (! ' + guard['term'] + ' :named activation))'
+                status, _ = solve(background, selected)
+                if status == 'unsat':
+                    blocking = extract(background, selected, solve)
+            report['property_activation'].append(dict(property_id=guard['property_id'],
+                status={'sat': 'reached', 'unsat': 'not_reached_bounded'}.get(status, 'inconclusive'),
+                solver_status=status, depth=exported['depth'], scope=guard['scope'],
+                blocking_core=blocking, blocking_assumptions=[bindings['constraints'][label] for label in blocking['labels']
+                    if label in bindings['constraints'] and bindings['constraints'][label].get('kind') == 'assumption'] if blocking else []))
         report['bounded_model'] = {'top': exported['top'], 'depth': exported['depth'], 'feasibility': feasibility,
             'scope': 'Aggregate bounded assertion query from captured SBY RTLIL, including AIGER engine runs. Core units are sample constraints, not logic cells. No exclusion authority.'}
     if args.db:
