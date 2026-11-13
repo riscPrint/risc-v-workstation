@@ -7,7 +7,8 @@
     "onCommand:navigation.blocks",
     "onCommand:navigation.wave",
     "onCommand:navigation.drivers",
-    "onCommand:navigation.loads"
+    "onCommand:navigation.loads",
+    "onCommand:navigation.navigate"
   ],
   "contributes": {
     "commands": [
@@ -30,6 +31,10 @@
       {
         "command": "navigation.loads",
         "title": "RVW: Show Loads at Line"
+      },
+      {
+        "command": "navigation.navigate",
+        "title": "RVW: Show Cross-Navigation Record"
       }
     ],
     "menus": {
@@ -56,6 +61,11 @@
         },
         {
           "command": "navigation.loads",
+          "when": "resourceExtname == .scala",
+          "group": "rvw"
+        },
+        {
+          "command": "navigation.navigate",
           "when": "resourceExtname == .scala",
           "group": "rvw"
         }

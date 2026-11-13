@@ -16,7 +16,7 @@ const feature: Feature = {id:'navigation', activate(context) {
   register('signals', async loc => {const signal=await select(loc); if(signal) await vscode.window.showInformationMessage(signal);});
   register('blocks', async loc => vscode.commands.executeCommand('spinalblocks.showLocation', loc));
   register('wave', async loc => {const signal=await select(loc); if(signal) await vscode.commands.executeCommand('wave.signalQuery', signal);});
-  for (const kind of ['drivers','loads'] as const) register(kind, async loc => {
+  for (const kind of ['drivers','loads','navigate'] as const) register(kind, async loc => {
     const signal=await select(loc); if(!signal) return;
     if(!vscode.workspace.isTrusted) throw new Error('Trust the workspace before running rvw.');
     const cfg=vscode.workspace.getConfiguration('lsp');

@@ -7,3 +7,6 @@ test('retain every instance candidate and use argv without a shell',()=>{
  assert.deepEqual(candidates(null),[]);
  assert.deepEqual(dependencyArgs('loads','a b.db','top.a'),['query','loads','--db','a b.db','--json','--','top.a']);
 });
+test('request one cross-navigation record',()=>{
+ assert.deepEqual(dependencyArgs('navigate','design.db','cpu.io_rd'),['query','navigate','--db','design.db','--json','--','cpu.io_rd']);
+});
