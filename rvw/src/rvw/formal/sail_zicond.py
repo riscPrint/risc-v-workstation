@@ -106,6 +106,11 @@ endmodule
 '''
 
 
+def lower_temporary_slices(text):
+    return re.sub(r'= \{([^;]+)\}\[([0-9]+):0\];',
+                  lambda m: '= ' + str(int(m[2]) + 1) + "'({" + m[1] + '});', text)
+
+
 def generate(model, compiler, out, *, rules=None, metadata=None, shell_builder=None):
     rules = extract(model) if rules is None else rules
     compiler = shutil.which(str(compiler))
@@ -199,8 +204,7 @@ def generate(model, compiler, out, *, rules=None, metadata=None, shell_builder=N
             raise ValueError('unsupported Sail result interface')
         # Yosys accepts a sized cast where Sail emits a slice of a temporary
         # concatenation. Both forms retain the low N bits of the expression.
-        lowered = re.sub(r'= \{([^\n]+)\}\[([0-9]+):0\];',
-                         lambda m: '= ' + str(int(m[2])+1) + "'(" + m[1] + ');', lowered)
+        lowered = lower_temporary_slices(lowered)
         target = out / f'insn_{name}.v'
         shell = (shell_builder(name, rule, result_ports[0]) if shell_builder
                  else instruction_shell(name, rule['match'], result_ports[0]))

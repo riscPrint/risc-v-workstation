@@ -12,7 +12,7 @@ def test_signedness_cast_lowering_does_not_corrupt_unsigned():
 
 def test_packed_assignment_and_multiline_temporary():
     assert "'{" not in lower("x = '{a,b};",'mul')
-    assert "x = 32'(a\n*b);" == lower('x = {a\n*b}[31:0];','mul')
+    assert "x = 32'({a\n*b});" == lower('x = {a\n*b}[31:0];','mul')
 
 
 def test_integer_primitive_is_bound_not_blackboxed():
