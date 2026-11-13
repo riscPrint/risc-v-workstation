@@ -167,7 +167,18 @@ def launch_online(command, model, platform, *, out, reproduction, timeout=120,
     try:
         if listener is not None:
             from .lockstep import serve_connection
-            connection, _ = listener.accept()
+            import time
+            deadline = time.monotonic() + timeout
+            listener.settimeout(min(0.2, timeout))
+            while True:
+                try:
+                    connection, _ = listener.accept()
+                    break
+                except TimeoutError:
+                    if done.is_set():
+                        raise ValueError('simulator exited before lockstep connection')
+                    if time.monotonic() >= deadline:
+                        raise ValueError('lockstep connection timed out')
             with connection:
                 connection.settimeout(timeout)
                 result = serve_connection(connection, model, platform, reproduction=reproduction,

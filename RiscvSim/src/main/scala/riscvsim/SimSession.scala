@@ -107,6 +107,12 @@ object RiscvSimConfig {
       case Some(path) => cfg.cachePath(path.getAbsolutePath)
       case None => cfg.disableCache
     }
+    if (sys.env.get("RVW_COSIM_DPI").contains("1")) {
+      val source = new File(sys.props("riscvsim.tools"), "Cosim/lockstep_dpi.cc")
+      cfg.addSimulatorFlag(source.getAbsolutePath)
+      val hash = ElfFile.sha256(java.nio.file.Files.readAllBytes(source.toPath))
+      cfg.addSimulatorFlag(s"-CFLAGS -DRVW_COSIM_DPI_$hash")
+    }
     if (key.wave) cfg.withVcdWave
     // Fault models write registers from outside; Verilator must re-evaluate their readers.
     if (key.faults) cfg.addSimulatorFlag("--public-flat-rw")

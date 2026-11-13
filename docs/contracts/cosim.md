@@ -185,3 +185,15 @@ that it occurred. `platform_policy` gives explicit reference choices.
 `trace_complete` requires a validated C2 end record. An incomplete valid prefix
 can be inspected. Errors return status `error` and CLI exit 2. Inspection returns
 CLI exit 0, including valid incomplete traces. No reference executable is needed.
+
+## Native lockstep DPI mailbox
+
+`RVW_COSIM_DPI=1` links `Cosim/lockstep_dpi.cc` into the generic Verilator
+simulation build. An adapter can expose `riscvsim.LockstepDpi` and pass its
+`observe` callback to `RvfiTraceWriter`. Call the callback from a simulation
+thread while the core clock has no edge. Each request blocks in native code
+until the reference checks that C2 record. The mailbox accepts at most 8192
+UTF-8 bytes per line. A longer line fails. The client returns 0 for continue,
+1 for a complete match, 2 for a comparison stop and -1 for transport failure.
+Only a complete match acknowledges the end record. The source digest enters
+the Verilator cache key. This transport does not add architectural masks.

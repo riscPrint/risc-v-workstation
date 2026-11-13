@@ -52,3 +52,14 @@ def test_launcher_blocks_each_record(tmp_path):
                           out=tmp_path/'out', reproduction={}, lockstep=True, timeout=5)
     assert result['status'] == 'match', result
     assert result['mode'] == 'lockstep'
+
+
+def test_launcher_reports_exit_before_connection(tmp_path):
+    import sys
+    import pytest
+    from rvw.cosim.online import launch_online
+    _, row = fixture()
+    with pytest.raises(ValueError, match='exited before lockstep connection'):
+        launch_online([sys.executable, '-c', 'raise SystemExit(2)'],
+                      Model(row), Platform.load('boom'), out=tmp_path/'out',
+                      reproduction={}, lockstep=True, timeout=5)

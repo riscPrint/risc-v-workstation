@@ -28,4 +28,28 @@ class LiveTraceSpec extends AnyFunSuite {
       Files.deleteIfExists(path)
     }
   }
+  test("custom transport observes flushed C2 and cannot resume") {
+    val path = Files.createTempFile("rvfi-dpi", ".jsonl")
+    val seen = scala.collection.mutable.ArrayBuffer.empty[String]
+    val observe: String => Unit = line => {
+      assert(Files.readAllLines(path).get(seen.size) == line)
+      seen += line
+    }
+    val writer = new RvfiTraceWriter(path.toFile, ujson.Obj("xlen" -> 32),
+      observe = Some(observe))
+    try {
+      assert(seen.size == 1)
+      writer.irq(1, 0)
+      writer.end(2, "pass")
+      assert(seen.size == 3)
+    } finally {
+      writer.close()
+      Files.deleteIfExists(path)
+    }
+    intercept[IllegalArgumentException] {
+      new RvfiTraceWriter(path.toFile, ujson.Obj("xlen" -> 32),
+        resume = Some(ujson.Obj()), observe = Some(observe))
+    }
+  }
+
 }
