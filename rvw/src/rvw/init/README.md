@@ -203,3 +203,8 @@ preprocesses RTL with the build arguments and emits `rvw.adapter-capture/2`.
 this identity before reuse and copy its result claims into each C1 record.
 The generated stub refuses run until memory and completion are mapped. Review
 input declarations again when you add project code or external dependencies.
+
+The plain HDL build forces make to recompile native objects. Make does not
+track changed compiler flags as object dependencies. This prevents a new
+identity from being attached to an old binary. A project launcher can skip a
+build only when its saved complete input identity is unchanged.
