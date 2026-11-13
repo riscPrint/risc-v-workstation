@@ -1,0 +1,102 @@
+{
+  "schema": "rvw.csim-rtl-compare/1",
+  "status": "compared",
+  "reasons": [],
+  "event_source": "bp-events",
+  "counter_semantics": "final-prediction",
+  "roi": {
+    "start_order": 0,
+    "end_order": null
+  },
+  "study": "vexiiriscv-rv32im_cached-predictors",
+  "study_sha256": "3c2d31e298b3956b932d97f2ced51ba90a855a04d207ca58ae1a6f7f89372e49",
+  "fidelity": "approximate",
+  "trace": {
+    "path": "$RUN_ROOT/vexii-predictor-targets/rvfi.jsonl",
+    "format": "c2",
+    "instructions": 35661,
+    "branches": 9004,
+    "memory_rows": 1,
+    "traps_skipped": 0,
+    "context_changes": 0
+  },
+  "events": "$RUN_ROOT/vexii-targets-bp.jsonl",
+  "observed": {
+    "direction": {
+      "disagree": 409,
+      "events": 6001,
+      "rtl_misses": 844,
+      "model_misses": 1065,
+      "both_wrong": 750,
+      "rtl_only_wrong": 94,
+      "model_only_wrong": 315,
+      "rtl_mpki": 23.667311628950394,
+      "model_mpki": 29.864557920417262,
+      "agreement": 0.9318446925512415
+    },
+    "target": {
+      "events": 6001,
+      "rtl_misses": 4,
+      "model_misses": 610,
+      "disagree": 606,
+      "rtl_mpki": 0.11216735369170802,
+      "model_mpki": 17.105521437985473,
+      "agreement": 0.8990168305282453
+    }
+  },
+  "inferred": null,
+  "per_branch": [
+    {
+      "pc": "0x80000048",
+      "kind": "cond",
+      "executed": 1500,
+      "rtl_direction_misses": 753,
+      "model_direction_misses": 747,
+      "direction_disagreements": 104,
+      "rtl_target_misses": 1,
+      "model_target_misses": 388
+    },
+    {
+      "pc": "0x80000098",
+      "kind": "cond",
+      "executed": 1500,
+      "rtl_direction_misses": 33,
+      "model_direction_misses": 151,
+      "direction_disagreements": 146,
+      "rtl_target_misses": 1,
+      "model_target_misses": 151
+    },
+    {
+      "pc": "0x80000054",
+      "kind": "cond",
+      "executed": 1500,
+      "rtl_direction_misses": 27,
+      "model_direction_misses": 124,
+      "direction_disagreements": 127,
+      "rtl_target_misses": 1,
+      "model_target_misses": 29
+    },
+    {
+      "pc": "0x8000006c",
+      "kind": "cond",
+      "executed": 1500,
+      "rtl_direction_misses": 31,
+      "model_direction_misses": 43,
+      "direction_disagreements": 32,
+      "rtl_target_misses": 1,
+      "model_target_misses": 42
+    },
+    {
+      "pc": "0x80000074",
+      "kind": "cond",
+      "executed": 1,
+      "rtl_direction_misses": 0,
+      "model_direction_misses": 0,
+      "direction_disagreements": 0,
+      "rtl_target_misses": 0,
+      "model_target_misses": 0
+    }
+  ],
+  "measured_instructions": 35661,
+  "note": "Agreement is a measured model gap, not an RTL correctness or fidelity verdict."
+}

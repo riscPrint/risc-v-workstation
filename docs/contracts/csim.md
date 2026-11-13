@@ -102,3 +102,10 @@ on the given traces, not a fidelity verdict.
 The comparison status is `inconclusive` when the ELF identity,
 hart, counter semantics or an event for a conditional branch in the ROI is
 missing, or when an event does not align with the trace. It never reports a match.
+
+## Predictor target scoring
+
+Target comparison ignores the target value when the actual branch is not taken.
+Both RTL and model target-miss counts use this rule. Direction and target
+agreement are separate metrics. A target-error indication alone cannot supply
+the predicted direction. Project probes must carry the actual prediction bits.

@@ -1243,7 +1243,6 @@
         "farm_recover",
         "farm_run",
         "farm_select",
-        "farm_observe",
         "farm_triage",
         "farm_workflow",
         "lint_emit",

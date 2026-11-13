@@ -205,7 +205,7 @@ def compare(study_path, c2_path, events_path, roi_start: int | None = None, roi_
             missing += 1
         if "target" in e or "target_correct" in e:
             model_ok = m["pred_target"] == m["target"] or not m["taken"]
-            rtl_ok = (e["target"][0] == e["target"][1]) if "target" in e else bool(e["target_correct"])
+            rtl_ok = not m["taken"] or ((e["target"][0] == e["target"][1]) if "target" in e else bool(e["target_correct"]))
             t["events"] += 1
             t["rtl_misses"] += not rtl_ok; t["model_misses"] += not model_ok
             t["disagree"] += rtl_ok != model_ok

@@ -234,3 +234,17 @@ def test_compare_reports(tmp_path, capsys):
     assert out["missing_candidate_traces"] == 0
     with pytest.raises(ValueError, match="expected"):
         study.compare({"schema": "x"}, b)
+
+
+def test_target_scoring_ignores_unused_target_on_not_taken_branch(tmp_path):
+    trace, rows = c2_branches(tmp_path, [False, True])
+    events = bp_events(tmp_path, rows)
+    lines = [json.loads(line) for line in events.read_text().splitlines()]
+    for event in lines[1:]:
+        event['predicted_target'] = '0x0'
+        event['target'] = hex(int(event['pc'], 16) + 8)
+    events.write_text('\n'.join(json.dumps(line) for line in lines) + '\n')
+    report = rtl.compare({'branch': {'model': 'perfect'}}, trace, events)
+    assert report['status'] == 'compared'
+    assert report['observed']['target']['events'] == 2
+    assert report['observed']['target']['rtl_misses'] == 1
