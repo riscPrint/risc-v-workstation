@@ -237,7 +237,9 @@ translation. The `gshare` study is unqualified.
 
 ## Out-of-order timing model
 
-`rvw/arch/ooo.json` describes this configuration for the workstation's
+`rvw/arch/ooo.json` retains the initial description. The revised default is
+`rvw/arch/ooo-measured.json`. See the measured delta study below for current
+trust limits. Both describe the same base RTL configuration for the workstation's
 trace-driven OoO model (`rvw ooo`): two-wide fetch, rename and commit, 64 ROB
 entries, 32 issue-queue entries, 16 load and 16 store entries, 64 physical
 registers, speculative load issue, buffered stores, and shared components for NaxRiscv's GShare
@@ -250,9 +252,9 @@ event, fits branch penalty and load latency on the training programs only
 3. The calibration plan allows 5,000,000 cycles, including `spmv`.
 
 ```sh
-rvw ooo rvw/arch/ooo.json rvw/out/probe/median/rvfi.jsonl --json
+rvw ooo rvw/arch/ooo-measured.json rvw/out/probe/median/rvfi.jsonl --json
 python3 rvw/arch/calibrate.py rvw/out/probe rvw/out/calib
-rvw ooo rvw/arch/ooo.json rvw/out/probe/spmv/rvfi.jsonl --max-cycles 5000000 --json
+rvw ooo rvw/arch/ooo-measured.json rvw/out/probe/spmv/rvfi.jsonl --max-cycles 5000000 --json
 ```
 
 ### Initial correlation
@@ -565,3 +567,192 @@ C1/C2/probe captures stay under `$RUN_ROOT/<variant>/<program>`; the retained
 file gives their hashes. The private fault-control edits were present
 with all plants disabled. This is simulation evidence on six programs.
 It is not ISA or whole-core qualification for the variants.
+
+
+## Measured delta study (2026-11-13)
+
+The model meets the delta criterion on only two of 15 nonzero RTL changes. All nine zero changes match. Structure-size choices still need RTL measurements. Use the model to select experiments and inspect possible bottlenecks. The current results do not qualify design decisions for Apple M-series or Zen 5 class cores.
+
+Thirty RTL runs pass. Thirty complete traces match Spike, with counter
+synchronization recorded. Six programs run at seed 1 with zero added memory
+wait. The variants change only dispatch slots (32 to 16), ROB entries
+(64 to 128), load entries (16 to 8) or store entries (16 to 8).
+The existing private fault controls stay disabled.
+
+### RTL IPC and slot partition
+
+R, S, B and F are percent retiring, bad speculation, back end and front end.
+These are project-bound commit-slot predicates. They are not hardware
+top-down counters or independent causal budgets.
+
+| Variant | Program | RTL IPC | R / S / B / F (%) |
+|---|---|---:|---|
+| base | median | 0.590 | 29.5 / 20.1 / 49.5 / 0.9 |
+| base | qsort | 0.770 | 38.5 / 15.0 / 46.5 / 0.1 |
+| base | multiply | 1.421 | 71.1 / 2.8 / 25.7 / 0.5 |
+| base | towers | 0.819 | 41.0 / 9.7 / 47.0 / 2.4 |
+| base | vvadd | 1.243 | 62.2 / 6.3 / 28.2 / 3.4 |
+| base | memcpy | 1.229 | 61.4 / 1.5 / 36.3 / 0.7 |
+| iq16 | median | 0.580 | 29.0 / 19.9 / 50.2 / 0.9 |
+| iq16 | qsort | 0.766 | 38.3 / 14.8 / 46.8 / 0.1 |
+| iq16 | multiply | 1.417 | 70.8 / 2.9 / 25.8 / 0.5 |
+| iq16 | towers | 0.814 | 40.7 / 8.4 / 48.5 / 2.4 |
+| iq16 | vvadd | 1.141 | 57.0 / 6.0 / 33.9 / 3.1 |
+| iq16 | memcpy | 1.075 | 53.8 / 1.5 / 44.1 / 0.6 |
+| rob128 | median | 0.590 | 29.5 / 20.1 / 49.5 / 0.9 |
+| rob128 | qsort | 0.770 | 38.5 / 15.0 / 46.5 / 0.1 |
+| rob128 | multiply | 1.421 | 71.1 / 2.8 / 25.7 / 0.5 |
+| rob128 | towers | 0.819 | 41.0 / 9.7 / 47.0 / 2.4 |
+| rob128 | vvadd | 1.243 | 62.2 / 6.3 / 28.2 / 3.4 |
+| rob128 | memcpy | 1.229 | 61.4 / 1.5 / 36.3 / 0.7 |
+| lq8 | median | 0.584 | 29.2 / 20.0 / 50.0 / 0.9 |
+| lq8 | qsort | 0.768 | 38.4 / 14.9 / 46.7 / 0.1 |
+| lq8 | multiply | 1.421 | 71.0 / 2.8 / 25.7 / 0.5 |
+| lq8 | towers | 0.808 | 40.4 / 8.9 / 48.3 / 2.3 |
+| lq8 | vvadd | 1.207 | 60.4 / 6.1 / 30.3 / 3.3 |
+| lq8 | memcpy | 1.131 | 56.5 / 1.4 / 41.4 / 0.7 |
+| sq8 | median | 0.590 | 29.5 / 20.1 / 49.5 / 0.9 |
+| sq8 | qsort | 0.768 | 38.4 / 14.9 / 46.7 / 0.1 |
+| sq8 | multiply | 1.421 | 71.1 / 2.8 / 25.7 / 0.5 |
+| sq8 | towers | 0.783 | 39.2 / 8.9 / 49.7 / 2.3 |
+| sq8 | vvadd | 1.243 | 62.2 / 6.3 / 28.2 / 3.4 |
+| sq8 | memcpy | 1.095 | 54.7 / 1.4 / 43.3 / 0.6 |
+
+
+### Fixed-calibration IPC changes
+
+Each value is percent change from the base IPC. Both descriptions use one
+base-only fit across all four variants. The revised fit uses median, qsort
+and multiply. It selects branch penalty 10 and load latency 2 from six
+candidates. No variant or held-out result enters selection. The new
+description is [ooo-measured.json](rvw/arch/ooo-measured.json).
+The initial description stays in [ooo.json](rvw/arch/ooo.json).
+
+A result is outside the criterion when its sign differs or its error exceeds
+half the measured change. Zero measured changes have no relative error.
+The criterion uses exact signs. Small nonzero losses remain explicit.
+
+| Variant | Program | Measured (%) | Initial model (%) | Revised model (%) | Revised criterion |
+|---|---|---:|---:|---:|---|
+| iq16 | median | -1.682 | -0.007 | -0.155 | outside |
+| rob128 | median | +0.000 | +0.000 | +0.000 | within |
+| lq8 | median | -1.057 | +0.000 | +0.000 | outside |
+| sq8 | median | +0.000 | +0.000 | +0.000 | within |
+| iq16 | qsort | -0.617 | -0.017 | -0.276 | outside |
+| rob128 | qsort | +0.000 | +0.000 | +0.000 | within |
+| lq8 | qsort | -0.359 | +0.000 | +0.000 | outside |
+| sq8 | qsort | -0.294 | +0.000 | +0.000 | outside |
+| iq16 | multiply | -0.303 | -0.026 | -0.088 | outside |
+| rob128 | multiply | +0.000 | +0.000 | +0.000 | within |
+| lq8 | multiply | -0.021 | +0.000 | +0.000 | outside |
+| sq8 | multiply | +0.000 | +0.000 | +0.000 | within |
+| iq16 | towers | -0.627 | -0.137 | -0.860 | within |
+| rob128 | towers | +0.000 | +0.000 | +0.000 | within |
+| lq8 | towers | -1.388 | -0.096 | -0.108 | outside |
+| sq8 | towers | -4.393 | -0.109 | -0.054 | outside |
+| iq16 | vvadd | -8.244 | -0.184 | -7.976 | within |
+| rob128 | vvadd | +0.000 | +0.000 | +0.000 | within |
+| lq8 | vvadd | -2.902 | -0.023 | +0.000 | outside |
+| sq8 | vvadd | +0.000 | +0.000 | +0.000 | within |
+| iq16 | memcpy | -12.497 | -0.004 | -5.890 | outside |
+| rob128 | memcpy | +0.000 | +0.000 | +0.000 | within |
+| lq8 | memcpy | -7.988 | -4.330 | -3.490 | outside |
+| sq8 | memcpy | -10.902 | -3.516 | -2.602 | outside |
+
+| Variant | Initial outside criterion | Revised outside criterion |
+|---|---:|---:|
+| iq16 | 6/6 | 4/6 |
+| rob128 | 0/6 | 0/6 |
+| lq8 | 5/6 | 6/6 |
+| sq8 | 3/6 | 3/6 |
+
+The initial model has 14 wrong deltas. The revision has 13.
+IQ16 improves on towers and vvadd. LQ8 worsens by one pair. The store-queue
+loss remains too small in the model. This is mixed delta evidence despite
+the better absolute IPC fit.
+
+### Mechanisms and remaining gaps
+
+The RTL issue queue reuses whole age-ordered lines after wakeup.
+The generic compacting policy now represents this constraint and one
+registered reuse cycle. The front end now has a generic fetch-block limit.
+The RTL uses one 8-byte block per cycle. The old description could fetch
+instructions from two adjacent blocks in one cycle.
+
+Training probe pairs show one-cycle ALU, two-cycle branch/jump and
+four-cycle store completion. Observed load hits take four cycles.
+The revised project also declares the existing 16-entry return stack
+and shared ALU/branch ports. The fitted load execution delay remains two
+cycles, plus component service. It is an effective timing parameter,
+not an extracted pipeline latency.
+
+The [per-pair mechanism record](rvw/arch/mechanism-results.json) gives
+both top-down partitions and counter values for every pair.
+The [stage-pair counts](rvw/arch/latency-results.json) retain the training
+observations. Stage-pair capture is partial. These counts support timing
+priors, not complete pipeline qualification.
+
+Finite store drain remains absent. Buffered stores release their model
+queue slot at commit. The RTL can retain stores until drain. Wrong-path
+load/issue occupancy, speculative predictor repair and exact LSU replay
+also remain approximate. These gaps can change capacity deltas even when
+the committed instruction stream is equal. Counter changes support these
+mechanism hypotheses; they do not isolate every cause.
+
+### Base-fit regression
+
+Mean absolute IPC error, in percent:
+
+| Description | Training (3) | Original held-out (5) | Extended held-out (6) |
+|---|---:|---:|---:|
+| Buffered baseline | 20.74 | 12.98 | 12.36 |
+| IPC objective only | 18.77 | 12.34 | 12.60 |
+| Compacting queue only | 20.74 | 13.08 | 12.47 |
+| RTL structure priors | 19.94 | 14.45 | 12.34 |
+| Fetch alignment and base-only fit | 10.67 | 7.56 | 7.47 |
+
+
+The queue-only and structure-prior rows are intermediate trials.
+Their engine hashes are retained. They are not a controlled one-field
+sweep of the final engine.
+
+The earlier buffered-store update changed branch overlap, memory ordering,
+port sharing and fit settings together. Its training regression cannot be
+attributed to buffered stores alone. The old objective minimized cycle
+error, although the reported metric was IPC error. IPC-only refitting
+helps the original held-out set but slightly worsens the extended set.
+The final structural correction improves both held-out set means.
+Individual regressions remain: revised memcpy error is -8.15%, against
+-7.16% before. Towers remains +20.34%.
+
+[Calibration inputs, candidates and all sample errors](rvw/arch/calibration-results.json)
+retain these distinctions. The branch-count event family matches retired
+counts. It does not validate predictor miss timing. Event coverage remains
+insufficient for a fidelity verdict.
+
+### Sensitivity rank agreement
+
+The model uses local plus/minus 12.5% changes. This keeps compacting issue
+capacities aligned to whole rename lines. RTL steps halve queues or double
+the ROB. IPC is instruction-pooled over the six programs. The comparison
+uses absolute elasticity to account for the different step sizes.
+
+| Structure | RTL pooled IPC change (%) | RTL absolute elasticity | Model local sensitivity |
+|---|---:|---:|---:|
+| issue_entries | -1.617 | 0.03234 | 0.01549 |
+| store_entries | -1.112 | 0.02224 | 0.00000 |
+| load_entries | -0.952 | 0.01904 | 0.00000 |
+| rob_entries | +0.000 | 0.00000 | 0.00000 |
+
+
+RTL ranks IQ, SQ, LQ, then ROB. The model ranks IQ first and ties the other
+three. Kendall tau-b is 0.707: three concordant pairs, zero discordant pairs
+and three unresolved model ties. This is partial rank agreement.
+Local sensitivity does not establish the order of large capacity changes.
+
+The [sensitivity record](rvw/arch/sensitivity-results.json) and
+[rank check](rvw/arch/rank-results.json) retain the trial sizes and method.
+Raw traces and builds stay outside versioned source. Compact receipts and
+hashes are retained. Results cover short RV32IMA programs on one pinned
+small OoO core. FP, vectors, operating-system workloads, larger cores,
+native model throughput and physical hardware are not qualified here.
