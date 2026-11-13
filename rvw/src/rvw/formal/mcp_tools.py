@@ -122,6 +122,27 @@ def _template(job, **args):
         raise ToolError('template generation failed', {'exit_code': code, 'log_tail': job.tail(20)})
     return {'status': 'generated', 'out': args['out']}
 
+def _rvfi_generate(job, **args):
+    manifest = args.pop('manifest')
+    code = job.run(_argv('rvfi-generate', args) + [manifest])
+    if code:
+        raise ToolError('RVFI generation failed', {'exit_code': code, 'log_tail': job.tail(20)})
+    result = json.loads((Path(args['out']) / 'result.json').read_text())
+    if result.get('schema') != 'rvw.rvfi-generation/1' or result.get('status') != 'generated':
+        raise ToolError('invalid RVFI generation report')
+    return result
+
+
+def _riscv(job, **args):
+    code = job.run(_argv('riscv', args))
+    out = Path(args['out'])
+    if code not in (1, 3) or not (out / 'verdict.json').is_file() or not (out / 'results.json').is_file():
+        raise ToolError('riscv-formal results unavailable', {'exit_code': code, 'log_tail': job.tail(20)})
+    verdict = json.loads((out / 'verdict.json').read_text())
+    if (code == 1) != (verdict.get('verdict') == 'reject'):
+        raise ToolError('riscv-formal exit and verdict disagree')
+    return dict(verdict=verdict, results=json.loads((out / 'results.json').read_text()))
+
 
 def _liveness(job, **args):
     argv = [sys.executable, '-m', 'rvw', 'formal', 'liveness', args['source'],
@@ -185,6 +206,11 @@ def mcp_tools():
                  _runner("datapath"), long=True),
         ToolSpec("formal_testplan", "Join a formal inventory with captured proof, core, activation and mutation evidence. JSON and HTML.",
                  schema({"manifest": S, "out": S}, ["manifest", "out"]), _runner("testplan"), long=True),
+
+        ToolSpec("formal_riscv", "Run selected project riscv-formal checks through SBY. Return C3 outcomes and a C4 verdict. Bounded passes cannot accept a core.",
+                 schema({"project": S, "out": S, "timeout": {"type": "number", "exclusiveMinimum": 0}}, ["out"]), _riscv, long=True),
+        ToolSpec("formal_rvfi_generate", "Generate an RVFI wrapper and project configuration from a core-owned port binding. No proof is run.",
+                 schema({"manifest": S, "out": S}, ["manifest", "out"]), _rvfi_generate, long=True),
         ToolSpec("formal_proof_core", "Extract a deletion-minimal solver core for one named SMT query. Not an RTL proof.",
                  schema({"smt2": S, "mapping": S, "result": S, "depth": I, "property": S, "db": S, "solver": S,
                          "timeout": {"type": "number", "exclusiveMinimum": 0}, "out": S},

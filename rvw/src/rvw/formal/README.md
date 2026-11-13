@@ -460,7 +460,7 @@ Required project fields:
 | `wrapper` | Project-owned SystemVerilog wrapper template. |
 | `verilog` | Nonempty list of design source paths. |
 | `isa` | `rv32i`, `rv32im`, `rv32ic`, `rv32imc`, or their `rv64` forms. |
-| `nret` | Must be 1 in this increment. Wider retirement is refused. |
+| `nret` | Retirement channels, 1..16. Check channel indices must be below NRET. |
 | `checks` | Exact generated task names. Must include `cover`. |
 | `depth` | Bound from 2 to 200 cycles. |
 | `solver` | `bitwuzla`, `yices`, `z3` or `boolector`. |
@@ -1937,3 +1937,37 @@ The activation job now samples source inequality with mode and enable, then
 delays the combined predicate by the declared latency. A proved safety relation
 without this witness remains incomplete. This check does not remove source
 assumptions or convert them into unrestricted influence evidence.
+
+Generate an RVFI project (#63)
+-----------------------------
+
+`rvw formal rvfi-generate binding.json --out generated` writes `rvw.toml` and
+a wrapper template for a core with RVFI output ports. The project-owned JSON
+uses schema `rvw.rvfi-binding/1`. It supplies `top`, `clock`, `reset`, `ports`
+(the complete RVFI field-to-DUT-port map), `inputs` and `outputs` (auxiliary
+DUT port widths), `root` (riscv-formal checkout), `verilog`, `isa`, `nret`,
+`checks`, `depth` and `solver`. Optional `defines` and `check_options` retain
+the runner format. Paths resolve against the binding file. Environment
+variables in paths expand when the generator runs. `name` sets the project name.
+
+Auxiliary inputs are unconstrained. The generator adds no bus assumptions.
+Review the generated wrapper for the selected DUT environment. The port map
+must cover all RVFI fields. Duplicate DUT ports and invalid widths are errors.
+Generation checks the current supported ISA and runner settings. It does not
+prove adapter conformance or validate the actual RTL port directions.
+
+Then run `rvw --project generated/rvw.toml formal riscv --out proof`.
+The runner generates `checks.cfg`, expands RVFI connections and runs SBY per
+requested check. NRET can be 1 to 16. Check channel indices must be below NRET.
+The retirement cover requires a witness on every channel. A missing channel
+witness makes otherwise passing checks inconclusive. The C3 report retains
+per-check results and settings. C4 never accepts a core from bounded evidence.
+MCP tools `formal_rvfi_generate` and `formal_riscv` expose these steps.
+
+`examples/vexriscv/formal/binding.json` supplies a VexRiscv RVFI binding for the
+upstream riscv-formal example. It has unconstrained bus response and error
+inputs. It does not replace the reviewed environment in `wrapper.sv.in`.
+The two-channel native fixture tests an independent ADD implementation and a
+mutation of channel 1. It establishes generation and channel-check execution,
+not conformance of a real core adapter. Real-core trap, killed instruction,
+memory lane and multiple-effect observations remain required for #63.

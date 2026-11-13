@@ -1,0 +1,75 @@
+{
+  "schema": "rvw.rvfi-binding/1",
+  "name": "vexriscv-generated-rvfi",
+  "top": "VexRiscv",
+  "clock": "clk",
+  "reset": "reset",
+  "root": "${RISCV_FORMAL}",
+  "verilog": [
+    "${RISCV_FORMAL}/cores/VexRiscv/VexRiscv.v"
+  ],
+  "isa": "rv32ic",
+  "nret": 1,
+  "depth": 20,
+  "solver": "bitwuzla",
+  "checks": [
+    "insn_add_ch0",
+    "insn_addi_ch0",
+    "cover"
+  ],
+  "defines": [
+    "`define RISCV_FORMAL_ALIGNED_MEM",
+    "`define RISCV_FORMAL_ALTOPS",
+    "`define DEBUGNETS"
+  ],
+  "ports": {
+    "valid": "rvfi_valid",
+    "order": "rvfi_order",
+    "insn": "rvfi_insn",
+    "trap": "rvfi_trap",
+    "halt": "rvfi_halt",
+    "intr": "rvfi_intr",
+    "mode": "rvfi_mode",
+    "ixl": "rvfi_ixl",
+    "rs1_addr": "rvfi_rs1_addr",
+    "rs2_addr": "rvfi_rs2_addr",
+    "rs1_rdata": "rvfi_rs1_rdata",
+    "rs2_rdata": "rvfi_rs2_rdata",
+    "rd_addr": "rvfi_rd_addr",
+    "rd_wdata": "rvfi_rd_wdata",
+    "pc_rdata": "rvfi_pc_rdata",
+    "pc_wdata": "rvfi_pc_wdata",
+    "mem_addr": "rvfi_mem_addr",
+    "mem_rmask": "rvfi_mem_rmask",
+    "mem_wmask": "rvfi_mem_wmask",
+    "mem_rdata": "rvfi_mem_rdata",
+    "mem_wdata": "rvfi_mem_wdata"
+  },
+  "inputs": {
+    "iBus_cmd_ready": 1,
+    "iBus_rsp_valid": 1,
+    "iBus_rsp_payload_inst": 32,
+    "iBus_rsp_payload_error": 1,
+    "dBus_cmd_ready": 1,
+    "dBus_rsp_ready": 1,
+    "dBus_rsp_data": 32,
+    "dBus_rsp_error": 1
+  },
+  "outputs": {
+    "iBus_cmd_valid": 1,
+    "iBus_cmd_payload_pc": 32,
+    "dBus_cmd_valid": 1,
+    "dBus_cmd_payload_wr": 1,
+    "dBus_cmd_payload_address": 32,
+    "dBus_cmd_payload_data": 32,
+    "dBus_cmd_payload_size": 2
+  },
+  "check_options": {
+    "insn_add_ch0": {
+      "engine": "abc bmc3"
+    },
+    "insn_addi_ch0": {
+      "engine": "abc bmc3"
+    }
+  }
+}

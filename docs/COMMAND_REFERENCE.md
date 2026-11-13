@@ -651,7 +651,7 @@ usage: rvw farm dashboard [-h] --root ROOT --out OUT [--core CORE] [--suite
 
 ```text
 usage: rvw formal [-h] [--project PROJECT]
-    {device-events,upf,csr,bug-hunt,model-live,rtl-grid,rtl-refine,relation-strengthen,doctor,engines,engine-race,engine-bench,model-grid,security,regress,properties,simulate,liveness,sva-lower,template,contracts,strengthen,testplan,proof-core,apps,autocheck,bench,cex,sby-history,sby-regress,prove,depth-search,riscv,connectivity,datapath,equiv,bmc,from-sim,swarm,xprop,x-context,x-sweep}
+    {device-events,upf,csr,bug-hunt,model-live,rtl-grid,rtl-refine,relation-strengthen,doctor,engines,engine-race,engine-bench,model-grid,security,regress,properties,simulate,liveness,sva-lower,template,contracts,strengthen,testplan,proof-core,apps,autocheck,bench,cex,sby-history,sby-regress,prove,depth-search,rvfi-generate,riscv,connectivity,datapath,equiv,bmc,from-sim,swarm,xprop,x-context,x-sweep}
     ...
 ```
 
@@ -914,6 +914,13 @@ usage: rvw formal depth-search [-h] [--verilog VERILOG [VERILOG ...]] [--top
     [--json] [--tie PORT=VALUE] --max-depth MAX_DEPTH --budget BUDGET
     [--reset-cycles RESET_CYCLES] [--free-reset] [--first-failure] [--project
     PROJECT]
+```
+
+### `rvw formal rvfi-generate`
+
+```text
+usage: rvw formal rvfi-generate [-h] --out OUT [--json] [--project PROJECT]
+    manifest
 ```
 
 ### `rvw formal riscv`
@@ -2510,6 +2517,14 @@ Arguments: `out` (required), `manifest` (required), `budget`, `depth`, `engine`.
 
 Starts a background job: yes.
 
+### `formal_riscv`
+
+Run selected project riscv-formal checks through SBY. Return C3 outcomes and a C4 verdict. Bounded passes cannot accept a core.
+
+Arguments: `project`, `out` (required), `timeout`.
+
+Starts a background job: yes.
+
 ### `formal_rtl_grid`
 
 Split pinned exported RTL properties across local and farm workers.
@@ -2523,6 +2538,14 @@ Starts a background job: yes.
 Automatically cut internal RTL state and RAM read outputs, then restore drivers after abstract failures.
 
 Arguments: `out` (required), `manifest` (required), `budget`, `timeout`, `max_cuts`.
+
+Starts a background job: yes.
+
+### `formal_rvfi_generate`
+
+Generate an RVFI wrapper and project configuration from a core-owned port binding. No proof is run.
+
+Arguments: `manifest` (required), `out` (required).
 
 Starts a background job: yes.
 
