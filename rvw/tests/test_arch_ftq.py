@@ -1,8 +1,9 @@
-"""Native FTQ regression. Opt in to serialize gem5 under the machine lock."""
+"""Native FTQ regression with installed tools, under the machine lock."""
 import json
 import os
 from pathlib import Path
 import re
+import shutil
 import subprocess
 
 import pytest
@@ -41,17 +42,26 @@ def test_fallthrough_checker_rejects_half_instruction():
     check_fallthrough(log.replace('0x102=>', '0x104=>'), {0x100: 4})
 
 
-@pytest.mark.skipif(os.environ.get('RVW_TEST_GEM5_FTQ') != '1', reason='opt-in native gem5 FTQ test')
 def test_native_mixed_width_ftq(tmp_path):
     from rvw.common.lock import held
     from rvw.common.proc import run_group
-    from rvw.arch.core import gem5_binary, tool_identity, validate_gem5
+    from rvw.arch.core import ArchError, gem5_binary, tool_identity, validate_gem5
 
-    binary = gem5_binary()
+    try:
+        binary = gem5_binary()
+    except ArchError:
+        pytest.skip('native gem5 required; install with scripts/install.sh --with-gem5 or set RVW_GEM5')
+    source = os.environ.get('RVW_TEST_RISCV_TESTS')
+    if not source and os.environ.get('RISCV_TESTS_SOURCE'):
+        source = str(Path(os.environ['RISCV_TESTS_SOURCE']) / 'benchmarks')
+    if not source or not (Path(source) / 'common/syscalls.c').is_file():
+        pytest.skip('riscv-tests benchmarks required; set RVW_TEST_RISCV_TESTS or RISCV_TESTS_SOURCE')
+    cc = os.environ.get('RVW_RISCV_CC', 'riscv64-unknown-elf-gcc')
+    if not shutil.which(cc):
+        pytest.skip('RISC-V GCC required for native gem5 FTQ test')
     with held('gem5'):
         validate_gem5(tool_identity(binary, '--build-info'))
-    sources = os.environ['RVW_TEST_RISCV_TESTS']
-    cc = os.environ.get('RVW_RISCV_CC', 'riscv64-unknown-elf-gcc')
+    sources = source
     subprocess.run(['make', '-s', '-C', str(ROOT / 'Arch/bench'), f'SRC={sources}',
                     f'BARE_CC={cc}', 'BENCHES=ftq-branches', f'BUILD={tmp_path}/bench'], check=True)
     elf = tmp_path / 'bench/ftq-branches.riscv'
