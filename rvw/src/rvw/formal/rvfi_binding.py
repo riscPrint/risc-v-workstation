@@ -24,6 +24,7 @@ def wrapper(plan):
         raise ValueError('ports must map every RVFI field')
     names = [clock, reset, *ports.values()]
     lines = ['module rvfi_wrapper(input clock, input reset, `RVFI_OUTPUTS);']
+    locals = {}
     conns = [f'.{clock}(clock)', f'.{reset}(reset)']
     for direction in ('inputs', 'outputs'):
         for i, (port, width) in enumerate(plan.get(direction, {}).items()):
@@ -31,6 +32,7 @@ def wrapper(plan):
             if type(width) is not int or not 1 <= width <= 65536:
                 raise ValueError('port width must be 1..65536')
             local = f'bound_{direction}_{i}'
+            locals[port] = local
             declaration = '(* anyseq *) reg' if direction == 'inputs' else 'wire'
             lines.append(f'{declaration} [{width - 1}:0] {local};')
             conns.append(f'.{port}({local})')
@@ -38,6 +40,9 @@ def wrapper(plan):
         ident(name)
     if len(set(names)) != len(names):
         raise ValueError('DUT ports must be distinct')
+    from .bus_environment import render
+    environment, _ = render(plan, locals)
+    lines.extend(environment)
     lines += [f'{top} dut(' + ',\n'.join(conns) + ',\n@RVFI_CONNECTIONS@);', 'endmodule']
     return '\n'.join(lines) + '\n'
 
@@ -72,7 +77,9 @@ def generate(manifest, out):
     result = dict(schema='rvw.rvfi-generation/1', status='generated',
                   manifest_sha256=hashlib.sha256(manifest.read_bytes()).hexdigest(),
                   project=str(out / 'rvw.toml'), wrapper=cfg['wrapper'],
-                  limits='Unconstrained auxiliary inputs. Review bus environment and adapter semantics before proof.')
+                  bus_environment=plan.get('bus_environment', []),
+                  environment_constants=plan.get('environment_constants', {}),
+                  limits='Explicit bus assumptions restrict the environment. Other auxiliary inputs are unconstrained. Review adapter semantics before proof.')
     (out / 'result.json').write_text(json.dumps(result, indent=2) + '\n')
     return result
 

@@ -79,3 +79,31 @@ inconclusive attempts. The liveness failure and C4 reject are retained.
 
 Retry evidence: `/tmp/conn-vex-pcfwd-abc20/results.json` and
 `/tmp/conn-vex-pcfwd-btor15/results.json`.
+
+## Generated fair bus rerun
+
+The 2026-11-13 rerun uses `binding.json` with explicit `stream-response`
+environments. Each bus accepts commands within two stalled samples and returns
+one read response within two pending samples. Responses are ordered, have at
+least one cycle of latency, and cannot appear without a pending read. Writes
+need no response. Bus errors are constrained to zero. Instruction data and traps
+are not constrained. Each bus has an asserted eight-request capacity limit.
+
+| Check | Native outcome | Cycles | Engine |
+| --- | --- | --- | --- |
+| liveness_ch0 | bounded PASS | [1, 10, 30] | abc bmc3 |
+| cover | reached | [1, 20] | smtbmc bitwuzla |
+
+Liveness took 21.9 wall seconds. Retirement cover took 5.6 wall seconds.
+The liveness job checks both progress and the environment tracker capacity.
+This result replaces the unconstrained environment failure only for this explicit
+finite-service environment. It does not establish unbounded progress, full bus
+compliance, or liveness on the workstation simulation variant.
+The C4 verdict remains inconclusive because these checks are bounded.
+
+Evidence: `/tmp/conn-fair-live/results.json`, `verdict.json` and SBY trees.
+The source revision is `c992aa61fdfe0846c5ed90324c596202a1c69b76`.
+RTL SHA-256: `545c0864dec04e72a7b74480464866c8af876c21ff7833f8f7d67dba6aa9e7c1`.
+Generated wrapper SHA-256: `992bb0e03f0d4e82004670350c67c5c29c3e3943adb15cb073d93f77daf1b4ad`.
+Settings SHA-256: `b46dc49a83368f98bab27fdaaec76aaed6908aac4d0998aa579e50d31fcbb4c1`.
+The run used a private source copy and `scripts/with-lock.sh vex-conn nice -n 10`.

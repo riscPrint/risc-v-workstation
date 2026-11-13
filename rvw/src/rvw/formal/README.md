@@ -2925,3 +2925,24 @@ per-byte instances for byte merging. An inconsistent age relation cannot
 silently remove every candidate. The separate `age_matrix` rule checks the
 full active relation. All variants bind through project data and the existing
 `formal template` CLI/MCP interfaces.
+
+## Generated bus environment
+
+An RVFI binding can declare `bus_environment` entries. The supported protocol is
+`stream-response`: ready/valid commands and ordered response pulses. Each entry
+binds one-bit output `valid`, input `ready`, input `response`, optional output
+`write`, `service_bound` (1..64) and `max_pending` (1..64, default 8).
+Writes do not need responses in this protocol. Use another environment for buses
+that acknowledge writes. The interface follows the ready/valid handshake in the
+simple bus protocol templates. Those safety templates alone do not imply fairness.
+
+The generated assumptions limit command stalls and the time between responses
+while reads are pending. They prohibit unsolicited and zero-cycle responses.
+They do not constrain request data, instruction data, retirement or traps.
+Outstanding requests must stay within `max_pending`; an assertion checks this
+instrumentation limit. It is not an assumption about the core.
+`environment_constants` can constrain declared input ports, for example bus error
+inputs. These are explicit environment restrictions. They are not ISA rules.
+Both declarations are recorded in `rvfi-generation/1` output. Remove them to
+retain the unconstrained wrapper. A passing finite liveness check remains bounded
+and applies only to the recorded environment.
