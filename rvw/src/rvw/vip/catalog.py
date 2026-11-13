@@ -49,6 +49,10 @@ def unsupported():
 
 
 def skeleton(db, out, bus=None, clock='clk', reset='reset_n', port_map=None):
+    if not port_map:
+        from .mapped import discover, generate as mapped
+        if discover(db) is not None:
+            return mapped(db,out)
     if port_map:
         from .declared import skeleton as declared
         return declared(db,out,port_map,bus)

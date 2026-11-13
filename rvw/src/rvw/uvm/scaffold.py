@@ -40,6 +40,9 @@ def generate(db=None, soc=None, out=None, *, rtl=None, language='pyuvm', profile
     finally:
         with_db.close()
     if not discovered:
+        from rvw.vip.mapped import discover, generate as mapped
+        if discover(db) is not None and language == 'pyuvm' and profile == 'auto':
+            return mapped(db,out,uvm=True)
         if any(bus_type(c) for c in classes):
             raise ValueError('automatic runnable profile requires one top-level APB bus')
         load(soc)

@@ -1866,3 +1866,22 @@ bindings. An emitted wrapper or verify table is not a native pass.
 For a cocotb run of generated RAM, list the emitted `.bin` files in the bench
 manifest's `data_files`. The worker copies them into the simulation directory
 and captures their hashes. Missing RAM images otherwise leave memory empty.
+
+## Live pyuvm or VIP on a mapped CPU
+
+Install the `rvw[pyuvm]` extra with a Python version supported by cocotb.
+The tested pair here is Python 3.13 with cocotb 2.1 and pyuvm 4.0.
+Export the mapped RTL, then select the design database:
+
+```sh
+rvw uvm new --db rvw/out/design.db --soc soc.json/soc.json --out rvw/out/cpu-bench
+rvw regress cocotb rvw/out/cpu-bench/bench.json --out rvw/out/cpu-bench-run --timeout 110
+rvw vip bench --db rvw/out/design.db --out rvw/out/cpu-vip.py
+```
+
+For a mapped RV32 req/rsp core with RVFI, these commands use the declared bus
+roles when typed metadata is absent. The generated pyuvm bench loads the
+project smoke ELF, drives RAM responses and checks every retirement with
+Spike until the passing tohost store. Set `RVW_ELF` to select another finite
+program. The VIP command also writes a `.bench.json` file beside its test.
+Extra protocols and extended architectural observations still need bindings.

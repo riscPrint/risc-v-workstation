@@ -87,3 +87,8 @@ JEDEC identity. Unsupported program/erase commands and partial words raise
 protocol errors. Its pin-level `step(Pins)` method works with the existing SPI
 agent. The composed flash-boot example uses it with a real CPU. See
 `SpinalSoc/examples/flash/README.md` for the measured scope and limits.
+
+For a database inside a mapped RV32 req/rsp project with RVFI, `vip bench`
+can use `rvw/core-map.json` as the declaration. It writes a live cocotb CPU
+test and an adjacent `.bench.json` manifest. Export mapped RTL first.
+The same driver and independent Spike scoreboard serve the pyuvm scaffold.

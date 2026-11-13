@@ -141,3 +141,11 @@ one clock domain. Unknown-reset and autonomous behavior remain separate.
 Feature and qualification tables require conclusive C3 pass entries. An explicit blocked verdict or an inconclusive marker cannot establish support. Counts of recorded runs do not establish qualification.
 
 Ignored-feature warnings also prevent positive probe qualification.
+
+## Mapped scalar CPU bench
+
+An untyped database can select its enclosing project's `rvw.core-map/1`.
+The map must identify the database top. The live bench supports RV32 req/rsp
+memory with RVFI, loads the project ELF and checks retirement through the
+independent Spike scoreboard. Missing or extended bindings remain errors.
+Generated files do not establish execution. Native C3 evidence is required.
