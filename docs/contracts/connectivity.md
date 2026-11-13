@@ -100,3 +100,11 @@ output maps. Environment assumptions bound service and prevent unsolicited
 responses. A capacity assertion checks outstanding requests. Constants constrain
 input ports only. These restrictions do not establish bus compliance or complete
 ISA signoff. Other protocols are refused.
+
+## Unbounded instruction portfolio
+
+`rvw.riscv-proof-capture/1` records upstream prove-mode instruction jobs,
+self-contained source hashes and formal input identity. `rvw.riscv-proof/1`
+records per-check engine-race results. Bounded and unbounded engine outcomes
+retain the portfolio meanings. Source assumptions without activation evidence
+keep the campaign inconclusive. These formats grant no ISA signoff.

@@ -3003,3 +3003,26 @@ unconstrained. Reset is low in the initial state and high in every later state.
 The result stays inconclusive because assumption activation is not checked.
 A native pass proves the bundled assertions under these exact restrictions.
 It does not prove the restrictions or remove them from the design.
+
+## Unbounded RVFI instruction portfolio
+
+`rvw formal riscv-proof --project PROJECT --checks insn_add_ch0,insn_and_ch0
+--out OUT --engines abc:pdr,smtbmc:yices --timeout 180` captures the upstream
+`mode prove` instruction checkers. The generated testbench enables
+`RISCV_FORMAL_UNBOUNDED`, so the check input is arbitrary instead of selecting
+one fixed BMC cycle. This command supports instruction checks only. It preserves
+source reset assumptions and project bus assumptions. Optional upstream
+`RISCV_FORMAL_ASSUME` blocks are refused.
+
+Each captured, self-contained source has a SHA-256 hash and an engine-race
+manifest. The command reuses the native engine portfolio. Each engine has the
+specified time limit. Jobs run in sequence, with the engines of one job in
+parallel. Select at most three engines for the native campaign limit.
+MCP tool `formal_riscv_proof` has the same arguments.
+
+`capture.json` records source identity and the captured jobs. `result.json`
+records each portfolio result, including engine rows. Unbounded engine success
+is distinct from bounded success. A portfolio with source assumptions remains
+inconclusive under the portfolio activation policy. The command exits 1 for a portfolio failure. Otherwise it exits 3 and does
+not grant ISA signoff. Run retirement cover with `formal riscv`
+separately. The capture itself does not establish adapter conformance.
