@@ -394,3 +394,17 @@ lookup miss; -2 means no lookup. Requests use actual-path training at issue.
 The caller owns the handle and arrays. This API does not introduce speculative
 history or wrong-path execution. End-to-end throughput remains measured
 separately from kernel throughput.
+
+## FTQ-directed instruction prefetch interface
+
+The own-model `frontend.fdip` boolean defaults to false. True requires an
+explicit `components.memory.l1i`. It selects bounded actual-path target
+runahead through the existing FTQ dimensions. Reports remain inconclusive.
+The target source is the committed C2 stream, not a speculative Spike stream.
+
+`csim_ifetch_prefetch(handle, cycle, pc, address)` requests one instruction
+line. Address is in bytes. It returns zero after submission, including native
+filtering, or -1 when the handle has no instruction cache. The Python API is
+`Components.prefetch_instruction(cycle, pc, address)`. It validates unsigned
+64-bit arguments. Submission does not promise an issued request or a completed
+fill. Use native prefetch statistics to distinguish those outcomes.

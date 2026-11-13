@@ -426,16 +426,16 @@ already made and their cache effects.
 Declare `memory.l1i` to add instruction cache service. This requires an explicit
 own `frontend` object. Fetch coalesces requests to the same line within a
 cycle and handles instructions that cross a line boundary. Native instruction
-prefetch policies can operate on this traffic. The interface does not expose
-FTQ-directed prefetch requests or instruction TLB walks.
+prefetch policies can operate on this traffic. The explicit prefetch API supports FTQ-directed instruction requests.
+Instruction TLB walks remain unavailable.
 
 Branch lookup uses the shared direction model, multi-level BTB, indirect
 predictor and RAS when configured. Actual-path history and training occur at
 issue. BTB lookup delay adds to the modeled branch resolution delay. This is
 a committed-path approximation. Speculative history repair and fetch-time
 prediction remain open. The report's `components` object retains native
-statistics. Own branch and recovery events remain in `events`. Component
-execution uses the Python timing loop. No RTL fidelity is established.
+statistics. Own branch and recovery events remain in `events`. Instruction frontend timing uses the Python loop. Ordered integer data and
+branch components can use the native scheduler. No RTL fidelity is established.
 
 ## Non-trapping control instructions
 
@@ -694,3 +694,35 @@ accuracy or performance on large open workloads.
 
 CPU time includes the hashing thread. It is not elapsed run throughput. Each
 trial uses 500,000 instructions. Four trials follow one warmup.
+
+## FTQ-directed instruction prefetch
+
+Set `frontend.fdip` to `true` with an explicit `components.memory.l1i`.
+The Python timing loop sends one target per cycle into a queue bounded by
+`frontend.ftq_entries`. A target ends at a branch, a discontinuity or a
+`frontend.block_bytes` boundary. It becomes available to fetch after
+`frontend.predictor_latency`. Fetch drains the queue. Back pressure stops
+new target admission when the queue is full. Recovery stops target admission
+and instruction prefetch requests. Existing targets remain queued.
+
+At target admission, the adapter calls the shared native instruction cache
+prefetch service for each covered line. Requests use the component cache's
+MSHR limits, lower hierarchy, completion times and prefetch counters.
+`fdip_targets` counts admitted targets. `fdip_line_requests` counts requests
+before native duplicate and queue-full filtering. `fdip_ftq_full` and
+`fdip_target_not_ready` count model phase observations. Native cache counters
+remain under `components.memory.l1i.prefetch` and in the flat event map.
+
+This first integration reads targets from the actual committed trace. It has
+oracle path lookahead. It does not predict target addresses at fetch, replay
+wrong-path bytes, repair predictor history or discard queued targets on a
+misprediction. It is an optimistic instruction-prefetch experiment. The
+existing issue-time branch miss and recovery model remains active. A speed
+change does not establish a hardware benefit.
+
+Wrong-path error bounds are **NOT MEASURED**. The current Spike adapter has
+no PC redirect or architectural checkpoint/restore API. Its debug snapshot
+contains debug registers, not a restorable processor and memory snapshot.
+A replay producer needs that interface before it can supply independent
+wrong-path instruction and memory traffic. The integration does not label
+synthetic traffic or committed-path comparisons as Spike replay evidence.

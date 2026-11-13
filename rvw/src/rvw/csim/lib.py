@@ -43,6 +43,7 @@ def _load():
             "csim_ind_predict": (u64, [vp, u64, ctypes.POINTER(u64)]),
             "csim_ind_update": (i, [vp, u64, u64]),
             "csim_mem_access": (u64, [vp, u64, u64, u64, i, i]),
+            "csim_ifetch_prefetch": (i, [vp, u64, u64, u64]),
             "csim_ooo_service": (None, [vp, u64, i, ctypes.POINTER(u64), ctypes.POINTER(ctypes.c_int64)]),
             "csim_reset_stats": (None, [vp]),
             "csim_stats": (ctypes.c_size_t, [vp, u64, ctypes.c_char_p, ctypes.c_size_t]),
@@ -125,6 +126,13 @@ class Components:
 
     def access(self, cycle: int, pc: int, addr: int, store: bool = False, fetch: bool = False) -> int:
         return self._lib.csim_mem_access(self._h, cycle, pc, addr, int(store), int(fetch))
+
+    def prefetch_instruction(self, cycle: int, pc: int, address: int) -> None:
+        """Request one instruction line through the shared native prefetch path."""
+        if any(type(v) is not int or not 0 <= v < 1 << 64 for v in (cycle, pc, address)):
+            raise ValueError("instruction prefetch requires unsigned 64-bit values")
+        if self._lib.csim_ifetch_prefetch(self._h, cycle, pc, address):
+            raise ValueError("instruction prefetch requires memory.l1i")
 
     def reset_stats(self) -> None:
         self._lib.csim_reset_stats(self._h)

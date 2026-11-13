@@ -61,6 +61,8 @@ class Config:
         from .translation import Translation
         if not isinstance(self.frontend, dict):
             raise ValueError("frontend must be an object")
+        if self.frontend.get('fdip') and not self.components.get('memory', {}).get('l1i'):
+            raise ValueError("fdip requires component memory.l1i")
         if self.frontend:
             FrontendConfig(**self.frontend)
         Execution(self.execution)

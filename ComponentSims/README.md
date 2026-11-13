@@ -256,3 +256,9 @@ this C entry point directly. It shares the same component handle, parameters
 and statistics as `rvw.csim.lib.Components`. It does not add wrong-path
 execution, speculative history repair or instruction-cache invalidation.
 The call layout is defined in `docs/contracts/arch.md`.
+
+`Components.prefetch_instruction(cycle, pc, address)` submits one byte-addressed
+instruction line through `csim_ifetch_prefetch`. It requires `memory.l1i`.
+The native prefetch path owns duplicate filtering, MSHR limits, memory latency
+and usefulness counts. The own-model FTQ adapter uses this method. Target
+prediction, recovery policy and evidence provenance remain the caller's job.

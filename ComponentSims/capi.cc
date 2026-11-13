@@ -79,6 +79,14 @@ uint64_t csim_mem_access(void* p, uint64_t cycle, uint64_t pc, uint64_t addr, in
     uint64_t t = m.mmu ? m.mmu->translate(addr, pc, cycle) : cycle;
     return m.l1d->access(addr, pc, t, is_store != 0, false, UINT64_MAX, nullptr);
 }
+// Explicit FTQ-directed instruction prefetch. Address is a byte address.
+int csim_ifetch_prefetch(void* p, uint64_t cycle, uint64_t pc, uint64_t address) {
+    auto* h = static_cast<Handle*>(p);
+    if (!h->mem->l1i) return -1;
+    h->mem->l1i->prefetch_into(address >> h->mem->l1i->line_bits, pc, cycle);
+    return 0;
+}
+
 // One issue-time service call for a native timing scheduler. No Python callbacks.
 // info: pc, next_pc, length, address, size, branch kind (1..6 or 0).
 // out: service latency, misprediction, BTB level (-1 for a miss).
