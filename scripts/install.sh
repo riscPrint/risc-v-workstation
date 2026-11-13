@@ -417,7 +417,13 @@ temurin_jdk() {
 }
 
 python_cmd=python3
-if ! probe Python 3.11 python3 --version >/dev/null 2>&1 && command -v python3.11 >/dev/null 2>&1; then
+# An unversioned uv request can select system Python even when PATH starts in a venv.
+# Keep the established base interpreter so profile changes retain its packages.
+if [ -x "$rvw_home/rvw/.venv/bin/python" ] && probe Python 3.11 "$rvw_home/rvw/.venv/bin/python" --version >/dev/null 2>&1; then
+  existing_python=$("$rvw_home/rvw/.venv/bin/python" -c 'import sys; print(sys._base_executable)')
+  if [[ "$existing_python" = /* ]] && [ -x "$existing_python" ]; then python_cmd="$existing_python"; fi
+fi
+if ! probe Python 3.11 "$python_cmd" --version >/dev/null 2>&1 && command -v python3.11 >/dev/null 2>&1; then
   python_cmd=python3.11
 fi
 # cocotb 2.1 supports Python through 3.14. Select only installed interpreters.
