@@ -8,6 +8,8 @@ request is acknowledged only after its callback completes. No RTL names live her
 class MailboxDriver:
     def __init__(self, events):
         self.events = list(events)
+        if any(e.get('kind')=='wfi-wake' for e in self.events):
+            raise ValueError('WFI clock-stop input requires StopWakeDriver')
         if any(e.get('phase_gate') for e in self.events):
             raise ValueError('phased reset requires PhaseDriver')
         steps = [e['step'] for e in events]
