@@ -54,10 +54,11 @@ object VexiiTop {
     p
   }
 
-  def apply(config: String, probeTap: Boolean = true): VexiiRiscv = {
+  def apply(config: String, probeTap: Boolean = true, bootTrace: Boolean = false): VexiiRiscv = {
     val plugins = param(config).plugins()
     plugins += new TrapTapPlugin
     if (probeTap) plugins += new ProbeTapPlugin
+    if (bootTrace) plugins += new BootTraceTap
     if (sys.env.get("RVW_COSIM_DPI").contains("1")) plugins += new LockstepTapPlugin
     val deviceRegions = sys.env.get("RVW_VEX_DEVICE_MAP").toSeq.flatMap { path =>
       ujson.read(java.nio.file.Files.readString(java.nio.file.Path.of(path)))("devices").arr.map { row =>

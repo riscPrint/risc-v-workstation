@@ -43,7 +43,15 @@ def convert(report: Path, checkpoint: Path, elf: Path, out: Path, *, wave=None, 
                         'last_retired_pc': sample['pc'], 'last_trap': sample['trap'],
                         'device_output': sample['console'], 'checkpoint_identity': state['identity'],
                         'last_retired_mode': sample.get('mode'), 'retired_by_mode': sample.get('retired_by_mode'),
-                        'irq_levels': sample.get('irq_levels')}})
+                        'irq_levels': sample.get('irq_levels'),
+                        # Native C2 uses the zero-based pre-edge loop index.
+                        # C1 cycles count completed edges from one.
+                        'wave_time_of_cycle_1': int(sample.get('wave_time_of_cycle_1', 11)) - (11 if 'wave_cycle_origin' in sample else 0),
+                        **({'wave_cycle_origin': int(sample['wave_cycle_origin'])+1,
+                            'wave_time_origin': int(sample['wave_time_origin']), 'boot_trace_cycle_base': 0}
+                           if 'wave_cycle_origin' in sample else {}),
+                        'wave_time_per_cycle': 11,
+                        'timer_mask': sample.get('timer_mask'), 'trace_records': sample.get('trace_records')}})
     save_run(result, out / 'result.json')
     return result.to_dict()
 

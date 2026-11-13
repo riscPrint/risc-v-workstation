@@ -47,6 +47,11 @@ def wave_clock(run, core_cfg: dict, wave=None) -> WaveClock:
         per = wops.detect_period(str(wave))
         src = "clock detected in the wave"
     per = int(per or 10)
+    if 'wave_cycle_origin' in d or 'wave_time_origin' in d:
+        cycle, time = d.get('wave_cycle_origin'), d.get('wave_time_origin')
+        if type(cycle) is not int or cycle < 0 or type(time) is not int or time < 0 or per <= 0:
+            raise ValueError('restored wave origin needs nonnegative integer cycle/time and a positive period')
+        return WaveClock(per, time-(cycle-1)*per, True, 'period and restored cycle/time origin from run details')
     t1 = d.get("wave_time_of_cycle_1")
     # C1 producers serialize exact Long values as decimal strings too.
     if isinstance(t1, str) and t1.isascii() and t1.isdecimal():

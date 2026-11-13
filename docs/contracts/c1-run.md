@@ -193,3 +193,13 @@ Missing counters are an error. The stream has consecutive probe IDs and
 `capture_mode: "topdown"` in its header. It contains no event rows.
 C1 `options.probe_mode` and the replay command record the selection.
 This changes observation cost. It does not select a different RTL model.
+## Restored wave clock origin
+
+A diagnostic run restored from a checkpoint can use cumulative logical cycles
+while its native simulator clock starts near zero. It can set the optional
+`details.wave_cycle_origin` and `details.wave_time_origin` to the same sampled
+edge. Both must be nonnegative integers. `details.wave_time_per_cycle` must
+be positive. The wave time of logical cycle N is
+`wave_time_origin + (N - wave_cycle_origin) * wave_time_per_cycle`.
+This mapping can imply a negative time for cycle 1, which is outside the
+captured window. Consumers must use the explicit origin pair when present.

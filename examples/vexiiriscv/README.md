@@ -905,7 +905,8 @@ The project `rvw/boot-slices.sh` uses the live Spinal register and memory bridge
 It saves a single-clock cacheless RV64 supervisor model at an exact cycle.
 It also saves RAM, devices, pending bus replies, the LR/SC reservation and
 retirement counters. It does not replay from reset. It uses fixed one-cycle
-bus replies. It does not start the upstream C2 probe or write a trace or wave.
+bus replies. It does not start the upstream C2 probe. Trace and wave output
+are off by default.
 
 Set `RVW_HOME` to this checkout. Set `VEXIIRISCV` to a private pinned core copy.
 Source the native tool environment. Keep all output outside the repository:
@@ -924,8 +925,10 @@ private `vex-linux` and `sbt-linux` locks and nice priority 10.
 Run `rvw/tests/test_boot_slices.py` from this example with the private core
 selected to compare fresh and resumed console output, retirements, final RTL
 state and RAM. A slice result has status `bounded`. It does not claim a Linux
-boot or shutdown. C2 capture, wave windows and Spike sampling are not yet bound
-to this harness. Checkpoints are trusted same-build data, not portable images.
+boot or shutdown. Bounded C2 and wave capture use the simulation-only observer
+described in [checkpoint debugging](rvw/linux/CHECKPOINT_DEBUG.md).
+Spike sampling remains separate. Checkpoints are trusted same-build data,
+not portable images.
 Set `RVW_BOOT_SECONDS=600` for a wall-time slice. The harness checks this limit
 every 1,024 cycles and saves the state at the next settled boundary. It excludes
 compilation from this limit. Restore with a stop cycle above the saved cycle.
@@ -1047,3 +1050,12 @@ with `rvw regress run --rvfi-trace --jobs 2`. Compare with the matching
 `rvw/platform32fp.json` or `platform64fp.json` using `rvw regress cosim`.
 The C2/2 capture includes FP destinations, fcsr and mstatus. Their native
 retirement timing still needs strict Spike validation. No FP match is claimed.
+
+## Boot checkpoint debug windows
+
+The project boot-slice harness supports bounded C2 and FST windows after
+restore. It writes neither file by default. See [checkpoint debugging](rvw/linux/CHECKPOINT_DEBUG.md)
+for the timer-input hang control, wave clock origin and bundle commands.
+The simulation-only observer is optional in `VexiiTop`. The boot harness
+includes it so a later process can trace restored state. It is separate
+from the standard C1 adapter's upstream probe.
