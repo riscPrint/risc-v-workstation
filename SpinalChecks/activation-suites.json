@@ -1,0 +1,28 @@
+[
+  {
+    "name": "generated-csr-rv32",
+    "source": "rvw/src/rvw/formal/csr.py",
+    "requires": [
+      "xlen:32",
+      "ext:zicsr",
+      "mode:M"
+    ]
+  },
+  {
+    "name": "hpm-read-rv32",
+    "source": "examples/vexriscv/rvw/programs/csr-check-events.S",
+    "requires": [
+      "xlen:32",
+      "ext:zicsr",
+      "mode:M"
+    ]
+  },
+  {
+    "name": "bus-backpressure-rv32",
+    "source": "examples/vexriscv/isa.json",
+    "requires": [
+      "xlen:32",
+      "ext:i"
+    ]
+  }
+]

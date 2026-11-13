@@ -1364,3 +1364,26 @@ The cancellation tests retain the illegal payload-change control.
 The rerun uses the same 49 aligned ISA programs and two CSR programs. All
 51 programs pass with 25 inserted checks and zero firings. The historical
 activation table above remains the pre-fix measurement.
+
+### Activation follow-up with backpressure
+
+[The follow-up record](activation-followup-results.json) assigns one result
+to each of the 38 original simulation misses. The named suites come from
+`rvw regress plan --features examples/vexriscv/rvw/features.json
+--catalog SpinalChecks/activation-suites.json --json`.
+The native slices run generated CSR accesses, counter reads and ISA programs.
+`RVW_CHECKS_BACKPRESSURE=1` permits command acceptance every eighth cycle.
+`RVW_CHECKS_RESPONSE_DELAY=32` permits up to seven ordered fetch requests.
+Both settings are opt-in.
+
+All 82 triggers have new depth-16 cover observations. Unreached VexiiRiscv
+triggers without an unreachability proof also have depth-128 retries.
+Negated-trigger assertions use base case and induction. Only a successful
+induction result is `unreachable`. All proofs use the captured two-sample
+reset sequence and `async2sync` single-clock mapping. They do not establish
+asynchronous hardware behavior. `rvw formal from-sim` refused the asynchronous
+RTL. Its refusal remains visible.
+
+The stimulus exposes new stream firings. The record retains these failures.
+A software pass does not override a check failure. Unreached and timed-out
+checks remain `no_activation`, not proved unreachable.

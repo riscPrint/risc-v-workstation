@@ -18,6 +18,9 @@ object CsrChecksRuntime {
     require(Set("none", "csr", "hpm", "hpm_read")(args(2)))
     val fault = args(2)
     val allChecks = sys.env.get("RVW_CHECKS_ISA").contains("1")
+    val backpressure = sys.env.get("RVW_CHECKS_BACKPRESSURE").contains("1")
+    val responseDelay = sys.env.get("RVW_CHECKS_RESPONSE_DELAY").map(_.toInt).getOrElse(0)
+    require(responseDelay >= 0)
     require(!allChecks || fault == "none", "ISA qualification requires clean observations")
     val core = VexTop.configuration()
     core.plugins += new CsrChecksPlugin(model, observationFault = fault == "csr")
@@ -62,22 +65,29 @@ object CsrChecksRuntime {
         dbus.cmd.ready #= false; dbus.rsp.ready #= false; dbus.rsp.data #= 0; dbus.rsp.error #= false
         cd.forkStimulus(10); cd.waitSampling(8)
         var instruction = Option.empty[BigInt]
+        val pendingFetch = scala.collection.mutable.Queue.empty[(BigInt, Int)]
         var data = Option.empty[BigInt]
         var done = Option.empty[Int]
         var cycle = 0
         var retired = 0L
         while (cycle < (if (allChecks) 200000 else 20000) && done.forall(cycle < _ + 20)) {
           cd.waitFallingEdge()
-          ibus.cmd.ready #= instruction.isEmpty
+          if (responseDelay > 0) instruction = pendingFetch.headOption.filter(_._2 <= cycle).map(_._1)
+          ibus.cmd.ready #= (if (responseDelay > 0) pendingFetch.size < 7 else instruction.isEmpty) && (!backpressure || cycle % 8 == 0)
           ibus.rsp.valid #= instruction.nonEmpty
           instruction.foreach(v => ibus.rsp.inst #= v)
-          dbus.cmd.ready #= data.isEmpty
+          dbus.cmd.ready #= data.isEmpty && (!backpressure || cycle % 8 == 0)
           dbus.rsp.ready #= data.nonEmpty
           data.foreach(v => dbus.rsp.data #= v)
           cd.waitSampling()
           cycle += 1
+          if (responseDelay > 0 && instruction.nonEmpty) pendingFetch.dequeue()
           instruction = None; data = None
-          if (ibus.cmd.valid.toBoolean && ibus.cmd.ready.toBoolean) instruction = Some(word(ibus.cmd.pc.toLong))
+          if (ibus.cmd.valid.toBoolean && ibus.cmd.ready.toBoolean) {
+            val value = word(ibus.cmd.pc.toLong)
+            if (responseDelay > 0) pendingFetch.enqueue((value, cycle + responseDelay))
+            else instruction = Some(value)
+          }
           if (dbus.cmd.valid.toBoolean && dbus.cmd.ready.toBoolean) {
             val cmd = dbus.cmd
             val address = cmd.address.toLong
