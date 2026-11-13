@@ -54,6 +54,14 @@ harness skeleton. The harness does not map buses or completion. Its run still
 refuses execution. HDL graph navigation is conservative; semantic diff remains
 inconclusive. The tool does not infer a safe harness from the HDL.
 
+For a Verilog core with a supported bus and RVFI ports, there is also a mapped
+mode: `rvw init --verilog-top MODULE --verilog FILE ...`. Review the explicit
+clock, reset polarity, reset address, parameters, memory map and bus bindings.
+See [PicoRV32](../examples/picorv32/README.md). This mode uses the installed
+Scala/sbt runtime. The `--hdl sv` C++ stub has no Scala dependency. Its project
+still needs a complete C1 implementation and input audit before regression.
+
+
 ## 3. Bind the adapter
 
 Implement `rvw/run.sh` and `rvw/src/main/scala/rvwcore/CoreAdapter.scala`.
@@ -265,7 +273,7 @@ Limits can differ within one tool. Read the linked README and PR before use.
 
 | Tool or flow | Recorded scope | Evidence and remaining limit |
 |---|---|---|
-| init | Fixture only | Generated-file and loader tests; [README](../rvw/src/rvw/init/README.md). A skeleton does not elaborate a new core. |
+| init | Native SV scaffold compile; mapped runtime incomplete in the fresh dry run | [Verilog dry run](DRY_RUN_VERILOG_2026-11-13.md): a fresh PicoRV32 scaffold compiles after #847. The mapped path waits for sbt. A compiled stub does not run a program. |
 | sim / arcilator | Ran on RTL | [#654](https://github.com/riscPrint/risc-v-workstation/pull/654): bounded VexRiscv C1/C2 comparison; BOOM, checkpoints and broader engine options NOT RUN. |
 | regress privilege extensions | Spike only | [#552](https://github.com/riscPrint/risc-v-workstation/pull/552): 81 programs; RTL and independent nested-pointer model remain open. |
 | cosim vector | Spike only | [#608](https://github.com/riscPrint/risc-v-workstation/pull/608): 1,333 instructions, replay match; no vector RTL. |
@@ -285,6 +293,23 @@ A later bounded scalar cosim run in [#692](https://github.com/riscPrint/risc-v-w
 matched real VexRiscv RTL through the DPI path and detected its injected writeback
 fault at the first affected retirement. This does not change the vector row's
 Spike-only scope or qualify interrupts, extended CSR capture or a second core.
+
+## Fresh Verilog project results
+
+The [2026-11-13 dry run](DRY_RUN_VERILOG_2026-11-13.md) records commands, fixes
+and limits for an external PicoRV32 repository. These rows do not qualify
+every non-Spinal core.
+
+| Flow | Status | Recorded scope and limit |
+|---|---|---|
+| Pure C++ C1/C2 and regression | Native completions; C1 inconclusive | 46 program completions pass. The temporary project adapter lacks complete native identity capture. No C4 acceptance. |
+| Scalar cosim | Native comparison | 40 traces match; six byte/halfword cases differ. No masks relaxed. |
+| Yosys/slang query and blocks | Native extraction and export | Both frontends run. SpinalBlocks JSON exports. Rendering NOT RUN. Include-bearing slang sources retain directory capture limits. |
+| Automatic UVM/VIP bench generation from plain ports | unsupported | No supported typed bus metadata. Supply a project bench with explicit protocol pin bindings. CLI exits 2; MCP retains unsupported. |
+| Formal | Bounded observations | Three bus properties pass at depth 8; retirement cover at depth 20; add check times out. No ISA proof. |
+| Fault injection through the temporary native adapter | unsupported | Sites and plans work. The adapter refuses --fault; zero injections. A project injection binding is required. |
+| Security IFT | Native potential-flow observation | Eight samples identify declared memory-data influence on a bus-data sink. X/Z values stay tainted. This is not a security specification or whole-core proof. |
+| Architecture calibration | NOT RUN | Project model supplied; gem5.opt absent. Component trace studies run separately and remain hypothetical. |
 
 ## Other tool boundaries
 
