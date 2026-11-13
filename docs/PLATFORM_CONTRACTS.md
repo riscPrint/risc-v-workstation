@@ -342,6 +342,11 @@ and LR/SC/AMOs. It computes address and width from its own instruction and
 pre-step registers, then checks the synchronous cause. Reserved encodings,
 partial effects on either side and Sail fault-attempt observations are refused. Such a refusal is not a match.
 Partial records define validity but do not establish checker support.
+The Spike shim refuses any trap with logged memory effects. It does not
+discard those logs and infer zero completion. `state_coverage` includes
+`csr_snapshot_steps` and `fault_access_steps`, the number of reference
+observations checked. These counts include a mismatching observation.
+A header declaration alone does not increase either count.
 
 
 The cosim result's `state_coverage` gives the input `trace_schema`, whether FP

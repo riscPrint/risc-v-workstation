@@ -57,7 +57,9 @@ handler:
             return check(path, reference, platform)
         finally:
             reference.close()
-    assert compare(rows)['status'] == 'match'
+    result = compare(rows)
+    assert result['status'] == 'match'
+    assert result['state_coverage']['csr_snapshot_steps'] == len(rows)
     changed = copy.deepcopy(rows)
     first = rows.index(writes[0])
     changed[first]['csr_state']['0x340'] = '0x2'  # final cycle state used too early

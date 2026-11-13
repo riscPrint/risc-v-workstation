@@ -825,3 +825,9 @@ An optional schema is `rvw.cosim-platform/1`. Each comparison result includes
 actually used for each CSR and synchronization reason. This list does not
 lose entries when the recent-history buffer fills. A configured mask that was
 not used is absent. Exact absent-PMP and ECALL policies do not apply masks.
+
+CSR and fault coverage reports include counts of checked reference observations.
+Spike refuses fault steps with logged memory effects because ordered partial
+effects are not yet available. Native zero-completion tests cover unsigned
+loads, stores, LR and AMOs. These tests use Spike as the reference. They do
+not establish DUT capture or Sail snapshot and fault-observation support.
