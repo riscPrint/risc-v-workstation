@@ -21,4 +21,4 @@ def mcp_tools():
                     schema({'manifest': {'type': 'string'}, 'out': {'type': 'string'},
                             'engine': {'type': 'string'}, 'depth': {'type': 'integer', 'minimum': 2},
                             'timeout': {'type': 'number', 'exclusiveMinimum': 0}}, ['out', 'manifest']),
-                    _runner('counter-quotient'), long=True)]
+                    _runner('counter-quotient'), long=True, side_effects='long-running; writes generated artifacts and reports to out; launches selected native tools', native_tools=('Yosys', 'SymbiYosys', 'yosys-smtbmc', 'Yices', 'Z3', 'Boolector', 'Bitwuzla', 'CVC4', 'CVC5', 'MathSAT', 'ABC', 'suprove', 'Avy', 'rIC3', 'EBMC', 'pono', 'btormc', 'btorsim'))]

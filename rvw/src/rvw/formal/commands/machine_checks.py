@@ -40,4 +40,4 @@ def mcp_tools():
     from rvw.mcp.spec import ToolSpec, schema
     return [ToolSpec('formal_machine_checks', 'Generate project-bound RV32 machine transition properties and optionally run bounded checks.',
                      schema({'manifest':{'type':'string'}, 'out':{'type':'string'}, 'run':{'type':'boolean'},
-                             'timeout':{'type':'number', 'exclusiveMinimum':0}}, ['manifest','out']), mcp_run, long=True)]
+                             'timeout':{'type':'number', 'exclusiveMinimum':0}}, ['manifest','out']), mcp_run, long=True, side_effects='long-running; writes generated artifacts and reports to out; launches selected native tools', native_tools=('Yosys', 'SymbiYosys', 'yosys-smtbmc', 'Yices', 'Z3', 'Boolector', 'Bitwuzla', 'CVC4', 'CVC5', 'MathSAT', 'ABC', 'suprove', 'Avy', 'rIC3', 'EBMC', 'pono', 'btormc', 'btorsim'))]

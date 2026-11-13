@@ -52,3 +52,13 @@ def test_wave_declarations_include_conditional_cache_writes(registry):
     assert 'out' in registry.tools['wave_cut'].side_effects
     assert registry.tools['wave_index_verify'].side_effects == 'read-only'
     assert registry.tools['wave_session_open'].native_tools == ('GTKWave tools',)
+
+
+def test_formal_declarations(registry):
+    tools = [tool for name, tool in registry.tools.items() if name.startswith('formal_')]
+    assert tools
+    assert all(tool.side_effects and tool.native_tools is not None for tool in tools)
+    assert registry.tools['formal_csr'].native_tools == ()
+    assert registry.tools['formal_doctor'].native_tools == ()
+    assert 'EQY' in registry.tools['formal_equiv'].native_tools
+    assert registry.tools['formal_sail_state'].native_tools == ('Sail',)

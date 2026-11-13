@@ -25,4 +25,4 @@ def mcp_tools():
             'reset_active':{'type':'string','enum':['high','low']},
             'cycles':{'type':'integer','minimum':0,'maximum':64},
             'timeout':{'type':'number','exclusiveMinimum':0}},['rtl','top','reset','out']),
-        _runner('reset-audit'),long=True)]
+        _runner('reset-audit'),long=True, side_effects='long-running; writes generated artifacts and reports to out; launches selected native tools', native_tools=('Yosys',))]
