@@ -15,7 +15,7 @@ def test_live_echo(tmp_path):
     assert built.returncode == 0, built.stderr
     out = tmp_path / 'echo'
     ran = run_group([str(root / 'run.sh'), 'run', '--elf', str(elf), '--out', str(out),
-                     '--soc-map', str(root.parent / 'live-devices.json'), '--seed', '1',
+                     '--soc-map', str(root / 'live-devices.json'), '--seed', '1',
                      '--mem-latency', '0', '--max-cycles', '30000', '--rvfi-trace', '--json'],
                     env=dict(os.environ), capture=True, text=True, timeout=1200)
     assert ran.returncode == 0, ran.stderr

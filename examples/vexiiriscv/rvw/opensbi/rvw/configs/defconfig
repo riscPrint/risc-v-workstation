@@ -1,0 +1,1 @@
+# UART and CLINT drivers are selected by the platform Kconfig.

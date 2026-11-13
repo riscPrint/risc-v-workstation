@@ -1,0 +1,39 @@
+{
+  "status": "pass",
+  "cycles": 304429,
+  "instret": 126162,
+  "elf_sha256": "a78226ff47b97ce896e154e64936929ebbdc833be749eebe64cb52a42aeb3500",
+  "rtl_sha256": "5e2e8ff7f63e9fcf89e0c4469860cf2193c6486597aa6e95d720901935e6eb97",
+  "config": "rv64imasu",
+  "seed": 1,
+  "mem_latency": 0,
+  "schema": "rvw.vexii-opensbi-sample/1",
+  "build": {
+    "compiler": "Homebrew clang version 23.1.4",
+    "schema": "rvw.vexii-opensbi-build/1",
+    "revision": "bd613dd92113f683052acfb23d9dc8ba60029e0a",
+    "config_sha256": "96b839ec42dad745fb4938dc12c327b6096de95a475301478e04706e9a720dfd",
+    "platform_sha256": "a1a95bb70090463ed199380f0e7e49315d33a01743225c844d8cad5fa24bfed7",
+    "firmware_sha256": "452e226165008033171daeb982a654329b72532cc2567f5081388a0fcce6c8a8"
+  },
+  "c2_sha256": "28d0e9e5b31017563248f797d140ffb0712cd7c0105f9b06eca222c6b083b40a",
+  "details": {
+    "last_retired_pc": "0x80400038",
+    "last_retired_mode": 1,
+    "retired_by_mode": {
+      "0": 0,
+      "1": 14,
+      "2": 0,
+      "3": 126148
+    },
+    "device_output": {
+      "uart": "S"
+    }
+  },
+  "checkpoint_restore": "not_implemented",
+  "core_source": {
+    "core_dirty": false,
+    "core_rev": "9b63f47",
+    "core_rev_full": "9b63f47fe559dbba7874af9196746412fa1294c1"
+  }
+}

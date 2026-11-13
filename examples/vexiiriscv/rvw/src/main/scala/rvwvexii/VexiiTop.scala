@@ -12,15 +12,17 @@ import vexiiriscv.misc.{PipelineBuilderPlugin, PrivilegedPlugin, TrapPlugin}
 /** RV32IM, machine mode only, cacheless native fetch and LSU buses, no MMU, PMP or debug unit.
   * `*_cached` adds the upstream fetch and LSU L1 caches and the BTB/GShare/RAS predictors. */
 object VexiiTop {
-  def liveMap = riscvsim.SimMap.load(new java.io.File(new java.io.File(sys.props("riscvsim.script")).getParentFile, "../live-devices.json"))
-  val configs = Seq("rv32im", "rv32imasu", "rv64imasu", "rv32im_cached")
+  def liveMap = riscvsim.SimMap.load(new java.io.File(new java.io.File(sys.props("riscvsim.script")).getParentFile, "live-devices.json"))
+  val configs = Seq("rv32im", "rv32imasu", "rv64imasu", "rv64imacsu", "rv64imacsu_linux", "rv32im_cached")
 
+  def supervisor(config: String) = config.endsWith("asu") || config.startsWith("rv64imacsu")
+  def compressed(config: String) = config.startsWith("rv64imacsu")
   def param(config: String): ParamSimple = {
     require(configs.contains(config), s"unknown VexiiRiscv config $config")
     val p = new ParamSimple()
     p.xlen = if (config.startsWith("rv64")) 64 else 32
     p.addISA("m")
-    if (config.endsWith("asu")) {
+    if (supervisor(config)) {
       p.addISA("a", "s", "u")
       p.asidWidth = if (p.xlen == 64) 16 else 9
       p.pmpParam.pmpSize = 8
@@ -33,6 +35,7 @@ object VexiiTop {
       p.lsuL1Enable = true; p.lsuL1Sets = 32; p.lsuL1Ways = 2
       p.withBtb = true; p.withGShare = true; p.withRas = true
     }
+    if (compressed(config)) p.addISA("c")
     p.fixIsaParams()
     p
   }

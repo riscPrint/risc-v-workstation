@@ -461,3 +461,23 @@ The tick can run before or after the injector on that edge. A change in thread
 order must not skip a one-cycle flip. If the adapter count differs by more than
 one tick, pending faults remain unapplied with an ambiguous-cycle reason.
 Read-back confirmation remains required before `details.fault.applied` is true.
+## VexiiRiscv boot payloads
+
+The example adapter loads the captured `RunContext.loadMemory` image. Its
+uncached RAM can span up to 128 MiB. The existing `rvw.boot-payloads/1` and
+`rvw.sim-map/1` formats apply. The `rv64imacsu` profile adds compressed
+instructions to the RV64 supervisor configuration. The `rv64imacsu_linux`
+profile uses bounded execution and disables bare-metal `tohost` completion.
+C1 `details.last_retired_pc` and `details.last_retired_mode` report the last
+observed retirement. They are null if no instruction retired.
+`details.retired_by_mode` counts observed instructions per privilege mode.
+The bounded profile records `details.completion=bounded` and a null `tohost`. Native live checkpoint
+save and restore are not supplied by this adapter.
+
+UART live-device state adds the modem-control register. Reset clears it.
+Snapshots retain its four supported output bits. Loopback mode is refused.
+Older snapshots without this register restore it as zero.
+
+The live CLINT model supports aligned eight-byte accesses to `mtime` and
+`mtimecmp`. Both halves use one sampled device state. MSIP and PLIC registers
+use four-byte accesses. UART registers use byte accesses.

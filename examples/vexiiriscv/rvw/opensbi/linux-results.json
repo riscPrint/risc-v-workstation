@@ -1,0 +1,36 @@
+{
+  "status": "timeout",
+  "cycles": 4682752,
+  "instret": 1726669,
+  "config": "rv64imacsu_linux",
+  "seed": 1,
+  "mem_latency": 0,
+  "rtl_sha256": "feb3b9f1dada9ba75bdba1d3e6019894b4a81ba8b838f8a12b997e820b5b08db",
+  "elf_sha256": "6f18cf75416767f53162e1b378a0775a9facd2704063e66152dc2e2eb4ac893d",
+  "message": "wall-clock timeout after 600 s at cycle 4682752",
+  "schema": "rvw.vexii-linux-prefix-sample/1",
+  "scope": "600-second bounded RTL execution; no completed Linux boot",
+  "firmware_sha256": "452e226165008033171daeb982a654329b72532cc2567f5081388a0fcce6c8a8",
+  "kernel_sha256": "08f6dbe2dd3b1b411e26b65c27b89f780e8af5d3d0ef4cde84a9f3291e2440f2",
+  "dtb_sha256": "5438ba5486c294edef5d83639967066f3176195d0456a03d1934c02753f18a98",
+  "details": {
+    "last_retired_pc": "0xffffffff8021296e",
+    "last_retired_mode": 1,
+    "retired_by_mode": {
+      "0": 0,
+      "1": 1597511,
+      "2": 0,
+      "3": 129158
+    },
+    "mmu_walks": 15,
+    "mmu_walks_unattached": 0,
+    "completion": "bounded",
+    "tohost": null,
+    "device_output": {
+      "uart": ""
+    }
+  },
+  "translated_address_observations": 328491,
+  "c2_trace": "not_captured",
+  "checkpoint_restore": "not_implemented"
+}
