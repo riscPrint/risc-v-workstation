@@ -1,7 +1,7 @@
 /* Bit-exact RISC-V M semantics. Unsigned operations avoid signed C overflow. */
 #include <stdint.h>
 static uint64_t rvw_m(unsigned op, unsigned width, uint64_t a, uint64_t b) {
-    uint64_t mask = width == 64 ? UINT64_MAX : UINT32_MAX;
+    uint64_t mask = width == 64 ? UINT64_MAX : (UINT64_C(1) << width) - 1; /* 8, 16, 32 or 64 */
     a &= mask; b &= mask;
     uint64_t sa=a>>(width-1), sb=b>>(width-1);
     uint64_t aa=sa ? (-a & mask) : a, bb=sb ? (-b & mask) : b;
