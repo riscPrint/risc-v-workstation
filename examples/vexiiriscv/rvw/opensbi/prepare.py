@@ -27,6 +27,8 @@ def main():
         dts=dts.replace('/dts-v1/;', '/dts-v1/;\n/memreserve/ 0x80000000 0x00400000;')
         dts=dts.replace('0x01000000',hex(ram)).replace('rv64ima_zicsr','rv64imac_zicsr')
         dts=dts.replace('\"a\", \"zicsr\"', '\"a\", \"c\", \"zicsr\"')
+        dts=dts.replace('rv64imac_zicsr_zifencei', 'rv64imac_zicsr_zifencei_zicntr')
+        dts=dts.replace('\"zifencei\";', '\"zifencei\", \"zicntr\";')
         if a.resumable: dts=dts.replace('100000000', '1000000')
         dts=dts.replace('chosen {', 'chosen { bootargs = "console=ttyS0,115200 earlycon=uart8250,mmio,0x10000000 keep_bootcon rdinit=/init lpj=1000 loglevel=7";')
     (out/'soc.dts').write_text(dts)

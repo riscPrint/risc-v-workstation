@@ -538,3 +538,17 @@ bits and modem loopback. Modem status has active CTS, DSR and DCD outside
 loopback. In loopback, modem control drives modem status and transmitted bytes
 enter the RX FIFO. RX trigger, overrun, TX-empty and modem-delta interrupts use
 the IIR priority order. There is no baud-rate timing or receiver-timeout IRQ.
+
+## Boot runtime profiles
+
+The project boot launcher selects native optimization with `RVW_BOOT_OPT`
+(default 3) and Verilator threads with `RVW_BOOT_THREADS` (default 1). It rejects
+an inherited `--threads` flag. It adds only the nice increment needed to reach
+niceness 10. An inherited niceness above 10 is preserved.
+
+`RVW_BOOT_FREEZE_RUNTIME` captures a new immutable runtime directory. Each
+classpath directory becomes a jar with its resources. Dependency jars are
+copied in classpath order. The saved `classpath.txt` is the Java classpath,
+not a new checkpoint format. `RVW_BOOT_CLASSPATH` selects it for later launches.
+Checkpoint identities still bind the RTL, harness, memory and device classes.
+Freezing does not qualify cross-version or cross-host restore.

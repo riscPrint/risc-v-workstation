@@ -61,6 +61,7 @@ def test_linux_platform_is_opt_in(tmp_path, monkeypatch, resumable, ram, clock, 
     assert (f'timebase-frequency = <{clock}>' in (out / 'soc.dts').read_text())
     assert 'riscv,isa-base = \"rv64i\"' in (out / 'soc.dts').read_text()
     assert '\"a\", \"c\", \"zicsr\"' in (out / 'soc.dts').read_text()
+    assert '\"zicntr\"' in (out / 'soc.dts').read_text()
     assert any(d['model'] == 'syscon-poweroff' for d in devices['devices']) == poweroff
 
 @pytest.mark.parametrize('status,console,expected', [

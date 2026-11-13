@@ -1003,9 +1003,10 @@ conversion tests passed. A diagnostic C1 view produced an `rvw bundle` without
 a trace or wave. It reports the missing evidence and remains inconclusive for
 C1 replay and regression acceptance. See the recipe for the exact commands.
 
-The launcher currently applies nice priority twice. The measured run had
-niceness 20. Correcting that launch profile and measuring throughput is the
-next speed item. No trace or wave was written for these boot slices.
+The first measured launcher applied nice priority twice and ran at niceness
+20. The long-run profile corrects that increment and defaults to optimization
+level 3 with one Verilator thread. No trace or wave was written for these boot slices.
+
 ## Dependency debug measurements
 
 The database entry resolves its device map from `RVW_ADAPTER` when no simulator

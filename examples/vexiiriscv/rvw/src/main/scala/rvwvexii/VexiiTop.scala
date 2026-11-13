@@ -49,6 +49,7 @@ object VexiiTop {
       p.withBtb = true; p.withGShare = true; p.withRas = true
     }
     if (compressed(config)) p.addISA("c")
+    if (config.endsWith("_linux")) p.addISA("zicntr")
     p.fixIsaParams()
     p
   }
