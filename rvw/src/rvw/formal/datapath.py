@@ -107,7 +107,7 @@ def run(args):
             from .common import check_ident
             check_ident('binding top', top)
         script = (f'read_verilog dut.v\nhierarchy -check -top {top}\nproc\nflatten\n'
-                  'check -assert\ntechmap\nopt_clean\ncheck -assert\nwrite_json mapped.json\n')
+                  'check -assert\ntechmap\nopt_clean\ncheck -assert\nwrite_json -noscopeinfo mapped.json\n')
         (out/'map.ys').write_text(script)
         r = execute([result['tools']['yosys']['path'], '-Q', '-s', 'map.ys'], 'yosys')
         if r.returncode:
