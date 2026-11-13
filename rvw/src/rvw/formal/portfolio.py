@@ -187,7 +187,8 @@ def race(plan, root, out, *, timeout=30, cross_check=False):
                 row['input_format'] = 'aiger_native'
             else:
                 native_sources = list(map(str, sources))
-                top_options = ['--top', plan['top']]
+                top_options = ['--top', plan['top'], '-D', 'FORMAL', '-D', 'YOSYS']
+                row['defines'] = ['FORMAL', 'YOSYS']
             command = ['ebmc', *native_sources, *top_options, '--bound', str(depth), '--json-result', 'ebmc-result.json']
             if mode == 'prove':
                 command.append('--k-induction')

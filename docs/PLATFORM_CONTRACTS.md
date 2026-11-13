@@ -4858,3 +4858,27 @@ unbounded safety pass receives `proof_kind=liveness_to_safety`. A bounded pass
 is a bounded lasso search. Justice feasibility and existential CTL deadlock
 freedom are not established. Existing safety assertions are removed from this
 separate job. Original assumptions remain.
+### Lazy RAM word-state refinement
+
+CLI `lazy-ram` and MCP `formal_lazy_ram` read pinned Verilog `top` and `sources`,
+plus a collected Yosys `memory` cell name. The runner uses `memory_map -formal`
+to retain source read, write, initialization and collision behavior. It then
+replaces each untracked word's flip-flop driver with an unconstrained per-step
+input. It removes initialization constraints from those freed word aliases.
+Tracked word dynamics remain unchanged. Aliased word state, negative offsets,
+missing word names and ambiguous whole-word drivers are rejected.
+
+`rvw.formal-lazy-ram/1` records original selected-memory state bits, tracked
+addresses, per-round `memory_state_bits`, result paths and source hashes. A
+source-conditional engine pass stays inconclusive. An unbounded pass on an
+overapproximation proves the original supplied safety problem. An abstract
+counterexample requests refinement only. Read-address constants and sampled
+counterexample addresses prioritize the next restored word. Missing samples
+fall back to the next word. Only a failure after all words are restored can
+become a concrete counterexample. The report does not claim total design-state
+or runtime savings. `max_words` defaults to 64 and cannot exceed 4096.
+
+EBMC Verilog inputs receive explicit `FORMAL` and `YOSYS` preprocessor defines,
+matching the Yosys formal read. Engine rows record these `defines`. Unsupported
+formal builtins remain native conversion errors. The adapter never falls back
+to a non-formal source branch to obtain a result.

@@ -2045,3 +2045,58 @@ It does not prove those models against a physical blackbox or an independent
 implementation. No conditional result can grant unconditional equivalence.
 `formal_equiv` exposes the same source inputs, revision exports, state hints and
 blackbox contract. It returns conditional evidence without granting a pass.
+
+## Lazy RAM word refinement
+
+Run `rvw formal lazy-ram --manifest PLAN.json --out OUT --budget 60 --timeout 10`.
+MCP `formal_lazy_ram` exposes the same command. A plan contains pinned `top`
+and `sources`, a collected Yosys `memory` cell name, optional `engines` and
+`depth`, and optional `max_words` with a default of 64 and maximum of 4096.
+
+The runner first uses Yosys `memory_map -formal`. This keeps the source's read,
+write, initialization and collision logic. It replaces untracked word state
+with unconstrained per-step inputs. Tracked words keep their original drivers.
+Abstract failures restore a word, with priority for read addresses seen in the
+counterexample and constant read addresses. Missing address samples use a
+simple next-word fallback. This affects search order only. An abstract failure
+cannot become a design failure. A concrete failure requires all word state to
+be restored. Original source assumptions remain unqualified.
+
+Limits: lowering must retain distinct word names and one whole-word flip-flop
+driver per word. Aliased words and negative offsets are rejected. The lowering
+still contains the original combinational memory logic. Tracked RAM state bits
+are not total design-state bits. No general runtime or capacity gain is claimed.
+
+Native evidence on the 16-word, 8-bit reference RAM: an abstract failure restored
+address 3. The next unbounded proof passed with 8 concrete RAM state bits from
+an original 128. A seeded fault remained inconclusive through all abstract
+rounds. It became a concrete failure only after all 16 words were restored.
+Evidence: `/tmp/deep-lazy-ram-{proof,fault-proof}/result.json`. A separate native
+masked-write test proved after restoring its one addressed word. Five targeted
+tests cover driver preservation, initialization removal, aliases and selection.
+
+## Pinned PicoRV32 property-set measurement
+
+`examples/formal/deep/picorv32.json` pins upstream source revision
+`ef203c2b0a3fb793280f5114941416c425c5b461`. Fetch it outside the repository
+with `scripts/fetch-formal-bench.py`. The default FORMAL export has 23
+assertions and two source restrictions: reset sequencing and memory response.
+Every problem result stays inconclusive because activation is unmeasured.
+The native engine answers below are conditional on those source restrictions.
+Each job had a 12 s timeout. Wall time includes preparation.
+
+| Engine | Native answer | Problem result | Wall time (s) |
+|---|---|---|---:|
+| `abc:pdr` | pass | inconclusive | 10.763 |
+| `aiger:rIC3` | pass | inconclusive | 7.808 |
+| `smtbmc:yices` | inconclusive | inconclusive | 4.269 |
+| `ebmc` | error | inconclusive | 0.506 |
+
+EBMC receives explicit FORMAL and YOSYS defines, matching the formal read.
+It rejects this source because `$initstate` is unsupported. The previous
+no-properties result exposed the missing FORMAL define and is retained in
+the first run. A regression now checks a failing FORMAL branch. No source
+restriction was removed or replaced. This is a property-bundle measurement,
+not a whole-core qualification. Raw results:
+`/tmp/rvw-deep-picorv32-proof/result.json` and
+`/tmp/rvw-deep-picorv32-ebmc-formal/result.json`.

@@ -97,3 +97,22 @@ def test_ebmc_receives_original_aiger_bytes(tmp_path, monkeypatch):
     r = p.race(m, tmp_path, tmp_path / 'out')
     assert r['status'] == 'pass'
     assert r['rows'][0]['input_format'] == 'aiger_native'
+
+
+def test_native_ebmc_checks_formal_branch(tmp_path):
+    import shutil
+    if not all(shutil.which(t) for t in ['ebmc', 'yosys']):
+        pytest.skip('optional native EBMC and Yosys missing')
+    source = tmp_path / 'branch.sv'
+    source.write_text('''module top;
+`ifdef FORMAL
+always @* assert(0);
+`else
+always @* assert(1);
+`endif
+endmodule
+''')
+    m = {'top': 'top', 'sources': [{'path': source.name,
+         'sha256': hashlib.sha256(source.read_bytes()).hexdigest()}], 'engines': ['ebmc']}
+    r = p.race(m, tmp_path, tmp_path / 'out', timeout=8)
+    assert r['status'] == 'fail', r
