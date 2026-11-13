@@ -20,7 +20,7 @@ def test_nested_lowering_and_capacity():
     rtl, rows, _ = lower()
     assert rows[0]['milestones'] == 2
     assert 's_eventually' not in rtl
-    for expr in ['s_eventually s_eventually b',
+    for expr in ['s_eventually s_eventually b', 's_eventually\n(a && s_eventually\nb)',
                  's_eventually (a && s_eventually (b && s_eventually a))']:
         assert lower(expr)[1][0]['operator'] == 'nested_eventually'
     with pytest.raises(ValueError):
@@ -43,3 +43,7 @@ def test_oracle_checks_order_and_pending_requests():
     assert not oracle([], [(1, 1, 0)])
     assert oracle([], [(1, 0, 1), (0, 1, 0)])
     assert not oracle([(1, 0, 0)], [(0, 0, 1)])
+
+
+def test_single_eventual_with_newline_remains_supported():
+    assert lower('req |-> s_eventually\nb')[1][0]['kind']=='live'

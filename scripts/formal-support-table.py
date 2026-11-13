@@ -81,4 +81,11 @@ features = ast.literal_eval(next(node.value for node in nested.body
                                         for t in node.targets)))
 rows += [f'| `{feature}` | native lasso oracle and positive/negative l2s jobs | two to eight ordered Boolean milestones; single clock |'
          for feature in features]
+cross_proof = ast.parse((root / 'rvw/tests/formal/test_cross_proof.py').read_text())
+features = ast.literal_eval(next(node.value for node in cross_proof.body
+                                if isinstance(node, ast.Assign)
+                                and any(isinstance(t, ast.Name) and t.id == 'SUPPORT_FEATURES'
+                                        for t in node.targets)))
+rows += [f'| `{feature}` | native oracle and positive/negative induction jobs | pre-update sampled values; two input clocks; no fairness |'
+         for feature in features]
 (root / 'rvw/src/rvw/formal/TEMPORAL_SUPPORT.md').write_text('\n'.join(rows) + '\n')

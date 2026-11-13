@@ -63,7 +63,7 @@ def rewrite(source,top,simulation=False):
             row=dict(id=name,kind=prop[1],clock=clocks[0][0]['signal'],
                      target_clock=clocks[1][0]['signal'],clock_events=[first,target],
                      terms=[terms[0] for terms in clocks],monitor=prefix,
-                     overlap=parts[1]=='|->')
+                     overlap=parts[1]=='|->', antecedent=antecedent, consequent=consequent)
             rows.append(row)
             declarations=f'reg {prefix}_tick=0, {prefix}_from=0, {prefix}_to=0;\n'
             if simulation:

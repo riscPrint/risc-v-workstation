@@ -3327,7 +3327,6 @@ refused. Each engine retains its existing event and reset limits. In particular,
 formal unbounded reset cancellation, general nested unbounded composition and
 full multi-clock proof remain unsupported. These defaults do not change that
 scope. The generated support table records paired native finite cases.
-<<<<<<< HEAD
 ## Conditional instruction abstraction
 
 `rvw formal riscv-abstract --project PROJECT --manifest MAP.json --checks
@@ -3374,7 +3373,6 @@ The ISA table also lists unselected instructions from the declared upstream
 ISA list and missing consistency checks for each retirement channel. They are
 unsupported gaps. A short project check list cannot silently qualify the rest
 of its declared ISA.
-=======
 
 ### Executed literal resource scenarios
 
@@ -3384,7 +3382,6 @@ Generation does not execute them. The
 [scenario guide](SCENARIOS.md#literal-mmio-execution-sources) states the supported
 literal operations. The linked composed VexRiscv example ran both native
 consumers and compared the same 12 observed MMIO values per consumer.
->>>>>>> e1d1c652 (feat(formal): execute literal scenarios on the vexriscv soc)
 
 ### Nested eventual milestones
 
@@ -3439,3 +3436,27 @@ Eleven unit cases cover selector routing, guest-file changes, pending-bit
 updates, unknown initial state, RV64 words, bounds and non-power-of-two identity
 capacity. No core binding, CSR denial test, delivery timing proof, APLIC model,
 major-priority model or complete AIA qualification was run.
+### Prove Boolean two-clock implications
+
+`rvw formal cross-prove --source model.sv --top TOP --out OUT --mode prove`
+checks one Boolean two-clock implication with `|->` or `|=>`. Each property
+clock must be a distinct scalar top-level input. Posedge and negedge events
+are accepted. Source must be preprocessed. Other assertions and assumptions
+need separate jobs. Sampled functions, reset cancellation and temporal
+consequents remain unsupported in this path.
+
+This path uses `multiclock on` and Yosys `clk2fflogic`. All clock inputs start
+low. Each global step can change inputs. The property samples settled values
+from before that step's transition. The nearest eligible target event completes
+all outstanding requests. An overlapped implication includes requests born at
+a simultaneous target edge. A nonoverlapped implication retains those requests
+for the next target edge. No bound replaces that next-event rule.
+
+No clock fairness is assumed. A target clock that stops can leave pending
+requests. The property is a safety check at eligible target events, not a
+liveness claim that they occur. A separate cover job checks one reached
+obligation. Its witness does not prove universal activation or clock fairness.
+C3 and JUnit come from the existing regression runner. BMC observations keep
+their bound. Induction observations are conditional proofs in this discrete
+model. No event between global samples, full SystemVerilog scheduling, analog
+clock behavior or metastability is modeled.
