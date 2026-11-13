@@ -102,7 +102,7 @@ Retained limit: Inferred pipeline states, counter warnings and settings checks r
 ## Explicit causes and commit kinds
 
 Perf reads the optional `#rvw` version 1 comment extension. See
-[the contract](../../../../docs/PLATFORM_CONTRACTS.md#pipeline-cause-event-extension).
+[the contract](../../../../docs/contracts/perf.md#pipeline-cause-event-extension).
 JSON adds `stall_causes`, `replays` and `commit_kinds`. Text shows each cause's
 scope and evidence kind. Existing saved reports without these fields still render.
 
@@ -136,7 +136,7 @@ not establish a prediction outcome. BOOM still needs core-owned probe signals.
 
 `#rvw` prediction records add direction, target and return outcomes, observed
 recovery cycles and wrong-path admission counts. See the
-[wire contract](../../../../docs/PLATFORM_CONTRACTS.md#observed-prediction-outcome-extension).
+[wire contract](../../../../docs/contracts/cosim.md#observed-prediction-outcome-extension).
 The `predictions` report groups observations by predictor, kind, warmup,
 alias and context. Each cost gives observed samples, unknown samples, sum and
 maximum. Unknown is not zero. Overlapping groups must not be summed as global

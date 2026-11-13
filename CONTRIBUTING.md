@@ -54,7 +54,7 @@ Do not build in another contributor's core checkout.
 Keep shared code generic. Do not name a core's signals, configs or tests in
 `rvw/src/`, `RiscvSim/src/` or the Spinal libraries. Put new core details in its
 repository beside `rvw.toml`. Keep the existing bundled adapters for compatibility.
-Update [PLATFORM_CONTRACTS.md](docs/PLATFORM_CONTRACTS.md) in the same commit
+Update the format's file under `docs/contracts/` (index: [PLATFORM_CONTRACTS.md](docs/PLATFORM_CONTRACTS.md)) in the same commit
 when you change a shared format.
 
 Never report a pass, match, accept or exclusion without enough evidence.

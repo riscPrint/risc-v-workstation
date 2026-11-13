@@ -110,8 +110,7 @@ def test_readme_current_schema_contract():
 
 
 def test_platform_contracts_current_schema_contract():
-    contracts = (Path(__file__).resolve().parents[2] / 'docs/PLATFORM_CONTRACTS.md').read_text()
-    c6 = contracts.split('## C6.', 1)[1].split('## C7.', 1)[0]
+    c6 = (Path(__file__).resolve().parents[2] / 'docs/contracts/c6-design-database.md').read_text()
     version = int(SCHEMA.rsplit('/', 1)[1])
     match = re.search(r'`rvw query diff` requires `/(\d+)` and refuses `/(\d+)` and older files', c6)
     assert match is not None

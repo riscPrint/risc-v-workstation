@@ -4,7 +4,7 @@ Use this playbook from a core's own repository. Keep the workstation installed
 in a separate repository. Keep the description and all core tuning with the
 core. Read [AGENT_SETUP.md](AGENT_SETUP.md) for the C1 adapter and project setup.
 Read [Arch/README.md](../Arch/README.md) and
-[contract C9](PLATFORM_CONTRACTS.md#c9-native-architecture-models) for the model
+[contract C9](contracts/c9-arch-models.md) for the model
 and report limits.
 
 For optional SoC topology, declared memory observations, and bounded model-only
@@ -470,7 +470,7 @@ Check both engines before using a fitted candidate.
 
 This workflow follows these installed sources:
 
-- [Arch/README.md](../Arch/README.md) and [C9](PLATFORM_CONTRACTS.md#c9-native-architecture-models).
+- [Arch/README.md](../Arch/README.md) and [C9](contracts/c9-arch-models.md).
 - [Arch/model.py](../Arch/model.py): description parser, fixed topology,
   gem5 object construction, ELF checks and ROI/exit checks.
 - [arch/core.py](../rvw/src/rvw/arch/core.py) and

@@ -217,7 +217,7 @@ simulator, or another HDL. The generic regression runner uses the C1 interface:
 Implement the options your suites request, including trace and memory timing
 options when used. Reject unsupported options. `run-many` reads one JSON object
 per line with the run options. It must write a separate C1 result for each job.
-See [C1](PLATFORM_CONTRACTS.md#c1-run-contract-core-adapter) for the full command
+See [C1](contracts/c1-run.md) for the full command
 and manifest interface, including optional wall-clock timeout support.
 
 For each run, the adapter must:
@@ -240,7 +240,7 @@ When a run requests `--rvfi-trace`, write C2 `rvfi.jsonl` and list it as
 retired instructions in `order`. Record PCs, instruction bits, privilege mode,
 register values, memory accesses and trap information from the actual run.
 Keep cycles nondecreasing across instructions and events. Use the core's trap
-CSR values. See [C2](PLATFORM_CONTRACTS.md#c2-rvfi-trace-rvfijsonl) for exact
+CSR values. See [C2](contracts/c2-rvfi-trace.md) for exact
 fields and interrupt events.
 
 For a Spinal adapter, [RiscvSim](../RiscvSim/README.md) supplies the driver,
@@ -272,7 +272,7 @@ only when your adapter implements
 C1 `result_claims`. Each result must carry those values. Identify the actual RTL
 and native model used by the simulation. Unknown dependencies give
 `input_not_captured:<name>` and prevent acceptance. The exact requirements are in
-[C8](PLATFORM_CONTRACTS.md#c8-input-capture-and-result-generations).
+[C8](contracts/c8-capture.md).
 
 Build the selected test ELFs before a regression. Test discovery does not compile
 them. Keep generated ELFs and build outputs under a repository `.gitignore` rule.

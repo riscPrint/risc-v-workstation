@@ -1,7 +1,7 @@
 # rvw cosim
 
 Trace-driven architectural comparison for a RISC-V core emitting the
-[C2 trace contract](../docs/PLATFORM_CONTRACTS.md#c2-rvfi-trace-rvfijsonl).
+[C2 trace contract](../docs/contracts/c2-rvfi-trace.md).
 This is the first implementation of an open replacement for the lockstep portion
 of ImperasDV / Questa RISC-V VIP. It does not claim commercial feature parity.
 Offline checking starts after simulation. The live integration API can check a
