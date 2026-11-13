@@ -23,21 +23,17 @@ package vip;
    function new(string name="stimulus"); super.new(name); endfunction
    task body();
      item t;
-     bit [31:0] previous_data;
-     bit data_changed;
      for(int i=0;i<40;i++) begin
        t=item::type_id::create("t");
        start_item(t);
        if(!t.randomize()) `uvm_fatal("RANDOM","randomize failed")
+       if($test$plusargs("constant_data")) t.data=0;
        if (!(t.opcode inside {0,4}) || !(t.address inside {0,4,8,12}))
          `uvm_fatal("RANDOM","constraint violation")
-       if(i>=8 && t.data!=previous_data) data_changed=1;
-       previous_data=t.data;
        // Eight directed transactions guarantee each opcode/address bin.
        if(i<8) begin t.opcode=i<4 ? 0 : 4; t.address=(i%4)*4; end
        finish_item(t);
      end
-     if(!data_changed) `uvm_fatal("RANDOM","random data did not change")
      if(t.randomize() with { opcode==3; })
        `uvm_fatal("RANDOM","unsatisfiable constraint was accepted")
    endtask
@@ -109,6 +105,8 @@ package vip;
    `uvm_component_utils(scoreboard)
    bit [31:0] model[4];
    int count, loads;
+   bit [31:0] previous_data;
+   bit data_changed;
    bit [7:0] seen_bins;
    covergroup traffic with function sample(bit op, bit [1:0] addr);
      cp_op: coverpoint op { bins put={0}; bins get={1}; }
@@ -120,6 +118,10 @@ package vip;
    endfunction
    function void write(item t);
      int idx;
+     // Check observed random traffic outside the sequence coroutine.
+     // The installed Verilator 5.049 drops local accumulators across nested task calls.
+     if(count>=8 && count<40 && t.data!=previous_data) data_changed=1;
+     previous_data=t.data;
      idx=t.address>>2;
      if(t.response_param!=0 || t.response_size!=2 || t.response_denied ||
         t.response_corrupt || t.response_sink ||
@@ -142,6 +144,7 @@ package vip;
      count++;
    endfunction
    function void check_phase(uvm_phase phase);
+     if(!data_changed) `uvm_fatal("RANDOM","random data did not change")
      if(count!=44 || loads<4 || seen_bins!=8'hff)
        `uvm_fatal("CHECK","missing transactions or coverage bins")
      if(traffic.get_inst_coverage()!=100.0)
