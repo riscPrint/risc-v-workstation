@@ -10,6 +10,8 @@ def diagnose():
         features = ['bounded_search' if m == 'bmc' else 'unbounded_safety' for m in modes]
         if name.startswith('smtbmc:') and 'prove' in modes:
             features.append('uninterpreted_datapath')
+        if name == 'aiger:rIC3':
+            features.extend(['aiger_liveness_to_safety', 'aiger_k_liveness', 'experimental_aiger_rlive'])
         row.update(backend=backend, features=features,
                    enabled_features=features if row['status'] == 'installed' else [],
                    executables={d: shutil.which(d) for d in deps},
