@@ -484,3 +484,11 @@ A writer with the `state` capability selects version 2. Adapters must capture
 state after the named retirement. Shared end-of-cycle state is insufficient
 for several retirement slots. A producer must not replace unavailable FP or
 CSR observations with constants.
+
+### Fault report completeness
+
+Fault reports reconcile outcomes against the selected plan by ID and fault
+parameters. Missing outcomes count as `inconclusive` and remain in `planned`,
+`unresolved` and `per_site`. `missing_outcomes` lists their IDs. Reports refuse
+unknown IDs, repeated IDs and parameters that differ from the plan. The report
+does not modify the stored plan or outcomes.

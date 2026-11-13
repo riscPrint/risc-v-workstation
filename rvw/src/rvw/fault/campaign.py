@@ -229,6 +229,25 @@ def wilson(successes, total, z=1.96):
 
 
 def report(plan_data, outcomes):
+    # Reconcile by plan identity before computing any denominator. Interrupted
+    # campaigns must retain faults whose outcome file entries were not written.
+    planned = {fault['id']: fault for fault in plan_data['faults']}
+    if len(planned) != len(plan_data['faults']):
+        raise ValueError('fault plan contains duplicate ids')
+    observed = {}
+    for outcome in outcomes:
+        identity = outcome['id']
+        if identity not in planned or identity in observed:
+            raise ValueError(f'unknown or duplicate fault outcome: {identity}')
+        fault = planned[identity]
+        if any(outcome.get(key) != fault.get(key)
+               for key in ('kind', 'site', 'bit', 'cycle', 'duration')):
+            raise ValueError(f'fault outcome differs from plan: {identity}')
+        observed[identity] = outcome
+    missing = [identity for identity in planned if identity not in observed]
+    outcomes = [observed.get(identity, dict(fault, classification='inconclusive',
+                evidence={'reason': 'missing fault outcome'}))
+                for identity, fault in planned.items()]
     counts = {c: 0 for c in CLASSES}
     per_site = {}
     for outcome in outcomes:
@@ -245,6 +264,7 @@ def report(plan_data, outcomes):
         'diagnostic_coverage': None if coverage is None else round(coverage, 4),
         'diagnostic_coverage_95': wilson(counts['detected'], dangerous),
         'safe_fraction': round(counts['safe'] / injected, 4) if injected else None,
+        'missing_outcomes': missing,
         'unresolved': [o['id'] for o in outcomes if o['classification'] in ('timeout', 'inconclusive', 'not_injected')],
         'per_site': per_site,
         'definitions': 'diagnostic coverage = detected / (detected + silent_corruption + timeout); '
