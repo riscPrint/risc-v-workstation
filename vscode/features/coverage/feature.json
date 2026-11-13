@@ -163,5 +163,8 @@
       "test/model.test.ts",
       "test/lines.test.ts"
     ]
+  },
+  "assets": {
+    "marker.svg": "marker.svg"
   }
 }
