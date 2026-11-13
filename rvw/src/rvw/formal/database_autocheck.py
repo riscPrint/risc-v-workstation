@@ -33,7 +33,7 @@ def populate(plan, database, capture):
         cid, path = components[0]
         signals = db.signals_where('s.component_id=?', (cid,))
         ports = {s.name: {'direction': {'in': 'input', 'out': 'output'}[s.direction], 'width': s.width}
-                 for s in signals if s.direction in ('in', 'out') and not s.pruned}
+                 for s in signals if s.direction in ('in', 'out')}
         if plan.get('ports') and plan['ports'] != ports:
             raise ValueError('declared ports differ from database module ports')
         fsms, skipped, internal = [], [], {}
@@ -66,6 +66,11 @@ def populate(plan, database, capture):
                                       'signal': left.name, 'other': right.name, 'signed': left.type == 'SInt',
                                       'operation': 'add' if match[2] == '+' else 'sub'})
         for pid, address, enable, depth in db.q('SELECT p.id,p.address,p.enable,m.depth FROM mem_ports p JOIN memories m ON m.id=p.memory_id WHERE p.component_id=?', (cid,)):
+            for endpoint in (address, enable):
+                sig = by_name.get(endpoint)
+                if sig and not sig.pruned and endpoint not in ports and re.fullmatch(r'[A-Za-z_][A-Za-z0-9_]*', endpoint):
+                    internal[endpoint]=sig.width
+                    ports[endpoint]={'direction':'output','width':sig.width}
             if type(depth) is int and depth > 0 and address in ports and depth <= 2**ports[address]['width'] and (enable in (None, '1') or enable in ports and ports[enable]['width'] == 1):
                 contracts.append({'id': f'array_port_{pid}', 'kind': 'array_bound', 'signal': address,
                                   'enable': enable or '1', 'size': depth})
@@ -74,6 +79,13 @@ def populate(plan, database, capture):
         from .role_discovery import discover
         roles, discovered = discover(db, cid, signals, ports)
         contracts.extend(discovered)
+        for role in roles:
+            if role['role']=='cam':
+                role['checks']=[p['id'] for p in contracts if p['kind']=='array_bound']
+                if role['checks']: role.pop('unsupported',None)
+            if role['role']=='counter' and role['signal'] not in ports:
+                internal[role['signal']]=role['width']
+                ports[role['signal']]={'direction':'output','width':role['width']}
         roles.extend({'role': 'fsm', 'path': f['signal'], 'evidence': {'encoding': f['states']}, 'checks': ['fsm_state', 'fsm_transition']} for f in fsms)
         return dict(plan, internal_ports=internal, ports=ports, fsms=fsms, contracts=contracts, toggle=plan.get('toggle', True), source_locations={s.name: {'file': s.file, 'line': s.line} for s in signals if s.file and s.line}, module=plan['top']), {
             'component': path, 'roles': roles, 'skipped': skipped, 'staleness': db.staleness(),

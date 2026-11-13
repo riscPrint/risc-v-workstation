@@ -84,3 +84,12 @@ Principles (from `ROADMAP.md`):
 | `SpinalKonata/` | Generic Konata pipeline-trace library for Spinal designs. | Scala |
 | `SpinalDB/` | One extraction pass over an elaborated Spinal design: the design database. | Scala |
 | `scripts/with-lock.sh` | Machine-wide lock for heavy jobs (see Resources); a wrapper around `rvw/src/rvw/common/lock.py`. | shell |
+
+### Automatic component app bindings
+
+Generated app plans can contain `fifo_stream`, `arbiter_transfer` and
+`counter_wrap`. Typed channel maps use exact valid, ready and payload endpoints.
+FIFO capacity comes from the selected component's memory structure. Counter wrap
+failures are reached observations. CAM address bounds do not establish key-match
+semantics. Public ports remain in the interface even when the database marks
+instance use as pruned; native interface validation remains required.
