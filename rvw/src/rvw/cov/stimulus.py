@@ -2,6 +2,7 @@
 from hashlib import sha256
 from importlib.metadata import version, PackageNotFoundError
 import json
+import random
 from pathlib import Path
 
 from . import captured
@@ -88,6 +89,14 @@ def generate(manifest, source_root, goal, work_dir, registers, seed=1, timeout_m
         solver.add(z3.Extract(24, 20, word) == rs2)
     else:
         solver.add(z3.Extract(31, 20, word) == imm)
+    # Seeded free operands vary the program while preserving the selected predicate.
+    rng = random.Random(seed)
+    if selected['field'] != 'rs1':
+        solver.add(a == rng.getrandbits(xlen))
+    if selected['field'] != 'rs2':
+        solver.add(b == rng.getrandbits(xlen))
+    if selected['field'] != 'imm12' and selected['instruction'] in I_TYPE:
+        solver.add(imm == rng.getrandbits(12))
     value = {'rs1': a, 'rs2': b, 'imm12': imm}[selected['field']]
     solver.add(predicate(z3, value, selected['value_class'], xlen, selected['field'] == 'imm12'))
     directory = Path(work_dir)

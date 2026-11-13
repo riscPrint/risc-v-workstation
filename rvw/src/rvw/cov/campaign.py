@@ -75,7 +75,7 @@ def campaign(settings, work_dir, resume=False):
     data = json.loads(captured.read_text(settings))
     required = {'schema', 'manifest', 'source_root', 'project', 'config', 'registers',
                 'runtime', 'linker', 'platform', 'compiler', 'isa', 'abi', 'attempts', 'seed'}
-    optional = {'timeout_s', 'max_cycles', 'timeout_ms', 'sequences', 'memory'}
+    optional = {'timeout_s', 'max_cycles', 'timeout_ms', 'sequences', 'memory', 'rtl_plan', 'recipes'}
     if data.keys()-required-optional or required-data.keys() or data['schema'] != 'rvw.stimulus-loop/1':
         raise ValueError('expected rvw.stimulus-loop/1 with declared fields')
     if type(data['attempts']) is not int or not 1 <= data['attempts'] <= 1000:
@@ -100,6 +100,10 @@ def campaign(settings, work_dir, resume=False):
         raise ValueError('compiler is not installed: '+data['compiler'])
     inputs = {'compiler': captured.sha256(compiler)}
     inputs.update({key: captured.sha256(path(key)) for key in ('manifest','runtime','linker','platform','project')})
+    if bool(data.get('rtl_plan')) != bool(data.get('recipes')):
+        raise ValueError('rtl_plan and recipes must be declared together')
+    if data.get('rtl_plan'):
+        inputs.update({key:captured.sha256(path(key)) for key in ('rtl_plan','recipes')})
     identity = sha256(json.dumps([data, inputs, pinned], sort_keys=True).encode()).hexdigest()
     out = Path(work_dir).resolve()
     report = {'schema': 'rvw.stimulus-loop/1', 'identity': identity, 'attempts': [], 'hits': [],
@@ -121,17 +125,27 @@ def campaign(settings, work_dir, resume=False):
     selected = load_config(project=path('project'))
     if data['config'] not in selected.configs:
         raise ValueError('unknown core configuration')
+    guide = None
+    if data.get('rtl_plan'):
+        from .guidance import Guide
+        guide = Guide(json.loads(captured.read_text(path('rtl_plan'))),
+                      json.loads(captured.read_text(path('recipes'))),report.get('guidance_history',[]))
+        report['unsupported_recipes'] = sorted(set(guide.recipes)-supported)
     hits = set(report['hits'])
     attempted = {a['goal'] for a in report['attempts']}
     def save():
         report['hits'] = sorted(hits)
+        if guide is not None:
+            report['guidance_history'] = guide.history
         publish(out/'state', lambda directory: (directory/'report.json').write_text(json.dumps(report, indent=2)+'\n'))
     save()
     for index in range(len(report['attempts']), data['attempts']):
         holes = sorted(supported-hits-attempted, key=lambda goal: (not goal.startswith('sequence:'),goal))
+        if guide is not None:
+            holes = sorted(set(holes) | (guide.pending_goals() & supported))
         if not holes:
             break
-        goal = holes[0]
+        goal = guide.choose(holes) if guide is not None else holes[0]
         attempted.add(goal)
         directory = out/f'attempt-{index:04d}'
         if directory.exists():
@@ -178,6 +192,10 @@ def campaign(settings, work_dir, resume=False):
                         coverage_plan.write_text(json.dumps({'groups':[], 'sequences':sequence_settings}))
                     evidence = qualify(elf, directory/'run', path('platform'), manifest, root, candidate, coverage_plan)
                     attempt.update(evidence)
+                    if guide is not None:
+                        from .feedback_campaign import collect
+                        attempt['feedback'] = collect(guide,goal,elf,directory/'run',path('rtl_plan'),
+                                                      evidence['status']=='qualified')
                     if evidence['status'] == 'qualified':
                         measured = identifiers(evidence['coverage']) & supported
                         attempt['new_hits'] = sorted(measured-hits)
@@ -189,6 +207,11 @@ def campaign(settings, work_dir, resume=False):
             attempt.update(status='interrupted', reason='execution cancelled; descendant cost may be incomplete')
             raise
         finally:
+            if guide is not None and 'feedback' not in attempt:
+                record = {'goal':goal,'new_events':[],'samples':[],'status':'unsupported',
+                          'reason':attempt.get('reason',attempt['status'])}
+                guide.history.append(record)
+                attempt['feedback'] = record
             after = os.times()
             attempt['elapsed_s'] = time.monotonic()-wall
             attempt['controller_cpu_s'] = after.user+after.system-before.user-before.system
