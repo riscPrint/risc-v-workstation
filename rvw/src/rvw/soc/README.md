@@ -504,3 +504,20 @@ example runs a directed bus-master test through the generated fabric. See
 The `block` peripheral profile exports an eight-sector volatile verification
 store and its register map. The directed composed example checks sector data,
 completion, IRQ and error handling. See SpinalSoc's block-device section.
+
+Use `connectivity.cone_cut = true` for per-connection source-cut proofs. The
+structural pre-check must resolve each required dependency. The reduced RTL
+keeps actual wiring and makes unrelated module outputs free. A transfer proof
+and activation witness remain mandatory. Clock and reset rows are sampled
+value checks. They do not qualify clock sequencing or reset release.
+
+Use `registers.write_read` to name directed write/read obligations. A pass
+requires a checked read after a write for each name. Plain capture matches
+without declared obligations still remain inconclusive.
+
+A VIP entry accepts the composition settings used by `uvm`. It generates one
+cocotb test per MMIO bus. Each test uses the APB VIP and independent register
+oracle on actual peripheral pins. A CDC/RDC entry can list
+`required_libraries` to require recognition of its declared synchronizers.
+Its structural summary reports findings and protected crossings separately
+from unproved temporal obligations.

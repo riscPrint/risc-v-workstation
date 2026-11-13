@@ -159,6 +159,8 @@ def execute(row, entry, root, out, timeout):
         if verdict in ('pass', 'proven') and process.returncode != 0:
             raise ValueError('Successful evidence conflicts with consumer exit code.')
         row.update(result=verdict, evidence=evidence)
+        if verdict in ('pass','proven'):
+            row['complete'] = True
         row.pop('reason', None)
     except (OSError, ValueError, TypeError, AttributeError) as exc:
         row['reason'] = str(exc)
@@ -219,18 +221,25 @@ def verify(source, out, manifest=None, timeout=120):
                 (out/'cdc_rdc.json').write_text(dumps(report))
                 row.update(generated=True, ran=True, result='inconclusive', details=report)
                 row.pop('reason', None)
+            if row['kind'] == 'cdc_rdc' and row.get('ran') and entry.get('required_libraries'):
+                from .cdc_report import summarize
+                summary = summarize(row['details'], entry['required_libraries'])
+                row.update(result=summary['status'],structural_summary=summary,complete=summary['status'] in ('findings','protected'))
+                if summary['reason']:
+                    row['reason'] = summary['reason']
             if row['kind'] == 'connectivity' and entry.get('database') and entry.get('manifest'):
-                from .connection_run import run as run_connections
+                from .connection_run import run, run_cut
+                run_connections = run_cut if entry.get("cone_cut") else run
                 report = run_connections(entry['database'], entry['manifest'], out/'connectivity-run',
                                          timeout=timeout, engine=entry.get('engine', 'smtbmc:yices'),
                                          depth=entry.get('depth', 10))
                 row.update(generated=True, ran=report['ran'], result=report['status'], details=report)
                 row.pop('reason', None)
-            if row['kind'] == 'uvm' and entry.get('composition') and entry.get('classpath_file'):
+            if row['kind'] in ('uvm', 'vip') and entry.get('composition') and entry.get('classpath_file'):
                 from .uvm_run import run as run_uvm
-                report = run_uvm(entry['composition'],out/'uvm-run',Path(entry['classpath_file']).read_text().strip(),
-                                 build_args=entry.get('build_args',[]),idle_inputs=entry.get('idle_inputs'),timeout=timeout,expected_map=source)
-                row.update(generated=report['generated'],ran=report['ran'],result=report['status'],details=report)
+                report = run_uvm(entry['composition'],out/(row['kind']+'-run'),Path(entry['classpath_file']).read_text().strip(),
+                                 build_args=entry.get('build_args',[]),idle_inputs=entry.get('idle_inputs'),timeout=timeout,expected_map=source,profile=row["kind"])
+                row.update(generated=report['generated'],ran=report['ran'],result=report['status'],details=report,complete=report['status']=='pass')
                 row.pop('reason',None)
             if row['kind'] == 'decode' and entry.get('classpath_file'):
                 from .decode_proof import prove
@@ -246,14 +255,25 @@ def verify(source, out, manifest=None, timeout=120):
                     # Finite sampled matches are not a whole-SoC verification pass.
                     row['result'] = 'inconclusive'
                     row['reason'] = report['scope']
+                    if row['kind'] == 'registers' and entry.get('write_read'):
+                        missing = [name for name in entry['write_read']
+                                   if not report['register_coverage'].get(name, {}).get('reads_after_write', 0)]
+                        if report['status']=='samples_match' and not missing and report['registers']['checks']>0:
+                            row.update(result='pass',complete=True,scope='Directed write/read checks for the declared registers.')
+                            row.pop('reason',None)
+                        else:
+                            row['reason'] = 'Missing checked write/read observations: '+', '.join(missing)
+
                 except AssertionError as exc:
                     row.update(ran=True, result='fail', reason=str(exc))
             if row['result'] != 'fail':
                 execute(row, settings.get(row['kind'], {}), root, out, timeout)
         except (OSError, ValueError, KeyError, TypeError, QueryError) as exc:
             row['reason'] = str(exc)
+    complete = all(r['generated'] and r.get('complete', True) and r['ran'] and
+                   r['result'] in ('pass','proven','findings','protected') for r in rows)
     status = 'fail' if any(r['result']=='fail' for r in rows) else (
-        'pass' if all(r['generated'] and r.get('complete', True) and r['ran'] and r['result'] in ('pass','proven') for r in rows) else 'inconclusive')
+        ('findings' if any(r['result']=='findings' for r in rows) else 'pass') if complete else 'inconclusive')
     result = dict(schema='rvw.soc-verify-result/1', status=status, checks=rows,
                   source=str(source), map_sha256=hashlib.sha256((out/'map.json').read_bytes()).hexdigest())
     (out/'result.json').write_text(dumps(result))

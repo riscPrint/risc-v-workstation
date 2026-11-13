@@ -37,3 +37,43 @@ def run(database, manifest, out, *, timeout=120, engine='smtbmc:yices', depth=10
     return dict(status=status, generated=True, ran=True, timed_out=process.timed_out,
                 returncode=process.returncode, checks=len(rows), details=report,
                 scope='Declared RTL value transfers with activation witnesses; reverse influence gaps remain in details.')
+
+
+def run_cut(database, manifest, out, *, timeout=30, engine='smtbmc:yices', depth=6):
+    """Prove each structurally resolved connection in a source-cut RTL cone."""
+    from types import SimpleNamespace
+    from rvw.common.capture import Capture
+    from rvw.query.db import DesignDB, QueryError
+    from rvw.formal.connectivity import resolve, campaign
+    from .connectivity import load
+    out = Path(out).resolve()
+    out.mkdir(parents=True, exist_ok=False)
+    capture = Capture(out/'inputs')
+    table = capture.file(Path(manifest).resolve())
+    db = DesignDB(database, capture=capture)
+    rows = []
+    try:
+        for index, declaration in enumerate(load(table.copy, format_path=manifest)):
+            row = resolve(db, declaration)
+            rows.append(row)
+            if declaration['kind'] != 'required' or row['structural_status'] != 'dependency_found':
+                row['reason'] = 'Source-cut proof needs a resolved required dependency.'
+                continue
+            directory = out/f'connection-{index}'
+            directory.mkdir()
+            args = SimpleNamespace(timeout=min(timeout, 20), depth=depth, engine=engine,
+                                   proof_mode='prove', clock='clk', reset='reset', cone_cut=True)
+            try:
+                row['campaign'] = campaign(db, declaration, directory, capture, args)
+                row['status'] = row['campaign']['status']
+            except (ValueError, QueryError) as exc:
+                row['reason'] = str(exc)
+    finally:
+        db.close()
+    status = 'fail' if any(r['status']=='contradicted' for r in rows) else (
+        'proven' if rows and all(r['status']=='proven' for r in rows) else 'inconclusive')
+    report = dict(status=status, generated=True, ran=True, checks=len(rows), connections=rows,
+                  scope='Per-connection source-cut RTL transfer proofs with activation witnesses; module outputs outside the observed hierarchy are unconstrained.',
+                  input_capture=capture.record())
+    (out/'result.json').write_text(json.dumps(report, indent=2)+'\n')
+    return report

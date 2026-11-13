@@ -167,7 +167,7 @@ def cli_run(args):
         die(str(exc))
 
 
-def harness(db, declaration, *, clock='clk', reset='reset', activation=False, ports=None):
+def harness(db, declaration, *, clock='clk', reset='reset', activation=False, ports=None, allow_control_sources=False):
     """Bind top ports or captured internal observation ports.
 
     Forbidden connections use two copies with common inputs except source.
@@ -199,7 +199,7 @@ def harness(db, declaration, *, clock='clk', reset='reset', activation=False, po
     for key in ('mode', 'enable'):
         if forbidden and key in bound and (bound[key].direction != 'in' or bound[key].name == source.name):
             raise ValueError('mode and enable must be common inputs distinct from source')
-    if source.name in (clock, reset):
+    if source.name in (clock, reset) and not allow_control_sources:
         raise ValueError('clock and reset cannot be data sources')
     if any(p.direction not in ('in', 'out') for p in ports.values()):
         raise ValueError('inout ports need a connectivity backend')
@@ -259,14 +259,16 @@ def campaign(db, declaration, out, capture, args):
     if not files:
         raise ValueError('database has no RTL files')
     from .connection_binding import expose
-    files, ports, binding = expose(db, declaration, files, out / 'binding', args.timeout)
+    files, ports, binding = expose(db, declaration, files, out / 'binding', args.timeout,
+                                  cone_cut=getattr(args, 'cone_cut', False))
     observations = {}
     for name in ('transfer', 'activation'):
         directory = out / name
         directory.mkdir()
         source = directory / 'connection.sv'
         source.write_text(harness(db, declaration, clock=args.clock, reset=args.reset,
-                                  activation=name == 'activation', ports=ports))
+                                  activation=name == 'activation', ports=ports,
+                                  allow_control_sources=getattr(args, 'cone_cut', False)))
         mode = getattr(args, 'proof_mode', 'bmc') if name == 'transfer' else 'bmc'
         command = [sys.executable, '-m', 'rvw', 'formal', mode, '--verilog', *files, str(source),
                    '--top', 'rvw_connection_top', '--clock', 'clk', '--reset', 'reset',

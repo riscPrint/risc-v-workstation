@@ -15,13 +15,13 @@
     {
       "id": "core_reset",
       "kind": "required",
-      "source": "ram.reset",
+      "source": "reset",
       "destination": "core.reset"
     },
     {
       "id": "fabric_clock",
       "kind": "required",
-      "source": "ram.clk",
+      "source": "clk",
       "destination": "clint_1.clk"
     }
   ]

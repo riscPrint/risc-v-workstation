@@ -89,3 +89,29 @@ assign io_resultIsValid=io_loadValues;
     assert row['campaign']['binding']['bindings'][0]['signal']=='x'
     assert row['campaign']['observations']['activation']['status']=='fail'
     assert report['status']=='incomplete'
+
+
+@pytest.mark.parametrize('wrong', [False, True])
+def test_source_cut_native_contract(gcd_db, tmp_path, wrong):
+    import hashlib
+    import json
+    import sqlite3
+    from rvw.soc.connection_run import run_cut
+    if any(not shutil.which(t) for t in ('yosys','sby','yices-smt2')):
+        pytest.skip('native Yosys/SBY/Yices required')
+    path = tmp_path/'design.db'
+    shutil.copyfile(gcd_db,path)
+    rtl = tmp_path/'GCD.v'
+    rtl.write_text("module GCD(input clk,reset,io_loadValues,input [31:0] io_a,io_b,\n"
+                   "output [31:0] io_result,output io_resultIsValid);\n"
+                   "wire [31:0] x = io_a; assign io_result = x" + (" ^ 1" if wrong else "") +
+                   "; assign io_resultIsValid=io_loadValues;\nendmodule\n")
+    with sqlite3.connect(path) as db:
+        db.execute('DELETE FROM rtl_files')
+        db.execute('INSERT INTO rtl_files VALUES (?)',(str(rtl),))
+        db.execute('INSERT INTO input_files VALUES (?, ?, ?, ?, ?)',
+                   (str(rtl),str(rtl.resolve()),hashlib.sha256(rtl.read_bytes()).hexdigest(),rtl.stat().st_size,'{}'))
+    manifest = tmp_path/'connections.json'
+    manifest.write_text(json.dumps(dict(connection=[dict(id='wire',kind='required',source='x',destination='io_result')])))
+    report = run_cut(path,manifest,tmp_path/'out',timeout=10)
+    assert report['status'] == ('fail' if wrong else 'proven'), report

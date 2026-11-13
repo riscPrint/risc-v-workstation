@@ -3,13 +3,34 @@
   "checks": {
     "protocol": {
       "capture": "{out}/native/apb.jsonl",
-      "composition": "compose.json"
+      "composition": "compose.json",
+      "classpath_file": "../../out/vex-cp.txt",
+      "command": [
+        "../../../rvw/.venv/bin/python",
+        "verify-protocol.py",
+        "{out}",
+        "{result}",
+        "{map}"
+      ]
     },
     "registers": {
-      "capture": "{out}/native/apb.jsonl"
+      "capture": "{out}/native/apb.jsonl",
+      "write_read": [
+        "uart.scratch",
+        "clint.msip",
+        "plic.priority_1"
+      ]
     },
     "vip": {
-      "capture": "{out}/native/apb.jsonl"
+      "composition": "compose.json",
+      "classpath_file": "../../out/vex-cp.txt",
+      "build_args": [
+        "-Drvw.soc.vex=true"
+      ],
+      "idle_inputs": {
+        "uart_serial_rxd": 1,
+        "plic_sources": 0
+      }
     },
     "decode": {
       "classpath_file": "../../out/vex-cp.txt"
@@ -27,10 +48,15 @@
     },
     "connectivity": {
       "database": "{out}/single/soc.db",
-      "manifest": "connections.json"
+      "manifest": "connections.json",
+      "cone_cut": true
     },
     "cdc_rdc": {
-      "database": "{out}/multi/soc.db"
+      "database": "{out}/multi/soc.db",
+      "required_libraries": [
+        "BufferCC",
+        "FlowCCUnsafeByToggle"
+      ]
     }
   },
   "prepare_steps": [

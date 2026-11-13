@@ -18,7 +18,7 @@ def run(args):
     try:
         result = verify(args.source, args.out, args.manifest, args.timeout)
         print(json.dumps(result) if args.json else table(result))
-        return {'pass':0, 'fail':1, 'inconclusive':3}[result['status']]
+        return {'pass':0, 'fail':1, 'inconclusive':3, 'findings':3}[result['status']]
     except (OSError, ValueError, TypeError, KeyError, QueryError) as exc:
         print(json.dumps(dict(status='error', error=str(exc))))
         return 2

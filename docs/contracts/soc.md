@@ -423,3 +423,36 @@ sectors are available through full-word DATA accesses. Controller state and
 command semantics are in SpinalSoc's README. DATA and autonomous status have
 unknown values for generic register checking. The profile supplies no SD wire
 protocol, filesystem, disk image binding or persistent storage claim.
+
+## Scoped executable verification consumers
+
+A connectivity entry can set `cone_cut = true`. Each required connection must
+first have a resolved structural dependency. The backend keeps the endpoint
+hierarchy, replaces other module outputs with independent formal inputs, cuts
+the declared source driver, and removes unrelated outputs and assertions.
+Canonical Yosys bit IDs preserve every source alias. Each connection requires
+an unbounded transfer proof and a separate bounded activation witness.
+This proves the declared transfer under a free source. It does not prove the
+source device, reverse influence, clock sequencing or reset release.
+Only explicit ANSI input/output module ports support module abstraction.
+
+A register entry can declare `write_read` register names. A scoped pass needs
+a completed capture and checked reads after writes for every named register.
+The oracle retains map-defined read and write effects. Unknown values are not
+learned from DUT reads. The result covers the named directed observations.
+
+A VIP entry can use the same composition settings as the pyuvm entry. It runs
+a separate generated cocotb test for each MMIO bus. Each test resets the RTL,
+reads map-known registers through the independent master, and checks actual
+peripheral pins with the APB VIP and register oracle.
+
+A CDC/RDC entry can declare `required_libraries`. The structural summary
+reports `findings`, `protected` or `inconclusive`. It requires two used clock
+domains and recognition of every declared synchronizer class. Detailed lint
+findings, extractor warnings and unrun temporal obligations remain in the
+report. Structural results never establish CDC/RDC signoff.
+
+When every scoped consumer finishes, the aggregate result can be `findings`
+if structural CDC/RDC findings remain. This is distinct from a missing or
+unrun consumer (`inconclusive`) and from an executable check failure (`fail`).
+It is not an acceptance result. The CLI retains a nonzero exit for findings.
