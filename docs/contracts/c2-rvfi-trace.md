@@ -475,3 +475,12 @@ RAM only, without virtual translation or devices. Loads read the unchanged RAM
 bytes after execution. Stores use Spike's ordered commit log. Mixed read/write
 operations and partial fault effects are refused. This support does not cover
 fault-only-first completion, translated memory, or bus transactions.
+
+### RiscvSim state producer
+
+`RvfiRecord.fpState` carries an optional `RvfiFpState`. It writes `fd_valid`,
+`fd`, raw `fd_wdata`, `fflags` and `fcsr` without changing the C2 state format.
+A writer with the `state` capability selects version 2. Adapters must capture
+state after the named retirement. Shared end-of-cycle state is insufficient
+for several retirement slots. A producer must not replace unavailable FP or
+CSR observations with constants.

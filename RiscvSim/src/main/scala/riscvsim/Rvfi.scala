@@ -5,13 +5,21 @@ import java.io.{BufferedWriter, File, FileWriter, PrintWriter}
 import spinal.core._
 import spinal.core.sim._
 
+/** Architectural floating-point state after one retirement. FLEN is 64. */
+case class RvfiFpState(valid: Boolean, destination: Int, data: BigInt, flags: BigInt, fcsr: BigInt) {
+  require(destination >= 0 && destination < 32)
+  require(flags >= 0 && flags < 32 && fcsr >= 0 && fcsr < 256 && (fcsr & 31) == flags)
+  def fields: ujson.Obj = ujson.Obj("fd_valid" -> valid, "fd" -> destination,
+    "fd_wdata" -> Hex(data), "fflags" -> Hex(flags), "fcsr" -> Hex(fcsr))
+}
+
 /** One RVFI retirement record (riscv-formal names, without the rvfi_ prefix). */
 case class RvfiRecord(order: BigInt, cycle: Long, insn: Long, trap: Boolean, halt: Boolean, intr: Boolean,
                       mode: Int, ixl: Int,
                       rs1: Int, rs1Rdata: BigInt, rs2: Int, rs2Rdata: BigInt, rd: Int, rdWdata: BigInt,
                       pc: BigInt, pcNext: BigInt,
                       memAddr: BigInt, memRmask: Int, memWmask: Int, memRdata: BigInt, memWdata: BigInt,
-                      memFault: Boolean, csrState: Map[Int, BigInt] = Map.empty) {
+                      memFault: Boolean, csrState: Map[Int, BigInt] = Map.empty, fpState: Option[RvfiFpState] = None) {
   /** One C2 (`rvw.rvfi/1`) JSONL line. */
   def toJson: String = {
     val sb = new StringBuilder(400)
@@ -33,7 +41,13 @@ case class RvfiRecord(order: BigInt, cycle: Long, insn: Long, trap: Boolean, hal
       }.mkString(", ")
       sb ++= "}}"
     }
-    sb.toString
+    fpState match {
+      case None => sb.toString
+      case Some(fp) =>
+        val row = ujson.read(sb.toString).obj
+        fp.fields.obj.foreach { case (k, v) => row(k) = v }
+        ujson.write(ujson.Obj.from(row))
+    }
   }
 }
 
@@ -117,7 +131,7 @@ class RvfiTraceWriter(file: File, header: ujson.Obj,
     observe.foreach(_(line))
   }
   private val snapshot = header.value.get("csr_snapshot").map(_.arr.map(_.str).toSet).getOrElse(Set.empty[String])
-  private val schema = if (snapshot.nonEmpty) "rvw.rvfi/2" else "rvw.rvfi/1"
+  private val schema = if (snapshot.nonEmpty || header.value.get("capabilities").exists(_.arr.contains(ujson.Str("state")))) "rvw.rvfi/2" else "rvw.rvfi/1"
   require(!header.value.contains("schema"), "trace writer selects the schema")
   private val supplied = if (snapshot.nonEmpty && !header.value.contains("capabilities"))
     header.value.toSeq :+ ("capabilities" -> ujson.Arr("csr")) else header.value.toSeq
@@ -156,6 +170,8 @@ class RvfiTraceWriter(file: File, header: ujson.Obj,
   }
 
   def write(r: RvfiRecord): Unit = {
+    require(r.fpState.nonEmpty == header.value.get("capabilities").exists(_.arr.contains(ujson.Str("state"))),
+      "FP state must match the declared state capability")
     require(r.csrState.keySet.map(a => Hex(BigInt(a))) == snapshot,
       "CSR state must contain exactly the header snapshot set")
     at(r.cycle)

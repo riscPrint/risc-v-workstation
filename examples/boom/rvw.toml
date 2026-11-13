@@ -163,3 +163,6 @@ build = ["${RVW_HOME}/scripts/with-lock.sh", "sbt", "${RVW_HOME}/SpinalDB/build-
 [formal]
 # The generator sbt builds declare SpinalDB, BOOM and SpinalHDL dependencies.
 export_dependencies = ["${RVW_HOME}"]
+
+[cosim]
+platform = "${RVW_HOME}/rvw/src/rvw/cosim/configs/boom.json"
