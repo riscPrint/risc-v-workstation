@@ -1,0 +1,45 @@
+{
+  "date": "2026-11-13",
+  "engine": "Icarus Verilog 14.0 devel; cocotb 2.1.0",
+  "scope": "seeded digital semantic RTL endpoints",
+  "source_identity_complete": false,
+  "campaigns": [
+    {
+      "protocol": "ethernet",
+      "seed": 17,
+      "good_passed": true,
+      "bad_detected": true,
+      "diagnostic": "ETH_TX_DATA_OR_ERROR"
+    },
+    {
+      "protocol": "pcie",
+      "seed": 17,
+      "good_passed": true,
+      "bad_detected": true,
+      "diagnostic": "PCIE_COMPLETION_DATA"
+    },
+    {
+      "protocol": "dram",
+      "seed": 17,
+      "good_passed": true,
+      "bad_detected": true,
+      "diagnostic": "DRAM_MODEL_DATA"
+    },
+    {
+      "protocol": "coherent",
+      "seed": 17,
+      "good_passed": true,
+      "bad_detected": true,
+      "diagnostic": "COH_DATA"
+    }
+  ],
+  "source_sha256": {
+    "Uvm/vip/rtl/contracts_top.sv": "31c23d5173c503794bc4ac0421b9e2f5cf4bb917ee8c8a36c2b7dc4764be14fe",
+    "Uvm/vip/rtl/contracts_test.py": "4c1b73d27fb94e2e0c84def9348a6d333aeb3eacd4d74c50ab9b525218859f3e",
+    "Uvm/vip/rtl/contracts_smoke.py": "6dac48ab012ccc809a5bd6bb10957a941ab8d3b94078fed48959fcc8ce4781ad",
+    "rvw/src/rvw/vip/pcie.py": "ec3c06f40d628cae782d8cc88c70ea3f409839ec8e67a109bfb91b558e42d296",
+    "rvw/src/rvw/vip/ethernet.py": "fe2ec16fcc8bf031e6ed926057b0235063d1f9a756d190553e025580f7070e44",
+    "rvw/src/rvw/vip/dram.py": "8af0bef8dbf6d4b992adc4e4b4e4c4666e051b454335c2fc6d20fe7d739ef5d2",
+    "rvw/src/rvw/vip/coherent.py": "ae7a20be6a761f75e40987dd5af5768887c898bd412883a43623d0ab7c4b768d"
+  }
+}
