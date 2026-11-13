@@ -1,0 +1,109 @@
+{
+  "schema": "rvw.nax-function-study/1",
+  "program": "memcpy",
+  "seed": 1,
+  "cases": [
+    {
+      "config": "rv32imasu",
+      "cycles": 25375,
+      "instret": 31185,
+      "counters": {
+        "topdown_slots": 50750,
+        "topdown_retiring": 31185,
+        "topdown_bad_speculation": 779,
+        "topdown_backend_bound": 18422,
+        "topdown_frontend_bound": 364,
+        "cycles": 25375,
+        "retired": 31185,
+        "rob_alloc_lines": 15791,
+        "rob_occupancy": 819512,
+        "reschedule_execute": 48,
+        "reschedule_commit": 47,
+        "reschedule_commit_trap": 2,
+        "freelist_alloc": 20378,
+        "freelist_free": 20409,
+        "iq_occupancy": 337678,
+        "iq_full_cycles": 0,
+        "iq_push_blocked": 5731,
+        "lq_occupancy": 298024,
+        "sq_occupancy": 139598,
+        "lq_full_cycles": 0,
+        "sq_full_cycles": 2982,
+        "icache_refills": 24,
+        "dcache_refills": 1009,
+        "dcache_writebacks": 254,
+        "branches": 7029,
+        "cond_branches": 7014,
+        "cond_mispredicts": 45,
+        "cond_taken": 3005
+      },
+      "spike": {
+        "status": "match",
+        "instructions": 31185,
+        "trap_events": 0
+      },
+      "hashes": {
+        "rvfi.jsonl": "2a629ed507278f9e3aa6e808b6ca4977d40839b86cf4f6e1f31a6494f1185a87",
+        "probe-events.jsonl": "f5f148433c1c2b42ff31dc9f50a3e2d0921b604990bd88827b0fe9b10148d3bd",
+        "result.json": "edfa12bce6eaf11445c50f63680914a28142f2fdafeeaedc3ded170f67a4e5b9"
+      }
+    },
+    {
+      "config": "rv32imasu-iq16",
+      "cycles": 28999,
+      "instret": 31185,
+      "counters": {
+        "topdown_slots": 57998,
+        "topdown_retiring": 31185,
+        "topdown_bad_speculation": 883,
+        "topdown_backend_bound": 25566,
+        "topdown_frontend_bound": 364,
+        "cycles": 28999,
+        "retired": 31185,
+        "rob_alloc_lines": 15808,
+        "rob_occupancy": 533630,
+        "reschedule_execute": 54,
+        "reschedule_commit": 53,
+        "reschedule_commit_trap": 3,
+        "freelist_alloc": 20405,
+        "freelist_free": 20436,
+        "iq_occupancy": 222440,
+        "iq_full_cycles": 0,
+        "iq_push_blocked": 11187,
+        "lq_occupancy": 176373,
+        "sq_occupancy": 99251,
+        "lq_full_cycles": 0,
+        "sq_full_cycles": 0,
+        "icache_refills": 24,
+        "dcache_refills": 1009,
+        "dcache_writebacks": 254,
+        "branches": 7029,
+        "cond_branches": 7014,
+        "cond_mispredicts": 50,
+        "cond_taken": 3005
+      },
+      "spike": {
+        "status": "match",
+        "instructions": 31185,
+        "trap_events": 0
+      },
+      "hashes": {
+        "rvfi.jsonl": "8c481aa7089dd053b636b04e91f6f038b289785bcf45ed4a1d4ac0fd8662f743",
+        "probe-events.jsonl": "76281e11820e8ea1afae77cde30dff5bae32e434312e8413121299a3b4ba6d76",
+        "result.json": "741a4e46ab861271e5ab8aa71edfe42e1cabf3eb4fc906f0daaa765b7a986503"
+      }
+    }
+  ],
+  "attempts": [
+    {
+      "config": "rob32_iq32",
+      "status": "error",
+      "reason": "Pinned core dispatch pointer arithmetic widens beyond ROB.ID; this configuration is not offered."
+    }
+  ],
+  "limits": [
+    "Only memcpy ran on the IQ16 variant. No ISA-suite or full-core qualification for that variant.",
+    "Lost slots use the next retirement, not a causal per-instruction attribution.",
+    "Queue-blocked counters can overlap other stalls and do not sum to runtime."
+  ]
+}

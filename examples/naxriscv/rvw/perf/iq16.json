@@ -1,0 +1,140 @@
+{
+  "schema": "rvw.topdown/1",
+  "unit": "commit_slots",
+  "total_slots": 57998,
+  "cycles": 28999,
+  "width": 2.0,
+  "slots": {
+    "retiring": 31185,
+    "bad_speculation": 883,
+    "backend_bound": 25566,
+    "frontend_bound": 364
+  },
+  "fractions": {
+    "retiring": 0.5376909548605124,
+    "bad_speculation": 0.015224662919411014,
+    "backend_bound": 0.44080830373461155,
+    "frontend_bound": 0.006276078485465016
+  },
+  "status": "checked",
+  "checks": {
+    "c2_retirements": 31185,
+    "c1_instret": 31185
+  },
+  "identity": {
+    "core": "naxriscv",
+    "config": "rv32imasu-iq16",
+    "elf": "$CHECKOUT/examples/naxriscv/rvw/out/bench/memcpy.riscv",
+    "elf_sha256": "c16e097a646a0278577f39503d3c115f5041b73706dd1278117323f74ce7f2ce",
+    "rtl_sha256": "d60190ea88f70945e066c203da05588a6ad75fd8f684a24c59afc6db279efc52",
+    "seed": 1
+  },
+  "source": "examples/naxriscv/rvw/out/function-window-rv32imasu-iq16/probe-events.jsonl",
+  "method": "project-bound commit-slot partition; not hardware top-down counters",
+  "functions": {
+    "(unknown)": {
+      "retiring": 55,
+      "bad_speculation": 7,
+      "backend_bound": 122,
+      "frontend_bound": 192
+    },
+    "_init": {
+      "retiring": 29,
+      "bad_speculation": 0,
+      "backend_bound": 47,
+      "frontend_bound": 26
+    },
+    "memcpy": {
+      "retiring": 12,
+      "bad_speculation": 53,
+      "backend_bound": 61,
+      "frontend_bound": 46
+    },
+    "memset": {
+      "retiring": 6,
+      "bad_speculation": 32,
+      "backend_bound": 26,
+      "frontend_bound": 0
+    },
+    "thread_entry": {
+      "retiring": 2,
+      "bad_speculation": 0,
+      "backend_bound": 12,
+      "frontend_bound": 18
+    },
+    "main": {
+      "retiring": 31027,
+      "bad_speculation": 784,
+      "backend_bound": 24883,
+      "frontend_bound": 40
+    },
+    "setStats": {
+      "retiring": 48,
+      "bad_speculation": 7,
+      "backend_bound": 389,
+      "frontend_bound": 18
+    },
+    "tohost_exit": {
+      "retiring": 6,
+      "bad_speculation": 0,
+      "backend_bound": 26,
+      "frontend_bound": 24
+    }
+  },
+  "function_fractions": {
+    "(unknown)": {
+      "retiring": 0.14627659574468085,
+      "bad_speculation": 0.018617021276595744,
+      "backend_bound": 0.324468085106383,
+      "frontend_bound": 0.5106382978723404
+    },
+    "_init": {
+      "retiring": 0.28431372549019607,
+      "bad_speculation": 0.0,
+      "backend_bound": 0.46078431372549017,
+      "frontend_bound": 0.2549019607843137
+    },
+    "memcpy": {
+      "retiring": 0.06976744186046512,
+      "bad_speculation": 0.3081395348837209,
+      "backend_bound": 0.3546511627906977,
+      "frontend_bound": 0.26744186046511625
+    },
+    "memset": {
+      "retiring": 0.09375,
+      "bad_speculation": 0.5,
+      "backend_bound": 0.40625,
+      "frontend_bound": 0.0
+    },
+    "thread_entry": {
+      "retiring": 0.0625,
+      "bad_speculation": 0.0,
+      "backend_bound": 0.375,
+      "frontend_bound": 0.5625
+    },
+    "main": {
+      "retiring": 0.5468854655056933,
+      "bad_speculation": 0.013818874043783269,
+      "backend_bound": 0.4385906158564529,
+      "frontend_bound": 0.000705044594070575
+    },
+    "setStats": {
+      "retiring": 0.1038961038961039,
+      "bad_speculation": 0.015151515151515152,
+      "backend_bound": 0.841991341991342,
+      "frontend_bound": 0.03896103896103896
+    },
+    "tohost_exit": {
+      "retiring": 0.10714285714285714,
+      "bad_speculation": 0.0,
+      "backend_bound": 0.4642857142857143,
+      "frontend_bound": 0.42857142857142855
+    }
+  },
+  "elf_sha256": "c16e097a646a0278577f39503d3c115f5041b73706dd1278117323f74ce7f2ce",
+  "attribution": "retired slots use their C2 PC; lost slots use the next C2 retirement; trailing cycles unknown",
+  "limits": [
+    "temporal attribution, not a causal stall diagnosis",
+    "lost-slot attribution cannot identify the instruction that caused a stall"
+  ]
+}

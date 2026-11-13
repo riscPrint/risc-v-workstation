@@ -414,3 +414,42 @@ uses all 1,003 cycles and reports the same 501 retirements as C1. Old streams
 without bounds keep their observed event window. `Ex` is an operand-read
 marker, not a measured execution latency for every functional unit. See
 [`rvw/probes/pipeline-results.json`](rvw/probes/pipeline-results.json).
+
+## Functions and issue-queue comparison (2026-11-13)
+
+`rv32imasu-iq16` changes `dispatchSlots` from 32 to 16. It keeps the 64-entry
+ROB and all other settings. The project emits `topdown_cycle` samples beside
+the aggregate counters. `rvw perf topdown ... --elf ELF` reports functions.
+Retired slots use each instruction's C2 PC. Lost slots use the next retiring
+function. This is time attribution, not a causal stall trace.
+
+```sh
+rvw perf topdown rvw/out/run/probe-events.jsonl --c2 rvw/out/run/rvfi.jsonl --elf rvw/out/bench/memcpy.riscv --result rvw/out/run/result.json --json
+rvw perf topdown-compare rvw/perf/iq32.json rvw/perf/iq16.json --json
+```
+
+Both configurations passed `memcpy` with seed 1 and zero refill wait cycles.
+Spike matched all 31,185 instructions in each complete trace. Most retired
+instructions map to `main`: 31,027 of 31,185. The function report places the
+added back-end slots there.
+
+| Issue entries | Cycles | IPC | Queue push blocked | Main back-end slots |
+|---|---:|---:|---:|---:|
+| 32 | 25,375 | 1.229 | 5,731 | 17,723 |
+| 16 | 28,999 | 1.075 | 11,187 | 24,883 |
+
+The smaller queue adds 3,624 cycles and 7,160 back-end slots in `main`.
+`iq_push_blocked` measures the exact dispatch condition: a valid dispatch
+stage with the queue push port not ready. The queue waits for its oldest
+line. Its aggregate `iq_full_cycles` counter stays at zero in both runs.
+Data-cache refills stay at 1,009. These observations support dispatch/issue
+window pressure as the reason for most of the added time in this pair.
+The counters can overlap other stalls. They do not add to a cycle budget.
+Store-queue-full cycles fall from 2,982 to zero as dispatch slows.
+
+[`rvw/perf/results.json`](rvw/perf/results.json) records the counters and limits.
+The saved reports are `iq32.json`, `iq16.json` and `iq-diff.json` in that folder.
+An attempted 32-entry ROB with a 32-entry issue queue failed elaboration on
+the pinned core. Its pointer-width error is recorded and that configuration
+is not offered. The IQ16 variant has only this benchmark result. It has no
+59-test ISA or generated-check qualification.

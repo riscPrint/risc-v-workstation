@@ -17,15 +17,22 @@ def _compare(base: str, candidate: str, job, **options):
     return run_function(job, "rvw.perf.cli", "execute_json", {"paths": ["compare", base, candidate], **options})
 
 
-def _topdown(events: str, job, c2: str | None = None, result: str | None = None):
-    return run_function(job, "rvw.perf.cli", "execute_json", {"paths": ["topdown", events], "c2": c2, "result": result})
+def _topdown(events: str, job, c2: str | None = None, result: str | None = None, elf: str | None = None):
+    return run_function(job, "rvw.perf.cli", "execute_json", {"paths": ["topdown", events], "c2": c2, "result": result, "elf": elf})
+
+
+def _topdown_compare(base: str, candidate: str, job):
+    return run_function(job, "rvw.perf.cli", "execute_json", {"paths": ["topdown-compare", base, candidate]})
 
 
 def mcp_tools():
     return [
+        ToolSpec("perf_topdown_compare", "Compare top-down slot counts for the same ELF.",
+                 schema({"base": S, "candidate": S}, ["base", "candidate"]),
+                 _topdown_compare, long=True, annotations={"readOnlyHint": True}, side_effects="read-only", native_tools=()),
         ToolSpec("perf_topdown", "Commit-slot top-down attribution (retiring, bad speculation, back-end bound, front-end "
                  "bound) from a run's topdown_* counter probes, checked against the C2 retirement count.",
-                 schema({"events": S, "c2": S, "result": S}, ["events"]),
+                 schema({"events": S, "c2": S, "result": S, "elf": S}, ["events"]),
                  _topdown, long=True, annotations={"readOnlyHint": True}, side_effects='read-only; long-running', native_tools=()),
         ToolSpec("perf_report", "Measure pipeline stage residence, IPC windows, discarded work and inferred retirement bubbles "
                  "from a Kanata 0004 log (or load a saved report). Large logs run as a job. Stage names are explicit options.",

@@ -70,4 +70,6 @@ def render(r: dict) -> str:
     lines = [f"top-down ({r['unit']}, {r['total_slots']} slots over {r['cycles']} cycles, {r['status']})"]
     for c in CLASSES:
         lines.append(f"  {c:16s} {r['fractions'][c] * 100:6.1f} %  ({r['slots'][c]})")
+    for name, slots in sorted(r.get("functions", {}).items()):
+        lines.append(f"  {name}: " + ", ".join(f"{k}={slots[k]} ({100*slots[k]/max(1,sum(slots.values())):.1f}%)" for k in CLASSES))
     return "\n".join(lines)
