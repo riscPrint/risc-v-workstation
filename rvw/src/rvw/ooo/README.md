@@ -1445,3 +1445,12 @@ LSU pipeline latency. Local added costs remain unmeasured. Their experimental
 zero values avoid counting component service waits twice. Exact replay is
 still unqualified. In particular, a long component response is not the same
 predicate as an explicit RTL cache retry response.
+
+`replay_at_commit: true` separates memory-order detection from architectural
+recovery. It waits for the oldest violating load to reach the ROB head.
+That load cannot retire with the stale result. The model then replays its
+tail through the finite issue window. It predicts commit waiting itself.
+The cost from the directed base capture is one cycle from flush to rename,
+rather than seven cycles from detection. This removes commit waiting from
+the fixed cost. It requires speculative memory and `replay_window: true`.
+Wrong-path LSU recovery remains unmodeled by this policy.

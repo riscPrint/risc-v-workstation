@@ -100,3 +100,23 @@ Local cache retries use a local LSU return path. They do not wait for an IQ
 slot. The declared load port limits simultaneous local returns, and shared
 execution ports remain occupied. This avoids a cycle where younger work
 fills the IQ while a dependent branch waits for the missed load.
+
+## Commit-controlled memory-order recovery
+
+`replay_at_commit: true` requires `memory_policy: speculate` and
+`replay_window: true`. A detected violation requests recovery at the oldest
+violating architectural load. The model continues older work. It prevents
+that load from retiring and starts tail recovery when it reaches the ROB
+head. The declared memory-order cost now covers restart after that point.
+It must not also include the wait to reach the head.
+
+The NaxRiscv base capture separates six cycles before the inclusive flush
+from one cycle to restarted rename. The experimental commit policy uses
+one restart cycle. The model predicts the earlier wait from its own ROB.
+`memory_order_replay_requests` and `memory_order_commit_wait` expose requests
+and wait cycles. `memory_order_replays` counts actual recoveries. Pending
+recovery contributes to the approximate bad-speculation slot partition.
+
+This policy ignores wrong-path LSU violations. Occupancy fillers have no
+observed speculative addresses. Speculative predictor repair and real
+wrong-path LSU recovery remain outside this experiment.

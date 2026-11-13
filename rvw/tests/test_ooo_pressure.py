@@ -278,3 +278,30 @@ def test_local_cache_retry_cannot_deadlock_behind_dependent_wrong_path():
     assert r['instret']==len(ops)
     assert r['events']['cache_miss_replays']==1
     assert r['max_occupancy']['issue_entries']<=c.issue_entries
+
+
+def test_commit_replay_models_wait_instead_of_charging_fixed_detection_cost():
+    c=Config(4,16,4,64,4,32,16,16,4,
+             dict(alu=1,divide=12,multiply=40,load=2,store=4),
+             memory_policy='speculate',replay_window=True,replay_at_commit=True,
+             retry_costs={'memory_order_violation':1})
+    ops=[Instruction('divide',dest=1),Instruction('store',(1,),address=16,size=4),
+         Instruction('multiply',dest=4),Instruction('load',dest=2,address=16,size=4),
+         Instruction('alu',(2,),3)]
+    a=simulate(ops,c,backend='python')
+    b=simulate(ops,replace(c,latencies=dict(c.latencies,multiply=70)),backend='python')
+    immediate=simulate(ops,replace(c,replay_at_commit=False),backend='python')
+    assert a['events']['memory_order_replays']==1
+    assert a['events']['replayed_instructions']==2
+    assert a['events']['issued']==7
+    assert a['events']['memory_order_commit_wait']>0
+    assert b['events']['memory_order_commit_wait']-a['events']['memory_order_commit_wait']==30
+    assert b['cycles']-a['cycles']==30
+    assert a['cycles']>immediate['cycles']
+    assert a['instret']==b['instret']==len(ops)
+
+
+def test_commit_replay_requires_speculation_and_a_finite_window():
+    for args in ({'replay_at_commit':1}, {'replay_at_commit':True}):
+        with pytest.raises(ValueError,match='replay_at_commit'):
+            config(**args)

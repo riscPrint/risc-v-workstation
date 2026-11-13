@@ -41,6 +41,7 @@ class Config:
     dependence_entries: int = 1024
     replay_penalty: int = 5
     retry_costs: dict = field(default_factory=dict)
+    replay_at_commit: bool = False
     forwarding_latency: int = 1
     frontend: dict = field(default_factory=dict)
     execution: dict = field(default_factory=dict)
@@ -113,6 +114,10 @@ class Config:
             raise ValueError("retry_costs must map typed LSU causes to cycle costs")
         if any(type(v) is not int or v < 0 for v in self.retry_costs.values()):
             raise ValueError("retry costs must be nonnegative integer cycles")
+        if type(self.replay_at_commit) is not bool:
+            raise ValueError("replay_at_commit must be boolean")
+        if self.replay_at_commit and (not self.replay_window or self.memory_policy != 'speculate'):
+            raise ValueError("replay_at_commit requires speculative memory and replay_window")
         if type(self.replay_window) is not bool:
             raise ValueError("replay_window must be boolean")
         if type(self.cache_miss_replay) is not bool:
@@ -263,6 +268,7 @@ def _simulate(instructions, config, max_cycles=1_000_000, predictor=None, memory
     wrong_fetched = deque()
     draining = deque()
     replay_pending = deque()
+    pending_order = None
     drain_ready = None
     squash_requested = False
     # Predictors implement predict(pc, fallthrough) and update(pc, actual_next).
@@ -274,6 +280,31 @@ def _simulate(instructions, config, max_cycles=1_000_000, predictor=None, memory
     from .memory_rename import source as memory_source
     from .dependence import Dependence
     dependence = Dependence(config.dependence_entries)
+    def recover_order(younger, cycle):
+        nonlocal squash_requested, replay_pending, unresolved_branch, blocked_until
+        squash_requested = True
+        events["memory_order_replays"] += 1
+        events["replayed_instructions"] += len(younger)
+        for victim in younger:
+            victim.done = None
+            victim.replay_at = None
+            victim.translation_ready = None
+            victim.predicted_correct = None
+        younger_set = set(younger)
+        waiting[:] = [item for item in waiting if item not in younger_set]
+        if config.replay_window or config.cache_miss_replay:
+            if issue_window:
+                issue_window.drop(younger_set)
+            replay_pending = deque(e for e in rob if e in replay_pending or (e in younger_set and not e.bypass_ready))
+        else:
+            # Preserve the earlier replay policy for explicit ablation.
+            waiting.extend(e for e in younger if not e.bypass_ready)
+        order = {item: index for index, item in enumerate(rob)}
+        waiting.sort(key=order.__getitem__)
+        unresolved_branch = None
+        blocked_until = max(blocked_until, cycle + config.retry_costs.get(
+            'memory_order_violation', config.replay_penalty))
+
     for cycle in range(max_cycles):
         for _ in range(config.store_drain_width):
             if not draining:
@@ -359,7 +390,13 @@ def _simulate(instructions, config, max_cycles=1_000_000, predictor=None, memory
                 entry.done = max([entry.bypass_ready] + [dep.done for dep in entry.deps])
         committed = 0
         committed_entries = [] if observer is not None else None
+        if pending_order is not None and rob and rob[0] is not pending_order:
+            events['memory_order_commit_wait'] += 1
         for _ in range(config.commit_width):
+            if rob and rob[0] is pending_order:
+                recover_order(list(rob), cycle)
+                pending_order = None
+                break
             if not rob or rob[0].done is None or rob[0].done > cycle:
                 break
             entry = rob.popleft()
@@ -379,10 +416,11 @@ def _simulate(instructions, config, max_cycles=1_000_000, predictor=None, memory
                 draining.append(entry)
             else:
                 stores -= entry.insn.kind == "store"
-        attribution.observe(committed, cycle < blocked_until, bool(rob))
+        recovering = cycle < blocked_until or pending_order is not None
+        attribution.observe(committed, recovering, bool(rob))
         if observer is not None:
             observer.cycle = cycle
-            observer.observe(committed_entries, rob, cycle < blocked_until,
+            observer.observe(committed_entries, rob, recovering,
                              instructions[retired].pc if retired < len(instructions) else None)
         if retired == len(instructions):
             if frontend:
@@ -548,36 +586,23 @@ def _simulate(instructions, config, max_cycles=1_000_000, predictor=None, memory
             if config.memory_policy == "speculate" and kind == "store":
                 entries = list(rob)
                 younger = entries[entries.index(entry)+1:]
-                violations = dependence.violations(entry.insn, younger)
+                candidates = [e for e in younger if not config.replay_at_commit or e.wrong_parent is None]
+                violations = (dependence.violations(entry.insn, candidates)
+                              if not config.replay_at_commit or entry.wrong_parent is None else [])
                 if violations:
                     if config.replay_window:
                         # The recovery anchor is the oldest violating load, not
                         # the store that discovers it. Older independent work survives.
                         first = min(younger.index(load) for load in violations)
                         younger = younger[first:]
-                    squash_requested = True
-                    events["memory_order_replays"] += 1
                     events["memory_order_violations"] += len(violations)
-                    events["replayed_instructions"] += len(younger)
-                    for victim in younger:
-                        victim.done = None
-                        victim.replay_at = None
-                        victim.translation_ready = None
-                        victim.predicted_correct = None
-                    younger_set = set(younger)
-                    waiting[:] = [item for item in waiting if item not in younger_set]
-                    if config.replay_window or config.cache_miss_replay:
-                        if issue_window:
-                            issue_window.drop(younger_set)
-                        replay_pending = deque(e for e in rob if e in replay_pending or (e in younger_set and not e.bypass_ready))
+                    if config.replay_at_commit:
+                        anchor = younger[0]
+                        if pending_order is None or entries.index(anchor) < entries.index(pending_order):
+                            pending_order = anchor
+                        events['memory_order_replay_requests'] += 1
                     else:
-                        # Preserve the earlier replay policy for explicit ablation.
-                        waiting.extend(e for e in younger if not e.bypass_ready)
-                    order = {item: index for index, item in enumerate(rob)}
-                    waiting.sort(key=order.__getitem__)
-                    unresolved_branch = None
-                    blocked_until = max(blocked_until, cycle + config.retry_costs.get(
-                        'memory_order_violation', config.replay_penalty))
+                        recover_order(younger, cycle)
             entry.done = cycle + latency
             if cache_replay_delay is not None:
                 entry.replay_at = cycle + cache_replay_delay

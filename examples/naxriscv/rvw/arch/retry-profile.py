@@ -22,7 +22,8 @@ for index,(cycle,probe,values) in enumerate(events):
  if cause=='memory_order_violation':
   flush=next((c for c,q,v in events[index+1:] if q.kind=='flush' and v['id']==i and v.get('inclusive')),None)
   restart=next((c for c,q,v in events[index+1:] if flush is not None and c>flush and q.kind=='stage' and q.meta.get('first')=='true' and v.get('pc')==first[1]),None)
-  observation.update(flush_cycle=flush,restart_cycle=restart,recovery_cycles=restart-cycle if restart else None)
+  observation.update(flush_cycle=flush,restart_cycle=restart,recovery_cycles=restart-cycle if restart else None,
+                     flush_to_restart_cycles=restart-flush if restart is not None and flush is not None else None)
  else:
   for c,q,v in events[index+1:]:
    if q.kind=='stage' and q.meta.get('first')=='true' and v['id']==i:break
@@ -34,6 +35,8 @@ recovery=[o['recovery_cycles'] for o in observations if o['cause']=='memory_orde
 if not recovery:raise ValueError('no complete memory-order recovery')
 profile={'memory_order_violation':int(median(recovery)),'store_forward_miss':0,'cache_miss_retry':0,'tlb_miss':0}
 r['observations']=observations;r['retry_costs']=profile
+commit_profile=dict(profile,memory_order_violation=int(median([o['flush_to_restart_cycles'] for o in observations if o.get('flush_to_restart_cycles') is not None])))
+r['commit_retry_costs']=commit_profile
 r['cost_evidence']={'memory_order_violation':'median detection to first matching-PC rename after inclusive flush; base RTL only',
                    'local_causes':'zero added recovery is an assumption; service waits are modeled separately, not measured isolated costs'}
 r['rtl']={k:json.loads((p/'result.json').read_text())[k] for k in ('status','cycles','instret','seed')}
@@ -43,4 +46,8 @@ r['captures']={f:sha256((p/f).read_bytes()).hexdigest() for f in ('probe-events.
 for cache in (False,True):
  config=json.loads((Path(__file__).parent/'ooo-resource.json').read_text());config['retry_costs']=profile;config['cache_miss_replay']=cache
  (out/('ooo-typed'+('-cache' if cache else '')+'.json')).write_text(json.dumps(config,indent=2)+'\n')
+for cache in (False,True):
+ config=json.loads((Path(__file__).parent/'ooo-resource.json').read_text())
+ config.update(retry_costs=commit_profile,replay_at_commit=True,cache_miss_replay=cache)
+ (out/('ooo-commit'+('-cache' if cache else '-replay')+'.json')).write_text(json.dumps(config,indent=2)+'\n')
 print(json.dumps(observations,indent=2))

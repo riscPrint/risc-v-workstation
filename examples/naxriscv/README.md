@@ -906,3 +906,10 @@ The rejected cache candidate remains in
 return path and does not need an IQ slot. A dependent wrong-path branch
 cannot prevent that return. Exact local cost isolation, cache retry predicate
 agreement and broad replay accuracy remain open.
+
+The optional `replay_at_commit` experiment separates that seven-cycle span.
+The model predicts the wait for the violating load to reach the ROB head.
+The base capture supplies one cycle from flush to rename. A targeted schedule
+changes an older instruction's latency by 30 cycles. Predicted commit waiting
+also changes by 30 cycles, with the restart cost held fixed. This is a
+mechanism check. Full matrix and absolute-error results remain separate.

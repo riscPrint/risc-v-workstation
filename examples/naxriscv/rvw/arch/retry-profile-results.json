@@ -73,7 +73,8 @@
       "pc": "0x80000028",
       "flush_cycle": 112,
       "restart_cycle": 113,
-      "recovery_cycles": 7
+      "recovery_cycles": 7,
+      "flush_to_restart_cycles": 1
     },
     {
       "cycle": 123,
@@ -92,6 +93,12 @@
   ],
   "retry_costs": {
     "memory_order_violation": 7,
+    "store_forward_miss": 0,
+    "cache_miss_retry": 0,
+    "tlb_miss": 0
+  },
+  "commit_retry_costs": {
+    "memory_order_violation": 1,
     "store_forward_miss": 0,
     "cache_miss_retry": 0,
     "tlb_miss": 0
