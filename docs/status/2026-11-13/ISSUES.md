@@ -4,7 +4,7 @@ Current source census: 865 merged PR bodies since 2026-11-13T00:00:00Z, through 
 
 This table replaces the earlier rows and refresh appendices. Each row gives the strongest reported executed slice. It does not qualify the whole issue. A failed RTL run still has RTL execution evidence. An import or RTL export is not execution. Core names in a source identify its scope; the linked body gives configurations and exclusions. Native results were read, not rerun.
 
-Issue associations use explicit issue footers and reviewed native campaign scope in the complete PR census. Context-only mentions do not count as implementation ownership. A reference can cover only part of an issue. The remaining-scope cell comes from the latest associated body, including its exclusions. No issue closure is proposed. Source bodies remain in [PR_EVIDENCE.md](PR_EVIDENCE.md). The historical census and milestone assignments remain in [SNAPSHOT.md](SNAPSHOT.md) and [TODO_PROPOSAL.md](TODO_PROPOSAL.md).
+Issue associations use explicit issue footers and reviewed native campaign scope in the complete PR census. Context-only mentions do not count as implementation ownership. A reference can cover only part of an issue. The remaining-scope cell comes from the latest associated body, including its exclusions. No issue closure is proposed. Source PR links remain in [PR_EVIDENCE.md](PR_EVIDENCE.md). The historical census and milestone assignments remain in [SNAPSHOT.md](SNAPSHOT.md) and [TODO_PROPOSAL.md](TODO_PROPOSAL.md).
 
 | Issue | Title | Area | PR references | What was built | Evidence level | What remains | Suggested disposition |
 |---|---|---|---|---|---|---|---|

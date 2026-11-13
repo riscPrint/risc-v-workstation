@@ -1,7 +1,7 @@
 # New tools and command families
 
 Current census: 865 merged PR bodies, through 2026-11-13T16:37:04Z.
-Each row reports the strongest executed slice. Native evidence is read from PR bodies. It was not rerun. A real-core report consumed by an index or plan is analysis of that report, not execution of a new core workflow. Full bodies are in [PR_EVIDENCE.md](PR_EVIDENCE.md).
+Each row reports the strongest executed slice. Native evidence is read from PR bodies. It was not rerun. A real-core report consumed by an index or plan is analysis of that report, not execution of a new core workflow. PR links and evidence labels are in [PR_EVIDENCE.md](PR_EVIDENCE.md).
 
 ## ComponentSims / rvw csim
 
