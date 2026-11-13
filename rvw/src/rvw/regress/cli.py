@@ -70,6 +70,8 @@ def register(sub) -> None:
     register_sim(rs)
     from . import random_stream
     random_stream.register(rs)
+    from . import sail_tests
+    sail_tests.register(rs)
     from rvw.privilege.cli import register as register_privilege
     register_privilege(rs)
     from . import mmu

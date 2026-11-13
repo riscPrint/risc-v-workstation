@@ -931,3 +931,24 @@ Hardware A/D writes, extension PTEs and root switches remain unsupported.
 short Spike self-checks and checks C1 results by functional group. See the
 [privilege guide](../privilege/README.md) for project configuration and limits.
 
+
+### Directed tests linked to Sail rules
+
+`rvw regress sail-tests --model SAIL_REPO --sail-endpoint HOST:PORT --registers 5,6,7,8 --work-dir tests --json`
+generates bounded RV32 add, sub and addi test fragments. `regress_sail_tests`
+uses the same API. The generator reuses the existing pinned Sail rule slice.
+A changed rule file fails before network access. Each case names its rule and
+result obligation. Boundary inputs come before seeded random inputs.
+
+Expected values come from complete, nontrapping DII oracle retirement streams.
+The generator uses the public TestRIG transport API. It keeps tokens, reference
+packets, source hashes and instruction/register mutation observations. Some
+mutants can survive a case. A survivor is recorded. It is not a waived failure.
+The endpoint binary identity is not attested. This is reference-generated test
+data, not proof or DUT execution. Other instructions and CSRs remain unsupported.
+
+The project must supply an RV32 Sail endpoint and four writable registers.
+The output fragments branch to project-owned `rvw_test_fail` on a bad result.
+The project runtime must provide that label and its own successful termination.
+Compile and run the fragments through C1 to earn DUT evidence. Native Sail and
+DUT campaigns are not part of the fixture tests.

@@ -205,6 +205,19 @@ through an absolute `RVW_HOME`. Keep core adapter sources in the core repository
 Use offline sbt after toolchain dependencies are installed. Source-directory settings
 in reusable builds must resolve from `baseDirectory.value`, not the caller's cwd.
 
+### Directed tests linked to pinned Sail rules
+
+`rvw regress sail-tests` and `regress_sail_tests` emit
+`rvw.sail-directed-tests/1`. The bounded domain is the existing pinned RV32
+add/sub/addi arithmetic slice. Each case records its exact rule/obligation,
+seeded inputs encoded as DII words, token/source hashes, complete reference
+packets, expected result and instruction/register mutation observations.
+Generated source fragments use four project-declared registers and a
+project-owned `rvw_test_fail` label. Source pin failure refuses generation.
+Partial/trapping oracle streams earn no expected result. Overall status is
+`reference_generated` or `inconclusive`. Endpoint binary identity remains
+unattested. No DUT pass, general Sail compilation or C4 acceptance follows.
+
 ### Native coverage metrics per linked source line
 
 `rvw.coverage-report/1` adds `scala_line_metrics`. Each file/line key contains

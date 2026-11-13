@@ -1246,7 +1246,7 @@ usage: rvw reduce [-h] [--out OUT] [--signature SIGNATURE] [--modes MODES]
 
 ```text
 usage: rvw regress [-h] [--project PROJECT]
-    {sim,speed-compare,speed-sweep,backends,uvm,uvm-ral,uvm-cpu,hdl,cocotb,random,privilege,mmu,vector,run,compare,gate,known,history,list}
+    {sim,speed-compare,speed-sweep,backends,uvm,uvm-ral,uvm-cpu,hdl,cocotb,random,sail-tests,privilege,mmu,vector,run,compare,gate,known,history,list}
     ...
 ```
 
@@ -1368,6 +1368,15 @@ usage: rvw regress cocotb [-h] --out OUT [--seed SEED] [--timeout TIMEOUT]
 usage: rvw regress random [-h] [--settings SETTINGS] --out OUT [--seeds SEEDS]
     [--seed-base SEED_BASE] [--core CORE] [--config CONFIG] [--json]
     [--project PROJECT]
+```
+
+### `rvw regress sail-tests`
+
+```text
+usage: rvw regress sail-tests [-h] --model MODEL --work-dir WORK_DIR
+    --sail-endpoint SAIL_ENDPOINT --registers REGISTERS [--instructions
+    {add,sub,addi} [{add,sub,addi} ...]] [--seed SEED] [--cases CASES]
+    [--timeout TIMEOUT] [--json] [--project PROJECT]
 ```
 
 ### `rvw regress privilege`
@@ -2916,6 +2925,14 @@ Starts a background job: yes.
 Run suites or a tier through the core adapter, resume/cache results, or preview with dry_run. source and rev are mutually exclusive. Use regress_compare or regress_gate for an accept/reject decision. Returns a job; the runner takes the core lock.
 
 Arguments: `project`, `core`, `jobs`, `seeds`, `seed_base`, `random_seeds`, `filter`, `max_cycles`, `timeout`, `rvfi_trace`, `no_cache`, `replay_max_bytes`, `suite`, `tier`, `config`, `out`, `rev`, `source`, `fresh`, `no_index`, `dry_run`.
+
+Starts a background job: yes.
+
+### `regress_sail_tests`
+
+Generate bounded directed test fragments for the three pinned RV32 Sail arithmetic rules. Expected values come from a complete DII oracle stream. No DUT pass or endpoint identity attestation is granted.
+
+Arguments: `model` (required), `work_dir` (required), `sail_endpoint` (required), `registers` (required), `instructions`, `seed`, `cases`, `timeout`.
 
 Starts a background job: yes.
 

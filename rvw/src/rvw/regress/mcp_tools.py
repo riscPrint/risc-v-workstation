@@ -30,6 +30,13 @@ def _call(action):
 def mcp_tools():
     from .mmu_iommu import mcp_run, generate
     return [
+        ToolSpec("regress_sail_tests", "Generate bounded directed test fragments for the three pinned RV32 Sail arithmetic rules. Expected values come from a complete DII oracle stream. No DUT pass or endpoint identity attestation is granted.",
+                 schema({"model":{"type":"string"},"work_dir":{"type":"string"},"sail_endpoint":{"type":"string"},
+                         "registers":{"type":"array","items":{"type":"integer"},"minItems":4,"maxItems":4},
+                         "instructions":{"type":"array","items":{"type":"string","enum":["add","sub","addi"]}},
+                         "seed":{"type":"integer"},"cases":{"type":"integer"},"timeout":{"type":"number"}},
+                        ["model","work_dir","sail_endpoint","registers"]),
+                 handler("rvw.regress.sail_tests","sail-tests"),long=True),
         ToolSpec('regress_mmu_iommu_generate', 'Generate decoded IOMMU translation, isolation, queue and MSI scenario data. This is not a DUT run.', schema({'seed': I, 'mode': {**S, 'enum': ['sv39', 'sv48', 'sv57']}}), generate, annotations=RO),
         ToolSpec('regress_mmu_iommu', 'Compare decoded IOMMU scenario steps with independently captured device responses. A consistent result requires C1 binding. Raw context and register conformance remain unsupported.', schema({'description': S, 'observations': S, 'result': S}, ['description']), mcp_run, annotations=RO),
         ToolSpec("regress_random", "Generate pinned riscv-dv programs, compile project runtime, run C1 and compare complete C2 with Spike. Only qualified runs earn functional coverage. Generator, compiler, adapter and comparison errors remain separate.",
