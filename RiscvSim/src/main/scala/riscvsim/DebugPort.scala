@@ -160,34 +160,39 @@ class DebugPort(mode: DebugMode, ctx: RunContext) {
             serving = false; server.close(); finish(ctl, s"no JTAG client for ${p.idleTimeoutS} s")
           case Some(s) =>
             clients += 1
-            s.setTcpNoDelay(true)
-            val in = s.getInputStream
-            val out = s.getOutputStream
-            var open = true
-            while (open) {
-              out.flush()
-              val n = in.read(buffer)
-              if (n < 0) open = false
-              var i = 0
-              while (open && i < n) {
-                val b = buffer(i).toChar
-                i += 1
-                b match {
-                  case c if c >= '0' && c <= '7' =>
-                    val v = c - '0'
-                    set(tck, (v >> 2) & 1); set(tms, (v >> 1) & 1); set(tdi, v & 1)
-                    requests += 1
-                    cd.waitSampling(p.cyclesPerByte)
-                  case 'R' => sleep(1); out.write(if (FaultInjector.raw(tdo) == 1) '1' else '0')
-                  case c if c >= 'r' && c <= 'u' =>
-                    trst.foreach(set(_, if (c == 't' || c == 'u') 1 else 0)) // r..u: trst (bit 1), srst (bit 0); 1 asserts
-                    cd.waitSampling(p.cyclesPerByte)
-                  case 'Q' => open = false
-                  case _ =>
+            try {
+              s.setTcpNoDelay(true)
+              val in = s.getInputStream
+              val out = new java.io.BufferedOutputStream(s.getOutputStream)
+              var open = true
+              while (open) {
+                out.flush()
+                val n = in.read(buffer)
+                if (n < 0) open = false
+                var i = 0
+                while (open && i < n) {
+                  val b = buffer(i).toChar
+                  i += 1
+                  b match {
+                    case c if c >= '0' && c <= '7' =>
+                      val v = c - '0'
+                      set(tck, (v >> 2) & 1); set(tms, (v >> 1) & 1); set(tdi, v & 1)
+                      requests += 1
+                      cd.waitSampling(p.cyclesPerByte)
+                    case 'R' => sleep(1); out.write(if (FaultInjector.raw(tdo) == 1) '1' else '0')
+                    case c if c >= 'r' && c <= 'u' =>
+                      trst.foreach(set(_, if (c == 't' || c == 'u') 1 else 0)) // r..u: trst (bit 1), srst (bit 0); 1 asserts
+                      cd.waitSampling(p.cyclesPerByte)
+                    case 'Q' => open = false
+                    case _ =>
+                  }
                 }
               }
+            } catch {
+              case e: java.net.SocketException => ctx.log(s"debug: JTAG client disconnected: ${e.getMessage}")
+            } finally {
+              s.close()
             }
-            s.close()
         }
       }
     }

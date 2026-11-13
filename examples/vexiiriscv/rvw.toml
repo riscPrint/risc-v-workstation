@@ -7,7 +7,7 @@ root = "."
 backend = "riscvsim-verilator"
 name = "vexiiriscv"
 adapter = "./rvw/run.sh"
-configs = ["rv32im", "rv32imasu", "rv32im_cached"]
+configs = ["rv32im", "rv32imasu", "rv32im_cached", "rv32im_dmi", "rv32im_jtag"]
 default_config = "rv32im"
 lock = "${RVW_VEX_LOCK:-vex}"                     # same lock as run.sh (the brief shares it with VexRiscv)
 source_repo = "${VEXIIRISCV}"
@@ -140,3 +140,5 @@ perf_metrics = ["cycles"]
 [tiers.bench]
 description = "fixed self-checked IPC regression subset; disabled in quick/full"
 runs = [{suite = "bench"}]
+[debug_module]
+profile = "./rvw/debug/profile-dmi.toml"

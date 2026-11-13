@@ -40,13 +40,14 @@ def version(command):
     return text[0] if text else None
 
 
-def openocd_config(port, *, host='127.0.0.1', irlen=5, idcode=None, log):
+def openocd_config(port, *, host='127.0.0.1', irlen=5, idcode=None, log, entry=None):
     expected = f' -expected-id 0x{idcode:08x}' if idcode is not None else ''
     return '\n'.join([
         'adapter driver remote_bitbang', f'remote_bitbang host {host}', f'remote_bitbang port {port}',
         'transport select jtag', f'jtag newtap dut cpu -irlen {irlen}{expected}',
         'target create dut.cpu riscv -chain-position dut.cpu', 'gdb_port pipe', 'tcl_port disabled',
-        'telnet_port disabled', f'log_output {log}', 'init', 'halt', '']) + '\n'
+        'telnet_port disabled', f'log_output {log}', 'init', 'halt',
+        *([f'reg pc {entry:#x}'] if entry is not None else []), '']) + '\n'
 
 
 def first_word(elf):
@@ -100,6 +101,8 @@ def run(*, port=None, profile=None, elf, openocd='openocd', gdb=None, out, timeo
     out = Path(out)
     out.mkdir(parents=True, exist_ok=True)
     endpoint = None
+    if profile is not None and port is None and profile.get('transport_declared') is False:
+        raise ValueError('the debug profile has no [transport]; give an RTL port or declare the target transport')
     if profile is not None and port is None:
         from . import serve
         from .profile import load_elf
@@ -118,7 +121,9 @@ def run(*, port=None, profile=None, elf, openocd='openocd', gdb=None, out, timeo
         raise FileNotFoundError(f'{openocd} not found')
     log = out / 'openocd.log'
     config = out / 'openocd.cfg'
-    config.write_text(openocd_config(port, idcode=idcode, log=log))
+    from rvw.cosim.elf import Elf
+    # GDB unwinds the stopped PC on attach, before its load command.
+    config.write_text(openocd_config(port, idcode=idcode, log=log, entry=Elf(elf).entry))
     env = {**os.environ, 'RVW_ELF': str(Path(elf).resolve()), 'RVW_FIRST_WORD': first_word(elf),
            'RVW_OPENOCD_PIPE': f'{shlex.quote(openocd_path)} -f {shlex.quote(str(config))}'}
     env.pop('RVW_WATCHPOINT', None)
