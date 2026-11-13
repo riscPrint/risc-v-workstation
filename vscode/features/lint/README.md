@@ -28,7 +28,8 @@ needs a trusted workspace.
 
 ## Limits
 
-- No quick fixes or waiver editing yet; add waivers to the settings file by hand
-  with the finding `id`.
+- The quick fix **Copy rvw lint waiver** copies an exact waiver row (config,
+  rule, endpoint, `finding_id`) with a `TODO` reason. Write the reason and add the
+  row to the settings `waivers` by hand; the feature does not edit settings.
 - Structural findings point at the Scala declaration of the endpoint, not at the
   logic that causes the crossing.

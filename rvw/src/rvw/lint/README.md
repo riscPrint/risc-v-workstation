@@ -192,9 +192,14 @@ the obligations into a new or empty directory:
   the target modules, and `rvw_cdc_checkers.sv`. Yosys does not elaborate
   `bind`; give these files to `rvw formal bmc|prove`.
 
+- `rvw_cdc_toggle` (`toggle_stable`): when the qualifier's source register
+  toggles itself (a toggle handshake such as `StreamCCByToggle`), data changes
+  only in the cycle the request toggles.
+
 The checkers use one clock (the source clock) and immediate assertions. The
-`data_stable` checker uses level semantics. A toggle protocol needs its own
-monitor. Emission is never a pass; the obligations stay unproved until a formal
+`data_stable` checker uses level semantics. `test_lint_hdl.py` runs a Verilog
+toggle handshake through `build-hdl`, `--emit` and a Yosys BMC: the correct
+design holds for 12 steps and a design that changes data between toggles fails. Emission is never a pass; the obligations stay unproved until a formal
 or simulation run checks them.
 
 ## Timing-constraint intent (SDC)

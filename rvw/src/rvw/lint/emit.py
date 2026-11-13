@@ -27,8 +27,17 @@ module rvw_cdc_stable #(parameter W = 1) (input clk, input qualifier, input [W-1
   // Data is stable while the qualifier that crosses with it stays asserted.
   always @(posedge clk) if (past_valid && q_last && qualifier) assert (value == v_last);
 endmodule
+
+module rvw_cdc_toggle #(parameter W = 1) (input clk, input qualifier, input [W-1:0] value);
+  reg past_valid = 1'b0;
+  reg q_last;
+  reg [W-1:0] v_last;
+  always @(posedge clk) begin past_valid <= 1'b1; q_last <= qualifier; v_last <= value; end
+  // Toggle handshake: data changes only in the cycle its request toggles.
+  always @(posedge clk) if (past_valid && value != v_last) assert (qualifier != q_last);
+endmodule
 '''
-MODULES = {'gray_code': 'rvw_cdc_gray', 'data_stable': 'rvw_cdc_stable'}
+MODULES = {'gray_code': 'rvw_cdc_gray', 'data_stable': 'rvw_cdc_stable', 'toggle_stable': 'rvw_cdc_toggle'}
 
 
 def instance(ob):

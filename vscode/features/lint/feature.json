@@ -8,10 +8,26 @@
   ],
   "contributes": {
     "commands": [
-      {"command": "lint.run", "title": "Lint: Run rvw lint"},
-      {"command": "lint.rerun", "title": "Lint: Run Again"},
-      {"command": "lint.open", "title": "Lint: Open Saved Report or SARIF"},
-      {"command": "lint.clear", "title": "Lint: Clear Diagnostics"}
+      {
+        "command": "lint.run",
+        "title": "Lint: Run rvw lint"
+      },
+      {
+        "command": "lint.rerun",
+        "title": "Lint: Run Again"
+      },
+      {
+        "command": "lint.open",
+        "title": "Lint: Open Saved Report or SARIF"
+      },
+      {
+        "command": "lint.clear",
+        "title": "Lint: Clear Diagnostics"
+      },
+      {
+        "command": "lint.copyWaiver",
+        "title": "Lint: Copy Waiver for Finding"
+      }
     ],
     "configuration": {
       "properties": {
@@ -33,6 +49,14 @@
           "description": "Timeout for one rvw lint run."
         }
       }
+    },
+    "menus": {
+      "commandPalette": [
+        {
+          "command": "lint.copyWaiver",
+          "when": "false"
+        }
+      ]
     }
   },
   "tests": {

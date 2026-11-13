@@ -44,3 +44,39 @@ def test_hdl_import_lint(tmp_path):
     from rvw.lint import structural
     s = run_on(db, lambda d: structural.analyze(d, {}))
     assert s['registers'] >= 1 and s['domains'][0]['clock'] == 'clk'
+
+
+TOGGLE = '''module top(input clkA, input clkB, input send, input [7:0] din, output reg [7:0] dout);
+  reg req = 1'b0;
+  reg [7:0] data = 8'd0;
+  always @(posedge clkA) begin
+    if (send) begin req <= ~req; data <= din; end
+    FAULT
+  end
+  reg r0 = 1'b0, r1 = 1'b0, r2 = 1'b0;
+  always @(posedge clkB) begin r0 <= req; r1 <= r0; r2 <= r1; if (r1 != r2) dout <= data; end
+endmodule
+'''
+
+
+@pytest.mark.skipif(not YOSYS, reason='native Yosys required')
+@pytest.mark.parametrize('fault', [False, True])
+def test_toggle_handshake_emit_and_bmc(tmp_path, fault):
+    import json, subprocess
+    from rvw.lint.cli import report_outputs
+    src = tmp_path / 'top.v'
+    src.write_text(TOGGLE.replace('FAULT', 'else data <= data + 8\'d1;' if fault else ''))
+    db = tmp_path / 'top.db'
+    build_hdl([src], 'top', db, yosys=YOSYS)
+    settings = tmp_path / 'lint.json'
+    settings.write_text(json.dumps(dict(schema='rvw.lint-settings/1', config='t', top='top', db='top.db',
+                                        files=['top.v'], backends=['structural'])))
+    r = report_outputs(str(settings), emit_dir=str(tmp_path / 'emit'))
+    obs = r['backends']['structural']['cdc']['obligations']
+    assert [o['kind'] for o in obs] == ['toggle_stable'] and obs[0]['bind']['ports']['qualifier'] == 'req'
+    checked = tmp_path / 'emit/checked'
+    script = (f'read_verilog -formal -sv {checked}/top.v {checked}/rvw_cdc_checkers.sv; prep -top top; flatten; '
+              'hierarchy -top top; async2sync; clk2fflogic; opt_clean; sat -seq 12 -prove-asserts -set-init-zero -verify')
+    run = subprocess.run([YOSYS, '-q', '-p', script], capture_output=True, text=True, timeout=110)
+    out = run.stdout + run.stderr
+    assert (run.returncode, 'proof did fail' in out) == ((1, True) if fault else (0, False)), out[-2000:]

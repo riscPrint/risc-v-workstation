@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import { execFile } from 'node:child_process';
 import { dirname, isAbsolute, join } from 'node:path';
 import type { Feature, FeatureContext } from '../../../src/api';
-import { headline, messageText, parseLint, type LintDiagnostic, type LintSummary } from './model';
+import { headline, messageText, parseLint, waiver, type LintDiagnostic, type LintSummary } from './model';
 
 /** `rvw lint` findings in the Problems panel: run with a settings file, or open a saved
  * rvw.lint/1 report or SARIF log. Waived findings show as hints with their reason. */
@@ -13,6 +13,8 @@ const feature: Feature = {id: 'lint', activate(context: FeatureContext) {
   context.subscriptions.push(collection, status);
   const config = () => vscode.workspace.getConfiguration('lint');
   let lastSettings: string | undefined;
+  let lastConfig: string | undefined;
+  const source = new WeakMap<vscode.Diagnostic, LintDiagnostic>();
 
   const level: Record<LintDiagnostic['severity'], vscode.DiagnosticSeverity> = {
     error: vscode.DiagnosticSeverity.Error, warning: vscode.DiagnosticSeverity.Warning,
@@ -20,6 +22,7 @@ const feature: Feature = {id: 'lint', activate(context: FeatureContext) {
 
   function show(summary: LintSummary, base: string, fallback: vscode.Uri): void {
     collection.clear();
+    lastConfig = summary.config;
     const byFile = new Map<string, vscode.Diagnostic[]>();
     for (const d of summary.diagnostics) {
       const file = d.file ? (isAbsolute(d.file) ? d.file : join(base, d.file)) : fallback.fsPath;
@@ -28,6 +31,7 @@ const feature: Feature = {id: 'lint', activate(context: FeatureContext) {
       diag.code = d.rule;
       diag.source = `rvw lint${d.backend ? ` ${d.backend}` : ''}`;
       if (d.waived !== undefined) diag.tags = [vscode.DiagnosticTag.Unnecessary];
+      source.set(diag, d);
       byFile.set(file, [...(byFile.get(file) ?? []), diag]);
     }
     for (const [file, list] of byFile) collection.set(vscode.Uri.file(file), list);
@@ -79,6 +83,22 @@ const feature: Feature = {id: 'lint', activate(context: FeatureContext) {
     show(parseLint(text), dirname(file.fsPath), file);
   });
   register('clear', async () => { collection.clear(); status.hide(); });
+  context.subscriptions.push(vscode.commands.registerCommand('lint.copyWaiver', async (d: LintDiagnostic) => {
+    try {
+      await vscode.env.clipboard.writeText(JSON.stringify(waiver(d, lastConfig), null, 2));
+      void vscode.window.showInformationMessage('Lint: waiver copied. Write its reason, then add it to the settings waivers.');
+    } catch (e) { void vscode.window.showErrorMessage(`Lint: ${String(e)}`); }
+  }));
+  context.subscriptions.push(vscode.languages.registerCodeActionsProvider({scheme: 'file'}, {
+    provideCodeActions: (_doc, _range, ctx) => ctx.diagnostics.flatMap(diag => {
+      const d = source.get(diag);
+      if (!d || !d.id || d.waived !== undefined || d.rule === 'lint.stale_waiver') return [];
+      const action = new vscode.CodeAction(`Copy rvw lint waiver for ${d.rule}`, vscode.CodeActionKind.QuickFix);
+      action.diagnostics = [diag];
+      action.command = {command: 'lint.copyWaiver', title: 'Copy waiver', arguments: [d]};
+      return [action];
+    }),
+  }, {providedCodeActionKinds: [vscode.CodeActionKind.QuickFix]}));
   return {parseLint};
 }};
 export default feature;
