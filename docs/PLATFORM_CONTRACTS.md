@@ -3747,6 +3747,16 @@ are independent events. The SoC map supplies reset, access and side-effect rules
 exit 1. Matching or incomplete observations remain inconclusive with exit 3.
 This does not establish capture completeness or a real-device binding.
 
+### Literal UPF isolation import
+
+`rvw.upf-subset/1` preserves literal domain elements and explicit output isolation
+strategies from the supported UPF 2.1 command subset. `rvw.upf-bindings/1` maps
+monitor inputs and complete output vectors with an always-on sampled clock.
+`rvw.upf-generation/1` records input hashes, normalized intent and unmonitored
+domains. Generation is not proof or physical power evidence. No generated monitor
+returns `no_checks`, exit 3. Unsupported commands and Tcl constructs are errors.
+Retention, supply tables and clock-gating import remain unsupported.
+
 ### Standard CSR catalog selection
 
 `rvw.csr-catalog/1` stores pinned UDB definitions, source paths, source hashes

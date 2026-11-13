@@ -87,6 +87,13 @@ def _device_events(job, **args):
     return json.loads(Path(args['out']).read_text())
 
 
+def _upf(job, **args):
+    code = job.run([sys.executable, "-m", "rvw", "formal", "upf", "--source", args['source'], "--bindings", args['bindings'], "--out", args['out']])
+    if code not in (0, 3):
+        raise ToolError("UPF generation failed", {"exit_code": code, "log_tail": job.tail(30)})
+    return json.loads((Path(args['out'])/'result.json').read_text())
+
+
 def _template(job, **args):
     from .invariants import NAMES
     if args['kind'] not in NAMES:
@@ -130,6 +137,8 @@ def mcp_tools():
                  _liveness, long=True),
         ToolSpec("formal_device_events", "Check concurrent device requests against independent reset state. Matching samples remain inconclusive.",
                  schema({"model": S, "trace": S, "out": S}, ["model", "trace", "out"]), _device_events, long=True),
+        ToolSpec("formal_upf", "Import literal UPF domain/isolation declarations and generate sampled checks. No verification run.",
+                 schema({"source": S, "bindings": S, "out": S}, ["source", "bindings", "out"]), _upf, long=True),
         ToolSpec("formal_template", "Generate a project-bound safety monitor. No verification run.",
                  schema({"kind": S, "out": S, "entries": I, "width": I}, ["kind", "out"]),
                  _template, long=True),

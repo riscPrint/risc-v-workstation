@@ -638,7 +638,7 @@ usage: rvw farm dashboard [-h] --root ROOT --out OUT [--core CORE] [--suite
 
 ```text
 usage: rvw formal [-h] [--project PROJECT]
-    {device-events,csr,bug-hunt,model-live,rtl-grid,rtl-refine,relation-strengthen,doctor,engines,engine-race,engine-bench,model-grid,security,regress,properties,simulate,liveness,sva-lower,template,contracts,strengthen,testplan,proof-core,apps,autocheck,bench,cex,sby-history,sby-regress,prove,depth-search,riscv,connectivity,datapath,equiv,bmc,from-sim,swarm,xprop,x-context,x-sweep}
+    {device-events,upf,csr,bug-hunt,model-live,rtl-grid,rtl-refine,relation-strengthen,doctor,engines,engine-race,engine-bench,model-grid,security,regress,properties,simulate,liveness,sva-lower,template,contracts,strengthen,testplan,proof-core,apps,autocheck,bench,cex,sby-history,sby-regress,prove,depth-search,riscv,connectivity,datapath,equiv,bmc,from-sim,swarm,xprop,x-context,x-sweep}
     ...
 ```
 
@@ -646,6 +646,13 @@ usage: rvw formal [-h] [--project PROJECT]
 
 ```text
 usage: rvw formal device-events [-h] --model MODEL --trace TRACE --out OUT
+    [--project PROJECT]
+```
+
+### `rvw formal upf`
+
+```text
+usage: rvw formal upf [-h] --source SOURCE --bindings BINDINGS --out OUT
     [--project PROJECT]
 ```
 
@@ -2496,6 +2503,14 @@ Starts a background job: yes.
 Join a formal inventory with captured proof, core, activation and mutation evidence. JSON and HTML.
 
 Arguments: `manifest` (required), `out` (required).
+
+Starts a background job: yes.
+
+### `formal_upf`
+
+Import literal UPF domain/isolation declarations and generate sampled checks. No verification run.
+
+Arguments: `source` (required), `bindings` (required), `out` (required).
 
 Starts a background job: yes.
 
