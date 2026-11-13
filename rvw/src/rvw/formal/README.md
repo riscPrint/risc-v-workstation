@@ -13,6 +13,33 @@ input ties, assumptions, and reset settings. Missing replay state starts free an
 spurious failures. Exit 0 means `pass`. Other written results exit 1. Invalid input exits 2.
 
 
+## Custom instruction state, memory and traps
+
+Use `rvw formal custom-effects effects.json --out OUT`. MCP tool
+`formal_custom_effects` uses the same generator. See
+`examples/custom-isa/effects.json` for complete store, accumulator and trap data.
+The format is `rvw.custom-isa/2`. The pure version-1 command remains supported.
+
+Declare all result, normal PC, extra-state, memory and trap effects. Word trees
+can read `rs1`, `rs2`, `pc`, `state.NAME` and load response `mem_rdata`. Operations
+are add/sub/xor/and/or/sll/srl. Values wrap to XLEN. Trap predicates support
+eq/ne/ult/slt/all/any/not. All extra-state updates read pre-state. A trap applies
+its own updates and target PC. It suppresses the normal destination/state commit.
+x0 suppresses only the integer destination write.
+
+The model supports one completed instruction transition and one load or store.
+A memory fault requires an attempted access. The RTL asserts this input contract.
+A store attempt and its architectural commit are separate outputs. Project bus
+logic must supply correct response data and fault timing. The kernel does not
+model handshakes, multiple accesses, AMOs, partial fault side effects or a DUT.
+
+Output contains one SystemVerilog kernel per instruction, `interface.json`,
+`plan.json` and `result.json`. The plan has boundary, alias and fault cases.
+Generated expected values share the declared semantics. Project reference
+vectors and effect mutants must be independent. Their results and gaps remain
+explicit. State setup, actual-core binding, software/backend support and full
+instruction proof remain separate work.
+
 ## Profile clauses and source catalogs
 
 `rvw formal profiles PLAN.json --out OUT` imports named RVA23/RVB23 extensions,

@@ -187,6 +187,18 @@ def _sail_zicond(job, **args):
     return json.loads((Path(args['out']) / 'manifest.json').read_text())
 
 
+def _custom_effects(job, **args):
+    manifest = args.pop('manifest')
+    code = job.run(_argv('custom-effects', args) + [manifest])
+    path = Path(args['out'])/'result.json'
+    if code not in (0,1) or not path.is_file():
+        raise ToolError('custom effect generation failed', {'exit_code': code})
+    result = json.loads(path.read_text())
+    if (code == 1) != (result.get('status') == 'mismatch'):
+        raise ToolError('custom effect exit and report disagree')
+    return result
+
+
 def _custom_isa(job, **args):
     manifest = args.pop('manifest')
     code = job.run(_argv('custom-isa', args) + [manifest])
@@ -235,6 +247,8 @@ def mcp_tools():
                  schema({"model": S, "compiler": S, "out": S}, ["model", "out"]), _sail_bitmanip, long=True),
         ToolSpec("formal_sail_zicond", "Compile pinned Sail RV32 CZERO rules into instruction checks. This is a result slice with an explicit RVFI shell, not a full-machine proof.",
                  schema({"model": S, "compiler": S, "out": S}, ["model", "out"]), _sail_zicond, long=True),
+        ToolSpec("formal_custom_effects", "Generate project-declared custom state, memory and trap transitions. Reference fixtures do not qualify a DUT.",
+                 schema({"manifest": S, "out": S}, ["manifest", "out"]), _custom_effects, long=True),
         ToolSpec("formal_custom_isa", "Export versioned pure custom R-type semantics, GNU software hooks and verification plans. Does not run a DUT.",
                  schema({"manifest": S, "out": S}, ["manifest", "out"]), _custom_isa, long=True),
         ToolSpec("formal_profiles", "Track pinned RVA23/RVB23 extension, base and conditional clauses. Export source-bound catalogs. No full profile acceptance verdict.",

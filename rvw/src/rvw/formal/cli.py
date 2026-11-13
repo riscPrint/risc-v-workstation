@@ -251,6 +251,12 @@ def register(sub) -> None:
     custom.add_argument("--json", action="store_true")
     from .custom_isa import main as custom_main
     custom.set_defaults(func=custom_main)
+    effects = s.add_parser("custom-effects", help="generate custom extra-state, memory and trap transition models")
+    effects.add_argument("manifest")
+    effects.add_argument("--out", required=True)
+    effects.add_argument("--json", action="store_true")
+    from .custom_effects import main as effects_main
+    effects.set_defaults(func=effects_main)
     profiles = s.add_parser("profiles", help="track pinned RVA23/RVB23 named obligations and mapped proof evidence")
     profiles.add_argument("manifest")
     profiles.add_argument("--baseline", help="previous pinned plan for an explicit-adoption obligation diff")
