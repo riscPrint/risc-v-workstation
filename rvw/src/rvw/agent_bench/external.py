@@ -22,10 +22,12 @@ from rvw.mcp.spec import ToolError
 from .engine import Session, load_pack, report
 
 
-def run_trial(pack, task, command, out, *, budget_s=60, max_calls=32, model=None, repeats=1):
+def run_trial(pack, task, command, out, *, budget_s=60, max_calls=32, model=None, repeats=1,
+              _load=load_pack, _session_factory=Session, _report=report,
+              _tool_surface='fixture MCP only; external client must disable other tools'):
     if budget_s <= 0 or max_calls < 1 or repeats < 1:
         raise ValueError('budget, max calls and repeats must be positive')
-    tasks, digest = load_pack(Path(pack))
+    tasks, digest = _load(Path(pack))
     selected = next((t for t in tasks if t['id'] == task), None)
     if selected is None:
         raise ValueError('unknown task ID')
@@ -35,7 +37,7 @@ def run_trial(pack, task, command, out, *, budget_s=60, max_calls=32, model=None
     for repetition in range(repeats):
         run_dir = out / f'trial-{repetition + 1}'
         run_dir.mkdir()
-        session = Session(selected, max_calls=max_calls)
+        session = _session_factory(selected, max_calls=max_calls)
         registry = session.registry()
         original_call = registry.call
         request_log = []
@@ -46,9 +48,17 @@ def run_trial(pack, task, command, out, *, budget_s=60, max_calls=32, model=None
                 if len(request_log) >= max_calls:
                     rejected_calls.append(name)
                     raise ToolError('tool budget exhausted')
-                request_log.append({'tool': name, 'arguments': arguments})
-                return original_call(name, arguments)
+                record = {'tool': name, 'arguments': arguments}
+                request_log.append(record)
+                try:
+                    record['result'] = original_call(name, arguments)
+                    return record['result']
+                except Exception as exc:
+                    record['error'] = str(exc)
+                    raise
         registry.call = bounded_call
+        if hasattr(session, 'requests'):
+            session.requests = request_log
         token = secrets.token_hex(32)
         ready = threading.Event()
         import uvicorn
@@ -93,12 +103,12 @@ def run_trial(pack, task, command, out, *, budget_s=60, max_calls=32, model=None
         attempts.append({'repeat': repetition + 1, 'exit_code': exit_code, 'timed_out': timeout,
                          'wall_s': wall, 'calls': len(request_log), 'budget_rejections': len(rejected_calls),
                          'requests': request_log, 'complete': score['complete']})
-        body = report(scores, digest, model or 'external')
+        body = _report(scores, digest, model or 'external')
         body.update(schema='rvw.agent-external-trial/1',
                     task_sha256=hashlib.sha256(json.dumps(selected, sort_keys=True).encode()).hexdigest(), client={'command': command, 'model': model},
                     machine={'system': platform.system(), 'machine': platform.machine(), 'cpus': os.cpu_count(),
                              'python': platform.python_version()}, budget_s=budget_s, max_calls=max_calls,
                     repeats_requested=repeats, attempts=attempts,
-                    tool_surface='fixture MCP only; external client must disable other tools')
+                    tool_surface=_tool_surface)
         (out / 'results.json').write_text(json.dumps(body, indent=2) + '\n')
     return body

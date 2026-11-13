@@ -235,3 +235,33 @@ nice -n 15 rvw/.venv/bin/python examples/agent-bench/audit-misleading.py \
 A controlled repair-runner test also checks a candidate that passes its named
 program and fails a hidden independent program. It earns `repair_rejected`.
 A native core run of that wrong-fix case remains NOT RUN.
+
+## External trials on normal rvw tools
+
+The scripted evidence solver can also use the external trial transport:
+
+```sh
+rvw agent-bench evidence-trial --plan PLAN.json --out NEW_DIRECTORY \
+  --budget-s 110 --max-calls 32 --model 'scripted MCP evidence solver' -- \
+  "$RVW_HOME/rvw/.venv/bin/python" -m rvw.agent_bench.solver_client
+```
+
+Use the same five-step plan as `evidence-solve`. The evaluator retains optional
+truth. The client receives only public steps and budgets. It calls the actual
+regression, cosim, bundle, drivers and wave tools over the bounded external MCP
+endpoint. MCP entry: `agent_bench_evidence_trial`. The evaluator records responses
+in the existing request log. It scores tool source-line rank and returned steps.
+It records wall time, calls, missing observations and partial attempts.
+The client cannot award its own successful workflow status.
+
+This tool surface has no source-edit or independent repair-check tool. It gives
+no repair credit. Any claimed fix is a false fix. Root-cause time stays censored;
+a returned source line is not a causal proof. Use `repair-check` separately for
+candidate sources. Supply qualified native inputs, a matching design database,
+a waveform and project-owned signal bindings to measure native localisation.
+A trial with missing inputs stays inconclusive. It does not become a native
+repair result. See [the workflow inputs](solver.md).
+
+The [fixture trial table](../../../../examples/agent-bench/external-trials.md)
+records ten scripted fixture fixes and five preserved inconclusive cases with
+zero false fixes. Those results test the fixture track, not native tools.

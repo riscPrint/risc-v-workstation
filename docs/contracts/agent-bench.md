@@ -261,3 +261,23 @@ checks file presence only. It does not check coverage completeness or properties
 `evidence_consistent` is an admission result, never a repair or C4 verdict.
 Missing or mismatched inputs are `inconclusive`. Both results retain `repair:
 NOT CLAIMED` and `c4_acceptance: NOT CLAIMED`.
+
+## External native-tool evidence trials
+
+`agent-bench evidence-trial` and MCP `agent_bench_evidence_trial` use the existing
+`rvw.agent-external-trial/1` report and bounded external transport with
+`track: native-tools`. A plan has an `id`, the evidence solver's five `steps`
+and optional evaluator-only `truth` with file and line. The client gets the
+steps and budgets through `bench_inspect`. It never gets truth or the plan path.
+The registry exposes those five normal tools, finish/inspect and job tools.
+It has no source patch or independent repair-check tool.
+
+Requests can retain `result` or `error` in the existing request log. Per-task
+scores retain candidates, `true_line_rank`, returned-step count, evaluator
+`workflow_outcome`, separate `client_workflow_outcome` and evidence timeout.
+A returned native job counts only after a completed job response. Location rank
+uses tool traversal order. It is not root-cause confidence. Root causes stay
+censored. No source repair can earn credit on this evidence-only surface.
+A client that claims a fix earns a false-fix result. Native repair checks and
+C4 acceptance remain separate. Parent wall and call budgets retain partial
+attempts. Client wall time excludes server startup and shutdown.
