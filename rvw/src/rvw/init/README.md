@@ -227,3 +227,7 @@ plugin reports invalid memory-cell parameters. See `scripts/build-ghdl-plugin.py
 ## MCP workflow calls
 
 MCP `init_scaffold` uses the existing Spinal/sbt scaffold generator. Set `out` to the core repository and supply `isa`. Use `dry_run` to inspect the plan. `wire_build` writes build inputs. It does not build the core.
+
+Mapped MCP init accepts `spinal_top` or `verilog_top`, `reset_pc`, `buses`,
+`rvfi_prefix`, clock/reset settings, interrupt inputs and constants.
+These values have the same meaning as the CLI mapped options.

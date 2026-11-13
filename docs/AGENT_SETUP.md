@@ -529,7 +529,7 @@ Optional tool set: 22 tools. Load MCP profile `core` with `rvw_tools_load`. Read
    - If exit 0: go to `init`.
 4. **init**: Write rvw.toml, rvw/run.sh, the adapter skeleton and the core playbook. `rvw init --isa <ISA> --wire-build --json` / MCP `init_scaffold`
    - If exit 0: go to `map-adapter`.
-5. **map-adapter**: Map clock, reset, accepted memory transactions, completion and committed RVFI fields in the core adapter. Follow docs/INTEGRATION_GUIDE.md sections 2 to 4. Review the ISA and memory map. Build a smoke ELF. (manual)
+5. **map-adapter**: Use init_scaffold with spinal_top, reset_pc, buses and rvfi_prefix for a mapped adapter. Map clock, reset, accepted memory transactions, completion and committed RVFI fields in the core adapter. Follow docs/INTEGRATION_GUIDE.md sections 2 to 4. Review the ISA and memory map. Build a smoke ELF. (manual)
    - If the adapter compiles: go to `smoke`.
 6. **smoke**: Build the model and run one ELF through C1. `rvw doctor --smoke-elf <ELF> --smoke-options rvfi --json` / MCP `doctor_smoke`
    - If smoke run fails: go to `test-fails`.
