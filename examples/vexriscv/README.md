@@ -676,6 +676,36 @@ remain clear. The program must execute at least eight counter-half reads.
 These aliases are exercised from M mode. Lower-mode counter-enable rules
 and programmable event selectors remain outside this example.
 
+## Cached configurations
+
+Two extra configs use the upstream caches. Neither changes the core sources; both live in
+`rvw/src/main/scala/rvwvex/CachedConfig.scala`. `rv32im` stays the default.
+
+| Config | Plugins | Suite |
+|--------|---------|-------|
+| `rv32im_cached` | `rv32im` with `IBusCachedPlugin` and `DBusCachedPlugin` (`GenFullNoMmu` caches: 4 KiB, 32-byte lines, 1 way; write-through data cache, no allocation on a store miss), `StaticMemoryTranslatorPlugin` (0xF0000000 and up uncached) | `isa-cached` |
+| `rv32ima_linux` | the same caches with LR/SC and AMOs, `MmuPlugin` (Sv32, 4-entry port TLBs), M/S/U CSRs | `isa-linux` |
+
+`DBusCachedPlugin` does not feed the RVFI memory fields. `CachedFormalPlugin` rebuilds them
+at write-back from the plugin's stage values (address, masks, store data, load word in its
+lanes, the AMO result and SC success). `CachedBuses` answers the cache buses: one
+outstanding refill per bus, one word per cycle after the run's memory latency; data-cache
+writes are single words without a response. The cached configs accept bare RAM only (no
+`--soc-map`). Build `rv32ua-p` ELFs with `rvw/build-tests.sh` (it now builds `ua` too).
+Compare `rv32ima_linux` traces with `--platform rvw/platform-linux.json` (M/S/U, RV32IMA).
+
+Measured 2026-11-13 with the private core copy, seed 1 or 7, `rvw cosim check` against Spike:
+
+| Config | Programs | Memory latency | Runs | Spike | Compared instructions |
+|--------|----------|----------------|------|-------|-----------------------|
+| `rv32im_cached` | 49 rv32ui/um-p | 0 | 49 pass | 49 match | 17,735 |
+| `rv32im_cached` | 49 rv32ui/um-p | seeded 1..4 | 49 pass | 49 match | 17,735 |
+| `rv32ima_linux` | 59 rv32ui/um/ua-p | 0 | 59 pass | 59 match | 24,919 |
+| `rv32ima_linux` | 59 rv32ui/um/ua-p | seeded 1..4 | 59 pass | 59 match | 24,919 |
+
+The 49 programs took 58,603 cycles on `rv32im_cached` at latency 0.
+`rv32ui-p-ma_data` stays excluded: these configs trap on misaligned data access.
+
 ## Probes
 
 `rvw/src/main/scala/rvwvex/ProbePlugin.scala` attaches

@@ -1,0 +1,64 @@
+{
+  "name": "vexriscv-linux",
+  "xlen": 32,
+  "isa": "rv32ima_zicsr_zifencei",
+  "reference_isa": "rv32ima_zicsr_zifencei_zicntr_zihpm",
+  "reset_pc": "0x80000000",
+  "ram": [
+    {
+      "base": "0x80000000",
+      "size": "0x1000000"
+    }
+  ],
+  "mmio": [],
+  "pmp_regions": 0,
+  "aligned_mem": true,
+  "irq_inputs": [
+    3,
+    7,
+    9,
+    11
+  ],
+  "privilege_modes": "MSU",
+  "misaligned": {
+    "load": "trap",
+    "store": "trap",
+    "atomic": "trap",
+    "split_page": "refuse",
+    "split_bus": "refuse"
+  },
+  "endianness": {
+    "instruction": "little",
+    "data": "little",
+    "page_table": "little",
+    "device": "little"
+  },
+  "absent_pmp_csrs": "read_zero_write_ignored",
+  "ecall_tval": "insn",
+  "sail_overrides": {
+    "platform": {
+      "clint": {
+        "supported": false
+      },
+      "simple_interrupt_generator": {
+        "supported": false
+      }
+    },
+    "extensions": {
+      "M": {
+        "mutable_misa": false
+      },
+      "A": {
+        "mutable_misa": false
+      }
+    },
+    "base": {
+      "mtvec": {
+        "vectored": {
+          "supported": false
+        }
+      }
+    }
+  },
+  "sail_reference_isa": "rv32ima_zicsr_zifencei"
+}

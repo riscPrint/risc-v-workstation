@@ -111,6 +111,20 @@ disassembly (the rvls disassembler is not loaded). `--rvfi-check` and
 These checks do not prove full ISA, privileged-mode, interrupt, formal or
 hardware correctness. They apply only to this configuration.
 
+## Cached configuration
+
+`rv32im_cached` adds the upstream fetch L1 and LSU L1 (64-byte lines, 2 ways x 32 sets =
+4 KiB each; the LSU L1 is write-back) and the upstream predictor stack (`BtbPlugin` with RAS,
+`GSharePlugin`). `rv32im` stays the default. `rvw/src/main/scala/rvwvexii/L1Buses.scala`
+answers the native L1 buses: each refill returns one line, one memory word per cycle, after
+the run's memory latency; a writeback burst is stored at once and answered after its last
+beat. With an LSU L1 the cacheless responder serves the LSU I/O bus. The BTB, GShare and
+RAS RAMs have simulation init content, so the example's `SpinalConfig` now inlines memory
+init (`inlineRom = true`); configs without such RAMs give the same Verilog.
+
+Measured 2026-11-13 (suite `isa-cached`, private core copy, `rvw cosim check` against Spike):
+49 rv32ui/um-p programs pass and match at memory latency 0 and at seeded latency 0..3 (seed 7).
+
 ## Probes
 
 `rvw/src/main/scala/rvwvexii/ProbeTapPlugin.scala` is the second user of

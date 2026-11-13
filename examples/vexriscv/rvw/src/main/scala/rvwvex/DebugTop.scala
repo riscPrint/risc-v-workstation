@@ -15,6 +15,7 @@ object VexDebug {
 
   def configuration(config: String): VexRiscvConfig = config match {
     case "rv32im" => VexTop.configuration()
+    case c if VexCached.configs.contains(c) => VexCached.configuration(c)
     case "rv32im_trace" => VexRiscvConfig(plugins = VexTop.configuration().plugins :+ new TraceIngressPlugin)
     case "rv32im_dmi" | "rv32im_jtag" =>
       val plugins = VexTop.configuration().plugins.map {
