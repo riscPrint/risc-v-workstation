@@ -80,3 +80,10 @@ policy timeout. The scoreboard preserves per-byte user bits and positions;
 other TUSER layouts need a project adapter. It does not model a packet
 transformer. Four-state X checking and AXI5-Stream need separate work.
 These component checks do not establish SoC conformance.
+
+## Bounded Python RTL evidence
+
+The Python cocotb adapter passed a seeded good RTL test and detected the
+controlled bad RTL result. See `Uvm/vip/rtl/README.md` for commands and
+fixture scope. This does not establish full protocol conformance or UVM
+runtime qualification.

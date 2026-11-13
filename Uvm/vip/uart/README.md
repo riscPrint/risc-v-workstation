@@ -60,3 +60,10 @@ and cancel in-flight cocotb sends with the DUT.
 UVM runtime builds and cocotb RTL runs were not run. Native serial timing,
 FIFO boundaries and IRQ behavior remain open under issue #202 until a
 project binds and runs the register/FIFO observations against its DUT.
+
+## Bounded Python RTL evidence
+
+The Python cocotb adapter passed a seeded good RTL test and detected the
+controlled bad RTL result. See `Uvm/vip/rtl/README.md` for commands and
+fixture scope. This does not establish full protocol conformance or UVM
+runtime qualification.

@@ -74,3 +74,10 @@ has not had native qualification. The UVM executable build exceeded the
 120-second smoke budget. UVM runtime qualification remains open. Four-state X checks are not qualified on two-state Verilator.
 Python errors on unresolved cocotb values. The fixture uses little-endian
 byte lanes. Multi-select decode and bridge integration need project tests.
+
+## Bounded Python RTL evidence
+
+The Python cocotb adapter passed a seeded good RTL test and detected the
+controlled bad RTL result. See `Uvm/vip/rtl/README.md` for commands and
+fixture scope. This does not establish full protocol conformance or UVM
+runtime qualification.

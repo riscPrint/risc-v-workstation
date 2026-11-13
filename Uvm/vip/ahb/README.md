@@ -78,3 +78,10 @@ has a 1000-cycle test timeout. The passive checker permits BUSY phases but
 the sequence library does not insert them. Locked traffic is not qualified.
 Four-state X checks and reactive subordinate pin integration need separate
 qualification. Component tests do not establish SoC conformance.
+
+## Bounded Python RTL evidence
+
+The Python cocotb adapter passed a seeded good RTL test and detected the
+controlled bad RTL result. See `Uvm/vip/rtl/README.md` for commands and
+fixture scope. This does not establish full protocol conformance or UVM
+runtime qualification.

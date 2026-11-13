@@ -48,3 +48,10 @@ are outside this bounded profile. The RAM uses exact exclusive reservations.
 It invalidates them on overlapping writes. It is not a cache or coherence
 model. Runtime UVM and cocotb qualification has not been run. SV lint does
 not establish simulator behavior or reactive subordinate qualification.
+
+## Bounded Python RTL evidence
+
+The Python cocotb adapter passed a seeded good RTL test and detected the
+controlled bad RTL result. See `Uvm/vip/rtl/README.md` for commands and
+fixture scope. This does not establish full protocol conformance or UVM
+runtime qualification.
