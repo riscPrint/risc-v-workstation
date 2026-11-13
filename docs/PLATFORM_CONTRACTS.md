@@ -25,6 +25,23 @@ Principles (from `ROADMAP.md`):
 - Every result records how to reproduce it: source revision, config, seed, ELF hash, tool versions,
   and a replay command.
 
+## Observed SoC transaction pairs
+
+`rvw.soc-events/1` starts with `observation=rtl_request_response_retire_tags`,
+`data_bytes`, `trace_sha256`, `source`, `rtl_sha256`, `elf_sha256`, `seed` and
+`run_id`. The latter fields must match the selected C1 simulation identity.
+Ordered `request` records contain cycle, unique tag, aligned address, Boolean
+write, mask and data. `response` records contain cycle, tag, data and Boolean
+error. `retire_link` records contain cycle, C2 order and a unique request-tag list.
+Project probes must observe request-to-retirement tags independently.
+
+`rvw.soc-pairing/1` reports pairs, comparisons, unpaired requests, gaps and input
+hashes. Addresses and data use little-endian byte lanes. Contradictory observed
+values report mismatch and exit 1. Matching or missing evidence remains
+inconclusive and exits 3. Unknown/reused tags and identity errors exit 2.
+Address-only pairing is not supported. Existing harness capture version 1 does
+not supply these transaction identities. No full DUT/bridge proof is implied.
+
 ## Core contracts
 
 - [Project configuration (`rvw.project/1`)](contracts/project.md)
