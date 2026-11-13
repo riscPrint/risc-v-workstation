@@ -319,7 +319,9 @@ queue budget scope. Unknown dependencies and cycles are refused. Save the
 returned workflow ID. Use `--action advance --workflow-id ID` to queue ready
 nodes. Run queue workers, then advance again. Repeated advances do not resubmit
 recorded nodes. `--action status` shows exact dependency and execution state.
-Failed dependencies remain blocked. Execution complete is not verified pass.
+Failed dependencies remain blocked. A node whose job collected a C4 `reject` or
+`inconclusive` report shows `dut_failure` or `inconclusive` and blocks its
+dependents, although the queue job is `complete`. Execution complete is not verified pass.
 `--action capabilities` returns tool names and argument schemas. MCP exposes
 `farm_workflow`. This service does not create a separate top-level agent.
 

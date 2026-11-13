@@ -50,7 +50,10 @@ are disabled; retry policy belongs to the controller.
 
 Farm workflow plans retain node IDs, command arrays and dependency IDs separately
 from verification evidence. Queue jobs bind workflow/node IDs for resume. Only
-completed dependencies admit a node. The SQLite event sequence supports SSE
+completed dependencies admit a node. A job that exits zero but whose last
+attempt collected a C4 `reject` or `inconclusive` report (`gate_verdict`) has
+node state `dut_failure` or `inconclusive` and does not admit dependents. Queue
+job state stays `complete` (collection). The SQLite event sequence supports SSE
 replay by Last-Event-ID. HTTP event access is restricted to the token owner.
 Workflow completion means execution complete, not a C4 acceptance or DUT pass.
 
