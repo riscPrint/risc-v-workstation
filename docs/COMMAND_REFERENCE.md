@@ -14,7 +14,7 @@ An entry here states availability. It does not qualify a native flow.
 
 ```text
 usage: rvw [-h] [--version] [--project PROJECT] [--json]
-    {agent,agent-bench,arch,bisect,bugmem,bundle,checks,cosim,cov,csim,debug,doctor,evidence,farm,fault,formal,init,lint,lsp,mcp,memory,ooo,perf,plan,privilege,probes,query,reduce,regress,replay-pack,replay,sec,sim,speed-compare,speed-sweep,backends,uvm-ral,uvm-cpu,hdl,cocotb,soc,uvm,verification-plan,vip,wave,workloads}
+    {agent,agent-bench,arch,bisect,bugmem,bundle,checks,cosim,cov,csim,csr,debug,doctor,evidence,farm,fault,formal,init,lint,lsp,mcp,memory,ooo,perf,plan,privilege,probes,query,reduce,regress,replay-pack,replay,sec,sim,speed-compare,speed-sweep,backends,uvm-ral,uvm-cpu,hdl,cocotb,soc,uvm,verification-plan,vip,wave,workloads}
     ...
 ```
 
@@ -407,7 +407,14 @@ usage: rvw bundle [-h] [--out OUT] [-n RETIRED] [--cut-cycles CUT_CYCLES]
 ### `rvw checks`
 
 ```text
-usage: rvw checks [-h] [--project PROJECT] [--json] {generate,report} ...
+usage: rvw checks [-h] [--project PROJECT] [--json] {plan,generate,report} ...
+```
+
+### `rvw checks plan`
+
+```text
+usage: rvw checks plan [-h] [--manifest MANIFEST] [--inventory INVENTORY]
+    [--json] [--project PROJECT]
 ```
 
 ### `rvw checks generate`
@@ -521,8 +528,15 @@ usage: rvw cosim live [-h] --elf ELF [--core CORE] [--platform PLATFORM]
 
 ```text
 usage: rvw cov [-h] [--project PROJECT] [--json]
-    {source-report,campaign,actions,exchange,block-check,generate,merge,report,rank,select,closure,isa-diff,isa-check,functional,rtl,prove,mutate}
+    {probe-goals,source-report,campaign,actions,exchange,block-check,generate,merge,report,rank,select,closure,isa-diff,isa-check,functional,rtl,prove,mutate}
     ...
+```
+
+### `rvw cov probe-goals`
+
+```text
+usage: rvw cov probe-goals [-h] --result RESULT --plan PLAN --platform
+    PLATFORM [--json] [--project PROJECT]
 ```
 
 ### `rvw cov source-report`
@@ -654,7 +668,7 @@ usage: rvw cov mutate [-h] [--run] [--baseline BASELINE] [--timeout TIMEOUT]
 
 ```text
 usage: rvw csim [-h] [--project PROJECT] [--json]
-    {run,sweep,budget,convert,models,compare-rtl,qualify,compare,simpoint,run-points,build}
+    {run,sweep,budget,convert,models,compare-rtl,compare-cache,qualify,compare,simpoint,run-points,build}
     ...
 ```
 
@@ -701,7 +715,16 @@ usage: rvw csim models [-h] [--json] [--project PROJECT]
 ```text
 usage: rvw csim compare-rtl [-h] --trace TRACE --events EVENTS [--roi-start
     ROI_START] [--roi-end ROI_END] [--elf-sha256 ELF_SHA256] [--top TOP]
-    [--json] [--project PROJECT] study
+    [--cache CACHE] [--level {l1d,l1i}] [--trace-out TRACE_OUT] [--json]
+    [--project PROJECT] study
+```
+
+### `rvw csim compare-cache`
+
+```text
+usage: rvw csim compare-cache [-h] --trace TRACE --events EVENTS [--cache
+    CACHE] [--level {l1d,l1i}] [--top TOP] [--trace-out TRACE_OUT] [--json]
+    [--project PROJECT] study
 ```
 
 ### `rvw csim qualify`
@@ -740,6 +763,18 @@ usage: rvw csim run-points [-h] --points POINTS [--warmup WARMUP] [--set
 
 ```text
 usage: rvw csim build [-h] [--json] [--project PROJECT]
+```
+
+### `rvw csr`
+
+```text
+usage: rvw csr [-h] [--project PROJECT] [--json] {show} ...
+```
+
+### `rvw csr show`
+
+```text
+usage: rvw csr show [-h] [--json] [--project PROJECT] name
 ```
 
 ### `rvw debug`
@@ -887,8 +922,15 @@ usage: rvw evidence query [-h] --db DB [--text TEXT] [--schema SCHEMA]
 
 ```text
 usage: rvw farm [-h] [--project PROJECT] [--json]
-    {run,cancel,notifications,classify,recover,plan,live,workflow,select,triage,budget,batch,queue,serve,dashboard}
+    {observe,run,cancel,notifications,classify,recover,plan,live,workflow,select,triage,budget,batch,queue,serve,dashboard}
     ...
+```
+
+### `rvw farm observe`
+
+```text
+usage: rvw farm observe [-h] --db DB --root ROOT --wave-prefix WAVE_PREFIX
+    --out OUT [--project PROJECT] [--json]
 ```
 
 ### `rvw farm run`
@@ -1928,9 +1970,9 @@ usage: rvw probes summary [-h] [--project PROJECT] [--json] events
 
 ```text
 usage: rvw probes convert [-h] --to
-    {bp-events,bus,cache,counts,csr-writes,etrace-ingress,fault-sites,hpm,interrupts,kanata,mmu,mmu-walks}
-    --out OUT [--c2 C2] [--c1 C1] [--probe PROBE] [--roi ROI] [--json]
-    [--project PROJECT] events
+    {bp-events,bus,cache,cache-check,counts,csr-writes,etrace-ingress,fault-sites,hpm,interrupts,kanata,mmu,mmu-walks}
+    --out OUT [--c2 C2] [--c1 C1] [--probe PROBE] [--roi ROI] [--elf ELF]
+    [--geometry CACHE=SETSxWAYS] [--json] [--project PROJECT] events
 ```
 
 ### `rvw query`
@@ -2724,7 +2766,7 @@ usage: rvw soc observe-pack [-h] --binding BINDING --pins PINS --trace TRACE
 ```text
 usage: rvw soc peripheral [-h] --name NAME --base BASE --out OUT [--json]
     [--project PROJECT]
-    {clint,plic,gpio,timer,finisher,uart16550,spi,i2c,watchdog,block}
+    {clint,plic,gpio,timer,finisher,uart16550,uart16550-full,spi,i2c,watchdog,block}
 ```
 
 ### `rvw soc verify`
@@ -3446,6 +3488,14 @@ Arguments: `project` (required), `out` (required), `manifest`.
 
 Starts a background job: yes.
 
+### `checks_plan`
+
+List check kinds, binding requirements and project declarations.
+
+Arguments: `project` (required), `manifest`, `inventory`.
+
+Starts a background job: no.
+
 ### `checks_report`
 
 Count generated, bound, proven, bounded, fired and unbound checks. Missing evidence stays null.
@@ -3582,6 +3632,14 @@ Arguments: `project` (required), `run`, `baseline`, `timeout`, `jobs`, `test`, `
 
 Starts a background job: yes.
 
+### `cov_probe_goals`
+
+Measure project probe goals after complete strict Spike qualification.
+
+Arguments: `result` (required), `plan` (required), `platform` (required).
+
+Starts a background job: no.
+
 ### `cov_prove`
 
 Run bounded cover and unbounded safety proofs for reviewed coverage-point expressions. Use a fresh work_dir; exclusions retain assumptions and hashes. The job holds the machine heavy-job lock ($RVW_HEAVY_LOCK, or `lock`; empty for none).
@@ -3646,11 +3704,19 @@ Arguments: `base` (required), `candidate` (required), `tolerance`.
 
 Starts a background job: no.
 
+### `csim_compare_cache`
+
+Compare a cache model (memory.l1d or memory.l1i of a study) with RTL cache probe access events (rvw.probe-events/1) on the same C2 run, access by access: per-access hit/miss agreement and miss-rate error. Misaligned or missing events give inconclusive. Runs as a job.
+
+Arguments: `study` (required), `trace` (required), `events` (required), `cache`, `level`, `top`, `trace_out`.
+
+Starts a background job: yes.
+
 ### `csim_compare_rtl`
 
 Compare a predictor model with explicit RTL predictor events (rvw.bp-events/1 or Kanata #rvw prediction records) on the same C2 run, branch by branch. Missing identity or events gives inconclusive. Runs as a job.
 
-Arguments: `study` (required), `trace` (required), `events` (required), `roi_start`, `roi_end`, `elf_sha256`, `top`.
+Arguments: `study` (required), `trace` (required), `events` (required), `roi_start`, `roi_end`, `elf_sha256`, `top`, `cache`, `level`, `trace_out`.
 
 Starts a background job: yes.
 
@@ -3709,6 +3775,14 @@ Cartesian sweep of dotted study keys over traces, with storage-budget marking an
 Arguments: `study` (required), `traces` (required), `params` (required), `format`, `sets`, `budget_kib`, `budget_scope`, `metric`, `jobs`, `timeout`.
 
 Starts a background job: yes.
+
+### `csr_describe`
+
+Read pinned CSR names, addresses, fields, aliases and raw WARL IDL. Metadata is not an execution model or verification evidence.
+
+Arguments: `name` (required).
+
+Starts a background job: no.
 
 ### `debug_checks`
 
@@ -3827,6 +3901,14 @@ Starts a background job: yes.
 Export notification events. No external delivery is attempted.
 
 Arguments: `out` (required).
+
+Starts a background job: yes.
+
+### `farm_observe`
+
+Native waveform observations for advisory impact selection.
+
+Arguments: `db` (required), `root` (required), `wave_prefix` (required), `out`.
 
 Starts a background job: yes.
 
@@ -4728,9 +4810,9 @@ Starts a background job: no.
 
 ### `probes_convert`
 
-Convert a rvw.probe-events/1 stream into a consumer format: bp-events, bus, cache, counts, csr-writes, etrace-ingress, fault-sites, hpm, interrupts, kanata, mmu, mmu-walks. bp-events, counts and interrupts need the run C2 (c2); counts also needs C1 (c1). Refuses events that do not align with C2.
+Convert a rvw.probe-events/1 stream into a consumer format: bp-events, bus, cache, cache-check, counts, csr-writes, etrace-ingress, fault-sites, hpm, interrupts, kanata, mmu, mmu-walks. bp-events, counts and interrupts need the run C2 (c2); counts also needs C1 (c1). cache-check needs c2 and the ELF (elf, default the stream identity), with optional geometry ["dcache=32x2"]. Refuses events that do not align with C2.
 
-Arguments: `events` (required), `to` (required), `out` (required), `c2`, `c1`, `probe`, `roi_start`, `roi_end`.
+Arguments: `events` (required), `to` (required), `out` (required), `c2`, `c1`, `probe`, `roi_start`, `roi_end`, `elf`, `geometry`.
 
 Starts a background job: no.
 
