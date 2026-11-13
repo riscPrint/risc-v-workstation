@@ -37,7 +37,7 @@ def regions(policy, elf, binding):
 
 # X constants become 0, like the two-state Verilator run. Async resets become synchronous;
 # the harness holds reset for several clock cycles, so the sampled behavior is the same.
-FLOW = ('proc; async2sync; flatten; delete t:$scopeinfo; memory_map; opt_clean; techmap; simplemap; dffunmap; setundef -zero -undriven; '
+FLOW = ('proc; async2sync; flatten; delete t:$scopeinfo; memory_map; opt; techmap; opt; simplemap; dffunmap; setundef -zero -undriven; '
         'opt_clean; write_json mapped.json')
 
 
@@ -55,7 +55,7 @@ def netlist(binding, work):
     return design
 
 
-def run(binding_path, policy_path, elf, out, mode='precise', work=None, soc=None):
+def _run(binding_path, policy_path, elf, out, mode='precise', work=None, soc=None):
     out = Path(out).resolve(); out.mkdir(parents=True, exist_ok=False)
     binding = rtl.load(binding_path)
     policy = json.loads(Path(policy_path).read_text())
@@ -65,6 +65,7 @@ def run(binding_path, policy_path, elf, out, mode='precise', work=None, soc=None
     sinks = policy.get('sinks', [])
     if not sinks or any('signal' not in s for s in sinks):
         raise ValueError('policy needs sinks with a signal name')
+    progress(out, 'netlist', mode=mode)
     design = netlist(binding, work)
     top = binding['top']
     mod = design['modules'][top]
@@ -81,10 +82,13 @@ def run(binding_path, policy_path, elf, out, mode='precise', work=None, soc=None
     words = regions(policy, elf, binding)
     shadow_policy = dict(clock=binding['clock'], reset=binding['reset'], sources=sources,
                          sinks=[s['signal'] for s in sinks], allow_memory_sources=bool(words))
+    progress(out, 'shadow', cells=len(mod['cells']), ports=len(mod['ports']), mode=mode)
     text, prefix = shadow(design, top, shadow_policy, mode)
     widths = {n: (p['direction'], len(p['bits'])) for n, p in mod['ports'].items()}
+    progress(out, 'compile', cells=len(mod['cells']), shadow_bytes=len(text.encode()), mode=mode)
     exe = rtl.build(binding, work, ift=(prefix, [(s['signal'], s.get('when')) for s in sinks], widths),
                     shadow_text=text)
+    progress(out, 'simulate', max_cycles=binding.get('max_cycles',100000), mode=mode)
     result = rtl.simulate(binding, exe, elf, out/'rtl', taint_words=words)
     status = rtl.c2(result, out/'rtl.jsonl', elf, binding, binding.get('isa', 'rv32im'))
     retired = rtl.cut(result)
@@ -110,3 +114,28 @@ def run(binding_path, policy_path, elf, out, mode='precise', work=None, soc=None
                                                    for i, m in result['tainted_words'] if i not in words][:64]),
                    checked_cycles=end,
                    path_kind='dynamic Boolean taint at top-level sinks; no source-level provenance')
+
+
+def progress(out, phase, **cost):
+    import sys
+    record = dict(phase=phase, **cost)
+    (Path(out)/'progress.json').write_text(json.dumps(record, indent=2)+'\n')
+    print('security flow: '+json.dumps(record), file=sys.stderr, flush=True)
+
+
+def run(binding_path, policy_path, elf, out, mode='precise', work=None, soc=None, timeout=110):
+    import time
+    from .budget import limit, BudgetExpired
+    if not 0 < timeout <= 120:
+        raise ValueError('flow timeout must be greater than zero and at most 120 seconds')
+    started = time.monotonic()
+    try:
+        with limit(timeout):
+            return _run(binding_path, policy_path, elf, out, mode, work, soc)
+    except BudgetExpired as exc:
+        path = Path(out)/'progress.json'
+        partial = json.loads(path.read_text()) if path.exists() else {}
+        return publish(out, 'ift-core', [], False, reason=str(exc), partial=partial,
+                       elapsed_s=time.monotonic()-started, timeout_s=timeout,
+                       cost_estimate=dict(**partial, note='Cell and byte counts describe preparation cost; runtime is not predicted.'),
+                       action='Inspect progress.json. Reuse the work cache; shorten the program or review the declared memory region. No flow verdict was earned.')

@@ -287,7 +287,8 @@ def build(binding, work, ift=None, shadow_text=None):
     widths = ift[2] if ift else ports(binding)
     tb = testbench(binding, widths, ift and ift[:2])
     sources = shadow_text if shadow_text is not None else ''.join(p.read_text() for p in binding['rtl'])
-    key = hashlib.sha256((sources+tb+native(['verilator', '--version'], work)).encode()).hexdigest()[:20]
+    build_flags = ['--output-split', '5000', '--output-split-cfuncs', '500', '-CFLAGS', '-O0'] if shadow_text is not None else []
+    key = hashlib.sha256((sources+tb+repr(build_flags)+native(['verilator', '--version'], work)).encode()).hexdigest()[:20]
     folder = Path(work)/f'build-{key}'
     exe = folder/'obj_dir/Vrvw_sec_tb'
     if exe.exists():
@@ -300,7 +301,7 @@ def build(binding, work, ift=None, shadow_text=None):
     else:
         files = [str(p) for p in binding['rtl']]
     native(['verilator', '--binary', '--timing', '-j', '4', '-Wno-fatal', '-Wno-lint', '-Wno-style',
-            '--top-module', 'rvw_sec_tb', '-O1', *files, 'tb.sv'], folder, timeout=1800)
+            '--top-module', 'rvw_sec_tb', '-O1', *build_flags, *files, 'tb.sv'], folder, timeout=1800)
     return exe
 
 
