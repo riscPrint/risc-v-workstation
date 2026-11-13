@@ -1153,3 +1153,21 @@ capture at simulation cycles. C1 records the FST artifact and model format.
 The [local service](../rvw/src/rvw/sim/README.md#live-server-and-failure-windows)
 lets `rvw bundle` request a failure window from the original live JVM.
 The VexRiscv adapter records its first sampled wave time and fixed clock period.
+
+## Per-request thread builds and device reset
+
+Adapters can opt in with `supportsSimThreads` when their compile path uses
+`RiscvSimConfig`. Use `--sim-threads N`, or `sim_threads` in server requests,
+to select an explicit Verilator thread count from 1 through 64. The VexRiscv
+adapter opts in. Build, identity, C1 and replay retain the choice. An absent
+choice preserves the existing profile. Conflicting inherited `--threads`
+flags refuse the request. Each explicit count has separate model/cache keys.
+Selecting another count in a live server builds that model once and reuses it.
+This does not qualify any thread-speed gain.
+
+`LiveDevices.reset()` restores all configured models to their initial state.
+Reset the scheduler cycle origin before starting the next run. The VexRiscv
+adapter creates a fresh device instance for every request instead. Its native
+poison/reset fixture leaves UART state, CLINT interrupts and an incomplete PLIC
+claim before checking the next request. C1 records the initial device-state
+hash. The checks apply to these models; adapters own other device lifetimes.

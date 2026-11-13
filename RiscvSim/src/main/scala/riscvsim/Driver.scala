@@ -226,6 +226,7 @@ class Driver(val adapter: CoreAdapter) {
       job.fault.toSeq.flatMap(f => Seq("--fault", f.file.getPath)) ++
       job.debug.toSeq.flatMap(m => Seq("--debug", m.text, "--debug-binding", m.binding.file.getPath)) ++
       job.traceIngress.toSeq.flatMap(b => Seq("--trace-ingress", b.file.getPath)) ++
+      job.simThreads.toSeq.flatMap(n => Seq("--sim-threads", n.toString)) ++
       job.memLatency.toSeq.flatMap(l => Seq("--mem-latency", l.toString)) ++
       job.wallTimeoutS.toSeq.flatMap(s => Seq("--wall-timeout", s.toString)) ++
       (if (job.rvfiTrace) Seq("--rvfi-trace") else Nil) ++
@@ -290,6 +291,7 @@ class Driver(val adapter: CoreAdapter) {
       "core" -> adapter.core, "config" -> job.config,
       "elf" -> job.elf.getPath, "elf_sha256" -> elfSha, "elf_load_bias" -> job.elfLoadBias.toString,
       "seed" -> job.seed, "max_cycles" -> RvwJson.num(job.maxCycles),
+      "sim_threads" -> job.simThreads.map(n => ujson.Num(n)).getOrElse(ujson.Null),
       "mem_latency" -> job.memLatency.map(ujson.Num(_)).getOrElse(ujson.Null),
       "soc_map_sha256" -> job.socMap.map(s => ujson.Str(s.sha256)).getOrElse(ujson.Null),
       "irq_schedule" -> job.irqSchedule.map(s => ujson.Str(s.text)).getOrElse(ujson.Null),
@@ -672,7 +674,7 @@ class Driver(val adapter: CoreAdapter) {
 
   def cmdInfo(o: Map[String, String]): Int = {
     val info = ujson.Obj("schema" -> "rvw.adapter/1", "core" -> adapter.core, "configs" -> adapter.configs,
-      "default_config" -> adapter.defaultConfig, "default_max_cycles" -> RvwJson.num(adapter.defaultMaxCycles),
+      "supports_sim_threads" -> adapter.supportsSimThreads, "default_config" -> adapter.defaultConfig, "default_max_cycles" -> RvwJson.num(adapter.defaultMaxCycles),
       "xlen" -> adapter.xlen, "isa" -> ujson.Obj.from(adapter.configs.map(c => c -> ujson.Str(adapter.isa(c)))),
       "work" -> workRoot.getPath, "script" -> script, "source" -> source, "tools" -> tools)
     emit(Cli.bool(o, "json"), info, ujson.write(info, indent = 2))
@@ -681,7 +683,7 @@ class Driver(val adapter: CoreAdapter) {
 
   def cmdIdentity(o: Map[String, String]): Int = {
     // Identity accepts run-manifest keys. Only model options affect elaboration.
-    val names = Set("rvfi", "rvfi-trace", "rvfi-check", "wave", "wave-from", "wave-to", "coverage", "konata", "spinaltrace", "probes", "fault")
+    val names = Set("sim-threads", "rvfi", "rvfi-trace", "rvfi-check", "wave", "wave-from", "wave-to", "coverage", "konata", "spinaltrace", "probes", "fault")
     val opts = o.get("options").map { text =>
       val values = ujson.read(text).obj.filter { case (name, _) => names(Cli.norm(name)) }
       Cli.fromJson(ujson.Obj.from(values))
@@ -690,7 +692,7 @@ class Driver(val adapter: CoreAdapter) {
       rvfi = Cli.bool(opts, "rvfi") || Cli.bool(opts, "rvfi-trace") || Cli.bool(opts, "rvfi-check"),
       wave = Cli.bool(opts, "wave") || opts.contains("wave-from") || opts.contains("wave-to"),
       coverage = Cli.bool(opts, "coverage"), konata = Cli.bool(opts, "konata"), spinaltrace = Cli.bool(opts, "spinaltrace"), probes = Cli.bool(opts, "probes"),
-      faults = opts.contains("fault"))
+      faults = opts.contains("fault"), simThreads = Cli.simThreads(opts, adapter))
     if (!adapter.configs.contains(key.config)) throw new Cli.UsageError(s"unknown config '${key.config}'")
     val (_, sha) = captureRtl(adapter.elaborate(key, workspace))
     if (key.spinaltrace) require(RiscvSimConfig.dependencyGraph(key, workspace).isFile,
@@ -714,7 +716,7 @@ class Driver(val adapter: CoreAdapter) {
     for (c <- configs if !adapter.configs.contains(c)) throw new Cli.UsageError(s"unknown config '$c'")
     val results = configs.map { c =>
       val key = ModelKey(c, rvfi = Cli.bool(o, "rvfi") || Cli.bool(o, "rvfi-trace") || Cli.bool(o, "rvfi-check"),
-        wave = Cli.bool(o, "wave"), coverage = Cli.bool(o, "coverage"), konata = Cli.bool(o, "konata"), spinaltrace = Cli.bool(o, "spinaltrace"), probes = Cli.bool(o, "probes"))
+        wave = Cli.bool(o, "wave"), coverage = Cli.bool(o, "coverage"), konata = Cli.bool(o, "konata"), spinaltrace = Cli.bool(o, "spinaltrace"), probes = Cli.bool(o, "probes"), simThreads = Cli.simThreads(o, adapter))
       try {
         val b = model(key, s => System.err.println(s"[build] $s"))
         ujson.Obj("model" -> key.toJson, "status" -> "ok", "compile_s" -> math.round(b.compileS * 10) / 10.0,

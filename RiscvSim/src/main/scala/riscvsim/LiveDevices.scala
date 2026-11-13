@@ -197,5 +197,9 @@ final class LiveDevices(map: SimMap) {
     require(v("state").obj.keySet == byName.keySet, "device snapshot inventory mismatch")
     entries.foreach { case (r, _, d) => d.restore(v("state")(r.name)) }
   }
+  private val resetState = snapshot()
+  /** Reset the complete device set for a new run whose cycle origin is zero. */
+  def reset(): Unit = restore(resetState)
+
   def outputs: ujson.Value = ujson.Obj.from(entries.collect { case (r, _, u: Uart) => r.name -> ujson.Str(u.output) })
 }

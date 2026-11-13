@@ -1041,3 +1041,19 @@ second machine was NOT RUN. See [the sample](rvw/replay-results.json).
 binding, case templates, IFT programs and policies, contract, campaign and
 model pre-check manifests. See [its README](rvw/sec/README.md) and the
 results in [`rvw/src/rvw/sec/README.md`](../../rvw/src/rvw/sec/README.md).
+## Device-wide reset and per-request threads
+
+Server requests can select `sim_threads: 1` or `sim_threads: 2`. The model cache
+keeps the compiled thread variants separate. Each request creates fresh RTL,
+RAM and UART/CLINT/PLIC state. C1 records the model choice and the initial
+device-state digest.
+
+`rvw/tests/test_reset_threads.py` first runs `device-poison.S`. It leaves a
+pending RX byte, overrun, FIFO/register/output state, asserted CLINT inputs
+and an incomplete PLIC claim. Later requests run `device-reset-check.S` and
+the interrupt-driven UART echo. They switch between one-/two-thread builds
+in one JVM and require complete C2 equality for each matching program.
+The native sample has four passes after the deliberate poisoning failure.
+Reset checks finish at cycle 158. Both echoes finish at cycle 4,079. Model-run
+counters prove reuse of the two compiled variants. No thread-speed gain or
+sampled OS-thread count is claimed. See [the sample](rvw/reset-thread-results.json).

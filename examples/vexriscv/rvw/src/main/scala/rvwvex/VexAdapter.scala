@@ -9,6 +9,7 @@ import scala.collection.mutable
 
 object VexAdapter extends CoreAdapter {
   override def freshInstancePerRun = true
+  override def supportsSimThreads = true
   type Model = SimCompiled[VexTop]
   override def irqInputMask: BigInt = 0x888
   def core = "vexriscv"
@@ -52,6 +53,9 @@ object VexAdapter extends CoreAdapter {
     job.socMap.foreach(m => require(m.regions.forall(r => !r.cacheable && r.base + r.size <= (BigInt(1) << 32)) && m.interrupts.isEmpty, "VexRiscv requires uncached 32-bit regions and device-owned routes"))
     val devices = job.socMap.map(new LiveDevices(_))
     devices.foreach(d => require((d.interruptMask & ~irqInputMask) == 0, "unsupported device interrupt pin"))
+    val initialDeviceState = devices.map { d =>
+      ElfFile.sha256(d.snapshot().render().getBytes("UTF-8"))
+    }
     val memory = mutable.LongMap.empty[Int]
     def inRam(a: Long, n: Long, permission: Char = 'r'): Boolean = job.socMap match {
       case Some(m) => m.region(BigInt(a), BigInt(n), permission).exists(_.kind == "ram")
@@ -265,6 +269,8 @@ object VexAdapter extends CoreAdapter {
       ujson.Obj("wave_time_per_cycle" -> 10, "wave_time_of_cycle_1" -> RvwJson.num(waveStart),
         "wave_window" -> ujson.Obj("from" -> job.waveFrom.map(v => ujson.Num(v.toDouble)).getOrElse(ujson.Null), "to" -> job.waveTo.map(v => ujson.Num(v.toDouble)).getOrElse(ujson.Null)),
         "traps" -> RvwJson.num(traps), "rvfi_records" -> RvwJson.num(retired), "tohost" -> Hex(tohost.value),
+        "device_reset" -> "fresh-instance-per-request",
+        "initial_device_state_sha256" -> initialDeviceState.map(ujson.Str).getOrElse(ujson.Null),
         "device_output" -> devices.map(_.outputs).getOrElse(ujson.Obj()), "rvfi_monitor" -> false, "memory_bytes" -> job.socMap.map(m => ujson.Str(m.regions.map(_.size).sum.toString)).getOrElse(ujson.Num(16777216)), "roi_markers" -> markers), metrics)
   }
 }
