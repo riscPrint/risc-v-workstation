@@ -210,6 +210,48 @@ traps. It handles conditional branches and indirect jumps, including compressed
 forms. It rejects unknown instructions, trap returns, traps and other privilege
 modes. It does not turn retirement data into DUT encoder evidence.
 
+## E-Trace flow with traps, loss and filters
+
+`rvw debug etrace-check` builds the expected stream from C2 with the pinned
+reference encoder. It then checks an encoder capture (#168):
+
+```sh
+rvw debug etrace-check --reference /tmp/etrace-reference --rvfi run/rvfi.jsonl \
+  --static-config enc.scf --user-config dec.ucf --toolchain /path/to/toolchain \
+  --packets capture.te_inst_raw [--filter filter.toml] [--loss-at N] --out /tmp/etrace
+```
+
+- Ingress covers exceptions, interrupts, trap returns and privilege changes. A
+  C2 trap row needs its trap event cause. An exception is an exception-only entry
+  at the trapping pc (the instruction does not retire). An interrupt is an
+  exception-only entry at the interrupted pc. xRET is reported as itype 6,
+  because the pinned baseline encoder treats only itype 6 as an uninferable
+  discontinuity with `itype_width_p=3`, and its decoder treats xRET as uninferable.
+- `packets` compares the capture with the reference stream field by field. A packet
+  difference can leave the flow equal; for example, the outcome of a branch just
+  before an exception is never observed. The flow verdict comes from decoding.
+- Decoding splits the stream at known gaps (`--loss-at`) and at trace-lost support
+  packets (qual_status 2) (#172). After a gap, packets are skipped until a sync
+  start (format 3, subformat 0). Each segment gets the stream's support packet
+  first, and a trace-ended support packet if a gap cut it. The decoder reports
+  nothing after the last packet of a segment. Each decoded segment must match C2
+  in order. Lost spans are `unknown` windows, never observed execution.
+- `--filter` (TOML: `privileges`, `ranges`, `exclude`, `start`, `stop`) selects
+  the qualified instructions (#195). The expected stream is one reference encode
+  per qualified window. A decoded pc or a sync address from unqualified execution
+  gives `leak`.
+
+Status: `flow_match` (exit 0), `mismatch` or `leak` (exit 1), `partial_match`
+(every observed window matches, some windows are unknown; exit 3), `no_checks`
+without `--packets` (exit 3), `inconclusive` (exit 3). The command writes
+`result.json` and `expected.te_inst`.
+
+`rvw debug etrace-loss` damages the reference stream (or `--packets`) with each
+fault: `drop`, `overflow` (a trace-lost support packet), `wrap` (a circular buffer
+lost the start) and `truncate`, at sampled positions (`--at`). A test passes when
+every observed window matches C2 and the lost span is reported as unknown. Results
+are C3 (`etrace-loss`). Resynchronization at trap syncs (subformat 1) is not used.
+
 ## Native validation
 
 ```sh
@@ -240,7 +282,9 @@ Open items:
 - #144: virtualization (vs/vu with H), textra/tdata3, size matching and NMI itrigger are not tested.
 - #153: abstract FPR access and relaxedpriv are not tested.
 - #156: concurrent-traffic ordering beyond visibility is not tested.
-- #168, #172, #194: see the E-Trace section and the trace modules.
+- #168: context changes (no C2 context field) and options beyond the baseline encoder are not tested.
+- #172: recovery at trap syncs and DUT overflow markers other than qual_status 2 are not used.
+- #195: authentication controls and encoder-side trigger inputs are not modelled.
 
 ## Decisions and sources
 

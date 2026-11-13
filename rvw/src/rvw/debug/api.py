@@ -59,3 +59,53 @@ def interop_run(out, elf, port=None, profile=None, reset_pc=None, idcode=None, o
     prof = profiles.load(profile) if profile else None
     return interop.run(port=port, profile=prof, elf=elf, openocd=openocd, gdb=gdb, out=out, timeout=timeout,
                        reset_pc=reset_pc, idcode=idcode)
+
+
+def _filter(path):
+    if not path:
+        return None
+    import tomllib
+    raw = tomllib.loads(Path(path).read_text())
+    unknown = set(raw) - {'privileges', 'ranges', 'exclude', 'start', 'stop'}
+    if unknown:
+        raise ValueError(f'unknown trace filter keys: {", ".join(sorted(unknown))}')
+    return raw
+
+
+def etrace_check(out, reference, rvfi, static_config, user_config, toolchain, packets=None, filter_path=None,
+                 losses=()):
+    import json
+    from . import etrace_flow
+    out = Path(out)
+    out.mkdir(parents=True, exist_ok=True)
+    result, expected = etrace_flow.check(reference, rvfi, static_config, user_config, toolchain=toolchain,
+                                         packets=packets, filter_spec=_filter(filter_path), losses=losses)
+    if expected:
+        etrace_flow.write_packets(expected, out / 'expected.te_inst')
+    (out / 'result.json').write_text(json.dumps(result, indent=2) + '\n')
+    result['result'] = str(out / 'result.json')
+    return result
+
+
+def etrace_loss(out, reference, rvfi, static_config, user_config, toolchain, packets=None, positions=None):
+    from . import etrace_flow, suite
+    tests = etrace_flow.loss_campaign(reference, rvfi, static_config, user_config, toolchain=toolchain,
+                                      packets=packets, positions=positions)
+    return _write_tests(out, tests, suite_name='etrace-loss', core=str(packets or 'reference-encoder'),
+                        config='e-trace-baseline')
+
+
+def _write_tests(out, tests, *, suite_name, core, config, extra=None):
+    import datetime
+    import json
+    from . import suite
+    created = datetime.datetime.now(datetime.timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
+    results = {'schema': 'rvw.results/1', 'run_id': f'{created.replace(":", "-")}-{suite_name}',
+               'suite': suite_name, 'core': core, 'config': config, 'created': created, 'source': {},
+               'tests': tests, **(extra or {})}
+    out = Path(out)
+    out.mkdir(parents=True, exist_ok=True)
+    (out / 'results.json').write_text(json.dumps(results, indent=2) + '\n')
+    status, code = suite.verdict(results)
+    return {'status': status, 'exit': code, 'results': str(out / 'results.json'),
+            'counts': {s: sum(t['status'] == s for t in tests) for s in {t['status'] for t in tests}}}

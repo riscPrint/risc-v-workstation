@@ -633,6 +633,18 @@ exercise its rule has status `error`, signature `inconclusive` and an
 `suite: "jtag-dtm"`. Exit codes: 0 all pass, 1 any fail, 3 inconclusive or no
 checks.
 
+### E-Trace flow results
+
+`rvw debug etrace-check` writes `result.json` with `status` (`flow_match`,
+`partial_match`, `mismatch`, `leak`, `no_checks`, `inconclusive`), `scope`,
+`decoder_rev`, `retired`, `qualified`, `expected_packets`, `rvfi_sha256`,
+`complete`, and with a capture also `packets_sha256`, `packets` (field
+comparison), `windows` (each `observed`, `unknown` or `mismatch` with `start`
+and `count` in C2 retirement order), `losses` and `skipped_packets`. A `leak`
+result lists `leaked_pcs` and `leaked_addresses`. `partial_match` is not a
+match of the whole run. `rvw debug etrace-loss` writes C3 with
+`suite: "etrace-loss"`; each test records `windows` and `unknown_instructions`.
+
 ### Optional multi-hart extension (C1 and C2)
 
 C1 stays `rvw.run/1`. An adapter can opt in with `details.multihart`.
