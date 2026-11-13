@@ -1,0 +1,126 @@
+{
+  "schema": "rvw.nax-isa-negative/1",
+  "core_revision": "9f452d50560d02fb391bc8039f5453c54e0911af",
+  "program": "rv32ui-p-add",
+  "seed": 1,
+  "plant": "RVW_NAX_PLANT=alu",
+  "elf_sha256": "6f47785fae57fb603483a0728acdc422df0b058e7593d81960b89055d3a1c5c2",
+  "rtl_sha256": "c41638e790ad8dad314dcd06d5a50f8fe0b5e6cbe85ba13cd9b9102ef6b122f6",
+  "source_trace_sha256": "e9aadc8e746be461fc86426d3f8247309583324b463ce03075c79dc8106ba13e",
+  "source_trace_end": {
+    "status": "assert",
+    "cycle": 381
+  },
+  "comparison": {
+    "status": "mismatch",
+    "matched_prefix_instructions": 1,
+    "stopped_at_first_mismatch": true,
+    "mismatch": {
+      "instruction_index": 1,
+      "order": 1,
+      "cycle": 107,
+      "pc": "0x80000050",
+      "disassembly": "li      ra, 0",
+      "differences": {
+        "rd_wdata": {
+          "expected": "0x0",
+          "actual": "0x1"
+        }
+      },
+      "actual": {
+        "order": 1,
+        "cycle": 107,
+        "pc": "0x80000050",
+        "pc_next": "0x80000054",
+        "insn": "0x93",
+        "mode": 3,
+        "trap": false,
+        "intr": false,
+        "halt": false,
+        "rs1": 0,
+        "rs1_rdata": "0x0",
+        "rs2": 0,
+        "rs2_rdata": "0x0",
+        "rd": 1,
+        "rd_wdata": "0x1",
+        "mem_addr": "0x0",
+        "mem_rmask": 0,
+        "mem_wmask": 0,
+        "mem_rdata": "0x0",
+        "mem_wdata": "0x0",
+        "mem_fault": false,
+        "csr_state": {}
+      },
+      "expected": {
+        "pc": "0x80000050",
+        "pc_next": "0x80000054",
+        "insn": "0x93",
+        "mode": 3,
+        "rd": 1,
+        "rd_wdata": "0x0",
+        "mem_addr": "0x0",
+        "mem_rmask": 0,
+        "mem_wmask": 0,
+        "mem_rdata": "0x0",
+        "mem_wdata": "0x0",
+        "trap": 0,
+        "intr": 0,
+        "cause": "0x0",
+        "tval": "0x0",
+        "mem_fault": 0,
+        "halted": 0,
+        "fd_valid": 0,
+        "fd": 0,
+        "fd_wdata": "0x0",
+        "fflags": "0x0",
+        "fcsr": "0x0",
+        "disasm": "li      ra, 0",
+        "debug": {
+          "mode": false,
+          "dpc": "0x0",
+          "dcsr": "0x40000000",
+          "step": false
+        }
+      },
+      "last_matching": [
+        {
+          "order": 0,
+          "cycle": 86,
+          "pc": "0x80000000",
+          "insn": "0x500006f",
+          "disassembly": "j       pc + 0x50"
+        }
+      ],
+      "register_diff": [
+        {
+          "reg": "x1",
+          "expected": "0x0",
+          "actual": "0x1"
+        }
+      ]
+    },
+    "applied_masks": [],
+    "synchronized": 0
+  },
+  "golden": {
+    "status": "match",
+    "instructions": 501,
+    "trap_events": 3
+  },
+  "limits": [
+    "The comparison stops at the first mismatch; it is not a complete mutant-trace match.",
+    "This is one planted integer ALU error on one ISA test."
+  ],
+  "attempts": [
+    {
+      "stage": "core_compile",
+      "status": "error",
+      "reason": "Initial mutation used an unresolved Stageable in a Scala if expression; the corrected mutation reads stage(ALU_RESULT)."
+    },
+    {
+      "stage": "cosim",
+      "status": "error",
+      "reason": "A stale Spike shim was refused. The current shim was rebuilt before the recorded comparisons."
+    }
+  ]
+}
