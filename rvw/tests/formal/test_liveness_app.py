@@ -35,3 +35,13 @@ def test_native_fair_response(tmp_path):
         out = tmp_path/name
         run(Namespace(manifest=str(tmp_path/'plan.json'), out=str(out), depth=12, engine='abc:pdr', timeout=20, mode='prove', json=False))
         assert json.loads((out/'result.json').read_text())['status'] == expected
+    # A unit that hangs busy: fairness on its own output excludes the hung loop.
+    (tmp_path/'top.sv').write_text('module top(input clk, reset, req, ready, output reg ack, output busy); reg stuck;\n'
+        'always @(posedge clk) if (reset) begin stuck<=0; ack<=0; end else begin ack<=0; if (req) stuck<=1; end\n'
+        'assign busy = stuck; endmodule')
+    for fair, expected in (['!busy'], 'inconclusive'), (['ready'], 'fail'):
+        (tmp_path/'plan.json').write_text(json.dumps(dict(plan, fairness=fair)))
+        out = tmp_path/('hang-'+fair[0].strip('!'))
+        code = run(Namespace(manifest=str(tmp_path/'plan.json'), out=str(out), depth=12, engine='abc:pdr', timeout=20, mode='prove', json=False))
+        result = json.loads((out/'result.json').read_text())
+        assert (result['status'], code) == (expected, 3 if expected == 'inconclusive' else 1), result

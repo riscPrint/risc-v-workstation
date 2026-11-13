@@ -106,11 +106,21 @@ def run(args):
     instrumented = out / 'l2s.sv'; instrumented.write_text(source)
     result = apps.flow([instrumented], top, clock, reset, out / 'proof', args.depth,
                        args.engine, args.timeout, args.mode)
-    report = {'schema': 'rvw.liveness-app-result/1', 'status': result['status'],
+    # Fairness on DUT outputs or internal state, or under source assumptions, can exclude the
+    # hung loop itself (a unit stuck busy with fairness `!busy`). Keep such a pass inconclusive.
+    inputs = {n for n, p in ports.items() if p['direction'] == 'input'} - {clock, reset}
+    unchecked = [f for f in fairness if not set(re.findall(r'[A-Za-z_][A-Za-z0-9_]*', f)) or
+                 not set(re.findall(r'[A-Za-z_][A-Za-z0-9_]*', f)) <= inputs]
+    assumed = any(c['type'] == '$assume' or (c['type'] == '$check' and c.get('parameters', {}).get('FLAVOR') == 'assume')
+                  for c in module['cells'].values())
+    feasibility = 'not_checked' if unchecked or (fairness and assumed) else 'free_inputs' if fairness else 'no_fairness'
+    if result['status'] == 'pass' and feasibility == 'not_checked':
+        result = dict(result, status='inconclusive', proof_kind='none')
+    report = {'schema': 'rvw.liveness-app-result/1', 'status': result['status'], 'fairness_check': feasibility,
               'proof_kind': 'liveness_to_safety' if result['status'] == 'pass' and result['proof_kind'] != 'bounded' else ('bounded_lasso_search' if args.mode == 'bmc' else 'lasso_counterexample' if result['status'] == 'fail' else 'none'),
               'state_bits': len(bits), 'fairness': fairness, 'request': request, 'response': response,
               'result': 'proof/result.json', 'input_capture': capture.record(),
               'limits': 'Single synchronous finite-state RTL. Justice is conditional. A proof rules out fair infinite paths with an outstanding request and no response. Fairness feasibility is not established. A bounded pass cannot prove liveness. No existential CTL deadlock claim.'}
     common.write_json(out / 'result.json', report)
     print(json.dumps(report, indent=2) if args.json else report['status'])
-    return 0 if report['status'] == 'pass' else 1
+    return {'pass': 0, 'fail': 1}.get(report['status'], 3)
