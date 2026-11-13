@@ -63,7 +63,7 @@ def confine(arguments, schema, project, output=None):
             return value
         if not root:
             raise ToolError('remote path arguments require a bound project')
-        symbolic = spec.get('enum') or name in {'base', 'candidate', 'gold', 'model', 'platform', 'schema', 'policy', 'source', 'reference', 'task', 'formal', 'isa', 'features'}
+        symbolic = spec.get('enum') or name in {'base', 'candidate', 'gold', 'model', 'platform', 'schema', 'policy', 'source', 'reference', 'task', 'tasks', 'sbt_project', 'formal', 'isa', 'features'}
         path = Path(value).expanduser()
         resolved = (path if path.is_absolute() else root / path).resolve()
         if not any(resolved.is_relative_to(base) for base in roots):
