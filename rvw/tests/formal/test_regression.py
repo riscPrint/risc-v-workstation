@@ -89,3 +89,21 @@ def test_unsupported_is_recorded(tmp_path):
     assert regression.run(args) == 1
     data = json.loads((tmp_path / 'out/results.json').read_text())
     assert all(p['formal_status'] == 'unsupported' for p in data['tests'])
+
+
+@pytest.mark.parametrize('status', ['timeout', 'unknown'])
+def test_missing_model_keeps_unresolved_status(tmp_path, monkeypatch, status):
+    directory = tmp_path / 'prop'
+    directory.mkdir()
+    job = directory / 'job.sby'
+    job.write_text('')
+    class Tools:
+        env = {}
+        def command(self, argv):
+            return argv
+        def verify(self):
+            pass
+    monkeypatch.setattr(regression, 'execute', lambda *a, **kw: (124, .1))
+    monkeypatch.setattr(regression.common, 'final_status', lambda *a: status)
+    result = regression.observe({'id': 'prop', 'top': 'm'}, directory, job, 'bmc', Tools(), 1, 8)
+    assert result['formal_status'] == status
