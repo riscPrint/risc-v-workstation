@@ -30,6 +30,7 @@ def execute(manifest, adapter, out, suite='isa', timeout=600):
         process = run_group([*adapter, 'run-many', '--persistent', '--jobs', '1', '--manifest', str(local), '--json'],
                             timeout=timeout, stdout=log, stderr=log, grace=20)
     tests, errors, source, core, config = [], [], None, None, None
+    identity_issues = set()
     for original, row in zip(rows, captured):
         try:
             run = load_run(row['out'])
@@ -42,12 +43,16 @@ def execute(manifest, adapter, out, suite='isa', timeout=600):
             if source is not None and (run.source != source or run.core != core or run.config != config):
                 raise ValueError('mixed source, core or configuration in shard')
             source, core, config = run.source, run.core, run.config
+            from .gate_intake import native_identity_issue
+            issue = native_identity_issue(run)
+            if issue:
+                identity_issues.add(issue)
             extra = dict(run.extra)
             extra.update(elf_sha256=run.elf_sha256, tools=run.tools,
-                         options={**run.extra.get('options', {}),
-                                  **{k: v for k, v in row.items() if k not in ('id', 'elf', 'out')},
+                         native_options=run.extra.get('options', {}),
+                         options={**{k: v for k, v in row.items() if k not in ('id', 'elf', 'out', 'config', 'seed')},
                                   'max_cycles': run.max_cycles, 'mem_latency': run.mem_latency},
-                         kind='elf')
+                         kind='elf-dir')
             if run.message:
                 extra.update(message=run.message, message_complete=True)
             if run.fail_code is not None:
@@ -60,6 +65,9 @@ def execute(manifest, adapter, out, suite='isa', timeout=600):
         except (OSError, ValueError) as error:
             errors.append(dict(test=original.get('id', Path(original['elf']).name), error=str(error)))
     if tests:
+        source = dict(source)
+        if identity_issues:
+            source.update(identity_complete=False, identity_incomplete_reasons=sorted(identity_issues))
         results = SuiteResults(out.name, suite, core, config, datetime.now(timezone.utc).isoformat(),
                                source=source, tests=tests)
         write_json(out / 'results.json', results.to_dict())

@@ -16,7 +16,7 @@ const byId=id=>document.getElementById(id);
 async function get(path){let r=await fetch(path,{headers:{Authorization:'Bearer '+byId('token').value}});if(!r.ok)throw Error(await r.text());return r.json()}
 function table(target,heads,rows){target.replaceChildren();let t=document.createElement('table');for(let row of [heads,...rows]){let tr=t.insertRow();for(let text of row)tr.insertCell().textContent=text}target.append(t)}
 byId('refresh').onclick=async()=>{try{let d=await get('/snapshot');
-table(byId('runs'),['Run','State','Tests','Passes','Evidence'],d.runs.map(r=>[r.id,r.state,r.tests,r.passes,r.evidence]));
+table(byId('runs'),['Run','State','Tests','Passes','C3 evidence','Recorded gate'],d.runs.map(r=>[r.id,r.state,r.tests,r.passes,r.evidence,r.recorded_gate||'not recorded']));
 let chart=byId('chart');chart.replaceChildren();let prev=null;d.trends.forEach((r,i)=>{if(r.pass_rate===null){prev=null;return}let x=10+i*980/Math.max(1,d.trends.length-1),y=90-r.pass_rate*80;
 if(prev){let l=document.createElementNS('http://www.w3.org/2000/svg','line');for(let [k,v]of Object.entries({x1:prev[0],y1:prev[1],x2:x,y2:y,stroke:'steelblue'}))l.setAttribute(k,v);chart.append(l)}
 let c=document.createElementNS('http://www.w3.org/2000/svg','circle');c.setAttribute('cx',x);c.setAttribute('cy',y);c.setAttribute('r',3);chart.append(c);prev=[x,y]});

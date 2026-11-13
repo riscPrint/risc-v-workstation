@@ -33,6 +33,10 @@ def test_persistent_shard_records_validated_c3(tmp_path):
     assert result.tests[0].id == 'program'
     assert result.tests[0].run == 'cells/0'
     assert result.tests[0].conclusive
+    assert result.tests[0].extra['kind'] == 'elf-dir'
+    assert 'config' not in result.tests[0].extra['options']
+    assert 'seed' not in result.tests[0].extra['options']
+    assert result.source['identity_complete'] is False
 
 
 @pytest.mark.parametrize('mutation', ["d['seed']=2", "d['execution_mode']='process'", "d['inconclusive']='missing capture'"])

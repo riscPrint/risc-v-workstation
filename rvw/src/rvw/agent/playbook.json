@@ -1240,6 +1240,7 @@
         "farm_classify",
         "farm_dashboard",
         "farm_live",
+        "farm_gate",
         "farm_notifications",
         "farm_observe",
         "farm_plan",

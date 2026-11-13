@@ -186,6 +186,15 @@ class Queue:
                     attempt['status'] = status
             except (ValueError, OSError) as exc:
                 attempt['evidence_error'] = str(exc)
+        if (attempt_dir / 'verdict.json').is_file():
+            from rvw.results import load_verdict
+            import hashlib
+            try:
+                verdict = load_verdict(attempt_dir / 'verdict.json')
+                attempt.update(gate_verdict=verdict.verdict,
+                    gate_sha256=hashlib.sha256((attempt_dir / 'verdict.json').read_bytes()).hexdigest())
+            except (ValueError, OSError) as exc:
+                attempt['gate_error'] = str(exc)
         retry_on = job['metadata'].get('retry_on', ['error', 'timeout', 'infrastructure_error'])
         state = 'queued' if status in retry_on and len(job['attempts']) <= job['retries'] else status
         observed_failure = any(a.get('dut_status') not in (None, 'pass') and not a.get('inconclusive') for a in job['attempts'])

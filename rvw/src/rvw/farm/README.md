@@ -477,3 +477,27 @@ keep unit costs null. Per-C4 groups show only charges of attempts that own that
 report. Scope totals can also include upstream simulation jobs. Caller rate
 units are not an external provider bill. Budget exhaustion never creates a
 verdict or removes a recorded DUT failure.
+
+## Native farm gate intake
+
+`rvw farm gate --base BASE --candidate CAND --project rvw.toml --tier TIER
+--rvfi-trace --out verdict.json` checks native C1/C3 identity and invokes the
+existing `rvw regress gate` engine. MCP exposes `farm_gate`. Core and harness
+must be clean committed revisions. Every cell needs ELF, RTL and captured
+native-build hashes. C1/C3 source, outcome, requested options and tools must
+agree. Missing or incomplete identities refuse intake. C3 source identity is
+marked incomplete when a native shard lacks these fields. Program outcomes
+remain recorded. Incomplete identities cannot earn C4 accept.
+
+Native model-build options remain in C3 `native_options`. C3 `options` holds
+requested execution options. Config and seed use their existing C3 fields.
+The gate's exact plan check remains unchanged. `rvw regress gate --out FILE`
+also selects an explicit verdict destination through CLI and MCP.
+
+For queue commands, use `python -m rvw.farm.gate_job` with the same arguments
+and `--out {attempt_dir}` as a directory. It writes `verdict.json` and
+`rvw.farm-gate/1` collection metadata. Exit zero means a C4 report was collected,
+including reject or inconclusive. The public gate CLI retains C4 exit codes.
+Queue attempts retain the recorded C4 value and hash. Live history shows that
+value separately from execution completion and C3 pass counts. Mixed recorded
+verdicts remain mixed. No acceptance is inferred from queue completion.

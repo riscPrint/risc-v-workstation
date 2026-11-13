@@ -63,7 +63,7 @@ def mcp_tools():
                  "Use base_rev or base; candidate defaults to HEAD when clean. Dirty trees run but cannot accept: "
                  "C4 /2 reports tests separately and not_accepted_reason=uncommitted. Commit (a scratch branch is fine) and rerun; complete RTL identities reuse passing results. Returns a job; the runner takes the core lock.",
                  schema({**COMPARE, **RUN, **BUDGET, "tier": {**S, "default": "quick"}, "config": S,
-                         "base_rev": S, "base": S, "cand_rev": S, "cand": S}),
+                         "base_rev": S, "base": S, "cand_rev": S, "cand": S, "out": S}),
                  handler("rvw.regress.cli", "gate"), long=True, side_effects='long-running; launches project native adapter and revision builds; writes run artifacts and history under project output', native_tools=()),
         ToolSpec("regress_history", "Find stored runs and their status before comparing or resuming; filter core, revision prefix or tier.",
                  schema({**CORE, "rev": S, "tier": S, "limit": {**I, "default": 20, "minimum": 0}}),

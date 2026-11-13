@@ -1,0 +1,423 @@
+{
+  "schema": "rvw.native-gate-validation/1",
+  "tier": "farm_isa",
+  "config": "rv32im",
+  "seed": 1,
+  "max_cycles": 200000,
+  "mem_latency": 0,
+  "rvfi_trace": true,
+  "cases": {
+    "base": {
+      "tests": 49,
+      "counts": {
+        "pass": 49
+      },
+      "core_revision": "020dcda4c9f5b452ecf8e7ab886b22dad92b9a04",
+      "harness_revision": "f9a4a7dda7a9251ea19210c218946225969aec91",
+      "core_dirty": false,
+      "harness_dirty": false,
+      "c3_sha256": "0512fb9840d05a87f9265924e25037d7d7265945aabfe7934998e900368aad24",
+      "rtl_sha256": [
+        "2e7f56ce66c1847819d80dac8a5ee35986f727c11f91c42c2d69d7ced06eaba7"
+      ],
+      "native_build_sha256": [
+        "e6b7f9f5c40a32422723676cddd0e9621a641864abd9353cb4b68a397ac96c39"
+      ],
+      "intake_sha256": "c9c1931412d6113b5660e52c957fd81d6def2cdfae3f47af11eb038f5e66f21a"
+    },
+    "repeat": {
+      "tests": 49,
+      "counts": {
+        "pass": 49
+      },
+      "core_revision": "020dcda4c9f5b452ecf8e7ab886b22dad92b9a04",
+      "harness_revision": "f9a4a7dda7a9251ea19210c218946225969aec91",
+      "core_dirty": false,
+      "harness_dirty": false,
+      "c3_sha256": "6f144735c53e369a77c7f3edaea4131462669981d6c449a97a409918f64a17c8",
+      "rtl_sha256": [
+        "2e7f56ce66c1847819d80dac8a5ee35986f727c11f91c42c2d69d7ced06eaba7"
+      ],
+      "native_build_sha256": [
+        "e6b7f9f5c40a32422723676cddd0e9621a641864abd9353cb4b68a397ac96c39"
+      ],
+      "intake_sha256": "3db9b0c2dbb901585582225a9d751f22c2fe4824c52f0d35d1aecc7bcfa37bba"
+    },
+    "bad": {
+      "tests": 49,
+      "counts": {
+        "pass": 47,
+        "fail": 2
+      },
+      "core_revision": "87ff426aaf80cbec82a8a6f0d13c74fc73d6396f",
+      "harness_revision": "f9a4a7dda7a9251ea19210c218946225969aec91",
+      "core_dirty": false,
+      "harness_dirty": false,
+      "c3_sha256": "fbf4cb101f0025f13cdcab70c14a818860196e5fc3973f3e39522275bfaffcb9",
+      "rtl_sha256": [
+        "b46052150e2e3243376edb63375482864672c4999e87b618c2cf76b238c9cced"
+      ],
+      "native_build_sha256": [
+        "c25abb57b3b855b88c0a2389ec3d21e5c5085080d9daa7afa3f98d132b7d7087"
+      ],
+      "intake_sha256": "11da241172bb89c56dcf81e9bb65d08fff1fac47247abd4afd312ad1c72fe431"
+    },
+    "change": {
+      "tests": 49,
+      "counts": {
+        "pass": 49
+      },
+      "core_revision": "f386f103146a5f2146eb6ac87008e48e2226adbf",
+      "harness_revision": "f9a4a7dda7a9251ea19210c218946225969aec91",
+      "core_dirty": false,
+      "harness_dirty": false,
+      "c3_sha256": "fa0c388195412a3f044789cb5bd1b1b0141019ba296ad7576c4047985412b4bf",
+      "rtl_sha256": [
+        "2db73e4f040383b46e664727e73d3c030f08a19df3382638b12fb0d4e0042c2f"
+      ],
+      "native_build_sha256": [
+        "1da3e84e3ca596441b16f1251b6ddd16589a00bb03aa9db100a202d0fe47c8af"
+      ],
+      "intake_sha256": "95bcb58347a7d351622b56013e9910519faec9d03c624398493db75b44a45b30"
+    }
+  },
+  "elf_corpus_sha256": "4c05c1155dfd21ec6f062f7e9ec97715c868c031a43a8995e1e2bf226bdc2d27",
+  "input_cells": [
+    {
+      "test": "rv32ui-p-add",
+      "seed": 1,
+      "elf_sha256": "8c996366174aac22d2b5db1404cedae3c1833b4662baa2bd38a62491c0057b51"
+    },
+    {
+      "test": "rv32ui-p-addi",
+      "seed": 1,
+      "elf_sha256": "67f33db20cffc959fb422b5876187cc20b340c5c9adfe5e61211f733c1228c5e"
+    },
+    {
+      "test": "rv32ui-p-and",
+      "seed": 1,
+      "elf_sha256": "303e3f062fb57465006c7840822f9c7ab9ec3dcaabef2301b534f3a3fce31c11"
+    },
+    {
+      "test": "rv32ui-p-andi",
+      "seed": 1,
+      "elf_sha256": "ba0be954b55c7468dead581aefcf0a1d1dd9c88ffedd8659cc502541f9313dde"
+    },
+    {
+      "test": "rv32ui-p-auipc",
+      "seed": 1,
+      "elf_sha256": "3dfb2c53fe186e51ee502f85667bcd70a528a1eb2f62cd7c9ac03eb087f7b43e"
+    },
+    {
+      "test": "rv32ui-p-beq",
+      "seed": 1,
+      "elf_sha256": "b311e07111cbbfe75610bf943ff13591d868b2e13b13eb333796b6f92c2f067b"
+    },
+    {
+      "test": "rv32ui-p-bge",
+      "seed": 1,
+      "elf_sha256": "2efb6c65e8c2f7d2cbd5895893c1efd356c39b65a90dee7a66615d5c94cdc71c"
+    },
+    {
+      "test": "rv32ui-p-bgeu",
+      "seed": 1,
+      "elf_sha256": "1562b3d012a728bc461f8bdf607f5afe78f4977cf4f26e60a95c9bc363585e08"
+    },
+    {
+      "test": "rv32ui-p-blt",
+      "seed": 1,
+      "elf_sha256": "d225dadd5ff079a0a61de5e54d416bc167d6e1a606f91ecb41ac69367f7d4f1e"
+    },
+    {
+      "test": "rv32ui-p-bltu",
+      "seed": 1,
+      "elf_sha256": "5156fd78bb6dfedbfaf9c4e88ac7a088261f00cf2cf0d700d51b8243e80c59a4"
+    },
+    {
+      "test": "rv32ui-p-bne",
+      "seed": 1,
+      "elf_sha256": "f6086e2b8bae63dcdc364bffc899e2905873807fec0c2470e363fde7f3421826"
+    },
+    {
+      "test": "rv32ui-p-fence_i",
+      "seed": 1,
+      "elf_sha256": "82e3b3bc874cfafb8638ba60cff9695e21cc1e7b21a3b3b028aa532898fdc7b1"
+    },
+    {
+      "test": "rv32ui-p-jal",
+      "seed": 1,
+      "elf_sha256": "ee3fcc2263b671b5bbe2c42ca55d934a5c580bf887ee006224771f8c7ee81ef6"
+    },
+    {
+      "test": "rv32ui-p-jalr",
+      "seed": 1,
+      "elf_sha256": "af24d8af60ee2dc04663468b21037fccca4d6d87cf8cdf670b0c9805b1a7a0aa"
+    },
+    {
+      "test": "rv32ui-p-lb",
+      "seed": 1,
+      "elf_sha256": "6c0b09f151e1fb7da8f0792de0639e123a9dac11a711eb767eac16ad06b393c5"
+    },
+    {
+      "test": "rv32ui-p-lbu",
+      "seed": 1,
+      "elf_sha256": "9d6546aa9578f300ddd406b6f8dcb95c8467480def7e7b883903d2d021faaded"
+    },
+    {
+      "test": "rv32ui-p-ld_st",
+      "seed": 1,
+      "elf_sha256": "c3a2ac5a0352fe404b2fd19179af7b8df840f9745068643f4c6a4870f8a68d85"
+    },
+    {
+      "test": "rv32ui-p-lh",
+      "seed": 1,
+      "elf_sha256": "892c384b1547b00f21c3bd0c63612a20a63378f30168a3802e5a3413f0457a6e"
+    },
+    {
+      "test": "rv32ui-p-lhu",
+      "seed": 1,
+      "elf_sha256": "f63b859acc90566913a281cc819975a45b463c685a047bc35b012a2824c60f85"
+    },
+    {
+      "test": "rv32ui-p-lui",
+      "seed": 1,
+      "elf_sha256": "dd2fd479050342853d177b6b521050d0c3d83164c9b06b2cb86bf7fc4b60ddcd"
+    },
+    {
+      "test": "rv32ui-p-lw",
+      "seed": 1,
+      "elf_sha256": "6f15b597cc7a2dfc0a723aaedd1a8d33f3851ef98e685b7dd4d60f91acf120d9"
+    },
+    {
+      "test": "rv32ui-p-or",
+      "seed": 1,
+      "elf_sha256": "7e789bbd7ca9e3c066364c5464983b6ec182521602b9676a7b8285f1e5e14c4c"
+    },
+    {
+      "test": "rv32ui-p-ori",
+      "seed": 1,
+      "elf_sha256": "92c1ca898668f26d64036e36142aa79a72449616b237ef023195b34a3091216d"
+    },
+    {
+      "test": "rv32ui-p-sb",
+      "seed": 1,
+      "elf_sha256": "bf12d8c1d249145b1d07f85f0c0b7260f03a26ebf5e99946f3dfe7cb182a4833"
+    },
+    {
+      "test": "rv32ui-p-sh",
+      "seed": 1,
+      "elf_sha256": "df6894cb2154edf9b787fdcbd8cf0dff54ca3fff2ad82148a3d0a8a84170f109"
+    },
+    {
+      "test": "rv32ui-p-simple",
+      "seed": 1,
+      "elf_sha256": "efd429016d74bd8a270e33ef0c696b500b8f8edfe7e6ccf0a80be1b3d5c3ff9d"
+    },
+    {
+      "test": "rv32ui-p-sll",
+      "seed": 1,
+      "elf_sha256": "14866c0465de8ba72a1c10ac17da0f18a42864419fea6701da153fa8aa184984"
+    },
+    {
+      "test": "rv32ui-p-slli",
+      "seed": 1,
+      "elf_sha256": "0c43ddb5fb0f5bf55625a21966fa73f6e6f848f8bcdee985a30000c37598e58a"
+    },
+    {
+      "test": "rv32ui-p-slt",
+      "seed": 1,
+      "elf_sha256": "0f17425335f8aac9fe0b88f48ae841a8d8355a2e4d44a4b77d2cfb1dbf929ab5"
+    },
+    {
+      "test": "rv32ui-p-slti",
+      "seed": 1,
+      "elf_sha256": "99d817db1e40a48a1992ede8cbf8501145c13ae2065645124d379044e3506d24"
+    },
+    {
+      "test": "rv32ui-p-sltiu",
+      "seed": 1,
+      "elf_sha256": "b11aca3bd12d648540f66b965807d6ff7ca55e462956b9f7d308f114aaf9f99c"
+    },
+    {
+      "test": "rv32ui-p-sltu",
+      "seed": 1,
+      "elf_sha256": "db0630b598ab30222e5c07b137d5d98c259be27e9a0d79cec8f83b087df4e971"
+    },
+    {
+      "test": "rv32ui-p-sra",
+      "seed": 1,
+      "elf_sha256": "25938a2096f78d2ade40a89ffe8fbc4830c8b226d8d31ec5131ed3ec51315ec3"
+    },
+    {
+      "test": "rv32ui-p-srai",
+      "seed": 1,
+      "elf_sha256": "49044d724c607293118a2ecc06d898a4e9964b02aae613dd4d3432249934248c"
+    },
+    {
+      "test": "rv32ui-p-srl",
+      "seed": 1,
+      "elf_sha256": "d2719e51bdd79d9f558fd050cf4f01e1312f2cd638e98f2d3f064f3632af7758"
+    },
+    {
+      "test": "rv32ui-p-srli",
+      "seed": 1,
+      "elf_sha256": "5ed49f255b0c8b319bd1596ccbdfec58bc99bca4d75a8a4c85fe1d75fc3a9628"
+    },
+    {
+      "test": "rv32ui-p-st_ld",
+      "seed": 1,
+      "elf_sha256": "de8d48ead52f9011964a369a7bf2f1c32568215ae3e2f2990fff820407b34131"
+    },
+    {
+      "test": "rv32ui-p-sub",
+      "seed": 1,
+      "elf_sha256": "034515610b3cecf57b57125e516ceb6e0ca8bd3da1910b681e409b2226fb2b71"
+    },
+    {
+      "test": "rv32ui-p-sw",
+      "seed": 1,
+      "elf_sha256": "56935b7f8ae4a5f4b189d5425b4d0067fb0dea46ebe520574d54dfd02709c9f5"
+    },
+    {
+      "test": "rv32ui-p-xor",
+      "seed": 1,
+      "elf_sha256": "f7c624a94977130fd108bda828615f7b8fe87ce360a9ae3b4788a4a06b0022b1"
+    },
+    {
+      "test": "rv32ui-p-xori",
+      "seed": 1,
+      "elf_sha256": "0ad7fa3227208461b87f29ea6bc298d9078b6bc6d13bc95b26e6d410554c62c3"
+    },
+    {
+      "test": "rv32um-p-div",
+      "seed": 1,
+      "elf_sha256": "187b8511786bed5c68856dffd55571a2945d6e766e7bf60a81566a408ea17205"
+    },
+    {
+      "test": "rv32um-p-divu",
+      "seed": 1,
+      "elf_sha256": "264d388f3a44d123f2c4c57d64bdfd5dccc360590f77d14ace5ce7d139d42489"
+    },
+    {
+      "test": "rv32um-p-mul",
+      "seed": 1,
+      "elf_sha256": "a9debf1236b2378613f9d6b8c18adc0a494891ed90d149892f9a2cfc858526db"
+    },
+    {
+      "test": "rv32um-p-mulh",
+      "seed": 1,
+      "elf_sha256": "9676bb3287a71112bb91e050b9787a7b3cca11166ecdca47983329a7f6e761d6"
+    },
+    {
+      "test": "rv32um-p-mulhsu",
+      "seed": 1,
+      "elf_sha256": "cc7c5ccd38361c01f8b9413262deadb4f02cc3f52ef07a9502db49ca01b147b8"
+    },
+    {
+      "test": "rv32um-p-mulhu",
+      "seed": 1,
+      "elf_sha256": "53f033826f4be91ebd8616bff78492e88a1daceda79f7018289faba9a61c0eb7"
+    },
+    {
+      "test": "rv32um-p-rem",
+      "seed": 1,
+      "elf_sha256": "c3ccd6ee74d15cb23c06c361901748dcd223adc83699134b2d7e8cd875ea988f"
+    },
+    {
+      "test": "rv32um-p-remu",
+      "seed": 1,
+      "elf_sha256": "89a6fb743482c0359dcf3e6bcef42db74f9e9460ac7c7e023cd7ec12d4cb24a6"
+    }
+  ],
+  "verdicts": {
+    "accept": {
+      "verdict": "accept",
+      "tests": "pass",
+      "compared": 49,
+      "new_failures": [],
+      "sha256": "9b635bd3458c6ff5fa01e65c219fa37d46db36c7169a28be734a586acca4c612",
+      "base_cells": 49,
+      "candidate_cells": 49,
+      "base_revision": "020dcda",
+      "candidate_revision": "f386f10"
+    },
+    "reject": {
+      "verdict": "reject",
+      "tests": "fail",
+      "compared": 49,
+      "new_failures": [
+        {
+          "suite": "isa",
+          "config": "rv32im",
+          "id": "rv32ui-p-xor",
+          "signature": "fail:2",
+          "status": "fail",
+          "seed": 1,
+          "run": "$CHECKOUT/rvw/out/farm-native/gates/queue/ced30852567949918f7d546be51a4255/attempt-1/cells/44",
+          "message": "tohost = 0x5",
+          "base": "pass"
+        },
+        {
+          "suite": "isa",
+          "config": "rv32im",
+          "id": "rv32ui-p-xori",
+          "signature": "fail:2",
+          "status": "fail",
+          "seed": 1,
+          "run": "$CHECKOUT/rvw/out/farm-native/gates/queue/ced30852567949918f7d546be51a4255/attempt-1/cells/20",
+          "message": "tohost = 0x5",
+          "base": "pass"
+        }
+      ],
+      "sha256": "31adcb87a8deb15e96c0c811709de2138e10d382f5dfbaa253d77043a9cffcf7",
+      "base_cells": 49,
+      "candidate_cells": 49,
+      "base_revision": "020dcda",
+      "candidate_revision": "87ff426"
+    },
+    "accept_repeat": {
+      "verdict": "accept",
+      "tests": "pass",
+      "compared": 49,
+      "new_failures": [],
+      "sha256": "9b487ab5ce760eca371bc7cbcbb1458a99043d85f550d13aed1d8054f430d4c4",
+      "base_cells": 49,
+      "candidate_cells": 49,
+      "base_revision": "020dcda",
+      "candidate_revision": "020dcda"
+    }
+  },
+  "regress_gate_cli": [
+    {
+      "case": "accept",
+      "exit_code": 0,
+      "compared": 49,
+      "verdict": "accept"
+    },
+    {
+      "case": "reject",
+      "exit_code": 1,
+      "compared": 49,
+      "verdict": "reject"
+    },
+    {
+      "case": "accept_change",
+      "exit_code": 0,
+      "compared": 49,
+      "verdict": "accept"
+    }
+  ],
+  "queue_jobs": 10,
+  "queue_wall_seconds": 479.7588839530945,
+  "declared_core_hours": 0.2665327133072747,
+  "rate_per_core_hour": 1.0,
+  "rate_units": "illustrative caller units; not provider bill",
+  "recorded_gate_reports": 3,
+  "cost_per_recorded_gate_report": 0.08884423776909156,
+  "cost_basis": "all ten queue attempts, including initial model-option formatting runs; excludes separate manual CLI checks",
+  "recorded_dut_outcomes": {
+    "pass": 339,
+    "fail": 4
+  },
+  "scope": "49 ISA self-checks on private committed fixtures; no whole-core, formal or fresh Spike qualification"
+}

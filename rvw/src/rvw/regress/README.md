@@ -1074,3 +1074,8 @@ the reference ELF remains unchanged. These results test the core-side hook.
 The live TestRIG transport, packet protocol and external TestRIG process are
 not implemented or qualified here. The public Scala `InstructionSource` API
 lets a later transport supply words to the same port driver.
+
+`regress gate --out FILE` writes its C4 verdict to an explicit path. The
+structured API and MCP `regress_gate` accept the same `out` argument. The
+default remains `verdict.json` beside the candidate. This permits a queue gate
+job to own its report without changing either input result directory.
