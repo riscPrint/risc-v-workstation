@@ -2,13 +2,15 @@
   "schema": "rvw.privilege/1",
   "kind": "aplic-msi",
   "spec_version": "AIA-1.0",
-  "spec_revision": "f24dd483d50e6a1448116dcf88b8b08e0863512c",
+  "spec_revision": "20318d1b03f0ac8253458b82f8244d0d0db074e9",
   "reference_backend": "python",
   "isa": "rv64im_zicsr_zifencei_smaia_ssaia",
   "aplic": {
-    "base": 218103808
+    "base": 218103808,
+    "poll_iterations": 1000
   },
   "imsic": {
-    "msi_address": 603979776
+    "msi_address": 603979776,
+    "identities": 63
   }
 }

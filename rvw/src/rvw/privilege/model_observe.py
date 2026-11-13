@@ -60,8 +60,9 @@ def _observe(elf,scenario,trace_path,c1_identity):
                 if virtual!=b['virtual']:return dict(status='fail',reason='wrong virtual mode at model instruction',symbol=b['symbol'])
             if row['rd']==0 or row['rd']!=((row['insn']>>7)&31):
                 return dict(status='fail',reason='model read destination differs',symbol=b['symbol'])
-            if b['kind']=='csr':
-                if row['insn']&0x7f!=0x73 or (row['insn']>>12)&7!=2 or (row['insn']>>15)&31 or row['insn']>>20!=number(b['csr']):
+            if b['kind'] in ('csr','csr-exchange'):
+                funct3=1 if b['kind']=='csr-exchange' else 2
+                if row['insn']&0x7f!=0x73 or (row['insn']>>12)&7!=funct3 or (row['insn']>>15)&31 or row['insn']>>20!=number(b['csr']):
                     return dict(status='inconclusive',reason='binding is not the expected CSR read',symbol=b['symbol'])
             elif b['kind']=='load':
                 if row['insn']&0x7f!=3 or row['mem_addr']!=number(b['address']) or row['mem_rmask'].bit_count()!=b['width'] or row['mem_wmask']:
@@ -95,7 +96,7 @@ def observe(elf,scenario,trace_path,c1_identity=None):
     sources=[]
     try:
         kind=scenario['reference_model']['kind']
-        module={'wfi-stop':'wfi_stop','ssstateen-access':'ssstateen','stateen-access':'state_hierarchy','reri-transactions':'reri_transactions','fast-preemption':'fast_preemption','fast-vector':'fast_vector'}.get(kind)
+        module={'imsic':'aia','aplic':'aia','aplic-msi':'aplic_gateway','wfi-stop':'wfi_stop','ssstateen-access':'ssstateen','stateen-access':'state_hierarchy','reri-transactions':'reri_transactions','fast-preemption':'fast_preemption','fast-vector':'fast_vector'}.get(kind)
         if module is None:raise ValueError('no bound observation model for this scenario')
         model=importlib.import_module('rvw.privilege.'+module);plan=scenario['reference_model']
         if scenario.get('spec_version')!=getattr(model,'VERSION',getattr(model,'FAST',None)):
@@ -112,6 +113,7 @@ def observe(elf,scenario,trace_path,c1_identity=None):
                  Path(importlib.import_module('rvw.cosim.elf').__file__),
                  Path(importlib.import_module('rvw.privilege.'+('reri' if kind=='reri-transactions' else 'controllers')).__file__)]
         if kind=='ssstateen-access':sources.append(Path(importlib.import_module('rvw.privilege.state_hierarchy').__file__))
+        if kind=='aplic-msi':sources.append(Path(importlib.import_module('rvw.privilege.aia').__file__))
         result=_observe(elf,scenario,trace_path,c1_identity)
     except (OSError,ValueError,KeyError,TypeError) as exc:
         result=dict(status='inconclusive',reason=str(exc))

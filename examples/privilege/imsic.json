@@ -3,8 +3,12 @@
   "kind": "imsic",
   "reference_backend": "python",
   "imsic": {
-    "msi_address": 603979776
+    "msi_address": 603979776,
+    "identities": 63,
+    "peer_identities": 63,
+    "poll_iterations": 1000
   },
   "spec_version": "AIA-1.0",
-  "isa": "rv64im_zicsr_zifencei_smaia_ssaia"
+  "isa": "rv64im_zicsr_zifencei_smaia_ssaia",
+  "spec_revision": "20318d1b03f0ac8253458b82f8244d0d0db074e9"
 }

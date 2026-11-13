@@ -347,3 +347,21 @@ hashes this artifact and requires its checks before model observation groups.
 Missing or early-return-only observations are inconclusive. Complete observed
 state, timing or retirement violations fail. These sampled protocol checks and
 named C2 observations do not establish full ISA or physical clock qualification.
+
+
+## AIA pending and claim observations
+
+AIA examples pin `spec_version = "AIA-1.0"` and document revision
+`20318d1b03f0ac8253458b82f8244d0d0db074e9` (20250312). The original 2023
+revision remains supported for the implemented subset. Other revisions are
+rejected. IMSIC `identities` and `peer_identities` declare the file sizes;
+`poll_iterations` sets an instruction bound for pending and IRQ waits. APLIC
+uses its own `poll_iterations`. All declared pending/enable banks are initialized.
+
+AIA rows use `reference_mode = "model-observations"`. Bindings check selected
+pending/IRQ bits, peer state, CSR claims and MMIO claims against Python models.
+`kind = "csr-exchange"` binds a CSRRW with rs1=x0, a nonzero destination and the
+exact CSR. It checks the returned claim value and count. A read-only CSRRS
+cannot satisfy this binding. These results earn only the existing model-based
+subset groups. They do not replace complete ISA comparison or prove full bus
+or interrupt-file state.

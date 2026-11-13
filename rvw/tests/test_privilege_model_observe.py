@@ -27,11 +27,15 @@ def fixture(tmp_path,monkeypatch,profile='fast-preemption',select=None):
             row.update(fd_valid=False,fd=0,fd_wdata='0x0',fflags='0x0',fcsr='0x0',hypervisor=dict(virtual=virtual,mode_after=mode,virtual_after=virtual,csrs={hex(a):'0x0' for a in H_CSRS},translations=[]))
         rows.append(row)
     for b in scenario['model_bindings']:
-        pc=symbols[b['symbol']];insn=int(b['insn'],0) if b['kind']=='writeback' else (int(b['csr'],0)<<20)|(2<<12)|(5<<7)|0x73
+        pc=symbols[b['symbol']]
+        if b['kind']=='writeback':insn=int(b['insn'],0)
+        elif b['kind']=='load':insn=(2<<12)|(5<<7)|3
+        else:insn=(int(b['csr'],0)<<20)|((1 if b['kind']=='csr-exchange' else 2)<<12)|(5<<7)|0x73
         segments.append((pc,insn.to_bytes(4,'little'),4))
         for value in b['expected']:
             value=symbols[value['symbol']] if isinstance(value,dict) else int(value,0)
             append(pc,insn,value,rd=(insn>>7)&31,mode=b.get('mode',3),virtual=b.get('virtual',False))
+            if b['kind']=='load':rows[-1].update(mem_addr=b['address'],mem_rmask=15,mem_rdata=hex(value))
     for address in scenario.get('model_forbidden_pcs',[]):
         from rvw.privilege.state_hierarchy import PROBES
         plan=scenario['reference_model'];pc=symbols[address['symbol']]
@@ -178,3 +182,21 @@ def test_wfi_wake_expected_instruction_observations(tmp_path,monkeypatch,selecte
     assert model_observe.observe(elf,s,path)['status']=='pass'
     rows[0]['rd_wdata']='0x0';write()
     assert model_observe.observe(elf,s,path)['status']=='fail'
+
+
+@pytest.mark.parametrize('profile',['imsic','imsic-s','imsic-vs','aplic','aplic-msi'])
+def test_aia_named_claim_observations(tmp_path,monkeypatch,profile):
+    elf,s,path,rows,write=fixture(tmp_path,monkeypatch,profile)
+    result=model_observe.observe(elf,s,path)
+    assert result['status']=='pass' and result['evidence']=='model-based'
+    rows[-1]['rd_wdata']='0x99';write()
+    assert model_observe.observe(elf,s,path)['status']=='fail'
+
+
+def test_imsic_claim_requires_combined_read_and_write(tmp_path,monkeypatch):
+    elf,s,path,rows,write=fixture(tmp_path,monkeypatch,'imsic')
+    image=model_observe.Elf(elf);pc=image.symbols['imsic_claim_0']
+    row=next(r for r in rows if int(r['pc'],0)==pc);insn=int(row['insn'],0)^(3<<12)
+    image.segments[:]=[(address,insn.to_bytes(4,'little') if address==pc else data,size) for address,data,size in image.segments]
+    row['insn']=hex(insn);write()
+    assert model_observe.observe(elf,s,path)['status']=='inconclusive'
