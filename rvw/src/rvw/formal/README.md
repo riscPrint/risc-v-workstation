@@ -1203,3 +1203,19 @@ monitors, optional project-bound SBY jobs, directed assembly and functional
 coverage groups. `formal_csr` exposes the same generator through MCP.
 See [the CSR format and limits](../../../../SpinalChecks/csr/README.md).
 Generated files carry no proof or compliance verdict.
+
+The `template` command also supports `hpm`, `initialized_read` and `axi_lite`.
+Set `--width` for the counter or initialization mask width.
+The HPM monitor starts from zero and uses independent event multiplicity,
+inhibit/filter controls, accepted writes, sticky overflow and interrupt enable.
+Counter writes suppress a new overflow. Clear has final pending priority.
+This is a declared project interrupt policy, not universal Zihpm behavior.
+Access permissions and RV32 halves use the existing Spinal HPM helpers.
+The initialization monitor tracks written bits. A used read must have all its
+required read bits initialized before that edge. Same-edge writes do not bypass.
+The AXI-Lite monitor has one outstanding address/data pair and one read.
+AW and W can arrive independently. Responses need prior accepted requests.
+It checks handshake observations and rejects EXOKAY responses. It does not check
+payload stability, response data, or full AXI/TileLink behavior.
+Bind each monitor from a project wrapper, then use the existing formal flows.
+Native fixture results are bounded observation checks, not whole-core proof.

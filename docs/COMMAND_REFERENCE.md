@@ -442,7 +442,8 @@ usage: rvw formal security contract [-h] --out OUT [--project PROJECT]
 
 ```text
 usage: rvw formal template [-h] [--entries ENTRIES] [--width WIDTH] --out OUT
-    [--project PROJECT] {rob,freelist,rename,issue,lsq,credit}
+    [--project PROJECT]
+    {rob,freelist,rename,issue,lsq,credit,hpm,initialized_read,axi_lite}
 ```
 
 ### `rvw formal contracts`
@@ -1153,7 +1154,7 @@ usage: rvw workloads verify [-h] [--json] --build BUILD --out OUT [--oracle
 
 ## MCP tools
 
-The default server exposes 77 built-in tools, including the four job tools.
+The default server exposes 78 built-in tools, including the four job tools.
 `--only` filters packages. `RVW_MCP_PLUGINS` can add tools.
 `rvw mcp --list --json` returns full input schemas.
 CLI commands without an MCP entry are CLI-only.
@@ -1461,6 +1462,14 @@ Starts a background job: yes.
 Extract a deletion-minimal solver core for one named SMT query. Not an RTL proof.
 
 Arguments: `smt2` (required), `mapping` (required), `db`, `solver`, `timeout`, `out` (required).
+
+Starts a background job: yes.
+
+### `formal_template`
+
+Generate a project-bound safety monitor. No verification run.
+
+Arguments: `kind` (required), `out` (required), `entries`, `width`.
 
 Starts a background job: yes.
 
