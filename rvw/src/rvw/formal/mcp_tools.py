@@ -8,6 +8,7 @@ import sys
 from pathlib import Path
 
 from rvw.mcp.spec import ToolError, ToolSpec, schema
+from .scenario import mcp_handler as scenario_handler
 
 S = {"type": "string"}
 I = {"type": "integer", "minimum": 0}
@@ -227,6 +228,10 @@ def mcp_tools():
         ToolSpec("formal_template", "Generate a project-bound safety monitor. No verification run.",
                  schema({"kind": S, "out": S, "entries": I, "width": I}, ["kind", "out"]),
                  _template, long=True),
+        ToolSpec("formal_scenario_plan", "Plan deterministic resource-aware actions with backend-specific timing. Does not execute operations.",
+                 schema({"source": S, "backend": S, "out": S}, ["source", "backend", "out"]), scenario_handler("plan"), long=True),
+        ToolSpec("formal_scenario_check", "Check supplied scenario outcomes and resource observations. Does not execute or infer hardware evidence.",
+                 schema({"source": S, "observed": S, "out": S}, ["source", "observed", "out"]), scenario_handler("check"), long=True),
         ToolSpec("formal_properties", "Generate SVA for common intents and typed Stream/Flow channels. Does not run a proof.",
                  schema({"spec": S, "channels": S, "db": S, "out": S}, ["spec", "out"]), _properties, long=True),
         ToolSpec("formal_security_pair", "Prove declared digital two-copy observation contracts or initial-state independence.",

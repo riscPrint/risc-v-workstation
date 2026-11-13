@@ -1,0 +1,95 @@
+{
+  "schema": "rvw.scenario/1",
+  "resources": {
+    "bus": 1,
+    "cpu": 2
+  },
+  "inputs": {
+    "seed": 7
+  },
+  "actions": [
+    {
+      "id": "prepare",
+      "kind": "prepare",
+      "claims": {
+        "cpu": 1
+      },
+      "needs": [
+        "seed"
+      ],
+      "produces": [
+        "buffer"
+      ],
+      "expect": {
+        "size": 4
+      }
+    },
+    {
+      "id": "write",
+      "kind": "transfer",
+      "claims": {
+        "bus": 1
+      },
+      "needs": [
+        "buffer"
+      ],
+      "expect": {
+        "done": true
+      }
+    },
+    {
+      "id": "read",
+      "kind": "transfer",
+      "claims": {
+        "bus": 1
+      },
+      "needs": [
+        "buffer"
+      ],
+      "expect": {
+        "done": true
+      }
+    }
+  ],
+  "backends": {
+    "model": {
+      "unit": "steps",
+      "bindings": {
+        "prepare": {
+          "operation": "model.prepare",
+          "duration": 1
+        },
+        "transfer": {
+          "operation": "model.transfer",
+          "duration": 2
+        }
+      }
+    },
+    "rtl": {
+      "unit": "cycles",
+      "bindings": {
+        "prepare": {
+          "operation": "rtl.prepare",
+          "duration": 3
+        },
+        "transfer": {
+          "operation": "rtl.transfer",
+          "duration": 6
+        }
+      }
+    },
+    "fpga": {
+      "unit": "ticks",
+      "bindings": {
+        "prepare": {
+          "operation": "fpga.prepare",
+          "duration": 10
+        },
+        "transfer": {
+          "operation": "fpga.transfer",
+          "duration": 20
+        }
+      }
+    }
+  }
+}

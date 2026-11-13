@@ -1212,6 +1212,13 @@ Render after Spinal assigns RTL names, then include the snippet in the reviewed
 module or checker wrapper. See [the Scala API](../../../../SpinalChecks/README.md#scala-property-builder).
 The builder does not insert properties into a design or run verification.
 
+### Resource-aware scenarios
+
+`formal scenario plan` schedules explicit logical actions with resource claims,
+data dependencies and backend-specific timing. `formal scenario check` compares
+supplied outcome records. Neither command executes backend operations. See
+[the scenario contract and PSS reuse assessment](SCENARIOS.md).
+
 ## Finite temporal SVA and task regression
 
 Use open Yosys for RTL and immediate formal statements. The `temporal` frontend
