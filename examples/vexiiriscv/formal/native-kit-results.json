@@ -64,10 +64,10 @@
       {
         "copy": "files/d3fafb80ea90d12c04029c5fb1b641cb89caa1bfd2980dd8affda297cb62ce17/raw-helper.db",
         "executable": 0,
-        "resolved": "/Users/mahir/fun/saviour/wt/.vex/equiv/kit-native-1113/raw-helper.db",
+        "resolved": "$RUN_ROOT/kit-native-1113/raw-helper.db",
         "sha256": "56f18abb2e5c2f249c6b5f31128fb6b4f517e6cf9065697d392d37d836fdd040",
         "size": 630784,
-        "source": "/Users/mahir/fun/saviour/wt/.vex/equiv/kit-native-1113/raw-helper.db",
+        "source": "$RUN_ROOT/kit-native-1113/raw-helper.db",
         "symlinks": []
       }
     ],
