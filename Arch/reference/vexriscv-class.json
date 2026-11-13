@@ -1,0 +1,152 @@
+{
+  "schema": "rvw.arch-core/1",
+  "config": "vexriscv-class",
+  "isa": "rv64gc",
+  "kind": "o3",
+  "cpu": {
+    "fetchWidth": 1,
+    "fetchBufferSize": 64,
+    "fetchQueueSize": 64,
+    "numFTQEntries": 32,
+    "decodeWidth": 1,
+    "renameWidth": 1,
+    "dispatchWidth": 1,
+    "commitWidth": 1,
+    "squashWidth": 1,
+    "issueWidth": 1,
+    "wbWidth": 1,
+    "fetchToDecodeDelay": 3,
+    "decodeToRenameDelay": 1,
+    "renameToIEWDelay": 2,
+    "issueToExecuteDelay": 2,
+    "iewToCommitDelay": 1,
+    "iewToFetchDelay": 2,
+    "commitToFetchDelay": 1,
+    "numROBEntries": 1,
+    "numPhysIntRegs": 33,
+    "numPhysFloatRegs": 64,
+    "LQEntries": 1,
+    "SQEntries": 1,
+    "cacheLoadPorts": 1,
+    "cacheStorePorts": 1
+  },
+  "queues": [
+    {
+      "entries": 1,
+      "units": [
+        {
+          "ops": [
+            "IntAlu"
+          ],
+          "count": 1,
+          "latency": 1,
+          "pipelined": true
+        },
+        {
+          "ops": [
+            "IntMult"
+          ],
+          "count": 1,
+          "latency": 3,
+          "pipelined": true
+        },
+        {
+          "ops": [
+            "IntDiv"
+          ],
+          "count": 1,
+          "latency": 20,
+          "pipelined": false
+        },
+        {
+          "ops": [
+            "MemRead",
+            "MemWrite"
+          ],
+          "count": 1,
+          "latency": 1,
+          "pipelined": true
+        }
+      ]
+    }
+  ],
+  "predictor": {
+    "tage": {
+      "nHistoryTables": 6,
+      "minHist": 2,
+      "maxHist": 64,
+      "tagTableTagWidths": [
+        0,
+        7,
+        7,
+        8,
+        8,
+        9,
+        9
+      ],
+      "logTagTableSizes": [
+        14,
+        10,
+        10,
+        11,
+        11,
+        10,
+        10
+      ],
+      "logUResetPeriod": 11
+    },
+    "loop": {
+      "logSizeLoopPred": 6,
+      "logLoopTableAssoc": 2
+    },
+    "btb": {
+      "numEntries": 2048,
+      "associativity": 2
+    },
+    "ras_entries": 32
+  },
+  "icache": {
+    "size": "32768B",
+    "assoc": 8,
+    "tag_latency": 1,
+    "data_latency": 1,
+    "response_latency": 1,
+    "mshrs": 1,
+    "tgts_per_mshr": 1,
+    "write_buffers": 1,
+    "is_read_only": true,
+    "writeback_clean": false
+  },
+  "dcache": {
+    "size": "32768B",
+    "assoc": 8,
+    "tag_latency": 1,
+    "data_latency": 1,
+    "response_latency": 1,
+    "mshrs": 4,
+    "tgts_per_mshr": 4,
+    "write_buffers": 1,
+    "writeback_clean": false
+  },
+  "itlb_entries": 32,
+  "dtlb_entries": 16,
+  "line_bytes": 64,
+  "bus_bytes": 16,
+  "memory_latency": 20,
+  "ooo": {
+    "latencies": {
+      "alu": 1,
+      "multiply": 3,
+      "divide": 20,
+      "load": 4,
+      "store": 1,
+      "branch": 1,
+      "jump": 1
+    },
+    "branch_penalty": 12,
+    "branch_speculation": true,
+    "ports": {
+      "alu": 1
+    }
+  }
+}

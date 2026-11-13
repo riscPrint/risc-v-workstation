@@ -1,0 +1,292 @@
+{
+  "schema": "rvw.arch-core/1",
+  "config": "mega",
+  "isa": "rv64gc_zba_zbb_zbs",
+  "kind": "o3",
+  "cpu": {
+    "fetchWidth": 8,
+    "fetchBufferSize": 16,
+    "fetchQueueSize": 32,
+    "numFTQEntries": 40,
+    "decodeWidth": 4,
+    "renameWidth": 4,
+    "dispatchWidth": 4,
+    "commitWidth": 4,
+    "squashWidth": 4,
+    "issueWidth": 10,
+    "wbWidth": 10,
+    "fetchToDecodeDelay": 3,
+    "decodeToRenameDelay": 1,
+    "renameToIEWDelay": 2,
+    "issueToExecuteDelay": 2,
+    "iewToCommitDelay": 1,
+    "iewToFetchDelay": 2,
+    "commitToFetchDelay": 1,
+    "numROBEntries": 128,
+    "numPhysIntRegs": 144,
+    "numPhysFloatRegs": 128,
+    "LQEntries": 32,
+    "SQEntries": 32,
+    "cacheLoadPorts": 2,
+    "cacheStorePorts": 2
+  },
+  "queues": [
+    {
+      "entries": 32,
+      "units": [
+        {
+          "ops": [
+            "MemRead",
+            "MemWrite",
+            "FloatMemRead",
+            "FloatMemWrite",
+            "InstPrefetch"
+          ],
+          "count": 3,
+          "latency": 1,
+          "pipelined": true
+        }
+      ]
+    },
+    {
+      "entries": 20,
+      "units": [
+        {
+          "ops": [
+            "IntMult"
+          ],
+          "count": 1,
+          "latency": 3,
+          "pipelined": true
+        },
+        {
+          "ops": [
+            "IntDiv"
+          ],
+          "count": 1,
+          "latency": 34,
+          "pipelined": false
+        },
+        {
+          "ops": [
+            "System"
+          ],
+          "count": 1,
+          "latency": 1,
+          "pipelined": true
+        },
+        {
+          "ops": [
+            "IntAlu",
+            "IntMult",
+            "IntDiv",
+            "FloatAdd",
+            "FloatCmp",
+            "FloatCvt",
+            "FloatMult",
+            "FloatMultAcc",
+            "FloatDiv",
+            "FloatMisc",
+            "FloatSqrt",
+            "SimdAdd",
+            "SimdAddAcc",
+            "SimdAlu",
+            "SimdCmp",
+            "SimdCvt",
+            "SimdMisc",
+            "SimdMult",
+            "SimdMultAcc",
+            "SimdMatMultAcc",
+            "SimdShift",
+            "SimdShiftAcc",
+            "SimdDiv",
+            "SimdSqrt",
+            "SimdFloatAdd",
+            "SimdFloatAlu",
+            "SimdFloatCmp",
+            "SimdFloatCvt",
+            "SimdFloatDiv",
+            "SimdFloatMisc",
+            "SimdFloatMult",
+            "SimdFloatMultAcc",
+            "SimdFloatMatMultAcc",
+            "SimdFloatSqrt",
+            "SimdReduceAdd",
+            "SimdReduceAlu",
+            "SimdReduceCmp",
+            "SimdFloatReduceAdd",
+            "SimdFloatReduceCmp",
+            "SimdAes",
+            "SimdAesMix",
+            "SimdSha1Hash",
+            "SimdSha1Hash2",
+            "SimdSha256Hash",
+            "SimdSha256Hash2",
+            "SimdShaSigma2",
+            "SimdShaSigma3",
+            "SimdSha3",
+            "SimdSm4e",
+            "SimdCrc",
+            "SimdPredAlu",
+            "SimdDotProd",
+            "Matrix",
+            "MatrixMov",
+            "MatrixOP",
+            "MemRead",
+            "MemWrite",
+            "FloatMemRead",
+            "FloatMemWrite",
+            "InstPrefetch",
+            "SimdUnitStrideLoad",
+            "SimdUnitStrideStore",
+            "SimdUnitStrideMaskLoad",
+            "SimdUnitStrideMaskStore",
+            "SimdStridedLoad",
+            "SimdStridedStore",
+            "SimdIndexedLoad",
+            "SimdIndexedStore",
+            "SimdWholeRegisterLoad",
+            "SimdWholeRegisterStore",
+            "SimdUnitStrideFaultOnlyFirstLoad",
+            "SimdUnitStrideSegmentedLoad",
+            "SimdUnitStrideSegmentedStore",
+            "SimdUnitStrideSegmentedFaultOnlyFirstLoad",
+            "SimdStrideSegmentedLoad",
+            "SimdStrideSegmentedStore",
+            "SimdExt",
+            "SimdFloatExt",
+            "SimdConfig",
+            "SimdBf16Add",
+            "SimdBf16Cmp",
+            "SimdBf16Cvt",
+            "SimdBf16DotProd",
+            "SimdBf16MatMultAcc",
+            "SimdBf16Mult",
+            "SimdBf16MultAcc",
+            "Bf16Cvt",
+            "System"
+          ],
+          "count": 1,
+          "latency": 1,
+          "pipelined": true
+        }
+      ]
+    },
+    {
+      "entries": 40,
+      "units": [
+        {
+          "ops": [
+            "IntAlu"
+          ],
+          "count": 4,
+          "latency": 1,
+          "pipelined": true
+        }
+      ]
+    },
+    {
+      "entries": 32,
+      "units": [
+        {
+          "ops": [
+            "FloatAdd",
+            "FloatCmp",
+            "FloatCvt",
+            "FloatMult",
+            "FloatMultAcc",
+            "FloatMisc",
+            "Bf16Cvt"
+          ],
+          "count": 2,
+          "latency": 4,
+          "pipelined": true
+        },
+        {
+          "ops": [
+            "FloatDiv",
+            "FloatSqrt"
+          ],
+          "count": 1,
+          "latency": 30,
+          "pipelined": false
+        }
+      ]
+    }
+  ],
+  "predictor": {
+    "tage": {
+      "nHistoryTables": 6,
+      "minHist": 2,
+      "maxHist": 64,
+      "tagTableTagWidths": [
+        0,
+        7,
+        7,
+        8,
+        8,
+        9,
+        9
+      ],
+      "logTagTableSizes": [
+        14,
+        10,
+        10,
+        11,
+        11,
+        10,
+        10
+      ],
+      "logUResetPeriod": 11
+    },
+    "loop": {
+      "logSizeLoopPred": 6,
+      "logLoopTableAssoc": 2
+    },
+    "btb": {
+      "numEntries": 2048,
+      "associativity": 2
+    },
+    "ras_entries": 32
+  },
+  "icache": {
+    "size": "32768B",
+    "assoc": 8,
+    "tag_latency": 1,
+    "data_latency": 1,
+    "response_latency": 1,
+    "mshrs": 1,
+    "tgts_per_mshr": 1,
+    "write_buffers": 1,
+    "is_read_only": true,
+    "writeback_clean": false
+  },
+  "dcache": {
+    "size": "32768B",
+    "assoc": 8,
+    "tag_latency": 1,
+    "data_latency": 1,
+    "response_latency": 1,
+    "mshrs": 8,
+    "tgts_per_mshr": 4,
+    "write_buffers": 1,
+    "writeback_clean": false
+  },
+  "itlb_entries": 32,
+  "dtlb_entries": 32,
+  "line_bytes": 64,
+  "bus_bytes": 16,
+  "memory_latency": 20,
+  "ooo": {
+    "latencies": {
+      "alu": 1,
+      "multiply": 3,
+      "divide": 34,
+      "load": 4,
+      "store": 1,
+      "branch": 1,
+      "jump": 1
+    },
+    "branch_penalty": 10
+  }
+}
