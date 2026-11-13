@@ -1071,9 +1071,9 @@ usage: rvw formal testplan [-h] --manifest MANIFEST --out OUT [--json]
 ### `rvw formal shortest`
 
 ```text
-usage: rvw formal shortest [-h] --result RESULT --out OUT [--max-depth
-    MAX_DEPTH] [--timeout TIMEOUT] [--engine ENGINE] [--json] [--project
-    PROJECT]
+usage: rvw formal shortest [-h] --result RESULT [--property PROPERTY] [--hgldd
+    HGLDD] --out OUT [--max-depth MAX_DEPTH] [--timeout TIMEOUT] [--engine
+    ENGINE] [--json] [--project PROJECT]
 ```
 
 ### `rvw formal proof-core`
@@ -3221,9 +3221,9 @@ Starts a background job: yes.
 
 ### `formal_shortest`
 
-Search increasing BMC depths for the sole captured assertion. Unknown depths cannot certify minimality.
+Search increasing BMC depths independently for captured assertions. Unknown depths cannot certify minimality.
 
-Arguments: `result` (required), `out` (required), `max_depth`, `timeout`, `engine`.
+Arguments: `result` (required), `out` (required), `property`, `hgldd`, `max_depth`, `timeout`, `engine`.
 
 Starts a background job: yes.
 

@@ -8,8 +8,10 @@ def register(s):
     report.add_argument("--json", action="store_true")
     report.set_defaults(func=testplan.run)
     from . import shortest
-    shortest_parser = s.add_parser("shortest", help="search the shortest failing depth of a captured single-assertion model")
+    shortest_parser = s.add_parser("shortest", help="search the shortest failing depth independently for captured assertions")
     shortest_parser.add_argument("--result", required=True)
+    shortest_parser.add_argument("--property", action="append", help="exact captured assertion cell; default all assertions")
+    shortest_parser.add_argument("--hgldd", help="SpinalWaves HGLDD directory for typed witness export")
     shortest_parser.add_argument("--out", required=True)
     shortest_parser.add_argument("--max-depth", type=int, default=20)
     shortest_parser.add_argument("--timeout", type=float, default=60)

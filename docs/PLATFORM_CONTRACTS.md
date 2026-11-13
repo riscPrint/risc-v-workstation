@@ -4916,3 +4916,12 @@ the existing register arrays. Mixed-width and combined synchronous read/write
 ports are refused. This changes native RTL identity. Older snapshots cannot
 restore into the new layout. The caller still owns all bus response and input
 state and must restore at a stopped low clock boundary.
+
+### Multiple shortest counterexamples
+
+`rvw.shortest-cex/1` can contain `properties`, with one independent shortest-depth
+search per captured assertion. Other assertions are removed from each search;
+assumptions remain. A shared timeout limits all searches. Single-property outputs
+retain the scalar depth and shortest fields. Optional `typed_output` records
+SpinalWaves conversion separately from solver evidence. Missing conversion tools
+cannot produce a completed typed-output result.

@@ -35,8 +35,8 @@ def mcp_tools():
         ToolSpec("formal_testplan", "Join a formal inventory with captured proof, core, activation and mutation evidence. JSON and HTML.",
                  schema({"manifest": S, "out": S}, ["manifest", "out"]), _runner("testplan"), long=True),
 
-        ToolSpec("formal_shortest", "Search increasing BMC depths for the sole captured assertion. Unknown depths cannot certify minimality.",
-                 schema({"result": S, "out": S, "max_depth": I, "timeout": {"type": "number", "exclusiveMinimum": 0}, "engine": S}, ["result", "out"]), _runner("shortest"), long=True),
+        ToolSpec("formal_shortest", "Search increasing BMC depths independently for captured assertions. Unknown depths cannot certify minimality.",
+                 schema({"result": S, "out": S, "property": {"type": "array", "items": S}, "hgldd": S, "max_depth": I, "timeout": {"type": "number", "exclusiveMinimum": 0}, "engine": S}, ["result", "out"]), _runner("shortest"), long=True),
         ToolSpec("formal_proof_core", "Extract a deletion-minimal solver core for one named SMT query. Not an RTL proof.",
                  schema({"cell_level": B, "smt2": S, "mapping": S, "result": S, "depth": I, "property": S, "db": S, "solver": S,
                          "timeout": {"type": "number", "exclusiveMinimum": 0}, "out": S},
