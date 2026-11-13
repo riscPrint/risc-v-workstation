@@ -800,7 +800,7 @@ usage: rvw fault report [-h] [--project PROJECT] directory
 
 ```text
 usage: rvw formal [-h] [--project PROJECT]
-    {device-events,upf,power,buses,csr,bug-hunt,model-live,rtl-grid,rtl-refine,relation-strengthen,doctor,engines,engine-race,engine-bench,model-grid,security,regress,properties,simulate,liveness,sva-lower,template,contracts,strengthen,testplan,shortest,proof-core,apps,autocheck,bench,recheck,cex,sby-history,sby-regress,prove,depth-search,rvfi-generate,sail-zicond,custom-isa,profiles,riscv,connectivity,datapath,equiv,bmc,from-sim,swarm,xprop,x-context,x-sweep}
+    {device-events,upf,power,buses,csr,bug-hunt,model-live,rtl-grid,rtl-refine,relation-strengthen,doctor,engines,engine-race,engine-bench,model-grid,security,regress,properties,simulate,liveness,sva-lower,template,contracts,strengthen,testplan,shortest,proof-core,apps,autocheck,bench,recheck,cex,app-live,sby-history,sby-regress,prove,depth-search,rvfi-generate,sail-zicond,custom-isa,profiles,riscv,connectivity,datapath,equiv,bmc,from-sim,swarm,xprop,x-context,x-sweep}
     ...
 ```
 
@@ -1057,6 +1057,14 @@ usage: rvw formal cex [-h] --result RESULT [--trace-index TRACE_INDEX] [--edit
     EDIT] [--timeout TIMEOUT] --out OUT [--json] [--hgldd HGLDD] [--pdg PDG]
     [--criterion CRITERION] [--at-time AT_TIME] [--minimize] [--max-checks
     MAX_CHECKS] [--emit-testbench] [--db DB] [--signal SIGNAL] [--open]
+    [--project PROJECT]
+```
+
+### `rvw formal app-live`
+
+```text
+usage: rvw formal app-live [-h] --manifest MANIFEST --out OUT [--depth DEPTH]
+    [--engine ENGINE] [--timeout TIMEOUT] [--mode {bmc,prove}] [--json]
     [--project PROJECT]
 ```
 
@@ -2761,6 +2769,14 @@ List register fault sites (path, width) from a design database.
 Arguments: `db` (required), `include`, `exclude`, `generated`.
 
 Starts a background job: no.
+
+### `formal_app_live`
+
+Reduce fair response liveness to a full-state lasso safety check.
+
+Arguments: `manifest` (required), `out` (required), `depth`, `engine`, `timeout`, `mode`.
+
+Starts a background job: yes.
 
 ### `formal_apps`
 
