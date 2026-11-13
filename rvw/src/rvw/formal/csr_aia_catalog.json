@@ -1,0 +1,3455 @@
+{
+  "schema": "rvw.csr-catalog-supplement/1",
+  "upstream": "https://github.com/riscv/riscv-aia",
+  "revision": "9507866427961d4ec2d2400ea875103b2a09520b",
+  "sources": {
+    "src/CSRs.adoc": "c194138487c954c6616dc2d46487cb9bfc0bb913ce371e72f8963cf1db083c0f",
+    "src/MSLevel.adoc": "0f5fa09009fc9d66570056662e0e45b8935fb6f76dcde22f05d27cb53b6f538c",
+    "src/VSLevel.adoc": "9d6d1a02ffd959db6dd837b452d57100a143d3c02751ab723e0dee52dbc1efe1",
+    "src/IMSIC.adoc": "a1ffc788b735324fa2079753a682f23a9e15b6dd1690863b69fdca406f0482d1"
+  },
+  "registers": {
+    "sieh": {
+      "definition": {
+        "name": "sieh",
+        "address": 276,
+        "priv_mode": "S",
+        "writable": true,
+        "length": 32,
+        "fields": {
+          "I32": {
+            "location": 0,
+            "type": "project-defined interrupt bit",
+            "alias": "sie[32]"
+          },
+          "I33": {
+            "location": 1,
+            "type": "project-defined interrupt bit",
+            "alias": "sie[33]"
+          },
+          "I34": {
+            "location": 2,
+            "type": "project-defined interrupt bit",
+            "alias": "sie[34]"
+          },
+          "I35": {
+            "location": 3,
+            "type": "project-defined interrupt bit",
+            "alias": "sie[35]"
+          },
+          "I36": {
+            "location": 4,
+            "type": "project-defined interrupt bit",
+            "alias": "sie[36]"
+          },
+          "I37": {
+            "location": 5,
+            "type": "project-defined interrupt bit",
+            "alias": "sie[37]"
+          },
+          "I38": {
+            "location": 6,
+            "type": "project-defined interrupt bit",
+            "alias": "sie[38]"
+          },
+          "I39": {
+            "location": 7,
+            "type": "project-defined interrupt bit",
+            "alias": "sie[39]"
+          },
+          "I40": {
+            "location": 8,
+            "type": "project-defined interrupt bit",
+            "alias": "sie[40]"
+          },
+          "I41": {
+            "location": 9,
+            "type": "project-defined interrupt bit",
+            "alias": "sie[41]"
+          },
+          "I42": {
+            "location": 10,
+            "type": "project-defined interrupt bit",
+            "alias": "sie[42]"
+          },
+          "I43": {
+            "location": 11,
+            "type": "project-defined interrupt bit",
+            "alias": "sie[43]"
+          },
+          "I44": {
+            "location": 12,
+            "type": "project-defined interrupt bit",
+            "alias": "sie[44]"
+          },
+          "I45": {
+            "location": 13,
+            "type": "project-defined interrupt bit",
+            "alias": "sie[45]"
+          },
+          "I46": {
+            "location": 14,
+            "type": "project-defined interrupt bit",
+            "alias": "sie[46]"
+          },
+          "I47": {
+            "location": 15,
+            "type": "project-defined interrupt bit",
+            "alias": "sie[47]"
+          },
+          "I48": {
+            "location": 16,
+            "type": "project-defined interrupt bit",
+            "alias": "sie[48]"
+          },
+          "I49": {
+            "location": 17,
+            "type": "project-defined interrupt bit",
+            "alias": "sie[49]"
+          },
+          "I50": {
+            "location": 18,
+            "type": "project-defined interrupt bit",
+            "alias": "sie[50]"
+          },
+          "I51": {
+            "location": 19,
+            "type": "project-defined interrupt bit",
+            "alias": "sie[51]"
+          },
+          "I52": {
+            "location": 20,
+            "type": "project-defined interrupt bit",
+            "alias": "sie[52]"
+          },
+          "I53": {
+            "location": 21,
+            "type": "project-defined interrupt bit",
+            "alias": "sie[53]"
+          },
+          "I54": {
+            "location": 22,
+            "type": "project-defined interrupt bit",
+            "alias": "sie[54]"
+          },
+          "I55": {
+            "location": 23,
+            "type": "project-defined interrupt bit",
+            "alias": "sie[55]"
+          },
+          "I56": {
+            "location": 24,
+            "type": "project-defined interrupt bit",
+            "alias": "sie[56]"
+          },
+          "I57": {
+            "location": 25,
+            "type": "project-defined interrupt bit",
+            "alias": "sie[57]"
+          },
+          "I58": {
+            "location": 26,
+            "type": "project-defined interrupt bit",
+            "alias": "sie[58]"
+          },
+          "I59": {
+            "location": 27,
+            "type": "project-defined interrupt bit",
+            "alias": "sie[59]"
+          },
+          "I60": {
+            "location": 28,
+            "type": "project-defined interrupt bit",
+            "alias": "sie[60]"
+          },
+          "I61": {
+            "location": 29,
+            "type": "project-defined interrupt bit",
+            "alias": "sie[61]"
+          },
+          "I62": {
+            "location": 30,
+            "type": "project-defined interrupt bit",
+            "alias": "sie[62]"
+          },
+          "I63": {
+            "location": 31,
+            "type": "project-defined interrupt bit",
+            "alias": "sie[63]"
+          }
+        },
+        "definedBy": "Ssaia",
+        "requires_alias_model": true
+      },
+      "source": "src/CSRs.adoc",
+      "sha256": "c194138487c954c6616dc2d46487cb9bfc0bb913ce371e72f8963cf1db083c0f",
+      "field_sources": {
+        "src/CSRs.adoc": "c194138487c954c6616dc2d46487cb9bfc0bb913ce371e72f8963cf1db083c0f",
+        "src/MSLevel.adoc": "0f5fa09009fc9d66570056662e0e45b8935fb6f76dcde22f05d27cb53b6f538c",
+        "src/VSLevel.adoc": "9d6d1a02ffd959db6dd837b452d57100a143d3c02751ab723e0dee52dbc1efe1",
+        "src/IMSIC.adoc": "a1ffc788b735324fa2079753a682f23a9e15b6dd1690863b69fdca406f0482d1"
+      },
+      "upstream": "https://github.com/riscv/riscv-aia",
+      "revision": "9507866427961d4ec2d2400ea875103b2a09520b",
+      "notices": [
+        "RISC-V International, RISC-V Advanced Interrupt Architecture",
+        "SPDX-License-Identifier: CC-BY-4.0",
+        "Field layouts transcribed; behavioral interpretation is not included."
+      ]
+    },
+    "siph": {
+      "definition": {
+        "name": "siph",
+        "address": 340,
+        "priv_mode": "S",
+        "writable": true,
+        "length": 32,
+        "fields": {
+          "I32": {
+            "location": 0,
+            "type": "project-defined interrupt bit",
+            "alias": "sip[32]"
+          },
+          "I33": {
+            "location": 1,
+            "type": "project-defined interrupt bit",
+            "alias": "sip[33]"
+          },
+          "I34": {
+            "location": 2,
+            "type": "project-defined interrupt bit",
+            "alias": "sip[34]"
+          },
+          "I35": {
+            "location": 3,
+            "type": "project-defined interrupt bit",
+            "alias": "sip[35]"
+          },
+          "I36": {
+            "location": 4,
+            "type": "project-defined interrupt bit",
+            "alias": "sip[36]"
+          },
+          "I37": {
+            "location": 5,
+            "type": "project-defined interrupt bit",
+            "alias": "sip[37]"
+          },
+          "I38": {
+            "location": 6,
+            "type": "project-defined interrupt bit",
+            "alias": "sip[38]"
+          },
+          "I39": {
+            "location": 7,
+            "type": "project-defined interrupt bit",
+            "alias": "sip[39]"
+          },
+          "I40": {
+            "location": 8,
+            "type": "project-defined interrupt bit",
+            "alias": "sip[40]"
+          },
+          "I41": {
+            "location": 9,
+            "type": "project-defined interrupt bit",
+            "alias": "sip[41]"
+          },
+          "I42": {
+            "location": 10,
+            "type": "project-defined interrupt bit",
+            "alias": "sip[42]"
+          },
+          "I43": {
+            "location": 11,
+            "type": "project-defined interrupt bit",
+            "alias": "sip[43]"
+          },
+          "I44": {
+            "location": 12,
+            "type": "project-defined interrupt bit",
+            "alias": "sip[44]"
+          },
+          "I45": {
+            "location": 13,
+            "type": "project-defined interrupt bit",
+            "alias": "sip[45]"
+          },
+          "I46": {
+            "location": 14,
+            "type": "project-defined interrupt bit",
+            "alias": "sip[46]"
+          },
+          "I47": {
+            "location": 15,
+            "type": "project-defined interrupt bit",
+            "alias": "sip[47]"
+          },
+          "I48": {
+            "location": 16,
+            "type": "project-defined interrupt bit",
+            "alias": "sip[48]"
+          },
+          "I49": {
+            "location": 17,
+            "type": "project-defined interrupt bit",
+            "alias": "sip[49]"
+          },
+          "I50": {
+            "location": 18,
+            "type": "project-defined interrupt bit",
+            "alias": "sip[50]"
+          },
+          "I51": {
+            "location": 19,
+            "type": "project-defined interrupt bit",
+            "alias": "sip[51]"
+          },
+          "I52": {
+            "location": 20,
+            "type": "project-defined interrupt bit",
+            "alias": "sip[52]"
+          },
+          "I53": {
+            "location": 21,
+            "type": "project-defined interrupt bit",
+            "alias": "sip[53]"
+          },
+          "I54": {
+            "location": 22,
+            "type": "project-defined interrupt bit",
+            "alias": "sip[54]"
+          },
+          "I55": {
+            "location": 23,
+            "type": "project-defined interrupt bit",
+            "alias": "sip[55]"
+          },
+          "I56": {
+            "location": 24,
+            "type": "project-defined interrupt bit",
+            "alias": "sip[56]"
+          },
+          "I57": {
+            "location": 25,
+            "type": "project-defined interrupt bit",
+            "alias": "sip[57]"
+          },
+          "I58": {
+            "location": 26,
+            "type": "project-defined interrupt bit",
+            "alias": "sip[58]"
+          },
+          "I59": {
+            "location": 27,
+            "type": "project-defined interrupt bit",
+            "alias": "sip[59]"
+          },
+          "I60": {
+            "location": 28,
+            "type": "project-defined interrupt bit",
+            "alias": "sip[60]"
+          },
+          "I61": {
+            "location": 29,
+            "type": "project-defined interrupt bit",
+            "alias": "sip[61]"
+          },
+          "I62": {
+            "location": 30,
+            "type": "project-defined interrupt bit",
+            "alias": "sip[62]"
+          },
+          "I63": {
+            "location": 31,
+            "type": "project-defined interrupt bit",
+            "alias": "sip[63]"
+          }
+        },
+        "definedBy": "Ssaia",
+        "requires_alias_model": true
+      },
+      "source": "src/CSRs.adoc",
+      "sha256": "c194138487c954c6616dc2d46487cb9bfc0bb913ce371e72f8963cf1db083c0f",
+      "field_sources": {
+        "src/CSRs.adoc": "c194138487c954c6616dc2d46487cb9bfc0bb913ce371e72f8963cf1db083c0f",
+        "src/MSLevel.adoc": "0f5fa09009fc9d66570056662e0e45b8935fb6f76dcde22f05d27cb53b6f538c",
+        "src/VSLevel.adoc": "9d6d1a02ffd959db6dd837b452d57100a143d3c02751ab723e0dee52dbc1efe1",
+        "src/IMSIC.adoc": "a1ffc788b735324fa2079753a682f23a9e15b6dd1690863b69fdca406f0482d1"
+      },
+      "upstream": "https://github.com/riscv/riscv-aia",
+      "revision": "9507866427961d4ec2d2400ea875103b2a09520b",
+      "notices": [
+        "RISC-V International, RISC-V Advanced Interrupt Architecture",
+        "SPDX-License-Identifier: CC-BY-4.0",
+        "Field layouts transcribed; behavioral interpretation is not included."
+      ]
+    },
+    "stopei": {
+      "definition": {
+        "name": "stopei",
+        "address": 348,
+        "priv_mode": "S",
+        "writable": true,
+        "length": "XLEN",
+        "fields": {
+          "IID": {
+            "location": "26-16",
+            "type": "RO"
+          },
+          "IPRIO": {
+            "location": "10-0",
+            "type": "RO"
+          }
+        },
+        "definedBy": "Ssaia",
+        "requires_environment_model": true,
+        "write_effect": "claim current pending interrupt; written data is ignored"
+      },
+      "source": "src/CSRs.adoc",
+      "sha256": "c194138487c954c6616dc2d46487cb9bfc0bb913ce371e72f8963cf1db083c0f",
+      "field_sources": {
+        "src/CSRs.adoc": "c194138487c954c6616dc2d46487cb9bfc0bb913ce371e72f8963cf1db083c0f",
+        "src/MSLevel.adoc": "0f5fa09009fc9d66570056662e0e45b8935fb6f76dcde22f05d27cb53b6f538c",
+        "src/VSLevel.adoc": "9d6d1a02ffd959db6dd837b452d57100a143d3c02751ab723e0dee52dbc1efe1",
+        "src/IMSIC.adoc": "a1ffc788b735324fa2079753a682f23a9e15b6dd1690863b69fdca406f0482d1"
+      },
+      "upstream": "https://github.com/riscv/riscv-aia",
+      "revision": "9507866427961d4ec2d2400ea875103b2a09520b",
+      "notices": [
+        "RISC-V International, RISC-V Advanced Interrupt Architecture",
+        "SPDX-License-Identifier: CC-BY-4.0",
+        "Field layouts transcribed; behavioral interpretation is not included."
+      ]
+    },
+    "stopi": {
+      "definition": {
+        "name": "stopi",
+        "address": 3504,
+        "priv_mode": "S",
+        "writable": false,
+        "length": "XLEN",
+        "fields": {
+          "IID": {
+            "location": "27-16",
+            "type": "RO"
+          },
+          "IPRIO": {
+            "location": "7-0",
+            "type": "RO"
+          }
+        },
+        "definedBy": "Ssaia",
+        "requires_environment_model": true
+      },
+      "source": "src/CSRs.adoc",
+      "sha256": "c194138487c954c6616dc2d46487cb9bfc0bb913ce371e72f8963cf1db083c0f",
+      "field_sources": {
+        "src/CSRs.adoc": "c194138487c954c6616dc2d46487cb9bfc0bb913ce371e72f8963cf1db083c0f",
+        "src/MSLevel.adoc": "0f5fa09009fc9d66570056662e0e45b8935fb6f76dcde22f05d27cb53b6f538c",
+        "src/VSLevel.adoc": "9d6d1a02ffd959db6dd837b452d57100a143d3c02751ab723e0dee52dbc1efe1",
+        "src/IMSIC.adoc": "a1ffc788b735324fa2079753a682f23a9e15b6dd1690863b69fdca406f0482d1"
+      },
+      "upstream": "https://github.com/riscv/riscv-aia",
+      "revision": "9507866427961d4ec2d2400ea875103b2a09520b",
+      "notices": [
+        "RISC-V International, RISC-V Advanced Interrupt Architecture",
+        "SPDX-License-Identifier: CC-BY-4.0",
+        "Field layouts transcribed; behavioral interpretation is not included."
+      ]
+    },
+    "hvien": {
+      "definition": {
+        "name": "hvien",
+        "address": 1544,
+        "priv_mode": "H",
+        "writable": true,
+        "length": 64,
+        "fields": {
+          "I13": {
+            "location": 13,
+            "type": "project-dependent interrupt bit"
+          },
+          "I14": {
+            "location": 14,
+            "type": "project-dependent interrupt bit"
+          },
+          "I15": {
+            "location": 15,
+            "type": "project-dependent interrupt bit"
+          },
+          "I16": {
+            "location": 16,
+            "type": "project-dependent interrupt bit"
+          },
+          "I17": {
+            "location": 17,
+            "type": "project-dependent interrupt bit"
+          },
+          "I18": {
+            "location": 18,
+            "type": "project-dependent interrupt bit"
+          },
+          "I19": {
+            "location": 19,
+            "type": "project-dependent interrupt bit"
+          },
+          "I20": {
+            "location": 20,
+            "type": "project-dependent interrupt bit"
+          },
+          "I21": {
+            "location": 21,
+            "type": "project-dependent interrupt bit"
+          },
+          "I22": {
+            "location": 22,
+            "type": "project-dependent interrupt bit"
+          },
+          "I23": {
+            "location": 23,
+            "type": "project-dependent interrupt bit"
+          },
+          "I24": {
+            "location": 24,
+            "type": "project-dependent interrupt bit"
+          },
+          "I25": {
+            "location": 25,
+            "type": "project-dependent interrupt bit"
+          },
+          "I26": {
+            "location": 26,
+            "type": "project-dependent interrupt bit"
+          },
+          "I27": {
+            "location": 27,
+            "type": "project-dependent interrupt bit"
+          },
+          "I28": {
+            "location": 28,
+            "type": "project-dependent interrupt bit"
+          },
+          "I29": {
+            "location": 29,
+            "type": "project-dependent interrupt bit"
+          },
+          "I30": {
+            "location": 30,
+            "type": "project-dependent interrupt bit"
+          },
+          "I31": {
+            "location": 31,
+            "type": "project-dependent interrupt bit"
+          },
+          "I32": {
+            "location": 32,
+            "type": "project-dependent interrupt bit"
+          },
+          "I33": {
+            "location": 33,
+            "type": "project-dependent interrupt bit"
+          },
+          "I34": {
+            "location": 34,
+            "type": "project-dependent interrupt bit"
+          },
+          "I35": {
+            "location": 35,
+            "type": "project-dependent interrupt bit"
+          },
+          "I36": {
+            "location": 36,
+            "type": "project-dependent interrupt bit"
+          },
+          "I37": {
+            "location": 37,
+            "type": "project-dependent interrupt bit"
+          },
+          "I38": {
+            "location": 38,
+            "type": "project-dependent interrupt bit"
+          },
+          "I39": {
+            "location": 39,
+            "type": "project-dependent interrupt bit"
+          },
+          "I40": {
+            "location": 40,
+            "type": "project-dependent interrupt bit"
+          },
+          "I41": {
+            "location": 41,
+            "type": "project-dependent interrupt bit"
+          },
+          "I42": {
+            "location": 42,
+            "type": "project-dependent interrupt bit"
+          },
+          "I43": {
+            "location": 43,
+            "type": "project-dependent interrupt bit"
+          },
+          "I44": {
+            "location": 44,
+            "type": "project-dependent interrupt bit"
+          },
+          "I45": {
+            "location": 45,
+            "type": "project-dependent interrupt bit"
+          },
+          "I46": {
+            "location": 46,
+            "type": "project-dependent interrupt bit"
+          },
+          "I47": {
+            "location": 47,
+            "type": "project-dependent interrupt bit"
+          },
+          "I48": {
+            "location": 48,
+            "type": "project-dependent interrupt bit"
+          },
+          "I49": {
+            "location": 49,
+            "type": "project-dependent interrupt bit"
+          },
+          "I50": {
+            "location": 50,
+            "type": "project-dependent interrupt bit"
+          },
+          "I51": {
+            "location": 51,
+            "type": "project-dependent interrupt bit"
+          },
+          "I52": {
+            "location": 52,
+            "type": "project-dependent interrupt bit"
+          },
+          "I53": {
+            "location": 53,
+            "type": "project-dependent interrupt bit"
+          },
+          "I54": {
+            "location": 54,
+            "type": "project-dependent interrupt bit"
+          },
+          "I55": {
+            "location": 55,
+            "type": "project-dependent interrupt bit"
+          },
+          "I56": {
+            "location": 56,
+            "type": "project-dependent interrupt bit"
+          },
+          "I57": {
+            "location": 57,
+            "type": "project-dependent interrupt bit"
+          },
+          "I58": {
+            "location": 58,
+            "type": "project-dependent interrupt bit"
+          },
+          "I59": {
+            "location": 59,
+            "type": "project-dependent interrupt bit"
+          },
+          "I60": {
+            "location": 60,
+            "type": "project-dependent interrupt bit"
+          },
+          "I61": {
+            "location": 61,
+            "type": "project-dependent interrupt bit"
+          },
+          "I62": {
+            "location": 62,
+            "type": "project-dependent interrupt bit"
+          },
+          "I63": {
+            "location": 63,
+            "type": "project-dependent interrupt bit"
+          }
+        },
+        "definedBy": "Ssaia",
+        "requires_environment_model": true
+      },
+      "source": "src/CSRs.adoc",
+      "sha256": "c194138487c954c6616dc2d46487cb9bfc0bb913ce371e72f8963cf1db083c0f",
+      "field_sources": {
+        "src/CSRs.adoc": "c194138487c954c6616dc2d46487cb9bfc0bb913ce371e72f8963cf1db083c0f",
+        "src/MSLevel.adoc": "0f5fa09009fc9d66570056662e0e45b8935fb6f76dcde22f05d27cb53b6f538c",
+        "src/VSLevel.adoc": "9d6d1a02ffd959db6dd837b452d57100a143d3c02751ab723e0dee52dbc1efe1",
+        "src/IMSIC.adoc": "a1ffc788b735324fa2079753a682f23a9e15b6dd1690863b69fdca406f0482d1"
+      },
+      "upstream": "https://github.com/riscv/riscv-aia",
+      "revision": "9507866427961d4ec2d2400ea875103b2a09520b",
+      "notices": [
+        "RISC-V International, RISC-V Advanced Interrupt Architecture",
+        "SPDX-License-Identifier: CC-BY-4.0",
+        "Field layouts transcribed; behavioral interpretation is not included."
+      ]
+    },
+    "hvictl": {
+      "definition": {
+        "name": "hvictl",
+        "address": 1545,
+        "priv_mode": "H",
+        "writable": true,
+        "length": "XLEN",
+        "fields": {
+          "VTI": {
+            "location": 30,
+            "type": "RW"
+          },
+          "IID": {
+            "location": "27-16",
+            "type": "WARL"
+          },
+          "DPR": {
+            "location": 9,
+            "type": "RW"
+          },
+          "IPRIOM": {
+            "location": 8,
+            "type": "RW"
+          },
+          "IPRIO": {
+            "location": "7-0",
+            "type": "RW"
+          }
+        },
+        "definedBy": "Ssaia",
+        "requires_environment_model": true
+      },
+      "source": "src/CSRs.adoc",
+      "sha256": "c194138487c954c6616dc2d46487cb9bfc0bb913ce371e72f8963cf1db083c0f",
+      "field_sources": {
+        "src/CSRs.adoc": "c194138487c954c6616dc2d46487cb9bfc0bb913ce371e72f8963cf1db083c0f",
+        "src/MSLevel.adoc": "0f5fa09009fc9d66570056662e0e45b8935fb6f76dcde22f05d27cb53b6f538c",
+        "src/VSLevel.adoc": "9d6d1a02ffd959db6dd837b452d57100a143d3c02751ab723e0dee52dbc1efe1",
+        "src/IMSIC.adoc": "a1ffc788b735324fa2079753a682f23a9e15b6dd1690863b69fdca406f0482d1"
+      },
+      "upstream": "https://github.com/riscv/riscv-aia",
+      "revision": "9507866427961d4ec2d2400ea875103b2a09520b",
+      "notices": [
+        "RISC-V International, RISC-V Advanced Interrupt Architecture",
+        "SPDX-License-Identifier: CC-BY-4.0",
+        "Field layouts transcribed; behavioral interpretation is not included."
+      ]
+    },
+    "hidelegh": {
+      "definition": {
+        "name": "hidelegh",
+        "address": 1555,
+        "priv_mode": "H",
+        "writable": true,
+        "length": 32,
+        "fields": {
+          "I32": {
+            "location": 0,
+            "type": "project-defined interrupt bit",
+            "alias": "hideleg[32]"
+          },
+          "I33": {
+            "location": 1,
+            "type": "project-defined interrupt bit",
+            "alias": "hideleg[33]"
+          },
+          "I34": {
+            "location": 2,
+            "type": "project-defined interrupt bit",
+            "alias": "hideleg[34]"
+          },
+          "I35": {
+            "location": 3,
+            "type": "project-defined interrupt bit",
+            "alias": "hideleg[35]"
+          },
+          "I36": {
+            "location": 4,
+            "type": "project-defined interrupt bit",
+            "alias": "hideleg[36]"
+          },
+          "I37": {
+            "location": 5,
+            "type": "project-defined interrupt bit",
+            "alias": "hideleg[37]"
+          },
+          "I38": {
+            "location": 6,
+            "type": "project-defined interrupt bit",
+            "alias": "hideleg[38]"
+          },
+          "I39": {
+            "location": 7,
+            "type": "project-defined interrupt bit",
+            "alias": "hideleg[39]"
+          },
+          "I40": {
+            "location": 8,
+            "type": "project-defined interrupt bit",
+            "alias": "hideleg[40]"
+          },
+          "I41": {
+            "location": 9,
+            "type": "project-defined interrupt bit",
+            "alias": "hideleg[41]"
+          },
+          "I42": {
+            "location": 10,
+            "type": "project-defined interrupt bit",
+            "alias": "hideleg[42]"
+          },
+          "I43": {
+            "location": 11,
+            "type": "project-defined interrupt bit",
+            "alias": "hideleg[43]"
+          },
+          "I44": {
+            "location": 12,
+            "type": "project-defined interrupt bit",
+            "alias": "hideleg[44]"
+          },
+          "I45": {
+            "location": 13,
+            "type": "project-defined interrupt bit",
+            "alias": "hideleg[45]"
+          },
+          "I46": {
+            "location": 14,
+            "type": "project-defined interrupt bit",
+            "alias": "hideleg[46]"
+          },
+          "I47": {
+            "location": 15,
+            "type": "project-defined interrupt bit",
+            "alias": "hideleg[47]"
+          },
+          "I48": {
+            "location": 16,
+            "type": "project-defined interrupt bit",
+            "alias": "hideleg[48]"
+          },
+          "I49": {
+            "location": 17,
+            "type": "project-defined interrupt bit",
+            "alias": "hideleg[49]"
+          },
+          "I50": {
+            "location": 18,
+            "type": "project-defined interrupt bit",
+            "alias": "hideleg[50]"
+          },
+          "I51": {
+            "location": 19,
+            "type": "project-defined interrupt bit",
+            "alias": "hideleg[51]"
+          },
+          "I52": {
+            "location": 20,
+            "type": "project-defined interrupt bit",
+            "alias": "hideleg[52]"
+          },
+          "I53": {
+            "location": 21,
+            "type": "project-defined interrupt bit",
+            "alias": "hideleg[53]"
+          },
+          "I54": {
+            "location": 22,
+            "type": "project-defined interrupt bit",
+            "alias": "hideleg[54]"
+          },
+          "I55": {
+            "location": 23,
+            "type": "project-defined interrupt bit",
+            "alias": "hideleg[55]"
+          },
+          "I56": {
+            "location": 24,
+            "type": "project-defined interrupt bit",
+            "alias": "hideleg[56]"
+          },
+          "I57": {
+            "location": 25,
+            "type": "project-defined interrupt bit",
+            "alias": "hideleg[57]"
+          },
+          "I58": {
+            "location": 26,
+            "type": "project-defined interrupt bit",
+            "alias": "hideleg[58]"
+          },
+          "I59": {
+            "location": 27,
+            "type": "project-defined interrupt bit",
+            "alias": "hideleg[59]"
+          },
+          "I60": {
+            "location": 28,
+            "type": "project-defined interrupt bit",
+            "alias": "hideleg[60]"
+          },
+          "I61": {
+            "location": 29,
+            "type": "project-defined interrupt bit",
+            "alias": "hideleg[61]"
+          },
+          "I62": {
+            "location": 30,
+            "type": "project-defined interrupt bit",
+            "alias": "hideleg[62]"
+          },
+          "I63": {
+            "location": 31,
+            "type": "project-defined interrupt bit",
+            "alias": "hideleg[63]"
+          }
+        },
+        "definedBy": "Ssaia",
+        "requires_alias_model": true
+      },
+      "source": "src/CSRs.adoc",
+      "sha256": "c194138487c954c6616dc2d46487cb9bfc0bb913ce371e72f8963cf1db083c0f",
+      "field_sources": {
+        "src/CSRs.adoc": "c194138487c954c6616dc2d46487cb9bfc0bb913ce371e72f8963cf1db083c0f",
+        "src/MSLevel.adoc": "0f5fa09009fc9d66570056662e0e45b8935fb6f76dcde22f05d27cb53b6f538c",
+        "src/VSLevel.adoc": "9d6d1a02ffd959db6dd837b452d57100a143d3c02751ab723e0dee52dbc1efe1",
+        "src/IMSIC.adoc": "a1ffc788b735324fa2079753a682f23a9e15b6dd1690863b69fdca406f0482d1"
+      },
+      "upstream": "https://github.com/riscv/riscv-aia",
+      "revision": "9507866427961d4ec2d2400ea875103b2a09520b",
+      "notices": [
+        "RISC-V International, RISC-V Advanced Interrupt Architecture",
+        "SPDX-License-Identifier: CC-BY-4.0",
+        "Field layouts transcribed; behavioral interpretation is not included."
+      ]
+    },
+    "hvienh": {
+      "definition": {
+        "name": "hvienh",
+        "address": 1560,
+        "priv_mode": "H",
+        "writable": true,
+        "length": 32,
+        "fields": {
+          "I32": {
+            "location": 0,
+            "type": "project-defined interrupt bit",
+            "alias": "hvien[32]"
+          },
+          "I33": {
+            "location": 1,
+            "type": "project-defined interrupt bit",
+            "alias": "hvien[33]"
+          },
+          "I34": {
+            "location": 2,
+            "type": "project-defined interrupt bit",
+            "alias": "hvien[34]"
+          },
+          "I35": {
+            "location": 3,
+            "type": "project-defined interrupt bit",
+            "alias": "hvien[35]"
+          },
+          "I36": {
+            "location": 4,
+            "type": "project-defined interrupt bit",
+            "alias": "hvien[36]"
+          },
+          "I37": {
+            "location": 5,
+            "type": "project-defined interrupt bit",
+            "alias": "hvien[37]"
+          },
+          "I38": {
+            "location": 6,
+            "type": "project-defined interrupt bit",
+            "alias": "hvien[38]"
+          },
+          "I39": {
+            "location": 7,
+            "type": "project-defined interrupt bit",
+            "alias": "hvien[39]"
+          },
+          "I40": {
+            "location": 8,
+            "type": "project-defined interrupt bit",
+            "alias": "hvien[40]"
+          },
+          "I41": {
+            "location": 9,
+            "type": "project-defined interrupt bit",
+            "alias": "hvien[41]"
+          },
+          "I42": {
+            "location": 10,
+            "type": "project-defined interrupt bit",
+            "alias": "hvien[42]"
+          },
+          "I43": {
+            "location": 11,
+            "type": "project-defined interrupt bit",
+            "alias": "hvien[43]"
+          },
+          "I44": {
+            "location": 12,
+            "type": "project-defined interrupt bit",
+            "alias": "hvien[44]"
+          },
+          "I45": {
+            "location": 13,
+            "type": "project-defined interrupt bit",
+            "alias": "hvien[45]"
+          },
+          "I46": {
+            "location": 14,
+            "type": "project-defined interrupt bit",
+            "alias": "hvien[46]"
+          },
+          "I47": {
+            "location": 15,
+            "type": "project-defined interrupt bit",
+            "alias": "hvien[47]"
+          },
+          "I48": {
+            "location": 16,
+            "type": "project-defined interrupt bit",
+            "alias": "hvien[48]"
+          },
+          "I49": {
+            "location": 17,
+            "type": "project-defined interrupt bit",
+            "alias": "hvien[49]"
+          },
+          "I50": {
+            "location": 18,
+            "type": "project-defined interrupt bit",
+            "alias": "hvien[50]"
+          },
+          "I51": {
+            "location": 19,
+            "type": "project-defined interrupt bit",
+            "alias": "hvien[51]"
+          },
+          "I52": {
+            "location": 20,
+            "type": "project-defined interrupt bit",
+            "alias": "hvien[52]"
+          },
+          "I53": {
+            "location": 21,
+            "type": "project-defined interrupt bit",
+            "alias": "hvien[53]"
+          },
+          "I54": {
+            "location": 22,
+            "type": "project-defined interrupt bit",
+            "alias": "hvien[54]"
+          },
+          "I55": {
+            "location": 23,
+            "type": "project-defined interrupt bit",
+            "alias": "hvien[55]"
+          },
+          "I56": {
+            "location": 24,
+            "type": "project-defined interrupt bit",
+            "alias": "hvien[56]"
+          },
+          "I57": {
+            "location": 25,
+            "type": "project-defined interrupt bit",
+            "alias": "hvien[57]"
+          },
+          "I58": {
+            "location": 26,
+            "type": "project-defined interrupt bit",
+            "alias": "hvien[58]"
+          },
+          "I59": {
+            "location": 27,
+            "type": "project-defined interrupt bit",
+            "alias": "hvien[59]"
+          },
+          "I60": {
+            "location": 28,
+            "type": "project-defined interrupt bit",
+            "alias": "hvien[60]"
+          },
+          "I61": {
+            "location": 29,
+            "type": "project-defined interrupt bit",
+            "alias": "hvien[61]"
+          },
+          "I62": {
+            "location": 30,
+            "type": "project-defined interrupt bit",
+            "alias": "hvien[62]"
+          },
+          "I63": {
+            "location": 31,
+            "type": "project-defined interrupt bit",
+            "alias": "hvien[63]"
+          }
+        },
+        "definedBy": "Ssaia",
+        "requires_alias_model": true
+      },
+      "source": "src/CSRs.adoc",
+      "sha256": "c194138487c954c6616dc2d46487cb9bfc0bb913ce371e72f8963cf1db083c0f",
+      "field_sources": {
+        "src/CSRs.adoc": "c194138487c954c6616dc2d46487cb9bfc0bb913ce371e72f8963cf1db083c0f",
+        "src/MSLevel.adoc": "0f5fa09009fc9d66570056662e0e45b8935fb6f76dcde22f05d27cb53b6f538c",
+        "src/VSLevel.adoc": "9d6d1a02ffd959db6dd837b452d57100a143d3c02751ab723e0dee52dbc1efe1",
+        "src/IMSIC.adoc": "a1ffc788b735324fa2079753a682f23a9e15b6dd1690863b69fdca406f0482d1"
+      },
+      "upstream": "https://github.com/riscv/riscv-aia",
+      "revision": "9507866427961d4ec2d2400ea875103b2a09520b",
+      "notices": [
+        "RISC-V International, RISC-V Advanced Interrupt Architecture",
+        "SPDX-License-Identifier: CC-BY-4.0",
+        "Field layouts transcribed; behavioral interpretation is not included."
+      ]
+    },
+    "hviprio1": {
+      "definition": {
+        "name": "hviprio1",
+        "address": 1606,
+        "priv_mode": "H",
+        "writable": true,
+        "length": 64,
+        "fields": {
+          "P1": {
+            "location": "15-8",
+            "type": "WARL or read-only zero"
+          },
+          "P5": {
+            "location": "31-24",
+            "type": "WARL or read-only zero"
+          },
+          "P13": {
+            "location": "47-40",
+            "type": "WARL or read-only zero"
+          },
+          "P14": {
+            "location": "55-48",
+            "type": "WARL or read-only zero"
+          },
+          "P15": {
+            "location": "63-56",
+            "type": "WARL or read-only zero"
+          }
+        },
+        "definedBy": "Ssaia"
+      },
+      "source": "src/CSRs.adoc",
+      "sha256": "c194138487c954c6616dc2d46487cb9bfc0bb913ce371e72f8963cf1db083c0f",
+      "field_sources": {
+        "src/CSRs.adoc": "c194138487c954c6616dc2d46487cb9bfc0bb913ce371e72f8963cf1db083c0f",
+        "src/MSLevel.adoc": "0f5fa09009fc9d66570056662e0e45b8935fb6f76dcde22f05d27cb53b6f538c",
+        "src/VSLevel.adoc": "9d6d1a02ffd959db6dd837b452d57100a143d3c02751ab723e0dee52dbc1efe1",
+        "src/IMSIC.adoc": "a1ffc788b735324fa2079753a682f23a9e15b6dd1690863b69fdca406f0482d1"
+      },
+      "upstream": "https://github.com/riscv/riscv-aia",
+      "revision": "9507866427961d4ec2d2400ea875103b2a09520b",
+      "notices": [
+        "RISC-V International, RISC-V Advanced Interrupt Architecture",
+        "SPDX-License-Identifier: CC-BY-4.0",
+        "Field layouts transcribed; behavioral interpretation is not included."
+      ]
+    },
+    "hviprio2": {
+      "definition": {
+        "name": "hviprio2",
+        "address": 1607,
+        "priv_mode": "H",
+        "writable": true,
+        "length": 64,
+        "fields": {
+          "P16": {
+            "location": "7-0",
+            "type": "WARL or read-only zero"
+          },
+          "P17": {
+            "location": "15-8",
+            "type": "WARL or read-only zero"
+          },
+          "P18": {
+            "location": "23-16",
+            "type": "WARL or read-only zero"
+          },
+          "P19": {
+            "location": "31-24",
+            "type": "WARL or read-only zero"
+          },
+          "P20": {
+            "location": "39-32",
+            "type": "WARL or read-only zero"
+          },
+          "P21": {
+            "location": "47-40",
+            "type": "WARL or read-only zero"
+          },
+          "P22": {
+            "location": "55-48",
+            "type": "WARL or read-only zero"
+          },
+          "P23": {
+            "location": "63-56",
+            "type": "WARL or read-only zero"
+          }
+        },
+        "definedBy": "Ssaia"
+      },
+      "source": "src/CSRs.adoc",
+      "sha256": "c194138487c954c6616dc2d46487cb9bfc0bb913ce371e72f8963cf1db083c0f",
+      "field_sources": {
+        "src/CSRs.adoc": "c194138487c954c6616dc2d46487cb9bfc0bb913ce371e72f8963cf1db083c0f",
+        "src/MSLevel.adoc": "0f5fa09009fc9d66570056662e0e45b8935fb6f76dcde22f05d27cb53b6f538c",
+        "src/VSLevel.adoc": "9d6d1a02ffd959db6dd837b452d57100a143d3c02751ab723e0dee52dbc1efe1",
+        "src/IMSIC.adoc": "a1ffc788b735324fa2079753a682f23a9e15b6dd1690863b69fdca406f0482d1"
+      },
+      "upstream": "https://github.com/riscv/riscv-aia",
+      "revision": "9507866427961d4ec2d2400ea875103b2a09520b",
+      "notices": [
+        "RISC-V International, RISC-V Advanced Interrupt Architecture",
+        "SPDX-License-Identifier: CC-BY-4.0",
+        "Field layouts transcribed; behavioral interpretation is not included."
+      ]
+    },
+    "hviprio1h": {
+      "definition": {
+        "name": "hviprio1h",
+        "address": 1622,
+        "priv_mode": "H",
+        "writable": true,
+        "length": 32,
+        "fields": {
+          "P13": {
+            "location": "15-8",
+            "type": "WARL or read-only zero",
+            "alias": "hviprio1.P13"
+          },
+          "P14": {
+            "location": "23-16",
+            "type": "WARL or read-only zero",
+            "alias": "hviprio1.P14"
+          },
+          "P15": {
+            "location": "31-24",
+            "type": "WARL or read-only zero",
+            "alias": "hviprio1.P15"
+          }
+        },
+        "definedBy": "Ssaia",
+        "requires_alias_model": true
+      },
+      "source": "src/CSRs.adoc",
+      "sha256": "c194138487c954c6616dc2d46487cb9bfc0bb913ce371e72f8963cf1db083c0f",
+      "field_sources": {
+        "src/CSRs.adoc": "c194138487c954c6616dc2d46487cb9bfc0bb913ce371e72f8963cf1db083c0f",
+        "src/MSLevel.adoc": "0f5fa09009fc9d66570056662e0e45b8935fb6f76dcde22f05d27cb53b6f538c",
+        "src/VSLevel.adoc": "9d6d1a02ffd959db6dd837b452d57100a143d3c02751ab723e0dee52dbc1efe1",
+        "src/IMSIC.adoc": "a1ffc788b735324fa2079753a682f23a9e15b6dd1690863b69fdca406f0482d1"
+      },
+      "upstream": "https://github.com/riscv/riscv-aia",
+      "revision": "9507866427961d4ec2d2400ea875103b2a09520b",
+      "notices": [
+        "RISC-V International, RISC-V Advanced Interrupt Architecture",
+        "SPDX-License-Identifier: CC-BY-4.0",
+        "Field layouts transcribed; behavioral interpretation is not included."
+      ]
+    },
+    "hviprio2h": {
+      "definition": {
+        "name": "hviprio2h",
+        "address": 1623,
+        "priv_mode": "H",
+        "writable": true,
+        "length": 32,
+        "fields": {
+          "P20": {
+            "location": "7-0",
+            "type": "WARL or read-only zero",
+            "alias": "hviprio2.P20"
+          },
+          "P21": {
+            "location": "15-8",
+            "type": "WARL or read-only zero",
+            "alias": "hviprio2.P21"
+          },
+          "P22": {
+            "location": "23-16",
+            "type": "WARL or read-only zero",
+            "alias": "hviprio2.P22"
+          },
+          "P23": {
+            "location": "31-24",
+            "type": "WARL or read-only zero",
+            "alias": "hviprio2.P23"
+          }
+        },
+        "definedBy": "Ssaia",
+        "requires_alias_model": true
+      },
+      "source": "src/CSRs.adoc",
+      "sha256": "c194138487c954c6616dc2d46487cb9bfc0bb913ce371e72f8963cf1db083c0f",
+      "field_sources": {
+        "src/CSRs.adoc": "c194138487c954c6616dc2d46487cb9bfc0bb913ce371e72f8963cf1db083c0f",
+        "src/MSLevel.adoc": "0f5fa09009fc9d66570056662e0e45b8935fb6f76dcde22f05d27cb53b6f538c",
+        "src/VSLevel.adoc": "9d6d1a02ffd959db6dd837b452d57100a143d3c02751ab723e0dee52dbc1efe1",
+        "src/IMSIC.adoc": "a1ffc788b735324fa2079753a682f23a9e15b6dd1690863b69fdca406f0482d1"
+      },
+      "upstream": "https://github.com/riscv/riscv-aia",
+      "revision": "9507866427961d4ec2d2400ea875103b2a09520b",
+      "notices": [
+        "RISC-V International, RISC-V Advanced Interrupt Architecture",
+        "SPDX-License-Identifier: CC-BY-4.0",
+        "Field layouts transcribed; behavioral interpretation is not included."
+      ]
+    },
+    "hviph": {
+      "definition": {
+        "name": "hviph",
+        "address": 1621,
+        "priv_mode": "H",
+        "writable": true,
+        "length": 32,
+        "fields": {
+          "I32": {
+            "location": 0,
+            "type": "project-defined interrupt bit",
+            "alias": "hvip[32]"
+          },
+          "I33": {
+            "location": 1,
+            "type": "project-defined interrupt bit",
+            "alias": "hvip[33]"
+          },
+          "I34": {
+            "location": 2,
+            "type": "project-defined interrupt bit",
+            "alias": "hvip[34]"
+          },
+          "I35": {
+            "location": 3,
+            "type": "project-defined interrupt bit",
+            "alias": "hvip[35]"
+          },
+          "I36": {
+            "location": 4,
+            "type": "project-defined interrupt bit",
+            "alias": "hvip[36]"
+          },
+          "I37": {
+            "location": 5,
+            "type": "project-defined interrupt bit",
+            "alias": "hvip[37]"
+          },
+          "I38": {
+            "location": 6,
+            "type": "project-defined interrupt bit",
+            "alias": "hvip[38]"
+          },
+          "I39": {
+            "location": 7,
+            "type": "project-defined interrupt bit",
+            "alias": "hvip[39]"
+          },
+          "I40": {
+            "location": 8,
+            "type": "project-defined interrupt bit",
+            "alias": "hvip[40]"
+          },
+          "I41": {
+            "location": 9,
+            "type": "project-defined interrupt bit",
+            "alias": "hvip[41]"
+          },
+          "I42": {
+            "location": 10,
+            "type": "project-defined interrupt bit",
+            "alias": "hvip[42]"
+          },
+          "I43": {
+            "location": 11,
+            "type": "project-defined interrupt bit",
+            "alias": "hvip[43]"
+          },
+          "I44": {
+            "location": 12,
+            "type": "project-defined interrupt bit",
+            "alias": "hvip[44]"
+          },
+          "I45": {
+            "location": 13,
+            "type": "project-defined interrupt bit",
+            "alias": "hvip[45]"
+          },
+          "I46": {
+            "location": 14,
+            "type": "project-defined interrupt bit",
+            "alias": "hvip[46]"
+          },
+          "I47": {
+            "location": 15,
+            "type": "project-defined interrupt bit",
+            "alias": "hvip[47]"
+          },
+          "I48": {
+            "location": 16,
+            "type": "project-defined interrupt bit",
+            "alias": "hvip[48]"
+          },
+          "I49": {
+            "location": 17,
+            "type": "project-defined interrupt bit",
+            "alias": "hvip[49]"
+          },
+          "I50": {
+            "location": 18,
+            "type": "project-defined interrupt bit",
+            "alias": "hvip[50]"
+          },
+          "I51": {
+            "location": 19,
+            "type": "project-defined interrupt bit",
+            "alias": "hvip[51]"
+          },
+          "I52": {
+            "location": 20,
+            "type": "project-defined interrupt bit",
+            "alias": "hvip[52]"
+          },
+          "I53": {
+            "location": 21,
+            "type": "project-defined interrupt bit",
+            "alias": "hvip[53]"
+          },
+          "I54": {
+            "location": 22,
+            "type": "project-defined interrupt bit",
+            "alias": "hvip[54]"
+          },
+          "I55": {
+            "location": 23,
+            "type": "project-defined interrupt bit",
+            "alias": "hvip[55]"
+          },
+          "I56": {
+            "location": 24,
+            "type": "project-defined interrupt bit",
+            "alias": "hvip[56]"
+          },
+          "I57": {
+            "location": 25,
+            "type": "project-defined interrupt bit",
+            "alias": "hvip[57]"
+          },
+          "I58": {
+            "location": 26,
+            "type": "project-defined interrupt bit",
+            "alias": "hvip[58]"
+          },
+          "I59": {
+            "location": 27,
+            "type": "project-defined interrupt bit",
+            "alias": "hvip[59]"
+          },
+          "I60": {
+            "location": 28,
+            "type": "project-defined interrupt bit",
+            "alias": "hvip[60]"
+          },
+          "I61": {
+            "location": 29,
+            "type": "project-defined interrupt bit",
+            "alias": "hvip[61]"
+          },
+          "I62": {
+            "location": 30,
+            "type": "project-defined interrupt bit",
+            "alias": "hvip[62]"
+          },
+          "I63": {
+            "location": 31,
+            "type": "project-defined interrupt bit",
+            "alias": "hvip[63]"
+          }
+        },
+        "definedBy": "Ssaia",
+        "requires_alias_model": true
+      },
+      "source": "src/CSRs.adoc",
+      "sha256": "c194138487c954c6616dc2d46487cb9bfc0bb913ce371e72f8963cf1db083c0f",
+      "field_sources": {
+        "src/CSRs.adoc": "c194138487c954c6616dc2d46487cb9bfc0bb913ce371e72f8963cf1db083c0f",
+        "src/MSLevel.adoc": "0f5fa09009fc9d66570056662e0e45b8935fb6f76dcde22f05d27cb53b6f538c",
+        "src/VSLevel.adoc": "9d6d1a02ffd959db6dd837b452d57100a143d3c02751ab723e0dee52dbc1efe1",
+        "src/IMSIC.adoc": "a1ffc788b735324fa2079753a682f23a9e15b6dd1690863b69fdca406f0482d1"
+      },
+      "upstream": "https://github.com/riscv/riscv-aia",
+      "revision": "9507866427961d4ec2d2400ea875103b2a09520b",
+      "notices": [
+        "RISC-V International, RISC-V Advanced Interrupt Architecture",
+        "SPDX-License-Identifier: CC-BY-4.0",
+        "Field layouts transcribed; behavioral interpretation is not included."
+      ]
+    },
+    "vsieh": {
+      "definition": {
+        "name": "vsieh",
+        "address": 532,
+        "priv_mode": "H",
+        "writable": true,
+        "length": 32,
+        "fields": {
+          "I32": {
+            "location": 0,
+            "type": "project-defined interrupt bit",
+            "alias": "vsie[32]"
+          },
+          "I33": {
+            "location": 1,
+            "type": "project-defined interrupt bit",
+            "alias": "vsie[33]"
+          },
+          "I34": {
+            "location": 2,
+            "type": "project-defined interrupt bit",
+            "alias": "vsie[34]"
+          },
+          "I35": {
+            "location": 3,
+            "type": "project-defined interrupt bit",
+            "alias": "vsie[35]"
+          },
+          "I36": {
+            "location": 4,
+            "type": "project-defined interrupt bit",
+            "alias": "vsie[36]"
+          },
+          "I37": {
+            "location": 5,
+            "type": "project-defined interrupt bit",
+            "alias": "vsie[37]"
+          },
+          "I38": {
+            "location": 6,
+            "type": "project-defined interrupt bit",
+            "alias": "vsie[38]"
+          },
+          "I39": {
+            "location": 7,
+            "type": "project-defined interrupt bit",
+            "alias": "vsie[39]"
+          },
+          "I40": {
+            "location": 8,
+            "type": "project-defined interrupt bit",
+            "alias": "vsie[40]"
+          },
+          "I41": {
+            "location": 9,
+            "type": "project-defined interrupt bit",
+            "alias": "vsie[41]"
+          },
+          "I42": {
+            "location": 10,
+            "type": "project-defined interrupt bit",
+            "alias": "vsie[42]"
+          },
+          "I43": {
+            "location": 11,
+            "type": "project-defined interrupt bit",
+            "alias": "vsie[43]"
+          },
+          "I44": {
+            "location": 12,
+            "type": "project-defined interrupt bit",
+            "alias": "vsie[44]"
+          },
+          "I45": {
+            "location": 13,
+            "type": "project-defined interrupt bit",
+            "alias": "vsie[45]"
+          },
+          "I46": {
+            "location": 14,
+            "type": "project-defined interrupt bit",
+            "alias": "vsie[46]"
+          },
+          "I47": {
+            "location": 15,
+            "type": "project-defined interrupt bit",
+            "alias": "vsie[47]"
+          },
+          "I48": {
+            "location": 16,
+            "type": "project-defined interrupt bit",
+            "alias": "vsie[48]"
+          },
+          "I49": {
+            "location": 17,
+            "type": "project-defined interrupt bit",
+            "alias": "vsie[49]"
+          },
+          "I50": {
+            "location": 18,
+            "type": "project-defined interrupt bit",
+            "alias": "vsie[50]"
+          },
+          "I51": {
+            "location": 19,
+            "type": "project-defined interrupt bit",
+            "alias": "vsie[51]"
+          },
+          "I52": {
+            "location": 20,
+            "type": "project-defined interrupt bit",
+            "alias": "vsie[52]"
+          },
+          "I53": {
+            "location": 21,
+            "type": "project-defined interrupt bit",
+            "alias": "vsie[53]"
+          },
+          "I54": {
+            "location": 22,
+            "type": "project-defined interrupt bit",
+            "alias": "vsie[54]"
+          },
+          "I55": {
+            "location": 23,
+            "type": "project-defined interrupt bit",
+            "alias": "vsie[55]"
+          },
+          "I56": {
+            "location": 24,
+            "type": "project-defined interrupt bit",
+            "alias": "vsie[56]"
+          },
+          "I57": {
+            "location": 25,
+            "type": "project-defined interrupt bit",
+            "alias": "vsie[57]"
+          },
+          "I58": {
+            "location": 26,
+            "type": "project-defined interrupt bit",
+            "alias": "vsie[58]"
+          },
+          "I59": {
+            "location": 27,
+            "type": "project-defined interrupt bit",
+            "alias": "vsie[59]"
+          },
+          "I60": {
+            "location": 28,
+            "type": "project-defined interrupt bit",
+            "alias": "vsie[60]"
+          },
+          "I61": {
+            "location": 29,
+            "type": "project-defined interrupt bit",
+            "alias": "vsie[61]"
+          },
+          "I62": {
+            "location": 30,
+            "type": "project-defined interrupt bit",
+            "alias": "vsie[62]"
+          },
+          "I63": {
+            "location": 31,
+            "type": "project-defined interrupt bit",
+            "alias": "vsie[63]"
+          }
+        },
+        "definedBy": "Ssaia",
+        "requires_alias_model": true
+      },
+      "source": "src/CSRs.adoc",
+      "sha256": "c194138487c954c6616dc2d46487cb9bfc0bb913ce371e72f8963cf1db083c0f",
+      "field_sources": {
+        "src/CSRs.adoc": "c194138487c954c6616dc2d46487cb9bfc0bb913ce371e72f8963cf1db083c0f",
+        "src/MSLevel.adoc": "0f5fa09009fc9d66570056662e0e45b8935fb6f76dcde22f05d27cb53b6f538c",
+        "src/VSLevel.adoc": "9d6d1a02ffd959db6dd837b452d57100a143d3c02751ab723e0dee52dbc1efe1",
+        "src/IMSIC.adoc": "a1ffc788b735324fa2079753a682f23a9e15b6dd1690863b69fdca406f0482d1"
+      },
+      "upstream": "https://github.com/riscv/riscv-aia",
+      "revision": "9507866427961d4ec2d2400ea875103b2a09520b",
+      "notices": [
+        "RISC-V International, RISC-V Advanced Interrupt Architecture",
+        "SPDX-License-Identifier: CC-BY-4.0",
+        "Field layouts transcribed; behavioral interpretation is not included."
+      ]
+    },
+    "vsiph": {
+      "definition": {
+        "name": "vsiph",
+        "address": 596,
+        "priv_mode": "H",
+        "writable": true,
+        "length": 32,
+        "fields": {
+          "I32": {
+            "location": 0,
+            "type": "project-defined interrupt bit",
+            "alias": "vsip[32]"
+          },
+          "I33": {
+            "location": 1,
+            "type": "project-defined interrupt bit",
+            "alias": "vsip[33]"
+          },
+          "I34": {
+            "location": 2,
+            "type": "project-defined interrupt bit",
+            "alias": "vsip[34]"
+          },
+          "I35": {
+            "location": 3,
+            "type": "project-defined interrupt bit",
+            "alias": "vsip[35]"
+          },
+          "I36": {
+            "location": 4,
+            "type": "project-defined interrupt bit",
+            "alias": "vsip[36]"
+          },
+          "I37": {
+            "location": 5,
+            "type": "project-defined interrupt bit",
+            "alias": "vsip[37]"
+          },
+          "I38": {
+            "location": 6,
+            "type": "project-defined interrupt bit",
+            "alias": "vsip[38]"
+          },
+          "I39": {
+            "location": 7,
+            "type": "project-defined interrupt bit",
+            "alias": "vsip[39]"
+          },
+          "I40": {
+            "location": 8,
+            "type": "project-defined interrupt bit",
+            "alias": "vsip[40]"
+          },
+          "I41": {
+            "location": 9,
+            "type": "project-defined interrupt bit",
+            "alias": "vsip[41]"
+          },
+          "I42": {
+            "location": 10,
+            "type": "project-defined interrupt bit",
+            "alias": "vsip[42]"
+          },
+          "I43": {
+            "location": 11,
+            "type": "project-defined interrupt bit",
+            "alias": "vsip[43]"
+          },
+          "I44": {
+            "location": 12,
+            "type": "project-defined interrupt bit",
+            "alias": "vsip[44]"
+          },
+          "I45": {
+            "location": 13,
+            "type": "project-defined interrupt bit",
+            "alias": "vsip[45]"
+          },
+          "I46": {
+            "location": 14,
+            "type": "project-defined interrupt bit",
+            "alias": "vsip[46]"
+          },
+          "I47": {
+            "location": 15,
+            "type": "project-defined interrupt bit",
+            "alias": "vsip[47]"
+          },
+          "I48": {
+            "location": 16,
+            "type": "project-defined interrupt bit",
+            "alias": "vsip[48]"
+          },
+          "I49": {
+            "location": 17,
+            "type": "project-defined interrupt bit",
+            "alias": "vsip[49]"
+          },
+          "I50": {
+            "location": 18,
+            "type": "project-defined interrupt bit",
+            "alias": "vsip[50]"
+          },
+          "I51": {
+            "location": 19,
+            "type": "project-defined interrupt bit",
+            "alias": "vsip[51]"
+          },
+          "I52": {
+            "location": 20,
+            "type": "project-defined interrupt bit",
+            "alias": "vsip[52]"
+          },
+          "I53": {
+            "location": 21,
+            "type": "project-defined interrupt bit",
+            "alias": "vsip[53]"
+          },
+          "I54": {
+            "location": 22,
+            "type": "project-defined interrupt bit",
+            "alias": "vsip[54]"
+          },
+          "I55": {
+            "location": 23,
+            "type": "project-defined interrupt bit",
+            "alias": "vsip[55]"
+          },
+          "I56": {
+            "location": 24,
+            "type": "project-defined interrupt bit",
+            "alias": "vsip[56]"
+          },
+          "I57": {
+            "location": 25,
+            "type": "project-defined interrupt bit",
+            "alias": "vsip[57]"
+          },
+          "I58": {
+            "location": 26,
+            "type": "project-defined interrupt bit",
+            "alias": "vsip[58]"
+          },
+          "I59": {
+            "location": 27,
+            "type": "project-defined interrupt bit",
+            "alias": "vsip[59]"
+          },
+          "I60": {
+            "location": 28,
+            "type": "project-defined interrupt bit",
+            "alias": "vsip[60]"
+          },
+          "I61": {
+            "location": 29,
+            "type": "project-defined interrupt bit",
+            "alias": "vsip[61]"
+          },
+          "I62": {
+            "location": 30,
+            "type": "project-defined interrupt bit",
+            "alias": "vsip[62]"
+          },
+          "I63": {
+            "location": 31,
+            "type": "project-defined interrupt bit",
+            "alias": "vsip[63]"
+          }
+        },
+        "definedBy": "Ssaia",
+        "requires_alias_model": true
+      },
+      "source": "src/CSRs.adoc",
+      "sha256": "c194138487c954c6616dc2d46487cb9bfc0bb913ce371e72f8963cf1db083c0f",
+      "field_sources": {
+        "src/CSRs.adoc": "c194138487c954c6616dc2d46487cb9bfc0bb913ce371e72f8963cf1db083c0f",
+        "src/MSLevel.adoc": "0f5fa09009fc9d66570056662e0e45b8935fb6f76dcde22f05d27cb53b6f538c",
+        "src/VSLevel.adoc": "9d6d1a02ffd959db6dd837b452d57100a143d3c02751ab723e0dee52dbc1efe1",
+        "src/IMSIC.adoc": "a1ffc788b735324fa2079753a682f23a9e15b6dd1690863b69fdca406f0482d1"
+      },
+      "upstream": "https://github.com/riscv/riscv-aia",
+      "revision": "9507866427961d4ec2d2400ea875103b2a09520b",
+      "notices": [
+        "RISC-V International, RISC-V Advanced Interrupt Architecture",
+        "SPDX-License-Identifier: CC-BY-4.0",
+        "Field layouts transcribed; behavioral interpretation is not included."
+      ]
+    },
+    "vstopei": {
+      "definition": {
+        "name": "vstopei",
+        "address": 604,
+        "priv_mode": "H",
+        "writable": true,
+        "length": "XLEN",
+        "fields": {
+          "IID": {
+            "location": "26-16",
+            "type": "RO"
+          },
+          "IPRIO": {
+            "location": "10-0",
+            "type": "RO"
+          }
+        },
+        "definedBy": "Ssaia",
+        "requires_environment_model": true,
+        "write_effect": "claim current pending interrupt; written data is ignored"
+      },
+      "source": "src/CSRs.adoc",
+      "sha256": "c194138487c954c6616dc2d46487cb9bfc0bb913ce371e72f8963cf1db083c0f",
+      "field_sources": {
+        "src/CSRs.adoc": "c194138487c954c6616dc2d46487cb9bfc0bb913ce371e72f8963cf1db083c0f",
+        "src/MSLevel.adoc": "0f5fa09009fc9d66570056662e0e45b8935fb6f76dcde22f05d27cb53b6f538c",
+        "src/VSLevel.adoc": "9d6d1a02ffd959db6dd837b452d57100a143d3c02751ab723e0dee52dbc1efe1",
+        "src/IMSIC.adoc": "a1ffc788b735324fa2079753a682f23a9e15b6dd1690863b69fdca406f0482d1"
+      },
+      "upstream": "https://github.com/riscv/riscv-aia",
+      "revision": "9507866427961d4ec2d2400ea875103b2a09520b",
+      "notices": [
+        "RISC-V International, RISC-V Advanced Interrupt Architecture",
+        "SPDX-License-Identifier: CC-BY-4.0",
+        "Field layouts transcribed; behavioral interpretation is not included."
+      ]
+    },
+    "vstopi": {
+      "definition": {
+        "name": "vstopi",
+        "address": 3760,
+        "priv_mode": "H",
+        "writable": false,
+        "length": "XLEN",
+        "fields": {
+          "IID": {
+            "location": "27-16",
+            "type": "RO"
+          },
+          "IPRIO": {
+            "location": "7-0",
+            "type": "RO"
+          }
+        },
+        "definedBy": "Ssaia",
+        "requires_environment_model": true
+      },
+      "source": "src/CSRs.adoc",
+      "sha256": "c194138487c954c6616dc2d46487cb9bfc0bb913ce371e72f8963cf1db083c0f",
+      "field_sources": {
+        "src/CSRs.adoc": "c194138487c954c6616dc2d46487cb9bfc0bb913ce371e72f8963cf1db083c0f",
+        "src/MSLevel.adoc": "0f5fa09009fc9d66570056662e0e45b8935fb6f76dcde22f05d27cb53b6f538c",
+        "src/VSLevel.adoc": "9d6d1a02ffd959db6dd837b452d57100a143d3c02751ab723e0dee52dbc1efe1",
+        "src/IMSIC.adoc": "a1ffc788b735324fa2079753a682f23a9e15b6dd1690863b69fdca406f0482d1"
+      },
+      "upstream": "https://github.com/riscv/riscv-aia",
+      "revision": "9507866427961d4ec2d2400ea875103b2a09520b",
+      "notices": [
+        "RISC-V International, RISC-V Advanced Interrupt Architecture",
+        "SPDX-License-Identifier: CC-BY-4.0",
+        "Field layouts transcribed; behavioral interpretation is not included."
+      ]
+    },
+    "mvien": {
+      "definition": {
+        "name": "mvien",
+        "address": 776,
+        "priv_mode": "M",
+        "writable": true,
+        "length": 64,
+        "fields": {
+          "I1": {
+            "location": 1,
+            "type": "project-dependent interrupt bit"
+          },
+          "I9": {
+            "location": 9,
+            "type": "project-dependent interrupt bit"
+          },
+          "I13": {
+            "location": 13,
+            "type": "project-dependent interrupt bit"
+          },
+          "I14": {
+            "location": 14,
+            "type": "project-dependent interrupt bit"
+          },
+          "I15": {
+            "location": 15,
+            "type": "project-dependent interrupt bit"
+          },
+          "I16": {
+            "location": 16,
+            "type": "project-dependent interrupt bit"
+          },
+          "I17": {
+            "location": 17,
+            "type": "project-dependent interrupt bit"
+          },
+          "I18": {
+            "location": 18,
+            "type": "project-dependent interrupt bit"
+          },
+          "I19": {
+            "location": 19,
+            "type": "project-dependent interrupt bit"
+          },
+          "I20": {
+            "location": 20,
+            "type": "project-dependent interrupt bit"
+          },
+          "I21": {
+            "location": 21,
+            "type": "project-dependent interrupt bit"
+          },
+          "I22": {
+            "location": 22,
+            "type": "project-dependent interrupt bit"
+          },
+          "I23": {
+            "location": 23,
+            "type": "project-dependent interrupt bit"
+          },
+          "I24": {
+            "location": 24,
+            "type": "project-dependent interrupt bit"
+          },
+          "I25": {
+            "location": 25,
+            "type": "project-dependent interrupt bit"
+          },
+          "I26": {
+            "location": 26,
+            "type": "project-dependent interrupt bit"
+          },
+          "I27": {
+            "location": 27,
+            "type": "project-dependent interrupt bit"
+          },
+          "I28": {
+            "location": 28,
+            "type": "project-dependent interrupt bit"
+          },
+          "I29": {
+            "location": 29,
+            "type": "project-dependent interrupt bit"
+          },
+          "I30": {
+            "location": 30,
+            "type": "project-dependent interrupt bit"
+          },
+          "I31": {
+            "location": 31,
+            "type": "project-dependent interrupt bit"
+          },
+          "I32": {
+            "location": 32,
+            "type": "project-dependent interrupt bit"
+          },
+          "I33": {
+            "location": 33,
+            "type": "project-dependent interrupt bit"
+          },
+          "I34": {
+            "location": 34,
+            "type": "project-dependent interrupt bit"
+          },
+          "I35": {
+            "location": 35,
+            "type": "project-dependent interrupt bit"
+          },
+          "I36": {
+            "location": 36,
+            "type": "project-dependent interrupt bit"
+          },
+          "I37": {
+            "location": 37,
+            "type": "project-dependent interrupt bit"
+          },
+          "I38": {
+            "location": 38,
+            "type": "project-dependent interrupt bit"
+          },
+          "I39": {
+            "location": 39,
+            "type": "project-dependent interrupt bit"
+          },
+          "I40": {
+            "location": 40,
+            "type": "project-dependent interrupt bit"
+          },
+          "I41": {
+            "location": 41,
+            "type": "project-dependent interrupt bit"
+          },
+          "I42": {
+            "location": 42,
+            "type": "project-dependent interrupt bit"
+          },
+          "I43": {
+            "location": 43,
+            "type": "project-dependent interrupt bit"
+          },
+          "I44": {
+            "location": 44,
+            "type": "project-dependent interrupt bit"
+          },
+          "I45": {
+            "location": 45,
+            "type": "project-dependent interrupt bit"
+          },
+          "I46": {
+            "location": 46,
+            "type": "project-dependent interrupt bit"
+          },
+          "I47": {
+            "location": 47,
+            "type": "project-dependent interrupt bit"
+          },
+          "I48": {
+            "location": 48,
+            "type": "project-dependent interrupt bit"
+          },
+          "I49": {
+            "location": 49,
+            "type": "project-dependent interrupt bit"
+          },
+          "I50": {
+            "location": 50,
+            "type": "project-dependent interrupt bit"
+          },
+          "I51": {
+            "location": 51,
+            "type": "project-dependent interrupt bit"
+          },
+          "I52": {
+            "location": 52,
+            "type": "project-dependent interrupt bit"
+          },
+          "I53": {
+            "location": 53,
+            "type": "project-dependent interrupt bit"
+          },
+          "I54": {
+            "location": 54,
+            "type": "project-dependent interrupt bit"
+          },
+          "I55": {
+            "location": 55,
+            "type": "project-dependent interrupt bit"
+          },
+          "I56": {
+            "location": 56,
+            "type": "project-dependent interrupt bit"
+          },
+          "I57": {
+            "location": 57,
+            "type": "project-dependent interrupt bit"
+          },
+          "I58": {
+            "location": 58,
+            "type": "project-dependent interrupt bit"
+          },
+          "I59": {
+            "location": 59,
+            "type": "project-dependent interrupt bit"
+          },
+          "I60": {
+            "location": 60,
+            "type": "project-dependent interrupt bit"
+          },
+          "I61": {
+            "location": 61,
+            "type": "project-dependent interrupt bit"
+          },
+          "I62": {
+            "location": 62,
+            "type": "project-dependent interrupt bit"
+          },
+          "I63": {
+            "location": 63,
+            "type": "project-dependent interrupt bit"
+          }
+        },
+        "definedBy": "Smaia",
+        "requires_environment_model": true
+      },
+      "source": "src/CSRs.adoc",
+      "sha256": "c194138487c954c6616dc2d46487cb9bfc0bb913ce371e72f8963cf1db083c0f",
+      "field_sources": {
+        "src/CSRs.adoc": "c194138487c954c6616dc2d46487cb9bfc0bb913ce371e72f8963cf1db083c0f",
+        "src/MSLevel.adoc": "0f5fa09009fc9d66570056662e0e45b8935fb6f76dcde22f05d27cb53b6f538c",
+        "src/VSLevel.adoc": "9d6d1a02ffd959db6dd837b452d57100a143d3c02751ab723e0dee52dbc1efe1",
+        "src/IMSIC.adoc": "a1ffc788b735324fa2079753a682f23a9e15b6dd1690863b69fdca406f0482d1"
+      },
+      "upstream": "https://github.com/riscv/riscv-aia",
+      "revision": "9507866427961d4ec2d2400ea875103b2a09520b",
+      "notices": [
+        "RISC-V International, RISC-V Advanced Interrupt Architecture",
+        "SPDX-License-Identifier: CC-BY-4.0",
+        "Field layouts transcribed; behavioral interpretation is not included."
+      ]
+    },
+    "mvip": {
+      "definition": {
+        "name": "mvip",
+        "address": 777,
+        "priv_mode": "M",
+        "writable": true,
+        "length": 64,
+        "fields": {
+          "I1": {
+            "location": 1,
+            "type": "project-dependent interrupt bit",
+            "alias": "mip bit under mvien and STCE conditions"
+          },
+          "I5": {
+            "location": 5,
+            "type": "project-dependent interrupt bit",
+            "alias": "mip bit under mvien and STCE conditions"
+          },
+          "I9": {
+            "location": 9,
+            "type": "project-dependent interrupt bit",
+            "alias": "mip bit under mvien and STCE conditions"
+          },
+          "I13": {
+            "location": 13,
+            "type": "project-dependent interrupt bit"
+          },
+          "I14": {
+            "location": 14,
+            "type": "project-dependent interrupt bit"
+          },
+          "I15": {
+            "location": 15,
+            "type": "project-dependent interrupt bit"
+          },
+          "I16": {
+            "location": 16,
+            "type": "project-dependent interrupt bit"
+          },
+          "I17": {
+            "location": 17,
+            "type": "project-dependent interrupt bit"
+          },
+          "I18": {
+            "location": 18,
+            "type": "project-dependent interrupt bit"
+          },
+          "I19": {
+            "location": 19,
+            "type": "project-dependent interrupt bit"
+          },
+          "I20": {
+            "location": 20,
+            "type": "project-dependent interrupt bit"
+          },
+          "I21": {
+            "location": 21,
+            "type": "project-dependent interrupt bit"
+          },
+          "I22": {
+            "location": 22,
+            "type": "project-dependent interrupt bit"
+          },
+          "I23": {
+            "location": 23,
+            "type": "project-dependent interrupt bit"
+          },
+          "I24": {
+            "location": 24,
+            "type": "project-dependent interrupt bit"
+          },
+          "I25": {
+            "location": 25,
+            "type": "project-dependent interrupt bit"
+          },
+          "I26": {
+            "location": 26,
+            "type": "project-dependent interrupt bit"
+          },
+          "I27": {
+            "location": 27,
+            "type": "project-dependent interrupt bit"
+          },
+          "I28": {
+            "location": 28,
+            "type": "project-dependent interrupt bit"
+          },
+          "I29": {
+            "location": 29,
+            "type": "project-dependent interrupt bit"
+          },
+          "I30": {
+            "location": 30,
+            "type": "project-dependent interrupt bit"
+          },
+          "I31": {
+            "location": 31,
+            "type": "project-dependent interrupt bit"
+          },
+          "I32": {
+            "location": 32,
+            "type": "project-dependent interrupt bit"
+          },
+          "I33": {
+            "location": 33,
+            "type": "project-dependent interrupt bit"
+          },
+          "I34": {
+            "location": 34,
+            "type": "project-dependent interrupt bit"
+          },
+          "I35": {
+            "location": 35,
+            "type": "project-dependent interrupt bit"
+          },
+          "I36": {
+            "location": 36,
+            "type": "project-dependent interrupt bit"
+          },
+          "I37": {
+            "location": 37,
+            "type": "project-dependent interrupt bit"
+          },
+          "I38": {
+            "location": 38,
+            "type": "project-dependent interrupt bit"
+          },
+          "I39": {
+            "location": 39,
+            "type": "project-dependent interrupt bit"
+          },
+          "I40": {
+            "location": 40,
+            "type": "project-dependent interrupt bit"
+          },
+          "I41": {
+            "location": 41,
+            "type": "project-dependent interrupt bit"
+          },
+          "I42": {
+            "location": 42,
+            "type": "project-dependent interrupt bit"
+          },
+          "I43": {
+            "location": 43,
+            "type": "project-dependent interrupt bit"
+          },
+          "I44": {
+            "location": 44,
+            "type": "project-dependent interrupt bit"
+          },
+          "I45": {
+            "location": 45,
+            "type": "project-dependent interrupt bit"
+          },
+          "I46": {
+            "location": 46,
+            "type": "project-dependent interrupt bit"
+          },
+          "I47": {
+            "location": 47,
+            "type": "project-dependent interrupt bit"
+          },
+          "I48": {
+            "location": 48,
+            "type": "project-dependent interrupt bit"
+          },
+          "I49": {
+            "location": 49,
+            "type": "project-dependent interrupt bit"
+          },
+          "I50": {
+            "location": 50,
+            "type": "project-dependent interrupt bit"
+          },
+          "I51": {
+            "location": 51,
+            "type": "project-dependent interrupt bit"
+          },
+          "I52": {
+            "location": 52,
+            "type": "project-dependent interrupt bit"
+          },
+          "I53": {
+            "location": 53,
+            "type": "project-dependent interrupt bit"
+          },
+          "I54": {
+            "location": 54,
+            "type": "project-dependent interrupt bit"
+          },
+          "I55": {
+            "location": 55,
+            "type": "project-dependent interrupt bit"
+          },
+          "I56": {
+            "location": 56,
+            "type": "project-dependent interrupt bit"
+          },
+          "I57": {
+            "location": 57,
+            "type": "project-dependent interrupt bit"
+          },
+          "I58": {
+            "location": 58,
+            "type": "project-dependent interrupt bit"
+          },
+          "I59": {
+            "location": 59,
+            "type": "project-dependent interrupt bit"
+          },
+          "I60": {
+            "location": 60,
+            "type": "project-dependent interrupt bit"
+          },
+          "I61": {
+            "location": 61,
+            "type": "project-dependent interrupt bit"
+          },
+          "I62": {
+            "location": 62,
+            "type": "project-dependent interrupt bit"
+          },
+          "I63": {
+            "location": 63,
+            "type": "project-dependent interrupt bit"
+          }
+        },
+        "definedBy": "Smaia",
+        "requires_environment_model": true
+      },
+      "source": "src/CSRs.adoc",
+      "sha256": "c194138487c954c6616dc2d46487cb9bfc0bb913ce371e72f8963cf1db083c0f",
+      "field_sources": {
+        "src/CSRs.adoc": "c194138487c954c6616dc2d46487cb9bfc0bb913ce371e72f8963cf1db083c0f",
+        "src/MSLevel.adoc": "0f5fa09009fc9d66570056662e0e45b8935fb6f76dcde22f05d27cb53b6f538c",
+        "src/VSLevel.adoc": "9d6d1a02ffd959db6dd837b452d57100a143d3c02751ab723e0dee52dbc1efe1",
+        "src/IMSIC.adoc": "a1ffc788b735324fa2079753a682f23a9e15b6dd1690863b69fdca406f0482d1"
+      },
+      "upstream": "https://github.com/riscv/riscv-aia",
+      "revision": "9507866427961d4ec2d2400ea875103b2a09520b",
+      "notices": [
+        "RISC-V International, RISC-V Advanced Interrupt Architecture",
+        "SPDX-License-Identifier: CC-BY-4.0",
+        "Field layouts transcribed; behavioral interpretation is not included."
+      ]
+    },
+    "midelegh": {
+      "definition": {
+        "name": "midelegh",
+        "address": 787,
+        "priv_mode": "M",
+        "writable": true,
+        "length": 32,
+        "fields": {
+          "I32": {
+            "location": 0,
+            "type": "project-defined interrupt bit",
+            "alias": "mideleg[32]"
+          },
+          "I33": {
+            "location": 1,
+            "type": "project-defined interrupt bit",
+            "alias": "mideleg[33]"
+          },
+          "I34": {
+            "location": 2,
+            "type": "project-defined interrupt bit",
+            "alias": "mideleg[34]"
+          },
+          "I35": {
+            "location": 3,
+            "type": "project-defined interrupt bit",
+            "alias": "mideleg[35]"
+          },
+          "I36": {
+            "location": 4,
+            "type": "project-defined interrupt bit",
+            "alias": "mideleg[36]"
+          },
+          "I37": {
+            "location": 5,
+            "type": "project-defined interrupt bit",
+            "alias": "mideleg[37]"
+          },
+          "I38": {
+            "location": 6,
+            "type": "project-defined interrupt bit",
+            "alias": "mideleg[38]"
+          },
+          "I39": {
+            "location": 7,
+            "type": "project-defined interrupt bit",
+            "alias": "mideleg[39]"
+          },
+          "I40": {
+            "location": 8,
+            "type": "project-defined interrupt bit",
+            "alias": "mideleg[40]"
+          },
+          "I41": {
+            "location": 9,
+            "type": "project-defined interrupt bit",
+            "alias": "mideleg[41]"
+          },
+          "I42": {
+            "location": 10,
+            "type": "project-defined interrupt bit",
+            "alias": "mideleg[42]"
+          },
+          "I43": {
+            "location": 11,
+            "type": "project-defined interrupt bit",
+            "alias": "mideleg[43]"
+          },
+          "I44": {
+            "location": 12,
+            "type": "project-defined interrupt bit",
+            "alias": "mideleg[44]"
+          },
+          "I45": {
+            "location": 13,
+            "type": "project-defined interrupt bit",
+            "alias": "mideleg[45]"
+          },
+          "I46": {
+            "location": 14,
+            "type": "project-defined interrupt bit",
+            "alias": "mideleg[46]"
+          },
+          "I47": {
+            "location": 15,
+            "type": "project-defined interrupt bit",
+            "alias": "mideleg[47]"
+          },
+          "I48": {
+            "location": 16,
+            "type": "project-defined interrupt bit",
+            "alias": "mideleg[48]"
+          },
+          "I49": {
+            "location": 17,
+            "type": "project-defined interrupt bit",
+            "alias": "mideleg[49]"
+          },
+          "I50": {
+            "location": 18,
+            "type": "project-defined interrupt bit",
+            "alias": "mideleg[50]"
+          },
+          "I51": {
+            "location": 19,
+            "type": "project-defined interrupt bit",
+            "alias": "mideleg[51]"
+          },
+          "I52": {
+            "location": 20,
+            "type": "project-defined interrupt bit",
+            "alias": "mideleg[52]"
+          },
+          "I53": {
+            "location": 21,
+            "type": "project-defined interrupt bit",
+            "alias": "mideleg[53]"
+          },
+          "I54": {
+            "location": 22,
+            "type": "project-defined interrupt bit",
+            "alias": "mideleg[54]"
+          },
+          "I55": {
+            "location": 23,
+            "type": "project-defined interrupt bit",
+            "alias": "mideleg[55]"
+          },
+          "I56": {
+            "location": 24,
+            "type": "project-defined interrupt bit",
+            "alias": "mideleg[56]"
+          },
+          "I57": {
+            "location": 25,
+            "type": "project-defined interrupt bit",
+            "alias": "mideleg[57]"
+          },
+          "I58": {
+            "location": 26,
+            "type": "project-defined interrupt bit",
+            "alias": "mideleg[58]"
+          },
+          "I59": {
+            "location": 27,
+            "type": "project-defined interrupt bit",
+            "alias": "mideleg[59]"
+          },
+          "I60": {
+            "location": 28,
+            "type": "project-defined interrupt bit",
+            "alias": "mideleg[60]"
+          },
+          "I61": {
+            "location": 29,
+            "type": "project-defined interrupt bit",
+            "alias": "mideleg[61]"
+          },
+          "I62": {
+            "location": 30,
+            "type": "project-defined interrupt bit",
+            "alias": "mideleg[62]"
+          },
+          "I63": {
+            "location": 31,
+            "type": "project-defined interrupt bit",
+            "alias": "mideleg[63]"
+          }
+        },
+        "definedBy": "Smaia",
+        "requires_alias_model": true
+      },
+      "source": "src/CSRs.adoc",
+      "sha256": "c194138487c954c6616dc2d46487cb9bfc0bb913ce371e72f8963cf1db083c0f",
+      "field_sources": {
+        "src/CSRs.adoc": "c194138487c954c6616dc2d46487cb9bfc0bb913ce371e72f8963cf1db083c0f",
+        "src/MSLevel.adoc": "0f5fa09009fc9d66570056662e0e45b8935fb6f76dcde22f05d27cb53b6f538c",
+        "src/VSLevel.adoc": "9d6d1a02ffd959db6dd837b452d57100a143d3c02751ab723e0dee52dbc1efe1",
+        "src/IMSIC.adoc": "a1ffc788b735324fa2079753a682f23a9e15b6dd1690863b69fdca406f0482d1"
+      },
+      "upstream": "https://github.com/riscv/riscv-aia",
+      "revision": "9507866427961d4ec2d2400ea875103b2a09520b",
+      "notices": [
+        "RISC-V International, RISC-V Advanced Interrupt Architecture",
+        "SPDX-License-Identifier: CC-BY-4.0",
+        "Field layouts transcribed; behavioral interpretation is not included."
+      ]
+    },
+    "mieh": {
+      "definition": {
+        "name": "mieh",
+        "address": 788,
+        "priv_mode": "M",
+        "writable": true,
+        "length": 32,
+        "fields": {
+          "I32": {
+            "location": 0,
+            "type": "project-defined interrupt bit",
+            "alias": "mie[32]"
+          },
+          "I33": {
+            "location": 1,
+            "type": "project-defined interrupt bit",
+            "alias": "mie[33]"
+          },
+          "I34": {
+            "location": 2,
+            "type": "project-defined interrupt bit",
+            "alias": "mie[34]"
+          },
+          "I35": {
+            "location": 3,
+            "type": "project-defined interrupt bit",
+            "alias": "mie[35]"
+          },
+          "I36": {
+            "location": 4,
+            "type": "project-defined interrupt bit",
+            "alias": "mie[36]"
+          },
+          "I37": {
+            "location": 5,
+            "type": "project-defined interrupt bit",
+            "alias": "mie[37]"
+          },
+          "I38": {
+            "location": 6,
+            "type": "project-defined interrupt bit",
+            "alias": "mie[38]"
+          },
+          "I39": {
+            "location": 7,
+            "type": "project-defined interrupt bit",
+            "alias": "mie[39]"
+          },
+          "I40": {
+            "location": 8,
+            "type": "project-defined interrupt bit",
+            "alias": "mie[40]"
+          },
+          "I41": {
+            "location": 9,
+            "type": "project-defined interrupt bit",
+            "alias": "mie[41]"
+          },
+          "I42": {
+            "location": 10,
+            "type": "project-defined interrupt bit",
+            "alias": "mie[42]"
+          },
+          "I43": {
+            "location": 11,
+            "type": "project-defined interrupt bit",
+            "alias": "mie[43]"
+          },
+          "I44": {
+            "location": 12,
+            "type": "project-defined interrupt bit",
+            "alias": "mie[44]"
+          },
+          "I45": {
+            "location": 13,
+            "type": "project-defined interrupt bit",
+            "alias": "mie[45]"
+          },
+          "I46": {
+            "location": 14,
+            "type": "project-defined interrupt bit",
+            "alias": "mie[46]"
+          },
+          "I47": {
+            "location": 15,
+            "type": "project-defined interrupt bit",
+            "alias": "mie[47]"
+          },
+          "I48": {
+            "location": 16,
+            "type": "project-defined interrupt bit",
+            "alias": "mie[48]"
+          },
+          "I49": {
+            "location": 17,
+            "type": "project-defined interrupt bit",
+            "alias": "mie[49]"
+          },
+          "I50": {
+            "location": 18,
+            "type": "project-defined interrupt bit",
+            "alias": "mie[50]"
+          },
+          "I51": {
+            "location": 19,
+            "type": "project-defined interrupt bit",
+            "alias": "mie[51]"
+          },
+          "I52": {
+            "location": 20,
+            "type": "project-defined interrupt bit",
+            "alias": "mie[52]"
+          },
+          "I53": {
+            "location": 21,
+            "type": "project-defined interrupt bit",
+            "alias": "mie[53]"
+          },
+          "I54": {
+            "location": 22,
+            "type": "project-defined interrupt bit",
+            "alias": "mie[54]"
+          },
+          "I55": {
+            "location": 23,
+            "type": "project-defined interrupt bit",
+            "alias": "mie[55]"
+          },
+          "I56": {
+            "location": 24,
+            "type": "project-defined interrupt bit",
+            "alias": "mie[56]"
+          },
+          "I57": {
+            "location": 25,
+            "type": "project-defined interrupt bit",
+            "alias": "mie[57]"
+          },
+          "I58": {
+            "location": 26,
+            "type": "project-defined interrupt bit",
+            "alias": "mie[58]"
+          },
+          "I59": {
+            "location": 27,
+            "type": "project-defined interrupt bit",
+            "alias": "mie[59]"
+          },
+          "I60": {
+            "location": 28,
+            "type": "project-defined interrupt bit",
+            "alias": "mie[60]"
+          },
+          "I61": {
+            "location": 29,
+            "type": "project-defined interrupt bit",
+            "alias": "mie[61]"
+          },
+          "I62": {
+            "location": 30,
+            "type": "project-defined interrupt bit",
+            "alias": "mie[62]"
+          },
+          "I63": {
+            "location": 31,
+            "type": "project-defined interrupt bit",
+            "alias": "mie[63]"
+          }
+        },
+        "definedBy": "Smaia",
+        "requires_alias_model": true
+      },
+      "source": "src/CSRs.adoc",
+      "sha256": "c194138487c954c6616dc2d46487cb9bfc0bb913ce371e72f8963cf1db083c0f",
+      "field_sources": {
+        "src/CSRs.adoc": "c194138487c954c6616dc2d46487cb9bfc0bb913ce371e72f8963cf1db083c0f",
+        "src/MSLevel.adoc": "0f5fa09009fc9d66570056662e0e45b8935fb6f76dcde22f05d27cb53b6f538c",
+        "src/VSLevel.adoc": "9d6d1a02ffd959db6dd837b452d57100a143d3c02751ab723e0dee52dbc1efe1",
+        "src/IMSIC.adoc": "a1ffc788b735324fa2079753a682f23a9e15b6dd1690863b69fdca406f0482d1"
+      },
+      "upstream": "https://github.com/riscv/riscv-aia",
+      "revision": "9507866427961d4ec2d2400ea875103b2a09520b",
+      "notices": [
+        "RISC-V International, RISC-V Advanced Interrupt Architecture",
+        "SPDX-License-Identifier: CC-BY-4.0",
+        "Field layouts transcribed; behavioral interpretation is not included."
+      ]
+    },
+    "mvienh": {
+      "definition": {
+        "name": "mvienh",
+        "address": 792,
+        "priv_mode": "M",
+        "writable": true,
+        "length": 32,
+        "fields": {
+          "I32": {
+            "location": 0,
+            "type": "project-defined interrupt bit",
+            "alias": "mvien[32]"
+          },
+          "I33": {
+            "location": 1,
+            "type": "project-defined interrupt bit",
+            "alias": "mvien[33]"
+          },
+          "I34": {
+            "location": 2,
+            "type": "project-defined interrupt bit",
+            "alias": "mvien[34]"
+          },
+          "I35": {
+            "location": 3,
+            "type": "project-defined interrupt bit",
+            "alias": "mvien[35]"
+          },
+          "I36": {
+            "location": 4,
+            "type": "project-defined interrupt bit",
+            "alias": "mvien[36]"
+          },
+          "I37": {
+            "location": 5,
+            "type": "project-defined interrupt bit",
+            "alias": "mvien[37]"
+          },
+          "I38": {
+            "location": 6,
+            "type": "project-defined interrupt bit",
+            "alias": "mvien[38]"
+          },
+          "I39": {
+            "location": 7,
+            "type": "project-defined interrupt bit",
+            "alias": "mvien[39]"
+          },
+          "I40": {
+            "location": 8,
+            "type": "project-defined interrupt bit",
+            "alias": "mvien[40]"
+          },
+          "I41": {
+            "location": 9,
+            "type": "project-defined interrupt bit",
+            "alias": "mvien[41]"
+          },
+          "I42": {
+            "location": 10,
+            "type": "project-defined interrupt bit",
+            "alias": "mvien[42]"
+          },
+          "I43": {
+            "location": 11,
+            "type": "project-defined interrupt bit",
+            "alias": "mvien[43]"
+          },
+          "I44": {
+            "location": 12,
+            "type": "project-defined interrupt bit",
+            "alias": "mvien[44]"
+          },
+          "I45": {
+            "location": 13,
+            "type": "project-defined interrupt bit",
+            "alias": "mvien[45]"
+          },
+          "I46": {
+            "location": 14,
+            "type": "project-defined interrupt bit",
+            "alias": "mvien[46]"
+          },
+          "I47": {
+            "location": 15,
+            "type": "project-defined interrupt bit",
+            "alias": "mvien[47]"
+          },
+          "I48": {
+            "location": 16,
+            "type": "project-defined interrupt bit",
+            "alias": "mvien[48]"
+          },
+          "I49": {
+            "location": 17,
+            "type": "project-defined interrupt bit",
+            "alias": "mvien[49]"
+          },
+          "I50": {
+            "location": 18,
+            "type": "project-defined interrupt bit",
+            "alias": "mvien[50]"
+          },
+          "I51": {
+            "location": 19,
+            "type": "project-defined interrupt bit",
+            "alias": "mvien[51]"
+          },
+          "I52": {
+            "location": 20,
+            "type": "project-defined interrupt bit",
+            "alias": "mvien[52]"
+          },
+          "I53": {
+            "location": 21,
+            "type": "project-defined interrupt bit",
+            "alias": "mvien[53]"
+          },
+          "I54": {
+            "location": 22,
+            "type": "project-defined interrupt bit",
+            "alias": "mvien[54]"
+          },
+          "I55": {
+            "location": 23,
+            "type": "project-defined interrupt bit",
+            "alias": "mvien[55]"
+          },
+          "I56": {
+            "location": 24,
+            "type": "project-defined interrupt bit",
+            "alias": "mvien[56]"
+          },
+          "I57": {
+            "location": 25,
+            "type": "project-defined interrupt bit",
+            "alias": "mvien[57]"
+          },
+          "I58": {
+            "location": 26,
+            "type": "project-defined interrupt bit",
+            "alias": "mvien[58]"
+          },
+          "I59": {
+            "location": 27,
+            "type": "project-defined interrupt bit",
+            "alias": "mvien[59]"
+          },
+          "I60": {
+            "location": 28,
+            "type": "project-defined interrupt bit",
+            "alias": "mvien[60]"
+          },
+          "I61": {
+            "location": 29,
+            "type": "project-defined interrupt bit",
+            "alias": "mvien[61]"
+          },
+          "I62": {
+            "location": 30,
+            "type": "project-defined interrupt bit",
+            "alias": "mvien[62]"
+          },
+          "I63": {
+            "location": 31,
+            "type": "project-defined interrupt bit",
+            "alias": "mvien[63]"
+          }
+        },
+        "definedBy": "Smaia",
+        "requires_alias_model": true
+      },
+      "source": "src/CSRs.adoc",
+      "sha256": "c194138487c954c6616dc2d46487cb9bfc0bb913ce371e72f8963cf1db083c0f",
+      "field_sources": {
+        "src/CSRs.adoc": "c194138487c954c6616dc2d46487cb9bfc0bb913ce371e72f8963cf1db083c0f",
+        "src/MSLevel.adoc": "0f5fa09009fc9d66570056662e0e45b8935fb6f76dcde22f05d27cb53b6f538c",
+        "src/VSLevel.adoc": "9d6d1a02ffd959db6dd837b452d57100a143d3c02751ab723e0dee52dbc1efe1",
+        "src/IMSIC.adoc": "a1ffc788b735324fa2079753a682f23a9e15b6dd1690863b69fdca406f0482d1"
+      },
+      "upstream": "https://github.com/riscv/riscv-aia",
+      "revision": "9507866427961d4ec2d2400ea875103b2a09520b",
+      "notices": [
+        "RISC-V International, RISC-V Advanced Interrupt Architecture",
+        "SPDX-License-Identifier: CC-BY-4.0",
+        "Field layouts transcribed; behavioral interpretation is not included."
+      ]
+    },
+    "mviph": {
+      "definition": {
+        "name": "mviph",
+        "address": 793,
+        "priv_mode": "M",
+        "writable": true,
+        "length": 32,
+        "fields": {
+          "I32": {
+            "location": 0,
+            "type": "project-defined interrupt bit",
+            "alias": "mvip[32]"
+          },
+          "I33": {
+            "location": 1,
+            "type": "project-defined interrupt bit",
+            "alias": "mvip[33]"
+          },
+          "I34": {
+            "location": 2,
+            "type": "project-defined interrupt bit",
+            "alias": "mvip[34]"
+          },
+          "I35": {
+            "location": 3,
+            "type": "project-defined interrupt bit",
+            "alias": "mvip[35]"
+          },
+          "I36": {
+            "location": 4,
+            "type": "project-defined interrupt bit",
+            "alias": "mvip[36]"
+          },
+          "I37": {
+            "location": 5,
+            "type": "project-defined interrupt bit",
+            "alias": "mvip[37]"
+          },
+          "I38": {
+            "location": 6,
+            "type": "project-defined interrupt bit",
+            "alias": "mvip[38]"
+          },
+          "I39": {
+            "location": 7,
+            "type": "project-defined interrupt bit",
+            "alias": "mvip[39]"
+          },
+          "I40": {
+            "location": 8,
+            "type": "project-defined interrupt bit",
+            "alias": "mvip[40]"
+          },
+          "I41": {
+            "location": 9,
+            "type": "project-defined interrupt bit",
+            "alias": "mvip[41]"
+          },
+          "I42": {
+            "location": 10,
+            "type": "project-defined interrupt bit",
+            "alias": "mvip[42]"
+          },
+          "I43": {
+            "location": 11,
+            "type": "project-defined interrupt bit",
+            "alias": "mvip[43]"
+          },
+          "I44": {
+            "location": 12,
+            "type": "project-defined interrupt bit",
+            "alias": "mvip[44]"
+          },
+          "I45": {
+            "location": 13,
+            "type": "project-defined interrupt bit",
+            "alias": "mvip[45]"
+          },
+          "I46": {
+            "location": 14,
+            "type": "project-defined interrupt bit",
+            "alias": "mvip[46]"
+          },
+          "I47": {
+            "location": 15,
+            "type": "project-defined interrupt bit",
+            "alias": "mvip[47]"
+          },
+          "I48": {
+            "location": 16,
+            "type": "project-defined interrupt bit",
+            "alias": "mvip[48]"
+          },
+          "I49": {
+            "location": 17,
+            "type": "project-defined interrupt bit",
+            "alias": "mvip[49]"
+          },
+          "I50": {
+            "location": 18,
+            "type": "project-defined interrupt bit",
+            "alias": "mvip[50]"
+          },
+          "I51": {
+            "location": 19,
+            "type": "project-defined interrupt bit",
+            "alias": "mvip[51]"
+          },
+          "I52": {
+            "location": 20,
+            "type": "project-defined interrupt bit",
+            "alias": "mvip[52]"
+          },
+          "I53": {
+            "location": 21,
+            "type": "project-defined interrupt bit",
+            "alias": "mvip[53]"
+          },
+          "I54": {
+            "location": 22,
+            "type": "project-defined interrupt bit",
+            "alias": "mvip[54]"
+          },
+          "I55": {
+            "location": 23,
+            "type": "project-defined interrupt bit",
+            "alias": "mvip[55]"
+          },
+          "I56": {
+            "location": 24,
+            "type": "project-defined interrupt bit",
+            "alias": "mvip[56]"
+          },
+          "I57": {
+            "location": 25,
+            "type": "project-defined interrupt bit",
+            "alias": "mvip[57]"
+          },
+          "I58": {
+            "location": 26,
+            "type": "project-defined interrupt bit",
+            "alias": "mvip[58]"
+          },
+          "I59": {
+            "location": 27,
+            "type": "project-defined interrupt bit",
+            "alias": "mvip[59]"
+          },
+          "I60": {
+            "location": 28,
+            "type": "project-defined interrupt bit",
+            "alias": "mvip[60]"
+          },
+          "I61": {
+            "location": 29,
+            "type": "project-defined interrupt bit",
+            "alias": "mvip[61]"
+          },
+          "I62": {
+            "location": 30,
+            "type": "project-defined interrupt bit",
+            "alias": "mvip[62]"
+          },
+          "I63": {
+            "location": 31,
+            "type": "project-defined interrupt bit",
+            "alias": "mvip[63]"
+          }
+        },
+        "definedBy": "Smaia",
+        "requires_alias_model": true
+      },
+      "source": "src/CSRs.adoc",
+      "sha256": "c194138487c954c6616dc2d46487cb9bfc0bb913ce371e72f8963cf1db083c0f",
+      "field_sources": {
+        "src/CSRs.adoc": "c194138487c954c6616dc2d46487cb9bfc0bb913ce371e72f8963cf1db083c0f",
+        "src/MSLevel.adoc": "0f5fa09009fc9d66570056662e0e45b8935fb6f76dcde22f05d27cb53b6f538c",
+        "src/VSLevel.adoc": "9d6d1a02ffd959db6dd837b452d57100a143d3c02751ab723e0dee52dbc1efe1",
+        "src/IMSIC.adoc": "a1ffc788b735324fa2079753a682f23a9e15b6dd1690863b69fdca406f0482d1"
+      },
+      "upstream": "https://github.com/riscv/riscv-aia",
+      "revision": "9507866427961d4ec2d2400ea875103b2a09520b",
+      "notices": [
+        "RISC-V International, RISC-V Advanced Interrupt Architecture",
+        "SPDX-License-Identifier: CC-BY-4.0",
+        "Field layouts transcribed; behavioral interpretation is not included."
+      ]
+    },
+    "miph": {
+      "definition": {
+        "name": "miph",
+        "address": 852,
+        "priv_mode": "M",
+        "writable": true,
+        "length": 32,
+        "fields": {
+          "I32": {
+            "location": 0,
+            "type": "project-defined interrupt bit",
+            "alias": "mip[32]"
+          },
+          "I33": {
+            "location": 1,
+            "type": "project-defined interrupt bit",
+            "alias": "mip[33]"
+          },
+          "I34": {
+            "location": 2,
+            "type": "project-defined interrupt bit",
+            "alias": "mip[34]"
+          },
+          "I35": {
+            "location": 3,
+            "type": "project-defined interrupt bit",
+            "alias": "mip[35]"
+          },
+          "I36": {
+            "location": 4,
+            "type": "project-defined interrupt bit",
+            "alias": "mip[36]"
+          },
+          "I37": {
+            "location": 5,
+            "type": "project-defined interrupt bit",
+            "alias": "mip[37]"
+          },
+          "I38": {
+            "location": 6,
+            "type": "project-defined interrupt bit",
+            "alias": "mip[38]"
+          },
+          "I39": {
+            "location": 7,
+            "type": "project-defined interrupt bit",
+            "alias": "mip[39]"
+          },
+          "I40": {
+            "location": 8,
+            "type": "project-defined interrupt bit",
+            "alias": "mip[40]"
+          },
+          "I41": {
+            "location": 9,
+            "type": "project-defined interrupt bit",
+            "alias": "mip[41]"
+          },
+          "I42": {
+            "location": 10,
+            "type": "project-defined interrupt bit",
+            "alias": "mip[42]"
+          },
+          "I43": {
+            "location": 11,
+            "type": "project-defined interrupt bit",
+            "alias": "mip[43]"
+          },
+          "I44": {
+            "location": 12,
+            "type": "project-defined interrupt bit",
+            "alias": "mip[44]"
+          },
+          "I45": {
+            "location": 13,
+            "type": "project-defined interrupt bit",
+            "alias": "mip[45]"
+          },
+          "I46": {
+            "location": 14,
+            "type": "project-defined interrupt bit",
+            "alias": "mip[46]"
+          },
+          "I47": {
+            "location": 15,
+            "type": "project-defined interrupt bit",
+            "alias": "mip[47]"
+          },
+          "I48": {
+            "location": 16,
+            "type": "project-defined interrupt bit",
+            "alias": "mip[48]"
+          },
+          "I49": {
+            "location": 17,
+            "type": "project-defined interrupt bit",
+            "alias": "mip[49]"
+          },
+          "I50": {
+            "location": 18,
+            "type": "project-defined interrupt bit",
+            "alias": "mip[50]"
+          },
+          "I51": {
+            "location": 19,
+            "type": "project-defined interrupt bit",
+            "alias": "mip[51]"
+          },
+          "I52": {
+            "location": 20,
+            "type": "project-defined interrupt bit",
+            "alias": "mip[52]"
+          },
+          "I53": {
+            "location": 21,
+            "type": "project-defined interrupt bit",
+            "alias": "mip[53]"
+          },
+          "I54": {
+            "location": 22,
+            "type": "project-defined interrupt bit",
+            "alias": "mip[54]"
+          },
+          "I55": {
+            "location": 23,
+            "type": "project-defined interrupt bit",
+            "alias": "mip[55]"
+          },
+          "I56": {
+            "location": 24,
+            "type": "project-defined interrupt bit",
+            "alias": "mip[56]"
+          },
+          "I57": {
+            "location": 25,
+            "type": "project-defined interrupt bit",
+            "alias": "mip[57]"
+          },
+          "I58": {
+            "location": 26,
+            "type": "project-defined interrupt bit",
+            "alias": "mip[58]"
+          },
+          "I59": {
+            "location": 27,
+            "type": "project-defined interrupt bit",
+            "alias": "mip[59]"
+          },
+          "I60": {
+            "location": 28,
+            "type": "project-defined interrupt bit",
+            "alias": "mip[60]"
+          },
+          "I61": {
+            "location": 29,
+            "type": "project-defined interrupt bit",
+            "alias": "mip[61]"
+          },
+          "I62": {
+            "location": 30,
+            "type": "project-defined interrupt bit",
+            "alias": "mip[62]"
+          },
+          "I63": {
+            "location": 31,
+            "type": "project-defined interrupt bit",
+            "alias": "mip[63]"
+          }
+        },
+        "definedBy": "Smaia",
+        "requires_alias_model": true
+      },
+      "source": "src/CSRs.adoc",
+      "sha256": "c194138487c954c6616dc2d46487cb9bfc0bb913ce371e72f8963cf1db083c0f",
+      "field_sources": {
+        "src/CSRs.adoc": "c194138487c954c6616dc2d46487cb9bfc0bb913ce371e72f8963cf1db083c0f",
+        "src/MSLevel.adoc": "0f5fa09009fc9d66570056662e0e45b8935fb6f76dcde22f05d27cb53b6f538c",
+        "src/VSLevel.adoc": "9d6d1a02ffd959db6dd837b452d57100a143d3c02751ab723e0dee52dbc1efe1",
+        "src/IMSIC.adoc": "a1ffc788b735324fa2079753a682f23a9e15b6dd1690863b69fdca406f0482d1"
+      },
+      "upstream": "https://github.com/riscv/riscv-aia",
+      "revision": "9507866427961d4ec2d2400ea875103b2a09520b",
+      "notices": [
+        "RISC-V International, RISC-V Advanced Interrupt Architecture",
+        "SPDX-License-Identifier: CC-BY-4.0",
+        "Field layouts transcribed; behavioral interpretation is not included."
+      ]
+    },
+    "mtopei": {
+      "definition": {
+        "name": "mtopei",
+        "address": 860,
+        "priv_mode": "M",
+        "writable": true,
+        "length": "XLEN",
+        "fields": {
+          "IID": {
+            "location": "26-16",
+            "type": "RO"
+          },
+          "IPRIO": {
+            "location": "10-0",
+            "type": "RO"
+          }
+        },
+        "definedBy": "Smaia",
+        "requires_environment_model": true,
+        "write_effect": "claim current pending interrupt; written data is ignored"
+      },
+      "source": "src/CSRs.adoc",
+      "sha256": "c194138487c954c6616dc2d46487cb9bfc0bb913ce371e72f8963cf1db083c0f",
+      "field_sources": {
+        "src/CSRs.adoc": "c194138487c954c6616dc2d46487cb9bfc0bb913ce371e72f8963cf1db083c0f",
+        "src/MSLevel.adoc": "0f5fa09009fc9d66570056662e0e45b8935fb6f76dcde22f05d27cb53b6f538c",
+        "src/VSLevel.adoc": "9d6d1a02ffd959db6dd837b452d57100a143d3c02751ab723e0dee52dbc1efe1",
+        "src/IMSIC.adoc": "a1ffc788b735324fa2079753a682f23a9e15b6dd1690863b69fdca406f0482d1"
+      },
+      "upstream": "https://github.com/riscv/riscv-aia",
+      "revision": "9507866427961d4ec2d2400ea875103b2a09520b",
+      "notices": [
+        "RISC-V International, RISC-V Advanced Interrupt Architecture",
+        "SPDX-License-Identifier: CC-BY-4.0",
+        "Field layouts transcribed; behavioral interpretation is not included."
+      ]
+    },
+    "mtopi": {
+      "definition": {
+        "name": "mtopi",
+        "address": 4016,
+        "priv_mode": "M",
+        "writable": false,
+        "length": "XLEN",
+        "fields": {
+          "IID": {
+            "location": "27-16",
+            "type": "RO"
+          },
+          "IPRIO": {
+            "location": "7-0",
+            "type": "RO"
+          }
+        },
+        "definedBy": "Smaia",
+        "requires_environment_model": true
+      },
+      "source": "src/CSRs.adoc",
+      "sha256": "c194138487c954c6616dc2d46487cb9bfc0bb913ce371e72f8963cf1db083c0f",
+      "field_sources": {
+        "src/CSRs.adoc": "c194138487c954c6616dc2d46487cb9bfc0bb913ce371e72f8963cf1db083c0f",
+        "src/MSLevel.adoc": "0f5fa09009fc9d66570056662e0e45b8935fb6f76dcde22f05d27cb53b6f538c",
+        "src/VSLevel.adoc": "9d6d1a02ffd959db6dd837b452d57100a143d3c02751ab723e0dee52dbc1efe1",
+        "src/IMSIC.adoc": "a1ffc788b735324fa2079753a682f23a9e15b6dd1690863b69fdca406f0482d1"
+      },
+      "upstream": "https://github.com/riscv/riscv-aia",
+      "revision": "9507866427961d4ec2d2400ea875103b2a09520b",
+      "notices": [
+        "RISC-V International, RISC-V Advanced Interrupt Architecture",
+        "SPDX-License-Identifier: CC-BY-4.0",
+        "Field layouts transcribed; behavioral interpretation is not included."
+      ]
+    }
+  },
+  "limits": [
+    "Field positions and alias facts only. Project semantics and environment bindings remain required."
+  ]
+}

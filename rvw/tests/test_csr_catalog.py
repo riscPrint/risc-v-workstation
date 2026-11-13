@@ -16,8 +16,8 @@ def selection():
 def test_pinned_definitions_and_field_semantics():
     obj = catalog()
     assert obj['revision'] == '176fc36018be56925061566447a656b93eba0ddb'
-    assert len(obj['registers']) == 416
-    assert sum(len(r['definition'].get('fields', {})) for r in obj['registers'].values()) == 1395
+    assert len(obj['registers']) == 442
+    assert sum(len(r['definition'].get('fields', {})) for r in obj['registers'].values() if 'revision' not in r) == 1395
     assert obj['registers']['sstatus']['definition']['fields']['SD']['alias'] == 'mstatus.SD'
     assert obj['registers']['dcsr']['definition']['priv_mode'] == 'D'
     assert 'sw_read()' in obj['registers']['sip']['definition']
@@ -92,3 +92,28 @@ def test_vex_example(tmp_path):
     assert [c['address'] for c in obj['csrs']] == [0x340, 0x140]
     assert obj['csrs'][1]['present'] is False
     assert generate(path, tmp_path/'generated')['status'] == 'generated'
+
+
+def test_aia_closes_the_26_layout_gaps():
+    root=Path(__file__).resolve().parents[2]
+    gaps=json.loads((root/'SpinalChecks/csr/catalog-gaps.json').read_text())
+    assert gaps['missing_field_definitions']==[]
+    obj=catalog()
+    assert len(gaps['resolved_field_definitions'])==26
+    for row in gaps['resolved_field_definitions']:
+        source=obj['registers'][row['name']]
+        assert source['definition']['address']==row['address']
+        assert source['definition']['fields']
+        assert source['revision']=='9507866427961d4ec2d2400ea875103b2a09520b'
+        assert len(source['field_sources'])==4
+    assert obj['registers']['mtopi']['definition']['fields']['IID']['location']=='27-16'
+    assert obj['registers']['mtopei']['definition']['fields']['IID']['location']=='26-16'
+    assert obj['registers']['hviprio1h']['definition']['fields']['P13']['location']=='15-8'
+    assert obj['registers']['mieh']['definition']['fields']['I32']['location']==0
+
+
+def test_aia_side_effects_are_not_plain_register_writes():
+    s=selection()
+    s['csrs'][0].update(name='mtopei',fields=[dict(name='IID',access=dict(U='RO',S='RO',M='RO'))])
+    with pytest.raises(ValueError,match='environment model'):
+        materialize(s)

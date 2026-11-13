@@ -3,7 +3,7 @@
   "manual_revision": "2713ba1fc5f2ccb1d5ebcb5e77f1b32e6f58bc5b",
   "source": "src/priv/csrs.adoc",
   "sha256": "a8aff82d214b98b5487a8699d2a671ac8b6236586cb83822c034d7631dbb994d",
-  "missing_field_definitions": [
+  "resolved_field_definitions": [
     {
       "name": "sieh",
       "address": 276,
@@ -134,5 +134,13 @@
       "address": 4016,
       "access": "MRO"
     }
+  ],
+  "missing_field_definitions": [],
+  "field_layout_source": {
+    "upstream": "https://github.com/riscv/riscv-aia",
+    "revision": "9507866427961d4ec2d2400ea875103b2a09520b"
+  },
+  "limits": [
+    "Field layouts are present. Alias execution, interrupt environments and privilege sequences remain separate work."
   ]
 }
