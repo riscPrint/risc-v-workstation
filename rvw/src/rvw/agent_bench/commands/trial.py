@@ -2,7 +2,6 @@
 import json
 from pathlib import Path
 
-from rvw.agent_bench.external import run_trial
 from rvw.mcp.spec import ToolSpec, schema
 
 
@@ -20,6 +19,7 @@ def register(sub):
 
 
 def execute(args):
+    from rvw.agent_bench.external import run_trial  # needs the mcp extra
     report = run_trial(args.pack, args.task, args.command, args.out, budget_s=args.budget_s,
                        max_calls=args.max_calls, model=args.model, repeats=args.repeats)
     print(json.dumps(report, indent=2))
@@ -27,6 +27,7 @@ def execute(args):
 
 
 def trial(pack, task, command, out, budget_s=60, max_calls=32, model=None, repeats=1):
+    from rvw.agent_bench.external import run_trial
     return run_trial(pack, task, command, out, budget_s=budget_s, max_calls=max_calls, model=model, repeats=repeats)
 
 
