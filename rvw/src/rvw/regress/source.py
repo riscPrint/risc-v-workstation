@@ -491,6 +491,39 @@ def checkout(repo: Path, rev: str, core: str) -> Source:
                        "to another directory")
 
 
+def _clone_submodules(repo: Path, dest: Path, sha: str, depth: int = 0) -> None:
+    """Check out, inside the clone `dest` of `repo` at `sha`, each submodule that `repo` has
+    initialized, at the commit recorded in `sha`'s tree. The objects come from `repo`'s own
+    submodule checkout (`clone --shared`); nothing is fetched. A submodule `repo` has not
+    initialized stays empty, as in `repo` itself. A recorded commit that the local submodule
+    lacks is an error: the checkout would not be the requested tree."""
+    if depth > SUBMODULE_MAX_DEPTH:
+        raise RuntimeError(f"submodules nested deeper than {SUBMODULE_MAX_DEPTH} levels")
+    listing = run_git(dest, "ls-tree", "-r", "-z", sha, run=run_group)
+    if listing.returncode != 0:
+        raise RuntimeError(f"git ls-tree {sha} failed: {(listing.stderr or '').strip()}")
+    for entry in (listing.stdout or "").split("\0"):
+        meta, _, name = entry.partition("\t")
+        if not meta.startswith("160000 "):
+            continue
+        commit = meta.split()[2]
+        source = _submodule(repo, os.fsencode(name))
+        if source is None:
+            continue
+        if source is False:
+            raise RuntimeError(f"submodule {name} in {repo} has files but no repository of its own")
+        target = dest / name
+        if target.exists():
+            target.rmdir()      # git leaves an empty directory for an uninitialized submodule
+        for args in (["clone", "-q", "--shared", "--no-checkout", str(source), str(target)],
+                     ["-C", str(target), "checkout", "-q", "--detach", commit]):
+            r = run_git(None, *args, timeout=CLONE_TIMEOUT_S, run=run_group)
+            if r.returncode != 0 or r.timed_out:
+                why = f"timed out after {CLONE_TIMEOUT_S}s" if r.timed_out else (r.stderr or "").strip()
+                raise RuntimeError(f"submodule {name}: git {' '.join(args[:2])} failed: {why}")
+        _clone_submodules(source, target, commit, depth + 1)
+
+
 def _publish(repo: Path, sha: str, dest: Path) -> None:
     """Clone `repo` at `sha` into a temporary directory and rename it to `dest`. The caller holds
     `_dest_lock(dest)` and has checked that `dest` is not published."""
@@ -502,6 +535,7 @@ def _publish(repo: Path, sha: str, dest: Path) -> None:
             if r.returncode != 0 or r.timed_out:
                 why = f"timed out after {CLONE_TIMEOUT_S}s" if r.timed_out else (r.stderr or "").strip()
                 raise RuntimeError(f"git {' '.join(args[:2])} failed: {why}")
+        _clone_submodules(repo, tmp, sha)
         (tmp / ".git" / DONE_MARK).write_text(sha + "\n")
         if _published(dest, sha):    # only a caller that skips the lock (an older rvw) gets here
             shutil.rmtree(tmp, ignore_errors=True)

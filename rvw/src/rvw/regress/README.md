@@ -185,7 +185,9 @@ also records `not_accepted_reason: "uncommitted"`. A rejected comparison stays r
 `gate` runs the tier on both sides and compares. The base revision is checked out as a
 `git clone --shared` at that commit in `$RVW_SRC_CACHE/<core>/<sha12>` (default `~/.cache/rvw/src`; reused only
 while its HEAD is that commit and its tree is clean) and handed to the
-adapter through `source_env` (BOOM: `SPINAL_BOOM`). With no `--cand-rev`, a clean core repo
+adapter through `source_env` (BOOM: `SPINAL_BOOM`). Each submodule that the core repo has
+initialized is cloned the same way, at the commit that the revision records; nothing is fetched.
+A recorded submodule commit that the local submodule lacks is an error. With no `--cand-rev`, a clean core repo
 uses its HEAD commit through the same private checkout path as an explicit revision.
 A dirty tree still runs in place and can `reject`, but cannot `accept`.
 `--base-rev WORKTREE` follows the same rule. Conclusive jobs with complete RTL identity can use the cache. Other failed jobs run again.
