@@ -81,3 +81,7 @@ The Python cocotb adapter passed a seeded good RTL test and detected the
 controlled bad RTL result. See `Uvm/vip/rtl/README.md` for commands and
 fixture scope. This does not establish full protocol conformance or UVM
 runtime qualification.
+
+The Python reactive subordinate also passed a bounded real RTL-manager
+read with seeded waits. A corrupted subordinate was detected. See
+`Uvm/vip/reactive/README.md` for the command and remaining scope.
