@@ -354,3 +354,13 @@ warmup, measured instructions/cycles and weight. Weighted CPI produces estimated
 cycles and IPC. An optional complete model run reports signed cycle error.
 Cold starts, bounded warmup and end drain remain explicit bias sources. Without
 a full run, sampling error stays unmeasured. Accuracy remains inconclusive.
+
+## Abstract system energy
+
+`rvw.system-energy-plan/1` names a saved own-model run, a common GHz clock and
+components with kind, source, state cycle counts and state mW. Optional event
+pJ and transition count/energy terms add incremental energy. State counts
+partition the run cycles. Missing model activity counts are errors.
+`rvw.system-energy/1` reports input hashes, per-component pJ, total pJ and
+average mW. Calibration is not performed. State residency and coefficients
+remain producer declarations. This is abstract system energy, not cell power.

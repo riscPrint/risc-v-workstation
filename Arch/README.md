@@ -748,3 +748,27 @@ The pinned workstation gem5 v25.1.0.1 API and the adapter's bare-metal ROI ELF
 contract still apply. CPU dimensions and the summed issue capacity share one
 source. FU semantics, predictor internals, stage timing and cache policies can
 differ between engines. File equality does not establish model timing parity.
+
+## Abstract system energy and power states
+
+Run `rvw arch system-energy PLAN --out NEW_REPORT.json --json`, or use
+`arch_system_energy`. A `rvw.system-energy-plan/1` object contains `run`
+(a saved `rvw.ooo-run/1` path), `clock_ghz`, and named `components`.
+Each component declares `kind` (`cpu`, `cache`, `memory` or `interconnect`),
+`source`, `state_cycles`, and `state_mw`. State cycle counts must partition
+the workload's complete cycle count. Paths are relative to the plan.
+
+For example, a 100-cycle run can use `state_cycles: {"active":80,"idle":20}`
+and `state_mw: {"active":10,"idle":2}`. Optional `event_pj` maps a model event
+name to incremental energy per event. A missing event is an error. Optional
+`transitions` entries declare `from`, `to`, `count` and `energy_pj`.
+Counts come from the workload or a project-declared residency estimate.
+Coefficients need a source. The tool does not fit them or label them calibrated.
+
+Energy is state power times residency plus incremental event and transition
+energy. The report gives per-component and system pJ and average mW. All
+components use the declared common clock. Avoid counting event energy again
+in state power. The tool does not propagate activity through topology links,
+simulate wake latency, infer sleep states or predict cell-level power. Declared
+state residency is not a hardware observation. Abstract system energy remains
+separate from physical PPA. Measurement-based calibration under #201 stays open.
