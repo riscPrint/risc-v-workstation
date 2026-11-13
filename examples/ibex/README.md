@@ -189,3 +189,77 @@ rvw --project examples/ibex regress run --suite mtvec-reset --rvfi-trace \
 rvw regress cosim "$IBEX_WORK/mtvec-reset-run" --platform examples/ibex/rvw/platform.json \
   --out "$IBEX_WORK/mtvec-reset-strict.json" --json
 ```
+
+## Lint, coverage and checks
+
+```sh
+cd "$RVW_HOME"
+rvw --project examples/ibex query build --out "$IBEX_WORK/design.db"
+nice -n 15 python examples/ibex/rvw/measure.py lint
+nice -n 15 python examples/ibex/rvw/measure.py coverage --run "$IBEX_WORK/isa-run"
+nice -n 15 python examples/ibex/rvw/measure.py checks
+```
+
+The checks output directory must be new. The port map declares two request/grant
+interfaces. Generated checks cover request and payload stability while a grant
+is absent. They do not establish response, memory-data or liveness correctness.
+Other check categories remain unbound. The measured checks were generated.
+They were not bound into the native model or proved.
+
+| Measurement | Result |
+| --- | --- |
+| Lint before automatic-local fix | 733 active findings |
+| Lint after fix | 732 active findings |
+| Reviewed high-severity structures | One automatic-local false positive fixed; three intentional structures |
+| Other lint/CDC/RDC findings | 729 not reviewed; no precision claim for this set |
+| Code coverage, ISA corpus | 22,237 / 42,700 points hit |
+| Line points | 354 / 661 |
+| Branch points | 393 / 756 |
+| Expression points | 770 / 1,373 |
+| Toggle points | 20,720 / 39,910 |
+| Functional coverage, ISA corpus | 14,596 retirements; eight qualified M-mode class bins; zero unknown encodings |
+| Declared memory checks | Two generated; execution and proof NOT RUN |
+
+The three reviewed intentional structures are the clock-gate latch, its clock
+as data, and an unconnected counter output. The fixed false positive was the
+automatic `pmp_cfg` argument of `is_mml_m_exec_cfg`. The slang importer now tags
+automatic subroutine locals. Lint keeps the undriven check for a loaded local.
+The remaining findings include 490 related-clock crossings, 98 unused signals,
+46 asynchronous reset crossings, 46 reset release-order obligations, 35 reset
+reconvergences, 13 registers without a recognized reset and four single findings.
+These counts are reports, not lint signoff.
+
+Coverage uses only the 51 instruction ELFs. It does not include ACT4. The default
+functional plan includes unsupported S/A/F bins. Eight hit bins do not establish
+RV32IMC coverage closure. C2 headers include the captured ELF hash so the coverage
+reader can bind each trace to its conclusive C1 pass.
+
+## Bounded ISA generation
+
+Set `RISCV_FORMAL` to a pinned external riscv-formal checkout. This measurement
+used `c992aa61fdfe0846c5ed90324c596202a1c69b76`. Put OSS CAD Suite tools and the
+matching slang plugin on PATH. Set `RVW_SLANG` to the plugin path.
+
+```sh
+"$RVW_HOME/scripts/with-lock.sh" ibex-ibex nice -n 15 rvw \
+  --project "$RVW_HOME/examples/ibex/rvw/formal" formal isa \
+  --out "$IBEX_WORK/formal-isa" --timeout 20 --json
+```
+
+The build entry lowers the actual SystemVerilog and its RVFI through slang.
+The wrapper binds one-cycle instruction and data responses with unconstrained
+read words. It has no stable memory model. IRQs and debug inputs are low. The
+project selects `insn_add_ch0` and retirement cover at depth 16. SBY uses
+`multiclock on` for the derived clock.
+
+| Formal scope | Result |
+| --- | --- |
+| Depth 6 diagnostic | No retirement; inconclusive |
+| Depth 16 retirement cover | Reached |
+| Depth 16 ADD check | Engine PASS; selected ADD activation not reached at the assertion cycle |
+| ISA result | Inconclusive; no qualified instruction proof |
+| Other instructions and machine checks | Unselected; unsupported rows remain visible |
+
+The instruction activation check prevents an unearned bounded result. No
+unbounded run was made. The formal wrapper keeps raw Ibex RVFI order and masks.
+The simulation exporter normalizes their conventions as described above.

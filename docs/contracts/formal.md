@@ -1193,3 +1193,11 @@ checks the unrestricted condition as literal `1` with no operand prefix.
 Only that full-domain job can return top-level `proved` with exit 0.
 The command does not combine saved part reports. A caller must not promote
 part proofs to a whole-domain proof without a checked cover of the operand space.
+
+## Derived clocks in riscv-formal
+
+The optional `riscv_formal.multiclock` boolean defaults to false. When true,
+the runner sets `multiclock on` in each generated SBY job. Instruction activation
+covers retain this setting. This selects SBY's clock lowering for designs with
+derived clocks. It does not assert that the derived clocks are equivalent or
+that a selected bound reaches retirement. The setting is part of the input hash.

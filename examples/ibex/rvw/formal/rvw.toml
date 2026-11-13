@@ -1,0 +1,37 @@
+[core]
+name = "ibex-formal"
+
+[riscv_formal]
+root = "${RISCV_FORMAL}"
+wrapper = "wrapper.sv.in"
+verilog = ["${IBEX_WORK}/formal-core.v"]
+build = ["./export.sh"]
+isa = "rv32imc"
+nret = 1
+checks = ["insn_add_ch0", "cover"]
+depth = 16
+solver = "bitwuzla"
+multiclock = true
+
+[riscv_formal.ports]
+valid = "rvfi_valid"
+order = "rvfi_order"
+insn = "rvfi_insn"
+trap = "rvfi_trap"
+halt = "rvfi_halt"
+intr = "rvfi_intr"
+mode = "rvfi_mode"
+ixl = "rvfi_ixl"
+rs1_addr = "rvfi_rs1_addr"
+rs2_addr = "rvfi_rs2_addr"
+rs1_rdata = "rvfi_rs1_rdata"
+rs2_rdata = "rvfi_rs2_rdata"
+rd_addr = "rvfi_rd_addr"
+rd_wdata = "rvfi_rd_wdata"
+pc_rdata = "rvfi_pc_rdata"
+pc_wdata = "rvfi_pc_wdata"
+mem_addr = "rvfi_mem_addr"
+mem_rmask = "rvfi_mem_rmask"
+mem_wmask = "rvfi_mem_wmask"
+mem_rdata = "rvfi_mem_rdata"
+mem_wdata = "rvfi_mem_wdata"

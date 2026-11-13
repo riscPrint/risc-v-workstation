@@ -54,7 +54,7 @@ def generate(manifest, out):
     text = wrapper(plan)
     # All core names and signal names come from this project-owned file.
     cfg = {k: plan[k] for k in ('isa', 'nret', 'checks', 'depth', 'solver', 'ports')}
-    for key in ('defines', 'check_options'):
+    for key in ('defines', 'check_options', 'multiclock'):
         if key in plan:
             cfg[key] = plan[key]
     cfg['root'] = str((manifest.parent / os.path.expandvars(plan['root'])).resolve())

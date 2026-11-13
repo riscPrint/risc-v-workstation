@@ -199,3 +199,11 @@ It reports missing adjacent connections and unreachable modes against the
 caller-supplied graphs. Missing either graph gives `inconclusive` unless a
 mismatch is already observed. `checked` covers only the supplied graphs.
 The format carries no RISC-V debug conformance or extracted-design claim.
+
+## SystemVerilog automatic locals
+
+The slang importer tags automatic subroutine arguments and local variables as
+`hdl:automatic-local`. These declarations are not standalone hardware inputs.
+Lint does not report an undriven error for a tagged local with no hardware load
+and no port direction. A loaded local still requires a driver. Static locals and
+ordinary nets do not receive this exception.

@@ -78,7 +78,7 @@ def parse_project(raw, path, environment):
         "lint": {"settings"},
         "arch": {"description", "sources", "benchmarks"},
         "formal": {"regress", "verilog", "top", "checks", "clock", "reset", "export_dependencies"},
-        "riscv_formal": {"root", "verilog", "wrapper", "isa", "nret", "checks", "depth", "solver", "defines", "ports", "check_options", "instruction_models", "memory", "build", "latency_trace"},
+        "riscv_formal": {"root", "verilog", "wrapper", "isa", "nret", "checks", "depth", "solver", "defines", "ports", "check_options", "instruction_models", "memory", "build", "latency_trace", "multiclock"},
 
     }
     _check_keys(raw, {"core", "suites", "tiers", *tables}, str(path))
