@@ -102,3 +102,10 @@ export function waiver(d: LintDiagnostic, config: string | undefined): Record<st
   if (!d.id || !d.endpoint || !config) throw new Error('this finding has no id, endpoint or configuration to waive');
   return {config, rule: d.rule, endpoint: d.endpoint, finding_id: d.id, reason: 'TODO: why this finding is safe'};
 }
+
+/** Keep backend and disposition on each finding, including CDC, RDC and SDC. */
+export function ruleGroups(summary:LintSummary):{rule:string;findings:LintDiagnostic[]}[]{
+ const groups=new Map<string,LintDiagnostic[]>();
+ for(const finding of summary.diagnostics)groups.set(finding.rule,[...(groups.get(finding.rule)??[]),finding]);
+ return [...groups].sort(([a],[b])=>a.localeCompare(b)).map(([rule,findings])=>({rule,findings}));
+}

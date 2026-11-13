@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import { execFile } from 'node:child_process';
 import { dirname, isAbsolute, join } from 'node:path';
 import type { Feature, FeatureContext } from '../../../src/api';
-import { headline, messageText, parseLint, waiver, type LintDiagnostic, type LintSummary } from './model';
+import { headline, messageText, parseLint, waiver, ruleGroups, type LintDiagnostic, type LintSummary } from './model';
 
 /** `rvw lint` findings in the Problems panel: run with a settings file, or open a saved
  * rvw.lint/1 report or SARIF log. Waived findings show as hints with their reason. */
@@ -14,6 +14,21 @@ const feature: Feature = {id: 'lint', activate(context: FeatureContext) {
   const config = () => vscode.workspace.getConfiguration('lint');
   let lastSettings: string | undefined;
   let lastConfig: string | undefined;
+  type Group = {rule:string;findings:LintDiagnostic[]};
+  type Entry = Group | LintDiagnostic;
+  let groups:Group[]=[];
+  let reportBase='';
+  const changed=new vscode.EventEmitter<Entry|undefined>();
+  context.subscriptions.push(changed,vscode.window.createTreeView('lint.rules',{treeDataProvider:{onDidChangeTreeData:changed.event,
+    getChildren:(row?:Entry)=>row&&'findings' in row?row.findings:row?[]:groups,
+    getTreeItem:(row:Entry)=>{const group='findings' in row;
+      const item=new vscode.TreeItem(group?`${row.rule}: ${row.findings.length}`:messageText(row),group?1:0);
+      if(!group){item.description=row.backend;item.contextValue='lint.finding';item.command={command:'lint.findingSource',title:'Open source',arguments:[row]};}return item;}}}));
+  context.subscriptions.push(vscode.commands.registerCommand('lint.findingSource',async(d:LintDiagnostic)=>{
+    try{if(!d.file)throw new Error('No source location for this finding.');
+      await vscode.window.showTextDocument(await vscode.workspace.openTextDocument(vscode.Uri.file(isAbsolute(d.file)?d.file:join(reportBase,d.file))),{selection:new vscode.Range(Math.max(0,d.line-1),0,Math.max(0,d.line-1),0)});
+    }catch(e){void vscode.window.showErrorMessage(`Lint: ${String(e)}`);}
+  }));
   const source = new WeakMap<vscode.Diagnostic, LintDiagnostic>();
 
   const level: Record<LintDiagnostic['severity'], vscode.DiagnosticSeverity> = {
@@ -22,6 +37,7 @@ const feature: Feature = {id: 'lint', activate(context: FeatureContext) {
 
   function show(summary: LintSummary, base: string, fallback: vscode.Uri): void {
     collection.clear();
+    groups=ruleGroups(summary);reportBase=base;changed.fire(undefined);
     lastConfig = summary.config;
     const byFile = new Map<string, vscode.Diagnostic[]>();
     for (const d of summary.diagnostics) {
@@ -82,7 +98,7 @@ const feature: Feature = {id: 'lint', activate(context: FeatureContext) {
     const text = new TextDecoder().decode(await vscode.workspace.fs.readFile(file));
     show(parseLint(text), dirname(file.fsPath), file);
   });
-  register('clear', async () => { collection.clear(); status.hide(); });
+  register('clear', async () => { collection.clear(); groups=[];changed.fire(undefined);status.hide(); });
   context.subscriptions.push(vscode.commands.registerCommand('lint.copyWaiver', async (d: LintDiagnostic) => {
     try {
       await vscode.env.clipboard.writeText(JSON.stringify(waiver(d, lastConfig), null, 2));
