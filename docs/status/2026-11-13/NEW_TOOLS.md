@@ -1,6 +1,6 @@
 # New tools and command families
 
-Current census: 846 merged PR bodies, through 2026-11-13T16:12:30Z.
+Current census: 854 merged PR bodies, through 2026-11-13T16:23:40Z.
 Each row reports the strongest executed slice. Native evidence is read from PR bodies. It was not rerun. A real-core report consumed by an index or plan is analysis of that report, not execution of a new core workflow. Full bodies are in [PR_EVIDENCE.md](PR_EVIDENCE.md).
 
 ## ComponentSims / rvw csim
@@ -29,9 +29,9 @@ Path: `rvw/src/rvw/sec/`.
 
 Purpose: Dynamic simulation security experiments and contract suites.
 
-Evidence level: ran on real core RTL. Scope: VexRiscv and VexiiRiscv; Stepper paired control. Source: [#955](https://github.com/riscPrint/risc-v-workstation/pull/955).
+Evidence level: ran on real core RTL. Scope: VexRiscv and VexiiRiscv; Stepper paired and 42-cycle flow controls. Sources: [#955](https://github.com/riscPrint/risc-v-workstation/pull/955), [#1240](https://github.com/riscPrint/risc-v-workstation/pull/1240).
 
-What remains: Flow completion and broader protocol/reset support remain. CSR storage resolution reuses the existing explicit policy resolver; ambiguous storage still requires a signal declaration. Source: [#1224](https://github.com/riscPrint/risc-v-workstation/pull/1224).
+What remains: The precise Stepper flow completes 42 checked cycles with no_leak_observed. Add/division pairs each complete two runs. Whole-core, all-operand and physical security qualification remain open. Source: [#1240](https://github.com/riscPrint/risc-v-workstation/pull/1240).
 
 ## rvw fault
 
@@ -211,7 +211,7 @@ Purpose: Generate mapped external-core projects and launchers.
 
 Evidence level: ran on real core RTL. Scope: Stepper RV32IM. Source: [#1217](https://github.com/riscPrint/risc-v-workstation/pull/1217).
 
-What remains: Flow completion, whole-core ISA/state proof and automatic SoC consumer bindings remain incomplete. These results are an informed rerun, not an independent newcomer trial or release qualification. Source: [#1232](https://github.com/riscPrint/risc-v-workstation/pull/1232).
+What remains: Whole-core ISA/state proof and automatic SoC consumer bindings remain incomplete. These results are an informed rerun, not an independent newcomer trial or release qualification. Source: [#1232](https://github.com/riscPrint/risc-v-workstation/pull/1232).
 
 ## Agent trial and evidence benchmark
 

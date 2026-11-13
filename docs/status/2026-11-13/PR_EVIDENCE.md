@@ -22817,3 +22817,168 @@ Select an ISA check depth from a project simulation RVFI trace. Retain its hash,
 Refs: #1225. Instruction closure remains open. A trace is a measured sample, not a worst-case latency proof.
 
 Roadmap notes: ISA setup now accepts measured latency. Stepper solver cost still prevents instruction closure within this short budget.
+
+## PR 1235
+
+[#1235](https://github.com/riscPrint/risc-v-workstation/pull/1235). Merged: 2026-11-13T16:13:56Z.
+
+Title: fix(uvm): accept the audited spike shim abi 8 profile
+
+Audit evidence label: ran on seeded RTL fixture.
+
+## Summary
+Restore CPU UVM replay with the current Spike shim ABI 8. Update the Python preparation guard, native C++ bridge guard and existing live ADDI/MISA fixture. Keep the source and build hash checks. Keep strict rejection of other ABI versions. Update the active setup notes.
+
+ABI 8 adds the external pending-bit API. It keeps the Effect layout and the existing create/write/step interfaces used by this scalar profile. The CPU replay profile still rejects interrupt and extended-state records.
+
+## Testing
+CPU replay unit tests: 29 passed, including rejection of ABI 7 and 9. Rebuilt the matched ABI 8 shim. The live six-retirement fixture passed both normal seeds, 1 and 3. Instruction, register-state and CSR fault controls each detected the injected defect: five native cases passed. This is bounded fixture evidence, not core or hardware qualification.
+
+No BOOM build or simulation ran. Full-suite campaign results follow separately. The independent generic UVM covergroup failure remains enabled and is not cleared by this repair.
+
+## Issues
+No issue closed.
+
+Roadmap notes: restore the existing CPU UVM consumers after the shim ABI update in PR #1147.
+
+## PR 1236
+
+[#1236](https://github.com/riscPrint/risc-v-workstation/pull/1236). Merged: 2026-11-13T16:15:38Z.
+
+Title: docs(status): reconcile current reported evidence and limits
+
+Audit evidence label: no code.
+
+## Summary
+Replace conflicting historical audit rows with one current table for all 220 issues and all 27 tool families. Reconcile 846 merged PR bodies through 16:12:30 UTC. Add 71 missing source bodies. Separate reported real-core, fixture, model, unit and absent evidence.
+
+Consolidate 30 core/tool findings with configurations, repository reproduction entries, rule decisions and status. Mark third-party cores and the absence of upstream reports. Revise retired/current risks and add the owner summary. Keep the #1218 two-of-15 timing result separate from the later five-of-15 result. Preserve the original census and milestone records in the snapshot/proposals.
+
+## Testing
+Fast set: 2981 passed, 1 skipped, 8081 deselected in 152.46 seconds. Release hygiene: 40 passed. The skip is the deferred command-reference test. Document checks: 220 unique issues, 27 families, 846 unique source records, local links, personal paths and whitespace.
+
+NOT RUN: simulations, builds, proofs, native campaigns, full Python suite or CI waits. Native claims come from PR bodies and were not independently rerun.
+
+## Issues
+Refs: #101. No issue closure. The owner retains acceptance and closure decisions. ROADMAP.md, TODO.md and AGENTS.md remain for the follow-up on open PR #1197.
+
+## PR 1237
+
+[#1237](https://github.com/riscPrint/risc-v-workstation/pull/1237). Merged: 2026-11-13T16:15:42Z.
+
+Title: feat(vexii): add rv64 machine and supervisor isa regressions
+
+Audit evidence label: ran on real core RTL.
+
+## Summary
+Add the extra cacheless `rv64ima` machine-mode config. Reuse `rv64imasu` for Sv39. Keep the RV32 default unchanged. Add separate M and MSU Spike platforms and RV64 UI/UM/UA suites. Keep misaligned-data tests excluded for these trapping profiles.
+
+## Testing
+Each config: 85 C1 passes, 85 complete strict Spike matches (53 UI, 13 UM, 19 UA). Zero synchronizations and masks. No core source changes. Private pinned core copy; private locks; two simulations per batch. Targeted profile test: 1 passed. Fast set: 2982 passed, 1 skipped, 8081 deselected. Release hygiene run separately. No full Python suite, BOOM, GitHub CI, C/F/D or ACT4 qualification in this item.
+
+## Issues
+Refs: no issue assigned. C/F/D remain outside these profiles. The separate generated-suite, ACT4 and tool-width items follow.
+
+Roadmap notes: VexiiRiscv now has native RV64IMA M and MSU riscv-tests evidence. This does not qualify privileged CSR behavior or architecture certification.
+
+## PR 1238
+
+[#1238](https://github.com/riscPrint/risc-v-workstation/pull/1238). Merged: 2026-11-13T16:17:45Z.
+
+Title: feat(arch): bound memory retry window admission
+
+Audit evidence label: ran on real core RTL.
+
+## Summary
+
+Add an opt-in long-response retry policy. Retain a missed load's compacting IQ line until response. Then reset its younger execution window, retain ROB/LSQ slots, and readmit through finite IQ capacity at rename width. Memory-order violations use the same bounded readmission queue. Recovery squashes active filler before it can block older retry admission. Recovery blocks correct-path issue while synthetic wrong-path work can finish until squash.
+
+This is not exact probe-driven replay. Existing reschedule counters mix branches, traps and LSU causes. They do not identify the LSU reason or instruction window. No replay rate or penalty is fitted from those totals. Keep the existing five-cycle penalty and all base parameters fixed. Cache retries are limited to one per dynamic load. A long response may also include contention or translation. Exact typed replay remains open.
+
+The README compares model retry counts with the mixed RTL totals without equating their predicates. Training absolute MAE rises from 7.33% to 9.46%; held-out MAE rises from 9.48% to 9.54%. The README and retained JSON record every paired delta, nonzero success count, same-step rank, and both absolute-error splits. No RTL run is repeated.
+
+## Testing
+
+Targeted timing, queue and retry tests: 41 passed. Tests cover missed-load retry, bounded readmission, queue pressure, retirement count, and required cache configuration. Final fast set: 2985 passed, 1 skipped, 8081 deselected. The saved multiply stream now retires fully in 38,020 model cycles under a 1,000-cycle progress check.
+
+NOT RUN: new RTL or Spike runs, core builds, full Python suite, formal jobs, hardware, CI waits.
+
+## Issues
+
+Refs: #1047, #1098. Exact probe-driven LSU replay, typed reasons, nested speculation and physical accuracy remain open. This PR must not be treated as completion of exact replay qualification.
+
+Roadmap notes: add bounded retry-window timing and preserve the missing typed RTL evidence as an open requirement.
+
+## PR 1239
+
+[#1239](https://github.com/riscPrint/risc-v-workstation/pull/1239). Merged: 2026-11-13T16:19:13Z.
+
+Title: docs(arch): correct native comparison and delta status
+
+Audit evidence label: no code.
+
+## Summary
+Correct ComponentSims' stale claim that no adapter supplies native comparison events. Name measured Vex/Vexii event counts and the remaining writeback gap. Update the OoO and NaxRiscv entry status to the later five-of-15 delta score. Keep the earlier two-of-15 result as a dated stage.
+
+## Testing
+Fast set: 2984 passed, 1 skipped, 8083 deselected in 146.48 seconds. The skip is the deferred command-reference check. Whitespace and source tables checked.
+
+NOT RUN: simulations, builds, proofs, native reruns, full Python suite or CI waits. Results come from merged PRs #1219 and #1231.
+
+## Issues
+Refs: #355, #358, #365. General component and structure-size fidelity remain unqualified.
+
+## PR 1240
+
+[#1240](https://github.com/riscPrint/risc-v-workstation/pull/1240). Merged: 2026-11-13T16:19:34Z.
+
+Title: fix(sec): bound flow preparation and split shadow compilation
+
+Audit evidence label: ran on real core RTL.
+
+## Summary
+Bound native flow preparation with one wall budget. Print phase progress and retain partial inconclusive reports with cell and shadow size counts. Generate a short secret-word load scenario. Split shadow C++ compilation and disable its C++ optimization. Use division for the generated IM constant-time pair.
+
+## Testing
+7 targeted tests passed. Fast set: 2987 passed, 1 skipped. Stepper precise flow completed over 42 checked cycles with no_leak_observed. Its initial 110-second timeout was in compilation at 56,003 cells and 16.6 MB shadow source. Add and division operand pairs each completed two native runs with no_leak_observed. No all-operand security claim. No BOOM, full suite, long proof or CI wait.
+
+## Issues
+Refs: #1224. Whole-core security qualification remains open.
+
+Roadmap notes: generated mapped-core flow now gives a finite native result and actionable partial timeout results. Paired division is finite evidence only.
+
+## PR 1241
+
+[#1241](https://github.com/riscPrint/risc-v-workstation/pull/1241). Merged: 2026-11-13T16:20:40Z.
+
+Title: docs(rvw): regenerate the command reference
+
+Audit evidence label: no code.
+
+## Summary
+Regenerate the CLI and MCP command reference from current declarations. Sheriff round 23 found no cross-area failure. Leave the reference test deferred.
+
+## Testing
+Main 517aed5a: 2985 passed, 1 skipped, 8083 deselected in 213.96 seconds. Parser construction, MCP listing without skipped-package warnings, all 47 top-level help checks, conflict-marker scan and repeated top-level definition scan passed. New fast files covered. The mapped-probe sample skipped because RVW_MAPPED_PROBE_PROJECT is unset; no runtime proof is claimed. Sample scratch removed. Dependency files unchanged. Full Python suites and BOOM jobs were not run. Rebased onto current main after the fast run.
+
+## Issues
+No issue closure. The owner explicitly excluded PRs #1197 and #381 from all sheriff adoption actions. Both remain untouched. Roadmap notes: no feature or roadmap change.
+
+## PR 1242
+
+[#1242](https://github.com/riscPrint/risc-v-workstation/pull/1242). Merged: 2026-11-13T16:23:40Z.
+
+Title: docs(uvm): replace stale runtime limits with measured status
+
+Audit evidence label: no code.
+
+## Summary
+Replace initial runtime-not-run statements in eleven VIP READMEs with the current bounded SV/cocotb fixture status. Keep protocol, physical, reactive-role and four inert-stub limits. Correct the CPU guide's missing Vex CSR callback claim with the measured IRQ/CSR sequences. Retain the installed Verilator covergroup failure.
+
+## Testing
+Fast set: 2989 passed, 1 skipped, 8083 deselected in 217.52 seconds. The skip is the deferred command-reference check. Whitespace, new links and changed-file path checks pass.
+
+NOT RUN: simulations, builds, proofs, native campaigns, full Python suite or CI waits. Results were read from #690, #987, #1183 and the dated runtime matrix.
+
+## Issues
+Refs: #202, #205, #296. No full UVM, CPU or protocol qualification is claimed.

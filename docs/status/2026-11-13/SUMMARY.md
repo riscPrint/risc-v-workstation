@@ -1,6 +1,6 @@
 # Owner summary: 2026-11-13
 
-Source cutoff: 846 merged PR bodies, 16:12:30 UTC. Results below are reported, not rerun. No whole-core qualification or commercial parity is claimed.
+Source cutoff: 854 merged PR bodies, 16:23:40 UTC. Results below are reported, not rerun. No whole-core qualification or commercial parity is claimed.
 
 Start with [INTEGRATION_GUIDE.md](../../INTEGRATION_GUIDE.md). Read [CLEAN_ROOM_2026-11-13.md](../../CLEAN_ROOM_2026-11-13.md) for the new-core trial and informed second pass. The three [Spinal](../../DRY_RUN_2026-11-13.md), [Verilog](../../DRY_RUN_VERILOG_2026-11-13.md) and [Chisel/VHDL](../../DRY_RUN_CHISEL_VHDL_2026-11-13.md) dry runs show setup gaps. Use [ISSUES.md](ISSUES.md), [NEW_TOOLS.md](NEW_TOOLS.md), [FINDINGS.md](FINDINGS.md) and [RISKS.md](RISKS.md) for source links and limits.
 
@@ -9,7 +9,7 @@ Start with [INTEGRATION_GUIDE.md](../../INTEGRATION_GUIDE.md). Read [CLEAN_ROOM_
 | Architecture | Component models, probes, timing fit and paired capacity studies. | ran on real core RTL: VexRiscv, VexiiRiscv, NaxRiscv, BOOM small and OoO Mini. Structure prediction remains unqualified. |
 | Core integration | Spinal, Verilog, Chisel and VHDL paths. Stepper passes and strictly matches 50 ISA programs. OoO Mini also matches 50. | ran on real core RTL: Stepper, PicoRV32, riscv-mini, NEORV32 and OoO Mini. Privileged boot and full interface acceptance remain open. |
 | Simulation | Persistent servers, DPI, replay, device plugins, cacheless/cached SMP and finite checkpoint paths. | ran on real core RTL: VexRiscv, VexiiRiscv and BOOM small. Linux, portable live restore and general coherence remain open. |
-| Verification | Strict Spike/Sail comparisons, ACT4, generated MMU/privilege/PMP suites and coverage reports. | ran on real core RTL: VexRiscv, VexiiRiscv, NaxRiscv and PicoRV32. Failed cases remain failures; no ISA certification. |
+| Verification | Strict Spike/Sail comparisons, ACT4, generated MMU/privilege/PMP suites and coverage reports. | ran on real core RTL: VexRiscv, VexiiRiscv, NaxRiscv and PicoRV32. Vexii RV64 M/MSU each add 85 strict ISA matches (#1237). Failed cases remain failures; no ISA certification. |
 | Formal/checks | Generated monitors, bounded core checks, arithmetic certificates and small memory refinement. | ran on real core RTL: VexRiscv, VexiiRiscv, Nax helpers, PicoRV32 and OoO Mini. Whole-core ISA proofs and activation closure remain open. |
 | SoC/UVM/VIP | Composer CPU/DMA, SMP host, imported UART, debug ports and live pyuvm/Spike benches. | ran on real core RTL: VexRiscv, VexiiRiscv and Stepper; other protocol work ran on seeded RTL fixture. CDC and complete protocol qualification remain open. |
 | Debug/security/fault | DMI/JTAG, finite paired/flow checks, trace ingress and register injections. | ran on real core RTL: VexRiscv, VexiiRiscv, NaxRiscv and BOOM small in separate slices. No physical leakage, reliability or debug compliance claim. |
@@ -20,7 +20,7 @@ The six main findings are: Vexii PMP-denied page walks; Vex interrupt mtval; Vex
 
 The six main negative results are:
 
-1. Timing prediction meets the criterion for only 2 of 15 nonzero changes at #1218. At #1231 the result is 5 of 15; ten deltas still fail. Structure decisions still need RTL.
+1. Timing prediction meets the criterion for only 2 of 15 nonzero changes at #1218. The drain stage reaches 5 of 15. The later retry stage falls to 1 of 15 (#1238). Structure decisions still need RTL.
 2. Eight-test impact selection misses the planted fault. Safe fallback runs all 49.
 3. Deep-proof abstractions give no qualified capacity gain on real VexRiscv models.
 4. Directed closure reaches 24 bins; random reaches 26 on the sampled campaigns.

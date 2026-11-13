@@ -1,11 +1,11 @@
 # NaxRiscv project example
 
-Current timing limit: the later drain model meets the criterion on 5 of 15
-nonzero RTL changes and 14 of 24 total pairs. Ten deltas still fail.
-Training/held-out IPC MAE is 7.33%/9.48%. The earlier tables below retain
+Current timing limit: the retry model meets the criterion on 1 of 15
+nonzero RTL changes and 9 of 24 total pairs.
+Training/held-out IPC MAE is 9.46%/9.54%. The earlier tables below retain
 their stage results, including the 2-of-15 result in PR #1218. Use the
-[latest model stage](../../rvw/src/rvw/ooo/README.md#resource-study-drain)
-and [PR #1231](https://github.com/riscPrint/risc-v-workstation/pull/1231)
+[latest model stage](../../rvw/src/rvw/ooo/README.md#resource-study-replay)
+and [PR #1238](https://github.com/riscPrint/risc-v-workstation/pull/1238)
 for current scores. Structure-size decisions still need RTL measurements.
 
 

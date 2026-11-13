@@ -1,6 +1,6 @@
 # Current risks
 
-Source census: 846 merged PR bodies through 2026-11-13T16:12:30Z. This review reads reported evidence. It does not rerun it. The current list replaces earlier refresh appendices.
+Source census: 854 merged PR bodies through 2026-11-13T16:23:40Z. This review reads reported evidence. It does not rerun it. The current list replaces earlier refresh appendices.
 
 ## Retired statements
 
@@ -16,12 +16,13 @@ Source census: 846 merged PR bodies through 2026-11-13T16:12:30Z. This review re
 | Fetch and PC/divider firings establish core defects | Cancellation bindings retire the 8768 Vex fetch and 139 Vexii PC/divider events on clean campaigns. New backpressure findings remain. | [#893](https://github.com/riscPrint/risc-v-workstation/pull/893), [#1136](https://github.com/riscPrint/risc-v-workstation/pull/1136), [#1171](https://github.com/riscPrint/risc-v-workstation/pull/1171) |
 | ACT4 supervisor reference checks only sampled 37 cases | All 270 cases now have first-difference comparisons. All fail at the same bootstrap CSR. No body qualifies. | [#1178](https://github.com/riscPrint/risc-v-workstation/pull/1178) |
 | Mapped newcomers cannot run native SoC or pyuvm | Stepper runs a real composed CPU and live pyuvm/Spike. Seven generated SoC consumers remain inconclusive. | [#1227](https://github.com/riscPrint/risc-v-workstation/pull/1227), [#1229](https://github.com/riscPrint/risc-v-workstation/pull/1229), [#1232](https://github.com/riscPrint/risc-v-workstation/pull/1232) |
+| Stepper flow preparation never completes | The precise flow now completes 42 checked cycles with no_leak_observed. This is finite evidence, not a whole-core proof. | [#1240](https://github.com/riscPrint/risc-v-workstation/pull/1240) |
 
 ## Risks that remain
 
 | Risk | Measured result and remaining work | Sources |
 |---|---|---|
-| Timing delta accuracy | At #1218, only 2 of 15 nonzero IPC changes meet the sign and half-size criterion. Nine zero changes match. Training MAE 10.7% and held-out 7.5% do not qualify structure-size decisions. #1231 improves this to 5/15 nonzero and 14/24 total. Ten deltas still fail. Training/held-out MAE is now 7.33%/9.48%; structure decisions remain unqualified. | [#1218](https://github.com/riscPrint/risc-v-workstation/pull/1218), [#1228](https://github.com/riscPrint/risc-v-workstation/pull/1228), [#1231](https://github.com/riscPrint/risc-v-workstation/pull/1231) |
+| Timing delta accuracy | At #1218, only 2 of 15 nonzero IPC changes meet the sign and half-size criterion. Nine zero changes match. Training MAE 10.7% and held-out 7.5% do not qualify structure-size decisions. #1231 improves this to 5/15 nonzero and 14/24 total. At the later retry stage (#1238), only 1/15 nonzero and 9/24 total deltas meet the criterion. Training/held-out MAE is 9.46%/9.54%; structure decisions remain unqualified. | [#1218](https://github.com/riscPrint/risc-v-workstation/pull/1218), [#1228](https://github.com/riscPrint/risc-v-workstation/pull/1228), [#1231](https://github.com/riscPrint/risc-v-workstation/pull/1231) |
 | Test-impact false negative | The eight-test ranking passes and misses the planted fault. Safe coverage fallback detects it by running all 49. No qualified reduction or speedup. | [#1090](https://github.com/riscPrint/risc-v-workstation/pull/1090), [#1182](https://github.com/riscPrint/risc-v-workstation/pull/1182) |
 | No deep-proof capacity gain | 129 baseline and 172 abstraction observations on real VexRiscv models earn no qualified solve or gain. Unequal limits prevent a speed comparison. | [#810](https://github.com/riscPrint/risc-v-workstation/pull/810) |
 | Directed closure does not beat random | Both samples start at 20 supported bins. Four directed candidates reach 24; random reaches 26. One seed gives no gain over random. | [#994](https://github.com/riscPrint/risc-v-workstation/pull/994) |
