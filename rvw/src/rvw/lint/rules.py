@@ -127,13 +127,19 @@ def analyze(db, config=None):
 
     # Combinational loops: cycles through wires only.
     for comp in sccs(sorted(comb), lambda v: [w for w in d.outgoing[v] if w in comb and
-                                               d.kinds[(v, w)] - {'blackbox'}]):
+                                               (v, w) not in d.alias_edges and d.kinds[(v, w)] - {'blackbox'}]):
         if len(comp) > 1 or comp[0] in d.outgoing[comp[0]]:
-            members = sorted(d.signals[i]['path'] for i in comp)
-            emit('lint.comb_loop', min(comp), f'Combinational loop through {len(comp)} signal(s).',
+            names = {i for i in comp if not d.signals[i].get('generated')}
+            names |= {o for i in comp for o in d.owners.get(i, ())}
+            members = sorted({d.signals[i]['path'] for i in names} or {d.signals[i]['path'] for i in comp})
+            emit('lint.comb_loop', d.by_path[members[0]], f'Combinational loop through {len(comp)} signal(s).',
                  members=members[:50])
 
-    rows = list(db.conn.execute('SELECT * FROM assignments'))
+    # HDL imports record net aliases as assignments; they drive nothing.
+    # A constant net's alias row has no reads: it is a tie, so it stays a driver.
+    read = {r[0] for r in db.conn.execute('SELECT DISTINCT assignment_id FROM assign_reads')}
+    rows = [a for a in db.conn.execute('SELECT * FROM assignments')
+            if a['source'] != 'Yosys net alias' or a['id'] not in read]
     by_target = {}
     for a in rows:
         by_target.setdefault(a['target_id'], []).append(a)
@@ -160,17 +166,30 @@ def analyze(db, config=None):
                     emit('lint.width_extension', t, f'Resize from {source} to {target} bits.',
                          source_width=source, target_width=target)
 
+    def linked(i):
+        return {b for b in d.outgoing[i] | d.incoming[i] if (i, b) in d.alias_edges}
+
+    def driven(i):
+        # Through alias bits: a real driver, a tie or constant, or a toplevel input sharing the bit.
+        return bool(d.drivers(i)) or any(by_target.get(b) or any(d.is_top_input(o) for o in d.owners.get(b, ()))
+                                         for b in linked(i))
+
+    def loaded(i):
+        return bool(d.loads(i)) or any(any(d.is_top_output(o) for o in d.owners.get(b, ())) for b in linked(i))
+
     for i, s in sorted(live.items()):
         if s['kind'] not in ('wire', 'reg') or s.get('generated'):
             continue
         comp = d.components.get(s['component_id'], {})
         boxed = bool(comp.get('blackbox'))
-        if not d.outgoing[i] and not d.is_top_output(i) and i not in role and not boxed:
+        tied = any(a['id'] not in read and a['source'] and a['source'].startswith('Yosys')
+                   for a in by_target.get(i, []))  # HDL constant net: used as a value
+        if not loaded(i) and not d.is_top_output(i) and i not in role and not boxed and not tied:
             if s['direction'] == 'out' and comp.get('depth', 0) > 0:
                 emit('lint.unconnected_output', i)
             elif s['direction'] is None:
                 emit('lint.unused', i)
-        if (not by_target.get(i) and not d.incoming[i] and not d.is_top_input(i) and i not in role
+        if (not by_target.get(i) and not driven(i) and not d.is_top_input(i) and i not in role
                 and not (boxed and s['direction'] == 'out') and s['kind'] == 'wire'):
             emit('lint.undriven', i)
         if s['kind'] == 'reg' and not d.incoming[i] and not any(

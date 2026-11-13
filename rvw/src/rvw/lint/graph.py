@@ -29,20 +29,54 @@ class Design:
             self.incoming[dst].add(src)
             self.outgoing[src].add(dst)
             self.kinds[(src, dst)].add(kind)
-        # HDL imports link hidden Yosys alias nets to their named net in both directions. Such a
-        # pair carries no logic: drop it, so aliases do not look like fan-out or feedback.
         meta = dict(conn.execute('SELECT key, value FROM meta')) if 'meta' in self.tables else {}
-        if meta.get('frontend') == 'yosys-verilog':
-            for (a, b) in list(self.kinds):
-                if a in self.outgoing[b] and (self.signals.get(a, {}).get('generated') or
-                                              self.signals.get(b, {}).get('generated')):
-                    alias = a if self.signals[a].get('generated') else b
-                    if self.signals[alias]['kind'] == 'wire':
-                        for x, y in ((a, b), (b, a)):
-                            self.outgoing[x].discard(y)
-                            self.incoming[y].discard(x)
-                            self.kinds.pop((x, y), None)
+        self.frontend = meta.get('frontend')
+        if self.frontend == 'yosys-verilog':
+            self._merge_hdl_aliases()
+        self.members = getattr(self, 'members', {})
+        self.alias_edges = getattr(self, 'alias_edges', set())
+        self.owners = getattr(self, 'owners', {})
         self._assign = None
+
+    def _merge_hdl_aliases(self):
+        """HDL imports link each named net to its bit nodes in both directions (`Yosys net alias`
+        rows). Drop the links of hidden names, merge the bits of a register vector into its one
+        visible name, and keep other links as connectivity that the loop check ignores."""
+        sig = self.signals
+        links = {(t, b) for t, b in self.c.execute(
+            "SELECT a.target_id, r.signal_id FROM assignments a JOIN assign_reads r ON r.assignment_id=a.id "
+            "WHERE a.source='Yosys net alias'") if t != b}
+        owners = {}
+        for t, b in links:
+            if not sig[t].get('generated'):
+                owners.setdefault(b, set()).add(t)
+        members = {}
+        for b, vs in owners.items():
+            for v in vs:
+                members.setdefault(v, set()).add(b)
+        rep = {}
+        # Only register vectors merge: a merged wire vector would join its bit slices into false loops.
+        for v, bits in members.items():
+            if sig[v]['kind'] == 'reg' and all(owners[b] == {v} for b in bits):
+                for b in bits:
+                    rep[b] = v
+        drop = {p for t, b in links if sig[t].get('generated') or rep.get(b) == t for p in ((t, b), (b, t))}
+        self.members = {v: bits for v, bits in members.items() if all(rep.get(b) == v for b in bits)}
+        old = self.kinds
+        self.incoming, self.outgoing, self.kinds = defaultdict(set), defaultdict(set), defaultdict(set)
+        for (a, b), ks in old.items():
+            if (a, b) in drop:
+                continue
+            x, y = rep.get(a, a), rep.get(b, b)
+            if x == y and a != b:
+                continue
+            self.incoming[y].add(x)
+            self.outgoing[x].add(y)
+            self.kinds[(x, y)] |= ks
+        self.alias_edges = {p for t, b in links for p in ((t, b), (b, t)) if p not in drop}
+        self.owners = owners
+        for b in rep:
+            self.regs.pop(b, None)
 
     # Structure -----------------------------------------------------------------
     def is_top_input(self, i):
@@ -69,6 +103,21 @@ class Design:
             else:
                 pending.extend(self.incoming[n])
         return seen - leaves, leaves
+
+    def loads(self, i):
+        """Real (non-alias) loads of a net, also through the bits it names."""
+        out = {w for w in self.outgoing[i] if (i, w) not in self.alias_edges}
+        for b in self.outgoing[i]:
+            if (i, b) in self.alias_edges:
+                out |= {w for w in self.outgoing[b] if (b, w) not in self.alias_edges}
+        return out
+
+    def drivers(self, i):
+        out = {w for w in self.incoming[i] if (w, i) not in self.alias_edges}
+        for b in self.incoming[i]:
+            if (b, i) in self.alias_edges:
+                out |= {w for w in self.incoming[b] if (w, b) not in self.alias_edges}
+        return out
 
     def upstream_regs(self, node):
         return {n for n in self.cone(node)[1] if n in self.regs}

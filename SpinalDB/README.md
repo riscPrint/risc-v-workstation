@@ -379,7 +379,10 @@ conservative: each cell input can affect each output, and a named vector can
 join disjoint slices. `sel` edges identify mux selects and enable ports.
 Clock and reset pins do not become value dependencies. State outputs stop
 combinational traversal. When one visible name holds a bit, hidden Yosys
-temporaries are its aliases; only visible names become registers.
+temporaries are its aliases; only visible names become registers. A constant
+on a child input, or a child output tied to a constant, becomes a
+`Yosys constant` assignment. A cell that reads its own output keeps the
+self-edge (a real loop), as SpinalDB does.
 
 Each flip-flop cell gives a `clock_domains` row: the clock and reset nets are
 followed through ports to a toplevel input, `clock_edge` comes from

@@ -16,8 +16,14 @@ CDC analysis from SpinalDB. It does not establish CDC signoff.
 Use Verilator and Verible as native backends. Keep diagnostics, tool output,
 configuration identity and waivers. Use SpinalDB edges for structural paths.
 Non-Spinal designs use `rvw query build-hdl`: it writes clock domains from
-the Yosys flip-flop cells (see the SpinalDB README). Hidden Yosys alias nets are
-removed from the lint graph. Synchronous resets in plain mux logic stay data.
+the Yosys flip-flop cells (see the SpinalDB README). The lint graph reads the
+importer's `Yosys net alias` rows: hidden names are dropped, the bits of a
+register vector merge into its one visible name, and other name-to-bit links stay
+as connectivity that the loop check ignores. A name is used or driven when one
+of its bits is. Constant ties count as drivers. Synchronous resets in plain mux
+logic stay data. On the SERV core (`serv_top`, 219 registers, Yosys import)
+the `rules`, `structural` and `sdc` backends run in under one second with no
+rule findings after these fixes; Yosys `check` agrees that it has no loop.
 
 ## Run
 
