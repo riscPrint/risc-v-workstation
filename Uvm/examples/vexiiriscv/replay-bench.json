@@ -1,0 +1,5 @@
+{
+ "schema":"rvw.cocotb/1", "name":"vexii-isa-capture-pyuvm",
+ "backend":"icarus", "top":"replay_top", "sources":["replay_top.sv"],
+ "test_module":"replay_test", "python_paths":[".","../../pyuvm"], "requires":["timer"]
+}
