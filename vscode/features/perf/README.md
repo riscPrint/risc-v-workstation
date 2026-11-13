@@ -87,3 +87,7 @@ JSON in an editor. Use **Jump to Source via Design Database** on a row with an
 explicit `signal` field. It uses that signal without another text entry. The
 database choice and captured source hash checks still apply. A generic `path`
 field is not treated as a signal.
+
+## Pipeline window
+
+Open Pipeline Window reads an uncompressed Kanata 0004 log up to 32 MiB. Select up to 80 cycles. The text grid shows lanes and stages for up to 500 instructions. Open spans keep a question mark. Discards and R type 0 events stay distinct. The stall table counts explicit `#rvw` samples by scope, cause and evidence. It does not infer causes from residence time. The saved perf results tree also exposes the full stall_causes report. Use rvw perf for larger logs.
