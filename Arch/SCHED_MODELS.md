@@ -82,3 +82,26 @@ Branch, load, mixed held-out, bypass and operand-dependent kernels remain
 open. Stock llvm-mca still uses the named built-in CPU. Generated scheduling
 fragments are not loaded into that tool. Native LLVM/GCC target integration
 and RTL accuracy qualification remain separate work.
+
+## Export from a shared project description
+
+`rvw arch compiler-export CORE.json --out NEW_DIRECTORY --json` projects an
+O3 `rvw.arch-core/1` file into partial LLVM `model.td`, GCC `model.md`,
+`tune.h`, `scheduling.json` and a report. `arch_compiler_export` is the matching
+cancellable MCP tool. Run `rvw arch compiler-check DIRECTORY --json` or
+`arch_compiler_check` to parse widths, resources, class latencies, occupancy
+and GCC reservations back. The checker also checks the restricted generated
+syntax and issue-rate include. It refuses modified mappings.
+
+The own-model latency table supplies operation latencies. The shared CPU supplies
+issue width and ROB capacity. An explicit own-model class port limit supplies
+the resource count. Without one, the exporter assumes one independent resource
+per class. Occupancy is one. Shared execution-port topology is not projected.
+Mappings cover a subset of base integer ALU, multiply, divide, load and store
+opcodes. Unsupported classes stay explicit in the report. Compressed, FP and
+vector mappings are absent. Names are scoped to the selected project config.
+
+These are target fragments. CPU registration, target guards, issue-rate hooks
+and compiler builds remain separate work under #367. The checker establishes
+restricted file round-trip consistency. It does not run TableGen, GCC's DFA,
+llvm-mca, a compiler or RTL. It gives no scheduling-accuracy verdict.
