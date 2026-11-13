@@ -28,4 +28,6 @@ def mcp_tools():
                 "exhaustive": {"type": "boolean", "default": False,
                                "description": "symbols: try every untested smaller value to prove the minimum"}},
                ["run_dir"]),
-        handler("rvw.reduce.cli"), long=True)]
+        handler("rvw.reduce.cli"), long=True,
+        side_effects='long-running; launches configured native adapter; writes reduction trials under out', native_tools=(),
+        )]

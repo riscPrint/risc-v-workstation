@@ -1,7 +1,5 @@
 [
   "arch_sched_study:native_tools:Declare inventory tool ids, or an empty tuple.",
   "cov_mutate:native_tools:Declare inventory tool ids, or an empty tuple.",
-  "farm_batch:native_tools:Declare inventory tool ids, or an empty tuple.",
-  "reduce_run:native_tools:Declare inventory tool ids, or an empty tuple.",
-  "reduce_run:side_effects:Declare read-only or writes-files."
+  "farm_batch:native_tools:Declare inventory tool ids, or an empty tuple."
 ]
