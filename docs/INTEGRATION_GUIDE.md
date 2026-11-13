@@ -325,6 +325,29 @@ RTL. Native scheduler parity is not application accuracy. The committed-trace
 model does not execute wrong-path instructions. Read [Arch](../Arch/README.md)
 and [component simulations](../ComponentSims/README.md).
 
+### Measured structure-size limits
+
+The model meets the delta criterion on only two of 15 nonzero RTL changes. All nine zero changes match. Structure-size choices still need RTL measurements. Use the model to select experiments and inspect possible bottlenecks. The current results do not qualify design decisions for Apple M-series or Zen 5 class cores.
+
+| Variant | Initial outside criterion | Revised outside criterion |
+|---|---:|---:|
+| iq16 | 6/6 | 4/6 |
+| rob128 | 0/6 | 0/6 |
+| lq8 | 5/6 | 6/6 |
+| sq8 | 3/6 | 3/6 |
+
+On NaxRiscv, the revised base-only fit gives mean absolute IPC errors of
+10.7% training, 7.6% on five held-out programs and 7.5% across six.
+The delta table still has 13 wrong pairs out of 24. Nine pairs are zero
+changes; only two of the 15 nonzero changes meet the criterion.
+Sensitivity places IQ first but ties SQ, LQ and ROB. Tau-b is 0.707.
+
+Use `rvw arch ooo-delta PLAN --out NEW_DIRECTORY --json` or MCP
+`arch_ooo_delta` for the same paired comparison on another project.
+Supply one frozen base calibration and paired C1/C2/ELF captures.
+[The measured tables and limits](../examples/naxriscv/README.md#measured-delta-study-2026-11-13)
+separate base-fit error, delta error and rank agreement.
+
 ## 13. Add UVM and protocol VIP
 
 Install `--with-sim`, `--with-cocotb` or `--with-pyuvm` for the chosen runner.
@@ -533,7 +556,7 @@ controls use a private patched checkout and private locks.
 | Probes and Kanata (`rvw probes`) | Entry, issue, completion, commit and ROB-tail flush taps | 501 native retirement PCs and cycles match C2; 1,003-cycle view; probes-off RTL is identical with and without the tap | 32 orphan events and seven open instructions at shutdown; TLB events |
 | Function top-down (`rvw perf`) | Per-cycle partition samples, C2 and ELF symbols | IQ32/IQ16 `memcpy`: 25,375/28,999 cycles; both completely match Spike; added back-end slots map to `main`; measured queue-push blocking rises | Lost slots use the next retirement as time attribution; more programs and configurations |
 | Predictor (`rvw csim compare-rtl`) | Project predictor study | Retained direction agreement 80.4% to 99.8% against gshare | Qualified study, exact PC hash and speculative history |
-| OoO model (`rvw ooo`, `rvw arch ooo-fit`) | Project description and probe event map | Revised mean IPC error: 20.7% training; 13.0% on the original five held-out programs; 12.4% across six including `spmv`; 5,000,000-cycle plan | Training worsens from 14.3%; finite store-buffer drain and replay fidelity; one event family |
+| OoO model (`rvw ooo`, `rvw arch ooo-fit`) | Project description and probe event map | Revised mean IPC error: 10.7% training; 7.6% on five held-out programs; 7.5% across six. Thirty RTL runs match Spike. Thirteen of 24 structure deltas remain wrong | Only two of 15 nonzero deltas meet the criterion; finite store drain, wrong-path occupancy and replay remain approximate |
 | Generated checks (`rvw checks generate`) | Queue, pointer and tag-event bindings | Nine rules; 59 ISA passes with zero firings; seed-1 ROB/free-list/forwarding controls fire their target rules 29/135/2 times | Actual RAM-state conservation, forwarded byte data, full recovery; unseeded directed-run firings |
 | Register faults (`rvw fault`) | Register sites from the database and a fixed-seed adapter | Three applied bit flips on ROB allocation, commit and free pointers; all detected by native assert/fail statuses | Three selected bits at one cycle do not qualify safety or broad fault coverage |
 
@@ -708,7 +731,7 @@ the cited scope. It does not erase older bounded evidence in that README.
 | [common](../rvw/src/rvw/common/README.md) | Local process/fixture checks | Process cancellation and resource limits do not establish DUT acceptance. |
 | [fault](../rvw/src/rvw/fault/README.md) | Ran on RTL | A bounded VexRiscv campaign and BOOM small register flips confirm native injection. Memories and FMEDA remain open. [#689](https://github.com/riscPrint/risc-v-workstation/pull/689), [#1101](https://github.com/riscPrint/risc-v-workstation/pull/1101). |
 | [perf](../rvw/src/rvw/perf/README.md) | Recorded trace analysis | BOOM small has measured stall samples and conditional branch comparisons. Prediction tags and full pipeline attribution remain open. [#451](https://github.com/riscPrint/risc-v-workstation/pull/451), [#1091](https://github.com/riscPrint/risc-v-workstation/pull/1091). |
-| [ooo](../rvw/src/rvw/ooo/README.md) | Native reference parity only | Committed-trace timing has no wrong-path execution; native gem5 comparison remains NOT RUN. [#655](https://github.com/riscPrint/risc-v-workstation/pull/655). |
+| [ooo](../rvw/src/rvw/ooo/README.md) | Native parity and bounded RTL correlation | NaxRiscv has 30 Spike-matched runs, but 13/24 structure deltas remain wrong. Dynamic wrong-path timing and native gem5 comparison remain unqualified. [#655](https://github.com/riscPrint/risc-v-workstation/pull/655). |
 
 ## Shared library boundaries
 

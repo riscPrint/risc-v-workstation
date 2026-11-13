@@ -5,6 +5,11 @@ complete single-hart C2 trace. This engine does not use gem5. Spike traces
 must first be exported as C2. RTL cycle timestamps are validated but do not
 drive the prediction. The full trace is the measured region.
 
+The NaxRiscv study still has 13 wrong structure deltas out of 24.
+Only two of 15 nonzero RTL changes meet the error criterion.
+Structure-size choices still need RTL measurements.
+See the measured structure-delta section below.
+
 Create CONFIG in your core project. This generic example is not a core preset:
 
 ```json
@@ -31,7 +36,7 @@ binds source operands to older producers. Integer x0 has no dependency.
 Issue uses one shared queue and oldest-ready selection. Execution uses a
 shared issue width with unlimited pipelined units. ROB and LSQ slots remain
 allocated until commit. Memory instructions wait for older memory completion.
-There is no address disambiguation, forwarding or store buffer model.
+Optional address disambiguation, forwarding and buffered stores are described below.
 
 `cycles` includes fill and drain from cycle zero through the last commit.
 The report gives IPC, issued instructions, queue peaks and event counts.
@@ -50,9 +55,9 @@ establish core correctness, configuration agreement or model accuracy.
 budgets in the design note are targets.
 
 The default engine uses fixed latencies. Optional pipeline structures are
-described below. Wrong-path execution and replay remain unsupported.
-It retains the full trace in memory. Core elaboration export, calibration, held-out RTL correlation and prediction
-ledgers remain separate work.
+described below. Optional replay and bounded wrong-path experiments are described below.
+It retains the full trace in memory. Project exports remain producer declarations. Calibration and RTL correlation
+do not establish whole-core fidelity.
 Do not use the existing gem5 report readers to certify this model.
 
 Run targeted tests from the workstation root:
@@ -63,7 +68,8 @@ PYTHONPATH=rvw/src python -m pytest rvw/tests/test_ooo.py -q
 
 See [the design](../../../../docs/design/own-core-model.md) for phases,
 contracts, prior art and acceptance targets. Keep tuned core values in the
-core project. Store measured evidence outside the repository.
+core project. Keep raw traces and native builds outside versioned source. Retain compact
+measured tables and input hashes with project documentation.
 
 ## Optional timing structures
 
@@ -636,8 +642,8 @@ counts. Each event mapping must declare matching model and RTL predicates.
 The command launches no RTL. Run it again with a new output directory when a
 new saved observation set is ready.
 
-Selection uses mean absolute relative cycle and mapped-event errors on training
-only. Zero measured counts use denominator one. Missing training counts stop
+The default objective uses mean absolute relative cycle and mapped-event errors
+on training only. Set `objective: ipc` to use relative IPC error instead. Zero measured counts use denominator one. Missing training counts stop
 fitting. Baseline validation reads all evidence, but held-out errors do not
 select the winner. Only the winner receives the final held-out calibration.
 Candidate configs, scores, the best config, and calibration evidence are saved.
@@ -903,3 +909,25 @@ of the default relative cycle error. Mapped-event errors keep equal
 weight with that timing metric. Selection still uses training samples
 only. Cycle error and IPC error are different ratios, so they can select
 different candidates. The fit report names its objective.
+
+## Measured structure deltas
+
+The model meets the delta criterion on only two of 15 nonzero RTL changes. All nine zero changes match. Structure-size choices still need RTL measurements. Use the model to select experiments and inspect possible bottlenecks. The current results do not qualify design decisions for Apple M-series or Zen 5 class cores.
+
+| Variant | Initial outside criterion | Revised outside criterion |
+|---|---:|---:|
+| iq16 | 6/6 | 4/6 |
+| rob128 | 0/6 | 0/6 |
+| lq8 | 5/6 | 6/6 |
+| sq8 | 3/6 | 3/6 |
+
+The revised base-only fit gives 10.7% mean absolute IPC error on training,
+7.6% on the original five held-out programs and 7.5% across six.
+The buffered baseline gave 20.7%, 13.0% and 12.4%.
+Better base IPC does not establish delta accuracy. Towers still has
++20.3% IPC error. Only two nonzero deltas meet the sign and half-size
+criterion. Sensitivity identifies IQ first but ties SQ, LQ and ROB;
+Kendall tau-b is 0.707 with three unresolved pairs.
+
+See [all RTL, delta, fit and rank tables](../../../../examples/naxriscv/README.md#measured-delta-study-2026-11-13).
+Finite store drain, wrong-path queue pressure and exact replay remain open.
