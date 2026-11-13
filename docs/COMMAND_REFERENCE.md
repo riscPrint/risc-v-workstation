@@ -14,8 +14,21 @@ An entry here states availability. It does not qualify a native flow.
 
 ```text
 usage: rvw [-h] [--version] [--project PROJECT]
-    {agent-bench,arch,bisect,bugmem,bundle,checks,cosim,cov,csim,debug,doctor,evidence,farm,fault,formal,init,lint,mcp,memory,ooo,perf,plan,privilege,probes,query,reduce,regress,sim,speed-compare,speed-sweep,backends,uvm-ral,uvm-cpu,hdl,cocotb,soc,uvm,verification-plan,wave,workloads}
+    {agent,agent-bench,arch,bisect,bugmem,bundle,checks,cosim,cov,csim,debug,doctor,evidence,farm,fault,formal,init,lint,mcp,memory,ooo,perf,plan,privilege,probes,query,reduce,regress,sim,speed-compare,speed-sweep,backends,uvm-ral,uvm-cpu,hdl,cocotb,soc,uvm,verification-plan,wave,workloads}
     ...
+```
+
+### `rvw agent`
+
+```text
+usage: rvw agent [-h] [--project PROJECT] {guide} ...
+```
+
+### `rvw agent guide`
+
+```text
+usage: rvw agent guide [-h] [--workflow WORKFLOW] [--json] [--markdown]
+    [--write WRITE] [--project PROJECT]
 ```
 
 ### `rvw agent-bench`
@@ -383,7 +396,7 @@ usage: rvw cov [-h] [--project PROJECT]
 
 ```text
 usage: rvw cov campaign [-h] --settings SETTINGS --work-dir WORK_DIR
-    [--resume] [--json] [--project PROJECT]
+    [--resume] [--replay REPLAY] [--json] [--project PROJECT]
 ```
 
 ### `rvw cov actions`
@@ -2361,6 +2374,14 @@ CLI commands without an MCP entry are CLI-only.
 Isolated calls can return a job after the sync timeout, even when
 they do not start a background job at once.
 
+### `agent_guide`
+
+Agent playbook: workflows (bring-up, a test fails, add coverage, prove a property, performance question) as ordered rvw CLI and MCP calls with decision points. Start here when you do not know which tool to call.
+
+Arguments: `workflow`.
+
+Starts a background job: no.
+
 ### `arch_build`
 
 Locate native gem5 and build bare-metal benchmarks with local GCC.
@@ -2645,7 +2666,7 @@ Starts a background job: yes.
 
 Execute bounded ISA candidates through C1 and strict complete Spike checks. Resume validates saved artifacts. CPU-hour metrics remain unqualified.
 
-Arguments: `settings` (required), `work_dir` (required), `resume`.
+Arguments: `settings` (required), `work_dir` (required), `resume`, `replay`.
 
 Starts a background job: yes.
 

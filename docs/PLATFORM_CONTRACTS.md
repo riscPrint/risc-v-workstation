@@ -46,6 +46,7 @@ Principles (from `ROADMAP.md`):
 - [Connectivity and riscv-formal bindings](contracts/connectivity.md)
 - [Co-simulation transports and capture inspection](contracts/cosim.md)
 - [Coverage](contracts/coverage.md)
+- [Archived stimulus replay](contracts/coverage.md#archived-stimulus-replay)
 - [Component simulations](contracts/csim.md)
 - [CSR and register maps](contracts/csr.md)
 - [Debug module and sessions](contracts/debug.md)

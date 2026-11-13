@@ -96,3 +96,22 @@ identity and complete sampling. Reused sample hashes earn no new reward.
 Missing hooks, stale samples and unqualified runs remain unsupported. History
 and sample hashes are part of resume state. ISA hits and RTL events stay separate.
 No native feedback campaign or gain over random generation is claimed.
+
+## Archived ELF replay
+
+Use `rvw cov campaign --settings loop.json --work-dir out --replay 0 --json`
+to recheck attempt zero. MCP accepts the same `replay` index. The command verifies
+the existing input/state/raw generations first. It ignores old working copies
+of attempt outputs and executes only the verified archive. Normal resume still
+checks retained working files. It runs the sealed candidate ELF
+through the selected C1 adapter and strict Spike checker. It uses a fresh result
+directory and seals that replay separately. The original state generation and
+credited hit set do not change.
+
+A qualified replay must match the campaign's recorded execution identity.
+Changed or missing identity is inconclusive. Failed runs remain observations on
+the current configured model. They do not establish original-context failure
+reproduction. Failed generation and compilation attempts without an archived ELF
+are unsupported for execution replay. Current pinned settings and implementation
+must still match. Cross-host replay and total replay-cost accounting remain
+unqualified. CPU fields exclude evidence sealing and publication overhead.

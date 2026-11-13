@@ -24,3 +24,19 @@ Coverage test selection (`rvw.coverage-select/1`) keeps the requested range in `
 the full compared commit IDs in `base_revision` and `head_revision`. Each distinct ref is resolved
 once. Both Git diffs use those IDs. Different refs are resolved in sequence; this does not claim
 an atomic snapshot of all refs. Later branch moves do not change the recorded selection.
+
+## Archived stimulus replay
+
+`rvw cov campaign --replay N` and the `cov_campaign` replay argument verify
+sealed campaign inputs and attempt evidence. They then run the archived ELF
+through C1, strict Spike qualification and payload sampling in a fresh result
+directory. `rvw.stimulus-replay/1` records the attempt, current and expected
+execution identities, comparison/coverage evidence, costs and raw archive
+generation. Old working output copies are not replay inputs.
+`credited_new_hits` is always empty. Replay does not change the
+campaign state or original hit set.
+
+A qualified replay requires matching execution identity. Missing or changed
+identity is inconclusive. Failed runs on a changed model do not prove failure
+reproduction in the original context. Attempts without an ELF are unsupported.
+Cross-host replay and complete cost qualification remain unverified.
