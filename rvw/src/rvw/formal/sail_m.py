@@ -2,7 +2,7 @@
 import re
 import json
 from pathlib import Path
-from rvw.formal.sail_zicond import generate as compile_rules
+from rvw.formal.sail_zicond import generate as compile_rules, lower_temporary_slices
 from rvw.formal.sail_subset import sha
 
 HASHES={'model/extensions/M/mext_insts.sail': 'f439cf260459ac1dd6031bf208c7444400b31bfa73dba5cec867d0edffa152f6', 'model/core/arithmetic.sail': 'e96d68eadd62816e02e5bed6ff428aa2098df37294675f066284370eb21dfcde', 'model/prelude/prelude.sail': 'c5a3825e88088bdad0a14abf9f8645894621148fe2cc23ebdd1e6d3ea549da8f'}
@@ -59,7 +59,7 @@ def generate(model, compiler, out):
 
 def lower(text, name):
     text=text.replace("unsigned'(", '$unsigned(').replace("signed'(", '$signed(').replace("'{", '{')
-    text=re.sub(r'= \{([^;]+)\}\[([0-9]+):0\];',lambda m:'= '+str(int(m[2])+1)+"'("+m[1]+');',text)
+    text=lower_temporary_slices(text)
     for primitive,op in [('quot_round_zero','/'),('rem_round_zero','%')]:
         if primitive in text:
             text=re.sub(r'\b'+primitive+r'\b','sail_'+name+'_'+primitive,text)
