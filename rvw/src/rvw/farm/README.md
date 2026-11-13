@@ -448,3 +448,22 @@ members retain the comparison hash, model, masks and synchronization records.
 `--core-env NAME` adds the source variable to generated `rvw bisect` commands.
 These commands bind the recorded good and bad revisions. `execution: not_run`
 means that triage has not run bisection.
+
+## Native observation catalogue
+
+`rvw farm observe --db design.db --root RUN --wave-prefix TOP.Module --out
+observations.json` reads conclusive C3/C1 evidence and exact waveform signal
+names. MCP exposes the same operation as `farm_observe`. VCD, gzipped VCD and
+FST are supported. FST conversion uses captured GTKWave tools. The report binds
+the database hash, waveform hashes, C1 source/RTL identities, converter inputs
+and measured test wall times. It records signals with known-value changes.
+Reset and boot activity are included. Missing waves or unmatched names leave
+signals unknown, so selection retains those tests. Partial signal observations
+are not functional, branch or statement coverage.
+
+Use native `rvw cov merge`, `cov rank` and `cov select` for coverage ranking.
+Attach its reviewed selection as `coverage_selection` in the catalogue.
+`coverage_selection.tests` are mandatory, even beyond the time budget. Unknown
+coverage-test IDs are errors. `fallback_all` still keeps every test. Freeze
+the catalogue and plan before executing the candidate. Compare the selected
+run with a separate full run. A point-covering subset need not catch a fault.

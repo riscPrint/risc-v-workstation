@@ -7,6 +7,8 @@ from .dashboard import dashboard
 def register(sub):
     parser = sub.add_parser("farm", help="native SSH shards and static history dashboard")
     commands = parser.add_subparsers(dest="farm_action", required=True)
+    from rvw.common.subcommands import register_commands
+    register_commands("rvw.farm", commands)
     run = commands.add_parser("run")
     for name in ("hosts", "manifest", "adapter", "identity-command", "identity", "out"):
         run.add_argument("--" + name, required=True)
