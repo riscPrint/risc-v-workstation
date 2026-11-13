@@ -161,7 +161,7 @@ def reference_checks(pack, base, workspace, runs, timeout):
     """Retain strict Spike output, including failures to launch the reference."""
     for name, run in runs.items():
         started = time.monotonic()
-        argv = [sys.executable, '-m', 'rvw', 'cosim', 'check',
+        argv = [sys.executable, '-m', 'rvw', 'cosim', 'check', '--core', 'native-task',
                 '--trace', run['trace'], '--elf', str((base / pack['programs'] / name).resolve()),
                 '--platform', str((base / pack['platform']).resolve()), '--strict', '--json']
         proc = run_group(argv, env=environment(pack, workspace), timeout=timeout, capture=True)

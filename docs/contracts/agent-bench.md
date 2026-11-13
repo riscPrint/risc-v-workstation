@@ -233,3 +233,12 @@ an explicit Spike mismatch. Seeded controls must pass and match. Missing
 reference evidence is inconclusive. Baseline and repair retain equal ELF,
 seed, config and harness revision. Existing repair-loop scores remain separate;
 the three-phase rule applies to `native-qualify`.
+
+## MCP evidence workflow records
+
+`rvw.agent-evidence-solver/1` has a `native-tools` track, ordered transcript,
+wall seconds, tool-call count, timeout flag and unique source `candidates`.
+The evaluator can add `true_line_rank`. Candidate order follows the query
+and wave response traversal. It does not imply causal confidence.
+`observed` means all five workflow requests returned. `inconclusive` means a
+request failed or its budget expired. Neither is a repair or C4 verdict.

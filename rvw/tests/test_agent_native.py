@@ -161,7 +161,7 @@ def test_reference_failure_cannot_earn_match(tmp_path, monkeypatch):
     result_path.parent.mkdir(parents=True)
     runs = {'broken': {'result': str(result_path), 'trace': str(result_path.with_name('rvfi.jsonl'))}}
     def invoke(argv, **kwargs):
-        assert '--strict' in argv and '--platform' in argv
+        assert '--strict' in argv and '--platform' in argv and '--core' in argv
         return SimpleNamespace(stdout='{"status":"match"}', stderr='reference failed', returncode=2, timed_out=False)
     monkeypatch.setattr(native, 'run_group', invoke)
     native.reference_checks({'source': {'env': 'TEST_CORE'}, 'programs': 'programs', 'platform': 'platform.json'},
