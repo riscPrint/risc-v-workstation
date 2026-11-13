@@ -6,7 +6,7 @@ from rvw.common.proc import run_group
 from rvw.uvm.composed import generate
 
 
-def run(source, out, classpath, *, build_args=(), idle_inputs=None, timeout=120, expected_map=None, profile="uvm"):
+def run(source, out, classpath, *, build_args=(), idle_inputs=None, timeout=120, expected_map=None, profile="uvm", lock="sbt-soc"):
     out = Path(out).resolve()
     root = Path(__file__).resolve().parents[4]
     report = generate(source,out,out/'rtl/VerificationSoc.v',expected_map=expected_map)
@@ -14,7 +14,7 @@ def run(source, out, classpath, *, build_args=(), idle_inputs=None, timeout=120,
     if profile == 'vip':
         from .vip_bench import generate as vip
         bus_tests = vip(out)
-    command = [str(root/'scripts/with-lock.sh'),'sbt-soc','nice','-n','10','sbt',*build_args,
+    command = [str(root/'scripts/with-lock.sh'),lock,'nice','-n','10','sbt',*build_args,
                'set Compile / unmanagedSources += file("'+report['scala']+'")','compile']
     with (out/'compile.log').open('w') as log:
         built = run_group(command,cwd=root/'SpinalSoc',stdout=log,stderr=log,timeout=timeout)

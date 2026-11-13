@@ -521,3 +521,8 @@ oracle on actual peripheral pins. A CDC/RDC entry can list
 `required_libraries` to require recognition of its declared synchronizers.
 Its structural summary reports findings and protected crossings separately
 from unproved temporal obligations.
+
+`verify` names missing manifest fields for each verification kind and explains
+how to supply them. JSON uses `missing_bindings`, `binding_help`, and
+`needed_evidence`. The text report prints the same instructions. Supplied
+bindings still need native evidence. A generated monitor is not a pass.

@@ -34,7 +34,7 @@ def generate(source, out, rtl, expected_map=None):
     text = text.replace('\n}\nobject VerificationGenerate', '\n'+'\n'.join(probes)+'\n}\nobject VerificationGenerate')
     scala.write_text(text)
     registers = [r['name']+'.'+reg['name'] for r in model['regions'] for reg in r['registers']
-                 if reg['width']==32 and reg['access'] != 'w' and reg['reset'] is not None]
+                 if reg['width'] in (8,16,32) and reg['access'] != 'w' and reg['reset'] is not None]
     if not registers:
         raise ValueError('composed RAL bench needs readable registers with known resets')
     # Exported peripheral inputs need explicit idle values. UART RX and PLIC
@@ -84,11 +84,11 @@ class Frontdoor:
                 return value
         raise AssertionError('SOC_FRONTDOOR_TIMEOUT')
     async def read(self, address, width):
-        assert width == 32
-        return await self.transfer(address)
+        assert width in (8,16,32)
+        return (await self.transfer(address)) & ((1 << width)-1)
     async def write(self, address, data, width):
-        assert width == 32
-        await self.transfer(address, True, data)
+        assert width in (8,16,32)
+        await self.transfer(address, True, data & ((1 << width)-1))
 
 @pyuvm.test()
 class ComposedRegisters(pyuvm.uvm_test):
