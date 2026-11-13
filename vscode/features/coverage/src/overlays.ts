@@ -6,7 +6,7 @@ import {lines,holes,type Line} from './lines';
 export function activateOverlays(context:FeatureContext){
  let marks:Line[]=[],base='',report:unknown;
  const changed=new vscode.EventEmitter<Row|undefined>();
- const decoration=vscode.window.createTextEditorDecorationType({isWholeLine:true,before:{contentText:'● ',color:new vscode.ThemeColor('editorWarning.foreground')}});
+ const decoration=vscode.window.createTextEditorDecorationType({gutterIconPath:vscode.Uri.joinPath(context.dist,'marker.svg'),gutterIconSize:'contain',overviewRulerColor:new vscode.ThemeColor('editorWarning.foreground')});
  function update(){for(const editor of vscode.window.visibleTextEditors)editor.setDecorations(decoration,marks.filter(m=>resolve(base,m.file)===editor.document.uri.fsPath&&m.line<=editor.document.lineCount).map(m=>({range:new vscode.Range(m.line-1,0,m.line-1,0),hoverMessage:`Saved coverage: ${m.hit}/${m.total} instrumented points hit (${m.types.join(', ')}). Source identity is not checked.`})));}
  context.subscriptions.push(changed,decoration,vscode.window.onDidChangeVisibleTextEditors(update),vscode.window.createTreeView('coverage.holes',{treeDataProvider:{onDidChangeTreeData:changed.event,getChildren:(row?:Row)=>row?children(row.value):report?children(report):[{key:'Open functional coverage or plan status JSON',value:null}],getTreeItem:(row:Row)=>new vscode.TreeItem(label(row),children(row.value).length?1:0)}}));
  for(const name of ['decorate','holes','plan','clearLines'])context.subscriptions.push(vscode.commands.registerCommand(`coverage.${name}`,async()=>{try{
