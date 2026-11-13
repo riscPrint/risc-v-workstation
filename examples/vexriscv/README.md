@@ -197,3 +197,12 @@ plan and those samples. The exporter does not collect samples by itself.
 
 The cosim platform declares M-only privilege, no PMP, zero PMP CSR reads, and
 instruction-valued `mtval` on ECALL. The adapter uses the same choices.
+
+### CSR model selection
+
+`rvw formal csr --model examples/vexriscv/csr.json --out out/vex-csr`
+selects M-only scratch access data from the pinned standard catalog. Run this
+from the workstation root. The model declares `mscratch` reset zero and absent
+`sscratch`. It generates the existing independent monitor and assembly tests.
+An RTL wrapper must still bind completed accesses and actual scratch storage.
+This file is not evidence of a VexRiscv CSR run or a real-core binding.

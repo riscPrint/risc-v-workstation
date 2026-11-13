@@ -1,0 +1,11 @@
+{
+  "schema": "rvw.csr-selection/1",
+  "xlen": 32,
+  "csrs": [
+    {
+      "name": "mscratch", "reset": 0, "assembly_safe": true,
+      "fields": [{"name": "SCRATCH", "access": {"U": "RO", "S": "RO", "M": "RW"}}]
+    },
+    {"name": "sscratch", "reset": 0, "present": false}
+  ]
+}

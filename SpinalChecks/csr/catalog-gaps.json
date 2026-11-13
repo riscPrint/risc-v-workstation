@@ -1,0 +1,138 @@
+{
+  "schema": "rvw.csr-catalog-gaps/1",
+  "manual_revision": "2713ba1fc5f2ccb1d5ebcb5e77f1b32e6f58bc5b",
+  "source": "src/priv/csrs.adoc",
+  "sha256": "a8aff82d214b98b5487a8699d2a671ac8b6236586cb83822c034d7631dbb994d",
+  "missing_field_definitions": [
+    {
+      "name": "sieh",
+      "address": 276,
+      "access": "SRW"
+    },
+    {
+      "name": "siph",
+      "address": 340,
+      "access": "SRW"
+    },
+    {
+      "name": "stopei",
+      "address": 348,
+      "access": "SRW"
+    },
+    {
+      "name": "stopi",
+      "address": 3504,
+      "access": "SRO"
+    },
+    {
+      "name": "hvien",
+      "address": 1544,
+      "access": "HRW"
+    },
+    {
+      "name": "hvictl",
+      "address": 1545,
+      "access": "HRW"
+    },
+    {
+      "name": "hidelegh",
+      "address": 1555,
+      "access": "HRW"
+    },
+    {
+      "name": "hvienh",
+      "address": 1560,
+      "access": "HRW"
+    },
+    {
+      "name": "hviprio1",
+      "address": 1606,
+      "access": "HRW"
+    },
+    {
+      "name": "hviprio2",
+      "address": 1607,
+      "access": "HRW"
+    },
+    {
+      "name": "hviprio1h",
+      "address": 1622,
+      "access": "HRW"
+    },
+    {
+      "name": "hviprio2h",
+      "address": 1623,
+      "access": "HRW"
+    },
+    {
+      "name": "hviph",
+      "address": 1621,
+      "access": "HRW"
+    },
+    {
+      "name": "vsieh",
+      "address": 532,
+      "access": "HRW"
+    },
+    {
+      "name": "vsiph",
+      "address": 596,
+      "access": "HRW"
+    },
+    {
+      "name": "vstopei",
+      "address": 604,
+      "access": "HRW"
+    },
+    {
+      "name": "vstopi",
+      "address": 3760,
+      "access": "HRO"
+    },
+    {
+      "name": "mvien",
+      "address": 776,
+      "access": "MRW"
+    },
+    {
+      "name": "mvip",
+      "address": 777,
+      "access": "MRW"
+    },
+    {
+      "name": "midelegh",
+      "address": 787,
+      "access": "MRW"
+    },
+    {
+      "name": "mieh",
+      "address": 788,
+      "access": "MRW"
+    },
+    {
+      "name": "mvienh",
+      "address": 792,
+      "access": "MRW"
+    },
+    {
+      "name": "mviph",
+      "address": 793,
+      "access": "MRW"
+    },
+    {
+      "name": "miph",
+      "address": 852,
+      "access": "MRW"
+    },
+    {
+      "name": "mtopei",
+      "address": 860,
+      "access": "MRW"
+    },
+    {
+      "name": "mtopi",
+      "address": 4016,
+      "access": "MRO"
+    }
+  ]
+}

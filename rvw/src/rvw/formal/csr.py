@@ -17,6 +17,9 @@ def integer(v):
 
 def load(path):
     obj = json.loads(Path(path).read_text())
+    if obj.get('schema') == 'rvw.csr-selection/1':
+        from .csr_catalog import materialize
+        obj = materialize(obj)
     if obj.get('schema') != 'rvw.csr/1' or obj.get('xlen') not in (32, 64):
         raise ValueError('expected rvw.csr/1 and xlen 32 or 64')
     if not obj.get('csrs'):
