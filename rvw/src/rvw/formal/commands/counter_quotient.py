@@ -15,7 +15,7 @@ def register(subparsers):
 
 def mcp_tools():
     from rvw.mcp.spec import ToolSpec, schema
-    from rvw.formal.mcp_tools import _runner
+    from rvw.formal.mcp_tools import _runner as _runner
     return [ToolSpec('formal_counter_quotient',
                     'Prove a reset-qualified modulo relation between a typed concrete counter and a smaller model.',
                     schema({'manifest': {'type': 'string'}, 'out': {'type': 'string'},

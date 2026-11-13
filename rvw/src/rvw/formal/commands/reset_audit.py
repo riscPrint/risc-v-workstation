@@ -1,5 +1,4 @@
 """Conservative reset-value and initial-state dependency inventory."""
-from rvw.formal.reset_audit import run
 
 
 def register(subparsers):
@@ -18,7 +17,7 @@ def register(subparsers):
 
 def mcp_tools():
     from rvw.mcp.spec import ToolSpec,schema
-    from rvw.formal.mcp_tools import _runner
+    from rvw.formal.mcp_tools import _runner as _runner
     string={'type':'string'}
     return [ToolSpec('formal_reset_audit','Inventory conservative reset constants and potential initial-state output paths. No reachability proof.',
         schema({'rtl':string,'top':string,'clock':string,'reset':string,'out':string,
@@ -26,3 +25,9 @@ def mcp_tools():
             'cycles':{'type':'integer','minimum':0,'maximum':64},
             'timeout':{'type':'number','exclusiveMinimum':0}},['rtl','top','reset','out']),
         _runner('reset-audit'),long=True, side_effects='long-running; writes generated artifacts and reports to out; launches selected native tools', native_tools=('Yosys',))]
+
+
+def run(args):
+    """Load the handler on first use."""
+    from rvw.formal.reset_audit import run as implementation
+    return implementation(args)

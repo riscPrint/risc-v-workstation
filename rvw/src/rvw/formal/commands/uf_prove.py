@@ -26,7 +26,7 @@ def register(subparsers):
 
 def mcp_tools():
     from rvw.mcp.spec import ToolSpec, schema
-    from rvw.formal.mcp_tools import _runner
+    from rvw.formal.mcp_tools import _runner as _runner
     return [ToolSpec('formal_uf_prove',
                     'Prove safety with typed global uninterpreted multiplication/division. Abstract failures stay inconclusive.',
                     schema({'manifest': {'type': 'string'}, 'out': {'type': 'string'},

@@ -12,7 +12,6 @@ def number(value):
     return int(value, 0) if isinstance(value, str) else int(value)
 
 
-PMPADDR0 = csr_address('pmpaddr0')
 # Interrupts whose pending bit only software sets (no Sstc): never a platform input.
 SOFTWARE_ONLY_IRQS = (1, 5)
 
@@ -24,6 +23,7 @@ def parse_csr_masks(items, xlen, pmp_regions):
     """
     if not isinstance(items, dict):
         raise ValueError("csr_masks must be an object of CSR (or range) to mask")
+    pmpaddr0 = csr_address('pmpaddr0')
     out = {}
     for key, value in items.items():
         lo, _, hi = str(key).partition("-")
@@ -34,8 +34,8 @@ def parse_csr_masks(items, xlen, pmp_regions):
         if not 0 < mask < 1 << xlen:
             raise ValueError(f"csr_masks {key!r}: mask must be nonzero and fit XLEN")
         for csr in range(lo, hi + 1):
-            if PMPADDR0 + pmp_regions <= csr < PMPADDR0 + 64:
-                raise ValueError(f"csr_masks {key!r}: pmpaddr{csr - PMPADDR0} exceeds pmp_regions={pmp_regions}")
+            if pmpaddr0 + pmp_regions <= csr < pmpaddr0 + 64:
+                raise ValueError(f"csr_masks {key!r}: pmpaddr{csr - pmpaddr0} exceeds pmp_regions={pmp_regions}")
             if csr in out:
                 raise ValueError(f"csr_masks: CSR {csr:#x} listed twice")
             out[csr] = mask

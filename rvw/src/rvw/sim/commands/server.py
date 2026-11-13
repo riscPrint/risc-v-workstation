@@ -1,7 +1,6 @@
 """Local service for an existing native JSONL adapter."""
 import json
 import signal
-from rvw.sim.server import request, serve
 
 
 def register(sub):
@@ -29,3 +28,14 @@ def mcp_tools():
     return [ToolSpec('sim_server_request', 'Submit a serial job to a running local native simulation server. An op:shutdown request closes it.',
                     schema({'endpoint': {'type': 'string'}, 'job': {'type': 'object'},
                             'timeout': {'type': 'number', 'exclusiveMinimum': 0}}, ['endpoint', 'job']), request, long=True, side_effects="writes-files", native_tools=(), result_envelope=True)]
+
+
+def request(endpoint, job, timeout=600):
+    """Load the handler on first use."""
+    from rvw.sim.server import request as implementation
+    return implementation(endpoint, job, timeout)
+
+def serve(endpoint, command, timeout=600, *, ready=None):
+    """Load the handler on first use."""
+    from rvw.sim.server import serve as implementation
+    return implementation(endpoint, command, timeout, ready=ready)

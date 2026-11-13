@@ -17,7 +17,7 @@ from .db import CAPTURE_SCHEMAS, STATE_SCHEMAS, DesignDB, QueryError, Signal, lo
 
 # Strength of a dependency kind; a path through compiler temporaries gets the strongest kind on it
 # (a data read that feeds a `when` condition is a control dependency of what the `when` assigns).
-KIND_RANK = {"data": 0, "blackbox": 1, "init": 2, "sel": 3, "cond": 4}
+from .kinds import KIND_RANK
 CONTROL = {"sel", "cond"}
 # Filter relations, never a signal's role. A clock can also be read as ordinary data.
 STATE_KINDS = {"reg", "mem", "mem_read"}

@@ -1,6 +1,5 @@
 """Build concurrent programs for per-hart project adapters."""
 from pathlib import Path
-from rvw.memory.concurrent_build import build
 from rvw.mcp.spec import ToolSpec, schema
 
 
@@ -31,3 +30,9 @@ def mcp_tools():
                              'timeout': {'type': 'number', 'default': 30}}, required=['out']), build,
         side_effects='long-running; launches compiler; writes per-hart ELFs under out', native_tools=('RISC-V GCC',),
         )]
+
+
+def build(out, seed=1, harts=2, length=16, gcc='riscv64-unknown-elf-gcc', base=2147483648, shared_base=2164260864, timeout=30):
+    """Load the handler on first use."""
+    from rvw.memory.concurrent_build import build as implementation
+    return implementation(out, seed, harts, length, gcc, base, shared_base, timeout)

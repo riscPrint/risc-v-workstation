@@ -9,8 +9,6 @@ import os
 import pkgutil
 from typing import Any
 
-from jsonschema import ValidationError
-from jsonschema.validators import validator_for
 
 import rvw
 
@@ -28,7 +26,7 @@ def discover(only: set[str] | None = None) -> tuple[list[ToolSpec], list[str]]:
     tools: list[ToolSpec] = []
     problems: list[str] = []
     for mod in sorted(pkgutil.iter_modules(rvw.__path__), key=lambda m: m.name):
-        if not mod.ispkg or (only and mod.name not in only):
+        if not mod.ispkg or (only is not None and mod.name not in only):
             continue
         name = f"rvw.{mod.name}.mcp_tools"
         try:
@@ -78,7 +76,7 @@ def discover_resources(only: set[str] | None = None) -> tuple[list[tuple], list[
     """Resources from every `rvw.<pkg>.mcp_tools.mcp_resources()`: (uri, name, description, reader)."""
     resources, problems = [], []
     for mod in sorted(pkgutil.iter_modules(rvw.__path__), key=lambda m: m.name):
-        if not mod.ispkg or (only and mod.name not in only):
+        if not mod.ispkg or (only is not None and mod.name not in only):
             continue
         try:
             m = importlib.import_module(f"rvw.{mod.name}.mcp_tools")
@@ -92,10 +90,27 @@ def discover_resources(only: set[str] | None = None) -> tuple[list[tuple], list[
     return resources, problems
 
 
+class _Validators(dict):
+    """Check each schema once, when its tool is first called."""
+    def __init__(self, tools):
+        super().__init__()
+        self.tools = tools
+
+    def __missing__(self, name):
+        from jsonschema.validators import validator_for
+        schema = self.tools[name].input_schema
+        validator = validator_for(schema)
+        validator.check_schema(schema)
+        value = validator(schema)
+        self[name] = value
+        return value
+
+
 class Registry:
     def __init__(self, tools: list[ToolSpec], jobs: JobManager | None = None, sync_s: float | None = None,
                  max_text: int | None = None, project: str | None = None,
                  profile: str = "all", workflow: str | None = None):
+        self._catalog_loader = None
         self.project = project
         self.jobs = jobs or JobManager()
         self.sync_s = float(os.environ.get("RVW_MCP_SYNC_S", SYNC_S)) if sync_s is None else sync_s
@@ -104,7 +119,7 @@ class Registry:
         self._isolate = [x.strip() for x in patterns.split(",") if x.strip()]
         self.tools: dict[str, ToolSpec] = {}
         self.resources: dict[str, tuple] = {}
-        self._validators = {}
+        self._validators = _Validators(self.tools)
         from .profiles import select_tools
         from .execution import prepare
         self.source_tools = {t.name: t for t in tools}
@@ -117,15 +132,22 @@ class Registry:
 
     def _add(self, t: ToolSpec) -> None:
         self.tools[t.name] = t
-        validator = validator_for(t.input_schema)
-        validator.check_schema(t.input_schema)
-        self._validators[t.name] = validator(t.input_schema)
+        self._validators.pop(t.name, None)
+
+    def _ensure_catalog(self):
+        if self._catalog_loader is not None:
+            tools = self._catalog_loader()
+            from .execution import prepare
+            self.source_tools.update((t.name, t) for t in tools)
+            self.catalog.update((t.name, prepare(t)) for t in tools)
+            self._catalog_loader = None
 
     def load_profile(self, profile: str) -> list[str]:
         """Add one profile's catalog tools to the live server. Returns the new names."""
         from .profiles import PROFILES, select_tools
         if profile not in PROFILES and profile != "all":
             raise ToolError(f"unknown profile {profile!r}; choose one of {sorted(PROFILES) + ['all']}")
+        self._ensure_catalog()
         added = []
         for t in select_tools(list(self.catalog.values()), profile):
             if t.name not in self.tools:
@@ -135,9 +157,23 @@ class Registry:
 
     @classmethod
     def discover(cls, only: set[str] | None = None, *, project: str | None = None, profile: str = "all", workflow: str | None = None) -> tuple["Registry", list[str]]:
-        tools, problems = discover(only)
+        selected = only
+        if profile == "core":
+            from .profiles import PROFILES
+            selected = PROFILES["core"] & only if only else PROFILES["core"]
+        tools, problems = discover(selected)
+        if profile == "core":
+            from .core_calls import tools as core_tools
+            tools.extend(core_tools(only))
         registry = cls(tools, project=project, profile=profile, workflow=workflow)
-        resources, more = discover_resources(only)
+        if profile == "core":
+            def catalog():
+                tools, errors = discover(only)
+                if errors:
+                    raise ToolError("catalog discovery failed", {"problems": errors})
+                return tools
+            registry._catalog_loader = catalog
+        resources, more = discover_resources(selected)
         for uri, name, description, reader in resources:
             registry.resources[uri] = (name, description, reader)
         return registry, problems + more
@@ -145,12 +181,15 @@ class Registry:
     def _meta_tools(self):
         from .profiles import describe
         def search(keyword: str):
+            self._ensure_catalog()
             words = keyword.lower().split()
             matches = [t for t in self.catalog.values()
                        if all(w in (t.name + " " + t.description).lower() for w in words)]
             return {"tools": [{"name": t.name, "purpose": t.description.splitlines()[0],
                               "profile": describe(t)["profile"]} for t in matches]}
         def detail(name: str):
+            if name not in self.catalog and name not in self.tools:
+                self._ensure_catalog()
             if name not in self.catalog and name not in self.tools:
                 raise ToolError(f"unknown tool {name!r}")
             return describe(self.catalog.get(name) or self.tools[name])
@@ -181,6 +220,8 @@ class Registry:
 
     def call(self, name: str, arguments: dict | None, *, dry_run: bool = False) -> Any:
         """Runs a tool. Long tools return a job record at once. Raises ToolError for bad calls."""
+        from jsonschema import ValidationError
+        from jsonschema.validators import validator_for
         spec = self.tools.get(name)
         if spec is None:
             raise ToolError(f"unknown tool {name!r}")

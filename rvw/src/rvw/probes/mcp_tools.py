@@ -23,7 +23,7 @@ def _convert(events, to, out, c2=None, c1=None, probe=None, roi_start=None, roi_
 
 
 def mcp_tools():
-    from .check import check
+    check = _lazy_check
     return [
         ToolSpec('probes_check', 'Name missing required probe kinds or kind/name bindings. With validate (or c2), also '
                  'validate an event stream against the contract (fields, end record, counters, instruction IDs, walk '
@@ -45,3 +45,9 @@ def mcp_tools():
                          'elf': S, 'geometry': {'type': 'array', 'items': S}},
                         ['events', 'to', 'out']), _convert, side_effects='writes converted files to out', native_tools=()),
     ]
+
+
+def _lazy_check(db=None, events=None, require=None, c2=None, validate=False, consumer=None):
+    """Load the handler on first use."""
+    from rvw.probes.check import check as implementation
+    return implementation(db, events, require, c2, validate, consumer)

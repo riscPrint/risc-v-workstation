@@ -1,5 +1,4 @@
 """Cross-navigation CLI and MCP registration."""
-from rvw.query.navigation import navigation
 from rvw.query.mcp_tools import DB, RO, _wrap
 from rvw.mcp.spec import ToolSpec, schema
 
@@ -17,3 +16,9 @@ def mcp_tools():
     return [ToolSpec('query_navigate', navigation.__doc__,
                      schema({**DB, 'signal': {'type': 'string'}}, ['signal']),
                      _wrap(navigation), annotations=RO, side_effects='read-only', native_tools=())]
+
+
+def navigation(db, signal):
+    """Load the handler on first use."""
+    from rvw.query.navigation import navigation as implementation
+    return implementation(db, signal)

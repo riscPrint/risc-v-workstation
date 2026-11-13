@@ -1,7 +1,6 @@
 """Bug-pattern memory MCP tools (C7)."""
 from rvw.mcp.spec import ToolSpec, schema
 
-from .memory import Store
 
 S = {"type": "string"}
 STORE = {"store": {**S, "description": "JSON-lines store; default RVW_BUGMEM or ~/.local/share/rvw/bugmem.jsonl"}}
@@ -9,19 +8,23 @@ REPORT = {"report": {**S, "description": "bundle summary.json, bundle dir, C1 re
 
 
 def _add(report, cause, fix=None, scope=None, label=None, store=None):
+    from .memory import Store
     return Store(store).add(report, cause, fix, scope, label)
 
 
 def _match(report, top=5, min_score=0.2, store=None):
+    from .memory import Store
     return Store(store).match(report, top, min_score)
 
 
 def _list(store=None):
+    from .memory import Store
     s = Store(store)
     return {"store": str(s.path), "entries": s.entries()}
 
 
 def _evaluate(top=3, store=None):
+    from .memory import Store
     return Store(store).evaluate(top)
 
 

@@ -18,7 +18,7 @@ def register(subparsers):
 
 def mcp_tools():
     from rvw.mcp.spec import ToolSpec,schema
-    from rvw.formal.mcp_tools import _runner
+    from rvw.formal.mcp_tools import _runner as _runner
     string={'type':'string'}
     return [ToolSpec('formal_sva_inspect',
                     'Inspect the native typed SVA AST. Parsing is not lowering or proof; missing dependency evidence stays inconclusive.',

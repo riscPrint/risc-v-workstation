@@ -1,5 +1,4 @@
 import json
-from rvw.soc.ip_import import import_ip
 
 
 def register(sub):
@@ -18,3 +17,9 @@ def mcp_tools():
     return [ToolSpec('soc_import_ip','Wrap declared external Verilog APB3 or classic Wishbone IP. Generation only.',
         schema(dict(source={'type':'string'},root={'type':'string'},out={'type':'string'},base={'type':'integer'}),
                ['source','root','out','base']),import_ip,side_effects='writes generated wrappers and captured sources to out',native_tools=())]
+
+
+def import_ip(source, root, out, base):
+    """Load the handler on first use."""
+    from rvw.soc.ip_import import import_ip as implementation
+    return implementation(source, root, out, base)

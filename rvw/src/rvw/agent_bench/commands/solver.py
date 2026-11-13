@@ -20,7 +20,7 @@ def execute(args):
 
 
 def mcp_tools():
-    from rvw.agent_bench.solver import run
+    run = _lazy_run
     from rvw.mcp.spec import ToolSpec, schema
     string = {'type': 'string'}
     return [ToolSpec('agent_bench_evidence_solve',
@@ -31,3 +31,9 @@ def mcp_tools():
                              'budget_s': {'type': 'number', 'exclusiveMinimum': 0}}, ['plan', 'out']),
                      run, long=True, side_effects='launches MCP stdio and project tools; writes transcript under out',
                      native_tools=())]
+
+
+def _lazy_run(plan, out, *, max_calls=32, budget_s=110):
+    """Load the handler on first use."""
+    from rvw.agent_bench.solver import run as implementation
+    return implementation(plan, out, max_calls=max_calls, budget_s=budget_s)

@@ -1,5 +1,4 @@
 import json
-from rvw.soc.scaffold import new
 
 
 def register(sub):
@@ -22,3 +21,9 @@ def run(args):
 def mcp_tools():
     from rvw.mcp.spec import ToolSpec,schema
     return [ToolSpec('soc_new','Create an editable APB3 SoC scaffold with a mapped wrapper when the selected project has a core-map.',schema({k:{'type':'string'} for k in ('name','out','project')},['name','out']),new, side_effects='writes generated artifacts and reports to out', native_tools=())]
+
+
+def new(name, out, project=None):
+    """Load the handler on first use."""
+    from rvw.soc.scaffold import new as implementation
+    return implementation(name, out, project)

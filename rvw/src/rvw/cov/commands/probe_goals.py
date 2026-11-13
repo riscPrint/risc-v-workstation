@@ -1,6 +1,5 @@
 """Qualified probe event and sequence goals."""
 import json
-from rvw.cov.probe_goals import probe_goals
 
 
 def run(args):
@@ -22,3 +21,9 @@ def mcp_tools():
     return [ToolSpec('cov_probe_goals','Measure project probe goals after complete strict Spike qualification.',
         schema({k:{'type':'string'} for k in ('result','plan','platform')},['result','plan','platform']),
         probe_goals,isolate=True,side_effects='read-only',native_tools=('Spike',))]
+
+
+def probe_goals(result, plan, platform):
+    """Load the handler on first use."""
+    from rvw.cov.probe_goals import probe_goals as implementation
+    return implementation(result, plan, platform)

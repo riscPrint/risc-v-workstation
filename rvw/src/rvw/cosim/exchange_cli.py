@@ -1,7 +1,12 @@
 """Format exchange command and MCP endpoint."""
 import json
 from pathlib import Path
-from .exchange import convert
+
+
+
+def convert(*args, **kwargs):
+    from .exchange import convert as implementation
+    return implementation(*args, **kwargs)
 
 
 def register(subs):

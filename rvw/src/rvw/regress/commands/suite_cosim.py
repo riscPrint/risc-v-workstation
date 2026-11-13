@@ -10,12 +10,7 @@ import json
 from collections import Counter
 from pathlib import Path
 
-from rvw.cosim.cli import execute_json as cosim
 from rvw.mcp.spec import ToolSpec, schema
-from rvw.regress.random_stream import complete
-from rvw.regress.run_evidence import owned_run_paths
-from rvw.results import load_run
-from rvw.regress.findings import load_findings, classify
 
 
 def _member(path, root):
@@ -38,6 +33,7 @@ ALLOW = {'reset': ('csr', 'csr_reset_unknown'), 'irq': ('irq', 'irq'), 'mmio': (
 
 def matched(comparison, run, allow):
     """A complete match. Each applied mask or synchronization must have an allowed reason."""
+    from rvw.regress.random_stream import complete
     reasons = {ALLOW[k][1] for k in allow}
     reason = lambda item: item.get('reason') if isinstance(item, dict) else None  # noqa: E731
     if any(reason(m) not in reasons for m in comparison.get('applied_masks', [])):
@@ -74,6 +70,10 @@ def check_run(run_dir, platform, model='spike', on_row=None, allow=(), findings=
     events show asserted; the reference has no input pins) and `mmio` (DUT data for loads from
     the platform's declared MMIO regions; the reference has no device state). Anything else keeps the row
     inconclusive. A match row records its `synchronized` count."""
+    from rvw.cosim.cli import execute_json as cosim
+    from rvw.regress.findings import load_findings, classify
+    from rvw.regress.run_evidence import owned_run_paths
+    from rvw.results import load_run
     allow = tuple(sorted(set(allow)))
     if set(allow) - set(ALLOW):
         raise ValueError(f'unknown --allow-sync kinds {sorted(set(allow) - set(ALLOW))}')

@@ -5,9 +5,11 @@ import argparse
 import json
 import sys
 
-from . import diff as diff_mod
-from . import ops
-from .db import QueryError, default_db, run_on
+from rvw.mcp.lazy import functions
+from .kinds import KIND_RANK
+
+ops = functions("rvw.query.ops")
+diff_mod = functions("rvw.query.diff")
 
 
 def register(subparsers) -> None:
@@ -71,7 +73,7 @@ def register(subparsers) -> None:
         c.add_argument("signal")
         c.add_argument("--depth", type=int, default=1)
         c.add_argument("--stop-at-regs", action="store_true", help="do not expand past registers, memories or synchronous read state")
-        c.add_argument("--kind", action="append", choices=sorted(ops.KIND_RANK), help="only these dependency kinds")
+        c.add_argument("--kind", action="append", choices=sorted(KIND_RANK), help="only these dependency kinds")
         c.add_argument("--limit", type=int, default=500, help="maximum signals")
         c.add_argument("--include-clock", action="store_true", help="include explicit clock-domain relations when stored; keep data uses in all cases")
 
@@ -141,6 +143,7 @@ def _diff(_db, a):
 
 
 def _run(args: argparse.Namespace, func) -> int:
+    from .db import QueryError, default_db, run_on
     try:
         from rvw.common.project import database
         if hasattr(args, "db"):
@@ -378,6 +381,7 @@ def render(command: str, r: dict) -> str:
 
 
 def _build(args):
+    from .db import QueryError, default_db, run_on
     from .project import build_database
     try:
         result = build_database(getattr(args, "project", None), args.config, args.out)

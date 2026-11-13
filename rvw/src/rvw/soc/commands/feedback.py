@@ -1,7 +1,5 @@
 from rvw.mcp.aliases import with_aliases
 import json
-from rvw.query.db import QueryError
-from rvw.soc.feedback import import_feedback
 
 
 def register(sub):
@@ -14,6 +12,7 @@ def register(sub):
 
 
 def run(args):
+    from rvw.query.db import QueryError
     try:
         print(json.dumps(import_feedback(args.db,args.source,args.out)))
         return 0
@@ -25,3 +24,9 @@ def run(args):
 def mcp_tools():
     from rvw.mcp.spec import ToolSpec,schema
     return [with_aliases(ToolSpec('soc_feedback','Link external reports to RTL and Scala. Imported claims only.',schema({k:{'type':'string'} for k in ('db_path','source','out')},['db_path','source','out']),import_feedback, side_effects='writes generated artifacts and reports to out', native_tools=()), db='db_path')]
+
+
+def import_feedback(db_path, source, out):
+    """Load the handler on first use."""
+    from rvw.soc.feedback import import_feedback as implementation
+    return implementation(db_path, source, out)

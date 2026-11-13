@@ -23,7 +23,7 @@ def register(subparsers):
 
 
 def mcp_tools():
-    from rvw.formal.mcp_tools import _runner
+    from rvw.formal.mcp_tools import _runner as _runner
     from rvw.mcp.spec import ToolSpec, schema
     return [ToolSpec('formal_scenario_compile', 'Generate an RV32 MMIO test and CPU-backed pyuvm sequence. Does not run verification.',
                     schema({'source': {'type':'string'}, 'out': {'type':'string'},

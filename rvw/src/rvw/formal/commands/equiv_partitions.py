@@ -19,7 +19,7 @@ def register(subparsers):
 
 def mcp_tools():
     from rvw.mcp.spec import ToolSpec,schema
-    from rvw.formal.mcp_tools import _runner
+    from rvw.formal.mcp_tools import _runner as _runner
     s={'type':'string'}
     return [ToolSpec('formal_equiv_partitions','Prove matched register observations in independent closed cones. No internal cut equality assumptions.',
         schema({'gold':{'type':'array','items':s},'gate':{'type':'array','items':s},'top':s,'clock':s,'reset':s,

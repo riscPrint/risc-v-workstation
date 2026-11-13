@@ -1,6 +1,5 @@
 """Measured coverage minimisation and budgeted C1 smoke execution."""
 import json
-from rvw.cov.smoke import execute_json
 
 
 def run(args):
@@ -26,3 +25,9 @@ def mcp_tools():
         schema({'database':{'type':'string'},'budget_s':{'type':'number'},'startup_s':{'type':'number'},
                 'run':{'type':'boolean'},'project':{'type':'string'},'work_dir':{'type':'string'}},['database','budget_s']),
         execute_json,isolate=True,side_effects='writes-files when run is true; read-only otherwise',native_tools=())]
+
+
+def execute_json(database, budget_s, startup_s=0, run=False, project=None, work_dir=None):
+    """Load the handler on first use."""
+    from rvw.cov.smoke import execute_json as implementation
+    return implementation(database, budget_s, startup_s, run, project, work_dir)

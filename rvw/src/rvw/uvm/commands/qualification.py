@@ -1,6 +1,5 @@
 import json
 from pathlib import Path
-from rvw.uvm.qualification import generate
 from rvw.mcp.spec import ToolSpec,schema
 
 def command(a):
@@ -16,3 +15,9 @@ def mcp_tools():
     string={'type':'string'}
     return [ToolSpec('uvm_qualification','Render measured SV CPU and feature-probe qualification.',
         schema({'cpu_results':string,'probes':string,'out':string},['cpu_results','probes','out']),generate, side_effects='writes generated files under out', native_tools=())]
+
+
+def generate(cpu_results, probes, out):
+    """Load the handler on first use."""
+    from rvw.uvm.qualification import generate as implementation
+    return implementation(cpu_results, probes, out)

@@ -1,7 +1,6 @@
 """ACT4 build entry point."""
 import json
 from pathlib import Path
-from rvw.regress.act4 import build, selection
 from rvw.mcp.spec import ToolSpec, schema
 
 
@@ -32,3 +31,14 @@ def mcp_tools():
             ToolSpec('regress_act4_build', 'Build pinned ACT4 tests. Sail supplies expected signatures; no DUT execution.',
                      schema({k: {'type': 'string'} for k in ('profile', 'checkout', 'out')}, ['profile', 'checkout', 'out']),
                      build, side_effects='writes build outputs', native_tools=('Sail', 'RISC-V GCC'))]
+
+
+def build(profile, checkout, out, timeout=900, compiler='riscv64-unknown-elf-gcc', reference='sail_riscv_sim'):
+    """Load the handler on first use."""
+    from rvw.regress.act4 import build as implementation
+    return implementation(profile, checkout, out, timeout, compiler, reference)
+
+def selection(profile):
+    """Load the handler on first use."""
+    from rvw.regress.act4 import selection as implementation
+    return implementation(profile)

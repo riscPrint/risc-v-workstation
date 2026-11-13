@@ -1,10 +1,4 @@
 from rvw.mcp.spec import ToolSpec, schema
-from .multihart import check, images
-from .axiomatic import check as axiomatic_check
-from .concurrent import generate
-from .tilelink_bind import generate as tilelink_bind
-from .directory_model import check as directory_check
-from .concurrent_native import smoke as concurrent_smoke
 
 
 def mcp_tools():
@@ -46,3 +40,39 @@ def mcp_tools():
                      schema({'trace': {'type': 'string'}, 'reference': {'type': 'string'}}, required=['trace', 'reference']), check,
         side_effects='read-only', native_tools=(),
         )]
+
+
+def check(trace, reference):
+    """Load the handler on first use."""
+    from rvw.memory.multihart import check as implementation
+    return implementation(trace, reference)
+
+def images(hart_images):
+    """Load the handler on first use."""
+    from rvw.memory.multihart import images as implementation
+    return implementation(hart_images)
+
+def axiomatic_check(trace, reference, model='rvwmo', limit=100000):
+    """Load the handler on first use."""
+    from rvw.memory.axiomatic import check as implementation
+    return implementation(trace, reference, model, limit)
+
+def generate(seed=1, harts=2, length=16):
+    """Load the handler on first use."""
+    from rvw.memory.concurrent import generate as implementation
+    return implementation(seed, harts, length)
+
+def tilelink_bind(database, profile, out):
+    """Load the handler on first use."""
+    from rvw.memory.tilelink_bind import generate as implementation
+    return implementation(database, profile, out)
+
+def directory_check(profile='mesi', lines=1, requests=1, limit=100000, bug=None):
+    """Load the handler on first use."""
+    from rvw.memory.directory_model import check as implementation
+    return implementation(profile, lines, requests, limit, bug)
+
+def concurrent_smoke(out, seed=1, harts=2, length=16, gcc='riscv64-unknown-elf-gcc', spike='spike', timeout=30):
+    """Load the handler on first use."""
+    from rvw.memory.concurrent_native import smoke as implementation
+    return implementation(out, seed, harts, length, gcc, spike, timeout)

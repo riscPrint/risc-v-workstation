@@ -1,7 +1,5 @@
 """SoC verification CLI and MCP entry points."""
 import json
-from rvw.query.db import QueryError
-from rvw.soc.verify import verify, table
 
 
 def register(sub):
@@ -15,6 +13,7 @@ def register(sub):
 
 
 def run(args):
+    from rvw.query.db import QueryError
     try:
         result = verify(args.source, args.out, args.manifest, args.timeout)
         print(json.dumps(result) if args.json else table(result))
@@ -29,3 +28,14 @@ def mcp_tools():
     return [ToolSpec('soc_verify', 'Generate SoC checks and run bound consumers. Missing evidence remains inconclusive.',
         schema({'source':{'type':'string'}, 'out':{'type':'string'}, 'manifest':{'type':'string'},
                 'timeout':{'type':'number'}}, ['source','out']), verify, long=True, side_effects='writes-files', native_tools=())]
+
+
+def verify(source, out, manifest=None, timeout=120):
+    """Load the handler on first use."""
+    from rvw.soc.verify import verify as implementation
+    return implementation(source, out, manifest, timeout)
+
+def table(result):
+    """Load the handler on first use."""
+    from rvw.soc.verify import table as implementation
+    return implementation(result)

@@ -1,6 +1,5 @@
 """MCP access to privilege campaigns."""
 from rvw.mcp.spec import ToolSpec, schema
-from .cli import execute
 
 S = {'type': 'string'}
 N = {'type': 'number', 'exclusiveMinimum': 0}
@@ -18,3 +17,9 @@ def mcp_tools():
                  schema({'directory': S, 'results': S, 'platform': S, 'timeout': N}, ['directory', 'results', 'platform']),
                  lambda **kw: execute('check', **kw), side_effects='reads DUT results; launches Spike for strict reference checks', native_tools=('Spike',)),
     ]
+
+
+def execute(action, **arguments):
+    """Load the handler on first use."""
+    from rvw.privilege.cli import execute as implementation
+    return implementation(action, **arguments)

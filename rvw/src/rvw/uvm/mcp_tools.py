@@ -1,7 +1,6 @@
 from rvw.mcp.spec import ToolSpec, schema
-from . import flow
-from .features import table
-from .scaffold import generate as scaffold
+from rvw.mcp.lazy import functions
+flow = functions("rvw.uvm.flow")
 
 
 def list_tests(manifest):
@@ -20,3 +19,14 @@ def mcp_tools():
         ToolSpec('uvm_regress', 'Run declared UVM tests and seeds and write C3 results.', schema({'build_dir': string, 'out': string, 'tests': {'type': 'array', 'items': string}, 'seeds': {'type': 'array', 'items': {'type': 'integer'}}, 'timeout': timeout}, ['build_dir', 'out']), flow.regress, long=True, side_effects='long-running; launches the built native UVM bench; writes evidence under out', native_tools=()),
         ToolSpec('uvm_coverage_merge', 'Merge native Verilator coverage files.', schema({'inputs': {'type': 'array', 'items': string}, 'out': string, 'tool': string, 'timeout': timeout}, ['inputs', 'out']), flow.coverage_merge, long=True, side_effects='long-running; launches native coverage merger; writes merged coverage to out', native_tools=('Verilator',)),
     ]
+
+
+def table(path):
+    """Load the handler on first use."""
+    from rvw.uvm.features import table as implementation
+    return implementation(path)
+
+def scaffold(db=None, soc=None, out=None, *, rtl=None, language='pyuvm', profile='auto', adapter=None, composition=None, port_map=None):
+    """Load the handler on first use."""
+    from rvw.uvm.scaffold import generate as implementation
+    return implementation(db, soc, out, rtl=rtl, language=language, profile=profile, adapter=adapter, composition=composition, port_map=port_map)

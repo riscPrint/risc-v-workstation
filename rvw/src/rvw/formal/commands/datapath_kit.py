@@ -5,7 +5,7 @@ def register(subparsers):
 
 def mcp_tools():
     from rvw.mcp.spec import ToolSpec, schema
-    from rvw.formal.mcp_tools import _runner
+    from rvw.formal.mcp_tools import _runner as _runner
     from rvw.formal.datapath_kit import UNITS
     return [ToolSpec('formal_datapath_kit','Propose datapath port bindings from SpinalDB. Designer confirmation is required. Use confirm with RTL and a C model to run a reviewed binding.',
         schema({'unit':{'type':'string','enum':list(UNITS)},'db':{'type':'string'},
