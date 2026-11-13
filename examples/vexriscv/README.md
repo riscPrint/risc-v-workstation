@@ -368,3 +368,33 @@ and the end event. RTL SHA-256 was
 The two short runs do not establish a speed change, ISA correctness or BOOM
 support. Medium/large BOOM, interrupts, CSR snapshots, waves, runtime effects
 and native checkpoint support remain outside this probe.
+## Native ISA co-simulation result
+
+On 2026-11-13, the private core at
+`a62c145aa042a5de874344e0a7683bd7c8c8c870` passed all 49 aligned ISA programs.
+`rvw cosim check` matched all 49 complete traces against Spike: 41 RV32UI
+programs and 8 RV32UM programs, with 17,735 compared instructions in total.
+The run used `rv32im`, seed 1, fixed memory latency 0 and a 200,000-cycle limit.
+It used the declared `rvw/platform.json` settings without added CSR masks.
+Each trace synchronized the unspecified initial `mscratch` value once.
+No counter, MMIO or interrupt synchronization was applied in this campaign.
+`rv32ui-p-ma_data` remains excluded because this configuration traps on
+misaligned data access. These results cover this configuration and these ELFs.
+
+Use a private core copy for concurrent native work. Set `VEXRISCV` to that
+copy. Set `RVW_VEX_LOCK=vex-cosim` for the normal run launcher. Set
+`RISCVSIM_WORK` to a directory in the private worktree to keep native build
+outputs there. The default lock remains `vex`.
+
+For a `run-many` JSONL manifest with absolute `elf` and `out` paths, set
+`rvfi_trace` to true, `mem_latency` to 0 and `max_cycles` to 200000 in each job.
+Run the manifest, then compare every saved trace:
+
+```sh
+examples/vexriscv/rvw/run.sh run-many --manifest jobs.jsonl --jobs 1 --json
+rvw/.venv/bin/python examples/vexriscv/rvw/check-isa.py jobs.jsonl summary.json
+```
+
+The comparison script saves every original C5 report, its input identity and
+its exit code. It returns failure for an empty campaign, an incomplete trace,
+a mismatch or missing evidence.
