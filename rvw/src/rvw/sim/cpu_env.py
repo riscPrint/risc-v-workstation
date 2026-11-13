@@ -81,6 +81,7 @@ class CpuScoreboard:
     def __init__(self, reference):
         self.reference, self.checks = reference, 0
         self.coverage = CpuCoverage()
+        self.after_trap = False
 
     def observe(self, record):
         required = self.fields + 'order rs1 rs1_rdata rs2 rs2_rdata intr halt'.split()
@@ -88,7 +89,12 @@ class CpuScoreboard:
             raise ValueError('incomplete scalar RVFI record')
         if record['order'] != self.checks:
             raise AssertionError('retirement gap or duplicate')
-        if record['intr'] or record['halt'] or (record.get('csr_state') and not callable(getattr(self.reference,'csr_snapshot',None))):
+        # RVFI intr marks the first instruction of any trap handler. After a
+        # retired synchronous trap the reference is already in the handler, so
+        # that entry is ordinary. Without a preceding trap it is an
+        # asynchronous interrupt, which needs an extended comparator.
+        handler_entry = record['intr'] and self.after_trap
+        if (record['intr'] and not handler_entry) or record['halt'] or (record.get('csr_state') and not callable(getattr(self.reference,'csr_snapshot',None))):
             raise ValueError('unsupported:cpu_extended_observation')
         expected = self.reference.step()
         if expected.get('intr') or expected.get('fd_valid'):
@@ -104,7 +110,9 @@ class CpuScoreboard:
                 lanes = expected['mem_rmask' if key == 'mem_rdata' else 'mem_wmask']
                 mask = sum(255 << (i*8) for i in range(8) if lanes & (1 << i))
             if record[key] & mask != expected[key] & mask:
-                raise AssertionError(f'SPIKE_MISMATCH:{key}')
+                raise AssertionError(f'SPIKE_MISMATCH:{key} order={record["order"]} pc={record["pc"]:#x} '
+                                     f'insn={record["insn"]:#010x} actual={record[key] & mask:#x} '
+                                     f'expected={expected[key] & mask:#x}')
         for name in ('rs1', 'rs2'):
             index = record[name]
             if not 0 <= index < 32 or record[name+'_rdata'] != expected['before'][index]:
@@ -116,11 +124,27 @@ class CpuScoreboard:
             if values != record['csr_state']:
                 raise AssertionError('SPIKE_MISMATCH:csr_state')
         self.coverage.sample(record)
+        self.after_trap = bool(record['trap'])
         self.checks += 1
 
     def finish(self, expected_retirements):
         if expected_retirements < 1 or self.checks != expected_retirements:
             raise AssertionError('missing CPU retirement checks')
+
+
+def spike_reference(platform, elf, work, shim=None):
+    """A captured Spike instance for CpuScoreboard. `platform` is a cosim
+    platform JSON path. The shim defaults to $RVW_SPIKE_SHIM or this checkout's
+    Cosim build; its bytes and linked Spike are captured under `work`."""
+    import os
+    from pathlib import Path
+    from rvw.common.capture import Capture
+    from rvw.cosim.platform import Platform
+    from rvw.cosim.spike import Spike, capture_shim
+    root = Path(__file__).resolve().parents[4]
+    shim = shim or os.environ.get('RVW_SPIKE_SHIM') or root / 'Cosim/build/librvw_spike.so'
+    captured = capture_shim(Capture(Path(work) / 'reference-inputs'), shim)
+    return Spike(Platform.load('project', platform), str(elf), shim=captured)
 
 
 async def monitor(dut, bindings, scoreboard, *, retirements, max_cycles):

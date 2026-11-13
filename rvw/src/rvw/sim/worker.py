@@ -5,6 +5,13 @@ from pathlib import Path
 import sys
 
 
+def backend_args(backend):
+    """Build options. Generated Spinal RTL often trips Verilator lint
+    warnings (constant unsigned compares, width); they print, but only
+    errors stop the build, as in the RiscvSim Verilator flow."""
+    return ['--assert', '-Wno-fatal', '-j', '2'] if backend == 'verilator' else ['-g2012']
+
+
 def main():
     from cocotb_tools.runner import get_runner
     out = Path(sys.argv[1])
@@ -14,7 +21,7 @@ def main():
         if key.startswith(('COCOTB_', 'GPI_')) or key in {'SIM_CMD_PREFIX', 'SIM_CMD_SUFFIX', 'WAVES'}:
             os.environ.pop(key)
     runner = get_runner(request['backend'])
-    build_args = ['--assert', '-j', '2'] if request['backend'] == 'verilator' else ['-g2012']
+    build_args = backend_args(request['backend'])
     runner.build(sources=request['sources'], hdl_toplevel=request['top'],
                  build_dir=out / 'build', build_args=build_args, timescale=('1ns', '1ps'))
     # The runner constructs PYTHONPATH from sys.path.
