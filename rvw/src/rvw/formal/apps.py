@@ -211,7 +211,7 @@ def run(args):
     if status != 'no_checks' and any(p['kind'] in ('fsm_state', 'fsm_transition', 'dead_code', 'toggle') for p in properties):
         status = 'inconclusive'  # Reachability targets use assertion failures as observations.
     report = {'schema': 'rvw.formal-app-results/1', 'status': status, 'properties': rows,
-              'limits': 'Reviewed port map; no SpinalDB resolution. Progress is a bounded response contract, '
+              'limits': 'Reviewed port map. Progress is a bounded response contract, '
                         'not general liveness. No activation or solver core claim. UNR app results do not '
                         'authorize exclusions; use rvw cov prove for guarded exclusion export.'}
     common.write_json(out / 'result.json', report)
