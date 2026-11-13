@@ -189,3 +189,26 @@ with zero replacements and a native failure can report `fail` with
 `proof_kind: counterexample`. Cross-check disagreement remains inconclusive.
 The SMTBMC jobs use explicit `QF_AUFBV` logic. No performance claim is implied.
 CLI `uf-prove` and MCP `formal_uf_prove` expose the same plan and report.
+
+## Native fair AIGER liveness reports
+
+`rvw.formal-aiger-live/1` records pinned ASCII AIGER bytes, reducer and tool
+hashes, source latch count, justice group, fairness literals, invariant
+constraints and native stages. It accepts exactly one bad justice group and
+no ordinary outputs or safety properties. Each justice member and fairness
+literal must recur infinitely for a violating execution.
+
+`method` is `l2s`, `k-live` or experimental `rlive`. Exact L2S captures every
+source latch and requires a nonempty loop with all goals seen. K-liveness
+counts complete goal rounds; `k_bound_reached` is inconclusive. Only unbounded
+safety passes or a native rlive safe result can earn `pass`. Source constraints
+or fairness require a separate exact fair-path feasibility result. If no
+fair path exists, `fairness_check: infeasible` keeps the report inconclusive.
+A native accepting-cycle result earns `fail` only for L2S or rlive.
+
+`proof_kind` is `liveness_to_safety`, `k_liveness`, `native_rlive`,
+`fair_accepting_cycle` or `none`. Stages retain command, engine, time, model
+hash, log paths and return code. Native rIC3 SAT/10, UNSAT/20 and UNKNOWN/30
+pairs are required. Errors, timeouts and inconsistent pairs stay inconclusive.
+CLI `aiger-live` and MCP `formal_aiger_live` share these semantics. This does
+not certify an SVA translation or independently validate engine certificates.

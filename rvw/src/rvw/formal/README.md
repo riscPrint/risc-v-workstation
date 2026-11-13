@@ -2380,3 +2380,38 @@ A signed-division pipeline also proved. A division identity was inconclusive
 with UFs and proved with concrete arithmetic. A faulty pipeline was
 inconclusive with UFs and failed with concrete arithmetic. Each stage used
 a 12 s timeout. These are small-design checks, not capacity measurements.
+
+## Native fair AIGER liveness
+
+Run `rvw formal aiger-live --manifest PLAN.json --out OUT --method l2s`.
+The `formal_aiger_live` MCP tool uses the same plan. The plan contains `path`
+and `sha256` for a self-contained ASCII `.aag` input. The adapter accepts one
+bad justice group. Each justice member and fairness literal must recur
+infinitely on a violating execution. Ordinary outputs, safety properties and
+multiple justice groups are refused. This command does not translate SVA.
+
+`--method l2s` retains all source state and invariant constraints. It guesses
+a loop start, saves the complete state and checks a nonempty return path that
+visits every justice and fairness condition. Native rIC3 IC3 proves or refutes
+the resulting safety property. An accepting cycle is a liveness failure.
+`--method k-live --k 4` counts complete rounds through all goals. An unbounded
+safety proof is sufficient for liveness. Reaching the selected count stays
+inconclusive because a finite accepting prefix can reach it.
+
+Before a proof with invariant constraints or fairness can pass, a separate
+exact reduction must find a fair infinite execution. Impossible or unchecked
+fairness stays inconclusive. Native stdout, stderr, commands, tool hashes,
+reduced model hashes and timings remain in the output directory. Certificates
+are not independently validated.
+
+`--method rlive` invokes rIC3's experimental native liveness engine. On pinned
+rIC3 revision `02c12ff1407b3474b7eb85c4531a06ad2eb86933`, all five reference
+cases failed on its internal unsupported `--no-ic3-pred-prop` option. They
+report errors and remain inconclusive. The source build was not changed.
+
+Native macOS ARM64 checks on 2026-11-13 used 12 s stage timeouts. Exact L2S
+proved toggling progress and fair input progress. It found accepting cycles
+for stuck progress and input progress with no fairness. K-liveness at `k=4`
+proved the two good cases and kept the two reached bounds inconclusive. Both
+methods kept impossible fairness inconclusive. Results are under
+`/tmp/deep-aiger-native4/`. These small models do not establish RTL capacity.
