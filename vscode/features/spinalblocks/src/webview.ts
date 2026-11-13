@@ -52,6 +52,7 @@ async function main(): Promise<void> {
     },
     contextMenu(d, x, y) {
       menu.replaceChildren();
+      if (d?.loc) for (const kind of ['drivers','loads'] as const) menu.append(button(`Show ${kind}`, () => post({type:'dependencies',kind,file:d.loc!.file,line:d.loc!.line})));
       if (d?.loc) menu.append(button('Open Source', () => openSource(d.loc!)));
       if (d?.module && d.target.kind === 'block') {
         const id = d.target.id;

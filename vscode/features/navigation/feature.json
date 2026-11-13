@@ -1,0 +1,70 @@
+{
+  "id": "navigation",
+  "title": "Design Navigation",
+  "description": "Navigate captured design signals.",
+  "activationEvents": [
+    "onCommand:navigation.signals",
+    "onCommand:navigation.blocks",
+    "onCommand:navigation.wave",
+    "onCommand:navigation.drivers",
+    "onCommand:navigation.loads"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "navigation.signals",
+        "title": "RVW: Show Generated Signals at Line"
+      },
+      {
+        "command": "navigation.blocks",
+        "title": "RVW: Focus Block Diagram at Line"
+      },
+      {
+        "command": "navigation.wave",
+        "title": "RVW: Query Wave Signal at Line"
+      },
+      {
+        "command": "navigation.drivers",
+        "title": "RVW: Show Drivers at Line"
+      },
+      {
+        "command": "navigation.loads",
+        "title": "RVW: Show Loads at Line"
+      }
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "command": "navigation.signals",
+          "when": "resourceExtname == .scala",
+          "group": "rvw"
+        },
+        {
+          "command": "navigation.blocks",
+          "when": "resourceExtname == .scala",
+          "group": "rvw"
+        },
+        {
+          "command": "navigation.wave",
+          "when": "resourceExtname == .scala",
+          "group": "rvw"
+        },
+        {
+          "command": "navigation.drivers",
+          "when": "resourceExtname == .scala",
+          "group": "rvw"
+        },
+        {
+          "command": "navigation.loads",
+          "when": "resourceExtname == .scala",
+          "group": "rvw"
+        }
+      ]
+    }
+  },
+  "tests": {
+    "unit": [
+      "test/model.test.ts"
+    ]
+  }
+}

@@ -70,6 +70,12 @@ const feature: Feature = {id: 'wave', activate(context: FeatureContext) {
     if (v === undefined) throw new Error('cancelled');
     return v;
   }
+  context.subscriptions.push(vscode.commands.registerCommand('wave.signalQuery', async (signal: string) => {
+    try {
+      const wave = (await vscode.window.showOpenDialog({title:'Wave for selected signal',canSelectMany:false}))?.[0];
+      if (wave) await run({schema:'rvw.wave-query/1',kind:'changes',wave:wave.fsPath,args:['^'+signal.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'$'],options:{indexed:true}});
+    } catch(e) {void vscode.window.showErrorMessage(`Wave: ${String(e)}`);}
+  }));
   register('new', async () => {
     const kind = (await vscode.window.showQuickPick([...KINDS], {title: 'Wave query kind'})) as QueryKind | undefined;
     if (!kind) return;

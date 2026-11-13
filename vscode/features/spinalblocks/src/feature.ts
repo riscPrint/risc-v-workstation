@@ -77,6 +77,7 @@ function activate(context: FeatureContext): TestApi | undefined {
     events.fire({uri:session.uri.toString(), kind:session.kind, message:value});
     switch (value.type) {
       case 'ready': session.busy?.(); session.busy = undefined; session.ready = true; await load(session); break;
+      case 'dependencies': await vscode.commands.executeCommand(`navigation.${value.kind}`, {file:value.file,line:value.line}); break;
       case 'save': if (session.kind === 'block') await context.workspaceState.update(savedKey(session), value.saved); break;
       case 'openSource': {
         if (!path.isAbsolute(value.loc.file)) { void vscode.window.showWarningMessage(`SpinalBlocks: source path is not absolute: ${value.loc.file}`); break; }

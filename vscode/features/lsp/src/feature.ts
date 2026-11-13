@@ -22,6 +22,11 @@ const feature: Feature = { id: 'lsp', activate(context: FeatureContext) {
     await client.start();
     context.log.info('Started rvw lsp. Rebuild the database after source changes.');
   }));
+  context.subscriptions.push(vscode.commands.registerCommand('lsp.sourceSignals', async (file: string, line: number) => {
+    if (!client || !client.isRunning()) throw new Error('Start rvw lsp first. Set lsp.database to the captured design database.');
+    const symbols = await client.sendRequest<any[]>('textDocument/documentSymbol', {textDocument: {uri: vscode.Uri.file(file).toString()}});
+    return symbols.filter(s => s.range.start.line === line - 1).map(s => s.name);
+  }));
   context.subscriptions.push({dispose() { if (client) void client.stop(); }});
 }};
 export default feature;
