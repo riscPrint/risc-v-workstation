@@ -18,7 +18,7 @@ class VexiiAdapter(val xlen: Int) extends CoreAdapter {
   override def irqInputMask: BigInt = if (xlen == 64) 0xa88 else 0x888
   def core = "vexiiriscv"
   val configs = VexiiTop.configs.filter(_.startsWith(s"rv$xlen"))
-  def isa(config: String) = s"rv${xlen}im${if (VexiiTop.supervisor(config) || config == "rv64ima") "a" else ""}${if (VexiiTop.compressed(config)) "c" else ""}_zicsr_zifencei"
+  def isa(config: String) = s"rv${xlen}im${if (VexiiTop.supervisor(config) || config == "rv64ima" || VexiiTop.floating(config)) "a" else ""}${if (VexiiTop.floating(config)) (if (xlen == 64) "fd" else "f") else ""}${if (VexiiTop.compressed(config)) "c" else ""}_zicsr_zifencei"
   def sourceDir = new File(sys.env("VEXIIRISCV")).getCanonicalFile
   override def replayEnv = Seq("VEXIIRISCV" -> sourceDir.getPath) ++
     Seq("RVW_COSIM_DPI", "RVW_COSIM_FAULT_ORDER", "RVW_VEX_LOCK", "RVW_VEX_XLEN", "RVW_VEX_DEVICE_MAP", "RVW_DEVICE_LIBRARY").flatMap(
@@ -148,7 +148,8 @@ class VexiiAdapter(val xlen: Int) extends CoreAdapter {
           Some(dut.host[LockstepTapPlugin].logic.transport) else None
         dpi.foreach(_.initialize())
         writer = if (job.rvfiTrace) Some(new RvfiTraceWriter(new File(job.out, "rvfi.jsonl"),
-          ujson.Obj.from(ctx.rvfiHeader.value.toSeq ++ externalEvidence.toSeq.map(e => "external_interrupts" -> e) ++ (if (resetEvents.nonEmpty) Seq("reset_events" -> ujson.Obj("schema" -> "rvw.reset-events/1", "events" -> ujson.Arr.from(resetEvents))) else Nil)), observe = dpi.filter(_ => sys.env.contains("RVW_COSIM_PORT"))
+          ujson.Obj.from(ctx.rvfiHeader.value.toSeq ++ (if (VexiiTop.floating(job.config)) Seq(
+            "capabilities" -> ujson.Arr("state", "csr"), "csr_snapshot" -> ujson.Arr("0x300")) else Nil) ++ externalEvidence.toSeq.map(e => "external_interrupts" -> e) ++ (if (resetEvents.nonEmpty) Seq("reset_events" -> ujson.Obj("schema" -> "rvw.reset-events/1", "events" -> ujson.Arr.from(resetEvents))) else Nil)), observe = dpi.filter(_ => sys.env.contains("RVW_COSIM_PORT"))
             .map(m => (line: String) => m.observe(line)))) else None
         probes = ProbeCollector.open(spinalprobes.Probe.of(dut), job, ctx.rvfiHeader)
         val priv = dut.host[PrivilegedPlugin].logic.harts(0)
@@ -179,6 +180,9 @@ class VexiiAdapter(val xlen: Int) extends CoreAdapter {
         var irqLevels = BigInt(-1)
         // Registered before the probe: the trap values are queued before the probe reports the trap.
         def sampleCycle(): Unit = {
+          if (backend != null) tap.fp.foreach { case (_, status, applied, _) =>
+            if (applied.toBoolean) backend.returnStatus(status.toBigInt)
+          }
           ctl.tick()
           val cycle = ctl.cycle
           if (!reset.exists(_.active)) {
@@ -307,7 +311,12 @@ class VexiiAdapter(val xlen: Int) extends CoreAdapter {
               case Some(f: ToHost.Fail) => finish = Some((Status.Fail, Some(f.code), Some(s"tohost = ${Hex(f.raw)}")))
               case None =>
             }
-          }, if (tap.lsuVirtualAddress.nonEmpty) logicalAddress else (_, _, address) => address)
+          }, if (tap.lsuVirtualAddress.nonEmpty) logicalAddress else (_, _, address) => address,
+          tap.fp.map { case (fcsr, status, _, _) => () => (fcsr.toBigInt, status.toBigInt) },
+          if (VexiiTop.compressed(job.config)) Some(pc => {
+            val low = read(pc.toLong, 2).toLong
+            if ((low & 3) != 3) low else read(pc.toLong, 4).toLong
+          }) else None, () => tap.fp.map(_._4.toBigInt).getOrElse(BigInt(0)))
         val probe = new VexiiRiscvProbe(dut, konataLog, withRvls = false)
         probe.checkLiveness = false
         probe.trace = job.konata

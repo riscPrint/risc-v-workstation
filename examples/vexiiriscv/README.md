@@ -1026,3 +1026,23 @@ The cold source build took 465 s before the missing device-map property stopped
 elaboration. The corrected warm database command took 66 s. These results cover
 extraction and one short simulation. They do not establish complete causal
 attribution, GUI rendering or other configurations.
+
+## Extra floating-point profiles
+
+The FP attempt uses private core revision
+`9b63f47fe559dbba7874af9196746412fa1294c1`. It has no tracked source changes.
+This differs from the older integer profile pin in the Setup table.
+
+| Config | ISA | Mode | Default change | Verification state |
+|---|---|---|---|---|
+| `rv32imafc` | RV32IMAFC | M | None | Adapter compiled; RTL qualification pending |
+| `rv64imafdc` | RV64IMAFDC | M | None | Adapter compiled; RTL qualification pending |
+
+Use `rvw32fp.toml` or `rvw64fp.toml`. Set `RVW_FPU_RUN_ROOT` outside the
+repository. Set the private core and lock environment as in the setup above.
+Use `RVW_VEX_LOCK=vex-fpu`, `RVW_SBT_LOCK=sbt-fpu` and `RVW_NICE=15`.
+`rvw/fpu/build-tests.sh 32` builds F/C; `64` builds F/D/C. Select `fp-isa`
+with `rvw regress run --rvfi-trace --jobs 2`. Compare with the matching
+`rvw/platform32fp.json` or `platform64fp.json` using `rvw regress cosim`.
+The C2/2 capture includes FP destinations, fcsr and mstatus. Their native
+retirement timing still needs strict Spike validation. No FP match is claimed.

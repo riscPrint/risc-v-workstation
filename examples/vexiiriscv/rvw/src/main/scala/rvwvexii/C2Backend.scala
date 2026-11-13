@@ -2,7 +2,7 @@ package rvwvexii
 
 import java.io.File
 import rvls.spinal.{TraceBackend, TraceIo}
-import riscvsim.{RvfiRecord, RvfiTraceWriter}
+import riscvsim.{RvfiRecord, RvfiTraceWriter, RvfiFpState}
 import scala.collection.mutable
 
 /** Turns the upstream VexiiRiscvProbe events into C2 retirement records and trap events.
@@ -15,7 +15,10 @@ import scala.collection.mutable
 class C2Backend(xlen: Int, cycle: () => Long, mode: () => Int, nextTrap: () => (BigInt, BigInt),
                 sink: RvfiRecord => Unit, trapSink: (Long, BigInt, BigInt, Boolean) => Unit,
                 onStore: (BigInt, Int, BigInt) => Unit,
-                resolveAddress: (Boolean, Long, Long) => Long = (_, _, address) => address) extends TraceBackend {
+                resolveAddress: (Boolean, Long, Long) => Long = (_, _, address) => address,
+                fpSnapshot: Option[() => (BigInt, BigInt)] = None,
+                instructionAt: Option[BigInt => Long] = None,
+                lateFlags: () => BigInt = () => BigInt(0)) extends TraceBackend {
   private val mask = (BigInt(1) << xlen) - 1
   val regs: Array[BigInt] = Array.fill(32)(BigInt(0))
   var retired = 0L
@@ -24,7 +27,13 @@ class C2Backend(xlen: Int, cycle: () => Long, mode: () => Int, nextTrap: () => (
   private var handler = false
   private var pending: Option[RvfiRecord] = None
   def pendingCycle: Option[Long] = pending.map(_.cycle)
+  /** The upstream return retires before its CSR state machine finishes. */
+  def returnStatus(value: BigInt): Unit = pending match {
+    case Some(r) if r.insn == 0x30200073L => pending = Some(r.copy(csrState = Map(0x300 -> value)))
+    case _ => throw new IllegalStateException("return state update without a pending mret")
+  }
 
+  private var fdData: Option[BigInt] = None
   private var rdData: Option[BigInt] = None
   private val loads = mutable.LongMap.empty[(Long, Long, BigInt)]
   private val stores = mutable.LongMap.empty[(Long, Long, BigInt)]
@@ -46,7 +55,7 @@ class C2Backend(xlen: Int, cycle: () => Long, mode: () => Int, nextTrap: () => (
   def drain(): Unit = pending.foreach(r => emit(C2Backend.fallThrough(r, xlen)))
 
   def resetState(): Unit = {
-    pending = None; rdData = None; load = None; store = None; storePhysical = None
+    pending = None; fdData = None; rdData = None; load = None; store = None; storePhysical = None
     loads.clear(); stores.clear(); physicalStores.clear(); io.clear()
     regs.indices.foreach(i => regs(i) = BigInt(0))
     handler = false
@@ -79,15 +88,25 @@ class C2Backend(xlen: Int, cycle: () => Long, mode: () => Int, nextTrap: () => (
         require(a == sa && n == sn, "atomic read/write addresses differ")
         ((BigInt(a) & mask), ((1 << n) - 1).toInt, d, ((1 << sn) - 1).toInt, sd)
     }
-    val r = RvfiRecord(order, cycle(), insn, trap = false, halt = false, intr = handler, mode = mode(), ixl = (if (xlen == 64) 2 else 1),
+    val snapshot = fpSnapshot.map { sample =>
+      val (fcsr, status) = sample()
+      // The real flags writeback can follow the probe's result retirement.
+      val raised = if (Set(0x43L, 0x47L, 0x4bL, 0x4fL, 0x53L)(insn & 0x7f)) lateFlags() else BigInt(0)
+      (fcsr | raised, status)
+    }
+    val fp = snapshot.map { case (fcsr, _) =>
+      RvfiFpState(fdData.nonEmpty, if (fdData.nonEmpty) rdField else 0,
+        fdData.getOrElse(BigInt(0)), fcsr & 31, fcsr)
+    }
+    val r = RvfiRecord(order, cycle(), instructionAt.map(_(pcValue)).getOrElse(insn), trap = false, halt = false, intr = handler, mode = mode(), ixl = (if (xlen == 64) 2 else 1),
       rs1 = rs1, rs1Rdata = regs(rs1), rs2 = rs2, rs2Rdata = regs(rs2), rd = rd, rdWdata = wdata,
       pc = pcValue, pcNext = 0, memAddr = memAddr, memRmask = rmask, memWmask = wmask,
-      memRdata = rdataMem, memWdata = wdataMem, memFault = false)
+      memRdata = rdataMem, memWdata = wdataMem, memFault = false, csrState = snapshot.map(s => Map(0x300 -> s._2)).getOrElse(Map.empty), fpState = fp)
     if (rd != 0) regs(rd) = wdata
     order += 1
     retired += 1
     handler = false
-    rdData = None; load = None
+    fdData = None; rdData = None; load = None
     pending = Some(r)
     store.foreach { case (a, n, d) => onStore(BigInt(storePhysical.getOrElse(throw new IllegalStateException("store has no physical address"))) & mask, Integer.numberOfTrailingZeros(n.toInt), d) }
     store = None; storePhysical = None
@@ -100,11 +119,12 @@ class C2Backend(xlen: Int, cycle: () => Long, mode: () => Int, nextTrap: () => (
     trapSink(cycle(), cause, tval & mask, interrupt)
     traps += 1
     handler = true
-    rdData = None; load = None; store = None; storePhysical = None
+    fdData = None; rdData = None; load = None; store = None; storePhysical = None
   }
 
   override def writeRf(hartId: Int, rfKind: Int, address: Int, data: Array[Byte]): Unit =
     if (rfKind == 0) rdData = Some(bytes(data, xlen / 8))
+    else if (rfKind == 1) fdData = Some(bytes(data, 8))
   override def loadExecute(hartId: Int, id: Long, addr: Long, len: Long, data: Array[Byte]): Unit =
     loads(id) = (resolveAddress(true, id, addr), len, bytes(data, len))
   override def loadCommit(hartId: Int, id: Long): Unit = load = loads.remove(id)
@@ -146,6 +166,8 @@ object C2Backend {
     val rs2 = ((insn >> 20) & 31).toInt
     (insn & 0x7f).toInt match {
       case 0x33 | 0x3b | 0x23 | 0x63 | 0x2f => (rs1, rs2)
+      case 0x07 | 0x27 => (rs1, 0)
+      case 0x53 if Set(0x68L, 0x69L, 0x78L, 0x79L)(insn >> 25) => (rs1, 0)
       case 0x13 | 0x1b | 0x03 | 0x67 => (rs1, 0)
       case 0x73 if Set(1, 2, 3)(((insn >> 12) & 7).toInt) => (rs1, 0)
       case _ => (0, 0)
@@ -158,6 +180,7 @@ object C2Backend {
   def fallThrough(r: RvfiRecord, xlen: Int): BigInt = {
     val insn = r.insn
     val pc = r.pc
+    if ((insn & 3) != 3) return pc + 2
     (insn & 0x7f).toInt match {
       case 0x6f =>
         val imm = ((insn >> 31) & 1) << 20 | ((insn >> 12) & 0xff) << 12 | ((insn >> 20) & 1) << 11 | ((insn >> 21) & 0x3ff) << 1

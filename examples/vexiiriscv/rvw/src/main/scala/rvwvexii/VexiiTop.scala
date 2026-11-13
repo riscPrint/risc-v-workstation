@@ -18,10 +18,11 @@ object VexiiTop {
       .getOrElse(throw new IllegalArgumentException("set RVW_ADAPTER for database elaboration"))
     new java.io.File(directory, "live-devices.json")
   })
-  val configs = Seq("rv32im", "rv32imasu", "rv64imasu", "rv64ima", "rv64imacsu", "rv64imacsu_linux", "rv32im_cached", "rv32im_bitpasta", "rv32im_bitpasta_ipc")
+  val configs = Seq("rv32imafc", "rv64imafdc", "rv32im", "rv32imasu", "rv64imasu", "rv64ima", "rv64imacsu", "rv64imacsu_linux", "rv32im_cached", "rv32im_bitpasta", "rv32im_bitpasta_ipc")
 
   def supervisor(config: String) = config.endsWith("asu") || config.startsWith("rv64imacsu")
-  def compressed(config: String) = config.startsWith("rv64imacsu")
+  def floating(config: String) = Set("rv32imafc", "rv64imafdc")(config)
+  def compressed(config: String) = config.startsWith("rv64imacsu") || floating(config)
   def param(config: String): ParamSimple = {
     require(configs.contains(config), s"unknown VexiiRiscv config $config")
     val p = new ParamSimple()
@@ -32,6 +33,8 @@ object VexiiTop {
       p.divArea = !config.endsWith("_ipc")
     }
     if (config == "rv64ima") p.addISA("a")
+    if (floating(config)) p.addISA("a", "f")
+    if (config == "rv64imafdc") p.addISA("d")
     if (supervisor(config)) {
       p.addISA("a", "s", "u")
       p.asidWidth = if (p.xlen == 64) 16 else 9
@@ -96,6 +99,25 @@ class TrapTapPlugin extends FiberPlugin {
     // Cacheless LSU only: the address that its bus command carries before translation.
     val lsuVirtualAddress = host.get[vexiiriscv.execute.lsu.LsuCachelessPlugin].map(_.logic).map(lsu =>
       CombInit(lsu.forkCtrl(lsu.onAddress.RAW_ADDRESS)).setName("rvw_lsu_va").simPublic())
+    val fp = host.get[vexiiriscv.execute.fpu.FpuCsrPlugin].map { plugin =>
+      val fcsr = CombInit(plugin.api.rm ## plugin.api.flags.asBits).setName("rvw_fcsr").simPublic()
+      val status = host[PrivilegedPlugin].logic.harts(0).m.status
+      val mstatus = Bits(vexiiriscv.riscv.Riscv.XLEN.get bits)
+      mstatus := 0
+      mstatus(3) := status.mie
+      mstatus(7) := status.mpie
+      mstatus(12 downto 11) := status.mpp.asBits
+      mstatus(14 downto 13) := status.fs.asBits
+      mstatus(17) := status.mprv
+      mstatus(mstatus.high) := status.sd
+      mstatus.setName("rvw_fp_mstatus").simPublic()
+      val xretApplied = RegNext(host[TrapPlugin].logic.harts(0).trap.fsm.isActive(host[TrapPlugin].logic.harts(0).trap.fsm.XRET_APPLY)) init(False)
+      xretApplied.setName("rvw_xret_applied").simPublic()
+      val flagsWb = host[vexiiriscv.execute.fpu.FpuFlagsWritebackPlugin]
+      val lateFlags = CombInit(flagsWb.logic.flagsOr.asBits.andMask(!flagsWb.lane.isFreezed()))
+        .setName("rvw_fp_late_flags").simPublic()
+      (fcsr, mstatus, xretApplied, lateFlags)
+    }
     val privilege = CombInit(host[PrivilegedPlugin].logic.harts(0).privilege).setName("rvw_privilege").simPublic()
     val walk = host.get[vexiiriscv.memory.MmuPlugin].map(new WalkTap(_))
     buildBefore.release()

@@ -86,3 +86,22 @@ comparison whose masks and synchronizations all have reasons allowed by
 `allow_sync` (`reset`: `csr_reset_unknown`; `irq`: `irq`; `mmio`: `mmio`). An empty
 `allow_sync` means strict mode. Match rows record `synchronized`. The exit
 code is 0 only when every row matches.
+
+## Floating-point configurations
+
+The extra `rv32imafc` and `rv64imafdc` machine configurations use the pinned
+external core without source changes. Their project files are `rvw32fp.toml`
+and `rvw64fp.toml`. Integer defaults are unchanged.
+
+The FP adapter writes C2 version 2 with `state` and `csr` capabilities.
+The upstream committed FP write supplies `fd_valid`, `fd` and `fd_wdata`.
+This includes writes to `f0`. The 64-bit transport keeps NaN boxing for
+single-precision values. RTL taps supply accrued `fflags`, `fcsr` including
+`frm`, and a complete machine-only `mstatus` snapshot at `0x300`.
+The native timing of these taps must pass strict comparison before the
+configuration has qualification credit. No reference value fills a DUT field.
+
+The upstream probe gives expanded compressed instructions. The adapter uses
+the expanded fields for register effects and reads the raw encoding at the
+retired PC for C2. A final non-control compressed instruction advances two
+bytes. Intermediate next PCs come from the next observed retirement.
