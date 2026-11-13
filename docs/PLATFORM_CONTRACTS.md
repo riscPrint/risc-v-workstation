@@ -4948,3 +4948,14 @@ assumptions remain. A shared timeout limits all searches. Single-property output
 retain the scalar depth and shortest fields. Optional `typed_output` records
 SpinalWaves conversion separately from solver evidence. Missing conversion tools
 cannot produce a completed typed-output result.
+### Standard device checkpoint payload
+
+The optional `PythonDevices.cpp` library implements `DeviceApiV1` unchanged.
+Its snapshot bytes contain UTF-8 JSON with schema `rvw.standard-device/1`.
+Fields are `schema`, `config`, `cycle` and `state`. Restore requires equal
+configuration and the same model state inventory. Byte arrays use a `bytes`
+hex object. Sets use a sorted `set` array object. The payload is trusted
+same-build state. Capture the plugin, Python library and Python source digests
+in the run identity. Host console output and host file writes are not emitted.
+The model owns the buffered console and disk state. See
+`RiscvSim/src/main/cpp/DEVICES.md` for model selection and interrupt bits.

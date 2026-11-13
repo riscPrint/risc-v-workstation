@@ -56,3 +56,50 @@ loads a small fixture shared library and checks independent handles, MMIO,
 ticks, interrupts, snapshot/restore and DPI failure status. A second smoke compiles and runs a tiny Verilator testbench
 with actual DPI-C imports for open, close, MMIO, ticks and interrupts. Use a pinned compiler and include the plugin library digest
 in every native run that loads it.
+
+## Standard models through CPython
+
+`PythonDevices.cpp` exports the same ABI. It calls `rvw.sim.devices.Device`.
+Build it as a shared library with the selected CPython headers and shared
+library. Set `PYTHONHOME` to that Python installation. Put `rvw/src` on
+`PYTHONPATH`. Keep the interpreter alive until process exit. Calls acquire the
+GIL. This is a reference bridge, with no throughput claim.
+
+The JSON `model` selects `ns16550`, `clint`, `aclint`, `plic`,
+`htif-console` or `simple-block`. Timer `map` uses `TimerMap` fields. PLIC `map`
+uses `PlicMap` fields. All map addresses are relative to this plugin's base.
+The project supplies `cycles_per_tick` for timers. PLIC `levels` can contain
+ordered `{cycle, source, level}` events at positive cycles. The harness must
+call `tick` before accesses at each cycle. Output bit zero is UART TX IRQ.
+Timers return software and timer bits for each hart in successive bit pairs.
+PLIC returns one bit per context. The project routes each output to the core.
+The ABI has no live gateway input callback. Interactive gateway routing needs
+an adapter extension. The Python composition API also exposes `set_level`.
+
+The UART supports polling output, divisor, scratch and TX IRQ registers.
+RX, modem input, FIFO operation and baud timing remain unsupported.
+CLINT/ACLINT provide MTIMER and MSWI registers. No supervisor software
+interrupt block is supplied. PLIC uses level gateways, claim and completion.
+The HTIF console accepts device 1, command 1 writes at offset 0 and
+acknowledges through offset 8. Other HTIF host calls fail.
+`simple-block` is a RAM disk byte window initialized by `image_hex`.
+It has no virtio transport, DMA, command queue or persistent host writes.
+All models require full byte masks. A partial device write fails without a
+read-modify-write because a read can acknowledge an interrupt.
+
+Console output and disk writes stay in model state. They cause no host output
+or file writes. Their complete state is in versioned JSON snapshots. Include
+the Python modules, Python library and configuration in the run identity.
+Snapshots are trusted same-build state, not a portable untrusted input format.
+The native test compiles the shared library and restores a fresh stopped UART
+state through `DevicePlugin`. It also tests timer, PLIC, HTIF and disk state in
+Python. This does not qualify a Linux RTL adapter.
+
+Build with the selected rvw Python environment:
+
+```sh
+rvw/.venv/bin/python RiscvSim/scripts/build-devices.py --out /tmp/new-devices.so
+```
+
+The helper refuses an existing output. It uses the interpreter's library and
+headers. On macOS it corrects the portable CPython library install name.
