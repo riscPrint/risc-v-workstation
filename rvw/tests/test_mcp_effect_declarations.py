@@ -31,3 +31,14 @@ def test_data_provider_declarations(name, registry):
     tool = registry.tools[name]
     assert tool.side_effects
     assert tool.native_tools == ()
+
+
+def test_query_declarations(registry):
+    tools = [tool for name, tool in registry.tools.items() if name.startswith('query_')]
+    assert tools
+    assert all(tool.side_effects is not None and tool.native_tools is not None for tool in tools)
+    assert registry.tools['query_info'].side_effects == 'read-only'
+    assert registry.tools['query_info'].native_tools == ()
+    assert registry.tools['query_build_db'].native_tools == ('JDK', 'sbt')
+    assert set(registry.tools['query_build_hdl'].native_tools) == {'Yosys', 'yosys-slang', 'GHDL', 'firtool'}
+    assert 'writes' in registry.tools['query_export'].side_effects
