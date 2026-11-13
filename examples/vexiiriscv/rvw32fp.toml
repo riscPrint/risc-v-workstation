@@ -63,5 +63,15 @@ max_cycles = 300000
 timeout_s = 120
 mem_latency = 0
 
+[suites.fp-act4]
+dir = "${RVW_FPU_RUN_ROOT}/act432/work/rvw-act4/elfs"
+act4_manifest = "${RVW_FPU_RUN_ROOT}/act432/manifest.json"
+glob = "**/*.elf"
+strip_suffix = ".elf"
+configs = ["rv32imafc"]
+max_cycles = 2000000
+timeout_s = 120
+mem_latency = 0
+
 [cosim]
 platform = "rvw/platform32fp.json"
