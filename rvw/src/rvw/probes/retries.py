@@ -23,12 +23,16 @@ def retry_statistics(stream):
     for cycle, p, v in stream.events('stage', 'lsuretry', 'retire', 'flush'):
         i = v['id']
         if p.kind == 'stage':
-            starts = p.meta.get('first') == 'true' if first else i not in live
+            stage = p.meta.get('stage', p.name)
+            starts = (p.meta.get('first') == 'true' and
+                      (i not in live or live[i]['stage'] != stage)) if first else i not in live
             if starts:
                 if i in live:
                     close(i, 'reused')
-                live[i] = dict(sequence=sequence, pending=[])
+                live[i] = dict(sequence=sequence, pending=[], stage=stage)
                 sequence += 1
+            if i in live:
+                live[i]['stage'] = stage
             if i in live and p.meta.get('stage') == 'Wb':
                 for cause, start in live[i]['pending']:
                     if cause != 'memory_order_violation':
