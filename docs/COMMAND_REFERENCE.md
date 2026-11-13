@@ -681,7 +681,8 @@ usage: rvw doctor [-h] [--features FEATURES] [--smoke-elf SMOKE_ELF]
 
 ```text
 usage: rvw farm [-h] [--project PROJECT]
-    {run,cancel,notifications,classify,recover,queue,serve,dashboard} ...
+    {run,cancel,notifications,classify,recover,batch,queue,serve,dashboard}
+    ...
 ```
 
 ### `rvw farm run`
@@ -714,6 +715,14 @@ usage: rvw farm classify [-h] [--project PROJECT] reports [reports ...]
 
 ```text
 usage: rvw farm recover [-h] --out OUT [--project PROJECT]
+```
+
+### `rvw farm batch`
+
+```text
+usage: rvw farm batch [-h] --plan PLAN [--action
+    {render,submit,status,cancel,collect}] [--executor {local,k8s}] [--root
+    ROOT] [--ids IDS] [--project PROJECT]
 ```
 
 ### `rvw farm queue`
@@ -2568,6 +2577,14 @@ Starts a background job: yes.
 Check a remote_bitbang JTAG TAP and RISC-V DTM: TAP resets, IR capture, IDCODE, BYPASS, DTMCS, DMI status, sticky busy and resets. Writes C3 results.
 
 Arguments: `port` (required), `out` (required), `host`, `irlen`, `busy_probe`.
+
+Starts a background job: yes.
+
+### `farm_batch`
+
+Render, submit, inspect, cancel or collect explicit local/Kubernetes shards.
+
+Arguments: `plan` (required), `action`, `executor`, `root`, `ids`.
 
 Starts a background job: yes.
 

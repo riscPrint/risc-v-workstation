@@ -4680,3 +4680,12 @@ attempt outcomes. `complete` means process completion with exit zero, not a C4
 accept or a DUT pass. Worker death is an infrastructure error. Unchecked process
 groups require cleanup and cannot earn cancellation acknowledgement. The HTTP
 service maps bearer tokens to owners and restricts job reads and cancellation.
+
+### Batch shard execution
+
+`farm batch` accepts one explicit command and expected C1/C3 result paths per
+shard. The same commands run locally or as batch/v1 Jobs. Project-supplied PVCs
+hold inputs, caches and results. Collection validates schemas and declared C1
+identity claims. Missing cells are explicit and inconclusive. Job process success
+and collection completeness do not establish C4 acceptance. Kubernetes retries
+are disabled; retry policy belongs to the controller.
