@@ -87,6 +87,16 @@ def path(design, top, sources, sink):
     return []
 
 
+def database_path(db, source, sink):
+    """Resolve a structural path through C6. This is not dynamic taint provenance."""
+    from rvw.query.db import run_on, QueryError
+    from rvw.query.ops import path as query_path
+    try:
+        return run_on(db,lambda design: query_path(design,source,sink,max_paths=1))
+    except (QueryError, sqlite3.Error, OSError) as e:
+        return {'found':False,'inconclusive':str(e)}
+
+
 def run(rtl, top, policy, stimulus, out, mode='precise', db=None):
     out = Path(out).resolve(); out.mkdir(parents=True, exist_ok=False)
     policy = json.loads(Path(policy).read_text())
@@ -111,11 +121,13 @@ def run(rtl, top, policy, stimulus, out, mode='precise', db=None):
         lines += [f'{"reg" if p["direction"]=="input" else "wire"} [{w-1}:0] {n};', f'wire [{w-1}:0] {n}__t;']
         con += [f'.{n}({n})', f'.{n}__t('+ (f"{w}'d0" if p['direction']=='input' else n+'__t')+')']
     lines += [f'{top}__ift dut('+','.join(con)+');','initial begin']
+    checked_cycles=0
     for cycle,sample in enumerate(samples):
         if set(sample) != set(inputs) or any(type(v) is not int or not 0<=v<1<<inputs[n] for n,v in sample.items()):
             raise ValueError('each sample must bind every non-clock input within its width')
         lines += [f'{clock}=0;']+[f"{n}={inputs[n]}'d{v};" for n,v in sample.items()]+[f'#1; {clock}=1; #1;']
         if sample[reset] == 0 and not sample.get(policy.get('declassifier'),0):
+            checked_cycles+=1
             for index,sink in enumerate(policy['sinks']):
                 ts = [f'dut.{prefix}t{b}' if isinstance(b,int) else "1'b0" for b in design['modules'][top]['netnames'][sink]['bits']]
                 lines.append(f'if ({" | ".join(ts)}) $display("SEC {cycle} {index}");')
@@ -129,10 +141,13 @@ def run(rtl, top, policy, stimulus, out, mode='precise', db=None):
     if db:
         with sqlite3.connect(Path(db).resolve().as_uri()+'?mode=ro',uri=True) as conn:
             db_paths = {r[0] for r in conn.execute('select path from signals')}
+    database_cache={}
     for cycle,index in re.findall(r'^SEC (\d+) (\d+)$',log,re.M):
         sink = policy['sinks'][int(index)]
         steps = path(design,top,policy['sources'],sink)
-        findings.append(dict(cycle=int(cycle), sink=sink, candidate_path=steps,
+        if db and sink not in database_cache:
+            database_cache[sink]={source:database_path(db,source,sink) for source in policy['sources']}
+        findings.append(dict(database_dependency_paths=database_cache.get(sink,{}),cycle=int(cycle), sink=sink, candidate_path=steps,
                              database_paths=[p for p in db_paths if p in steps or p.split('.')[-1] in steps]))
-    return publish(out,'ift',findings,'SEC_END' in log,mode=mode,policy=policy,
+    return publish(out,'ift',findings,'SEC_END' in log and checked_cycles>0,mode=mode,policy=policy,checked_cycles=checked_cycles,
                    path_kind='structural candidate, not dynamic provenance',samples=len(samples))

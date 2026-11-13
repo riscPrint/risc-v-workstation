@@ -40,3 +40,15 @@ Each C1 adapter run also writes security-observations.json with exactly the
 manifest's digital channel names. A harmless architectural trace requires equal
 security observations. A declared named detection can satisfy the detection
 check. Generic fail/assert statuses without declared names remain unresolved.
+
+## Aggregate outcomes and generated gadgets
+
+sec suite accepts only executed rvw.sec/1 reports. It emits one C3 test per
+report. Missing or invalid reports produce error entries. Violations survive
+incomplete peer results. Completeness retains every child report's completeness.
+The rvw.sec-gadgets/1 generation manifest names four assembly templates, expected
+no-leak outcomes, a register ABI and project environment hooks. It is generated
+evidence only. It cannot earn an executed C3 pass.
+
+IFT reports checked_cycles. Zero enabled sink samples is inconclusive. Optional
+C6 dependency paths retain query capture identity and structural-path limits.

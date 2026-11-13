@@ -43,3 +43,12 @@ def test_contract_eligibility():
     assert compare(a,{**b,'reference':[{**row,'pc':20}]},plan)['status']=='ineligible'
     assert generate(12,4)==generate(12,4)
     with pytest.raises(ValueError): compare(a,a,plan)
+
+
+def test_c6_dependency_path(gcd_db):
+    from rvw.sec.ift import database_path
+    result=database_path(gcd_db,'io_a','io_result')
+    assert result['found']
+    assert result['input_capture']
+    missing=database_path(gcd_db,'unknown_security_source','io_result')
+    assert missing['inconclusive'] and not missing['found']

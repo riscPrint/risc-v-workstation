@@ -37,3 +37,16 @@ def test_native_pair_runner(tmp_path,leak):
         adapter_command=[sys.executable,str(Path(__file__).parent/'fixtures/sec/adapter.py'),'{request}','{out}'])))
     result=pairs(manifest,tmp_path/'pairs')
     assert result['status']==('violation' if leak else 'no_leak_observed'),result
+
+
+@pytest.mark.slow
+def test_no_sink_checks_is_inconclusive(tmp_path):
+    if not all(shutil.which(t) for t in ('yosys','verilator')):pytest.skip('native tools required')
+    rtl=tmp_path/'unit.v'
+    rtl.write_text('module unit(input clk,reset,secret,allow_release,output reg bus); always @(posedge clk) if(reset) bus<=0; else bus<=secret; endmodule')
+    policy=tmp_path/'policy.json'
+    policy.write_text(json.dumps(dict(clock='clk',reset='reset',sources=['secret'],sinks=['bus'],declassifier='allow_release')))
+    stimulus=tmp_path/'samples.json'
+    stimulus.write_text(json.dumps([dict(reset=1,secret=0,allow_release=0),dict(reset=0,secret=1,allow_release=1)]))
+    result=run(rtl,'unit',policy,stimulus,tmp_path/'out')
+    assert result['status']=='inconclusive' and result['checked_cycles']==0

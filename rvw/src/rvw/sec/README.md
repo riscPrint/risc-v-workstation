@@ -197,3 +197,36 @@ Native tests use a tiny Verilog key register and parity guard. The planted
 unguarded fault changes a debug observation while its synthetic NOP architecture
 stays equal. The fixed variant reports a parity detection. This is not physical
 fault injection. Multi-bit, clock, voltage, laser and EM attacks are not modeled.
+
+## Suite outcomes and MCP
+
+```
+rvw sec suite --report out/ift/report.json --report out/pair/report.json --out out/security
+rvw mcp --list
+```
+
+MCP tools are `sec_ift`, `sec_contract`, `sec_gadgets`, `sec_latency`,
+`sec_isolation`, `sec_fault` and `sec_suite`. Long native operations use MCP jobs.
+`sec_suite` collects executed reports into C3 tests. It retains violations when
+another technique is incomplete. Generated gadget manifests cannot count as
+executed evidence. A partial violation stays incomplete even though it is a
+failure. An IFT stimulus with no enabled sink sample is inconclusive.
+
+With `--db`, IFT also uses the existing C6 query engine to resolve structural
+source-to-sink dependency paths. Each query records database capture identity.
+Unknown or ambiguous names retain an inconclusive path entry. These C6 paths
+are structural candidates, not dynamic provenance and not proofs of influence.
+
+C3 `pass` means the declared finite sample met that technique's criterion.
+It does not mean secure. Fault checks can satisfy a declared detection contract
+without establishing absence of earlier leakage. The suite does not combine
+several incomplete techniques into a security proof or a release approval.
+
+## Remaining integration work
+
+The default pair generator is a small seeded ALU grammar. Broader instruction,
+memory and privilege fuzz grammars need project bindings. Gadget generation
+still needs executed core suites. PMP/ePMP, predictor/cache cleanup and declared
+Zkt decoding need independent project models and native core evidence. IFT
+memory regions need mapped signal declarations; dynamic source-level taint
+provenance is not implemented. These limits remain open work.
