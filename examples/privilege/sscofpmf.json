@@ -1,0 +1,9 @@
+{
+  "schema": "rvw.privilege/1",
+  "kind": "sscofpmf",
+  "isa": "rv64ima_zicsr_zifencei_sscofpmf_zihpm",
+  "spec_version": "Sscofpmf-1.0",
+  "cofpmf": {
+    "counter": 3
+  }
+}
