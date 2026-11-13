@@ -228,3 +228,19 @@ The [probe campaign](rvw/probes.md) passes 307 executions with 24 monitors
 and zero firings. It qualifies a full-ROB interrupt, a discarded speculative
 fault and forwarding before branch recovery. Consecutive-cycle recovery stays
 unhit. These are finite observations, not whole-core proof.
+## Dependency debug
+
+The adapter accepts `--spinaltrace`. The generic simulator emits the PDG from
+its instrumented report. The run loop records short wave windows and the
+pre-edge C2 sample time in C1. Cycle zero is the first C2 sample.
+Build the database with `runMain ooomini.BuildDb` in a private source copy.
+Do not join a plain database and an instrumented wave without checking paths.
+
+| Private extraction | Measured result |
+|---|---|
+| SpinalHDL 1.15.0, default core | 2 components; 2,175 signals; 3,703 assignments; 1,641 conditions; 9,422 edges |
+| Elaboration / extraction | 12.6 s / 11.0 s |
+| PDG / blocks / HGLDD export | 2.2 s / 1.4 s / 0.9 s |
+
+These measurements establish extraction only. Dynamic attribution, typed wave
+rendering and seeded bug hits need separate native wave checks.

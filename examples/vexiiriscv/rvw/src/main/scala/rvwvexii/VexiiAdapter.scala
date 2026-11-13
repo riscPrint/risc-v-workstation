@@ -140,8 +140,9 @@ class VexiiAdapter(val xlen: Int) extends CoreAdapter {
       require(observed._1 == physical, "memory tag does not match the observed physical address")
       observed._2
     }
+    var waveStart = -1L
     val (status, code, message, cycles) = try {
-      val result = SimSession.run(model, job, ctx) { (dut, ctl) =>
+      val result = SimSession.runCtl(model, job, ctx) { (dut, ctl) =>
         val cd = dut.clockDomain
         val dpi = if (sys.env.get("RVW_COSIM_DPI").contains("1"))
           Some(dut.host[LockstepTapPlugin].logic.transport) else None
@@ -361,7 +362,8 @@ class VexiiAdapter(val xlen: Int) extends CoreAdapter {
         cd.waitSamplingWhere(false)
       }
       probes.foreach(_.close(result._4))
-      result
+      waveStart = result._5.timeOfCycle1
+      (result._1, result._2, result._3, result._4)
     } finally {
       probes.foreach(_.abandon())
       devices.foreach(_.close())
@@ -383,7 +385,10 @@ class VexiiAdapter(val xlen: Int) extends CoreAdapter {
     val (finalStatus, finalMessage) = mailbox.filter(m => status == Status.Pass && !m.complete)
       .map(m => (Status.Error, Some(s"stimulus served ${m.served} of its events"))).getOrElse((status, message))
     RunOutcome(finalStatus, cycles, retired, code, finalMessage,
-      ujson.Obj("traps" -> RvwJson.num(if (backend == null) 0L else backend.traps), "rvfi_records" -> RvwJson.num(retired),
+      ujson.Obj("wave_time_per_cycle" -> 10, "wave_time_of_cycle_1" -> RvwJson.num(waveStart),
+        "wave_window" -> ujson.Obj("from" -> job.waveFrom.map(v => ujson.Num(v.toDouble)).getOrElse(ujson.Null),
+          "to" -> job.waveTo.map(v => ujson.Num(v.toDouble)).getOrElse(ujson.Null)),
+        "traps" -> RvwJson.num(if (backend == null) 0L else backend.traps), "rvfi_records" -> RvwJson.num(retired),
         "completion" -> (if (job.config.endsWith("_linux")) "bounded" else "tohost"),
         "tohost" -> (if (job.config.endsWith("_linux")) ujson.Null else ujson.Str(Hex(tohost.value))), "rvfi_monitor" -> false, "memory_bytes" -> RvwJson.num(ramSize),
         "retired_by_mode" -> ujson.Obj.from(retiredByMode.indices.map(i => i.toString -> RvwJson.num(retiredByMode(i)))),

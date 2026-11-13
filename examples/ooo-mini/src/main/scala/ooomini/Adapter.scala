@@ -43,7 +43,7 @@ object Adapter extends CoreAdapter {
     report(key,work).generatedSourcesPaths.toSeq.map(new File(_))
   override def generatedVerilog(model: Model): Seq[File] = model.report.generatedSourcesPaths.toSeq.map(new File(_))
   def run(model: Model, job: RunJob, ctx: RunContext): RunOutcome = {
-    require(!job.konata && !job.spinaltrace && !job.rvfiCheck,
+    require(!job.konata && !job.rvfiCheck,
       "use probe conversion for Kanata; runtime RVFI monitor are not mapped yet")
     require(job.memLatency.forall(_ == 0), "only zero-latency RAM is mapped")
     val ram = scala.collection.mutable.LongMap.empty[Int]
@@ -53,12 +53,14 @@ object Adapter extends CoreAdapter {
     var outcome = RunOutcome(Status.Timeout,0,0)
     var cycle = 0L
     var retired = 0L
+    var firstSample = -1L
     try model.doSim(job.out.getAbsolutePath,job.seed) { dut =>
       dut.io.boot #= ctx.elf.entry
       dut.io.interrupts #= 0
       dut.io.instruction #= 0; dut.io.loadData #= 0
       dut.clockDomain.forkStimulus(10)
       dut.clockDomain.waitSampling()
+      if(job.wave && job.waveFrom.exists(_ > 0)) disableSimWave()
       val control = new SimControl(job,ctx.wallClock)
       dut.clockDomain.onSamplings { control.cycle += 1 }
       FaultInjector.forJob(job).foreach(_.attach(dut,control))
@@ -70,6 +72,10 @@ object Adapter extends CoreAdapter {
       try {
         while(cycle < job.maxCycles && !stop && !ctx.wallClock.over()) {
           dut.clockDomain.waitFallingEdge()
+          if(job.wave) {
+            if(job.waveFrom.contains(cycle)) enableSimWave()
+            if(job.waveTo.exists(cycle > _)) disableSimWave()
+          }
           val levels = job.irqSchedule.map(_.levelsAt(cycle)).getOrElse(BigInt(0))
           require((levels & ~BigInt(0x888)) == 0,"only machine software, timer and external interrupts are mapped")
           dut.io.interrupts #= levels
@@ -86,6 +92,7 @@ object Adapter extends CoreAdapter {
             val cause = dut.io.interruptCause.toBigInt
             writer.foreach(_.trap(cycle,cause,BigInt(0),true))
           }
+          if(firstSample < 0) firstSample = simTime()
           val records = rvfi.sample(cycle)
           val store = dut.io.store.toBoolean
           val addr = dut.io.storeAddress.toLong
@@ -108,7 +115,11 @@ object Adapter extends CoreAdapter {
         if(!stop) outcome = RunOutcome(Status.Timeout,cycle,retired)
         ChecksSim.writeRunReport(dut,new File(job.out,"checks-run.json").getPath)
         outcome = outcome.copy(details = ujson.Obj("generated_sv_bindings" -> (if(job.config == "default") 8 else 0),
-          "generated_sv_assertions_enabled" -> (job.config == "default")))
+          "generated_sv_assertions_enabled" -> (job.config == "default"),
+          // C2 samples before the edge and numbers its first cycle zero.
+          "wave_time_per_cycle" -> 10, "wave_time_of_cycle_1" -> (firstSample + 10),
+          "wave_window" -> ujson.Obj("from" -> job.waveFrom.map(x => ujson.Num(x)).getOrElse(ujson.Null),
+            "to" -> job.waveTo.map(x => ujson.Num(x)).getOrElse(ujson.Null))))
         if(ChecksSim.firings(dut).nonEmpty && outcome.status == Status.Pass)
           outcome = outcome.copy(status = Status.Fail,message = Some("generated check fired"))
         writer.foreach(_.end(cycle,outcome.status.name))

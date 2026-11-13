@@ -1,6 +1,6 @@
 // Dynamic PDG builder. Forked from chiseltrace-rs (jarlb/chiseltrace f4bf63a, Apache-2.0).
 // SpinalTrace patches are marked with "SPINALTRACE:" and listed in PORTING_NOTES.md.
-use std::{cell::RefCell, collections::{HashMap, HashSet}, fs::File, io::{self, BufReader}, path::Path, rc::Rc};
+use std::{cell::RefCell, collections::{HashMap, HashSet}, path::Path, rc::Rc};
 use serde::Serialize;
 use vcd::{Command as Command, IdCode};
 use anyhow::Result;
@@ -101,7 +101,7 @@ impl ProviderSet {
 }
 
 struct VcdReader {
-    parser: vcd::Parser<io::BufReader<File>>,
+    parser: crate::vcd_input::Parser,
     extra_scopes: Vec<String>,
     header: vcd::Header,
     clock: vcd::IdCode,
@@ -541,9 +541,7 @@ fn vector_bits(v: &vcd::Vector) -> String {
 
 impl VcdReader {
     fn new(vcd_path: impl AsRef<Path>, signals: &TraceSignals) -> Result<Self> {
-        let file = File::open(vcd_path)?;
-        let reader = BufReader::new(file);
-        let mut parser = vcd::Parser::new(reader);
+        let mut parser = crate::vcd_input::open(vcd_path)?;
         let header = parser.parse_header()?;
         let extra_scopes = signals.extra_scopes.clone();
 
@@ -671,7 +669,7 @@ impl VcdReader {
 
 /// SPINALTRACE: number of the cycle that contains VCD time `t` (cycle n ends at the n-th rising edge).
 pub fn cycle_at_time(vcd_path: impl AsRef<Path>, extra_scopes: &[String], clock: &str, t: u64) -> Result<i64> {
-    let mut parser = vcd::Parser::new(BufReader::new(File::open(vcd_path)?));
+    let mut parser = crate::vcd_input::open(vcd_path)?;
     let header = parser.parse_header()?;
     let mut path = extra_scopes.to_vec();
     path.extend(clock.split('.').map(String::from));
