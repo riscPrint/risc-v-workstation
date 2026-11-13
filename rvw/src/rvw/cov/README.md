@@ -1130,3 +1130,15 @@ version-bound legal/illegal/unavailable catalogs remain project-owned work.
 This extension does not establish complete ISA compliance coverage.
 
 See [coverage counter exchange](EXCHANGE.md) for UCIS XML import/export and native DAT/LCOV exports.
+
+### Native metrics per Scala line
+
+`rvw cov report` also returns `scala_line_metrics`. Each linked source line has
+separate native metric totals, hits, holes and exclusions. A native point can
+link to several lines. Duplicate links to the same line count once. Toggle,
+expression/condition and FSM metric names remain the names collected by the
+native tool. No missing metric is inferred from another metric.
+
+`statement_hit_status` stays `undetermined`. These are native instrumented
+points with source navigation links. They do not establish individual Scala
+statement hits. Unmapped points remain in the report's unmapped denominator.
