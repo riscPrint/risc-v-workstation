@@ -508,7 +508,9 @@ def report(data, exclusions=None):
     for point in data['points']:
         if point.get('scala'):
             mapping_methods[point['scala'].get('method', 'unspecified')] += 1
+    from .line_metrics import line_metrics
     return {"schema": "rvw.coverage-report/1", "instance_scope": instance_scope,
+            "scala_line_metrics": line_metrics(data["points"], summary),
             "scala_mapping": {"denominator": len(data['points']),
                               "mapped": sum(bool(p.get('scala')) for p in data['points']),
                               "methods": dict(sorted(mapping_methods.items())),

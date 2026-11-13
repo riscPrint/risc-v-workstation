@@ -205,6 +205,14 @@ through an absolute `RVW_HOME`. Keep core adapter sources in the core repository
 Use offline sbt after toolchain dependencies are installed. Source-directory settings
 in reusable builds must resolve from `baseDirectory.value`, not the caller's cwd.
 
+### Native coverage metrics per linked source line
+
+`rvw.coverage-report/1` adds `scala_line_metrics`. Each file/line key contains
+native metric summaries, statement_hit_status `undetermined`, and a unit string.
+Each native point counts once per linked line and metric. Several linked lines
+can refer to the same point. Native types, holes and exclusions remain separate.
+This field adds no source attribution and makes no Scala statement-hit claim.
+
 ### Coverage counter interchange
 
 `rvw cov exchange` and `cov_exchange` implement the declared UCIS 1.0 counter
