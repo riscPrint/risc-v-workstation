@@ -1,0 +1,101 @@
+{
+  "date": "2026-11-13",
+  "runs": [
+    {
+      "rtl_sha256": "1a791f8d828a42b774181017108324ef23675253056effdb53c405b695f33415",
+      "fresh_elaboration": false,
+      "divisor": "zero",
+      "scope": "isolated real plugin; fixed opcode; stable operands; first transaction; stage validity and stall supplied by the adapter",
+      "boundary": {
+        "clk": 1,
+        "reset": 1,
+        "execute_RS1": 32,
+        "execute_RS2": 32,
+        "execute_INSTRUCTION": 32,
+        "execute_IS_RS1_SIGNED": 1,
+        "execute_IS_RS2_SIGNED": 1,
+        "execute_IS_DIV": 1,
+        "memory_INSTRUCTION": 32,
+        "memory_IS_DIV": 1,
+        "memory_arbitration_isValid": 1,
+        "memory_arbitration_isStuck": 1,
+        "memory_DivPlugin_div_result": 32,
+        "memory_DivPlugin_div_done": 1
+      },
+      "results": [
+        {
+          "operation": "div",
+          "status": "proved",
+          "reason": null,
+          "wall_s": 56.207
+        },
+        {
+          "operation": "divu",
+          "status": "proved",
+          "reason": null,
+          "wall_s": 44.8
+        },
+        {
+          "operation": "rem",
+          "status": "proved",
+          "reason": null,
+          "wall_s": 52.462
+        },
+        {
+          "operation": "remu",
+          "status": "proved",
+          "reason": null,
+          "wall_s": 59.284
+        }
+      ]
+    },
+    {
+      "rtl_sha256": "1a791f8d828a42b774181017108324ef23675253056effdb53c405b695f33415",
+      "fresh_elaboration": false,
+      "divisor": "full",
+      "scope": "isolated real plugin; fixed opcode; stable operands; first transaction; stage validity and stall supplied by the adapter",
+      "boundary": {
+        "clk": 1,
+        "reset": 1,
+        "execute_RS1": 32,
+        "execute_RS2": 32,
+        "execute_INSTRUCTION": 32,
+        "execute_IS_RS1_SIGNED": 1,
+        "execute_IS_RS2_SIGNED": 1,
+        "execute_IS_DIV": 1,
+        "memory_INSTRUCTION": 32,
+        "memory_IS_DIV": 1,
+        "memory_arbitration_isValid": 1,
+        "memory_arbitration_isStuck": 1,
+        "memory_DivPlugin_div_result": 32,
+        "memory_DivPlugin_div_done": 1
+      },
+      "results": [
+        {
+          "operation": "div",
+          "status": "inconclusive",
+          "reason": "cbmc timed out",
+          "wall_s": 90.522
+        },
+        {
+          "operation": "divu",
+          "status": "inconclusive",
+          "reason": "cbmc timed out",
+          "wall_s": 90.211
+        },
+        {
+          "operation": "rem",
+          "status": "inconclusive",
+          "reason": "cbmc timed out",
+          "wall_s": 90.196
+        },
+        {
+          "operation": "remu",
+          "status": "inconclusive",
+          "reason": "cbmc timed out",
+          "wall_s": 90.21
+        }
+      ]
+    }
+  ]
+}
