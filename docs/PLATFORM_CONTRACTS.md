@@ -1352,6 +1352,16 @@ The BOOM sources come from `SPINAL_BOOM` (default `../spinal-boom-eda`, a privat
 ELFs may be read from `../spinal-boom/tests/vm/build`, `../ref/riscv-tests/build/isa`,
 `../ref/act4/work/boom-rv64gc/elfs`; benchmark ELFs come from `rvw arch build` (`examples/boom/out/arch/bench`).
 
+## UVM register sequence diagnostics
+
+The generated `rvw.soc/1` register model can use `rvw_ral_pkg` normalized
+transfers. A transfer starts with `UVM_NOT_OK`. The project bus driver must
+set completion status. An explicit predictor consumes bus observations;
+auto-prediction must be disabled when that predictor is connected.
+`UNSUPPORTED_RAL_BACKDOOR` refuses standard access tests without a configured
+backdoor. The caller resets hardware before the standard reset sequence.
+This register fixture evidence does not establish peripheral or CPU behavior.
+
 ## C9. Native architecture models
 
 These reports measure model performance. They do not produce C4 gate verdicts

@@ -200,3 +200,12 @@ ordered scoreboard, bounded CPU memory model, retirement comparator wrapper and
 RAL frontdoor/backdoor adapters. The native RTL memory fixture checks eight
 transactions and all declared operation/address bins. CPU reference connections
 and project-specific instruction, interrupt and debug agents remain required.
+
+## Reusable register adapters and standard sequences
+
+See [base register support](base/README.md) for normalized transfers, the
+frontdoor adapter, explicit predictor and standard reset, bit-bash and access
+sequences. The [RAL fixture](examples/ral/top.sv) exercises generated models
+with these components. It uses a fixture backdoor. It does not qualify a
+physical peripheral. The standard access sequence reports
+`UNSUPPORTED_RAL_BACKDOOR` if a register has no configured backdoor.
