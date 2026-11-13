@@ -860,6 +860,18 @@ pointer cases. See `examples/mmu/pointer.json`. These run through the same
 build, reference, C1 suite and coverage paths. Keep each extension campaign
 outside default tiers until the selected project declares it supported.
 
+The `examples/mmu/random.json` campaign creates deterministic multi-page
+programs from selected modes and seeds. It mixes loads, stores, invalid PTEs
+and permission faults. Each program checks values, exact fault cause/tval/PC
+and final physical data. Build and run these ELFs through the existing C1
+suite adapter. Limits are 64 pages and 128 accesses per program.
+
+Every MMU build emits `functional-groups.json`. Pass it to `rvw cov functional`
+with the C2 traces. Groups consume actual walk/protocol/IOMMU captures,
+hypervisor translations and pointer CSR snapshots. C2/2 multi-hart histories
+are separate per hart and epoch. Missing captures produce holes. Observation
+hits do not imply architectural correctness or DUT qualification.
+
 `rvw regress mmu iommu --generate --seed 1 --mode sv39` emits a decoded
 IOMMU scenario description. Save stdout as a project file. Run `rvw regress
 mmu iommu DESCRIPTION` to inspect reference expectations. It remains

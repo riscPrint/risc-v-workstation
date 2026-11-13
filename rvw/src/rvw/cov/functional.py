@@ -128,7 +128,8 @@ def observations(row, xlen, previous, aligned_mem=None):
         else:
             # C.BEQZ/C.BNEZ consume RVFI rs1_rdata; target may equal fall-through.
             obs['branch_taken'] = (number(row['rs1_rdata']) == 0) == (info['mnemonic'] == 'c.beqz')
-    output = [obs]
+    from rvw.regress.mmu_cov import observations as mmu_observations
+    output = [obs, *mmu_observations(row)]
     for access, mask_name in [('read', 'mem_rmask'), ('write', 'mem_wmask')]:
         mask = number(row.get(mask_name, 0))
         if not mask:
@@ -233,7 +234,7 @@ def functional(paths, config=None, platform=None, manifest=None, source_root=Non
             continue
         with path.open() as stream:
             first = json.loads(next(stream))
-            if first.get('schema') != 'rvw.rvfi/1' or first.get('xlen') not in (32, 64):
+            if first.get('schema') not in ('rvw.rvfi/1', 'rvw.rvfi/2') or first.get('xlen') not in (32, 64):
                 raise ValueError(f'{path}: expected C2 RVFI header with xlen 32 or 64')
             if manifest and (first['isa'] != config['isa_plan']['manifest']['isa']
                              or first['xlen'] != int(config['isa_plan']['manifest']['isa'][2:4])):
@@ -259,8 +260,17 @@ def functional(paths, config=None, platform=None, manifest=None, source_root=Non
             history = []
             from .semantic import Observer
             semantic = Observer()
+            hart_contexts = {}
             for line_no, line in enumerate(stream, 2):
                 row = json.loads(line)
+                hart_key = None
+                if first.get('harts') and row.get('event') not in ('external', 'end'):
+                    if row.get('hart') not in first['harts'] or type(row.get('epoch')) is not int:
+                        raise ValueError('multi-hart coverage requires declared hart and epoch')
+                    hart_key = row['hart'], row['epoch']
+                    previous, order, history, semantic = hart_contexts.get(hart_key, (None, -1, [], Observer()))
+                    if 'event' not in row:
+                        row['order'] = number(row['order'])
                 if 'event' not in row:
                     if row['order'] <= order:
                         raise ValueError(f'{path}:{line_no}: non-increasing RVFI order')
@@ -269,6 +279,8 @@ def functional(paths, config=None, platform=None, manifest=None, source_root=Non
                         previous = None
                         history.clear()
                         semantic = Observer()
+                        if hart_key is not None:
+                            hart_contexts[hart_key] = (previous, order, history, semantic)
                         continue
                     if region is not None:
                         visits = traces[file_hash]['payload_visits']
@@ -300,6 +312,8 @@ def functional(paths, config=None, platform=None, manifest=None, source_root=Non
                         if matches(obs, condition) and all(f in obs for f in group['fields']):
                             key = json.dumps([obs[f] for f in group['fields']], separators=(',', ':'))
                             counters[group['name']][key] += 1
+                if hart_key is not None:
+                    hart_contexts[hart_key] = (previous, order, history, semantic)
     result = {}
     for group in groups:
         counter = counters[group['name']]

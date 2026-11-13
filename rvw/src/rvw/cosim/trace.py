@@ -166,6 +166,9 @@ class Trace:
                     if not isinstance(snapshots, dict) or set(snapshots) != set(self.header.get("csr_snapshot", [])):
                         raise ValueError("csr_state must contain exactly the declared snapshot addresses")
                     obj["csr_state"] = {k: hexnum(v, xlen) for k, v in snapshots.items()}
+                for capture_kind in ('mmu_protocol', 'iommu'):
+                    if capture_kind in obj and ('event' in obj or not isinstance(obj[capture_kind], list) or any(not isinstance(e, dict) for e in obj[capture_kind])):
+                        raise ValueError('MMU capture fields require retirement lists of records')
                 if "mmu_walks" in obj:
                     if "event" in obj or not isinstance(obj["mmu_walks"], list):
                         raise ValueError("mmu_walks requires a retirement and a list")

@@ -3414,6 +3414,32 @@ level-zero RV64 mapping. The Spike reference uses `-p2`. The C1 project must
 select an adapter configuration with two harts. Request, acknowledgement and
 completion use RAM mailboxes and explicit memory fences. No IPI is implied.
 Neither option supports the independent immutable-walk checker yet.
+### Random MMU programs and functional groups
+
+`rvw.mmu/1` may contain `random` with selected `modes`, integer `seeds`, `pages`
+and `accesses`. Pages are bounded to 1..64. Accesses are bounded to 1..128.
+Each seed creates one program with multiple random mappings and load/store
+accesses. PTEs select read/write, read-only, invalid or reserved level-zero
+entries. Programs check each load, each exact trap cause/tval/PC and all final
+physical data values. A/D bits are preset. Every access restores MPP before
+MPRV so a prior trap cannot change the effective privilege. These are bounded
+random programs, not exhaustive VM verification. The same ELF-dir C1 adapter
+suites run them. `random_program` in expanded scenarios records seed and bounds.
+
+MMU builds also write `functional-groups.json` for `rvw cov functional`.
+Groups cross paging mode/access/result, levels/faults, PTE permissions,
+translation protocols, harts, VS/G modes, pointer controls and IOMMU contexts,
+stages and queues. C2 retirements may carry `mmu_protocol` and `iommu` lists
+of captured dictionaries. Protocol records use `kind` and optional `hart`.
+IOMMU records use `device`, `process`, `result`, `stage`, `access`, `queue`
+and `operation` as applicable. Missing fields do not hit the affected group.
+The coverage engine also consumes `mmu_walks`, hypervisor translations and
+pointer CSR snapshots. C2/2 multi-hart traces keep separate dependency and
+sequence histories for each hart and reset epoch. Coverage hits are capture
+observations. They do not prove correctness or fill MMU architectural bins.
+Missing captures remain holes. Hardware support and reachability are not
+inferred from the declared domains.
+
 ### Decoded IOMMU scenarios
 
 `rvw regress mmu iommu --generate --seed N --mode MODE` emits
