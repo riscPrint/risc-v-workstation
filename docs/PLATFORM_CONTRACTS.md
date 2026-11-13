@@ -4063,3 +4063,12 @@ Optional database binding emits `rvw.channel-bindings/1` beside the generated
 SVA. It contains `bindings`, `input_capture` and `db_warnings`. Domain anchors,
 clock/reset ports and widths resolve from SpinalDB. Ambiguous or mixed domains
 are refused. A database warning is not a current-RTL match or timing result.
+### EBMC native AIGER input
+
+For an AIGER source, the EBMC adapter gives the original hash-checked `.aig`
+bytes to EBMC's native reader. It does not pass a top-module override. EBMC
+uses its own `aiger::main` transition system. The engine row records
+`input_format: aiger_native`. Yosys's separate safety inventory still uses the
+captured Verilog translation. `source_transforms` describes that preparation
+translation; it is not EBMC's verification input. The importer rejects justice,
+fairness and mixed ordinary-output/bad-state models before native execution.
