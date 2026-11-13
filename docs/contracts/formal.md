@@ -1134,3 +1134,22 @@ or twice the current limit when larger. A starting one-minute load above 20
 also requests a lower-load retry with at most two engines. These are retry
 settings, not measured defaults. A timeout alone cannot distinguish host
 contention from a solver capacity limit. No proof or bound is added.
+
+## Retained timeout replay
+
+`python -m rvw.formal.timeout_rerun PLAN --out OUT --time-limit 30m`
+selects timeout checks from prior receipts. A plan has `cores` rows with
+`name`, `previous` and `jobs`; optional JSON pointer and job path overrides
+select nested reports or named SBY tasks. The bundled plan is
+`examples/formal/isa-timeouts.json`. The replay preserves source bytes,
+mode and depth. It uses up to two SBY engines per check in sequence.
+It records prior-receipt, job, input and condition-model hashes.
+
+`rvw.formal-timeout-rerun/1` retains per-check depth, native status, first
+engine, elapsed time, limit, starting and ending load and source assumptions.
+It writes `comparison.md` after each attempted check. `closed_after_retry`
+does not establish load causation or whole-core signoff. `still_unresolved`
+does not establish an absolute capacity limit. Missing receipts and jobs
+remain explicit errors. Native passes require a recorded nonempty property
+set. Cover success requires a witness. The overall verdict remains
+inconclusive. A native counterexample returns exit 1; other results return 3.

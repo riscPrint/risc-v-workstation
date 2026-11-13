@@ -1,0 +1,54 @@
+{
+  "cores": [
+    {
+      "name": "VexRiscv restricted FormalSimple",
+      "previous": "../vexriscv/formal/portfolio-results.json",
+      "jobs": "${RUN_ROOT}/vex-portfolio",
+      "job_pattern": "{check}/{check}/rtlil-retry/abc_pdr/problem.sby"
+    },
+    {
+      "name": "VexRiscv machine checks depth 25",
+      "previous": "../vexriscv/formal/machine-remaining-results.json",
+      "previous_pointer": "/rows",
+      "checks": {
+        "csr_consistency": {"sby": "${RUN_ROOT}/machine-remaining/csr_consistency/csr_consistency/check.sby", "task": "check"},
+        "instruction_memory": {"sby": "${RUN_ROOT}/machine-remaining/instruction_memory/instruction_memory/check.sby", "task": "check"}
+      }
+    },
+    {
+      "name": "VexRiscv Sail M depth 60",
+      "previous": "${RUN_ROOT}/vex-sail-m-v1/result.json",
+      "jobs": "${RUN_ROOT}/vex-sail-m-v1",
+      "job_pattern": "{instruction}/riscv-formal/cores/project/checks/{check}.sby"
+    },
+    {
+      "name": "VexRiscv Sail multiply depth 20",
+      "previous": "${RUN_ROOT}/vex-sail-m-short-v2/result.json",
+      "jobs": "${RUN_ROOT}/vex-sail-m-short-v2",
+      "job_pattern": "{instruction}/riscv-formal/cores/project/checks/{check}.sby"
+    },
+    {
+      "name": "VexRiscv Sail MUL and MULHU Bitwuzla depth 20",
+      "previous": "${RUN_ROOT}/vex-sail-m-smt-v1/result.json",
+      "jobs": "${RUN_ROOT}/vex-sail-m-smt-v1",
+      "job_pattern": "{instruction}/riscv-formal/cores/project/checks/{check}.sby"
+    },
+    {
+      "name": "VexiiRiscv observer diagnostic",
+      "previous": "../vexiiriscv/formal/observer-results.json",
+      "previous_pointer": "/isa",
+      "jobs": "${RUN_ROOT}/vexii-checks/isa/bounded/riscv-formal/cores/project/checks"
+    },
+    {
+      "name": "ooo-mini",
+      "previous": "../ooo-mini/formal-results.json",
+      "previous_pointer": "/isa",
+      "jobs": "${RUN_ROOT}/ooo-isa/bounded/riscv-formal/cores/project/checks"
+    },
+    {
+      "name": "PicoRV32 state-map suite",
+      "previous": "../picorv32/formal/suite-results.json",
+      "jobs": "${RUN_ROOT}/pico-state"
+    }
+  ]
+}

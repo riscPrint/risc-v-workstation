@@ -3109,6 +3109,11 @@ The table lists missing property classes and witness-reconstruction failures.
 
 ## ISA kit signoff table
 
+Use the [retained timeout replay](timeout-rerun.md) for a later 30-minute
+comparison on an idle machine. It selects the prior timeout checks, preserves
+their captured model and writes the engine, time, depth and load table.
+The idle-machine capacity table is NOT yet measured.
+
 Timeout rows now show elapsed seconds, the time limit, the starting host load
 and the next setting to try. Native engine rows retain the ending load too.
 Use `--timeout 1800` for a 30-minute retry at the same depth. A high-load
