@@ -63,3 +63,11 @@ incomplete observations are errors. Source identity remains incomplete.
 `cpu_required=False` for a bus-master bench. That profile accepts only
 `finish(0)` and emits `cpu_checks=0`. Bus and UART checks remain required.
 It must not be presented as CPU execution evidence.
+
+## Database-selected bench profile scaffolds
+
+`uvm new` accepts `language=pyuvm|sv` and a database bus `profile`.
+Auto selection requires one recognized top-level bus. Output includes its
+port inventory, clock domains and project scenario hook. Profile generation
+is structural evidence only. Unbound and empty scenarios must fail. The
+default single-APB pyuvm path retains its automatic reset-read bench.
