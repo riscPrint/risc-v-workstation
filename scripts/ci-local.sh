@@ -3,7 +3,7 @@
 set -euo pipefail
 if [ "${1:-}" = --tier ]; then shift; fi
 mode="${1:-fast}"
-case "$mode" in fast|native-light|examples|nightly|javascript|rust|nightly-python|nightly-scala|messages) ;; *) echo "usage: $0 [fast|nightly-python|nightly-scala|messages]" >&2; exit 2 ;; esac
+case "$mode" in fast|native-light|examples|nightly|javascript|rust|nightly-python|nightly-scala|messages) ;; *) echo "usage: $0 --tier fast|native-light|examples|nightly" >&2; exit 2 ;; esac
 root="$(cd "$(dirname "$0")/.." && pwd)"
 # Commit policy needs only the standard library and the event's Git history.
 if [ "$mode" = messages ]; then
@@ -13,6 +13,13 @@ job="$(mktemp -d "${TMPDIR:-/tmp}/rvw-ci.XXXXXXXX")"
 cleanup() {
   status=$?
   trap - EXIT
+  if [ -n "${GITHUB_STEP_SUMMARY:-}" ]; then
+    printf '\nLocal CI %s: exit %s.\n' "$mode" "$status" >> "$GITHUB_STEP_SUMMARY"
+  fi
+  # Keep reports outside the disposable tree, including reports from failed jobs.
+  if [ -d "$job/work" ]; then
+    "${CI_PYTHON:-python3.11}" "$root/scripts/ci-copy-reports.py" "$job/work" "${CI_REPORT_DIR:-$root/rvw/out/ci}" || true
+  fi
   # Tests publish read-only result generations. Restore owner access in this
   # job's private directory before removal. Do not follow directory symlinks.
   chmod -R -P u+rwX "$job"
@@ -95,6 +102,16 @@ case "$mode" in
     ;;
   rust)
     (cd SpinalTrace; "$RVW_CI_WORK/scripts/with-lock.sh" suite nice -n 10 cargo test --locked -p spinaltrace-rs)
+    ;;
+  native-light|examples|nightly)
+    if [ "$mode" = nightly ] && [ -z "${CI_COMPONENT:-}" ]; then
+      status=0
+      for component in python scala rust javascript components vip; do
+        python scripts/ci-tiers.py --tier nightly --component "$component" || status=1
+      done
+      exit "$status"
+    fi
+    python scripts/ci-tiers.py --tier "$mode" --component "${CI_COMPONENT:-python}"
     ;;
   nightly-python)
     python scripts/ci-tiers.py --tier nightly --component python

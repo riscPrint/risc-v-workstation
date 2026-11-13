@@ -100,6 +100,7 @@ def test_ci_cleanup_removes_readonly_results_and_keeps_status(tmp_path, exit_cod
 
     prefix = (REPO / 'scripts/ci-local.sh').read_text().split(
         'export RVW_CI_SOURCE=', 1)[0]
+    prefix = prefix.replace('root="$(cd "$(dirname "$0")/.." && pwd)"', 'root=' + str(REPO))
     command = prefix + f"""
 mkdir -p "$job/results/generation"
 printf result > "$job/results/generation/result.json"
@@ -119,3 +120,41 @@ def test_messages_bypass_dependency_install():
     assert 'uv lock --check --project rvw' in text
     nightly = text.split('  nightly-python)')[1].split('    ;;')[0]
     assert '--component python' in nightly
+
+
+def test_all_local_nightly_components_run():
+    text = (REPO / 'scripts/ci-local.sh').read_text()
+    assert 'for component in python scala rust javascript components vip' in text
+    assert 'scripts/ci-copy-reports.py' in text
+    assert 'nice -n 10' in text
+
+
+def test_failed_job_reports_survive_cleanup(tmp_path):
+    import runpy
+    copy = runpy.run_path(str(REPO / 'scripts/ci-copy-reports.py'))['copy_reports']
+    source = tmp_path / 'work'
+    source.mkdir()
+    (source / 'ci-results.xml').write_text('<testsuite tests="1" failures="1"/>')
+    destination = tmp_path / 'reports'
+    assert copy(source, destination) == 1
+    assert (destination / 'ci-results.xml').read_text() == '<testsuite tests="1" failures="1"/>'
+
+
+def test_all_tiers_have_execution_cases():
+    text = (REPO / 'scripts/ci-local.sh').read_text().split('case "$mode" in')[-1]
+    assert 'native-light|examples|nightly)' in text
+    assert 'python scripts/ci-tiers.py --tier "$mode"' in text
+
+
+@pytest.mark.parametrize('tier,count', [('native-light', 1), ('examples', 1), ('nightly', 6)])
+def test_local_tier_dispatch_without_running_tools(tier, count):
+    import os
+    import subprocess
+    text = (REPO / 'scripts/ci-local.sh').read_text()
+    dispatch = 'case "$mode" in' + text.split('case "$mode" in')[-1]
+    shell = 'python() { printf "CALLED %s\\n" "$*"; }; mode=' + tier + '\n' + dispatch
+    env = {k: v for k, v in os.environ.items() if k != 'CI_COMPONENT'}
+    result = subprocess.run(['bash', '-c', shell], env=env, text=True, capture_output=True)
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.count('CALLED ') == count
+    assert '--tier ' + tier in result.stdout
