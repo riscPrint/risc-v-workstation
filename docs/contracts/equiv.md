@@ -314,3 +314,17 @@ The checked-in `rvw.hardfloat-evidence/1` ledger aggregates run receipts and the
 input/tool hashes. Repeated or overlapping contracts remain separate runs. Run
 counts are not input coverage, whole-FPU qualification or ISA proof. A case pass
 applies only to its recorded format, inputs, rounding mode and transaction bound.
+
+## Bounded IFT policies and persistent state sources
+
+The `rvw.secure-path/1` result records `proof_kind` as `bounded` or `unbounded`.
+A bounded result records `depth` in 1..128. An unbounded result records null.
+Policies default to `mode: prove`. Mode `bmc` selects bounded checking.
+
+The optional `internal_sources` list names synchronous register Q nets in the
+mapped DUT. Their shadow value is one on every sample. Their original value and
+next-state logic do not change. This is persistent state secrecy, not a one-time
+injection or erasure model. At least one input or internal source is required.
+The optional Boolean `memory_map` lowers finite memories exactly before IFT.
+A nonempty `source_regions` field is refused because response/address alignment
+is not modeled. Mapping and proof share the declared total timeout.

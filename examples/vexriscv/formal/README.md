@@ -40,6 +40,14 @@ apply only to this exact observation contract. The initialization case compares
 raw fetch PC even when fetch-valid is low.
 
 CSR source injection, region-specific policies, internal taint instrumentation,
-PMP/ePMP isolation, instruction coverage and long bounds remain open. The bundled
-VexRiscv adapter has no PMP. VexiiRiscv PMP proofs were not run. These controls do
+PMP/ePMP isolation, instruction coverage and long bounds remain open. The original captured
+VexRiscv configuration has no PMP. A later optional PMP variant is recorded
+in `NATIVE_SECURITY.md`. VexiiRiscv PMP proofs were not run. These controls do
 not establish digital noninterference, ISA correctness or physical security.
+
+## Fresh exports and CSR sources
+
+See [the continuation results](NATIVE_SECURITY.md) for fresh RV32IM and PMP
+exports. The new script accepts `--csr-source CsrPlugin_mscratch` and defaults
+to bounded IFT at `--depth`. Use `--ift-mode prove` for unbounded IFT.
+The older results above remain historical attempts.

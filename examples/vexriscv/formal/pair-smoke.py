@@ -14,6 +14,8 @@ def main():
     p.add_argument('--out',type=Path,required=True)
     p.add_argument('--depth',type=int,default=8)
     p.add_argument('--timeout',type=float,default=90)
+    p.add_argument('--csr-source',action='append',default=[])
+    p.add_argument('--ift-mode',choices=['bmc','prove'],default='bmc')
     a=p.parse_args()
     root=Path(__file__).resolve().parents[3]
     out=a.out.resolve();out.mkdir(parents=True,exist_ok=False)
@@ -52,6 +54,7 @@ def main():
             'reason':record.get('reason'),'exit':result.returncode})
         (out/'summary.json').write_text(json.dumps(summary,indent=2)+'\n')
     policy={'clock':'clk','reset':'reset','sources':['dBus_rsp_data'],
+            'internal_sources':a.csr_source,'memory_map':True,'mode':a.ift_mode,'depth':a.depth,
             'sinks':['iBus_cmd_valid','dBus_cmd_valid'], 'kind':'secure_path',
             'adversary':common['adversary'],'unmodeled_channels':common['unmodeled_channels']}
     (out/'ift-policy.json').write_text(json.dumps(policy,indent=2)+'\n')
@@ -60,7 +63,7 @@ def main():
                     '--out',str(out/'ift'),'--timeout',str(a.timeout)],'ift.log',a.timeout+10)
     record=json.loads((out/'ift/result.json').read_text()) if (out/'ift/result.json').exists() else {}
     summary['cases'].append({'name':'ift','status':record.get('status','inconclusive'),
-                            'reason':record.get('reason'),'exit':result.returncode})
+                            'reason':record.get('reason'),'proof_kind':record.get('proof_kind'),'depth':record.get('depth'),'exit':result.returncode})
     (out/'summary.json').write_text(json.dumps(summary,indent=2)+'\n')
     print(json.dumps(summary,indent=2))
 

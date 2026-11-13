@@ -1,0 +1,1090 @@
+{
+  "schema": "rvw.real-security-runs/1",
+  "source_revision": "a62c145aa042a5de874344e0a7683bd7c8c8c870",
+  "adapter_revision": "7023cb9686bb238fe31801c32e76d1b643999363",
+  "export": "rvwvex.SecRtl; rv32im and rv32imu-pmp; private source copy; sbt-equiv; nice -n 10",
+  "depth": 8,
+  "timeout_per_check": 90,
+  "results": {
+    "rv32im": {
+      "rtl_sha256": "917ec686b4ada9df0218155e84fb9305caa38ff22f8cdf28d2f4733dc8b05f73",
+      "fresh_elaboration": true,
+      "scope": "supplied real core RTL export; no source revision certification",
+      "cases": [
+        {
+          "name": "memory-observation",
+          "status": "fail",
+          "proof_kind": "bounded",
+          "depth": 8,
+          "reason": null,
+          "exit": 1
+        },
+        {
+          "name": "initialization",
+          "status": "fail",
+          "proof_kind": "bounded",
+          "depth": 8,
+          "reason": null,
+          "exit": 1
+        },
+        {
+          "name": "ift",
+          "status": "inconclusive",
+          "reason": "proof did not complete; see proof.log",
+          "proof_kind": "bounded",
+          "depth": 8,
+          "exit": 1
+        }
+      ],
+      "checks": {
+        "memory-observation": {
+          "schema": "rvw.security-pair/1",
+          "status": "fail",
+          "proof_kind": "bounded",
+          "depth": 8,
+          "rtl_sha256": "917ec686b4ada9df0218155e84fb9305caa38ff22f8cdf28d2f4733dc8b05f73",
+          "plan": {
+            "schema": "rvw.security-pair/1",
+            "rtl": "VexTop.v",
+            "top": "VexTop",
+            "clock": "clk",
+            "reset": "reset",
+            "mode": "bmc",
+            "depth": 8,
+            "ports": {
+              "iBus_cmd_valid": {
+                "direction": "output",
+                "width": 1
+              },
+              "iBus_cmd_ready": {
+                "direction": "input",
+                "width": 1
+              },
+              "iBus_cmd_payload_pc": {
+                "direction": "output",
+                "width": 32
+              },
+              "iBus_rsp_valid": {
+                "direction": "input",
+                "width": 1
+              },
+              "iBus_rsp_payload_error": {
+                "direction": "input",
+                "width": 1
+              },
+              "iBus_rsp_payload_inst": {
+                "direction": "input",
+                "width": 32
+              },
+              "timerInterrupt": {
+                "direction": "input",
+                "width": 1
+              },
+              "externalInterrupt": {
+                "direction": "input",
+                "width": 1
+              },
+              "softwareInterrupt": {
+                "direction": "input",
+                "width": 1
+              },
+              "rvfi_valid": {
+                "direction": "output",
+                "width": 1
+              },
+              "rvfi_order": {
+                "direction": "output",
+                "width": 64
+              },
+              "rvfi_insn": {
+                "direction": "output",
+                "width": 32
+              },
+              "rvfi_trap": {
+                "direction": "output",
+                "width": 1
+              },
+              "rvfi_halt": {
+                "direction": "output",
+                "width": 1
+              },
+              "rvfi_intr": {
+                "direction": "output",
+                "width": 1
+              },
+              "rvfi_mode": {
+                "direction": "output",
+                "width": 2
+              },
+              "rvfi_ixl": {
+                "direction": "output",
+                "width": 2
+              },
+              "rvfi_rs1_addr": {
+                "direction": "output",
+                "width": 5
+              },
+              "rvfi_rs1_rdata": {
+                "direction": "output",
+                "width": 32
+              },
+              "rvfi_rs2_addr": {
+                "direction": "output",
+                "width": 5
+              },
+              "rvfi_rs2_rdata": {
+                "direction": "output",
+                "width": 32
+              },
+              "rvfi_rd_addr": {
+                "direction": "output",
+                "width": 5
+              },
+              "rvfi_rd_wdata": {
+                "direction": "output",
+                "width": 32
+              },
+              "rvfi_pc_rdata": {
+                "direction": "output",
+                "width": 32
+              },
+              "rvfi_pc_wdata": {
+                "direction": "output",
+                "width": 32
+              },
+              "rvfi_mem_addr": {
+                "direction": "output",
+                "width": 32
+              },
+              "rvfi_mem_rmask": {
+                "direction": "output",
+                "width": 4
+              },
+              "rvfi_mem_wmask": {
+                "direction": "output",
+                "width": 4
+              },
+              "rvfi_mem_rdata": {
+                "direction": "output",
+                "width": 32
+              },
+              "rvfi_mem_wdata": {
+                "direction": "output",
+                "width": 32
+              },
+              "dBus_cmd_valid": {
+                "direction": "output",
+                "width": 1
+              },
+              "dBus_cmd_ready": {
+                "direction": "input",
+                "width": 1
+              },
+              "dBus_cmd_payload_wr": {
+                "direction": "output",
+                "width": 1
+              },
+              "dBus_cmd_payload_mask": {
+                "direction": "output",
+                "width": 4
+              },
+              "dBus_cmd_payload_address": {
+                "direction": "output",
+                "width": 32
+              },
+              "dBus_cmd_payload_data": {
+                "direction": "output",
+                "width": 32
+              },
+              "dBus_cmd_payload_size": {
+                "direction": "output",
+                "width": 2
+              },
+              "dBus_rsp_ready": {
+                "direction": "input",
+                "width": 1
+              },
+              "dBus_rsp_error": {
+                "direction": "input",
+                "width": 1
+              },
+              "dBus_rsp_data": {
+                "direction": "input",
+                "width": 32
+              },
+              "trap_valid": {
+                "direction": "output",
+                "width": 1
+              },
+              "snapshot_mscratch": {
+                "direction": "output",
+                "width": 32
+              },
+              "trap_cause": {
+                "direction": "output",
+                "width": 32
+              },
+              "trap_tval": {
+                "direction": "output",
+                "width": 32
+              },
+              "clk": {
+                "direction": "input",
+                "width": 1
+              },
+              "reset": {
+                "direction": "input",
+                "width": 1
+              }
+            },
+            "adversary": "controls shared instruction and bus responses; no bus protocol assumptions",
+            "unmodeled_channels": [
+              "analog",
+              "power",
+              "debug",
+              "DMA",
+              "CSR secret injection",
+              "region-specific memory secrecy"
+            ],
+            "kind": "noninterference",
+            "secrets": [
+              "dBus_rsp_data"
+            ],
+            "architectural": [
+              "rvfi_pc_rdata",
+              "rvfi_rd_wdata"
+            ],
+            "observations": [
+              "iBus_cmd_valid",
+              "dBus_cmd_valid"
+            ]
+          },
+          "failures": [
+            {
+              "property": "rvw_formal_top.dut._witness_.check_assert__HOME_fun_saviour_wt__vex_equiv_security_base_resume_1113_memory_observation_proof_inputs_frontend_1_pair_sv_74_1123",
+              "location": "pair.sv:74",
+              "step": 6,
+              "cycle": 5,
+              "module": "rvw_security_pair",
+              "check": null,
+              "kind": null,
+              "source": null
+            }
+          ],
+          "traces": [
+            "sby/engine_0/trace.vcd"
+          ]
+        },
+        "initialization": {
+          "schema": "rvw.security-pair/1",
+          "status": "fail",
+          "proof_kind": "bounded",
+          "depth": 8,
+          "rtl_sha256": "917ec686b4ada9df0218155e84fb9305caa38ff22f8cdf28d2f4733dc8b05f73",
+          "plan": {
+            "schema": "rvw.security-pair/1",
+            "rtl": "VexTop.v",
+            "top": "VexTop",
+            "clock": "clk",
+            "reset": "reset",
+            "mode": "bmc",
+            "depth": 8,
+            "ports": {
+              "iBus_cmd_valid": {
+                "direction": "output",
+                "width": 1
+              },
+              "iBus_cmd_ready": {
+                "direction": "input",
+                "width": 1
+              },
+              "iBus_cmd_payload_pc": {
+                "direction": "output",
+                "width": 32
+              },
+              "iBus_rsp_valid": {
+                "direction": "input",
+                "width": 1
+              },
+              "iBus_rsp_payload_error": {
+                "direction": "input",
+                "width": 1
+              },
+              "iBus_rsp_payload_inst": {
+                "direction": "input",
+                "width": 32
+              },
+              "timerInterrupt": {
+                "direction": "input",
+                "width": 1
+              },
+              "externalInterrupt": {
+                "direction": "input",
+                "width": 1
+              },
+              "softwareInterrupt": {
+                "direction": "input",
+                "width": 1
+              },
+              "rvfi_valid": {
+                "direction": "output",
+                "width": 1
+              },
+              "rvfi_order": {
+                "direction": "output",
+                "width": 64
+              },
+              "rvfi_insn": {
+                "direction": "output",
+                "width": 32
+              },
+              "rvfi_trap": {
+                "direction": "output",
+                "width": 1
+              },
+              "rvfi_halt": {
+                "direction": "output",
+                "width": 1
+              },
+              "rvfi_intr": {
+                "direction": "output",
+                "width": 1
+              },
+              "rvfi_mode": {
+                "direction": "output",
+                "width": 2
+              },
+              "rvfi_ixl": {
+                "direction": "output",
+                "width": 2
+              },
+              "rvfi_rs1_addr": {
+                "direction": "output",
+                "width": 5
+              },
+              "rvfi_rs1_rdata": {
+                "direction": "output",
+                "width": 32
+              },
+              "rvfi_rs2_addr": {
+                "direction": "output",
+                "width": 5
+              },
+              "rvfi_rs2_rdata": {
+                "direction": "output",
+                "width": 32
+              },
+              "rvfi_rd_addr": {
+                "direction": "output",
+                "width": 5
+              },
+              "rvfi_rd_wdata": {
+                "direction": "output",
+                "width": 32
+              },
+              "rvfi_pc_rdata": {
+                "direction": "output",
+                "width": 32
+              },
+              "rvfi_pc_wdata": {
+                "direction": "output",
+                "width": 32
+              },
+              "rvfi_mem_addr": {
+                "direction": "output",
+                "width": 32
+              },
+              "rvfi_mem_rmask": {
+                "direction": "output",
+                "width": 4
+              },
+              "rvfi_mem_wmask": {
+                "direction": "output",
+                "width": 4
+              },
+              "rvfi_mem_rdata": {
+                "direction": "output",
+                "width": 32
+              },
+              "rvfi_mem_wdata": {
+                "direction": "output",
+                "width": 32
+              },
+              "dBus_cmd_valid": {
+                "direction": "output",
+                "width": 1
+              },
+              "dBus_cmd_ready": {
+                "direction": "input",
+                "width": 1
+              },
+              "dBus_cmd_payload_wr": {
+                "direction": "output",
+                "width": 1
+              },
+              "dBus_cmd_payload_mask": {
+                "direction": "output",
+                "width": 4
+              },
+              "dBus_cmd_payload_address": {
+                "direction": "output",
+                "width": 32
+              },
+              "dBus_cmd_payload_data": {
+                "direction": "output",
+                "width": 32
+              },
+              "dBus_cmd_payload_size": {
+                "direction": "output",
+                "width": 2
+              },
+              "dBus_rsp_ready": {
+                "direction": "input",
+                "width": 1
+              },
+              "dBus_rsp_error": {
+                "direction": "input",
+                "width": 1
+              },
+              "dBus_rsp_data": {
+                "direction": "input",
+                "width": 32
+              },
+              "trap_valid": {
+                "direction": "output",
+                "width": 1
+              },
+              "snapshot_mscratch": {
+                "direction": "output",
+                "width": 32
+              },
+              "trap_cause": {
+                "direction": "output",
+                "width": 32
+              },
+              "trap_tval": {
+                "direction": "output",
+                "width": 32
+              },
+              "clk": {
+                "direction": "input",
+                "width": 1
+              },
+              "reset": {
+                "direction": "input",
+                "width": 1
+              }
+            },
+            "adversary": "controls shared instruction and bus responses; no bus protocol assumptions",
+            "unmodeled_channels": [
+              "analog",
+              "power",
+              "debug",
+              "DMA",
+              "CSR secret injection",
+              "region-specific memory secrecy"
+            ],
+            "kind": "initialization",
+            "secrets": [],
+            "architectural": [],
+            "observations": [
+              "iBus_cmd_valid",
+              "iBus_cmd_payload_pc",
+              "dBus_cmd_valid"
+            ]
+          },
+          "failures": [
+            {
+              "property": "rvw_formal_top.dut._witness_.check_assert__HOME_fun_saviour_wt__vex_equiv_security_base_resume_1113_initialization_proof_inputs_frontend_1_pair_sv_74_1117",
+              "location": "pair.sv:74",
+              "step": 6,
+              "cycle": 5,
+              "module": "rvw_security_pair",
+              "check": null,
+              "kind": null,
+              "source": null
+            }
+          ],
+          "traces": [
+            "sby/engine_0/trace.vcd"
+          ]
+        },
+        "ift": {
+          "schema": "rvw.secure-path/1",
+          "status": "inconclusive",
+          "proof_kind": "bounded",
+          "depth": 8,
+          "reason": "proof did not complete; see proof.log",
+          "rtl_sha256": "917ec686b4ada9df0218155e84fb9305caa38ff22f8cdf28d2f4733dc8b05f73",
+          "policy": {
+            "clock": "clk",
+            "reset": "reset",
+            "sources": [
+              "dBus_rsp_data"
+            ],
+            "internal_sources": [
+              "CsrPlugin_mscratch"
+            ],
+            "memory_map": true,
+            "mode": "bmc",
+            "depth": 8,
+            "sinks": [
+              "iBus_cmd_valid",
+              "dBus_cmd_valid"
+            ],
+            "kind": "secure_path",
+            "adversary": "controls shared instruction and bus responses; no bus protocol assumptions",
+            "unmodeled_channels": [
+              "analog",
+              "power",
+              "debug",
+              "DMA",
+              "CSR secret injection",
+              "region-specific memory secrecy"
+            ]
+          },
+          "failures": [],
+          "traces": []
+        }
+      },
+      "source_certification": "local source and generator pins; no independent reproducibility certification"
+    },
+    "rv32imu-pmp": {
+      "rtl_sha256": "09bd906aab6bcab0f45055918aed6749c475424e2301b31240c61da6e7ea1a2d",
+      "fresh_elaboration": true,
+      "scope": "supplied real core RTL export; no source revision certification",
+      "cases": [
+        {
+          "name": "memory-observation",
+          "status": "inconclusive",
+          "proof_kind": "bounded",
+          "depth": 8,
+          "reason": "RTL mapping failed",
+          "exit": 1
+        },
+        {
+          "name": "initialization",
+          "status": "inconclusive",
+          "proof_kind": "bounded",
+          "depth": 8,
+          "reason": "RTL mapping failed",
+          "exit": 1
+        },
+        {
+          "name": "ift",
+          "status": "inconclusive",
+          "reason": "RTL mapping failed or timed out",
+          "proof_kind": "bounded",
+          "depth": 8,
+          "exit": 1
+        }
+      ],
+      "checks": {
+        "memory-observation": {
+          "schema": "rvw.security-pair/1",
+          "status": "inconclusive",
+          "proof_kind": "bounded",
+          "depth": 8,
+          "reason": "RTL mapping failed",
+          "rtl_sha256": "09bd906aab6bcab0f45055918aed6749c475424e2301b31240c61da6e7ea1a2d",
+          "plan": {
+            "schema": "rvw.security-pair/1",
+            "rtl": "VexTop.v",
+            "top": "VexTop",
+            "clock": "clk",
+            "reset": "reset",
+            "mode": "bmc",
+            "depth": 8,
+            "ports": {
+              "iBus_cmd_valid": {
+                "direction": "output",
+                "width": 1
+              },
+              "iBus_cmd_ready": {
+                "direction": "input",
+                "width": 1
+              },
+              "iBus_cmd_payload_pc": {
+                "direction": "output",
+                "width": 32
+              },
+              "iBus_rsp_valid": {
+                "direction": "input",
+                "width": 1
+              },
+              "iBus_rsp_payload_error": {
+                "direction": "input",
+                "width": 1
+              },
+              "iBus_rsp_payload_inst": {
+                "direction": "input",
+                "width": 32
+              },
+              "timerInterrupt": {
+                "direction": "input",
+                "width": 1
+              },
+              "externalInterrupt": {
+                "direction": "input",
+                "width": 1
+              },
+              "softwareInterrupt": {
+                "direction": "input",
+                "width": 1
+              },
+              "rvfi_valid": {
+                "direction": "output",
+                "width": 1
+              },
+              "rvfi_order": {
+                "direction": "output",
+                "width": 64
+              },
+              "rvfi_insn": {
+                "direction": "output",
+                "width": 32
+              },
+              "rvfi_trap": {
+                "direction": "output",
+                "width": 1
+              },
+              "rvfi_halt": {
+                "direction": "output",
+                "width": 1
+              },
+              "rvfi_intr": {
+                "direction": "output",
+                "width": 1
+              },
+              "rvfi_mode": {
+                "direction": "output",
+                "width": 2
+              },
+              "rvfi_ixl": {
+                "direction": "output",
+                "width": 2
+              },
+              "rvfi_rs1_addr": {
+                "direction": "output",
+                "width": 5
+              },
+              "rvfi_rs1_rdata": {
+                "direction": "output",
+                "width": 32
+              },
+              "rvfi_rs2_addr": {
+                "direction": "output",
+                "width": 5
+              },
+              "rvfi_rs2_rdata": {
+                "direction": "output",
+                "width": 32
+              },
+              "rvfi_rd_addr": {
+                "direction": "output",
+                "width": 5
+              },
+              "rvfi_rd_wdata": {
+                "direction": "output",
+                "width": 32
+              },
+              "rvfi_pc_rdata": {
+                "direction": "output",
+                "width": 32
+              },
+              "rvfi_pc_wdata": {
+                "direction": "output",
+                "width": 32
+              },
+              "rvfi_mem_addr": {
+                "direction": "output",
+                "width": 32
+              },
+              "rvfi_mem_rmask": {
+                "direction": "output",
+                "width": 4
+              },
+              "rvfi_mem_wmask": {
+                "direction": "output",
+                "width": 4
+              },
+              "rvfi_mem_rdata": {
+                "direction": "output",
+                "width": 32
+              },
+              "rvfi_mem_wdata": {
+                "direction": "output",
+                "width": 32
+              },
+              "dBus_cmd_valid": {
+                "direction": "output",
+                "width": 1
+              },
+              "dBus_cmd_ready": {
+                "direction": "input",
+                "width": 1
+              },
+              "dBus_cmd_payload_wr": {
+                "direction": "output",
+                "width": 1
+              },
+              "dBus_cmd_payload_mask": {
+                "direction": "output",
+                "width": 4
+              },
+              "dBus_cmd_payload_address": {
+                "direction": "output",
+                "width": 32
+              },
+              "dBus_cmd_payload_data": {
+                "direction": "output",
+                "width": 32
+              },
+              "dBus_cmd_payload_size": {
+                "direction": "output",
+                "width": 2
+              },
+              "dBus_rsp_ready": {
+                "direction": "input",
+                "width": 1
+              },
+              "dBus_rsp_error": {
+                "direction": "input",
+                "width": 1
+              },
+              "dBus_rsp_data": {
+                "direction": "input",
+                "width": 32
+              },
+              "trap_valid": {
+                "direction": "output",
+                "width": 1
+              },
+              "snapshot_mscratch": {
+                "direction": "output",
+                "width": 32
+              },
+              "trap_cause": {
+                "direction": "output",
+                "width": 32
+              },
+              "trap_tval": {
+                "direction": "output",
+                "width": 32
+              },
+              "clk": {
+                "direction": "input",
+                "width": 1
+              },
+              "reset": {
+                "direction": "input",
+                "width": 1
+              }
+            },
+            "adversary": "controls shared instruction and bus responses; no bus protocol assumptions",
+            "unmodeled_channels": [
+              "analog",
+              "power",
+              "debug",
+              "DMA",
+              "CSR secret injection",
+              "region-specific memory secrecy"
+            ],
+            "kind": "noninterference",
+            "secrets": [
+              "dBus_rsp_data"
+            ],
+            "architectural": [
+              "rvfi_pc_rdata",
+              "rvfi_rd_wdata"
+            ],
+            "observations": [
+              "iBus_cmd_valid",
+              "dBus_cmd_valid"
+            ]
+          },
+          "failures": [],
+          "traces": []
+        },
+        "initialization": {
+          "schema": "rvw.security-pair/1",
+          "status": "inconclusive",
+          "proof_kind": "bounded",
+          "depth": 8,
+          "reason": "RTL mapping failed",
+          "rtl_sha256": "09bd906aab6bcab0f45055918aed6749c475424e2301b31240c61da6e7ea1a2d",
+          "plan": {
+            "schema": "rvw.security-pair/1",
+            "rtl": "VexTop.v",
+            "top": "VexTop",
+            "clock": "clk",
+            "reset": "reset",
+            "mode": "bmc",
+            "depth": 8,
+            "ports": {
+              "iBus_cmd_valid": {
+                "direction": "output",
+                "width": 1
+              },
+              "iBus_cmd_ready": {
+                "direction": "input",
+                "width": 1
+              },
+              "iBus_cmd_payload_pc": {
+                "direction": "output",
+                "width": 32
+              },
+              "iBus_rsp_valid": {
+                "direction": "input",
+                "width": 1
+              },
+              "iBus_rsp_payload_error": {
+                "direction": "input",
+                "width": 1
+              },
+              "iBus_rsp_payload_inst": {
+                "direction": "input",
+                "width": 32
+              },
+              "timerInterrupt": {
+                "direction": "input",
+                "width": 1
+              },
+              "externalInterrupt": {
+                "direction": "input",
+                "width": 1
+              },
+              "softwareInterrupt": {
+                "direction": "input",
+                "width": 1
+              },
+              "rvfi_valid": {
+                "direction": "output",
+                "width": 1
+              },
+              "rvfi_order": {
+                "direction": "output",
+                "width": 64
+              },
+              "rvfi_insn": {
+                "direction": "output",
+                "width": 32
+              },
+              "rvfi_trap": {
+                "direction": "output",
+                "width": 1
+              },
+              "rvfi_halt": {
+                "direction": "output",
+                "width": 1
+              },
+              "rvfi_intr": {
+                "direction": "output",
+                "width": 1
+              },
+              "rvfi_mode": {
+                "direction": "output",
+                "width": 2
+              },
+              "rvfi_ixl": {
+                "direction": "output",
+                "width": 2
+              },
+              "rvfi_rs1_addr": {
+                "direction": "output",
+                "width": 5
+              },
+              "rvfi_rs1_rdata": {
+                "direction": "output",
+                "width": 32
+              },
+              "rvfi_rs2_addr": {
+                "direction": "output",
+                "width": 5
+              },
+              "rvfi_rs2_rdata": {
+                "direction": "output",
+                "width": 32
+              },
+              "rvfi_rd_addr": {
+                "direction": "output",
+                "width": 5
+              },
+              "rvfi_rd_wdata": {
+                "direction": "output",
+                "width": 32
+              },
+              "rvfi_pc_rdata": {
+                "direction": "output",
+                "width": 32
+              },
+              "rvfi_pc_wdata": {
+                "direction": "output",
+                "width": 32
+              },
+              "rvfi_mem_addr": {
+                "direction": "output",
+                "width": 32
+              },
+              "rvfi_mem_rmask": {
+                "direction": "output",
+                "width": 4
+              },
+              "rvfi_mem_wmask": {
+                "direction": "output",
+                "width": 4
+              },
+              "rvfi_mem_rdata": {
+                "direction": "output",
+                "width": 32
+              },
+              "rvfi_mem_wdata": {
+                "direction": "output",
+                "width": 32
+              },
+              "dBus_cmd_valid": {
+                "direction": "output",
+                "width": 1
+              },
+              "dBus_cmd_ready": {
+                "direction": "input",
+                "width": 1
+              },
+              "dBus_cmd_payload_wr": {
+                "direction": "output",
+                "width": 1
+              },
+              "dBus_cmd_payload_mask": {
+                "direction": "output",
+                "width": 4
+              },
+              "dBus_cmd_payload_address": {
+                "direction": "output",
+                "width": 32
+              },
+              "dBus_cmd_payload_data": {
+                "direction": "output",
+                "width": 32
+              },
+              "dBus_cmd_payload_size": {
+                "direction": "output",
+                "width": 2
+              },
+              "dBus_rsp_ready": {
+                "direction": "input",
+                "width": 1
+              },
+              "dBus_rsp_error": {
+                "direction": "input",
+                "width": 1
+              },
+              "dBus_rsp_data": {
+                "direction": "input",
+                "width": 32
+              },
+              "trap_valid": {
+                "direction": "output",
+                "width": 1
+              },
+              "snapshot_mscratch": {
+                "direction": "output",
+                "width": 32
+              },
+              "trap_cause": {
+                "direction": "output",
+                "width": 32
+              },
+              "trap_tval": {
+                "direction": "output",
+                "width": 32
+              },
+              "clk": {
+                "direction": "input",
+                "width": 1
+              },
+              "reset": {
+                "direction": "input",
+                "width": 1
+              }
+            },
+            "adversary": "controls shared instruction and bus responses; no bus protocol assumptions",
+            "unmodeled_channels": [
+              "analog",
+              "power",
+              "debug",
+              "DMA",
+              "CSR secret injection",
+              "region-specific memory secrecy"
+            ],
+            "kind": "initialization",
+            "secrets": [],
+            "architectural": [],
+            "observations": [
+              "iBus_cmd_valid",
+              "iBus_cmd_payload_pc",
+              "dBus_cmd_valid"
+            ]
+          },
+          "failures": [],
+          "traces": []
+        },
+        "ift": {
+          "schema": "rvw.secure-path/1",
+          "status": "inconclusive",
+          "proof_kind": "bounded",
+          "depth": 8,
+          "reason": "RTL mapping failed or timed out",
+          "rtl_sha256": "09bd906aab6bcab0f45055918aed6749c475424e2301b31240c61da6e7ea1a2d",
+          "policy": {
+            "clock": "clk",
+            "reset": "reset",
+            "sources": [
+              "dBus_rsp_data"
+            ],
+            "internal_sources": [
+              "CsrPlugin_mscratch"
+            ],
+            "memory_map": true,
+            "mode": "bmc",
+            "depth": 8,
+            "sinks": [
+              "iBus_cmd_valid",
+              "dBus_cmd_valid"
+            ],
+            "kind": "secure_path",
+            "adversary": "controls shared instruction and bus responses; no bus protocol assumptions",
+            "unmodeled_channels": [
+              "analog",
+              "power",
+              "debug",
+              "DMA",
+              "CSR secret injection",
+              "region-specific memory secrecy"
+            ]
+          },
+          "failures": [],
+          "traces": []
+        }
+      },
+      "source_certification": "local source and generator pins; no independent reproducibility certification"
+    }
+  },
+  "observed_counterexamples": {
+    "memory-observation": {
+      "cycle": 5,
+      "left_dBus_cmd_valid": 1,
+      "right_dBus_cmd_valid": 0,
+      "architectural_prefix_equal": true
+    },
+    "initialization": {
+      "cycle": 5,
+      "left_dBus_cmd_valid": 0,
+      "right_dBus_cmd_valid": 1
+    }
+  },
+  "pmp_mapping_errors": [
+    "DBusSimplePlugin_mmuBus_rsp_bypassTranslation is used but has no driver",
+    "IBusSimplePlugin_mmuBus_rsp_bypassTranslation is used but has no driver"
+  ],
+  "ift_limit": "RV32IM taint generation completed; native port probe timed out before solving"
+}
