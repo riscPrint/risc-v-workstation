@@ -3767,7 +3767,7 @@ Starts a background job: yes.
 
 ### `csim_compare_rtl`
 
-Compare a predictor model with explicit RTL predictor events (rvw.bp-events/1 or Kanata #rvw prediction records) on the same C2 run, branch by branch. Missing identity or events gives inconclusive. Runs as a job.
+Compare a predictor model with explicit RTL predictor events (rvw.bp-events/1 or Kanata #rvw prediction records) on the same C2 run. Set cache for per-access cache comparison. Missing identity or events gives inconclusive. Optional trace_out writes a new cache trace. Runs as a job.
 
 Arguments: `study` (required), `trace` (required), `events` (required), `roi_start`, `roi_end`, `elf_sha256`, `top`, `cache`, `level`, `trace_out`.
 
@@ -4647,9 +4647,9 @@ Starts a background job: yes.
 
 ### `init_scaffold`
 
-Plan or write rvw project files in an existing Spinal/sbt core repository. Refuse existing output files. Generation is not a build or a core qualification.
+Plan or write core project files. For a mapped adapter, supply spinal_top or verilog_top, reset_pc and buses. Each bus is NAME:PROTOCOL:key=port,...; req-rsp roles: cmd_valid,address,rsp_valid,rdata; optional cmd_ready,write,wdata,mask,error,rsp_ready,write_response=1. Generation does not build or qualify the core.
 
-Arguments: `out` (required), `isa` (required), `name`, `sbt_project`, `wire_build`, `dry_run`.
+Arguments: `out` (required), `isa` (required), `name`, `sbt_project`, `spinal_top`, `verilog_top`, `clock`, `reset`, `rvfi_prefix`, `reset_pc`, `ram`, `yosys`, `wire_build`, `dry_run`, `force`, `accept_platform_defaults`, `verilog`, `defines`, `params`, `buses`, `irq`, `constants`, `reset_active`.
 
 Starts a background job: no.
 
