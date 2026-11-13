@@ -106,3 +106,10 @@ Native validation on 2026-11-13 built the adapter fixture on Verilator
 candidate each ran `adapter_smoke` at seeds 1 and 3 through one build-suite
 job. The tested implementation commit was `6665411b`. This checks the gate
 integration. It does not test acceptance of a changed CPU revision.
+
+## Untyped HDL databases
+
+Automatic bench generation requires supported typed bus metadata. A database
+with plain Verilog ports returns `status: unsupported` and writes no bench.
+The CLI exits 2. MCP returns the same status. Supply a project-owned bench
+and explicit protocol pin bindings. Port names alone do not establish a bus.

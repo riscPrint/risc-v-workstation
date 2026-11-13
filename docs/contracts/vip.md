@@ -72,3 +72,10 @@ pin bindings. It never reports verification success. The skeleton stops
 until project stimulus and expectations are supplied. Clock and active-low
 reset paths are caller selections. Output files are never overwritten.
 Unsupported types and ambiguous bus selections are errors.
+
+## Untyped HDL databases
+
+Automatic bench generation requires supported typed bus metadata. A database
+with plain Verilog ports returns `status: unsupported` and writes no bench.
+The CLI exits 2. MCP returns the same status. Supply a project-owned bench
+and explicit protocol pin bindings. Port names alone do not establish a bus.

@@ -99,3 +99,10 @@ observed error responses and reset aborts must agree with the requested
 scenario. Python cleanup clears IRQs and injection and stops traffic on
 failure or cancellation. Projects own callback watchdogs, live bindings and
 reset of expected models. Callback tests do not qualify CPU architecture.
+
+## Untyped HDL databases
+
+Automatic bench generation requires supported typed bus metadata. A database
+with plain Verilog ports returns `status: unsupported` and writes no bench.
+The CLI exits 2. MCP returns the same status. Supply a project-owned bench
+and explicit protocol pin bindings. Port names alone do not establish a bus.
