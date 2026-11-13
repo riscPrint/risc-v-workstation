@@ -119,3 +119,10 @@ does not require missing arguments. It returns help data and dry_run: true.
 It never calls a handler or starts a job. This is not verification evidence.
 rvw mcp smoke checks every loaded tool through that path. Discovery problems
 or schema-help errors return exit 2. Fast tests forbid handler and job dispatch.
+
+## Isolation of wrapped providers
+
+A packaged isolated handler that cannot be imported directly is resolved by
+its discovered tool name in the worker. Wrappers retain their actual call
+signature, including indexed wave arguments. The sync window, job controls
+and process cancellation rules are the same as for directly importable tools.

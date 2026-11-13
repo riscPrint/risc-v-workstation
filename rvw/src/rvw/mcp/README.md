@@ -217,3 +217,8 @@ Dry calls return schema help. They validate supplied values and omit required
 input checks. They never execute handlers or submit jobs. The output says
 `handler NOT RUN`. Fast tests check every tool through list, describe and dry
 call. These tests establish discovery and schema help, not native behavior.
+
+Wrapped packaged wave handlers use discovery inside the worker when a direct
+function import is not possible. They keep the same sync window and job
+controls. The wrapper's indexed argument remains valid. This path has a tiny
+VCD worker-process test; native EDA behavior is not established by that test.
