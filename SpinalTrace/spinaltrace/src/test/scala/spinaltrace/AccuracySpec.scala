@@ -28,9 +28,13 @@ class AccuracySpec extends AnyFunSuite {
       case _ =>
     }
     assert(PdgExtractor.extract(report).meta.warnings.exists(_.contains("mixed-width write")))
-    assert(extract(new AsyncWriteMemory).meta.warnings.exists(_.contains("read side")))
     assert(extract(new LargeMemory).meta.warnings.exists(_.contains("8192 words")))
     assert(extract(new MaskedMemory, 2).meta.warnings.exists(_.contains("one symbol")))
+  }
+  test("asynchronous writes cannot claim exact read-side attribution") {
+    if (!classOf[Mem[Bits]].getMethods.exists(_.getName == "readAsyncWrite"))
+      cancel("The selected SpinalHDL has no Mem.readAsyncWrite API.")
+    assert(extract(new AsyncWriteMemory).meta.warnings.exists(_.contains("read side")))
   }
   test("more than 16 partial providers and statements on one line remain visible") {
     assert(extract(new ManyPartialWrites).vertices.count(_.assignRange.contains("dyn")) >= 20)

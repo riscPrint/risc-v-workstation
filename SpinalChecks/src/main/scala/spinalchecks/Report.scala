@@ -85,9 +85,9 @@ object Report {
               case b: BaseType if alive(b) => b
             }.orElse(Option(original).filter(alive))
           }.map(b => vname(SpinalChecks.instancePath(b.component), b): V).getOrElse(Null)
-          obj("clock" -> signal(cd.clock), "edge" -> cd.config.clockEdge.toString,
-              "reset" -> signal(cd.reset), "reset_kind" -> cd.config.resetKind.toString,
-              "reset_active" -> cd.config.resetActiveLevel.toString,
+          obj("clock" -> signal(cd.clock), "edge" -> cd.config.clockEdge.getClass.getSimpleName.stripSuffix("$"),
+              "reset" -> signal(cd.reset), "reset_kind" -> cd.config.resetKind.getClass.getSimpleName.stripSuffix("$"),
+              "reset_active" -> cd.config.resetActiveLevel.getClass.getSimpleName.stripSuffix("$"),
               "clock_enable" -> signal(cd.clockEnable)): V
         }.getOrElse(Null),
         "trigger_signal" -> Option(c.trigger).map(b => vname(path, b)),

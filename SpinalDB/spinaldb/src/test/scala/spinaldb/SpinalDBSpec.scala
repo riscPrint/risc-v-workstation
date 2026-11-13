@@ -548,7 +548,8 @@ class Round13Serial1 extends Round13Design("serial", 1)
 // iteration in a class that only claims to be the Scala library's, the accessors of a subclass of a
 // Spinal tag the encoder special-cases).
 case class R14Hidden(x: Int) extends SpinalTag { override def productIterator: Iterator[Any] = Iterator(0) }
-case class R14Element(x: Int) extends SpinalTag {
+trait R14ProductNames { def productElementNames: Iterator[String] }
+case class R14Element(x: Int) extends SpinalTag with R14ProductNames {
   override def productElement(n: Int): Any = 0
   override def productElementNames: Iterator[String] = Iterator("x")
 }
@@ -617,7 +618,7 @@ class SpinalDBSpec extends AnyFunSuite {
     val dir = Files.createTempDirectory(s"spinaldb-$name").toFile
     val out = new File(dir, s"$name.db")
     val config = SpinalConfig(targetDirectory = new File(dir, "rtl").getPath)
-    SpinalDB.generate(if (formal) config.includeFormal else config, out,
+    SpinalDB.generate(if (formal) config.copy(mode = SystemVerilog).includeFormal else config, out,
       opts.copy(sourceRoots = roots, log = _ => ()))(gen)
     out
   }
@@ -730,11 +731,24 @@ class SpinalDBSpec extends AnyFunSuite {
     val base = emitted(identity)
     val policies: Seq[SpinalConfig => SpinalConfig] = Seq(
       _.copy(mode = SystemVerilog), _.copy(defaultConfigForClockDomains = ClockDomainConfig(resetKind = SYNC)),
-      _.copy(mergeAsyncProcess = true), _.copy(mergeSyncProcess = false), _.copy(inlineRom = true),
-      _.copy(caseRom = true), _.copy(noRandBoot = true), _.copy(randBootFixValue = false),
+      _.copy(mergeAsyncProcess = true), _.copy(inlineRom = true),
+      _.copy(noRandBoot = true), _.copy(randBootFixValue = false),
       _.copy(defaultClockDomainFrequency = FixedFrequency(50 MHz)), _.copy(device = Device.XILINX))
+    // Use the selected SDK's constructor layout for optional backend flags.
+    import scala.reflect.runtime.universe._
+    val parameters = typeOf[SpinalConfig].typeSymbol.asClass.primaryConstructor.asMethod.paramLists.flatten.map(_.name.toString)
+    val optional = Seq("mergeSyncProcess" -> false, "caseRom" -> true).flatMap { case (name, value) =>
+      val index = parameters.indexOf(name)
+      if (index < 0) { info(s"The selected SpinalHDL has no $name policy."); None }
+      else Some((c: SpinalConfig) => {
+        val args = c.productIterator.map(_.asInstanceOf[AnyRef]).toArray
+        args(index) = Boolean.box(value)
+        c.getClass.getConstructors.find(_.getParameterCount == args.length).get
+          .newInstance(args: _*).asInstanceOf[SpinalConfig]
+      })
+    }
     assert(!ExprText.isIncomplete(base), base)
-    for (change <- policies) {
+    for (change <- policies ++ optional) {
       val key = emitted(change)
       assert(!ExprText.isIncomplete(key) && key != base, key)
     }
@@ -988,7 +1002,9 @@ class SpinalDBSpec extends AnyFunSuite {
     val header = dir.resolve("external.svh")
     val ext = dir.resolve("External.v")
     def body(text: String) = Files.write(ext, text.getBytes)
-    body(s"`include \"$header\"\nmodule External #(parameter K=1)(input [7:0] a, output [7:0] y); assign y = a + `K + K; endmodule\n")
+    body(s"""`include "$header"
+module External #(parameter K=1)(input [7:0] a, output [7:0] y); assign y = a + `K + K; endmodule
+""")
     val bb = "SELECT body_sha256, key, body_from FROM blackboxes"
     def at(k: Int, gen: Int = 1) = {
       Files.write(header, s"`define K $k\n".getBytes)
@@ -1205,7 +1221,10 @@ class SpinalDBSpec extends AnyFunSuite {
     // (its field is keyed as it is), and `@SerialVersionUID`'s field is the compiler's.
     val lz = r13("lazy", 0)
     assert(!lz.contains("bitmap") && !ExprText.isIncomplete(lz) && lz.contains("v=Int("), lz)
-    assert(r13("annotated", 0) == "tag spinaldb.R13Annotated$:spinaldb.R13Annotated$")
+    val privateUid = java.lang.reflect.Modifier.isPrivate(R13Annotated.getClass.getDeclaredField("serialVersionUID").getModifiers)
+    // Scala 2.12 emits a public UID. Keep public fields as payload, even for this annotation.
+    val uidPayload = if (privateUid) "" else "{serialVersionUID=Long(7)}"
+    assert(r13("annotated", 0) == "tag spinaldb.R13Annotated$:spinaldb.R13Annotated$" + uidPayload)
     // A case class's own field beyond its elements (here a private payload) is keyed (round 14: a case
     // class is read by all its fields).
     val cb = r13("caseBitmap", 0)
@@ -1218,8 +1237,10 @@ class SpinalDBSpec extends AnyFunSuite {
     // The role of each field, from the compiled classes.
     def role(c: Class[_], n: String) = Extractor.fieldRole(c.getDeclaredField(n))
     assert(role(R13Lazy.getClass, "bitmap$0") == Extractor.FieldRole.Compiler)
-    assert(role(R13Annotated.getClass, "serialVersionUID") == Extractor.FieldRole.Compiler)
+    assert(role(R13Annotated.getClass, "serialVersionUID") ==
+      (if (privateUid) Extractor.FieldRole.Compiler else Extractor.FieldRole.Payload))
     assert(role(R13Lazy.getClass, "MODULE$") == Extractor.FieldRole.Compiler)
+    assert(role(classOf[`FalseModule$`], "MODULE$") == Extractor.FieldRole.Payload)
     assert(role(R13Bitmap.getClass, "bitmap$0") == Extractor.FieldRole.Payload)
     assert(role(R13Serial.getClass, "serialVersionUID") == Extractor.FieldRole.Payload)
     assert(role(R13TraitBitmap.getClass, "bitmap$0") == Extractor.FieldRole.Payload)
@@ -1264,26 +1285,37 @@ class SpinalDBSpec extends AnyFunSuite {
   test("allow-list: every Spinal expression class is modelled except a pinned few; statement kinds are pinned") {
     // A reflection sweep over spinalhdl-core: what `ExprText.modelled` accepts is the supported set in
     // SpinalDB/README.md. A Spinal upgrade that adds a node class, a field or a statement kind fails here.
-    val jar = classOf[Bool].getProtectionDomain.getCodeSource.getLocation.getPath
-    val zf = new java.util.zip.ZipFile(jar)
-    val classes = try {
-      scala.jdk.CollectionConverters.EnumerationHasAsScala(zf.entries()).asScala.map(_.getName)
-        .filter(n => n.startsWith("spinal/core/") && n.endsWith(".class")).map(_.stripSuffix(".class").replace('/', '.'))
-        .flatMap(n => scala.util.Try(Class.forName(n, false, getClass.getClassLoader)).toOption).toSeq
-    } finally zf.close()
+    import scala.collection.JavaConverters._
+    val location = Paths.get(classOf[Bool].getProtectionDomain.getCodeSource.getLocation.toURI)
+    val names = if (Files.isDirectory(location)) {
+      val files = Files.walk(location)
+      try files.iterator.asScala.filter(p => Files.isRegularFile(p))
+        .map(p => location.relativize(p).toString.replace(File.separatorChar, '/')).toVector
+      finally files.close()
+    } else {
+      val zip = new java.util.zip.ZipFile(location.toFile)
+      try zip.entries.asScala.map(_.getName).toVector finally zip.close()
+    }
+    val classes = names.filter(n => n.startsWith("spinal/core/") && n.endsWith(".class"))
+      .map(_.stripSuffix(".class").replace('/', '.'))
+      .flatMap(n => scala.util.Try[Class[_]](Class.forName(n, false, this.getClass.getClassLoader)).toOption)
     def concrete(c: Class[_]) = !c.isInterface && !java.lang.reflect.Modifier.isAbstract(c.getModifiers)
     val exprs = classes.filter(c => concrete(c) && classOf[spinal.core.internals.Expression].isAssignableFrom(c) &&
       !classOf[BaseType].isAssignableFrom(c))
-    assert(exprs.size > 140, exprs.size)
+    val asyncPort = classOf[SpinalApi.AsyncWritePort]
+    if (asyncPort.getSimpleName == "MemReadAsyncWrite") assert(exprs.size > 140, exprs.size)
+    else assert(exprs.size == 137, exprs.size)
     val unmodelled = exprs.filterNot(ExprText.modelled).map(_.getName).toSet
-    assert(unmodelled.isEmpty, unmodelled)
+    assert(unmodelled.isEmpty, exprs.filterNot(ExprText.modelled).map(c => s"${c.getName}: origin=${LibraryClasses.isSpinal(c)} missing=${ExprText.params(c) -- ExprText.handled(c)}").mkString("; "))
     val statements = classes.filter(c => concrete(c) && classOf[spinal.core.internals.Statement].isAssignableFrom(c) &&
       !classOf[BaseType].isAssignableFrom(c)).map(_.getSimpleName).toSet
-    assert(statements == Set("Mem", "MemWrite", "MemReadSync", "MemReadAsync", "MemReadWrite", "MemReadAsyncWrite",
+    val asyncPorts = if (asyncPort.getSimpleName == "MemReadAsyncWrite") Seq(asyncPort) else Nil
+    val expected = Set("Mem", "MemWrite", "MemReadSync", "MemReadAsync", "MemReadWrite",
       "AssertStatement", "DataAssignmentStatement", "InitAssignmentStatement", "InitialAssignmentStatement",
-      "SwitchStatement", "WhenStatement"), statements)
+      "SwitchStatement", "WhenStatement") ++ asyncPorts.map(_.getSimpleName)
+    assert(statements == expected, statements)
     // Every memory port's fields are written into its key.
-    for (c <- Seq(classOf[MemWrite], classOf[MemReadSync], classOf[MemReadAsync], classOf[MemReadWrite], classOf[MemReadAsyncWrite]))
+    for (c <- Seq(classOf[MemWrite], classOf[MemReadSync], classOf[MemReadAsync], classOf[MemReadWrite]) ++ asyncPorts)
       assert(ExprText.params(c).subsetOf(ExprText.MemPortFields(c)), (c, ExprText.params(c)))
   }
 

@@ -97,6 +97,15 @@ Generic changes this needed (all version-neutral; the release axis still compile
   to `SPINAL_VERILATOR_FLAGS`, so Verilator reads its own context time. SpinalHDL
   1.15.0 has a null check instead.
 
+  This workaround does not validate HDL assertions. A native probe with the
+  installed Verilator 5.049 returns `$time == 0` with `VL_TIME_CONTEXT`, even
+  when the old callback reports time 17. The old wrapper does not advance
+  `VerilatedContext` time. Assertions guarded by `noAssertAtTimeZero` can then
+  remain disabled. The [native probe](../../RiscvSim/tests/repro/verilator-context-time/README.md)
+  has the source and command. Use a null-safe callback in the SDK or a compatible
+  Verilator before validating assertions on this axis. The basic C1 smoke
+  result does not establish assertion coverage.
+
 - SpinalDB selects its API shim directory through `SpinalAxis.apiSources`:
   `scala-spinal-legacy/` for this SpinalHDL revision. The legacy shim declares
   the missing port and operator types (`MemReadAsyncWrite`, `Repeat`,

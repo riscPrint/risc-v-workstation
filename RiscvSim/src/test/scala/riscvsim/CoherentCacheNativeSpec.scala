@@ -80,7 +80,7 @@ class CoherentCacheNativeSpec extends AnyFunSuite {
             }
           }
         })
-        val bus = tb.dut.masters.node.bus
+        val bus = tester.c.report.toplevel.asInstanceOf[Top].masters.node.bus
         cd.onSamplings {
           val offered = Set("B", "D").filter {
             case "B" => bus.b.valid.toBoolean
@@ -101,7 +101,7 @@ class CoherentCacheNativeSpec extends AnyFunSuite {
         tb.slavesStuff.foreach(_.model.driver.driver.randomizeStallRate())
         def word(value: Int) = (0 until 4).map(i => (value >>> (8*i)).toByte)
         expected.write(0,word(37),15)
-        agent.putInt(0,0x10000,37)
+        agent.putFullData(0,0x10000,word(37))
         val owner = agent.acquireBlock(0,Param.Grow.NtoT,0x10000,64)
         assert(owner.data.toVector == expected.read(0,64))
         // Independent stimulus dirties a simulated coherent client. The DUT cache
@@ -129,9 +129,9 @@ class CoherentCacheNativeSpec extends AnyFunSuite {
         val beforeEviction = writebacks
         // Same-set alias forces actual cache replacement and dirty writeback.
         expected.write(1024,word(99),15)
-        agent.putInt(0,0x10400,99)
+        agent.putFullData(0,0x10400,word(99))
         assert(writebacks > beforeEviction, "same-set replacement did not write back dirty data")
-        assert(agent.getInt(0,0x10000) == 85)
+        assert(agent.get(0,0x10000,4).data.toVector == word(85).toVector)
         cd.waitSampling(40)
         assert(tb.slavesStuff.head.model.mem.readBytes(0,64).toVector == expected.read(0,64), "backing memory after eviction")
         assert(interventions > 0 && releases > 0 && writebacks > 0, "required coherence transitions not observed")

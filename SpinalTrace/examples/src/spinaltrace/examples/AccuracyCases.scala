@@ -69,7 +69,11 @@ class AsyncWriteMemory extends Component {
     val result = out Bits(8 bits)
   }
   val mem = Mem(Bits(8 bits), 4)
-  io.result := mem.readAsyncWrite(io.address, io.data, io.enable)
+  // Keep this fixture loadable on SDKs without the async-write API.
+  // AccuracySpec checks the capability before it constructs this component.
+  val method = mem.getClass.getMethods.find(m => m.getName == "readAsyncWrite" && m.getParameterCount == 7).get
+  val defaults = (4 to 7).map(i => mem.getClass.getMethod(s"readAsyncWrite$$default$$$i").invoke(mem))
+  io.result := method.invoke(mem, (Seq[AnyRef](io.address, io.data, io.enable) ++ defaults): _*).asInstanceOf[Bits]
 }
 
 class LargeMemory extends Component {

@@ -51,13 +51,27 @@ object Round18Fixtures {
     val body = root.toPath.resolve("Round18Box.v")
     val synth = root.toPath.resolve("synth.svh")
     val sim = root.toPath.resolve("sim.svh")
-    Files.writeString(body, s"module Round18Box(output y);\n`ifdef SYNTHESIS\n`include \"$synth\"\n`else\n`include \"$sim\"\n`endif\nendmodule\n")
+    Files.writeString(body, s"""module Round18Box(output y);
+`ifdef SYNTHESIS
+`include "$synth"
+`else
+`include "$sim"
+`endif
+endmodule
+""")
     Files.writeString(synth, "assign y = 1'b0;\n")
     for (n <- 0 to 1) {
       Files.writeString(sim, s"assign y = 1'b$n;\n")
       write(s"r18_box$n")(new Round18Top(body.toString))
     }
-    Files.writeString(body, s"module Round18Box(output y);\n`ifdef OUTSIDE\n`include \"$sim\"\n`else\nassign y=0;\n`endif\nendmodule\n")
+    Files.writeString(body, s"""module Round18Box(output y);
+`ifdef OUTSIDE
+`include "$sim"
+`else
+assign y=0;
+`endif
+endmodule
+""")
     write("r18_box_unknown")(new Round18Top(body.toString))
   }
 }
