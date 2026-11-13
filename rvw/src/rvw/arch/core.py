@@ -122,9 +122,6 @@ def build_abi(isa):
 def build(project=None, bench=None):
     p, _, desc = settings(project)
     names = selection(bench)
-    binary = gem5_binary()
-    gem5 = tool_identity(binary, "--build-info")
-    validate_gem5(gem5)
     cc = executable(os.environ.get('RVW_RISCV_CC', 'riscv64-unknown-elf-gcc'))
     compiler = tool_identity(cc)
     out = Path(p.get('arch', 'benchmarks'))
@@ -141,7 +138,7 @@ def build(project=None, bench=None):
         files.append({'id': name, 'path': str(path), 'sha256': digest(path.read_bytes())})
     result = {'schema': 'rvw.arch-build/1', 'config': desc['config'], 'isa': desc['isa'],
               'sources': str(p.get('arch', 'sources')),
-              'gem5': gem5, 'compiler': compiler, 'benchmarks': files}
+              'backend': 'riscv-gcc', 'compiler': compiler, 'benchmarks': files}
     write_json(out / 'build.json', result)
     return result
 
