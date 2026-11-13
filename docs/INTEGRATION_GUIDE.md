@@ -328,7 +328,7 @@ Limits can differ within one tool. Read the linked README and PR before use.
 | sim / arcilator | Ran on RTL | [#654](https://github.com/riscPrint/risc-v-workstation/pull/654): bounded VexRiscv C1/C2 comparison; BOOM, checkpoints and broader engine options NOT RUN. |
 | regress privilege extensions | Spike only | [#552](https://github.com/riscPrint/risc-v-workstation/pull/552): 81 programs; RTL and independent nested-pointer model remain open. The base privilege, PMP and WFI families now have RTL rows below. |
 | generated MMU suites on RTL | Ran on RTL (VexiiRiscv Sv39/Sv32) | [VexiiRiscv README](../examples/vexiiriscv/README.md#generated-suites-on-rtl-2026-11-13): Sv39 matrix/fault/random 145/18/2 run, 154 Spike match, 11 finding; Sv32 140/12/2 run, 146 match, 8 finding. All findings: PTE reads ignore PMP. [Triage and directed reproduction](../examples/vexiiriscv/findings/ptw-pmp/README.md) confirm one core cause across 11 Sv39 and 8 Sv32 programs. C2 walk check: 92 Sv39 and 89 Sv32 matrix scenarios consistent with the independent walker. Sv48/57, H, NAPOT, PBMT, pointer masking and shootdown have no RTL target. |
-| generated privilege/interrupt suites on RTL | Ran on RTL (VexiiRiscv, VexRiscv M-only) | VexiiRiscv RV64: controls 30/30, PMP 264/264, scheduled WFI 6/6 Spike match; RV32 scheduled WFI 6/6; PMP 394 applicable and run, 394 C1 pass, 0 C1 fail, 394 strict Spike match, 0 findings. VexRiscv: scheduled WFI 3/6 match, 3 confirmed core findings (MSIP/MTIP/MEIP keep old `mtval`; no M-only exception, [reproduction](../examples/vexriscv/findings/interrupt-mtval/README.md)). VexiiRiscv RV64 CLINT WFI 4/4 (device model drives the pins; `--allow-sync irq,mmio`). PLIC and PLIC delivery 12/12 C1 pass through the `rvw.stimulus/1` mailbox; Spike comparison inconclusive at the harness-written mailbox word. NMI, AIA, Sstc and state-enable NOT RUN (no target feature). |
+| generated privilege/interrupt suites on RTL | Ran on RTL (VexiiRiscv, VexRiscv M-only) | VexiiRiscv RV64: controls 30/30, PMP 264/264, scheduled WFI 6/6 Spike match; RV32 scheduled WFI 6/6; PMP 394 applicable and run, 394 C1 pass, 0 C1 fail, 394 strict Spike match, 0 findings. VexRiscv: scheduled WFI 3/6 match, 3 confirmed core findings (MSIP/MTIP/MEIP keep old `mtval`; no M-only exception, [reproduction](../examples/vexriscv/findings/interrupt-mtval/README.md)). VexiiRiscv RV64 CLINT WFI 4/4 (device model drives the pins; `--allow-sync irq,mmio`). PLIC and PLIC delivery 12/12 C1 pass and 12/12 strict Spike match with declared external-interrupt evidence (1,424 instructions, zero synchronizations); [ordered events and negative controls](../examples/vexiiriscv/plic-results.json). NMI, AIA, Sstc and state-enable NOT RUN (no target feature). |
 | generated ordering suites on RTL | Ran on RTL, single hart | VexiiRiscv RV64 and RV32: LR/SC, AMO, AMO fault, FENCE, FENCE.I 5/5 Spike match each; VexRiscv FENCE/FENCE.I 2/2. Zacas, cache-block, litmus and multi-hart NOT RUN. No concurrent ordering evidence. |
 | cosim vector | Spike only | [#608](https://github.com/riscPrint/risc-v-workstation/pull/608): 1,333 instructions, replay match; no vector RTL. |
 | probe collection | Ran on RTL fixture | [#612](https://github.com/riscPrint/risc-v-workstation/pull/612): Verilator collector tests; [#614](https://github.com/riscPrint/risc-v-workstation/pull/614) converters used fixture events. |
@@ -383,7 +383,7 @@ modes and hardware A/D updates. Findings can overlap C1 failures.
 | Vexii RV64 | Ordering | 5 | 5 | 5 | 5 | 0 | 5 | 0 |
 | Vexii RV64 | Scheduled WFI | 6 | 6 | 6 | 6 | 0 | 6 | 0 |
 | Vexii RV64 + CLINT | WFI | 4 | 4 | 4 | 4 | 0 | 4 | 0 |
-| Vexii RV64 + PLIC | PLIC and delivery | 12 | 12 | 12 | 12 | 0 | 0 (12 inconclusive) | 0 |
+| Vexii RV64 + PLIC | PLIC and delivery | 12 | 12 | 12 | 12 | 0 | 12 | 0 |
 | Vexii RV32 | MMU matrix | 589 | 140 | 140 | 138 | 2 | 138 | 2 |
 | Vexii RV32 | Fault walks | 84 | 12 | 12 | 6 | 6 | 6 | 6 |
 | Vexii RV32 | MMU random | 8 | 2 | 2 | 2 | 0 | 2 | 0 |
@@ -394,8 +394,10 @@ modes and hardware A/D updates. Findings can overlap C1 failures.
 | VexRiscv RV32 M only | Scheduled WFI | 6 | 6 | 6 | 6 | 0 | 3 | 3 |
 
 IRQ, MMIO and unspecified-reset synchronizations retain the limits in the
-linked family READMEs. The PLIC reference cannot observe the harness-written
-acknowledgement. It does not earn a complete Spike match.
+linked family READMEs. Fresh PLIC traces declare the external-interrupt
+extension. Its independent replay checks device and mailbox events and earns
+12 complete strict Spike matches. Older captures without these events remain
+inconclusive.
 
 
 

@@ -100,6 +100,10 @@ def check(trace_path, model, platform, history=10, sync=SYNC_KINDS, *, ordered_e
     from .reset_scratch import ResetScratch
     scratch = ResetScratch(xmask if "csr" in enabled and platform.trace_from_reset else 0)
     trace = Trace(trace_path)
+    external_replay = bool(trace.header.get('external_interrupts'))
+    if external_replay:
+        from .external_plic import Replay
+        model = Replay(model, trace.header['external_interrupts'])
     if trace.multihart:
         from .multihart import check_multihart
         return check_multihart(trace, model, platform, history=history, sync=sync)
@@ -147,6 +151,8 @@ def check(trace_path, model, platform, history=10, sync=SYNC_KINDS, *, ordered_e
         return sum(1 << bit for bit, (_, low) in irq_inputs.items() if low is None or low > start)
     environment = None
     def result(status, **extra):
+        if external_replay and status == "match":
+            extra["external_interrupt_evidence"] = model.finish_external_interrupts()
         return {"schema": "rvw.cosim/1", "status": status, "model": model.name if hasattr(model, "name") else "spike",
                 "instructions": count, "trap_events": trap_events,
                 "reference_limits": list(getattr(model, "limitations", ())),
@@ -292,7 +298,8 @@ def check(trace_path, model, platform, history=10, sync=SYNC_KINDS, *, ordered_e
             last_order = actual["order"]
             # intr marks the first handler instruction after any trap. An
             # interrupt event supplies cause; never infer a cause from a boolean.
-            mmio = environment.retire(actual) if environment else platform.mmio_read(actual) if "mmio" in enabled else None
+            mmio = (environment.retire(actual) if environment else
+                    platform.mmio_read(actual) if "mmio" in enabled and not external_replay else None)
             represented_by_event = (event_effect is not None and not event_effect["intr"]
                                     and actual["trap"] and actual["pc"] == event_effect["pc"])
             try:

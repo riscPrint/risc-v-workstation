@@ -95,12 +95,26 @@ class VexiiAdapter(val xlen: Int) extends CoreAdapter {
     // on the device map and writes the step to stimulus_ack.
     def symbol(name: String) = ctx.elf.symbol(name).getOrElse(throw new IllegalArgumentException(s"stimulus needs ELF symbol $name"))
     val stimulusWords = job.stimulus.map(_ => (symbol("stimulus_step"), symbol("stimulus_ack")))
+    var currentCycle = 0L
+    val externalEvidence = for (stimulus <- job.stimulus; layout <- devices.flatMap(_.plicEvidence)) yield {
+      layout("stimulus") = ujson.Arr.from(stimulus.events)
+      layout("request_address") = Hex(BigInt(stimulusWords.get._1))
+      layout("ack_address") = Hex(BigInt(stimulusWords.get._2))
+      layout
+    }
+    def external(cycle: Long, kind: String, fields: ujson.Obj): Unit = if (externalEvidence.nonEmpty)
+      events += ((cycle, () => writer.foreach(_.externalInterrupt(cycle, kind, fields))))
     val mailbox = job.stimulus.map(s => new StimulusMailbox(s, event => event("kind").str match {
       case "plic-level" =>
         devices.getOrElse(throw new IllegalArgumentException("plic-level stimulus needs RVW_VEX_DEVICE_MAP"))
           .setInput("plic", event("source").num.toInt, event("level").bool)
+        external(currentCycle, "source", ujson.Obj("source" -> event("source"), "level" -> event("level"), "step" -> event("step")))
       case other => throw new IllegalArgumentException(s"unsupported stimulus kind $other")
-    }, step => (0 until 8).foreach(i => memory(stimulusWords.get._2 + i) = ((step >> (8 * i)) & 255).toInt)))
+    }, step => {
+      (0 until 8).foreach(i => memory(stimulusWords.get._2 + i) = ((step >> (8 * i)) & 255).toInt)
+      external(currentCycle, "ack", ujson.Obj("address" -> Hex(BigInt(stimulusWords.get._2)), "bytes" -> 8,
+        "value" -> Hex(BigInt(step)), "step" -> RvwJson.num(step)))
+    }))
     val lastVirtual = mutable.LongMap.empty[Long]
     def logicalAddress(load: Boolean, id: Long, physical: Long): Long = {
       // The probe reports an AMO's store half with a stale store id. A store whose tag entry is
@@ -119,7 +133,7 @@ class VexiiAdapter(val xlen: Int) extends CoreAdapter {
           Some(dut.host[LockstepTapPlugin].logic.transport) else None
         dpi.foreach(_.initialize())
         writer = if (job.rvfiTrace) Some(new RvfiTraceWriter(new File(job.out, "rvfi.jsonl"),
-          ctx.rvfiHeader, observe = dpi.filter(_ => sys.env.contains("RVW_COSIM_PORT"))
+          ujson.Obj.from(ctx.rvfiHeader.value.toSeq ++ externalEvidence.toSeq.map(e => "external_interrupts" -> e)), observe = dpi.filter(_ => sys.env.contains("RVW_COSIM_PORT"))
             .map(m => (line: String) => m.observe(line)))) else None
         probes = ProbeCollector.open(spinalprobes.Probe.of(dut), job, ctx.rvfiHeader)
         val priv = dut.host[PrivilegedPlugin].logic.harts(0)
@@ -152,6 +166,7 @@ class VexiiAdapter(val xlen: Int) extends CoreAdapter {
         cd.onSamplings {
           ctl.tick()
           val cycle = ctl.cycle
+          currentCycle = cycle
           probes.foreach(_.sample(cycle))
           dut.host[PrivilegedPlugin].logic.rdtime #= cycle
           val deviceLevels = live.map(_.tick(cycle)).orElse(devices.map(_.tick(cycle))).getOrElse(BigInt(0))
@@ -160,6 +175,7 @@ class VexiiAdapter(val xlen: Int) extends CoreAdapter {
           priv.int.m.software #= levels.testBit(3)
           priv.int.m.timer #= levels.testBit(7)
           priv.int.m.external #= levels.testBit(11)
+          if (levels != irqLevels) external(cycle, "pins", ujson.Obj("levels" -> Hex(levels)))
           if (levels != irqLevels) { events += ((cycle, () => writer.foreach(_.irq(cycle, levels)))); irqLevels = levels }
           if (tap.fire.toBoolean) traps.enqueue((tap.epc.toBigInt, tap.tval.toBigInt))
           mailbox.foreach(_.tick(cycle))
@@ -220,6 +236,9 @@ class VexiiAdapter(val xlen: Int) extends CoreAdapter {
               require(!atomic, "device atomics are unsupported")
               if (cmd.write.toBoolean) devices.get.write(cmd.address.toLong, width, (cmd.data.toBigInt >> shift) & fieldMask) // the bus replicates narrow data across lanes
               val result = if (cmd.write.toBoolean) BigInt(0) else devices.get.read(cmd.address.toLong, width) << shift
+              if (devices.get.isPlic(cmd.address.toLong, width)) external(cycle, "mmio", ujson.Obj(
+                "address" -> Hex(BigInt(cmd.address.toLong)), "bytes" -> width, "write" -> cmd.write.toBoolean,
+                "value" -> Hex(if (cmd.write.toBoolean) (cmd.data.toBigInt >> shift) & fieldMask else result >> shift)))
               lsu.accept(cycle, result, false, cmd.id.toInt)
             } else {
               lsu.accept(cycle, if (atomic || !cmd.write.toBoolean) old else BigInt(0), !ok, cmd.id.toInt, scMiss)
@@ -251,7 +270,10 @@ class VexiiAdapter(val xlen: Int) extends CoreAdapter {
             val sampled = if (walks.isEmpty) faulted else faulted.copy(extra = Seq("mmu_walks" -> ujson.Arr.from(walks)))
             events += ((r.cycle, () => writer.foreach(_.write(sampled))))
           },
-          (c, cause, tval, intr) => events += ((c, () => writer.foreach(_.trap(c, cause, tval, intr)))),
+          (c, cause, tval, intr) => {
+            if (intr) external(c, "taken", ujson.Obj("cause" -> Hex(cause)))
+            events += ((c, () => writer.foreach(_.trap(c, cause, tval, intr))))
+          },
           (addr, sizeLog2, data) => {
             bench.foreach(_.onStore(addr, sizeLog2, data))
             for (m <- mailbox; (step, _) <- stimulusWords if addr == BigInt(step) && sizeLog2 == 3) m.request(ctl.cycle, data)

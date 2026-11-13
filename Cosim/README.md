@@ -891,7 +891,7 @@ remain refused. This compares architectural completion. It does not check
 bus transactions, partial stores, page faults or fault order.
 
 Rebuild the Spike shim with `Cosim/build.sh` after updating the workstation.
-The shim behavior version is 7. Older libraries are refused.
+The shim behavior version is 8. Older libraries are refused.
 ### Unspecified FCSR reset
 
 `fcsr_reset: "unspecified"` permits one initial reference alignment on a
@@ -913,3 +913,10 @@ Build the optional add-on with `Cosim/replay-build.sh` after `Cosim/build.sh`.
 It supplies single-hart functional checkpoints and restore by action replay.
 The primary shim adds PC redirect. Each replayed effect must match its saved
 hash. See [the wrong-path experiment](../Arch/ooo/WRONG_PATH.md) for limits.
+
+C2 `rvw.external-interrupts/1` can supply checked PLIC input and bus evidence.
+The independent PLIC model checks claim/complete operations and pin routing.
+Only served stimulus steps can update the reference acknowledgement mailbox.
+Pending-state CSR reads use those checked pin levels through shim version 8.
+This input is not a synchronization of DUT register results. See the
+[contract](../docs/contracts/cosim.md#plic-external-interrupt-replay).

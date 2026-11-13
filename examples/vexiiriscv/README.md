@@ -341,12 +341,28 @@ build directories are `cache_paths` entries so regress captures the files.
 
 On 2026-11-13 all 12 PLIC programs (priority, tie, threshold claim, shared
 contexts, gateway completion, enable changes; M- and S-context delivery with
-global, local and threshold masking) passed C1. Each program checks claim
-IDs that the independent PLIC model derived. Spike agreed for the first 56 to
-61 instructions of each program, up to the first `stimulus_ack` read. The
-reference cannot see that harness-written RAM word, so `rvw regress cosim`
-and `rvw regress privilege check` report these runs as inconclusive with that
-reason, not as a match or a finding.
+global, local and threshold masking) passed C1. A fresh capture with declared
+`rvw.external-interrupts/1` evidence resolves the earlier mailbox limitation.
+All 12 complete traces match Spike strictly: 1,424 instructions, zero
+synchronizations and no masks. The independent PLIC replay checks 36 pin
+records, 123 accepted MMIO accesses, 30 claims, eight completions, 27 source
+changes, 27 served acknowledgements and six interrupt-taken boundaries.
+The six delivery programs each take one interrupt.
+
+[The retained evidence](plic-results.json) gives every ordered input/device
+record with cycle and retirement boundary, plus ELF, RTL and trace hashes.
+A missing acknowledgement gives a reference load mismatch. A wrong claim
+value and a wrong pin level each fail the independent device check. These
+negative controls do not earn a match. Earlier captures without this extension
+remain inconclusive. Use the same device profile and stimulus files to capture
+fresh evidence, then run `rvw cosim check --strict` with
+`rvw/platform64-devices.json`. Rebuild the Spike shim with `Cosim/build.sh`:
+this consumer needs shim version 8. The core source is unchanged.
+
+| Family | Generated | Applicable | Run | C1 pass | C1 fail | Spike match | Finding |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| PLIC | 6 | 6 | 6 | 6 | 0 | 6 | 0 |
+| PLIC delivery | 6 | 6 | 6 | 6 | 0 | 6 | 0 |
 
 ### Generated suites on RTL (2026-11-13)
 
@@ -399,9 +415,8 @@ synchronization each). All other matches are strict.
 Not applicable from the declared features: Sv48/Sv57, NAPOT/PBMT, H,
 pointer masking, Smepmp, Zacas, cache-block operations and two-hart families.
 The RV64 CLINT WFI family needs `device:clint`, which only the device profile
-declares; see the device binding below (4/4 match). NMI, AIA, Sstc, state-enable and PLIC families
-are not in the requirement catalog and need extensions or devices this core
-does not have.
+declares; see the device binding below (4/4 match). NMI, AIA, Sstc and state-enable need extensions this profile does not have.
+The device profile declares PLIC and runs its two families as recorded above.
 
 The 19 denied-walk failures have one confirmed core cause: PTE reads bypass PMP.
 See [the per-program triage, directed Spike reproduction and wave window](findings/ptw-pmp/README.md).

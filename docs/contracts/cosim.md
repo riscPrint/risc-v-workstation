@@ -285,3 +285,28 @@ Its ABI is 1. Checkpoints save initial inputs and an action-history prefix.
 Restore creates a fresh machine, replays the prefix and checks effect hashes.
 A mismatch returns an error. Checkpoints restore functional state by replay.
 They do not copy Spike internals. Restore cost grows with history length.
+
+## PLIC external-interrupt replay
+
+The `rvw.external-interrupts/1` C2 declaration can bind an independent PLIC
+model with `plic` layout fields, `routes` pairs of context and mip bit,
+`stimulus` payloads, `request_address` and `ack_address`. Mailbox addresses
+must equal the ELF's `stimulus_step` and `stimulus_ack` symbols. Source steps
+must match the declared stimulus plan and the reference's retired requests.
+Only served acknowledgements can write the declared RAM mailbox.
+
+The checker replays accepted MMIO against the independent PLIC model. It
+checks accepted read values before they can become reference load inputs.
+Each retired PLIC access must match its accepted bus record. Pending-state
+CSR reads use checked pin levels. The Spike shim version is 8 and supplies
+`rvw_external_pending` for these platform input bits. This does not set a
+DUT register result or waive a CSR comparison. Interrupt injection still
+occurs at the recorded taken boundary. No other reference step receives a
+pending interrupt input that can move interrupt entry earlier.
+
+A complete match includes `external_interrupt_evidence.status: checked` and
+counts for pins, sources, acknowledgements, MMIO, claims, completions and
+interrupts taken. A missing category can have zero count. No incomplete
+source plan, acknowledgement, request, device access or taken boundary can
+earn a match. This replay supports one PLIC and one hart. Other external
+devices need their own declared consumer. Missing bindings give an error.
