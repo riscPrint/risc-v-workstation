@@ -170,3 +170,30 @@ It is not native PMP/ePMP, predictor or cache validation. The tool does not infe
 CSR encodings, implement a PMP policy model, verify the selected privilege mode,
 or verify that a project flushes all relevant state. The project program and
 policy binding must establish these conditions. A missing boundary is an error.
+
+## Critical-register faults
+
+`rvw sec fault --manifest fault.json --out out/fault` reuses `rvw fault` site
+selection, single-bit flip planning, C1 injection confirmation and C2 comparison.
+MCP tool: `sec_fault`. The manifest declares `db`, `elf`, `critical_registers`
+(path globs), `window` (start and end cycles), `samples`, `seed`,
+`adapter_command` (argv list), `detections` and `observations` (channel names).
+Use absolute adapter paths. Database and ELF paths are relative to the manifest.
+
+The adapter receives the existing `run --fault FILE` interface. It must also
+write `security-observations.json` in every run directory. This is an object
+with exactly the declared channels, including timing, bus or probe arrays as
+required by the threat model. A passing matching C2 trace alone is not enough.
+
+A named declared detection mechanism satisfies the detection check. A generic
+failure status without a named mechanism is unresolved. An architecturally
+harmless fault also needs identical declared security observations. Changed
+observations are a violation. Missing observations, unconfirmed injection and
+unresolved faults keep the campaign incomplete. Detection does not prove that
+no data escaped before the mechanism fired. Set the project's detection contract
+and observation window accordingly.
+
+Native tests use a tiny Verilog key register and parity guard. The planted
+unguarded fault changes a debug observation while its synthetic NOP architecture
+stays equal. The fixed variant reports a parity detection. This is not physical
+fault injection. Multi-bit, clock, voltage, laser and EM attacks are not modeled.
