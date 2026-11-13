@@ -303,3 +303,21 @@ restrictions. `abstract.sv` is the candidate model. A successful certificate
 covers projected low bits only. It does not replace a wider design. The reset
 policy resets once at startup, then holds reset inactive. Arbitrary future
 reset sequences are outside this certificate.
+
+## Cover-directed bounded campaign reports
+
+`rvw.formal-cover-hunt/1` records source, transformer and elaborated model
+hashes, preparation passes, available covers, target rows, covered count and
+unstarted targets. Each selected lowered cover becomes the only safety check
+in its target problem: assert the inverse of its predicate with its original
+enable. Original assertions and other covers are removed. Assumptions and
+transitions stay in place. Native liveness constraints are unsupported.
+
+A target has `status: covered` and `proof_kind: bounded_reachability` only
+after a concrete native counterexample to that generated check. Other target
+results remain inconclusive. An all-covered selection gives root `covered`,
+never safety `pass`. Bounded exhaustion does not mean unreachable. Target rows
+retain source location, attempt records and the native campaign result path.
+The captured campaign retains the generated sources and witness artifacts.
+CLI `cover-hunt` and MCP `formal_cover_hunt` expose the same budget and timeout.
+No reset, multi-clock scheduling or whole-design coverage result is implied.

@@ -2671,3 +2671,32 @@ Native reference evidence: the 32-bit counter proved against the 4-bit model.
 The increment-by-two candidate failed its obligation. Native tests also check
 16-bit to 3-bit projection with an active-low reset and renamed ports. Evidence:
 `/tmp/deep-counter-{safe,bad}/result.json`. No full-core result is implied.
+
+## Cover-directed bounded search
+
+Run `rvw formal cover-hunt --manifest PLAN.json --out OUT --budget 60` to
+search hard-to-reach covers. The plan uses pinned `top` and `sources`, plus
+the `depths`, `engines` and rIC3 `seeds` fields from `bug-hunt`. Optional
+`targets` selects unique elaborated cover cell names. Without it, the command
+searches every cover. The `formal_cover_hunt` MCP tool runs the same campaign.
+
+Yosys prepares the source with `prep -flatten`, `async2sync` and
+`chformal -lower`. Each target becomes a separate negated safety check with
+its original enable. Original safety assertions and other covers are removed
+from that target job. Source assumptions and all transition logic remain.
+The bounded campaign increases depth and varies engines and rIC3 seeds.
+The remaining budget is shared over remaining targets.
+
+A concrete failure of the generated check is a `bounded_reachability` cover
+hit. The report uses `covered`, never safety `pass`. Bounded success, missing
+engines, errors and budget expiry stay inconclusive. They cannot establish
+unreachability. The report retains elaborated and transformer hashes, target
+source locations, each attempt and native witness paths. No reset or physical
+clock qualification is added. Liveness constraints are refused.
+
+Native macOS ARM64 checks on 2026-11-13 used SMTBMC/Yices and rIC3 BMC.
+A four-bit counter's value-12 cover was not reached at depth 4 and was reached
+at depth 20. Its impossible value-16 cover stayed inconclusive. A deliberately
+failing source assertion did not count as a hit. rIC3 used seeds 0 and 1 at
+the shallow bound. Both native tests passed in 5.99 s with 6 s stage timeouts.
+Results are under `/tmp/deep-cover-native4/`. No capacity improvement is claimed.
