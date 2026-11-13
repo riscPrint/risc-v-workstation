@@ -94,3 +94,5 @@ Principles (from `ROADMAP.md`):
 
 - [ACT4 suite builds](contracts/act4.md)
 - [External SoC IP import](contracts/soc-ip.md)
+
+- [RTL benchmark campaigns](contracts/bench.md)

@@ -632,7 +632,7 @@ Optional tool set: 74 tools. Load MCP profile `formal` with `rvw_tools_load`. Re
 
 The question is cycles, IPC or where a pipeline stalls.
 
-Optional tool set: 56 tools. Load MCP profile `arch` with `rvw_tools_load`. Read the tool names in `rvw agent guide --json`. Use `rvw_tools_describe` before a call.
+Optional tool set: 57 tools. Load MCP profile `arch` with `rvw_tools_load`. Read the tool names in `rvw agent guide --json`. Use `rvw_tools_describe` before a call.
 
 1. **konata**: Run the workload with a Konata pipeline log (adapter option --konata). The mapped adapter collects declared probes and converts them. Compare retirement counts with C1 and C2. (manual)
    - If a Konata log: go to `report`.

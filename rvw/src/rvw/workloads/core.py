@@ -108,8 +108,9 @@ def recipe(name):
     return ASSETS / names[name]
 
 
-def build(manifest, source, out, cc, bench=None):
+def build(manifest, source, out, cc, bench=None, target=None, keep_going=False):
     data = load(manifest)
+    target = target or {}
     source, out = Path(source).resolve(), Path(out).resolve()
     if source == out or source in out.parents:
         raise ValueError("output must be outside the source tree")
@@ -142,31 +143,36 @@ def build(manifest, source, out, cc, bench=None):
         runtime = Path(relative)
         if runtime.is_absolute() or ".." in runtime.parts:
             raise ValueError("runtime paths must stay within the workstation")
-        target = out / "assets/workstation" / runtime
-        target.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copyfile(root / runtime, target)
+        runtime_target = out / "assets/workstation" / runtime
+        runtime_target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(root / runtime, runtime_target)
     records = []
     for w in rows:
         dest = out / w["id"]
         dest.mkdir()
         mapping = {"source": str(captured), "out": str(dest), "cc": compiler["path"],
-                   "assets": str(out / "assets")}
+                   "assets": str(out / "assets"), **{k: str(v) for k, v in target.items()}}
         argv = [a.format_map(mapping) for a in w["build"]]
-        command(argv, cwd=captured)
-        elf = dest / "workload.elf"
-        # Refuse a successful command that produced no target or the wrong target.
-        header = elf.read_bytes()[:64]
-        if len(header) < 64 or header[:6] != b"\x7fELF\x02\x01" or header[18:20] != b"\xf3\x00":
-            raise ValueError("build output must be a little-endian RV64 ELF")
-        records.append({**w, "argv": argv, "elf": str(elf), "elf_sha256": digest(elf),
-                        "elf_bytes": elf.stat().st_size})
+        try:
+            command(argv, cwd=captured)
+            elf = dest / "workload.elf"
+            # Refuse a successful command that produced no target or the wrong target.
+            header = elf.read_bytes()[:64]
+            if len(header) < 64 or header[:4] != b"\x7fELF" or header[4] != (1 if target.get("march", "rv64").startswith("rv32") else 2) or header[5] != 1 or header[18:20] != b"\xf3\x00":
+                raise ValueError("build output must be a little-endian " + ("RV32 ELF" if target.get("march", "rv64").startswith("rv32") else "RV64 ELF"))
+            records.append({**w, "argv": argv, "elf": str(elf), "elf_sha256": digest(elf),
+                            "elf_bytes": elf.stat().st_size})
+        except (ValueError, OSError) as exc:
+            if not keep_going:
+                raise
+            records.append({**w, "build_error": str(exc)})
     if tree_hash(captured) != source_hash:
         raise ValueError("build modified captured sources; put generated files under {out}")
     if digest(compiler["path"]) != compiler["sha256"]:
         raise ValueError("compiler changed during build")
-    report = {"schema": "rvw.workload-build/1", "status": "built", "manifest": data,
+    report = {"schema": "rvw.workload-build/1", "status": "partial" if any("build_error" in r for r in records) else "built", "manifest": data,
               "source_sha256": source_hash, "assets_sha256": tree_hash(out / "assets"),
-              "compiler": compiler, "workloads": records}
+              "compiler": compiler, "target": target, "workloads": records}
     (out / "build.json").write_text(json.dumps(report, indent=2) + "\n")
     return report
 
