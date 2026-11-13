@@ -1039,3 +1039,87 @@ selection, external corpus preparation, C1 suite entries, scheduled inputs
 and native page-walk observations for `rv64imasu`. It keeps the base project
 and its RV32 default unchanged. The measured MMU failures are in
 [FINDINGS.md](FINDINGS.md#rv64-sv39-functional-findings).
+
+
+## RV64 out-of-order tools
+
+Measured on `rv64imasu` on 2026-11-13. These three RV64IM programs run in
+M-mode with translation disabled. Seed 1 and zero added memory wait apply.
+They pass their RTL self-checks. Each complete Spike comparison uses only
+two counter synchronizations for the benchmark's cycle reads. Strict
+comparison differs at `mcycle`. These are not strict architectural matches.
+There is no output mask. MMIO, CSR and IRQ synchronization are disabled.
+
+| Program | RTL cycles | Retired | RTL IPC | Model cycles | Model IPC | IPC error | Counter synchronizations |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| median | 19,185 | 12,651 | 0.65942 | 21,553 | 0.58697 | -10.99% | 2 |
+| multiply | 40,136 | 55,393 | 1.38013 | 40,144 | 1.37986 | -0.02% | 2 |
+| memcpy | 22,235 | 28,674 | 1.28959 | 19,928 | 1.43888 | +11.58% | 2 |
+
+The existing [resource model](rvw/arch/ooo-resource.json) is used without
+RV64 fitting. C2 supplies XLEN 64 to the instruction decoder. The model has
+two-wide fetch, rename and commit, three issue ports, 64 ROB entries,
+32 IQ entries, 64 integer physical registers, and 16 load and store entries.
+It has two ALU ports and one shared execution port. Cache geometry, GShare,
+BTB and RAS settings stay as described in that file. The constant operation
+latencies, branch recovery, front-end delay, store drain and replay costs
+remain approximations. The RV32 fit has prior exposure to these benchmark
+families. This is a parameter-transfer check. It is not a new held-out fit.
+IPC uses the full C1/C2 program interval, not the benchmark ROI counters.
+IPC error is `100 * (model IPC / RTL IPC - 1)`.
+No translated benchmark timing or structure-size decision is qualified.
+
+| Program | Probe check | C2 / retiring slots | Top-down check | Captured rules / firings | Orphan-event warnings |
+|---|---|---:|---|---:|---:|
+| median | clean | 12,651 / 12,651 | checked | 9 / 0 | 1,280 |
+| multiply | clean | 55,393 / 55,393 | checked | 9 / 0 | 512 |
+| memcpy | clean | 28,674 / 28,674 | checked | 9 / 0 | 69 |
+
+The build exposes 55 registered probes. `rvw probes check --validate --c2`
+checks event fields and retirement counts. It reports the orphan events as
+warnings. It does not prove every pipeline-ID relationship. `rvw perf
+topdown` checks that retiring slots equal C1 and C2 retirements. Its other
+slots use the project's commit-slot partition. Function attribution assigns
+lost slots by time. These results do not prove a unique stall cause.
+
+The nine generated queue, pointer, free-list and forwarding rules compile
+into the RTL model. Native output capture sees zero firings in each run.
+The Sv39 config has 32 physical address bits, so the 32-bit refill bindings
+retain the full physical address. The M-only 64-bit physical-width config
+was not checked by this run. RV64 negative controls and whole-core formal
+proofs were NOT RUN. Zero firings cover only these exercised rules and runs.
+
+Use a private pinned core and the private locks from the setup above. Keep
+`RUN_ROOT` outside Git. The riscv-tests source pin is
+`d7e86f701b929b5d801f8cda1a4871ab05f452bb`. Its `isa` and `env` sources are
+unchanged. Build and run the programs once with the same model:
+
+```sh
+export NAX_BENCH_ELFS="$RUN_ROOT/bench64"
+export NAX_BENCH_RUN="$RUN_ROOT/bench64-rtl"
+nice -n 10 make -s -C Arch/bench SRC="$RISCV_TESTS_SOURCE/benchmarks" \
+  BARE_CC=riscv64-unknown-elf-gcc MARCH=rv64im ABI=lp64 \
+  BUILD="$NAX_BENCH_ELFS" BENCHES='median multiply memcpy'
+rvw --project examples/naxriscv checks generate --all --out "$RUN_ROOT/checks64" --json
+export RVW_NAX_CHECKS="$RUN_ROOT/checks64/queues"
+python - <<'PYMANIFEST'
+import json, os
+from pathlib import Path
+rows = [dict(config='rv64imasu', elf=str(Path(os.environ['NAX_BENCH_ELFS'])/(n+'.riscv')),
+             out=str(Path(os.environ['NAX_BENCH_RUN'])/n), seed=1, mem_latency=0,
+             max_cycles=1000000, wall_timeout=120, probes=True, rvfi_trace=True)
+        for n in ('median', 'multiply', 'memcpy')]
+(Path(os.environ['RUN_ROOT'])/'bench64-jobs.jsonl').write_text(
+    '\n'.join(json.dumps(r) for r in rows)+'\n')
+PYMANIFEST
+nice -n 10 examples/naxriscv/rvw/run.sh run-many \
+  --manifest "$RUN_ROOT/bench64-jobs.jsonl" --jobs 1 --persistent
+nice -n 10 python examples/naxriscv/rvw/arch/rv64-study.py \
+  --runs "$NAX_BENCH_RUN" --elf-dir "$NAX_BENCH_ELFS" \
+  --out "$RUN_ROOT/bench64-analysis"
+```
+
+The helper runs the existing probe, top-down, timing-model and Spike tools.
+It checks their outcomes and prints the IPC table. Full consumer reports
+stay in the external output directory. The model configuration SHA256 is
+`c8ed44308b842f120a5106d4a4fccbd1a2b99b9b7393b3486a59eab57ce879d2`.
