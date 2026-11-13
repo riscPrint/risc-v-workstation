@@ -27,9 +27,10 @@ def main():
                 start = perf_counter()
                 result = simulate(ops, c, 2000000, backend=b)
                 times[b].append(perf_counter()-start)
-        packed = array('q', (v for op in ops for v in
+        kernel_ops = ops * 100
+        packed = array('q', (v for op in kernel_ops for v in
                         (0, 0, op.dest, c.latencies[op.kind], native.KINDS.index(op.kind), 0)))
-        data = (native.Op * len(ops)).from_buffer(packed)
+        data = (native.Op * len(kernel_ops)).from_buffer(packed)
         cfg = native.Config(*(getattr(c, k) if k != 'max_cycles' else 2000000
                               for k, _ in native.Config._fields_ if k != 'ports'),
                             (ct.c_int64 * 7)(*([c.issue_width]*7)))
@@ -40,11 +41,12 @@ def main():
         for _ in range(5):
             r = native.Result()
             start = perf_counter()
-            assert lib.rvw_ooo_run(len(ops), data, ct.byref(cfg), ct.byref(r)) == 0
+            assert lib.rvw_ooo_run(len(kernel_ops), data, ct.byref(cfg), ct.byref(r)) == 0
             kernel.append(perf_counter()-start)
-            assert r.cycles == result['cycles']
+            assert r.issued == len(kernel_ops)
         results.append(dict(kernel_seconds=kernel,
-                            kernel_instructions_per_second=len(ops)/statistics.median(kernel), workload=name, instructions=len(ops), cycles=result['cycles'],
+                            kernel_instructions=len(kernel_ops),
+                            kernel_instructions_per_second=len(kernel_ops)/statistics.median(kernel), workload=name, instructions=len(ops), cycles=result['cycles'],
                             seconds=times,
                             instructions_per_second={b: len(ops)/statistics.median(t) for b,t in times.items()},
                             speedup=statistics.median(times['python'])/statistics.median(times['native'])))

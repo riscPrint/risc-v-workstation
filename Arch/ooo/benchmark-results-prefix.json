@@ -1,0 +1,73 @@
+{
+  "host": "macOS-27.2-arm64-arm-64bit-Mach-O",
+  "machine": "arm64",
+  "method": "warmed alternating trials; simulate includes validation and packing; C2 parsing excluded",
+  "results": [
+    {
+      "kernel_seconds": [
+        0.005447375006042421,
+        0.0036163750337436795,
+        0.0033098330022767186,
+        0.003291750093922019,
+        0.0032870409777387977
+      ],
+      "kernel_instructions": 500000,
+      "kernel_instructions_per_second": 151065023.41842246,
+      "workload": "integer",
+      "instructions": 5000,
+      "cycles": 628,
+      "seconds": {
+        "python": [
+          0.021502416930161417,
+          0.018789874971844256,
+          0.01870562497060746,
+          0.12320770800579339
+        ],
+        "native": [
+          0.006134249968454242,
+          0.005963958101347089,
+          0.005957250017672777,
+          0.005898917093873024
+        ]
+      },
+      "instructions_per_second": {
+        "python": 248186.42792325793,
+        "native": 838841.1560440216
+      },
+      "speedup": 3.3798832718741605
+    },
+    {
+      "kernel_seconds": [
+        0.17940399993676692,
+        0.20482233306393027,
+        0.1770931250648573,
+        0.14692666695918888,
+        0.2367515000514686
+      ],
+      "kernel_instructions": 500000,
+      "kernel_instructions_per_second": 2787005.864842651,
+      "workload": "mixed",
+      "instructions": 5000,
+      "cycles": 5001,
+      "seconds": {
+        "python": [
+          5.051257667015307,
+          4.858378458069637,
+          6.924945167033002,
+          6.740226250025444
+        ],
+        "native": [
+          0.00762016698718071,
+          0.007622916018590331,
+          0.008924750029109418,
+          0.007487499970011413
+        ]
+      },
+      "instructions_per_second": {
+        "python": 848.0696806572629,
+        "native": 656035.2650585183
+      },
+      "speedup": 773.5629276949084
+    }
+  ]
+}
