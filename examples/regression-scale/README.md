@@ -103,3 +103,27 @@ exact good-to-bad range and `rvw bisect` argument arrays. Native bisection was a
 `src/test/resources/VexRiscvRegressionData` gitlink before simulation. No
 endpoint or first-bad result was earned. The capture check was kept intact.
 These XOR failures did not exercise a trap-cause signature.
+
+## Native impact selection
+
+`selection-results.json` records a separate private control fixture. Its base
+commit enables line comments and removes the unused test-data gitlink. No
+capture check changes. The baseline supplied 49 passing native runs, 1,585
+Verilator coverage points and a 1,033-signal design database. `farm observe`
+read captured FST waves. Its corrected mapping retains all aliases of each
+wave code. The catalogue and two-second plan were frozen before candidate
+execution. A later alias fix replay kept the same 49 selected test IDs.
+
+The candidate changes the example's split-add/sub option and plants the XOR
+fault. Coverage selection cannot map either edited source line. It therefore
+requires all 49 tests. The farm plan preserves that requirement and reports
+its 61.89-second estimate as over budget. The separate full and selected runs
+both report 47 passes and two failures. This caught the planted fault through
+full-suite fallback. It does not qualify test reduction.
+
+The baseline point-coverage ranking chose eight tests. A separate native run
+of those eight tests passed all eight and missed the fault. Point coverage is
+not functional coverage. Do not use that ranking alone as a gate. No candidate
+outcomes were used to form the frozen plan. Native test times include model
+startup in the first test. The two-second value is an advisory selection
+budget, not an enforced execution limit. C4 acceptance was NOT RUN here.

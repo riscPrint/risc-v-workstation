@@ -1,0 +1,73 @@
+{
+  "schema": "rvw.native-impact-validation/1",
+  "baseline_revision": "020dcda4c9f5b452ecf8e7ab886b22dad92b9a04",
+  "candidate_revision": "87ff426aaf80cbec82a8a6f0d13c74fc73d6396f",
+  "database_sha256": "3853be187c118ea36a0618e0f4a11dcc332a1230321669d556594a9c34d68d92",
+  "database_signals": 1033,
+  "baseline_tests": 49,
+  "coverage_points": 1585,
+  "coverage_rank_selected": [
+    "rv32ui-p-fence_i",
+    "rv32ui-p-lui",
+    "rv32um-p-div",
+    "rv32ui-p-srl",
+    "rv32ui-p-ld_st",
+    "rv32ui-p-bgeu",
+    "rv32um-p-mul",
+    "rv32um-p-mulh"
+  ],
+  "wave_mapped_signals": 808,
+  "wave_codes": 453,
+  "observation_issues": 0,
+  "coverage_fallback": true,
+  "uncovered_changes": [
+    {
+      "file": "rvw/src/main/scala/rvwvex/VexTop.scala",
+      "start": 18,
+      "end": 18,
+      "insertion": false,
+      "new_file": false,
+      "added_lines": 0,
+      "unmapped_lines": [
+        18
+      ],
+      "unhit_lines": []
+    },
+    {
+      "file": "src/main/scala/vexriscv/plugin/IntAluPlugin.scala",
+      "start": 89,
+      "end": 89,
+      "insertion": false,
+      "new_file": false,
+      "added_lines": 0,
+      "unmapped_lines": [
+        89
+      ],
+      "unhit_lines": []
+    }
+  ],
+  "catalogue_sha256": "ad26ab9deefa7f48ea685d1728935b98bbe9422af257750f95b5ce298e76462d",
+  "plan_sha256": "a8329a31e51143162ec7e61533a6f604cc0775d31183ade3398199b40b503412",
+  "plan_frozen_before_candidate": true,
+  "selected_tests": 49,
+  "budget_seconds": 2,
+  "expected_wall_seconds": 61.89,
+  "over_budget": true,
+  "full_counts": {
+    "pass": 47,
+    "fail": 2
+  },
+  "selected_counts": {
+    "pass": 47,
+    "fail": 2
+  },
+  "ranking_only_counts": {
+    "pass": 8
+  },
+  "selected_caught_bug": true,
+  "ranking_only_caught_bug": false,
+  "reduction_qualified": false,
+  "alias_fix": "post-validation catalogue replay kept the same 49 selected IDs; original frozen catalogue retained",
+  "gate": "not_run",
+  "fixture": "private committed example; line comments enabled; unused test-data gitlink removed; capture policy unchanged"
+}

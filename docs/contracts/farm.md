@@ -128,3 +128,13 @@ invalid comparison evidence does not waive the C1 failure. Invalid evidence
 adds an `issues` entry. Members retain comparison hashes and reference-policy
 metadata. Generated bisect command arrays retain their revision range and
 `execution: not_run`. Generating a command is not bisection evidence.
+
+## Native impact observations
+
+`rvw.impact-observations/1` is a farm selection catalogue. It records exact
+waveform/database name matches, known-value changes, measured wall seconds,
+database and waveform hashes, C1 source/RTL identities and waveform capture
+metadata. Unknown observations omit `signals`. The selector keeps them
+mandatory. Signal activity includes reset and boot. It is partial evidence,
+not functional coverage or gate acceptance. Coverage selection `tests` remain
+mandatory regardless of the time budget. Unknown required test IDs are errors.

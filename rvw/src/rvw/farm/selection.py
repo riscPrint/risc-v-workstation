@@ -30,7 +30,10 @@ def select(db, changed, catalogue, seconds=600):
     stale = catalogue.get('database_sha256') != digest
     coverage_plan = catalogue.get('coverage_selection', {})
     fallback = bool(coverage_plan.get('fallback_all')) or bool(changed and not targets)
+    coverage_required = set(coverage_plan.get('tests', []))
     tests = catalogue['tests']
+    if coverage_required - {t['id'] for t in tests}:
+        raise ValueError('coverage selection names tests absent from observation catalogue')
     if len({t['id'] for t in tests}) != len(tests):
         raise ValueError('test IDs must be unique')
     for test in tests:
@@ -40,7 +43,7 @@ def select(db, changed, catalogue, seconds=600):
     elapsed = 0.
     # Unknown impacts and stale observations are mandatory, even over budget.
     for test in tests:
-        if test.get('mandatory') or stale or unknown or fallback or 'signals' not in test:
+        if test.get('mandatory') or test['id'] in coverage_required or stale or unknown or fallback or 'signals' not in test:
             selected.append(dict(id=test['id'], reason='mandatory_or_unknown', wall_seconds=test['wall_seconds']))
             elapsed += test['wall_seconds']
             covered.update(test.get('signals', []))
