@@ -2306,6 +2306,21 @@ Signal names are relative to the design top. Unavailable signal names are null.
 This field records the check's Spinal domain, not a relationship constraint.
 Older reports without this field remain readable.
 
+### Two-copy security and reset contract
+
+`rvw.security-pair/1` uses a reviewed top/port map, one RTL source, public clock
+and reset, secret inputs, architectural outputs and digital observation outputs.
+The result retains the plan, RTL hash and nested `rvw.formal/1` unbounded proof.
+Status is `pass`, `fail` or `inconclusive`. CLI exit is zero only for `pass`.
+Equal architectural observation prefixes require equal current observations.
+No retirement alignment or implicit declassification is added. `initialization`
+shares every input and compares independent RTL initial states after reset.
+`constant_time` has declared operation names and no architectural guard. Those
+names document project binding, not checked instruction decoding. `reset_values`
+adds expected output values after reset edges. `reset_coverage` counts declared,
+total output and proved bits. A nonpassing proof has zero proved bits. This
+format does not record internal-register or whole-core security qualification.
+
 ### Sequential equivalence result (`rvw.formal.equiv/1`)
 
 `rvw formal equiv` compares two captured RTL file sets. It writes `result.json`.

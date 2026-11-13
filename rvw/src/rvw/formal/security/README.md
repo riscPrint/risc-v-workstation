@@ -80,3 +80,51 @@ It does not estimate detection on arbitrary designs. It has no noise model beyon
 deterministic simulation. Cache coherence, real predictors, physical timing,
 analog effects, DMA, debug authentication, lifecycle, Smepmp, and power/reset
 crossings remain unmodeled. Issues #20, #138, #195 and #198 remain open.
+
+## Two-copy formal contracts and reset analysis
+
+`rvw formal security pair --manifest pair.json --out pair-proof` checks a
+project-owned `rvw.security-pair/1` description. MCP tool: `formal_security_pair`.
+
+```json
+{"schema":"rvw.security-pair/1", "kind":"noninterference", "top":"Unit",
+ "rtl":"unit.v", "clock":"clk", "reset":"reset",
+ "ports":{"clk":{"direction":"input","width":1},
+          "reset":{"direction":"input","width":1},
+          "secret":{"direction":"input","width":32},
+          "pc":{"direction":"output","width":32},
+          "cache_hit":{"direction":"output","width":1}},
+ "secrets":["secret"], "architectural":["pc"], "observations":["cache_hit"],
+ "adversary":"controls input data", "unmodeled_channels":["power","analog noise"]}
+```
+
+The check instantiates two copies. Secret inputs are independent. All other
+inputs, including clock and reset, are shared. State starts under each copy's
+RTL initialization rules. The existing proof flow holds reset for one clock.
+At each later rising edge, equal architectural observation prefixes require
+equal current observation samples. Once the architectural prefixes differ, the
+pair has no further obligations. Architectural sample timing is part of this
+contract. This is a causal prefix contract. It does not align retirement events
+or infer a sequential ISA contract. Use the existing Spike campaign for that.
+
+For a declared Zkt unit, use `kind: "constant_time"`, list its `operations`,
+leave `architectural` empty, and select only timing outputs in `observations`.
+The proof checks the bound unit for all shared public input sequences. Operation
+names document the binding. They do not validate instruction decoding or select
+an instruction subset inside the DUT. No physical leakage result is implied.
+
+Use `kind: "initialization"` with empty `secrets` and `architectural` lists to
+check initial-state independence after reset. Both copies then receive identical
+inputs. A counterexample shows that a declared output can still differ. This
+checks uninitialized-state effects without the conservative IFT transfer rules.
+
+Optional `reset_values` maps output names to unsigned expected values. Assertions
+check both copies at the sample after each reset edge. `reset_coverage` records
+declared bits, total declared output bits and proved bits. Proved bits are zero
+unless the complete proof passes. These are output reset checks. They do not
+count all internal registers or establish reset coverage for the whole design.
+
+The command captures the plan and self-contained RTL. It rejects DUT assertions,
+assumptions and nondeterministic cells. The existing single-clock proof flow
+checks the generated wrapper and records native evidence under `proof/`.
+Missing tools, a timeout or incomplete evidence cannot produce `pass`.
