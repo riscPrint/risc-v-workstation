@@ -109,11 +109,11 @@ def mcp_tools():
                  "trace hash.", schema({"base": S, "candidate": S, "tolerance": {"type": "number", "default": 0}}, ["base", "candidate"]),
                  _compare_reports, annotations={"readOnlyHint": True}, side_effects='read-only; long-running', native_tools=()),
         ToolSpec("csim_compare_rtl", "Compare a predictor model with explicit RTL predictor events (rvw.bp-events/1 or Kanata "
-                 "#rvw prediction records) on the same C2 run, branch by branch. Missing identity or events gives inconclusive. Runs as a job.",
+                 "#rvw prediction records) on the same C2 run. Set cache for per-access cache comparison. Missing identity or events gives inconclusive. Optional trace_out writes a new cache trace. Runs as a job.",
                  schema({"study": S, "trace": S, "events": S, "roi_start": {"type": "integer"}, "roi_end": {"type": "integer"},
                          "elf_sha256": S, "top": {"type": "integer", "default": 20}, "cache": S,
                          "level": {**S, "enum": ["l1d", "l1i"]}, "trace_out": S}, ["study", "trace", "events"]),
-                 _compare, long=True, annotations={"readOnlyHint": True}, side_effects='long-running; launches native component engine; builds engine cache if absent', native_tools=('native csim',)),
+                 _compare, long=True, annotations={"readOnlyHint": False}, side_effects='long-running; launches native component engine; builds engine cache if absent; optional trace_out writes a new file', native_tools=('native csim',)),
         ToolSpec("csim_compare_cache", "Compare a cache model (memory.l1d or memory.l1i of a study) with RTL cache probe "
                  "access events (rvw.probe-events/1) on the same C2 run, access by access: per-access hit/miss "
                  "agreement and miss-rate error. Misaligned or missing events give inconclusive. Runs as a job.",

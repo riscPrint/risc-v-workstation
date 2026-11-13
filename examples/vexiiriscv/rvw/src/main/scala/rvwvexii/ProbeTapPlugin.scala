@@ -34,10 +34,11 @@ class ProbeTapPlugin extends FiberPlugin {
       val learns = wb.prediction.learns
       for ((l, i) <- learns.zipWithIndex) {
         val p = l.payload
-        Probe.branch(s"learn$i", l.valid && p.isBranch, p.pcOnLastSlice, p.taken, p.pcTarget,
+        val covered = if (dynamicDirection) p.isBranch || p.isPush || p.isPop else p.isBranch
+        Probe.branch(s"learn$i", l.valid && covered, p.pcOnLastSlice, p.taken, p.pcTarget,
           predictedTaken = Some(if (dynamicDirection) p.ctx(Prediction.ALIGNED_JUMPED) else p.taken ^ p.wasWrong),
           predictedTarget = if (dynamicDirection) Some(p.ctx(Prediction.ALIGNED_JUMPED_PC)) else None,
-          covers = Seq("cond"))
+          covers = if (dynamicDirection) Seq("cond", "call", "icall", "ret") else Seq("cond"))
       }
       val commitId = Reg(UInt(32 bits)) init(0)
       val commitValid = wb.commits.ports.map(_.valid).orR

@@ -133,7 +133,7 @@ signals only and adds nothing unless the run uses C1 `--probes`.
 
 | Probe | Signals |
 |-------|---------|
-| `branch learn0` (`cond`) | upstream whitebox learn port: `pcOnLastSlice`, `taken`, `pcTarget`; predicted = `taken xor wasWrong` (no BTB or GShare: the sequential PC) |
+| `branch learn0` (cached: `cond`, `call`, `icall`, `ret`; default: `cond`) | upstream whitebox learn port: `pcOnLastSlice`, `taken`, `pcTarget`; cacheless: sequential prediction; cached: carried `ALIGNED_JUMPED` and `ALIGNED_JUMPED_PC` |
 | `counter` | cycles, retired (commit ports), branches, cond_branches, mispredicts (HPM 3), loads (HPM 4), stores (HPM 5), flushes |
 | `csrWrite csr` | whitebox CSR access port with `writeDone` |
 | `interruptTaken irq` | trap whitebox `trap && interrupt`, code, pending PC |
@@ -174,7 +174,7 @@ they differ. Measured identical on 2026-11-13.
 
 ## Limits
 
-- Compressed, FPU and cached configurations have no validated trace mapping.
+- Compressed and FPU configurations have no validated trace mapping.
   The additional supervisor configurations below are experimental.
 - No riscv-formal monitor. The probe is the only commit source.
 - `rvw query` cannot see the `rvw_trap_*` tap signals. They are simulation-only.
@@ -764,3 +764,44 @@ The audit also includes the CLINT/PLIC RV64 feature plan. Its four WFI and
 12 PLIC/delivery programs keep the documented device/reference limits.
 Repeated reset with live devices is excluded until a device reset contract
 exists. The main-pin reset result does not qualify that combination.
+
+## Cached probe measurements
+
+`rv32im_cached` keeps one lane and machine mode. It adds 4 KiB instruction
+and data L1 caches, GShare, BTB and a four-entry RAS. The default remains
+`rv32im`. Core sources are unchanged. With probes enabled, all 49 selected
+aligned RV32UI/UM programs passed and matched complete Spike traces at
+seed 7 and memory latency 0. [The ISA record](rvw/csim/isa-measured.json)
+retains input and RTL hashes.
+
+[CacheProbes](rvw/src/main/scala/rvwvexii/CacheProbes.scala) taps physical
+instruction lookups, refill beats, fills and invalidation. It records data
+access hit/miss, refill, victim eviction, writeback bursts and flush
+completion. Its data-cache flush cleans dirty lines and retains tags. Retired
+instruction accesses have separate refill-attribution semantics.
+
+The cache sweep completed 3,344 C2 instructions in 20,738 cycles. Its data
+cache emitted 769 accesses, 513 misses, 513 fills, 449 evictions and 512
+writeback bursts. All 769 data accesses agreed with the component model.
+Miss-rate error was zero. RTL recorded one data-cache clean. The model
+omits that clean and records 449 writebacks, a count error of -63.
+The independent checker was consistent on all four measured programs. It checked 12 early-restart instruction hits in
+the cache sweep against exact returned words.
+
+The predictor study describes the selected GShare, BTB and RAS stack. Its
+conditional, call and return measurements are recorded in
+[the predictor study](rvw/csim/README.md). It uses the actual carried
+prediction. `wasWrong` also includes target errors and cannot supply the
+predicted direction by itself. The model remains approximate.
+
+`rvw perf` has a commit-stage view and inferred refill/recovery spans. Its
+clock window matches C1. The retirement-count difference remains visible.
+See [the event-boundary explanation](rvw/csim/RETIREMENT.md). The frozen
+three-program timing study reports inconclusive accuracy. Its held-out IPC
+errors were +81.54 percent on `branches` and +210.26 percent on the `nop`
+cache sweep. No timing fit or fidelity claim is made.
+
+See [the performance record](rvw/csim/perf-measured.json) and
+[the commands](rvw/csim/README.md). These results cover selected native
+simulation cases. They do not qualify cache coherence, other configs or
+physical hardware.

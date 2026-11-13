@@ -1,0 +1,42 @@
+{
+  "schema": "rvw.example-predictor-inputs/1",
+  "config": "rv32im_cached",
+  "seed": 7,
+  "memory_latency": 0,
+  "rtl_status": "pass",
+  "inconclusive": null,
+  "instructions": 35661,
+  "cycles": 108567,
+  "elf_sha256": "89640cc283934cbf05d783e0ee57e20426d49a2297585916502456e78a0a511d",
+  "rtl_sha256": "c0d442ec703c5257502c109a5d11475c0964362730ec78de1c947b5bbd1ad0c9",
+  "covered_kinds": [
+    "cond",
+    "call",
+    "icall",
+    "ret"
+  ],
+  "events": {
+    "cond": 6001,
+    "call": 1500,
+    "ret": 1500
+  },
+  "inputs_sha256": {
+    "result.json": "0f74b2802d3b10f8dc76ca2604bc0d9f6c69d68ef66fa907441cc79829f6e7fc",
+    "rvfi.jsonl": "bc72930da4fcd22a6239520229234145d7604f1d32af3c511a50055f53974684",
+    "probe-events.jsonl": "a35ea6e350f4dfd776f681c3e7e62b41baecdb4b518a6d01f656966985b60f4f"
+  },
+  "bp_events_sha256": "1d143f91966a6e0db6e4d9e441d1485bcb9c34d420a39f297cbab95ec1c07b9a",
+  "binding_sha256": "5eb65622c7772c4d19bef4a2a4fa4c4f8890cafb46548685a4c4b89b67b522f3",
+  "component_sources_sha256": {
+    "ComponentSims/branch_sim.cc": "0e8d6ae3ecdc001155cf248ca4d5ec402ae19d76f3d3b972694b27ad6b1c0840",
+    "ComponentSims/capi.cc": "e8b24425258971b225df094c052f68019dc010087059a005bbf236303c21844b",
+    "ComponentSims/csim.cc": "f38ae16828e38b43d283d9985d680bc0897eee4f7187ab97d1299020196ed96e",
+    "ComponentSims/include/csim/common.h": "27f583b1a9cd332b5d2789d9aad06f7a5167954365df36047e6e00057ebeb32a",
+    "ComponentSims/include/csim/direction.h": "3c906c128c1899c27740276908e8bc212ac424044eea920cdf6d5193d79614fb",
+    "ComponentSims/include/csim/memory.h": "37e6588ff778c27cffdfe91dd9579541f0cbf1046365c76480c4ee132928dfb3",
+    "ComponentSims/include/csim/misc.h": "1c81b5f16b48b2d0821339882c0ae6971d6dcaa8046e11c1cfcf5d428caf0cb9",
+    "ComponentSims/include/csim/study.h": "621ace12362856f0f33ad727841e87013a3956c860d445a1e2fd3082ff2b2041",
+    "ComponentSims/include/csim/target.h": "4c9cfc393eb12e4c939750281564bef65afc2d69c4cee5dbcf126e9a08dfdd14",
+    "ComponentSims/include/csim/trace.h": "d5ab7b32c632738e45943656a0553c11aa951d7446fc5adcecd3acb08a8297e1"
+  }
+}

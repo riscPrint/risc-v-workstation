@@ -501,11 +501,13 @@ Minimal probe set per tool:
 
 | Tool | Probes | Convert |
 |------|--------|---------|
-| `rvw csim compare-rtl` | `branch` at the commit point with `predictedTaken` (and `semantics`) | `--to bp-events --c2 RUN/rvfi.jsonl` |
+| `rvw csim compare-rtl` | one `branch` event per covered C2 branch, actual prediction bits and declared `semantics` | `--to bp-events --c2 RUN/rvfi.jsonl` |
 | `rvw perf` pipeline view | `stage` per stage with a unique instruction ID, `retire`, `flush` | `--to kanata` |
 | `rvw perf` stall causes | the above plus `stall(scope, cause, valid)` | `--to kanata` |
 | `rvw arch ooo-calibrate` | `counter` per RTL event in the plan (rename stalls, ROB full, IQ occupancy as an amount, mispredicts, misses) | `--to counts --c1 RUN/result.json --c2 RUN/rvfi.jsonl` |
 | HPM monitors | `counter(name, inc, hpm = Some(selector))` | `--to hpm` |
+| `rvw probes convert --to cache-check` | physical cache lookup/access, refill beats, fills, evictions, writeback and flush | `--c2 RUN/rvfi.jsonl --elf ELF --geometry CACHE=SETSxWAYS` |
+| `rvw csim compare-rtl --cache CACHE` | retired cache access attribution and hit/miss | use raw `probe-events.jsonl` with C2 and the project study |
 | RiscvSim `CacheEventObserver` | `cacheAccess` with `data` (and `mask` for stores) | `--to cache` |
 | `rvw regress mmu report --protocol-config` | `tlb` fill/hit/invalidate with va, pa, asid, entry, size, PTE | `--to mmu` |
 | MMU walk capture | `pageWalk` request/response | `--to mmu` |
@@ -516,6 +518,56 @@ Per-slot CSR state for `rvw cosim` still uses `RvfiProbe csrSlots` (see RiscvSim
 injection uses the design database and an adapter that implements C1 `--fault`.
 The [VexRiscv example](../examples/vexriscv/README.md#probes) taps existing signals from
 a plugin, without core source changes.
+
+### Event boundaries and measured examples
+
+Choose the event boundary before you bind a counter. Record whether it
+counts completion, physical commit or accepted interface transfers. Use an
+end condition at the same boundary when equal totals are required. The
+VexiiRiscv example has different C1 and typed-counter boundaries. Its commit
+PCs equal the C2 prefix. The remaining C2 records are at the tail. The
+[analysis](../examples/vexiiriscv/rvw/csim/RETIREMENT.md) records the source
+and native evidence. Do not add a constant to make counters equal.
+
+Tap actual prediction bits. A correction flag can include target errors
+and cannot supply direction by itself. Declare the instruction kinds that
+a branch probe covers. The converter checks every event in those kinds
+against C2. Missing, extra or misaligned events remain errors. Do not drop
+individual events to force agreement. For Kanata predictions, carry the
+same live instruction ID as the stage probes.
+
+For caches, separate physical lookup results from retired refill
+attribution. A buffered instruction can retire after invalidation. For
+early restart, record each returned refill word, its physical address and
+its data. The checker permits a hit before full-line completion only when
+the requested bytes arrived and their values match memory. False hits
+remain violations. Declare `semantics=writeback-only` when a flush cleans
+dirty lines but keeps tags. Use invalidation semantics only when tags
+become invalid. Compare writeback counts beside access agreement.
+Pull a child signal into the parent before selecting
+its bits. Keep core signal names and geometry in project code and data.
+
+Use explicit `first_cycle` and `last_cycle` sampling bounds for performance
+windows. `ProbeCollector` supplies them after sampling. Legacy streams
+without these bounds retain only their observed event window. Mark a stall
+reason as `inferred` when the signals show refill activity or a recovery
+span without proving lost CPU cycles. Causes can overlap.
+
+The extra cached VexRiscv and VexiiRiscv configs each passed 49 selected
+aligned ISA programs with probes enabled. All 98 traces matched Spike.
+Four programs per core supplied physical cache checks and performance
+reports. All eight cache checks were consistent. Data-cache models agreed
+on all 769 accesses in each cache sweep. VexiiRiscv also checked 512
+writebacks and 12 early-restart instruction hits. Frozen timing models
+were scored on three programs per core. Both reported inconclusive
+accuracy. No core source changes were needed.
+
+See the [VexRiscv commands and records](../examples/vexriscv/rvw/csim/README.md)
+and [VexiiRiscv commands and records](../examples/vexiiriscv/rvw/csim/README.md).
+The [native negative test](../examples/vexriscv/rvw/tests/test_probe_misplaced.py)
+checks a deliberately misplaced branch probe in a temporary adapter.
+Use `rvw probes check --events RUN/probe-events.jsonl --validate --c2 RUN/rvfi.jsonl`.
+The check must name that probe.
 
 ## Configure MCP
 

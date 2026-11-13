@@ -21,3 +21,12 @@ def test_docs_staging_does_not_write_sources(tmp_path):
     assert done.returncode==0,done.stderr
     assert 'tool README pages' in done.stdout
     assert not (tmp_path/'site').exists()
+
+
+def test_hidden_metadata_readme_is_not_a_tool_page(tmp_path, monkeypatch):
+    for name in ('Cosim', '.pytest_cache'):
+        directory = tmp_path / name
+        directory.mkdir()
+        (directory / 'README.md').write_text('# Example\n')
+    monkeypatch.setattr(docs, 'ROOT', tmp_path)
+    assert docs.readmes() == ['Cosim/README.md']
