@@ -10,12 +10,23 @@ def register(subparsers) -> None:
     p.add_argument("--list", action="store_true", help="print the tools and exit (needs no MCP SDK)")
     p.add_argument("--only", help="comma-separated rvw packages whose tools to serve (default: all)")
     p.add_argument("--json", action="store_true", help="with --list: machine-readable")
+    p.add_argument("--transport", choices=("stdio", "sse"), default="stdio")
+    p.add_argument("--clients", help="JSON token-to-client policy file for SSE")
+    p.add_argument("--host", default="127.0.0.1")
+    p.add_argument("--port", type=int, default=8766)
     p.set_defaults(func=run)
 
 
 def run(args) -> int:
     from .registry import Registry
 
+    if getattr(args, "transport", "stdio") == "sse":
+        from pathlib import Path
+        from .remote import serve
+        if not args.clients:
+            raise ValueError("SSE transport requires --clients")
+        serve(json.loads(Path(args.clients).read_text()), args.host, args.port)
+        return 0
     only = set(args.only.split(",")) if args.only else None
     from rvw.common.project import load_project
     try:

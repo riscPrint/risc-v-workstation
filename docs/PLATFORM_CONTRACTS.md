@@ -1,5 +1,14 @@
 # Platform contracts
 
+### Authenticated remote MCP transport
+
+MCP SSE requires bearer authentication on both session and message endpoints.
+Each token has an explicit tool allowlist, fixed project and separate job store.
+Clients can inspect and cancel only their own jobs. Remote calls use owned workers
+and optional per-client per-run supervisor budgets. Disconnect does not cancel;
+server shutdown does. Read-only roles are limited to the implemented query list.
+No new verification verdict or hostile-input guarantee follows from transport.
+
 ### Persistent agent workflow plans
 
 Farm workflow plans retain node IDs, command arrays and dependency IDs separately

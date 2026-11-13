@@ -52,6 +52,7 @@ class Job:
         self.done = threading.Event()
         self.exception: BaseException | None = None
         self.cost_report = None
+        self.budget = None
 
     # -- for handlers
     def log(self, line: str) -> None:
@@ -86,7 +87,7 @@ class Job:
         from pathlib import Path
         import sys
         budget_temp = None
-        budget = os.environ.get("RVW_JOB_BUDGET")
+        budget = self.budget if self.budget is not None else os.environ.get("RVW_JOB_BUDGET")
         if budget:
             from rvw.common.budget import Budget
             self.GRACE_S = max(self.GRACE_S, 30.0)
@@ -223,7 +224,13 @@ class JobManager:
     """`workers` threads run long jobs; `quick_workers` run isolated short calls (registry), so a
     quick call never queues behind a regression. The newest `keep` finished jobs are kept."""
 
-    def __init__(self, workers: int = 2, quick_workers: int = 4, keep: int = 100):
+    def __init__(self, workers: int = 2, quick_workers: int = 4, keep: int = 100, budget=None):
+        self.budget = None
+        if budget is not None:
+            import json
+            from rvw.common.budget import Budget
+            Budget(**budget)
+            self.budget = json.dumps(budget)
         self._pool = ThreadPoolExecutor(max_workers=workers, thread_name_prefix="rvw-job")
         self._quick = ThreadPoolExecutor(max_workers=quick_workers, thread_name_prefix="rvw-quick")
         self._jobs: dict[str, Job] = {}
@@ -234,6 +241,7 @@ class JobManager:
     def submit(self, tool: str, arguments: dict, fn: Callable[[Job], Any], quick: bool = False) -> Job:
         with self._lock:
             job = Job(f"job-{next(self._ids)}-{int(time.time())}", tool, arguments)
+            job.budget = self.budget
             self._jobs[job.id] = job
         self._evict()
 
