@@ -14,7 +14,7 @@ def mcp_tools():
         "(no retirement in the last hang_cycles cycles, from an RVFI trace). A symbol's `smallest_failing` is the "
         "smallest tested failing value, or null when the original value did not reproduce in this search. "
         "It is `exact` only with monotone or exhaustive after the failing upper bound is confirmed.",
-        schema({"project": S, "run_dir": S, "out": S, "signature": S,
+        schema({"project": S, "run_dir": S, "out": S, "signature": S, "cosim_platform": S,
                 "modes": {**S, "default": "cycles,seeds,latency", "description": "comma-separated modes; uart_rx removes timed UART input transactions"},
                 "seeds": {**I, "default": 12}, "seed_start": {**I, "default": 1},
                 "latencies": {**S, "default": "1,2,5,10,20,50", "description": "comma-separated fixed latencies"},
