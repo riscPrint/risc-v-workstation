@@ -11,10 +11,10 @@ import scala.collection.mutable
 /** Bounded real-core checkpoint probe. No JVM threads or reset replay are saved. */
 object CheckpointProbe {
   def main(args: Array[String]): Unit = {
-    require(args.length == 5 || args.length == 6, "ELF OUT CHECKPOINT save|restore|bootstrap RETIREMENT [BOOT-IMAGE]")
+    require(args.length == 5 || args.length == 6, "ELF OUT CHECKPOINT save|restore|replay|bootstrap RETIREMENT [BOOT-IMAGE]")
     val elfFile = new File(args(0)); val out = new File(args(1)); out.mkdirs()
     val checkpoint = new File(args(2)); val mode = args(3); val at = args(4).toLong
-    require(Set("save", "restore", "bootstrap")(mode) && at > 0)
+    require(Set("save", "restore", "replay", "bootstrap")(mode) && at > 0)
     val bridge = new BridgeState
     val config = bridge.instrument(VexTop.spinalConfig.copy(headerWithDate = false, headerWithRepoHash = false))
     val compiled = SimConfig.withConfig(config).withVerilator
@@ -25,7 +25,7 @@ object CheckpointProbe {
     val identity = ujson.Obj("rtl" -> hash(rtlBytes), "elf" -> hash(Files.readAllBytes(elfFile.toPath)),
       "harness" -> hash(getClass.getResourceAsStream("CheckpointProbe$.class").readAllBytes()),
       "bridge" -> hash(classOf[BridgeState].getResourceAsStream("BridgeState.class").readAllBytes()))
-    val saved = if (mode == "restore") Some({
+    val saved = if (mode == "restore" || mode == "replay") Some({
       val envelope = ujson.read(Files.readString(checkpoint.toPath))
       require(hash(ujson.write(envelope("state")).getBytes("UTF-8")) == envelope("sha256").str,
         "checkpoint digest mismatch")
@@ -112,7 +112,7 @@ object CheckpointProbe {
         }
         cd.clockSim #= true; sleep(5); cd.clockSim #= false; sleep(5)
         ip = ni; dp = nd
-        if (mode == "save" && !captured && retired == at) {
+        if ((mode == "save" || mode == "replay") && !captured && retired == at) {
           val state = ujson.Obj("schema" -> "rvw.vex-bridge-probe/1", "identity" -> identity,
             "cycle" -> cycle.toString, "retired" -> retired.toString, "handler" -> handler,
             "ibus" -> pending(ip), "dbus" -> pending(dp), "rtl" -> bridge.capture(),
@@ -123,7 +123,7 @@ object CheckpointProbe {
         }
       }
       require(finished && transferred, "core did not finish after transfer")
-      require(mode != "save" || captured, "checkpoint retirement not reached")
+      require(!Set("save", "replay")(mode) || captured, "checkpoint retirement not reached")
       writer.end(cycle, "pass")
     } finally writer.close()
   }
