@@ -107,6 +107,11 @@ def command(a):
 def register(sub):
     sim = sub.add_parser('sim', help='native simulation checkpoint control')
     commands = sim.add_subparsers(dest='snapshot_action', required=True)
+    p = commands.add_parser('timing-handoff', help='check an external gate-netlist/SDF capability declaration')
+    p.add_argument('manifest', type=Path)
+    p.add_argument('--capabilities', type=Path, required=True)
+    from .timing import command as timing_command
+    p.set_defaults(func=timing_command)
     p = commands.add_parser('profile', help='report recorded C1 native build and run costs')
     p.add_argument('--result', action='append', type=Path, default=[])
     p.add_argument('--build-profile', choices=('default', 'threads-2', 'threads-4', 'split-10000'), default='default')

@@ -3,12 +3,16 @@ from rvw.mcp.spec import ToolSpec, schema
 from .live import capture, resume, suffix_check
 from .reverse import reverse_step
 from .profile import report
+from .timing import inspect
 
 
 def mcp_tools():
     s = {'type': 'string'}
     n = {'type': 'integer', 'minimum': 1}
     return [
+        ToolSpec('sim_timing_handoff', 'Check declared external gate-netlist/SDF cell, delay, timing-check and unknown behavior support. Interface readiness only; no native annotation or physical signoff.',
+                 schema({'manifest': s, 'capabilities': s}, ['manifest', 'capabilities']), inspect,
+                 annotations={'readOnlyHint': True}),
         ToolSpec('sim_profile', 'Report recorded C1 native build/run costs, missing measurements and PATH tool availability. Proposed flag profiles are not applied. No speed qualification.',
                  schema({'results': {'type': 'array', 'items': s}, 'build_profile':
                          {'type': 'string', 'enum': ['default', 'threads-2', 'threads-4', 'split-10000']}}), report,

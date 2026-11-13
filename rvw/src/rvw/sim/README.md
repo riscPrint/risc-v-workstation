@@ -19,6 +19,31 @@ Use `rvw sim reverse-step adapter.json --snapshot A.json --snapshot B.json
 replay. MCP: `sim_reverse_step`. See [reverse execution](REVERSE.md) for port
 requirements, history limits and the current native qualification limit.
 
+## External timing replay handoff
+
+`rvw sim timing-handoff request.json --capabilities adapter.json` checks a
+project's external gate-netlist/SDF handoff. MCP: `sim_timing_handoff`.
+The result is `declared_compatible`. It is not native annotation evidence.
+Both documents must list supported/requested cells, delay constructs, timing
+checks, unknown-value behavior and SDF corners. Unsupported requests fail.
+
+`rvw.timing-request/1` includes `top`, `netlist`, `sdf`, `cell_libraries`,
+`cells`, `delays`, `timing_checks`, `unknown_behavior` and `corner`.
+Paths resolve beside the manifest. Inputs must be nonempty. Unknown behavior
+is `four-state` or `two-state`. Corner is `min`, `typ` or `max`.
+`rvw.timing-capabilities/1` includes `simulator`, `version`, `cells`, `delays`,
+`timing_checks`, `unknown_behavior`, and `corners`. Inventories are project
+and adapter declarations. The tool does not infer complete cell inventories.
+The report includes exact input sizes and hashes.
+
+External native adapters can implement `timing.TimingPort`. `replay` captures
+all declared input bytes before calling the adapter. Its `run_timing` must
+consume those bytes, refuse ignored annotation and return a native C1 outcome.
+Compilation alone is refused as an outcome. A replay result always reports
+`physical_signoff: false`. Cell-library, delay and timing-check qualification
+belongs to the external adapter. No bundled gate-level backend or physical
+validation is supplied by this interface.
+
 ## Profile recorded build and run costs
 
 Use `rvw sim profile --result RUN/result.json --result OTHER/result.json

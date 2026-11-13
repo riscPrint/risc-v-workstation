@@ -120,6 +120,21 @@ Scala compile time or process-tree RSS. `status: reported` is not qualification.
 and do not classify the recorded runs. Tool statuses reflect PATH lookup only.
 Unimplemented hierarchy/PGO/Arcilator paths remain explicit unsupported entries.
 
+### External gate-netlist and SDF replay interface
+
+`rvw.timing-request/1` names a netlist, SDF, cell libraries, top, cell inventory,
+delay constructs, timing checks, unknown behavior and min/typ/max corner.
+`rvw.timing-capabilities/1` declares simulator/version, supported inventories,
+unknown behavior and corners. `rvw.timing-handoff/1` reports captured input
+hashes and declarations. `declared_compatible` means interface readiness only.
+It does not establish annotation, complete cell coverage or physical signoff.
+Unsupported requested cells, delays, checks, corners or unknown behavior fail.
+
+An external native `TimingPort` consumes captured input bytes and must refuse
+ignored annotation. It returns a native C1 outcome. A compile-only result is
+not a run outcome. `physical_signoff` remains false. The simulation README
+lists exact fields. No standard-cell library or native gate backend is bundled.
+
 ## Layout
 
 | Path | What | Language |
