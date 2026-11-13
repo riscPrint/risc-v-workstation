@@ -125,14 +125,18 @@ def generate(spec, out):
                 raise ValueError('invalid or duplicate rule id')
             seen.add(name)
             kind=rule['kind']
-            required={'clk','reset',*PORTS[kind]}
+            from . import ooo_checks
+            required={'clk','reset',*(ooo_checks.PORTS[kind] if kind in ooo_checks.NAMES else PORTS[kind])}
             if set(rule.get('ports',{})) != required:
                 raise ValueError('bind exactly: '+', '.join(sorted(required)))
-            if any(not isinstance(v,str) or not path.fullmatch(v) for v in rule['ports'].values()):
+            # A list binds lanes: element 0 is the least significant part.
+            if any(not all(isinstance(x,str) and path.fullmatch(x) for x in (v if isinstance(v,list) and v else [v]))
+                   for v in rule['ports'].values()):
                 raise ValueError('ports must name project RTL signals')
             from .invariants import render as render_any
             entries=rule.get('entries',4)
-            source=render_any(kind,entries,rule.get('width',8))
+            source=(ooo_checks.render(kind,rule.get('width',8),entries,rule.get('lanes')) if kind in ooo_checks.NAMES
+                    else render_any(kind,entries,rule.get('width',8)))
             module='rvw_rule_'+name
             sources.append(source.replace('module rvw_'+kind,'module '+module,1))
             bound=rule.get('bound',8)
@@ -152,9 +156,10 @@ def generate(spec, out):
                 row['initial_live']=initial
                 if kind=='freelist_conservation':row['usable']=usable
             binds.append('bind '+spec['top']+' '+module+params+' '+module+'_instance('+', '.join(
-                '.'+k+'('+v+')' for k,v in sorted(rule['ports'].items()))+');')
+                '.'+k+'('+('{'+', '.join(reversed(v))+'}' if isinstance(v,list) else v)+')' for k,v in sorted(rule['ports'].items()))+');')
             row.update(status='generated', ports=rule['ports'])
             if kind=='arbiter': row['bound']=bound
+            if kind in ooo_checks.NAMES and rule.get('lanes'): row['lanes']=rule['lanes']
         except (ValueError, KeyError, TypeError) as exc:
             row['reason']=str(exc)
     out=Path(out)

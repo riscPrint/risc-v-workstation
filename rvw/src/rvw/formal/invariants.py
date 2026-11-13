@@ -1,9 +1,9 @@
 """Small reusable safety predicates. Parameters come from the specification."""
 from pathlib import Path
 
-from . import generated_checks, resource_checks, micro_checks, simple_bus_checks
+from . import generated_checks, resource_checks, micro_checks, ooo_checks, simple_bus_checks
 
-NAMES = ('rob', 'freelist', 'rename', 'issue', 'lsq', 'credit') + generated_checks.NAMES + resource_checks.NAMES + micro_checks.NAMES + simple_bus_checks.NAMES
+NAMES = ('rob', 'freelist', 'rename', 'issue', 'lsq', 'credit') + generated_checks.NAMES + resource_checks.NAMES + micro_checks.NAMES + ooo_checks.NAMES + simple_bus_checks.NAMES
 
 
 def render(kind: str, entries: int = 4, width: int = 3) -> str:
@@ -14,6 +14,8 @@ def render(kind: str, entries: int = 4, width: int = 3) -> str:
         raise ValueError(f'width must be in 1..{max_width}')
     if kind in micro_checks.NAMES:
         return micro_checks.render(kind, width, entries)
+    if kind in ooo_checks.NAMES:
+        return ooo_checks.render(kind, width, entries)
     if kind in resource_checks.NAMES:
         return resource_checks.render(kind, width, entries)
     if kind in simple_bus_checks.NAMES:

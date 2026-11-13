@@ -1241,3 +1241,14 @@ ports or design-database types, current declarations and generation gaps.
 `--inventory CHECKS_JSON` adds native inserted IDs and signal roles from a
 checks inventory. The plan keeps generator output separate from native
 insertion. It does not run a simulation or proof. MCP exposes `checks_plan`.
+
+## Wide out-of-order rules
+
+The generated microarchitecture checks now include `rob_pointers`,
+`freelist_ghost` and `store_forward_window`. The first accepts multiple push
+and pop lanes with independent steps. The second observes allocate and free
+events and keeps a ghost free-tag mask, including RAM-backed free lists.
+The third checks the youngest matching older store in a wrapping queue.
+See [the contract](../docs/contracts/formal.md#wide-out-of-order-event-checks).
+NaxRiscv supplies all signal bindings in its example. Its forwarding rule is
+active only for loads. It does not check forwarded byte data.

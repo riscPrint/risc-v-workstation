@@ -1,0 +1,442 @@
+{
+  "schema": "rvw.nax-wide-check-study/1",
+  "isa": {
+    "pass_count": 59,
+    "firings": 0,
+    "rules": 9,
+    "tests": [
+      {
+        "test": "rv32ua-p-amoadd_w",
+        "cycles": 544,
+        "instret": 102,
+        "checks_sha256": "710b06f891e5e9701e0171e80e4b4b4ff1e7f60559743246bd08177306c9e877"
+      },
+      {
+        "test": "rv32ua-p-amoand_w",
+        "cycles": 545,
+        "instret": 100,
+        "checks_sha256": "710b06f891e5e9701e0171e80e4b4b4ff1e7f60559743246bd08177306c9e877"
+      },
+      {
+        "test": "rv32ua-p-amomax_w",
+        "cycles": 590,
+        "instret": 114,
+        "checks_sha256": "710b06f891e5e9701e0171e80e4b4b4ff1e7f60559743246bd08177306c9e877"
+      },
+      {
+        "test": "rv32ua-p-amomaxu_w",
+        "cycles": 548,
+        "instret": 101,
+        "checks_sha256": "710b06f891e5e9701e0171e80e4b4b4ff1e7f60559743246bd08177306c9e877"
+      },
+      {
+        "test": "rv32ua-p-amomin_w",
+        "cycles": 590,
+        "instret": 114,
+        "checks_sha256": "710b06f891e5e9701e0171e80e4b4b4ff1e7f60559743246bd08177306c9e877"
+      },
+      {
+        "test": "rv32ua-p-amominu_w",
+        "cycles": 548,
+        "instret": 101,
+        "checks_sha256": "710b06f891e5e9701e0171e80e4b4b4ff1e7f60559743246bd08177306c9e877"
+      },
+      {
+        "test": "rv32ua-p-amoor_w",
+        "cycles": 545,
+        "instret": 100,
+        "checks_sha256": "710b06f891e5e9701e0171e80e4b4b4ff1e7f60559743246bd08177306c9e877"
+      },
+      {
+        "test": "rv32ua-p-amoswap_w",
+        "cycles": 545,
+        "instret": 100,
+        "checks_sha256": "710b06f891e5e9701e0171e80e4b4b4ff1e7f60559743246bd08177306c9e877"
+      },
+      {
+        "test": "rv32ua-p-amoxor_w",
+        "cycles": 548,
+        "instret": 104,
+        "checks_sha256": "710b06f891e5e9701e0171e80e4b4b4ff1e7f60559743246bd08177306c9e877"
+      },
+      {
+        "test": "rv32ua-p-lrsc",
+        "cycles": 38589,
+        "instret": 6277,
+        "checks_sha256": "710b06f891e5e9701e0171e80e4b4b4ff1e7f60559743246bd08177306c9e877"
+      },
+      {
+        "test": "rv32ui-p-add",
+        "cycles": 1003,
+        "instret": 501,
+        "checks_sha256": "710b06f891e5e9701e0171e80e4b4b4ff1e7f60559743246bd08177306c9e877"
+      },
+      {
+        "test": "rv32ui-p-addi",
+        "cycles": 727,
+        "instret": 278,
+        "checks_sha256": "710b06f891e5e9701e0171e80e4b4b4ff1e7f60559743246bd08177306c9e877"
+      },
+      {
+        "test": "rv32ui-p-and",
+        "cycles": 987,
+        "instret": 521,
+        "checks_sha256": "710b06f891e5e9701e0171e80e4b4b4ff1e7f60559743246bd08177306c9e877"
+      },
+      {
+        "test": "rv32ui-p-andi",
+        "cycles": 659,
+        "instret": 234,
+        "checks_sha256": "710b06f891e5e9701e0171e80e4b4b4ff1e7f60559743246bd08177306c9e877"
+      },
+      {
+        "test": "rv32ui-p-auipc",
+        "cycles": 496,
+        "instret": 94,
+        "checks_sha256": "710b06f891e5e9701e0171e80e4b4b4ff1e7f60559743246bd08177306c9e877"
+      },
+      {
+        "test": "rv32ui-p-beq",
+        "cycles": 926,
+        "instret": 327,
+        "checks_sha256": "710b06f891e5e9701e0171e80e4b4b4ff1e7f60559743246bd08177306c9e877"
+      },
+      {
+        "test": "rv32ui-p-bge",
+        "cycles": 1017,
+        "instret": 345,
+        "checks_sha256": "710b06f891e5e9701e0171e80e4b4b4ff1e7f60559743246bd08177306c9e877"
+      },
+      {
+        "test": "rv32ui-p-bgeu",
+        "cycles": 1035,
+        "instret": 370,
+        "checks_sha256": "710b06f891e5e9701e0171e80e4b4b4ff1e7f60559743246bd08177306c9e877"
+      },
+      {
+        "test": "rv32ui-p-blt",
+        "cycles": 927,
+        "instret": 327,
+        "checks_sha256": "710b06f891e5e9701e0171e80e4b4b4ff1e7f60559743246bd08177306c9e877"
+      },
+      {
+        "test": "rv32ui-p-bltu",
+        "cycles": 937,
+        "instret": 352,
+        "checks_sha256": "710b06f891e5e9701e0171e80e4b4b4ff1e7f60559743246bd08177306c9e877"
+      },
+      {
+        "test": "rv32ui-p-bne",
+        "cycles": 937,
+        "instret": 327,
+        "checks_sha256": "710b06f891e5e9701e0171e80e4b4b4ff1e7f60559743246bd08177306c9e877"
+      },
+      {
+        "test": "rv32ui-p-fence_i",
+        "cycles": 1280,
+        "instret": 332,
+        "checks_sha256": "710b06f891e5e9701e0171e80e4b4b4ff1e7f60559743246bd08177306c9e877"
+      },
+      {
+        "test": "rv32ui-p-jal",
+        "cycles": 492,
+        "instret": 91,
+        "checks_sha256": "710b06f891e5e9701e0171e80e4b4b4ff1e7f60559743246bd08177306c9e877"
+      },
+      {
+        "test": "rv32ui-p-jalr",
+        "cycles": 606,
+        "instret": 151,
+        "checks_sha256": "710b06f891e5e9701e0171e80e4b4b4ff1e7f60559743246bd08177306c9e877"
+      },
+      {
+        "test": "rv32ui-p-lb",
+        "cycles": 717,
+        "instret": 289,
+        "checks_sha256": "710b06f891e5e9701e0171e80e4b4b4ff1e7f60559743246bd08177306c9e877"
+      },
+      {
+        "test": "rv32ui-p-lbu",
+        "cycles": 717,
+        "instret": 289,
+        "checks_sha256": "710b06f891e5e9701e0171e80e4b4b4ff1e7f60559743246bd08177306c9e877"
+      },
+      {
+        "test": "rv32ui-p-ld_st",
+        "cycles": 2181,
+        "instret": 999,
+        "checks_sha256": "710b06f891e5e9701e0171e80e4b4b4ff1e7f60559743246bd08177306c9e877"
+      },
+      {
+        "test": "rv32ui-p-lh",
+        "cycles": 724,
+        "instret": 305,
+        "checks_sha256": "710b06f891e5e9701e0171e80e4b4b4ff1e7f60559743246bd08177306c9e877"
+      },
+      {
+        "test": "rv32ui-p-lhu",
+        "cycles": 755,
+        "instret": 314,
+        "checks_sha256": "710b06f891e5e9701e0171e80e4b4b4ff1e7f60559743246bd08177306c9e877"
+      },
+      {
+        "test": "rv32ui-p-lui",
+        "cycles": 484,
+        "instret": 101,
+        "checks_sha256": "710b06f891e5e9701e0171e80e4b4b4ff1e7f60559743246bd08177306c9e877"
+      },
+      {
+        "test": "rv32ui-p-lw",
+        "cycles": 756,
+        "instret": 319,
+        "checks_sha256": "710b06f891e5e9701e0171e80e4b4b4ff1e7f60559743246bd08177306c9e877"
+      },
+      {
+        "test": "rv32ui-p-or",
+        "cycles": 987,
+        "instret": 524,
+        "checks_sha256": "710b06f891e5e9701e0171e80e4b4b4ff1e7f60559743246bd08177306c9e877"
+      },
+      {
+        "test": "rv32ui-p-ori",
+        "cycles": 658,
+        "instret": 241,
+        "checks_sha256": "710b06f891e5e9701e0171e80e4b4b4ff1e7f60559743246bd08177306c9e877"
+      },
+      {
+        "test": "rv32ui-p-sb",
+        "cycles": 1033,
+        "instret": 490,
+        "checks_sha256": "710b06f891e5e9701e0171e80e4b4b4ff1e7f60559743246bd08177306c9e877"
+      },
+      {
+        "test": "rv32ui-p-sh",
+        "cycles": 1132,
+        "instret": 543,
+        "checks_sha256": "710b06f891e5e9701e0171e80e4b4b4ff1e7f60559743246bd08177306c9e877"
+      },
+      {
+        "test": "rv32ui-p-simple",
+        "cycles": 457,
+        "instret": 77,
+        "checks_sha256": "710b06f891e5e9701e0171e80e4b4b4ff1e7f60559743246bd08177306c9e877"
+      },
+      {
+        "test": "rv32ui-p-sll",
+        "cycles": 1036,
+        "instret": 529,
+        "checks_sha256": "710b06f891e5e9701e0171e80e4b4b4ff1e7f60559743246bd08177306c9e877"
+      },
+      {
+        "test": "rv32ui-p-slli",
+        "cycles": 725,
+        "instret": 277,
+        "checks_sha256": "710b06f891e5e9701e0171e80e4b4b4ff1e7f60559743246bd08177306c9e877"
+      },
+      {
+        "test": "rv32ui-p-slt",
+        "cycles": 994,
+        "instret": 495,
+        "checks_sha256": "710b06f891e5e9701e0171e80e4b4b4ff1e7f60559743246bd08177306c9e877"
+      },
+      {
+        "test": "rv32ui-p-slti",
+        "cycles": 703,
+        "instret": 273,
+        "checks_sha256": "710b06f891e5e9701e0171e80e4b4b4ff1e7f60559743246bd08177306c9e877"
+      },
+      {
+        "test": "rv32ui-p-sltiu",
+        "cycles": 703,
+        "instret": 273,
+        "checks_sha256": "710b06f891e5e9701e0171e80e4b4b4ff1e7f60559743246bd08177306c9e877"
+      },
+      {
+        "test": "rv32ui-p-sltu",
+        "cycles": 994,
+        "instret": 495,
+        "checks_sha256": "710b06f891e5e9701e0171e80e4b4b4ff1e7f60559743246bd08177306c9e877"
+      },
+      {
+        "test": "rv32ui-p-sra",
+        "cycles": 1050,
+        "instret": 548,
+        "checks_sha256": "710b06f891e5e9701e0171e80e4b4b4ff1e7f60559743246bd08177306c9e877"
+      },
+      {
+        "test": "rv32ui-p-srai",
+        "cycles": 723,
+        "instret": 292,
+        "checks_sha256": "710b06f891e5e9701e0171e80e4b4b4ff1e7f60559743246bd08177306c9e877"
+      },
+      {
+        "test": "rv32ui-p-srl",
+        "cycles": 1047,
+        "instret": 542,
+        "checks_sha256": "710b06f891e5e9701e0171e80e4b4b4ff1e7f60559743246bd08177306c9e877"
+      },
+      {
+        "test": "rv32ui-p-srli",
+        "cycles": 729,
+        "instret": 286,
+        "checks_sha256": "710b06f891e5e9701e0171e80e4b4b4ff1e7f60559743246bd08177306c9e877"
+      },
+      {
+        "test": "rv32ui-p-st_ld",
+        "cycles": 1427,
+        "instret": 519,
+        "checks_sha256": "710b06f891e5e9701e0171e80e4b4b4ff1e7f60559743246bd08177306c9e877"
+      },
+      {
+        "test": "rv32ui-p-sub",
+        "cycles": 987,
+        "instret": 493,
+        "checks_sha256": "710b06f891e5e9701e0171e80e4b4b4ff1e7f60559743246bd08177306c9e877"
+      },
+      {
+        "test": "rv32ui-p-sw",
+        "cycles": 1116,
+        "instret": 550,
+        "checks_sha256": "710b06f891e5e9701e0171e80e4b4b4ff1e7f60559743246bd08177306c9e877"
+      },
+      {
+        "test": "rv32ui-p-xor",
+        "cycles": 995,
+        "instret": 523,
+        "checks_sha256": "710b06f891e5e9701e0171e80e4b4b4ff1e7f60559743246bd08177306c9e877"
+      },
+      {
+        "test": "rv32ui-p-xori",
+        "cycles": 656,
+        "instret": 243,
+        "checks_sha256": "710b06f891e5e9701e0171e80e4b4b4ff1e7f60559743246bd08177306c9e877"
+      },
+      {
+        "test": "rv32um-p-div",
+        "cycles": 559,
+        "instret": 132,
+        "checks_sha256": "710b06f891e5e9701e0171e80e4b4b4ff1e7f60559743246bd08177306c9e877"
+      },
+      {
+        "test": "rv32um-p-divu",
+        "cycles": 585,
+        "instret": 133,
+        "checks_sha256": "710b06f891e5e9701e0171e80e4b4b4ff1e7f60559743246bd08177306c9e877"
+      },
+      {
+        "test": "rv32um-p-mul",
+        "cycles": 986,
+        "instret": 495,
+        "checks_sha256": "710b06f891e5e9701e0171e80e4b4b4ff1e7f60559743246bd08177306c9e877"
+      },
+      {
+        "test": "rv32um-p-mulh",
+        "cycles": 976,
+        "instret": 495,
+        "checks_sha256": "710b06f891e5e9701e0171e80e4b4b4ff1e7f60559743246bd08177306c9e877"
+      },
+      {
+        "test": "rv32um-p-mulhsu",
+        "cycles": 976,
+        "instret": 495,
+        "checks_sha256": "710b06f891e5e9701e0171e80e4b4b4ff1e7f60559743246bd08177306c9e877"
+      },
+      {
+        "test": "rv32um-p-mulhu",
+        "cycles": 976,
+        "instret": 495,
+        "checks_sha256": "710b06f891e5e9701e0171e80e4b4b4ff1e7f60559743246bd08177306c9e877"
+      },
+      {
+        "test": "rv32um-p-rem",
+        "cycles": 559,
+        "instret": 132,
+        "checks_sha256": "710b06f891e5e9701e0171e80e4b4b4ff1e7f60559743246bd08177306c9e877"
+      },
+      {
+        "test": "rv32um-p-remu",
+        "cycles": 585,
+        "instret": 132,
+        "checks_sha256": "710b06f891e5e9701e0171e80e4b4b4ff1e7f60559743246bd08177306c9e877"
+      }
+    ]
+  },
+  "negative_controls": [
+    {
+      "plant": "rob",
+      "seed": 1,
+      "target": "rob_conservation",
+      "status": "assert",
+      "rtl_sha256": "08e3ae060cb0b8da522a573d285bbcbcf834245e47f640fba77953917561702d",
+      "firings": [
+        {
+          "id": "rob_conservation",
+          "count": 29
+        },
+        {
+          "id": "int_freelist_ghost",
+          "count": 304
+        }
+      ]
+    },
+    {
+      "plant": "freelist",
+      "seed": 1,
+      "target": "int_freelist_ghost",
+      "status": "assert",
+      "rtl_sha256": "d7667f5ee5c655d1e95d42ae3ae1e5cd1b83423558152c9cc182dde7fea066e2",
+      "firings": [
+        {
+          "id": "int_freelist_ghost",
+          "count": 135
+        }
+      ]
+    },
+    {
+      "plant": "forward",
+      "seed": 1,
+      "target": "sq_forward_youngest",
+      "status": "fail",
+      "rtl_sha256": "69c8986e2c20bcfca94a3cc01306d36fdebeccf9b1a3e3263b8fa51059c9bfd8",
+      "firings": [
+        {
+          "id": "sq_forward_youngest",
+          "count": 2
+        }
+      ]
+    }
+  ],
+  "attempts": [
+    {
+      "plant": "freelist",
+      "status": "error",
+      "reason": "First mutation removed a bound signal; this is not a caught bug."
+    },
+    {
+      "plant": "forward",
+      "program": "rv32ui-p-sb",
+      "target_firings": 0,
+      "reason": "Other rules fired. Use the directed multi-store control for the forwarding rule."
+    },
+    {
+      "program": "forward-control",
+      "seed": 1452471272,
+      "status": "fail",
+      "target_firings": 0,
+      "reason": "Unseeded clean run fired non-forwarding rules. Cause unresolved. Controls are bounded to fixed seed 1."
+    }
+  ],
+  "limits": [
+    "One RV32IMA configuration in simulation. No formal proof or whole-core qualification.",
+    "Forwarding rule checks age and selection, not data correctness."
+  ],
+  "directed_positive": {
+    "seed": 1,
+    "status": "pass",
+    "firings": 0,
+    "spike": {
+      "status": "match",
+      "instructions": 331
+    }
+  }
+}
