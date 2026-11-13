@@ -122,7 +122,7 @@ def test_csr_masks_ranges_and_access_decoding(tmp_path):
     base["csr_sync"] = ["0x301"]
     path = tmp_path / "old.json"
     path.write_text(json.dumps(base))
-    with pytest.raises(ValueError, match="csr_masks"):
+    with pytest.raises(ValueError, match="unknown cosim platform settings.*csr_sync"):
         Platform.load("old", path)
 
 
