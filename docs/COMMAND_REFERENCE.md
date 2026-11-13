@@ -554,7 +554,7 @@ usage: rvw farm dashboard [-h] --root ROOT --out OUT [--core CORE] [--suite
 
 ```text
 usage: rvw formal [-h] [--project PROJECT]
-    {csr,rtl-grid,rtl-refine,relation-strengthen,doctor,engines,engine-race,engine-bench,model-grid,security,regress,properties,liveness,sva-lower,template,contracts,strengthen,testplan,proof-core,apps,autocheck,bench,cex,sby-history,sby-regress,prove,depth-search,riscv,connectivity,datapath,equiv,bmc,from-sim,swarm,xprop,x-context,x-sweep}
+    {csr,model-live,rtl-grid,rtl-refine,relation-strengthen,doctor,engines,engine-race,engine-bench,model-grid,security,regress,properties,liveness,sva-lower,template,contracts,strengthen,testplan,proof-core,apps,autocheck,bench,cex,sby-history,sby-regress,prove,depth-search,riscv,connectivity,datapath,equiv,bmc,from-sim,swarm,xprop,x-context,x-sweep}
     ...
 ```
 
@@ -562,6 +562,13 @@ usage: rvw formal [-h] [--project PROJECT]
 
 ```text
 usage: rvw formal csr [-h] --model MODEL --out OUT [--project PROJECT]
+```
+
+### `rvw formal model-live`
+
+```text
+usage: rvw formal model-live [-h] --manifest MANIFEST --out OUT [--json]
+    [--project PROJECT]
 ```
 
 ### `rvw formal rtl-grid`
@@ -844,9 +851,10 @@ usage: rvw formal from-sim [-h] [--verilog VERILOG [VERILOG ...]] [--top TOP]
 usage: rvw formal swarm [-h] [--verilog VERILOG [VERILOG ...]] [--top TOP]
     [--clock CLOCK] [--reset RESET] [--reset-active {high,low}] [--checks
     CHECKS] [--depth DEPTH] [--engine ENGINE] [--timeout TIMEOUT] --out OUT
-    [--json] [--tie PORT=VALUE] --trace TRACE [--start-cycle START_CYCLE]
-    --end-cycle END_CYCLE [--samples SAMPLES] --budget BUDGET [--scope SCOPE]
-    [--memories {trace,free}] [--first-failure] [--project PROJECT]
+    [--json] [--tie PORT=VALUE] --trace TRACE [--state-plan STATE_PLAN]
+    [--engine-pool ENGINE_POOL] [--start-cycle START_CYCLE] --end-cycle
+    END_CYCLE [--samples SAMPLES] --budget BUDGET [--scope SCOPE] [--memories
+    {trace,free}] [--first-failure] [--project PROJECT]
 ```
 
 ### `rvw formal xprop`
@@ -2134,6 +2142,14 @@ Arguments: `out` (required), `manifest` (required), `hosts`, `timeout`, `workers
 
 Starts a background job: yes.
 
+### `formal_model_live`
+
+Check fair recurrent progress on an explicit finite graph. No RTL translation claim.
+
+Arguments: `out` (required), `manifest` (required).
+
+Starts a background job: yes.
+
 ### `formal_proof_core`
 
 Extract a deletion-minimal solver core for one named SMT query. Not an RTL proof.
@@ -2187,6 +2203,14 @@ Starts a background job: yes.
 Lower finite clocked SVA to native Yosys assertions. Unsupported constructs give named errors.
 
 Arguments: `source` (required), `out` (required).
+
+Starts a background job: yes.
+
+### `formal_swarm`
+
+Run bounded replay checks from sampled trace states with coverage-hole priorities and engine diversity.
+
+Arguments: `out` (required), `verilog` (required), `top` (required), `trace` (required), `end_cycle` (required), `start_cycle`, `samples`, `budget` (required), `timeout`, `depth`, `engine`, `engine_pool`, `state_plan`, `scope`.
 
 Starts a background job: yes.
 
