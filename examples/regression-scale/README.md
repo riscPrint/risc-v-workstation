@@ -127,3 +127,19 @@ not functional coverage. Do not use that ranking alone as a gate. No candidate
 outcomes were used to form the frozen plan. Native test times include model
 startup in the first test. The two-second value is an advisory selection
 budget, not an enforced execution limit. C4 acceptance was NOT RUN here.
+
+## Native budgets and unit costs
+
+`budget-results.json` records real adapter executions on the committed private
+fault fixture. A one-job run budget stopped the declared DUT-failure retry.
+The original C1 failure remains recorded. A one-job agent budget allowed a
+native add test to pass and blocked the next job before launch. A 0.2-second
+run wall budget ended a native adapter launch with no C1 verdict. Cleanup made
+its charged wall time 0.399 seconds. The private core lock was free afterward.
+
+Three attempts used 145.751 wall seconds and 0.080973 declared core-hours.
+At an illustrative rate of one caller unit per core-hour, the cost was
+0.040486 units per conclusive C1 observation across one pass and one failure.
+The charge includes the timed-out launch. CPU use is declared, not measured.
+There are no C4 reports in this budget experiment. Its C4 unit cost is null.
+Later committed gate runs supply that separate measure.

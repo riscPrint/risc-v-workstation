@@ -467,3 +467,13 @@ Attach its reviewed selection as `coverage_selection` in the catalogue.
 coverage-test IDs are errors. `fallback_all` still keeps every test. Freeze
 the catalogue and plan before executing the candidate. Compare the selected
 run with a separate full run. A point-covering subset need not catch a fault.
+
+Budget reports also show recorded C1/C3 DUT outcomes and C4 report counts.
+`cost_per_conclusive_dut_observation` divides all scope charges, including
+infrastructure attempts, by recorded conclusive C1/C3 observations. Repeated
+executions count separately. `cost_per_recorded_gate_report` divides the same
+scope charges by unambiguous recorded C4 reports. Missing rates or zero reports
+keep unit costs null. Per-C4 groups show only charges of attempts that own that
+report. Scope totals can also include upstream simulation jobs. Caller rate
+units are not an external provider bill. Budget exhaustion never creates a
+verdict or removes a recorded DUT failure.
