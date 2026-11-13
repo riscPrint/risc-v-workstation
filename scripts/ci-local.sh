@@ -9,6 +9,9 @@ root="$(cd "$(dirname "$0")/.." && pwd)"
 if [ "$mode" = messages ]; then
   exec "${CI_PYTHON:-python3}" "$root/scripts/check-conventional.py"
 fi
+CI_REPORT_DIR="${CI_REPORT_DIR:-$root/rvw/out/ci/$mode-${GITHUB_RUN_ID:-local}}"
+if [[ "$CI_REPORT_DIR" != /* ]]; then CI_REPORT_DIR="$root/$CI_REPORT_DIR"; fi
+export CI_REPORT_DIR
 job="$(mktemp -d "${TMPDIR:-/tmp}/rvw-ci.XXXXXXXX")"
 cleanup() {
   status=$?
@@ -60,6 +63,8 @@ mkdir -p "$TMPDIR"
 unset RVW_HOME RVW_PROJECT RVW_CORE RVW_LOCKS_HELD RVW_LOCK_PYTHON PYTHONPATH VIRTUAL_ENV
 # Optional core tests must never find a neighbouring developer checkout.
 export SPINAL_BOOM="$job/no-boom" VEXRISCV="$job/no-vex"
+export VEXIIRISCV="$job/no-vexii" NAXRISCV="$job/no-nax" RVW_CORE_SOURCE="$job/no-core"
+unset RVW_SPINAL_SOURCE
 export RVW_RESULTS="$job/results" RVW_SRC_CACHE="$job/src-cache"
 "${CI_PYTHON:-python3.11}" -m venv rvw/.venv
 export PATH="$PWD/rvw/.venv/bin:$PATH"

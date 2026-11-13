@@ -1166,6 +1166,7 @@ cocotb = [
 ]
 dev = [
     { name = "pytest" },
+    { name = "pyyaml" },
 ]
 docs = [
     { name = "mkdocs" },
@@ -1192,6 +1193,7 @@ requires-dist = [
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=8" },
     { name = "pyuvm", marker = "extra == 'pyuvm'", specifier = ">=4,<5" },
     { name = "pywellen", marker = "extra == 'waves'", specifier = "==0.25.7" },
+    { name = "pyyaml", marker = "extra == 'dev'", specifier = ">=6" },
     { name = "uvicorn", marker = "extra == 'mcp'", specifier = ">=0.30" },
 ]
 provides-extras = ["mcp", "dev", "docs", "cocotb", "waves", "pyuvm"]

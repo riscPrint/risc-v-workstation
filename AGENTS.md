@@ -123,79 +123,41 @@ Exit codes and JSON formats are in `docs/PLATFORM_CONTRACTS.md`. A gate verdict 
 
 ## Tests
 
-Run the public fast Python set from the repository root:
+Use `scripts/ci-local.sh --tier fast|native-light|examples|nightly`.
+Run one tier name per command. See [Local CI](CONTRIBUTING.md#local-ci).
 
-```sh
-cd rvw
-uv venv
-uv pip install -e '.[dev,mcp]'
-cd ..
-rvw/.venv/bin/python -m pytest rvw/tests -m fast --strict-markers -q -ra --durations=10
-```
+| Tier | Tests | Optional tools |
+|---|---|---|
+| `fast` | Python fast set, release hygiene and command-reference check | None |
+| `native-light` | Tiny Verilator, Yosys, SBY and Spike companion fixtures; 120-second cap | Listed in `scripts/ci-tiers.json` |
+| `examples` | VexRiscv and VexiiRiscv smoke suites through `rvw regress` | Listed in `scripts/ci-tiers.json` |
+| `nightly` | Slow Python shards, Scala suites, Rust, VS Code, ComponentSims and Uvm/vip | Listed in `scripts/ci-tiers.json` |
 
-The `fast` marker uses the explicit module list in `rvw/tests/conftest.py`.
-It covers result formats, RISC-V decoding, project selection, performance reports,
-database queries from committed SQL fixtures, commit policy and release hygiene.
-It needs Python 3.11 or later, Git and Bash. It needs no BOOM checkout, simulator,
-solver, Spike shim or RISC-V compiler. Expected optional skips: none.
-The target is less than five minutes for the Python test command, after dependency
-installation. CI logs show timing, pass counts and skip counts on Linux and macOS.
-The JUnit artifacts retain the Python results for seven days.
+The tool names and apt recipes come from `rvw/src/rvw/doctor/tools.json`.
+macOS jobs expect native tools on PATH. They do not install system packages.
+Missing tools produce explicit skips with reasons. A skip is not runtime proof.
+The command-reference test remains skipped during the parallel push. Restore the
+test after the owner regenerates the reference. Do not edit the reference here.
 
-New modules default to `slow`. Review their dependencies and time before adding
-one to the fast set: put `pytestmark = pytest.mark.fast` in the module (preferred, no shared
-edit) or add it to `FAST_MODULES`. The marker selection deselects tests; deselection is not a skip.
-Run the slow set with `-m slow`. Run both sets with no `-m` option:
+Each package can opt a module into fast with `pytestmark = pytest.mark.fast`.
+Do not add entries to `FAST_MODULES`. New tests otherwise default to slow.
+Use `@pytest.mark.native_light('Yosys')` to select a bounded native fixture.
+Use exact inventory tool names as marker arguments. Keep an explicit missing-tool
+skip for direct pytest use. Run native fixtures through the tier to enforce its cap.
+The nightly Python selector uses stable node-ID hashes for `CI_SHARD=INDEX/COUNT`.
+Deselecting a test is not a skip.
 
-```sh
-scripts/with-lock.sh suite nice -n 10 rvw/.venv/bin/python -m pytest rvw/tests -q -ra
-```
+Run focused Python tests with `rvw/.venv/bin/python -m pytest PATH -q`.
+Before a push, run `rvw/.venv/bin/python -m pytest rvw/tests -m fast --strict-markers -q`.
+The fast set needs Python 3.11+, uv, Git and Bash. It needs no native EDA tools.
+The Python test target is less than 300 seconds after dependency setup.
+Retained JUnit reports contain counts, test times and skip reasons.
 
-The root [nightly workflow](.github/workflows/nightly.yml) runs both Python sets
-on Ubuntu at 03:23 UTC each day. It also supports `workflow_dispatch`.
-It needs no private core checkout. Missing native tools cause expected skips:
-Spike shim and RISC-V GCC for native co-simulation, Sail, formal tools
-(Yosys, SymbiYosys and solvers), Verilator, Icarus and GTKWave conversion tools.
-Tests that need a second Z3 install or an OSS CAD Suite launcher can also skip.
-The nightly job installs Clang, Verilator, GTKWave tools, Yosys, Icarus and
-JDK 21/sbt for launcher and database extraction tests. It warms the Scala classpath before pytest. It does
-not install the other optional tools. Use `-ra` to read the
-actual skip reasons. A skipped test does not establish native-tool support.
-For local native tests, source `env.sh` and build `Cosim/build.sh` as needed.
-
-The root [push/PR workflow](.github/workflows/ci.yml) runs the fast Python set,
-including `test_release_hygiene.py`, on `ubuntu-latest` and `macos-latest`.
-It also runs these checks on both systems:
-
-- Rust: `cd SpinalTrace && cargo test --locked -p spinaltrace-rs`.
-- JavaScript: `cd vscode && npm ci && npm run typecheck && npm run build && npm test`.
-- Scala: in `SpinalWaves/spinalwaves`, run `sbt -batch -J-XX:ActiveProcessorCount=2
-  'testOnly spinalwaves.NamingSpec spinalwaves.EmitterSpec'` with JDK 21 and sbt.
-
-These checks need Rust, Node.js 22 and JDK 21/sbt, but no core or native EDA tools.
-The nightly Scala job runs the generic Konata tests with native Verilator. It
-compiles the SpinalDB, SpinalTrace and SpinalChecks test sources. Compilation is
-not a test pass. `RiscvSim` and `SpinalBlocks` sbt builds remain excluded because
-they load BOOM's `ProjectRef` ([#6](https://github.com/riscPrint/risc-v-workstation/issues/6)).
-The full SpinalWaves and SpinalTrace native suites are not part of this minimum
-signal. BOOM gates remain separate and need a private core and native tools.
-Clean-install CI belongs to [#17](https://github.com/riscPrint/risc-v-workstation/issues/17)
-and [#40](https://github.com/riscPrint/risc-v-workstation/issues/40).
-The fast/slow selection is tracked in [#41](https://github.com/riscPrint/risc-v-workstation/issues/41);
-the root CI is tracked in [#16](https://github.com/riscPrint/risc-v-workstation/issues/16).
-
-CI checks PR titles and each new non-merge commit with
-`scripts/check-conventional.py`. It checks the syntax, summary length and issue
-footer rules below. Reviewers check imperative wording and the required docs for
-breaking changes. Generated merge commits are excluded. A new branch push checks
-its tip; a PR checks all commits after its merge base. PR title edits rerun CI.
-
-- Scala: hold the `sbt` lock with `scripts/with-lock.sh sbt nice -n 10 sbt ...`.
-  Use `sbt test` in `SpinalWaves/spinalwaves`, `SpinalTrace/spinaltrace`, `SpinalDB/spinaldb`,
-  `SpinalChecks`, `SpinalKonata`; `sbt spinalblocks/test` in `SpinalBlocks/spinalblocks`;
-  `sbt riscvsim/test` in `RiscvSim`.
-- Rust: `cargo test -p spinaltrace-rs` in `SpinalTrace`.
-- VS Code extension: `npm run typecheck && npm run build && npm test` in `vscode/`.
+PR jobs use changed paths. Docs-only changes run release hygiene and the
+command-reference test. Python changes run the fast set. Rust, JavaScript and
+Scala jobs run for their paths. CI changes select all jobs. The stable `Fast`
+check is the required-check target. The separate conventional-commit check stays.
+The workflow cannot set repository branch protection.
 
 ## Working rules
 
@@ -233,7 +195,7 @@ and pull request titles: `type(scope): summary`.
 - Summary: imperative, lower case, no full stop, at most 72 characters.
 - Breaking changes: add `!` after the scope and a `BREAKING CHANGE:` footer. Update the docs in
   the same commit.
-- Link issues in a footer: `Refs: #12` or `Closes: #12`.
+- Link issues in a footer: `Refs: #12`. The owner closes issues.
 - A pull request title follows the same format. Its body has `## Summary`, `## Testing` (commands
   and pass/skip counts) and `## Issues` sections.
 
@@ -256,18 +218,17 @@ Use the project's lock for RTL. gem5 runs under the `gem5` lock, one process
 at a time. Core presets and calibration targets belong in project data.
 
 See the complete [CLI and MCP reference](docs/COMMAND_REFERENCE.md) for command paths,
-options and built-in tool arguments. The reference is checked against the code.
+options and built-in tool arguments. The reference check is currently deferred.
 
 ## Local CI
 
-The CI, Conventional Commits and Nightly definitions target the repo-level runner with
-labels `self-hosted`, `macOS`, `ARM64`, `rvw-local`. Use `scripts/ci-local.sh`
-for the same fast checks as CI. The script creates a clean temporary workdir
-and venv. It uses `scripts/with-lock.sh suite|sbt` and `nice -n 10`. Never point
-CI at another contributor's checkout. Nightly runs at 03:23 UTC.
-
-The per-user launchd agent is in `~/opt/actions-runner`. Run `./svc.sh status`,
-`./svc.sh stop` or `./svc.sh start` there. It starts after login. Keep one
-runner only. Keep Nightly disabled until its local definition reaches the default
-branch. Keep Linux workflows and Native tool bundles disabled. See
-[Local CI](CONTRIBUTING.md#local-ci) for prerequisites and Linux runner limits.
+Use the repo-level runner labels `self-hosted`, `macOS`, `ARM64`, `rvw-local`.
+The runner accepts one job at a time. Do not change its service during CI work.
+The workflows call `scripts/ci-local.sh`. The script copies tracked files into a
+private directory and creates a venv with the locked dependencies. It uses the
+`suite` and `sbt` locks and `nice -n 10`. It removes the private directory on exit.
+It retains JUnit reports in `rvw/out/ci` or `CI_REPORT_DIR`.
+Nightly runs at 03:23 UTC. A schedule is not proof of a completed run.
+Linux definitions use `ubuntu-latest`. They are disabled unless the single
+repository variable `RVW_LINUX_CI` equals `enabled`. Linux remains untested.
+See [Local CI](CONTRIBUTING.md#local-ci) for commands and prerequisites.

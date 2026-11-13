@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Run pinned Vex smoke suites in private copies of cached core checkouts."""
 import os
+import json
 from pathlib import Path
 import shutil
 import subprocess
@@ -14,8 +15,8 @@ CORES = {
 }
 
 
-def run(argv, cwd, env):
-    subprocess.run(argv, cwd=cwd, env=env, check=True, timeout=1700)
+def run(argv, cwd, env, capture=False):
+    return subprocess.run(argv, cwd=cwd, env=env, check=not capture, timeout=1700, capture_output=capture, text=True)
 
 
 def main():
@@ -48,7 +49,23 @@ def main():
                 run(['riscv64-unknown-elf-gcc', '-march=rv32im_zicsr_zifencei', '-mabi=ilp32', '-nostdlib', '-nostartfiles', '-T', 'rvw/programs/link.ld', '-Wl,--build-id=none', f'rvw/programs/{program}.S', '-o', str(out / program)], core, env)
             # Private output needs no shared core lock.
             env['RVW_VEX_LOCK'] = 'ci-examples-' + name
-            run([sys.executable, '-m', 'rvw', '--project', str(core / 'rvw.toml'), 'regress', 'run', '--suite', 'smoke'], core, env)
+            env['RVW_SBT_LOCK'] = 'sbt-ci-examples-' + name
+            result = run([sys.executable, '-m', 'rvw', '--project', str(core / 'rvw.toml'), 'regress', 'run', '--suite', 'smoke', '--json'], core, env, capture=True)
+            print(result.stderr, end='', file=sys.stderr)
+            try:
+                data = json.loads(result.stdout)
+            except ValueError:
+                print(result.stdout, file=sys.stderr)
+                raise
+            counts = data['counts']
+            text = (f"| Package | Passed | Failed | Skipped |\n|---|---:|---:|---:|\n"
+                    f"| {name} | {counts.get('pass', 0)} | {sum(n for k, n in counts.items() if k not in ('pass', 'skip'))} | {counts.get('skip', 0)} |")
+            print(text, flush=True)
+            if os.environ.get('GITHUB_STEP_SUMMARY'):
+                with open(os.environ['GITHUB_STEP_SUMMARY'], 'a') as stream:
+                    stream.write(text + '\n')
+            if result.returncode or not data.get('ok') or counts.get('pass') != 2 or sum(counts.values()) != 2:
+                raise RuntimeError(name + ': two passing smoke programs are required')
     return 0
 
 

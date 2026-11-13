@@ -86,64 +86,63 @@ Report security problems through [SECURITY.md](SECURITY.md).
 
 ## Local CI
 
-This private repository uses one repo-level macOS ARM64 runner. GitHub-hosted
-Actions need paid minutes. The runner has labels `self-hosted`, `macOS`, `ARM64`
-and `rvw-local`. It accepts one job at a time. CI and Conventional Commits run
-on pushes and pull requests. Nightly runs at 03:23 UTC (03:23 GMT or 04:23 BST).
-Schedules use the default branch, so workflow changes must reach that branch
-before the new schedule takes effect. Keep Nightly disabled until then.
+The workflows use one macOS ARM64 runner with labels `self-hosted`, `macOS`,
+`ARM64`, `rvw-local`. It accepts one job at a time. Do not change the runner service
+or cancel runs as part of a definition change.
 
-The runner is installed in `~/opt/actions-runner`. It runs as a per-user
-launchd agent. It starts when the user logs in after a restart. It does not
-run before login. Use these commands as the runner's user:
+Run a tier from the repository root:
 
 ```sh
-cd ~/opt/actions-runner
-./svc.sh status
-./svc.sh stop
-./svc.sh start
+scripts/ci-local.sh --tier fast
+scripts/ci-local.sh --tier native-light
+scripts/ci-local.sh --tier examples
+scripts/ci-local.sh --tier nightly
 ```
 
-Use `./svc.sh uninstall` to remove the launchd agent. Do not register a second
-runner on this Mac. Do not save registration tokens in files or shell history.
-The runner stores its own service credentials; these are not registration tokens.
+Fast needs Python 3.11+, uv 0.13.6+, Git and Bash. Use `CI_PYTHON` to select Python.
+It runs the Python fast set, including release hygiene. The command-reference
+check is selected but remains explicitly deferred until the owner restores it.
+It needs no native tools. Its Python test target is less than 300 seconds.
 
-Run the same fast checks without Actions from the repository root:
+Native-light runs tiny fixtures with a 120-second process-group cap. Its tool
+names are in `scripts/ci-tiers.json`. New package fixtures use the `native_light`
+marker with exact tool names from `rvw/src/rvw/doctor/tools.json`.
+Missing tools produce a skip with its reason. Presence does not prove operation.
 
-```sh
-scripts/ci-local.sh
-```
+Examples runs VexRiscv and VexiiRiscv smoke suites through `rvw regress`.
+It caches pinned core repositories in `~/.cache/rvw-ci/cores`.
+Use `RVW_CI_CORE_CACHE` to select another cache. Builds use private core copies.
+It builds only the two smoke programs. It does not need riscv-tests.
+It expects JDK, sbt, Verilator and RISC-V GCC from the inventory.
 
-The command needs `python3.11`, uv 0.13.6+, Git, Node 22, npm, Rust/Cargo,
-JDK 21 and sbt.
-Use `CI_PYTHON` to select another Python 3.11+ executable.
-It copies tracked files, including local edits, into a temporary work directory.
-It creates a new Python venv and removes the work directory on exit. Add new
-files to Git before you run it. It does not use another checkout or its venv.
-It uses the machine-wide `suite` and `sbt` locks and `nice -n 10`. It keeps
-normal package download caches. The fast set runs Python `-m fast`, extension
-checks, Rust fixture tests and the SpinalWaves naming and emitter tests.
-Failures stop the command. Counts and timings appear in the job log.
-The Actions timeout allows 90 minutes, including waits for shared locks.
+Nightly runs the slow Python set, Scala suites, Rust, VS Code, ComponentSims and
+VIP tests. Scala needs JDK 21 and sbt. Rust needs Cargo. VS Code needs Node 22
+and npm. ComponentSims needs a C++17 compiler. Other native tools come from the
+inventory. macOS jobs expect these tools. They do not install system packages.
+Use `CI_COMPONENT=python|scala|rust|javascript|components|vip` for one component.
+Use `CI_SCALA_PROJECT` for one listed Scala project.
+Use `CI_SHARD=0/4` through `3/4` for disjoint slow Python shards.
+Nightly is scheduled for 03:23 UTC. The definitions also allow manual dispatch.
+No completed run is implied by these definitions.
 
-Nightly uses `scripts/ci-local.sh nightly-python` and
-`scripts/ci-local.sh nightly-scala`. Optional native tools must already be on
-the runner's PATH. Missing optional tools can cause skips. Nightly does not
-install system packages or use a BOOM checkout.
+The script copies tracked files, including local edits, to a private directory.
+Add new files to Git before use. It creates a venv and uses locked dependencies.
+It uses the machine-wide `suite` and `sbt` locks and `nice -n 10`.
+Reports survive cleanup in `rvw/out/ci`. Use `CI_REPORT_DIR` to change this path.
+Job summaries give test counts, slow tests, skip reasons and absent tools.
+A setup failure has no test counts. It must not report tests as passed.
 
-Native installer and Native Linux reference boot are manual-only and remain
-disabled. They target `[self-hosted, Linux, X64, rvw-linux]`. They need a
-separate Linux self-hosted runner. To use paid GitHub-hosted minutes instead,
-change their runner labels to Ubuntu and get owner approval before enabling
-them. Native tool bundles also remains disabled. Its host matrix still needs
-separate runner and cost decisions. Do not enable a hosted workflow on this Mac.
+PR jobs use changed paths. Docs-only changes run hygiene and the selected
+command-reference check. Python changes run the fast set. Rust, JavaScript and
+Scala checks run for their paths. CI changes select all jobs.
+Superseded PR runs are cancelled by branch. Keep `Fast` as the required-check
+name in repository settings. Conventional Commits remains a separate check.
 
-The root [CI workflow](.github/workflows/ci.yml) runs the fast set on PRs.
-The [nightly workflow](.github/workflows/nightly.yml) runs all Python tests at
-03:23 UTC and supports manual dispatch. Both use `scripts/ci-local.sh`.
-This is the root CI work tracked in [#16](https://github.com/riscPrint/risc-v-workstation/issues/16).
-Python jobs publish pass, skip, failure and error counts in the Actions summary.
-The fast Python set must finish in less than 300 seconds. This budget excludes
-installation and the separate extension, Rust and Scala checks. A missing test
-report fails the job. Native skips remain visible in pytest output.
-A configured schedule does not prove that a nightly run completed.
+Linux definitions use `ubuntu-latest`. Both remain disabled unless the single
+repository variable `RVW_LINUX_CI` equals `enabled`. Linux is untested.
+Their apt recipe reads the tier's tools from the inventory. Source-only tools
+are not installed by apt. Missing tools remain explicit skips.
+Manual installer and Linux boot workflows retain their existing separate controls.
+
+This work is tracked in [#16](https://github.com/riscPrint/risc-v-workstation/issues/16)
+and [#41](https://github.com/riscPrint/risc-v-workstation/issues/41).

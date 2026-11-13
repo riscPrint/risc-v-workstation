@@ -19,6 +19,7 @@ jobs:
       javascript: ${{ steps.paths.outputs.javascript }}
       rust: ${{ steps.paths.outputs.rust }}
       scala: ${{ steps.paths.outputs.scala }}
+      scala_projects: ${{ steps.paths.outputs.scala_projects }}
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
@@ -49,6 +50,7 @@ jobs:
   fast:
     name: Fast
     needs: changes
+    if: always()
     runs-on: [self-hosted, macOS, ARM64, rvw-local]
     timeout-minutes: 15
     steps:
@@ -57,8 +59,11 @@ jobs:
           persist-credentials: false
       - name: Python fast set or release hygiene
         env:
+          SELECTION_STATUS: ${{ needs.changes.result }}
           CI_HYGIENE_ONLY: ${{ needs.changes.outputs.python != 'true' }}
-        run: scripts/ci-local.sh fast
+        run: |
+          test "$SELECTION_STATUS" = success
+          scripts/ci-local.sh fast
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -118,13 +123,19 @@ jobs:
   scala:
     needs: changes
     if: needs.changes.outputs.scala == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        project: ${{ fromJSON(needs.changes.outputs.scala_projects) }}
     runs-on: [self-hosted, macOS, ARM64, rvw-local]
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           persist-credentials: false
-      - run: scripts/ci-local.sh nightly-scala
+      - env:
+          CI_SCALA_PROJECT: ${{ matrix.project }}
+        run: scripts/ci-local.sh nightly-scala
       - uses: actions/upload-artifact@v4
         if: always()
         with:

@@ -28,3 +28,16 @@ def test_nightly_python_does_not_select_fast_tests():
     assert 'get_closest_marker("slow")' in plugin or "get_closest_marker('slow')" in plugin
     assert 'sha256(item.nodeid.encode())' in plugin
     assert 'CI inventory missing:' in plugin
+
+
+def test_konata_keeps_the_input_suite():
+    commands = ci['commands']('nightly', 'scala')
+    assert 'inputs/test' in next(args for name, _, args in commands if name == 'SpinalKonata')
+
+
+@pytest.mark.parametrize('tier,component,expected', [
+    ('examples', 'python', False), ('native-light', 'python', True),
+    ('nightly', 'python', True), ('nightly', 'scala', False),
+])
+def test_only_python_test_tiers_require_python_junit(tier, component, expected):
+    assert ci['needs_python_report'](tier, component) == expected

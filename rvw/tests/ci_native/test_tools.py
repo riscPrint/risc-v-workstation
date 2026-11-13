@@ -28,8 +28,8 @@ def test_verilator_tiny_lint(tmp_path):
 
 @needs('Yosys')
 def test_yosys_tiny_equivalence(tmp_path):
-    (tmp_path / 'tiny.v').write_text('module tiny(input a, output y); assign y = a; endmodule\n')
-    run(['yosys', '-Q', '-T', '-p', 'read_verilog tiny.v; prep -top tiny; sat -prove y a -verify'], tmp_path)
+    (tmp_path / 'tiny.v').write_text('module tiny(input a, output y); assign y = a ^ a; endmodule\n')
+    run(['yosys', '-Q', '-T', '-p', 'read_verilog tiny.v; prep -top tiny; sat -prove y 0 -verify'], tmp_path)
 
 
 @needs('SymbiYosys', 'Yosys', 'Z3')

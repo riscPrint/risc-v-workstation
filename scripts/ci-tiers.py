@@ -4,7 +4,6 @@ import argparse
 import json
 import os
 from pathlib import Path
-import shlex
 import shutil
 import sys
 
@@ -12,10 +11,7 @@ ROOT = Path(__file__).resolve().parents[1]
 TIERS = json.loads((ROOT / 'scripts/ci-tiers.json').read_text())
 SCALA = ['SpinalWaves/spinalwaves', 'SpinalTrace/spinaltrace', 'SpinalDB/spinaldb',
          'SpinalChecks', 'SpinalKonata', 'SpinalBlocks/spinalblocks', 'RiscvSim',
-         'SpinalProbes', 'SpinalSoc', 'SpinalSoc/examples/vexii',
-         'Uvm/examples/soc/spinal', 'Uvm/examples/composed/spinal',
-         'examples/vexriscv/rvw', 'examples/vexiiriscv/rvw', 'examples/smp/rvw',
-         'examples/naxriscv/rvw', 'examples/picorv32/rvw', 'rvw/examples/coverage/spinal']
+         'SpinalProbes', 'SpinalSoc']
 
 
 def emit(text):
@@ -60,7 +56,7 @@ def commands(tier, component):
         if any(p not in SCALA for p in projects):
             raise ValueError('unknown Scala CI project')
         return [(p, ROOT / p, ['sbt', '-batch', '-J-XX:ActiveProcessorCount=2',
-                                 'spinalblocks/test' if p.startswith('SpinalBlocks/') else 'riscvsim/test' if p == 'RiscvSim' else 'test']) for p in projects]
+                                 'spinalblocks/test' if p.startswith('SpinalBlocks/') else 'riscvsim/test' if p == 'RiscvSim' else 'test', *(['inputs/test'] if p == 'SpinalKonata' else [])]) for p in projects]
     if component == 'rust':
         return [('rust', ROOT / 'SpinalTrace', ['cargo', 'test', '--locked', '-p', 'spinaltrace-rs'])]
     if component == 'javascript':
@@ -70,6 +66,10 @@ def commands(tier, component):
     if component == 'vip':
         return [('Uvm/vip', ROOT, pytest + ['rvw/tests', '-k', 'vip or uvm', '-q', '-ra', '--junitxml=vip-results.xml'])]
     raise ValueError('unknown tier component')
+
+
+def needs_python_report(tier, component):
+    return tier in ('fast', 'native-light') or (tier == 'nightly' and component == 'python')
 
 
 def main():
@@ -125,7 +125,7 @@ def main():
                 failed |= bool(code)
             if not reports:
                 emit(summary['language_details'](result.stdout, name))
-        if args.tier in ('fast', 'native-light') or args.component == 'python':
+        if needs_python_report(args.tier, args.component):
             report = ROOT / 'ci-results.xml'
             if report.exists():
                 import runpy

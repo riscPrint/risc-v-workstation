@@ -14,3 +14,13 @@ select = runpy.run_path(str(Path(__file__).resolve().parents[2] / 'scripts/ci-pa
 ])
 def test_path_selection(paths, expected):
     assert {key for key, value in select(paths).items() if value} == expected
+
+
+def test_scala_change_selects_only_its_project():
+    projects = runpy.run_path(str(Path(__file__).resolve().parents[2] / 'scripts/ci-paths.py'))['scala_projects']
+    assert projects(['SpinalProbes/src/main/scala/Probe.scala']) == ['SpinalProbes']
+    assert len(projects(['scripts/ci-local.sh'])) >= 9
+
+
+def test_package_documentation_does_not_select_builds():
+    assert not any(select(['vscode/README.md', 'SpinalProbes/README.md']).values())
