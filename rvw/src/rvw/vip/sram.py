@@ -2,7 +2,7 @@
 from collections import deque,Counter
 from dataclasses import dataclass,replace
 import random
-from .apb import ProtocolError
+from .apb import ProtocolError, NoChecks
 
 
 @dataclass(frozen=True)
@@ -58,7 +58,7 @@ class Monitor:
         if p.valid:self.coverage['response']+=1;self.hook(p)
     def finish(self):
         if any(x is not None for x in self.reference.pending):raise ProtocolError('MEM_MISSING_READ')
-        if not self.coverage['response']:raise ProtocolError('MEM_NO_READS')
+        if not self.coverage['response']:raise NoChecks('MEM_NO_READS')
 
 
 class Manager:

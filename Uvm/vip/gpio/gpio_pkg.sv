@@ -42,6 +42,7 @@ package gpio_vip;
   endclass
   class monitor extends uvm_component;
     `uvm_component_utils(monitor)
+    int observed_transactions;
     virtual gpio_if b; uvm_analysis_port#(item) ap;
     covergroup traffic with function sample(bit [7:0] direction,irq,bit reset_n);
       directions:coverpoint direction; interrupts:coverpoint irq; resets:coverpoint reset_n;
@@ -55,9 +56,14 @@ package gpio_vip;
       forever begin @(posedge b.clk); t=new(); t.reset_n=b.reset_n;
         t.external_value=b.external_value; t.direction=b.direction; t.output_value=b.output_value;
         if($isunknown({b.sampled,b.irq})) `uvm_fatal("GPIO_UNKNOWN_PIN","unknown input")
-        t.sampled=b.sampled; t.irq=b.irq; ap.write(t); traffic.sample(t.direction,t.irq,t.reset_n);
+        t.sampled=b.sampled; t.irq=b.irq; observed_transactions++; ap.write(t); traffic.sample(t.direction,t.irq,t.reset_n);
       end
     endtask
+    function void check_phase(uvm_phase phase);
+      string idle_reason;
+      if(observed_transactions==0 && (!uvm_config_db#(string)::get(this,"","idle_reason",idle_reason) || idle_reason.len()==0))
+        `uvm_fatal("NO_CHECKS","no_checks: zero observed transactions")
+    endfunction
   endclass
   class scoreboard extends uvm_subscriber#(item);
     `uvm_component_utils(scoreboard)

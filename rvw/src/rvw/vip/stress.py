@@ -2,7 +2,7 @@
 from collections import Counter
 from dataclasses import dataclass
 import random
-from .apb import ProtocolError
+from .apb import ProtocolError, NoChecks
 
 
 @dataclass(frozen=True)
@@ -66,7 +66,7 @@ class Monitor:
         self.coverage['latency_sum']+=cycle-start;self.coverage['errors']+=int(r.error)
     def finish(self):
         if self.pending:raise ProtocolError('STRESS_MISSING_RESPONSE')
-        if not self.coverage['responses']:raise ProtocolError('STRESS_NO_RESPONSES')
+        if not self.coverage['responses']:raise NoChecks('STRESS_NO_RESPONSES')
 
 
 class Subordinate:

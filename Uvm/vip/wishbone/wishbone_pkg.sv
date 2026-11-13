@@ -44,6 +44,7 @@ package wishbone_vip;
   endclass
   class monitor extends uvm_component;
     `uvm_component_utils(monitor)
+    int observed_transactions;
     virtual wishbone_if b;uvm_analysis_port#(item) ap;
     covergroup traffic with function sample(bit write,error,bit [3:0] select);
       writes:coverpoint write;errors:coverpoint error;selects:coverpoint select;
@@ -56,10 +57,15 @@ package wishbone_vip;
       forever begin @(posedge b.clk);
         if(b.reset_n && b.cyc && b.stb && (b.ack || b.err)) begin
           t=new();t.address=b.adr;t.data=b.dat_w;t.write=b.we;t.select=b.sel;t.response=b.dat_r;t.error=b.err;
-          ap.write(t);traffic.sample(t.write,t.error,t.select);
+          observed_transactions++; ap.write(t);traffic.sample(t.write,t.error,t.select);
         end
       end
     endtask
+    function void check_phase(uvm_phase phase);
+      string idle_reason;
+      if(observed_transactions==0 && (!uvm_config_db#(string)::get(this,"","idle_reason",idle_reason) || idle_reason.len()==0))
+        `uvm_fatal("NO_CHECKS","no_checks: zero observed transactions")
+    endfunction
   endclass
   class scoreboard extends uvm_subscriber#(item);
     `uvm_component_utils(scoreboard)

@@ -144,6 +144,7 @@ package tilelink_vip;
     int a_active=-1,d_active=-1;
     bit uh,denied[16];
     int count;
+    int completed;
     covergroup traffic with function sample(bit response,int opcode,int param,int size,int source,bit denied,bit corrupt);
       channels:coverpoint response; opcodes:coverpoint opcode; params:coverpoint param;
       sizes:coverpoint size; sources:coverpoint source; errors:coverpoint denied; corrupts:coverpoint corrupt;
@@ -209,12 +210,15 @@ package tilelink_vip;
           end
           foreach(pending[i]) if(pending[i]!=null)
             if(a_count[i]==pending[i].a_beats() && d_count[i]==pending[i].d_beats()) begin
-              pending[i]=null; a_count[i]=0; d_count[i]=0;
+              completed++; pending[i]=null; a_count[i]=0; d_count[i]=0;
             end
         end
       end
     endtask
     function void check_phase(uvm_phase phase);
+      string idle_reason;
+      if(completed==0 && (!uvm_config_db#(string)::get(this,"","idle_reason",idle_reason) || idle_reason.len()==0))
+        `uvm_fatal("NO_CHECKS","no_checks: zero completed transactions")
       foreach(pending[i]) if(pending[i]!=null) `uvm_fatal("TL_OUTSTANDING","incomplete message")
     endfunction
   endclass

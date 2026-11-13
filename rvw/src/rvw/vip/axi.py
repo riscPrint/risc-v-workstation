@@ -7,7 +7,7 @@ per-ID response order and exclusive reservations. Optional user/QoS omitted.
 from collections import Counter, defaultdict, deque
 from dataclasses import dataclass, replace
 import random
-from .apb import ProtocolError
+from .apb import ProtocolError, completion
 
 
 @dataclass(frozen=True)
@@ -101,6 +101,7 @@ class Monitor:
         self.aw, self.w = deque(), deque()
         self.writes, self.reads = defaultdict(deque), defaultdict(deque)
         self.coverage = Counter()
+        self.completed = 0
 
     def sample(self, p):
         old, self.previous = self.previous, p
@@ -127,6 +128,7 @@ class Monitor:
             if p.bready:
                 q.popleft(); self.hook(('write', a, beats, p.b))
                 self.coverage[('bresp', p.b.response)] += 1
+                self.completed += 1
         if p.rvalid:
             q = self.reads[p.r.id]
             if not q:
@@ -142,6 +144,7 @@ class Monitor:
                 if p.r.last:
                     q.popleft(); self.hook(('read', a, tuple(beats), p.r))
                 self.coverage[('rresp', p.r.response)] += 1
+                self.completed += int(p.r.last)
         for ch, queue in (('aw', self.aw), ('ar', None)):
             if getattr(p, ch+'valid'):
                 a = getattr(p, ch)
@@ -171,9 +174,10 @@ class Monitor:
         if r.response not in (0, 1, 2, 3) or r.response == 1 and (not a.lock or self.lite):
             raise ProtocolError('AXI_RESPONSE')
 
-    def finish(self):
+    def finish(self, *, idle_reason=None):
         if self.aw or self.w or any(self.writes.values()) or any(self.reads.values()):
             raise ProtocolError('AXI_OUTSTANDING')
+        return completion(self.completed, idle_reason)
 
 
 class Scoreboard:

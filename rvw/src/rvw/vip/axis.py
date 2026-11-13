@@ -6,7 +6,7 @@ Null bytes disappear from packet tokens. Position bytes retain a None value.
 from collections import Counter, defaultdict, deque
 from dataclasses import dataclass, replace
 import random
-from .apb import ProtocolError
+from .apb import ProtocolError, completion
 
 
 @dataclass(frozen=True)
@@ -81,9 +81,10 @@ class Monitor:
                 del self.partial[key]
                 self.coverage['packets'] += 1
 
-    def finish(self):
+    def finish(self, *, idle_reason=None):
         if self.partial:
             raise ProtocolError('AXIS_UNTERMINATED_PACKET')
+        return completion(self.coverage['packets'], idle_reason)
 
 
 class Scoreboard:

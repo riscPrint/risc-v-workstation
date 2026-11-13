@@ -33,6 +33,7 @@ package stress_vip;
   endclass
   class monitor extends uvm_component;
     `uvm_component_utils(monitor)
+    int observed_transactions;
     virtual stress_if b;uvm_analysis_port#(item) ap;int cycle;
     covergroup traffic with function sample(int source,qos);sources:coverpoint source;classes:coverpoint qos;endgroup
     function new(string name,uvm_component parent);super.new(name,parent);ap=new("ap",this);traffic=new();endfunction
@@ -42,9 +43,14 @@ package stress_vip;
     task run_phase(uvm_phase phase);item t;
       forever begin @(posedge b.clk);cycle++;if(b.reset_n && b.valid && b.ready)begin
         t=new();t.response=b.response;t.txn=b.txn;t.source=b.source;t.address=b.address;t.write=b.write;t.error=b.error;t.qos=b.qos;t.data=b.observed_data;t.cycle=cycle;
-        ap.write(t);traffic.sample(int'(t.source),int'(t.qos));
+        if(t.response) observed_transactions++; ap.write(t);traffic.sample(int'(t.source),int'(t.qos));
       end end
     endtask
+    function void check_phase(uvm_phase phase);
+      string idle_reason;
+      if(observed_transactions==0 && (!uvm_config_db#(string)::get(this,"","idle_reason",idle_reason) || idle_reason.len()==0))
+        `uvm_fatal("NO_CHECKS","no_checks: zero observed transactions")
+    endfunction
   endclass
   class scoreboard extends uvm_subscriber#(item);
     `uvm_component_utils(scoreboard)

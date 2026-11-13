@@ -2,7 +2,7 @@
 from collections import Counter
 from dataclasses import dataclass,asdict
 from rvw.debug.jtag import NEXT,tms_path
-from .apb import ProtocolError
+from .apb import ProtocolError, completion
 
 
 @dataclass(frozen=True)
@@ -57,6 +57,11 @@ class Monitor:
         elif p.tck and not self.previous.tck:
             old=self.state;self.state=NEXT[old][p.tms];self.coverage[(old,self.state)]+=1;self.hook(old,p)
         self.previous=p
+
+    def finish(self, *, idle_reason=None):
+        if self.state not in ('TLR', 'RTI'):
+            raise ProtocolError('JTAG_UNFINISHED_SCAN')
+        return completion(self.coverage[('UPDATE_IR', 'RTI')]+self.coverage[('UPDATE_DR', 'RTI')], idle_reason)
 
 
 class Manager:

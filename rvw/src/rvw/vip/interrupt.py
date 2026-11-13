@@ -2,7 +2,7 @@
 from collections import Counter,deque
 from dataclasses import dataclass
 import random
-from .apb import ProtocolError
+from .apb import ProtocolError, NoChecks
 
 
 @dataclass(frozen=True)
@@ -29,7 +29,7 @@ class Monitor:
         self.previous=levels;self.coverage['samples']+=1
     def finish(self):
         if any(0<n<self.min_pulse for n in self.lengths):raise ProtocolError('IRQ_SHORT_PULSE')
-        if not self.coverage['samples']:raise ProtocolError('IRQ_NO_SAMPLES')
+        if not self.coverage['samples']:raise NoChecks('IRQ_NO_SAMPLES')
 
 
 class Scoreboard:

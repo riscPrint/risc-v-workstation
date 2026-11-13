@@ -104,6 +104,7 @@ package ahb_vip;
 
   class monitor extends uvm_component;
     `uvm_component_utils(monitor)
+    int observed_transactions;
     virtual ahb_if b;
     uvm_analysis_port#(item) ap;
     item pending, last;
@@ -123,7 +124,7 @@ package ahb_vip;
           if(pending!=null) begin
             if(b.hready) begin
               pending.response=b.hrdata; pending.data[0]=b.hwdata;
-              pending.error=b.hresp; pending.waits=waits; ap.write(pending);
+              pending.error=b.hresp; pending.waits=waits; if(!pending.aborted) observed_transactions++; ap.write(pending);
               pending=null; waits=0;
             end else waits++;
           end
@@ -156,6 +157,11 @@ package ahb_vip;
         end
       end
     endtask
+    function void check_phase(uvm_phase phase);
+      string idle_reason;
+      if(observed_transactions==0 && (!uvm_config_db#(string)::get(this,"","idle_reason",idle_reason) || idle_reason.len()==0))
+        `uvm_fatal("NO_CHECKS","no_checks: zero observed transactions")
+    endfunction
   endclass
 
   class scoreboard extends uvm_subscriber#(item);

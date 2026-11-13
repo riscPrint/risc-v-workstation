@@ -6,7 +6,7 @@ at rising edges. No arbitration, SPLIT, RETRY or AHB5 extensions.
 from dataclasses import dataclass, replace
 from collections import Counter
 import random
-from .apb import ProtocolError
+from .apb import ProtocolError, completion
 
 LENGTHS = {0: 1, 1: None, 2: 4, 3: 4, 4: 8, 5: 8, 6: 16, 7: 16}
 
@@ -122,6 +122,11 @@ class Monitor:
                 raise ProtocolError('AHB_BURST_SHORT')
             self.beats = 1
         self.pending = self.last = t
+
+    def finish(self, *, idle_reason=None):
+        if self.pending is not None:
+            raise ProtocolError('AHB_UNFINISHED')
+        return completion(sum(v for k,v in self.coverage.items() if isinstance(k,tuple)), idle_reason)
 
 
 class RegisterScoreboard:

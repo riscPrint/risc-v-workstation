@@ -34,6 +34,7 @@ package coherent_vip;
   endclass
   class monitor extends uvm_component;
     `uvm_component_utils(monitor)
+    int observed_transactions;
     virtual coherent_if b;uvm_analysis_port#(item) ap;
     covergroup traffic with function sample(int kind,op);kinds:coverpoint kind;ops:coverpoint op;endgroup
     function new(string name,uvm_component parent);super.new(name,parent);ap=new("ap",this);traffic=new();endfunction
@@ -43,9 +44,14 @@ package coherent_vip;
     task run_phase(uvm_phase phase);item t;
       forever begin @(posedge b.clk);if(b.reset_n && b.valid && b.ready)begin
         t=new();t.kind=b.kind;t.txn=b.txn;t.node=b.node;t.line=b.line;t.op=b.op;t.data=b.observed_data;
-        ap.write(t);traffic.sample(t.kind,t.op);
+        if(t.kind==2) observed_transactions++; ap.write(t);traffic.sample(t.kind,t.op);
       end end
     endtask
+    function void check_phase(uvm_phase phase);
+      string idle_reason;
+      if(observed_transactions==0 && (!uvm_config_db#(string)::get(this,"","idle_reason",idle_reason) || idle_reason.len()==0))
+        `uvm_fatal("NO_CHECKS","no_checks: zero observed transactions")
+    endfunction
   endclass
   class scoreboard extends uvm_subscriber#(item);
     `uvm_component_utils(scoreboard)

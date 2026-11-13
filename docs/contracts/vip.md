@@ -97,3 +97,16 @@ transfer. These commands generate skeletons, not passing DUT evidence.
 "ports.json"}` in its generation manifest. The emitted monitor checks that
 valid and payload stay stable while stalled. Reset polarity is explicit.
 No memory response, bus role, fairness or completion property is inferred.
+
+## Empty protocol observations
+
+A monitor with zero completed transactions reports `no_checks`.
+Python `finish()` raises `NoChecks`, a `ProtocolError` with `status: no_checks`.
+An incomplete transaction still raises its protocol error.
+AXI, AXI-Stream, TileLink, Wishbone, APB, AHB, SPI, I2C, JTAG and DRAM
+monitors accept an explicit nonempty `idle_reason`. They then return
+`status: idle` and zero transactions. This declaration is local to that agent.
+A bench must finish each agent. It cannot pass with an undeclared empty agent.
+The UVM protocol monitors use the string config key
+`idle_reason` for the same declaration. Their default empty result is fatal
+`NO_CHECKS`. Existing scoreboards still require their expected checks.

@@ -2,7 +2,7 @@
 from collections import Counter
 from dataclasses import dataclass,replace
 import random
-from .apb import ProtocolError
+from .apb import ProtocolError, completion
 
 
 @dataclass(frozen=True)
@@ -49,8 +49,9 @@ class Monitor:
                 self.coverage['error' if p.err else 'transfer']+=1;self.pending=None
             else: self.pending=control;self.coverage['wait']+=1
         elif p.ack or p.err: raise ProtocolError('WB_UNSOLICITED_RESPONSE')
-    def finish(self):
+    def finish(self, *, idle_reason=None):
         if self.pending is not None: raise ProtocolError('WB_UNFINISHED')
+        return completion(self.coverage['transfer']+self.coverage['error'], idle_reason)
 
 
 class Subordinate:

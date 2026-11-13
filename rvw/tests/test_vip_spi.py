@@ -31,6 +31,6 @@ def test_partial_word_and_idle_clock():
 
 def test_empty_response_and_reset():
     sub=Subordinate(); assert Manager(sub.step).transfer(0)==255
-    mon=Monitor(); mon.sample(Pins(cs_n=0)); mon.sample(Pins(reset_n=0)); mon.finish()
+    mon=Monitor(); mon.sample(Pins(cs_n=0)); mon.sample(Pins(reset_n=0)); mon.finish(idle_reason='reset-only fixture')
     with pytest.raises(ValueError): Config(bits=33)
     with pytest.raises(ProtocolError,match='SPI_UNKNOWN_PIN'): mon.sample(Pins(miso=2))

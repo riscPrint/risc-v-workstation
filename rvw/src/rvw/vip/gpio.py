@@ -2,7 +2,7 @@
 from collections import Counter, deque
 from dataclasses import dataclass, replace
 import random
-from .apb import ProtocolError
+from .apb import ProtocolError, NoChecks
 
 
 @dataclass(frozen=True)
@@ -73,7 +73,7 @@ class Manager:
 class Scoreboard(Monitor):
     def observe(self,p): self.sample(p)
     def finish(self):
-        if not self.coverage['samples']: raise ProtocolError('GPIO_NO_SAMPLES')
+        if not self.coverage['samples']: raise NoChecks('GPIO_NO_SAMPLES')
 
 
 def sequences(seed=1,count=32,config=Config()):

@@ -6,7 +6,7 @@ No coherent B/C/E channels. All methods accept explicit immutable pin samples.
 from collections import Counter, deque
 from dataclasses import dataclass, replace
 import random
-from .apb import ProtocolError
+from .apb import ProtocolError, completion
 
 
 @dataclass(frozen=True)
@@ -71,7 +71,7 @@ class Monitor:
         self.hook,self.uh=hook,uh
         self.pending={}
         self.a_active=self.d_active=None
-        self.coverage=Counter()
+        self.coverage=Counter();self.completed=0
 
     def sample(self,p):
         if not p.reset_n:
@@ -126,9 +126,11 @@ class Monitor:
             if state['a_done'] and state['d_done']:
                 self.hook((tuple(state['requests']),tuple(state['responses'])))
                 del self.pending[source]
+                self.completed+=1
 
-    def finish(self):
+    def finish(self, *, idle_reason=None):
         if self.pending: raise ProtocolError('TL_OUTSTANDING')
+        return completion(self.completed, idle_reason)
 
 
 class Memory:

@@ -59,6 +59,7 @@ package spi_vip;
   endclass
   class monitor extends uvm_component;
     `uvm_component_utils(monitor)
+    int observed_transactions;
     virtual spi_if b; uvm_analysis_port#(item) ap;
     bit old_cs=1,old_clk; int index,count; bit [31:0] tx,rx;
     covergroup traffic with function sample(bit polarity,phase,lsb,int bits,int data);
@@ -80,7 +81,7 @@ package spi_vip;
           if(!b.cs_n && b.sclk!=old_clk && b.sclk==(b.phase ? b.polarity : !b.polarity)) begin
             lane=b.lsb_first ? index : b.bits-1-index; tx[lane]=b.mosi; rx[lane]=b.miso; index++;
             if(index==b.bits) begin
-              t=new(); t.mosi=tx; t.miso=rx; ap.write(t); count++;
+              t=new(); t.mosi=tx; t.miso=rx; observed_transactions++; ap.write(t); count++;
               traffic.sample(b.polarity,b.phase,b.lsb_first,b.bits,int'(tx)); index=0; tx=0; rx=0;
             end
           end
@@ -89,6 +90,10 @@ package spi_vip;
       end
     endtask
     function void check_phase(uvm_phase phase);
+      string idle_reason;
+      if(observed_transactions==0 && (!uvm_config_db#(string)::get(this,"","idle_reason",idle_reason) || idle_reason.len()==0))
+        `uvm_fatal("NO_CHECKS","no_checks: zero observed transactions")
+
       if(index!=0 || !b.cs_n) `uvm_fatal("SPI_UNFINISHED_SELECT","incomplete transfer")
     endfunction
   endclass
