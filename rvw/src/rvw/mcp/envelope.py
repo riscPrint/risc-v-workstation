@@ -1,5 +1,5 @@
 """Additive C7 results. Preserve legacy fields and evidence limits."""
-VERDICTS = {"pass", "fail", "inconclusive", "no_checks", "unsupported", "not_installed", "error"}
+from rvw.common.verdicts import VERDICTS
 
 
 def envelope(value, *, error=False):

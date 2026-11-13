@@ -75,3 +75,10 @@ Both example cores have `verification-plan.json` and a saved status from real
 native samples. Their plans retain native point and retirement-pair holes.
 They pin evidence hashes. Missing worker-local C1 files remain missing evidence
 on a clean checkout. Saved status path aliases are for display.
+
+## Evidence verdict bound
+
+Entries, features and the report include `verdict`. The report retains the
+weakest selected input verdict. Missing evidence and unassigned requirements
+prevent pass. `reported_closed` is a planning count. It does not grant C4 acceptance.
+See `docs/contracts/evidence.md` for layer ownership and aggregation rules.

@@ -4,6 +4,7 @@ from pathlib import Path
 import json
 from rvw.cov import captured
 from rvw.results import RunResult, Verdict, load_results
+from rvw.common.verdicts import VERDICTS, producer_verdict, weakest_verdict
 
 
 class VPlan:
@@ -44,26 +45,37 @@ class VPlan:
                  'coverage_hit':0,'coverage_expected':0,'coverage_contexts':[]}
             for role in ('coverage','tests','formal','checks'):
                 for reference in feature.get(role,[]):
-                    entry={'role':role,'path':reference['path'],'status':'inconclusive'}
+                    entry={'role':role,'path':reference['path'],'status':'inconclusive','verdict':'inconclusive'}
                     row['evidence'].append(entry)
                     try:
                         path,data,digest=self.read(reference)
                         entry['sha256']=digest
+                        entry['verdict']=producer_verdict(data)
+                        declared=data.get('verdict',data.get('status'))
+                        # C1 tests need their typed inconclusive/timeout checks first.
+                        if ((declared in VERDICTS or data.get('inconclusive')) and entry['verdict']!='pass'
+                                and not (role=='tests' and data.get('schema')=='rvw.run/1')):
+                            raise ValueError('producer verdict is '+entry['verdict'])
                         if role=='coverage': self.coverage(data,reference,row,entry)
                         elif role=='tests': self.tests(data,reference,path,row,entry)
                         elif role=='formal': self.formal(data,reference,path,row,entry)
                         else: self.check(data,reference,row,entry)
                     except (OSError,ValueError,KeyError,TypeError) as exc:
+                        if entry['verdict']=='pass': entry['verdict']='inconclusive'
                         row['holes'].append({'role':role,'path':reference['path'],'reason':str(exc)})
             if not row['evidence']:
                 row['holes'].append({'reason':'no evidence checks declared'})
             if row['scope']=='integration' and row['evidence'] and all(e.get('scope')=='block' for e in row['evidence']):
                 row['holes'].append({'reason':'block evidence does not cover new integration wiring'})
             row['status']='reported_closed' if not row['holes'] else 'open'
+            row['verdict']=weakest_verdict([e['verdict'] for e in row['evidence']]
+                + (['inconclusive'] if row['holes'] else []))
             row['hole_count']=len(row['holes'])
             row['coverage_contexts']=sorted(set(row['coverage_contexts']))
             report['features'].append(row)
         report['unassigned_requirements']=sorted(plan['requirements'].keys()-assigned)
+        report['verdict']=weakest_verdict([f['verdict'] for f in report['features']]
+            + (['inconclusive'] if report['unassigned_requirements'] else []))
         report['summary']={'features':len(ids),'reported_closed':sum(f['status']=='reported_closed' for f in report['features']),
                            'open':sum(f['status']=='open' for f in report['features']),
                            'holes':sum(f['hole_count'] for f in report['features']),
@@ -153,14 +165,17 @@ class VPlan:
             run=RunResult.from_dict(data)
             if run.extra.get('details',{}).get('block_evidence'):
                 entry['scope']='block'
-            if run.why_inconclusive or run.status!='pass':
+            entry['verdict']='inconclusive' if run.why_inconclusive else producer_verdict(data)
+            if entry['verdict']!='pass' or run.status!='pass':
                 raise ValueError('C1 is not a conclusive pass: '+str(run.why_inconclusive or run.status))
         elif data.get('schema')=='rvw.results/1':
             suite=load_results(path)
             selected=[t for t in suite.tests if not ref.get('ids') or t.id in ref['ids']]
             if not selected or (ref.get('ids') and set(ref['ids'])-{t.id for t in selected}):
                 raise ValueError('missing selected suite tests')
-            if any(not t.conclusive or t.status!='pass' for t in selected):
+            entry['verdict']=weakest_verdict(['inconclusive' if not t.conclusive else
+                producer_verdict(dict(t.extra,status=t.status)) for t in selected])
+            if entry['verdict']!='pass' or any(t.status!='pass' for t in selected):
                 raise ValueError('selected suite tests are not conclusive passes')
         else: raise ValueError('expected C1 or C3 test evidence')
         entry['status']='recorded_pass'
@@ -173,9 +188,15 @@ class VPlan:
         if required not in ('bounded','unbounded'): raise ValueError('unknown required proof kind')
         for identifier in ref['properties']:
             prop=properties[identifier]
+            entry['verdict']=producer_verdict(prop)
+            if entry['verdict']!='pass':
+                raise ValueError(identifier+': property summary is '+entry['verdict'])
             child=path.parent/prop['result']
             if not child.resolve().is_relative_to(path.parent.resolve()): raise ValueError('property result escapes report')
             result=json.loads(captured.read_text(child))
+            entry['verdict']=producer_verdict(result)
+            if entry['verdict']!='pass':
+                raise ValueError(identifier+': child verdict is '+entry['verdict'])
             if (result.get('schema')!='rvw.formal/1' or result.get('status')!='pass'
                     or result.get('proof_kind')!=required or type(result.get('assertions')) is not int or result['assertions']<=0
                     or (result.get('reachability') or {}).get('status')!='reachable'):
@@ -197,3 +218,4 @@ class VPlan:
             entry['limitation']='new wiring remains uncovered'
         else: raise ValueError('check kind must be gate or block')
         entry['status']='recorded_satisfied'
+        entry['verdict']='pass'
