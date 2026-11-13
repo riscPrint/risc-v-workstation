@@ -10,9 +10,10 @@ def programs(config):
             raise ValueError('PMA region name must be a simple identifier')
         base, size = region['base'], region['size']
         widths = region['widths']
-        if base < 0 or size < 16 or any(w not in (1, 2, 4, 8) for w in widths):
-            raise ValueError('PMA region needs a nonnegative base, size >= 16 and scalar widths')
+        if base < 0 or size < 1 or any(w not in (1, 2, 4, 8) for w in widths):
+            raise ValueError('PMA region needs a nonnegative base, positive size and scalar widths')
         for width in (1, 2, 4, 8):
+            if width>size:continue
             for edge, address in [('first', base), ('last', base + size - width)]:
                 if address % width:
                     continue
@@ -57,10 +58,16 @@ access_site:
 
 
 def observe(expected, capture):
-    if not capture or capture.get('complete') is not True or expected.get('count') is None or not expected.get('state'):
+    if not capture or capture.get('complete') is not True or (expected.get('count') is None and 'transfers' not in expected) or not expected.get('state'):
         return {'status':'inconclusive', 'reason':'need complete independent bus and device state contract'}
-    matches = [x for x in capture.get('transfers',[]) if x.get('address') == expected['address']]
-    if len(matches) != expected['count'] or any(x.get('width') != expected['width'] or x.get('write') != expected['write'] for x in matches):
+    if 'transfers' in expected:
+        actual=[{k:t.get(k) for k in ('address','width','write')} for t in capture.get('transfers',[])]
+        if actual!=expected['transfers']:
+            return {'status':'fail','reason':'PMA probe-window transfer sequence differs'}
+        matches=[]
+    else:
+        matches = [x for x in capture.get('transfers',[]) if x.get('address') == expected['address']]
+    if 'transfers' not in expected and (len(matches) != expected['count'] or any(x.get('width') != expected['width'] or x.get('write') != expected['write'] for x in matches)):
         return {'status':'fail','reason':'PMA transfer count or shape differs'}
     for name, value in expected['state'].items():
         actual = capture.get('device_state',{}).get(name)
