@@ -168,3 +168,17 @@ It does not qualify serial behavior, all bus traffic, IRQ delivery or a CPU.
 with `composition`, `classpath_file`, optional `build_args` for the private
 library build, and explicit `idle_inputs` for board pins. The private
 SpinalSoc build runs under `sbt-soc`. Verilator assertions stay enabled.
+
+## RV32IM ISA campaigns
+
+The [VexRiscv campaign](../../../../Uvm/examples/vexriscv/ISA.md) runs all
+50 built RV32UI/RV32UM machine-mode ELFs through the live pyuvm binding.
+The [VexiiRiscv campaign](../../../../Uvm/examples/vexiiriscv/README.md)
+checks complete native C2 captures through the shared pyuvm CPU scoreboard.
+That path is offline replay. It has no live cocotb pin binding.
+
+On 2026-11-13 each campaign checked 49 complete passing programs and retained
+one failed `ma_data` program. Neither campaign establishes a full suite pass.
+The capture checker validates zero IRQ observations, checked trap/handler
+markers, a unique completion store and all captured suffix retirements.
+Active IRQ stimulus remains unsupported in that replay profile.
