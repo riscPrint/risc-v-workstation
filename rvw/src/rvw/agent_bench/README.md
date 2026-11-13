@@ -66,10 +66,14 @@ rvw agent-bench native-qualify --pack examples/agent-bench/native.json \
 ```
 
 Use `--task xor` to select one task. Each adapter call has a 110-second limit.
-The example uses the private `vex-agent` lock. The generic runner takes core
+The example uses the private `vex-agentbench` and `sbt-agentbench` locks.
+It limits native make jobs to two and uses nice level 15. The generic runner takes core
 paths, mutations, config and workload names from the pack. It never edits the
-source checkout. The runner checks a seeded copy, reverses the seeded change,
-and checks the repaired copy. Each task needs a failing workload and passing
+source checkout. The runner first checks an unmutated copy, applies the seed, then reverses it
+and checks the repaired copy. Each phase records its batch wall time.
+Strict Spike checks must match baseline and repaired traces. Each failing seeded
+trace must have a first mismatch. The report retains that instruction and the
+reference check time. Missing Spike evidence cannot qualify a task. Each task needs a failing workload and passing
 control workloads. C1 status, C2 completion and matching identities are required.
 Both runs must use the same ELF, seed and config, and different RTL hashes.
 Missing evidence is inconclusive. Reports retain every run path and identity.

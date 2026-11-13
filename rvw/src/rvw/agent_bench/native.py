@@ -11,6 +11,7 @@ import os
 import shutil
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 from rvw.common.proc import run_group
@@ -89,10 +90,12 @@ def run_tests(pack, base, workspace, out, tests, timeout):
     manifest = out / 'jobs.jsonl'
     manifest.write_text(''.join(json.dumps({'elf': str(programs / name), 'out': str(out / name)}) + '\n'
                                 for name in tests))
-    argv = ['nice', '-n', '10', str(adapter), 'run-many', '--manifest', str(manifest), '--jobs', '1',
+    argv = ['nice', '-n', str(pack.get('nice', 15)), str(adapter), 'run-many', '--manifest', str(manifest), '--jobs', '1',
             '--config', pack['config'], '--seed', str(pack.get('seed', 1)), '--rvfi-trace',
             *pack.get('run_args', [])]
+    started = time.monotonic()
     proc = run_group(argv, env=environment(pack, workspace), timeout=timeout, capture=True)
+    elapsed = time.monotonic() - started
     (out / 'adapter.log').write_text((proc.stdout or '') + (proc.stderr or ''))
     runs = {}
     for name in tests:
@@ -126,7 +129,7 @@ def run_tests(pack, base, workspace, out, tests, timeout):
                 or identity['elf_sha256'] != expected_elf or not source.get('core_rev')):
             status = 'inconclusive'
         runs[name] = {'status': status, 'identity': identity, 'result': str(run_dir / 'result.json'),
-                      'trace': str(trace), 'exit_code': proc.returncode, 'timed_out': proc.timed_out}
+                      'trace': str(trace), 'batch_wall_s': elapsed, 'exit_code': proc.returncode, 'timed_out': proc.timed_out}
     return runs
 
 
@@ -154,6 +157,52 @@ def qualification(task, seeded, repaired):
     return 'qualified'
 
 
+def reference_checks(pack, base, workspace, runs, timeout):
+    """Retain strict Spike output, including failures to launch the reference."""
+    for name, run in runs.items():
+        started = time.monotonic()
+        argv = [sys.executable, '-m', 'rvw', 'cosim', 'check',
+                '--trace', run['trace'], '--elf', str((base / pack['programs'] / name).resolve()),
+                '--platform', str((base / pack['platform']).resolve()), '--strict', '--json']
+        proc = run_group(argv, env=environment(pack, workspace), timeout=timeout, capture=True)
+        destination = Path(run['result']).parent.parent / (name + '-cosim.json')
+        destination.write_text(proc.stdout or '{}')
+        destination.with_suffix('.log').write_text(proc.stderr or '')
+        try:
+            result = json.loads(proc.stdout or '{}')
+        except ValueError:
+            result = {}
+        expected_code = {'match': 0, 'mismatch': 1}.get(result.get('status'))
+        run['cosim'] = {'status': result.get('status', 'inconclusive')
+                        if not proc.timed_out and expected_code == proc.returncode else 'inconclusive',
+                        'mismatch': result.get('mismatch'), 'wall_s': time.monotonic() - started,
+                        'exit_code': proc.returncode, 'timed_out': proc.timed_out, 'result': str(destination)}
+
+
+def native_verdict(task, baseline, seeded, repaired):
+    verdict = qualification(task, seeded, repaired)
+    if verdict != 'qualified':
+        return verdict
+    if set(baseline) != set(seeded):
+        return 'inconclusive'
+    for name, run in baseline.items():
+        if run['status'] != 'pass' or run.get('cosim', {}).get('status') != 'match':
+            return 'inconclusive'
+        a, b = run['identity'], repaired[name]['identity']
+        if any(a.get(k) != b.get(k) for k in ('elf_sha256', 'seed', 'config')):
+            return 'inconclusive'
+        if (a.get('source') or {}).get('tools_rev') != (b.get('source') or {}).get('tools_rev'):
+            return 'inconclusive'
+    for name in seeded:
+        expected = 'mismatch' if name in task['private']['fail_to_pass'] else 'match'
+        check = seeded[name].get('cosim', {})
+        if check.get('status') != expected or (expected == 'mismatch' and not check.get('mismatch')):
+            return 'inconclusive'
+        if repaired[name].get('cosim', {}).get('status') != 'match':
+            return 'inconclusive'
+    return 'qualified'
+
+
 def qualify(pack_path, source, out, *, task_ids=None, timeout=110):
     pack, digest, base = load_pack(pack_path)
     tasks = [t for t in pack['tasks'] if task_ids is None or t['id'] in task_ids]
@@ -164,21 +213,45 @@ def qualify(pack_path, source, out, *, task_ids=None, timeout=110):
     report = {'schema': 'rvw.agent-native-qualification/1', 'track': 'native', 'pack_sha256': digest,
               'source_revision': pack['source']['revision'], 'workstation_revision': git(HOME, 'rev-parse', 'HEAD'),
               'tasks': [], 'automatic_root_cause': 'NOT CLAIMED', 'c4_acceptance': 'NOT CLAIMED'}
+    # One stable source path lets sbt reuse unchanged core classes between tasks.
+    workspace = prepare(pack, source, out / 'workspace', tasks[0])
+    mutate(workspace, tasks[0]['private']['mutation'], reverse=True)
+    git(workspace, 'add', '-A')
+    git(workspace, 'commit', '-qm', 'baseline task')
+    all_tests = list(dict.fromkeys(name for task in tasks for name in
+                                  task['private']['fail_to_pass'] + task['private']['pass_to_pass']))
+    baseline = run_tests(pack, base, workspace, out / 'baseline', all_tests, timeout)
+    if all(r['status'] == 'pass' for r in baseline.values()):
+        if 'platform' not in pack:
+            raise ValueError('native qualification requires a Spike platform in the task pack')
+        reference_checks(pack, base, workspace, baseline, min(timeout, 30))
     for task in tasks:
         root = out / task['id']
-        workspace = prepare(pack, source, root / 'workspace', task)
         tests = task['private']['fail_to_pass'] + task['private']['pass_to_pass']
-        seeded = run_tests(pack, base, workspace, root / 'seeded', tests, timeout)
-        if any(r['status'] not in ('pass', 'fail', 'assert', 'rvfi_error') for r in seeded.values()):
-            report['tasks'].append({'id': task['id'], 'status': 'inconclusive', 'seeded': seeded,
-                                    'repaired': {}, 'reason': 'seeded workload evidence is incomplete'})
-            (out / 'qualification.json').write_text(json.dumps(report, indent=2) + '\n')
-            continue
-        mutate(workspace, task['private']['mutation'], reverse=True)
-        git(workspace, 'add', '-A')
-        git(workspace, 'commit', '-qm', 'repair task')
-        repaired = run_tests(pack, base, workspace, root / 'repaired', tests, timeout)
-        report['tasks'].append({'id': task['id'], 'status': qualification(task, seeded, repaired),
-                                'seeded': seeded, 'repaired': repaired})
+        control = {name: baseline[name] for name in tests}
+        if any(r['status'] != 'pass' or r.get('cosim', {}).get('status') != 'match' for r in control.values()):
+            report['tasks'].append({'id': task['id'], 'status': 'inconclusive', 'baseline': control,
+                                    'seeded': {}, 'repaired': {}, 'reason': 'baseline did not pass and match'})
+        else:
+            mutate(workspace, task['private']['mutation'])
+            git(workspace, 'add', '-A')
+            git(workspace, 'commit', '-qm', 'seed ' + task['id'])
+            try:
+                seeded = run_tests(pack, base, workspace, root / 'seeded', tests, timeout)
+            finally:
+                mutate(workspace, task['private']['mutation'], reverse=True)
+                git(workspace, 'add', '-A')
+                git(workspace, 'commit', '-qm', 'repair ' + task['id'])
+            if any(r['status'] not in ('pass', 'fail', 'assert', 'rvfi_error') for r in seeded.values()):
+                report['tasks'].append({'id': task['id'], 'status': 'inconclusive', 'baseline': control,
+                                        'seeded': seeded, 'repaired': {},
+                                        'reason': 'seeded workload evidence is incomplete'})
+            else:
+                repaired = run_tests(pack, base, workspace, root / 'repaired', tests, timeout)
+                reference_checks(pack, base, workspace, seeded, min(timeout, 30))
+                reference_checks(pack, base, workspace, repaired, min(timeout, 30))
+                report['tasks'].append({'id': task['id'], 'baseline': control,
+                                        'status': native_verdict(task, control, seeded, repaired),
+                                        'seeded': seeded, 'repaired': repaired})
         (out / 'qualification.json').write_text(json.dumps(report, indent=2) + '\n')
     return report

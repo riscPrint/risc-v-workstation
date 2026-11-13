@@ -15,7 +15,7 @@ def test_example_pack_is_pinned_and_keeps_core_data_outside_generic_code():
     pack, digest, base = native.load_pack(ROOT / 'examples/agent-bench/native.json')
     assert len(pack['tasks']) == 10 and len(digest) == 64
     assert len(pack['source']['revision']) == 40
-    assert pack['environment']['RVW_VEX_LOCK'] == 'vex-agent'
+    assert pack['environment']['RVW_VEX_LOCK'] == 'vex-agentbench'
     for task in pack['tasks']:
         assert 'mutation' not in task['public']
         assert task['private']['fail_to_pass'] and task['private']['pass_to_pass']
@@ -88,7 +88,7 @@ def test_batch_requires_matching_trace_identity_and_complete_end(tmp_path, monke
     variant = {}
 
     def invoke(argv, **kwargs):
-        assert argv[:3] == ['nice', '-n', '10']
+        assert argv[:3] == ['nice', '-n', '15']
         manifest = Path(argv[argv.index('--manifest') + 1])
         jobs = [json.loads(line) for line in manifest.read_text().splitlines()]
         assert len(jobs) == 1
@@ -135,3 +135,37 @@ def test_incomplete_seeded_batch_does_not_start_a_repair_batch(tmp_path, monkeyp
     assert len(calls) == 1
     assert report['tasks'][0]['status'] == 'inconclusive'
     assert report['tasks'][0]['repaired'] == {}
+    assert report['tasks'][0]['reason'] == 'baseline did not pass and match'
+
+
+def test_native_verdict_requires_baseline_and_first_spike_mismatch():
+    task = {'private': {'fail_to_pass': ['broken'], 'pass_to_pass': ['control']}}
+    baseline = {n: {**evidence('pass', 'b' * 64), 'cosim': {'status': 'match'}} for n in ('broken', 'control')}
+    seeded = {'broken': {**evidence('fail'), 'cosim': {'status': 'mismatch', 'mismatch': {'pc': '0x80000000'}}},
+              'control': {**evidence('pass'), 'cosim': {'status': 'match'}}}
+    repaired = copy.deepcopy(baseline)
+    assert native.native_verdict(task, baseline, seeded, repaired) == 'qualified'
+    assert native.native_verdict(task, {}, seeded, repaired) == 'inconclusive'
+    for phase, name in ((baseline, 'broken'), (seeded, 'control'), (repaired, 'broken')):
+        previous = phase[name]['cosim']
+        phase[name]['cosim'] = {'status': 'inconclusive'}
+        assert native.native_verdict(task, baseline, seeded, repaired) == 'inconclusive'
+        phase[name]['cosim'] = previous
+    seeded['broken']['cosim']['mismatch'] = None
+    assert native.native_verdict(task, baseline, seeded, repaired) == 'inconclusive'
+
+
+def test_reference_failure_cannot_earn_match(tmp_path, monkeypatch):
+    from types import SimpleNamespace
+    result_path = tmp_path / 'batch' / 'broken' / 'result.json'
+    result_path.parent.mkdir(parents=True)
+    runs = {'broken': {'result': str(result_path), 'trace': str(result_path.with_name('rvfi.jsonl'))}}
+    def invoke(argv, **kwargs):
+        assert '--strict' in argv and '--platform' in argv
+        return SimpleNamespace(stdout='{"status":"match"}', stderr='reference failed', returncode=2, timed_out=False)
+    monkeypatch.setattr(native, 'run_group', invoke)
+    native.reference_checks({'source': {'env': 'TEST_CORE'}, 'programs': 'programs', 'platform': 'platform.json'},
+                            tmp_path, tmp_path, runs, 1)
+    assert runs['broken']['cosim']['status'] == 'inconclusive'
+    assert runs['broken']['cosim']['exit_code'] == 2
+    assert runs['broken']['cosim']['wall_s'] >= 0
