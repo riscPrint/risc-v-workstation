@@ -31,8 +31,13 @@ class Trace:
                 declaration(h["external_interrupts"])
             self.multihart = "harts" in h
             caps = h.get("capabilities", ["multihart"] if self.multihart else ["state"])
-            if not isinstance(caps, list) or not caps or any(c not in ("state", "multihart", "csr", "fault") for c in caps) or len(set(caps)) != len(caps):
+            if not isinstance(caps, list) or not caps or any(c not in ("state", "multihart", "csr", "fault", "environment") for c in caps) or len(set(caps)) != len(caps):
                 raise ValueError("invalid C2 capabilities")
+            self.environment = "environment" in caps
+            if self.environment and "external_interrupts" in h:
+                raise ValueError("select one external environment evidence protocol")
+            if self.environment and (h["schema"] != "rvw.rvfi/2" or self.multihart or h.get("environment") != "retirement-ordered/1"):
+                raise ValueError("environment capability requires single-hart C2/2 retirement-ordered/1")
             self.state = "state" in caps
             if self.multihart != ("multihart" in caps) or (self.multihart and h["schema"] != "rvw.rvfi/2"):
                 raise ValueError("multi-hart capability requires C2/2 harts")
@@ -122,12 +127,26 @@ class Trace:
                         from .external_interrupts import validate
                         validate(obj, self.header, external_sequence, order + 1)
                         external_sequence += 1
+                    elif obj["event"] == "environment":
+                        if not self.environment or type(obj.get('before_order')) is not int or obj['before_order'] != order+1:
+                            raise ValueError('environment event requires declared next retirement boundary')
+                        if obj.get('kind') == 'pins':
+                            obj['levels'] = hexnum(obj['levels'], xlen)
+                        elif obj.get('kind') in ('device-read', 'device-write'):
+                            obj['address'] = hexnum(obj['address'], xlen)
+                            obj['data'] = hexnum(obj['data'], xlen)
+                            if obj.get('size') not in (1,2,4,8) or obj['data'] >= 1 << (8*obj['size']):
+                                raise ValueError('invalid device response size or data')
+                        else:
+                            raise ValueError('unsupported environment event kind')
                     elif obj["event"] == "debug":
                         if not self.header.get("debug") or obj.get("action") not in ("halt", "observe"):
                             raise ValueError("debug event requires declared debug state and halt/observe action")
                         from .debug_state import validate
                         validate(obj["debug"], xlen)
                     elif obj["event"] == "trap":
+                        if self.environment and obj.get("before_order") != order+1:
+                            raise ValueError("trap needs its next retirement boundary")
                         obj["cause"] = hexnum(obj["cause"], xlen)
                         obj["tval"] = hexnum(obj["tval"], xlen)
                         if type(obj.get("intr")) is not bool:

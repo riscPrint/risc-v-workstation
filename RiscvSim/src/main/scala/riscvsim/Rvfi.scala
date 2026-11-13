@@ -141,7 +141,7 @@ class RvfiTraceWriter(file: File, header: ujson.Obj,
     observe.foreach(_(line))
   }
   private val snapshot = header.value.get("csr_snapshot").map(_.arr.map(_.str).toSet).getOrElse(Set.empty[String])
-  private val schema = if (snapshot.nonEmpty || header.value.get("capabilities").exists(_.arr.contains(ujson.Str("state")))) "rvw.rvfi/2" else "rvw.rvfi/1"
+  private val schema = if (snapshot.nonEmpty || header.value.get("capabilities").exists(_.arr.exists(v => v == ujson.Str("state") || v == ujson.Str("environment")))) "rvw.rvfi/2" else "rvw.rvfi/1"
   require(!header.value.contains("schema"), "trace writer selects the schema")
   private val supplied = if (snapshot.nonEmpty && !header.value.contains("capabilities"))
     header.value.toSeq :+ ("capabilities" -> ujson.Arr("csr")) else header.value.toSeq
@@ -193,10 +193,22 @@ class RvfiTraceWriter(file: File, header: ujson.Obj,
     if (flushEachRecord) w.flush()
   }
 
-  def trap(cycle: Long, cause: BigInt, tval: BigInt, intr: Boolean): Unit = {
+  def trap(cycle: Long, cause: BigInt, tval: BigInt, intr: Boolean, beforeOrder: Option[Long] = None): Unit = {
     at(cycle)
-    emit(s"""{"event": "trap", "cycle": $cycle, "cause": "${Hex(cause)}", "tval": "${Hex(tval)}", "intr": $intr}""")
+    val record = ujson.Obj("event" -> "trap", "cycle" -> ujson.Num(cycle.toDouble), "cause" -> Hex(cause), "tval" -> Hex(tval), "intr" -> intr)
+    beforeOrder.foreach(n => record("before_order") = ujson.Num(n.toDouble))
+    emit(ujson.write(record))
     if (flushEachRecord) w.flush()
+  }
+
+  /** Harness-owned inputs, ordered before the specified retirement. */
+  def environment(cycle: Long, beforeOrder: Long, kind: String, payload: ujson.Obj): Unit = {
+    require(header.value.get("environment").contains(ujson.Str("retirement-ordered/1")), "declare environment evidence")
+    at(cycle)
+    val record = ujson.Obj("event" -> "environment", "cycle" -> ujson.Num(cycle.toDouble),
+      "before_order" -> ujson.Num(beforeOrder.toDouble), "kind" -> kind)
+    payload.value.foreach { case(k,v) => require(!record.value.contains(k)); record(k) = v }
+    emit(ujson.write(record))
   }
 
   /** Interrupt input levels (in their `mip` bit positions) the harness drives from `cycle` on. */
