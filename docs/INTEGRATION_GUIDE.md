@@ -532,6 +532,7 @@ not transfer qualification to a new core, bus configuration or simulator.
 | Native VexiiRiscv ISA captures through pyuvm | 50 native programs attempted. 49 complete passing captures checked 17,637 retirements and 245 traps. | Offline C2 replay. The native `ma_data` failure remains explicit. No live cocotb VexiiRiscv binding or full suite pass. |
 | Composed SpinalSoc scenarios | Two pyuvm tests passed. Each checked 32 IRQ pulses, bus-error injection and reset during a stalled write. | Peripheral and fabric checks. Scenario seeds 1 and 7; simulator seed 1. CPU checks: zero. |
 | Python PCIe, Ethernet, DRAM and coherent agents | Four native good/bad campaigns passed at seed 17 on Icarus 14.0 devel. | Seeded semantic RTL endpoints. No physical link, vendor model, JEDEC timing, MAC/PHY implementation or complete coherent protocol qualification. |
+| Custom-bus project adapter | Verilator 5.049: 82 transfers and 83 positive checks passed at seed 17. Corrupt read data failed with `APB_DATA`. | Explicit APB4 semantics on custom pins. Declared database fixture and generated pyuvm bench. No automatic protocol discovery, CPU execution or C4 acceptance. |
 
 Use the detailed records for exact checks and limits:
 
@@ -541,6 +542,7 @@ Use the detailed records for exact checks and limits:
 - [VexiiRiscv native capture replay](../Uvm/examples/vexiiriscv/README.md).
 - [Composed SoC scenario project](../Uvm/examples/composed/README.md).
 - [Python semantic endpoint matrix](../Uvm/vip/rtl/CONTRACT_RESULTS.md).
+- [Custom-bus adapter RTL result](../Uvm/examples/custom_bus/README.md).
 
 The SV campaign uses pinned Accellera UVM 2020.3.1 with `UVM_NO_DPI`.
 The CPU example links a separate matched ABI 6 Spike DPI bridge. This does
