@@ -82,3 +82,12 @@ def test_regression_and_coverage_declarations(registry):
     assert 'MCY' in registry.tools['cov_mutate'].side_effects
     assert registry.tools['regress_privilege_build'].native_tools == ('RISC-V GCC',)
     assert registry.tools['cov_report'].native_tools == ()
+
+
+def test_soc_uvm_and_snapshot_declarations(registry):
+    tools = [tool for name, tool in registry.tools.items() if name.startswith(('soc_', 'uvm_', 'sim_'))]
+    assert tools and all(tool.side_effects and tool.native_tools is not None for tool in tools)
+    assert registry.tools['soc_peripheral'].side_effects == 'read-only'
+    assert registry.tools['uvm_build'].native_tools == ('Verilator',)
+    assert registry.tools['sim_profile'].side_effects == 'read-only'
+    assert 'adapter' in registry.tools['sim_resume'].side_effects

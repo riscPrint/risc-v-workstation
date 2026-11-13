@@ -179,4 +179,4 @@ def mcp_tools():
         return result
     names=['capture','trace','result','out']
     return [ToolSpec('soc_pair','Pair observed bus request tags with independent C2 retirements. Matching samples remain inconclusive.',
-                     schema({key:{'type':'string'} for key in names},names),execute,long=True)]
+                     schema({key:{'type':'string'} for key in names},names),execute,long=True, side_effects='long-running; writes generated observations or reports to out', native_tools=())]
