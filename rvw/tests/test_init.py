@@ -208,6 +208,10 @@ def test_wired_launcher_uses_generic_supervision_and_identity(core, tmp_path, bu
     (workstation / 'scripts').mkdir()
     supervisor = scripts / 'supervise.py'
     supervisor.write_text('import os, sys\nos.execv(sys.argv[1], [*sys.argv[1:3], "--riscvsim-supervised", os.environ["LAUNCH_OWNER"], *sys.argv[3:]])\n')
+    import shutil
+    shutil.copy(Path(__file__).resolve().parents[2] / 'RiscvSim/scripts/classpath.py', scripts / 'classpath.py')
+    jar = tmp_path / 'scala-library.jar'
+    jar.touch()
     (scripts / 'source-identity.py').write_text('print("{}")\n')
     (scripts / 'native-identity.py').write_text('import json, os, sys\nfrom pathlib import Path\nif len(sys.argv) == 1: print(\'{}\')\nelse: Path(os.environ["OUTPUT_ARGS"]).write_text(json.dumps(sys.argv[1:]))\n')
     lock = workstation / 'scripts/with-lock.sh'
@@ -217,7 +221,7 @@ def test_wired_launcher_uses_generic_supervision_and_identity(core, tmp_path, bu
     binaries.mkdir()
     sbt = binaries / 'sbt'
     sbt.write_text('#!/bin/bash\necho compiling\n' +
-                   ('exit 7\n' if build_fails else 'echo /synthetic/scala-library.jar\n'))
+                   ('exit 7\n' if build_fails else f'echo "{jar}"\n'))
     sbt.chmod(0o755)
     owner = tmp_path / 'owner'
     owner.mkdir()

@@ -245,3 +245,10 @@ RTL identity capture. Custom adapter inputs must extend this declaration.
 The generated project owns `Elaboration.config` and `Elaboration.top()`.
 Simulation and database generation use this entry. Formal and lint use the
 RTL recorded in that database. Both RTL identity hooks remain required.
+
+## External runtime classpath cache
+
+Wired launchers store `target/rvw-classpath.json` in the adapter project.
+It is a build accelerator, not a result identity. Source and runtime file hashes
+must match before reuse. Native identity capture still runs on every launch.
+The generated sbt lock is private to the project name (`sbt-<name>`).
