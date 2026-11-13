@@ -1,0 +1,314 @@
+{
+  "schema": "rvw.soc/1",
+  "name": "vex_soc",
+  "address_bits": 32,
+  "platform": {
+    "name": "vexriscv",
+    "xlen": 32,
+    "isa": "rv32im_zicsr_zifencei",
+    "reference_isa": "rv32im_zicsr_zifencei_zicntr_zihpm",
+    "reset_pc": "0x80000000",
+    "pmp_regions": 0,
+    "aligned_mem": true,
+    "irq_inputs": [
+      3,
+      7,
+      9,
+      11
+    ],
+    "privilege_modes": "M",
+    "misaligned": {
+      "load": "trap",
+      "store": "trap",
+      "atomic": "trap",
+      "split_page": "refuse",
+      "split_bus": "refuse"
+    },
+    "endianness": {
+      "instruction": "little",
+      "data": "little",
+      "page_table": "little",
+      "device": "little"
+    },
+    "absent_pmp_csrs": "read_zero_write_ignored",
+    "ecall_tval": "insn"
+  },
+  "regions": [
+    {
+      "name": "ram",
+      "kind": "ram",
+      "base": "0x80000000",
+      "size": "0x10000",
+      "permissions": "rwx",
+      "cacheable": false,
+      "registers": []
+    },
+    {
+      "name": "uart",
+      "kind": "mmio",
+      "base": 268435456,
+      "size": 256,
+      "permissions": "rw",
+      "cacheable": false,
+      "registers": [
+        {
+          "name": "data_divisor_low",
+          "offset": 0,
+          "width": 32,
+          "access": "rw",
+          "reset": null,
+          "read_action": "none",
+          "write_action": "normal"
+        },
+        {
+          "name": "ier_divisor_high",
+          "offset": 4,
+          "width": 32,
+          "access": "rw",
+          "reset": 0,
+          "read_action": "none",
+          "write_action": "normal"
+        },
+        {
+          "name": "iir_fcr",
+          "offset": 8,
+          "width": 32,
+          "access": "rw",
+          "reset": null,
+          "read_action": "none",
+          "write_action": "normal"
+        },
+        {
+          "name": "lcr",
+          "offset": 12,
+          "width": 32,
+          "access": "rw",
+          "reset": 3,
+          "read_action": "none",
+          "write_action": "normal"
+        },
+        {
+          "name": "lsr",
+          "offset": 20,
+          "width": 32,
+          "access": "r",
+          "reset": null,
+          "read_action": "none",
+          "write_action": "normal"
+        },
+        {
+          "name": "scratch",
+          "offset": 28,
+          "width": 32,
+          "access": "rw",
+          "reset": 0,
+          "read_action": "none",
+          "write_action": "normal"
+        }
+      ]
+    },
+    {
+      "name": "clint",
+      "kind": "mmio",
+      "base": 33554432,
+      "size": 65536,
+      "permissions": "rw",
+      "cacheable": false,
+      "registers": [
+        {
+          "name": "msip",
+          "offset": 0,
+          "width": 32,
+          "access": "rw",
+          "reset": 0,
+          "read_action": "none",
+          "write_action": "normal"
+        },
+        {
+          "name": "mtimecmp_low",
+          "offset": 16384,
+          "width": 32,
+          "access": "rw",
+          "reset": 4294967295,
+          "read_action": "none",
+          "write_action": "normal"
+        },
+        {
+          "name": "mtimecmp_high",
+          "offset": 16388,
+          "width": 32,
+          "access": "rw",
+          "reset": 4294967295,
+          "read_action": "none",
+          "write_action": "normal"
+        },
+        {
+          "name": "mtime_low",
+          "offset": 49144,
+          "width": 32,
+          "access": "rw",
+          "reset": null,
+          "read_action": "none",
+          "write_action": "normal"
+        },
+        {
+          "name": "mtime_high",
+          "offset": 49148,
+          "width": 32,
+          "access": "rw",
+          "reset": null,
+          "read_action": "none",
+          "write_action": "normal"
+        }
+      ]
+    },
+    {
+      "name": "plic",
+      "kind": "mmio",
+      "base": 201326592,
+      "size": 4194304,
+      "permissions": "rw",
+      "cacheable": false,
+      "registers": [
+        {
+          "name": "priority_1",
+          "offset": 4,
+          "width": 32,
+          "access": "rw",
+          "reset": 0,
+          "read_action": "none",
+          "write_action": "normal"
+        },
+        {
+          "name": "priority_2",
+          "offset": 8,
+          "width": 32,
+          "access": "rw",
+          "reset": 0,
+          "read_action": "none",
+          "write_action": "normal"
+        },
+        {
+          "name": "priority_3",
+          "offset": 12,
+          "width": 32,
+          "access": "rw",
+          "reset": 0,
+          "read_action": "none",
+          "write_action": "normal"
+        },
+        {
+          "name": "priority_4",
+          "offset": 16,
+          "width": 32,
+          "access": "rw",
+          "reset": 0,
+          "read_action": "none",
+          "write_action": "normal"
+        },
+        {
+          "name": "priority_5",
+          "offset": 20,
+          "width": 32,
+          "access": "rw",
+          "reset": 0,
+          "read_action": "none",
+          "write_action": "normal"
+        },
+        {
+          "name": "priority_6",
+          "offset": 24,
+          "width": 32,
+          "access": "rw",
+          "reset": 0,
+          "read_action": "none",
+          "write_action": "normal"
+        },
+        {
+          "name": "priority_7",
+          "offset": 28,
+          "width": 32,
+          "access": "rw",
+          "reset": 0,
+          "read_action": "none",
+          "write_action": "normal"
+        },
+        {
+          "name": "pending",
+          "offset": 4096,
+          "width": 32,
+          "access": "r",
+          "reset": 0,
+          "read_action": "none",
+          "write_action": "normal"
+        },
+        {
+          "name": "enable",
+          "offset": 8192,
+          "width": 32,
+          "access": "rw",
+          "reset": 0,
+          "read_action": "none",
+          "write_action": "normal"
+        },
+        {
+          "name": "threshold",
+          "offset": 2097152,
+          "width": 32,
+          "access": "rw",
+          "reset": 0,
+          "read_action": "none",
+          "write_action": "normal"
+        },
+        {
+          "name": "claim_complete",
+          "offset": 2097156,
+          "width": 32,
+          "access": "rw",
+          "reset": null,
+          "read_action": "none",
+          "write_action": "normal"
+        }
+      ]
+    },
+    {
+      "name": "finisher",
+      "kind": "mmio",
+      "base": 268439552,
+      "size": 256,
+      "permissions": "rw",
+      "cacheable": false,
+      "registers": [
+        {
+          "name": "tohost",
+          "offset": 0,
+          "width": 32,
+          "access": "rw",
+          "reset": 0,
+          "read_action": "none",
+          "write_action": "normal"
+        }
+      ]
+    }
+  ],
+  "interrupts": [
+    {
+      "name": "timer",
+      "region": "clint",
+      "register": "mtimecmp_low",
+      "cause": 7
+    },
+    {
+      "name": "external",
+      "region": "plic",
+      "register": "claim_complete",
+      "cause": 11
+    },
+    {
+      "name": "uart",
+      "region": "uart",
+      "register": "ier_divisor_high",
+      "cause": 11
+    }
+  ]
+}

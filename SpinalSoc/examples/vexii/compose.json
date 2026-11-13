@@ -1,0 +1,37 @@
+{
+  "schema": "rvw.soc-compose/1",
+  "map": "../vex/soc.json",
+  "core": {
+    "class": "examplesocvexii.VexiiCore",
+    "bus": "axi4"
+  },
+  "clock_hz": 50000000,
+  "reset": "async_high",
+  "devices": {
+    "ram": {
+      "type": "ram"
+    },
+    "uart": {
+      "type": "project",
+      "class": "rvwsoc.Uart16550",
+      "exports": [
+        "serial"
+      ]
+    },
+    "clint": {
+      "type": "project",
+      "class": "rvwsoc.Clint"
+    },
+    "plic": {
+      "type": "project",
+      "class": "rvwsoc.Plic",
+      "exports": [
+        "sources"
+      ]
+    },
+    "finisher": {
+      "type": "project",
+      "class": "rvwsoc.Finisher"
+    }
+  }
+}

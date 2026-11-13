@@ -154,3 +154,11 @@ separate memory domain elaborated. `BusSmoke` passed at seed 31 with
 Verilator assertions, both on one clock and across periods 10 and 14.
 AXI/TileLink transaction simulation, wider TileLink simulation, structural
 lint extraction and formal CDC/reset checks were NOT RUN.
+
+## Real core wrappers
+
+[The VexRiscv example](examples/vex/README.md) has a wrapper, C1 adapter and
+captured-input regression setup. [The VexiiRiscv example](examples/vexii/README.md)
+has a separate source build for its pinned Spinal dependencies. Both expose
+AXI4 masters through `AxiCoreWrapper` and wire machine interrupt inputs.
+Debug transport and debug module integration remain open.
