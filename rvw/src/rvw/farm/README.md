@@ -536,3 +536,13 @@ Its example image is an unbuilt placeholder. Do not submit it as a working
 image. This native run used macOS tools. It does not establish Linux or cluster
 parity. Persistent shared-plan output paths are fixed. Use a new root for every
 rerun or retry. The queue-owned submit example instead uses fresh attempt paths.
+
+Triage also reads native C2 trap events for a conclusive failed test whose C1
+records traps. It validates the full C2 stream, terminal status, trap count and
+C1/C3/header identities. With no first mismatch, the last recorded trap cause
+becomes the grouping key. Members retain the original C1 signature, C1/C2
+hashes, interrupt flag, value and cycle. A trap before a failure need not be
+its root cause. The report states `root_cause: not_established`. Invalid or
+unbound trap evidence keeps the original signature and adds an issue. Passing
+trap tests do not create failure clusters. A representative C5 retains the
+original C1 failure signature even when its cluster uses a trap grouping key.

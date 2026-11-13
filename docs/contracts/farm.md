@@ -177,3 +177,16 @@ OpenAPI SHA-256 and canonical rendered manifest SHA-256. Cluster execution and
 admission remain `not_run`. The enclosing document must be a nonempty `v1`
 List. Each item must be a `batch/v1` Job and satisfy its schema definition.
 This is structural validation. It is not Kubernetes admission or runtime proof.
+
+## Native trap observations in triage
+
+A failure-cluster member can include `trap_observation`. It records the last
+validated C2 trap's cause, interrupt flag, value, cycle, trap count, C1/C2 hashes,
+`selection: last-recorded-trap` and `root_cause: not_established`. C1/C3 identities
+must agree. C2 header core, config, seed, source, ELF and RTL identities must
+match C1. The full C2 stream must validate. Its end status and trap count must
+match C1. A first-mismatch signature takes priority. Otherwise a conclusive
+failed test with recorded traps can use `trap:CAUSE` as its grouping key.
+The original C1 signature and any C5 signature remain unchanged. Invalid trap
+evidence adds an issue and cannot replace the original failure signature.
+A cause grouping is an observation, not a root-cause or core-bug claim.

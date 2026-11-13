@@ -415,6 +415,14 @@ and coverage ranking before the candidate run. Keep unknown impacts mandatory.
 Compare the chosen tests with a separate full run. Coverage point ranking
 alone missed the planted fault in this experiment.
 
+A later [native trap control](../examples/regression-scale/trap-results.json)
+uses a correct ECALL expectation and a deliberately wrong expectation. The
+control passes. The wrong expectation fails. Both record cause `0xb`. Triage
+validates C1/C3/C2 identities and groups the failure by its last observed trap
+cause. It retains the original `fail:2` signature and one C5 bundle. The pair
+took 25.793 seconds with a private model path. This is a test fault, not a core
+finding. The last trap does not establish the failure's root cause.
+
 ### Budgets, gates and evidence
 
 Set cumulative scopes with `farm budget --scope run:JOB_ID`, `agent:OWNER` or
