@@ -12,11 +12,12 @@ loop:
   div t2, t0, t1
   la a0, scratch
   sw t2, 0(a0)
-  lw t3, 0(a0)
-  bne t2, t3, fail
   beq zero, zero, recovered
+  lw t3, 0(a0)
   sw zero, 0(a0)
 recovered:
+  lw t3, 0(a0)
+  bne t2, t3, fail
   fence.i
   ecall
   csrr t0, mstatus

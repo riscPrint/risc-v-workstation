@@ -478,7 +478,11 @@ class Core(val entries: Int = 8, val physicalCount: Int = 48) extends Component 
   observedToken.simPublic()
   val loadFire = (issue && isLoad(selected)).setName("loadFire")
   loadFire.simPublic()
+  val commitBytes = Mux(masks(head)(3),U(4,3 bits),Mux(masks(head)(1),U(2,3 bits),U(1,3 bits)))
+  val commitStoreAllowed = Pmp.allowed(pmpConfig,pmpAddress,address(head),commitBytes,memoryMachine,1)
   val propertySignals = Seq(
+    "privilege_supported" -> (privilege === 0 || privilege === 3),
+    "store_permission" -> (!io.store || commitStoreAllowed),
     "rob_bound" -> (count <= entries),
     "rob_count" -> (count === CountOne(valid.asBits)),
     "zero_map" -> (map(0) === 0),
@@ -509,6 +513,25 @@ class Core(val entries: Int = 8, val physicalCount: Int = 48) extends Component 
     (0 until entries).map(i => Mux(valid(i) && writes(i),B(1,physicalCount bits) |<< dest(i),B(0,physicalCount bits))).reduce(_ | _)
   DeclaredChecks.rule("freelist.conservation","rename","free and owned tags partition the register file",trigger = True)(free =/= ~liveTags)
   DeclaredChecks.rule("execution.operands","issue","both physical sources are ready",trigger = issue)(issue && (!ready(src1(selected)) || !ready(src2(selected))))
+  if(Probe.isEnabled) {
+    Probe.custom("speculative_fault",issue && exception && selected =/= head,
+      "cause" -> cause,"pc" -> pcs(selected),"id" -> ids(selected))
+    val forwardedBytes = Bits(4 bits)
+    for(i <- 0 until 4) forwardedBytes(i) := forwardSelect(i).orR
+    val olderRecovery = (0 until entries).map { i =>
+      valid(i) && done(i) && isBranch(i) && !faults(i) && nextPc(i) =/= predicted(i) &&
+        (U(i,slotWidth bits)-head) < selectAge
+    }.reduce(_ || _)
+    Probe.custom("forwarding",loadFire,"bytes" -> forwardedBytes,"pending_recovery" -> olderRecovery)
+    Probe.counter("forward_pending_recovery",loadFire && forwardedBytes.orR && olderRecovery)
+    Probe.counter("interrupt_rob_full",interrupt && count === entries)
+    val sinceRecovery = Reg(UInt(4 bits)).init(15)
+    val seenRecovery = Reg(Bool()).init(False)
+    when(sinceRecovery =/= 15) { sinceRecovery := sinceRecovery+1 }
+    when(redirect) { sinceRecovery := 0; seenRecovery := True }
+    Probe.counter("recoveries_within_8",redirect && seenRecovery && sinceRecovery < 8)
+    Probe.custom("recovery_spacing",redirect && seenRecovery,"gap" -> (sinceRecovery.resize(5)+1))
+  }
   Probe.stageAt("rename","Rn",push,nextId,Some(pc),first = true)
   Probe.stageAt("issue","Is",issue,ids(selected),Some(pcs(selected)))
   Probe.stageAt("commit","Cm",pop,ids(head),Some(pcs(head)))
