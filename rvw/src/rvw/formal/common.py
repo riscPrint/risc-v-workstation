@@ -710,13 +710,48 @@ def count_asserts(rtlil: Path, top: str) -> int | None:
     own: dict[str, int] = {}
     inst: dict[str, list[str]] = {}
     module = None
-    for line in rtlil.read_text(errors="replace").splitlines():
+    twines: dict[str, str] = {}
+
+    def decode(token):
+        match = re.fullmatch(r"\$(pub|priv)@(\d+)", token)
+        if match:
+            value = twines.get(match[2])
+            if value is None:
+                raise ValueError("unresolved RTLIL name")
+            return ("\\" if match[1] == "pub" else "") + value
+        return token
+
+    lines = rtlil.read_text(errors="replace").splitlines()
+    # Twines are ordered: a suffix refers to an earlier leaf or suffix.
+    in_twines = False
+    for line in lines:
+        s = line.strip()
+        if s == "twines":
+            in_twines = True
+        elif in_twines and s == "end":
+            in_twines = False
+        elif in_twines:
+            match = re.fullmatch(r'(leaf|suffix) (\d+) (?:(\d+) )?(".*")', s)
+            if not match:
+                return None
+            try:
+                text = json.loads(match[4])
+                twines[match[2]] = (twines[match[3]] if match[1] == "suffix" else "") + text
+            except (ValueError, KeyError):
+                return None
+    for line in lines:
         s = line.strip()
         if s.startswith("module "):
-            module = s.split()[1].lstrip("\\")
+            try:
+                module = decode(s.split()[1]).lstrip("\\")
+            except ValueError:
+                return None
             own[module], inst[module] = 0, []
         elif s.startswith("cell ") and module is not None:
-            typ = s.split()[1]
+            try:
+                typ = decode(s.split()[1])
+            except ValueError:
+                return None
             if typ == "$assert":
                 own[module] += 1
             elif typ.startswith("\\"):
