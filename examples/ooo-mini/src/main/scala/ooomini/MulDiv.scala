@@ -57,7 +57,7 @@ class MulDiv extends Component {
     val ss = io.a.asSInt * io.b.asSInt
     val uu = io.a.asUInt * io.b.asUInt
     val su = io.a.asSInt.resize(33) * io.b.asUInt.resize(33).asSInt
-    product := uu(31 downto 0).asBits ^ B(1,32 bits)
+    product := uu(31 downto 0).asBits
     switch(io.funct) {
       is(1) { product := ss(63 downto 32).asBits }
       is(2) { product := su(63 downto 32).asBits }
