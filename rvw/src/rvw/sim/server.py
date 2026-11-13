@@ -43,6 +43,7 @@ def serve(endpoint, command, timeout=600, *, ready=None):
                                        stderr=log, start_new_session=True, bufsize=0)
             if ready is not None:
                 ready.set()
+            pending = bytearray()
             while True:
                 with listener.accept()[0] as client:
                     with client.makefile('rwb', buffering=0) as stream:
@@ -50,15 +51,22 @@ def serve(endpoint, command, timeout=600, *, ready=None):
                         job = json.loads(line)
                         process.stdin.write(json.dumps(job).encode() + b'\n')
                         process.stdin.flush()
+                        deadline = time.monotonic() + timeout
                         with selectors.DefaultSelector() as selector:
                             selector.register(process.stdout, selectors.EVENT_READ)
-                            if not selector.select(timeout):
-                                stream.write(b'{"error":"native simulation request timed out; server stopped"}\n')
-                                return 2
-                        reply = process.stdout.readline()
-                        if not reply:
-                            stream.write(b'{"error":"native simulation process exited; server stopped"}\n')
-                            return 2
+                            while b'\n' not in pending:
+                                remaining = deadline - time.monotonic()
+                                if remaining <= 0 or not selector.select(remaining):
+                                    stream.write(b'{"error":"native simulation request timed out; server stopped"}\n')
+                                    return 2
+                                chunk = os.read(process.stdout.fileno(), 65536)
+                                if not chunk:
+                                    stream.write(b'{"error":"native simulation process exited; server stopped"}\n')
+                                    return 2
+                                pending.extend(chunk)
+                        line, _, rest = pending.partition(b'\n')
+                        pending = bytearray(rest)
+                        reply = line + b'\n'
                         stream.write(reply)
                         if job.get('op') == 'shutdown':
                             return 0
