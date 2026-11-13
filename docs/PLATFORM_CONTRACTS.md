@@ -711,6 +711,17 @@ with explicit missing fields. Sparse imports cannot produce C2 or a match.
 Unsupported Spike effects fail instead of being discarded. Conversion reports
 `independent_check: false`; format conversion is not architectural validation.
 
+### C2 custom Spike reference extensions
+
+The cosim platform accepts `reference_extensions`, a list of objects with
+`library` and `name` strings. Library paths are relative to the original platform
+file. Inputs capture each library before execution and record its digest. Spike
+loads captured libraries, then registers each named extension on the processor
+before loading the ELF. Libraries must use the installed Spike extension ABI.
+A missing library or registration failure is an error. Sail refuses this setting.
+Custom CSR state uses the existing C2 `csr_snapshot` declaration. Reference trace
+generation still refuses custom instructions with unknown operand layouts.
+
 ## C3. Suite results (`rvw.results/1`)
 
 New regress run sets publish through C8 `current` and `generations/<id>`. The root workspace

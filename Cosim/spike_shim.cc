@@ -4,6 +4,7 @@
 #include <riscv/disasm.h>
 #include <riscv/simif.h>
 #include <riscv/trap.h>
+#include <riscv/extension.h>
 #include <array>
 #include <cstring>
 #include <cstdio>
@@ -266,6 +267,15 @@ void rvw_set_trap_tval(void* m,uint64_t value) {
 }
 void rvw_set_mscratch(void* m,uint64_t value) {
   static_cast<Machine*>(m)->cpu->put_csr(CSR_MSCRATCH,value);
+}
+int rvw_register_extension(void* m, const char* name) {
+  try {
+    auto factory = find_extension(name);
+    if (!factory) throw std::runtime_error("unknown Spike extension");
+    auto* cpu = static_cast<Machine*>(m)->cpu.get();
+    cpu->register_extension(factory());
+    return 0;
+  } catch(const std::exception& ex) { error=ex.what(); return -1; }
 }
 int rvw_read_csr(void* m,unsigned address,uint64_t* value) {
   try { *value=static_cast<Machine*>(m)->cpu->get_csr(address); return 0; }
