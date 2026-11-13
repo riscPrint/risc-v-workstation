@@ -17,6 +17,15 @@
       "low",
       "high",
       "low"
-    ]
+    ],
+    "clock_measure": {
+      "reference_hz": 1000000000,
+      "min_high_ticks": 5,
+      "min_low_ticks": 5,
+      "period_tolerance_ticks": 0,
+      "settle_ticks": 20,
+      "max_switch_ticks": 1000,
+      "max_edge_gap_ticks": 100
+    }
   }
 }

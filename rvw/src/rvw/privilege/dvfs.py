@@ -13,6 +13,9 @@ def transitions(config):
 
 def programs(config):
     pairs=transitions(config)
+    if config['dvfs'].get('clock_measure'):
+        from .clock_edges import validate
+        validate(config['dvfs']['clock_measure'])
     code=HEAD+' li s0, 0x12345\n li s1, 0\n'
     events=[]
     for step,(old,new) in enumerate(pairs,1):
