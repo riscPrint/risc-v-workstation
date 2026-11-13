@@ -270,7 +270,7 @@ usage: rvw bundle [-h] [--out OUT] [-n RETIRED] [--cut-cycles CUT_CYCLES]
 
 ```text
 usage: rvw cosim [-h] [--project PROJECT]
-    {dii,exchange,vector-source,adjudicate,check,generate,live} ...
+    {dii,exchange,vector-source,adjudicate,qemu-check,check,generate,live} ...
 ```
 
 ### `rvw cosim dii`
@@ -313,8 +313,15 @@ usage: rvw cosim vector-source [-h] --out OUT [--timeout TIMEOUT] [--json]
 
 ```text
 usage: rvw cosim adjudicate [-h] --elf ELF --trace TRACE [--core CORE]
-    [--platform PLATFORM] [--sail-config SAIL_CONFIG] [--timeout TIMEOUT]
-    [--strict] [--json] [--project PROJECT]
+    [--platform PLATFORM] [--sail-config SAIL_CONFIG] [--qemu-log QEMU_LOG]
+    [--timeout TIMEOUT] [--strict] [--json] [--project PROJECT]
+```
+
+### `rvw cosim qemu-check`
+
+```text
+usage: rvw cosim qemu-check [-h] --trace TRACE --log LOG [--max-prefix
+    MAX_PREFIX] [--json] [--project PROJECT]
 ```
 
 ### `rvw cosim check`
@@ -2246,7 +2253,7 @@ Starts a background job: yes.
 
 Check a DUT trace against Spike and Sail. Preserve both reports and identify which reference the DUT matches at a disagreement. No majority vote.
 
-Arguments: `elf` (required), `trace` (required), `core`, `platform`, `project`, `sail_config`, `timeout`, `strict`.
+Arguments: `elf` (required), `trace` (required), `core`, `platform`, `project`, `sail_config`, `qemu_log`, `timeout`, `strict`.
 
 Starts a background job: yes.
 
@@ -2271,6 +2278,14 @@ Starts a background job: yes.
 Generate a C2 trace from Spike for an ELF, for reference fixtures or later comparison. Writes out (refused if out is the ELF or an existing file that is not a C2 trace) and returns reproduction metadata; runs as a cancellable job.
 
 Arguments: `project`, `elf` (required), `core`, `platform`, `out` (required), `max_instructions`.
+
+Starts a background job: yes.
+
+### `cosim_qemu_check`
+
+Compare bounded single-hart C2 boot traces with QEMU single-step CPU logs. Checks PC and integer observations only. Async events remain inconclusive.
+
+Arguments: `trace` (required), `log` (required), `max_prefix`.
 
 Starts a background job: yes.
 
