@@ -2716,3 +2716,15 @@ The AXI slow tests run independent good traces and seeded bad traces through
 SBY in prove mode. They use Yices for AXI4 and ABC PDR for AXI4-Lite. Each
 expected fault must return FAIL. Tool errors do not count as detected faults.
 These small fixtures prove monitor behavior, not a connected design.
+
+### Exact TileLink bus types
+
+SpinalChecks reports the qualified TileLink bus type, enabled live signals
+and library options in its `buses` inventory. Use
+`rvw formal buses --db design.db --type-report design.checks.json --out OUT`
+when SpinalDB records only the ambiguous class name `Bus`. Binding requires
+one exact top, component path and live signal-name set match. Missing and
+duplicate matches remain unsupported. The report does not prove that two
+elaborations have equal behavior. Use matching project captures.
+MCP `formal_buses` accepts `type_report`. Project bus entries accept the same
+key as a path relative to `checks.generate.json`.

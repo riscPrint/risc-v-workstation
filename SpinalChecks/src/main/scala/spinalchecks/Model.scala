@@ -202,15 +202,20 @@ class CheckRecord(val id: String, val kind: String, val component: Component, va
 class Channel(val kind: String, val component: Component, val path: String, val objName: String,
               val valid: Bool, val ready: Bool, val payload: Seq[BaseType], val location: Option[SourceLoc])
 
+/** Runtime bus types retained for database binding after elaboration. */
+class BusTypeRecord(val component: Component, val bus: Data, val protocol: String,
+                    val options: Map[String, Int])
+
 class ChecksResult(val config: ChecksConfig) {
   var top: Component = null
   var formal: Boolean = false
   var reportFile: String = null
   val records = ArrayBuffer[CheckRecord]()
   val channels = ArrayBuffer[Channel]()
+  val buses = ArrayBuffer[BusTypeRecord]()
   val notes = ArrayBuffer[String]()
   def inserted: Seq[CheckRecord] = records.filter(_.inserted).toSeq
-  def clear(): Unit = { top = null; records.clear(); channels.clear(); notes.clear() }
+  def clear(): Unit = { top = null; records.clear(); channels.clear(); buses.clear(); notes.clear() }
 }
 
 /** Attached to the toplevel so simulations can find the checks of the design they run. */

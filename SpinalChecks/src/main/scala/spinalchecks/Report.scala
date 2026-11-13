@@ -116,7 +116,13 @@ object Report {
         "by_kind" -> obj(byKind: _*)),
       "notes" -> arr(r.notes.map(n => n: V).toSeq),
       "checks" -> arr(checks.toSeq),
-      "channels" -> arr(channels.toSeq)
+      "channels" -> arr(channels.toSeq),
+      "buses" -> arr(r.buses.map { b =>
+        obj("path" -> SpinalChecks.instancePath(b.component), "object" -> b.bus.getName(),
+          "class_name" -> b.protocol,
+          "signals" -> arr(b.bus.flatten.filter(alive).map(x => x.getName(): V).toList),
+          "options" -> obj(b.options.toSeq.sortBy(_._1).map { case (k, v) => k -> (v: V) }: _*)) : V
+      }.toSeq)
     )) + "\n"
   }
 }

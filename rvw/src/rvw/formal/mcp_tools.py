@@ -259,7 +259,7 @@ def mcp_tools():
         ToolSpec("formal_power", "Generate sampled low-power checks and declared DFT inventory. No proof or ATPG run.",
                  schema({"intent": S, "out": S, "db": S}, ["intent", "out"]), _power, long=True),
         ToolSpec("formal_buses", "Generate typed bus monitors and bounded AXI transaction trackers from SpinalDB. No proof run.",
-                 schema({"db": S, "out": S, "depth": {"type": "integer", "minimum": 1, "maximum": 64}, "max_beats": {"type": "integer", "minimum": 1, "maximum": 256}}, ["db", "out"]), _buses, long=True),
+                 schema({"db": S, "out": S, "depth": {"type": "integer", "minimum": 1, "maximum": 64}, "max_beats": {"type": "integer", "minimum": 1, "maximum": 256}, "type_report": S}, ["db", "out"]), _buses, long=True),
         ToolSpec("formal_security_prove", "Prove a source/sink IFT or static access isolation policy on exported RTL. Digital policy scope only.",
                  schema({"rtl": S, "top": S, "policy": S, "out": S,
                          "timeout": {"type": "number", "exclusiveMinimum": 0}}, ["rtl", "top", "policy", "out"]),
@@ -381,7 +381,7 @@ def _properties(job, **args):
 
 def _buses(job, **args):
     argv=[sys.executable, "-m", "rvw", "formal", "buses", "--db", args['db'], "--out", args['out']]
-    for key in ("depth", "max_beats"):
+    for key in ("depth", "max_beats", "type_report"):
         if key in args: argv += ["--"+key.replace("_","-"),str(args[key])]
     code = job.run(argv)
     if code not in (0, 3):
