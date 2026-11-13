@@ -979,3 +979,61 @@ cache or memory-order replays. Refill counts alone give no replay window.
 The paired partitions describe where slots went. They cannot prove which
 missing mechanism caused a specific IPC loss. Exact replay needs typed,
 instruction-linked reschedule events before it can be claimed.
+
+## Statistical wrong-path occupancy
+
+`wrong_path_occupancy: true` enables a deterministic filler when a functional
+path provider is absent. It samples the full committed instruction mix in
+trace order. Branch and system instructions become inert ALU work. Prediction occurs at rename. Filler enters rename at the fetch rate
+until branch resolution, including time when the branch waits to issue.
+It uses shared ROB, IQ and LSQ capacity and is squashed before commit.
+Its loads and stores do not change component cache state. It has no invented
+register dependencies. This is an occupancy approximation, not exact replay.
+The existing explicit Spike path provider takes precedence.
+
+The Spike path capture on main only supports sequential prediction. It cannot
+supply paths for the gshare study. The filler therefore supports that study,
+but its mix is a committed-path proxy. Actual wrong-path mix is unmeasured.
+Predictor training occurs at issue. Nested speculation and speculative
+history repair remain absent. These limits can hide queue-size costs.
+
+## Resource study: occupancy
+
+This stage meets the criterion on 13/24 pairs and 4/15 nonzero changes.
+Training mean absolute IPC error is 7.15%.
+Held-out mean absolute IPC error is 9.48% across six programs.
+Same-step pooled elasticity rank tau-b is 0.667, with 0 model ties.
+This rank uses the measured large steps. It is separate from the original
+local sensitivity tau-b of 0.707 with three unresolved ties. The original
+same-step rank is 0.667. Parameters stay fixed at the base-only fit.
+No variant result selects a parameter.
+
+| Variant | Program | RTL change (%) | Model change (%) | Criterion |
+|---|---|---:|---:|---|
+| iq16 | median | -1.682 | -0.613 | outside |
+| rob128 | median | +0.000 | +0.000 | within |
+| lq8 | median | -1.057 | +0.000 | outside |
+| sq8 | median | +0.000 | +0.000 | within |
+| iq16 | qsort | -0.617 | -0.221 | outside |
+| rob128 | qsort | +0.000 | +0.000 | within |
+| lq8 | qsort | -0.359 | +0.000 | outside |
+| sq8 | qsort | -0.294 | +0.000 | outside |
+| iq16 | multiply | -0.303 | -0.217 | within |
+| rob128 | multiply | +0.000 | +0.000 | within |
+| lq8 | multiply | -0.021 | +0.000 | outside |
+| sq8 | multiply | +0.000 | +0.000 | within |
+| iq16 | towers | -0.627 | -1.705 | outside |
+| rob128 | towers | +0.000 | +0.000 | within |
+| lq8 | towers | -1.388 | -0.041 | outside |
+| sq8 | towers | -4.393 | -0.069 | outside |
+| iq16 | vvadd | -8.244 | -8.658 | within |
+| rob128 | vvadd | +0.000 | +0.000 | within |
+| lq8 | vvadd | -2.902 | +0.595 | outside |
+| sq8 | vvadd | +0.000 | +0.000 | within |
+| iq16 | memcpy | -12.497 | -8.715 | within |
+| rob128 | memcpy | +0.000 | +0.000 | within |
+| lq8 | memcpy | -7.988 | -4.075 | within |
+| sq8 | memcpy | -10.902 | -3.090 | outside |
+
+[Retained results](../../../../examples/naxriscv/rvw/arch/occupancy-results.json) include
+the configuration, engine hash, absolute errors and paired results.
