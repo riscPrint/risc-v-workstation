@@ -1,6 +1,4 @@
 """Register-to-register paths. This is a structural inventory, not a proof."""
-from collections import defaultdict
-import sqlite3
 from . import cdc, depth, rdc
 from .graph import Design
 
@@ -12,18 +10,8 @@ UNRUN = ["cdc.protocol", "cdc.metastability", "cdc.pulse_loss", "cdc.reconvergen
 def analyze(db, intent=None):
     c = db.conn
     design = Design(c)
-    domains = {r['id']: dict(r) for r in c.execute('SELECT * FROM clock_domains')}
-    signals = {r['id']: dict(r) for r in c.execute(
-        'SELECT s.*, f.path AS file FROM signals s LEFT JOIN files f ON f.id=s.file_id')}
-    regs = {i: s for i, s in signals.items() if s['kind'] == 'reg' and not s['pruned']}
-    incoming, outgoing = defaultdict(set), defaultdict(set)
-    blackbox = False
-    for src, dst, kind in c.execute('SELECT src,dst,kind FROM edges'):
-        if kind == 'init':
-            continue
-        blackbox |= kind == 'blackbox'
-        incoming[dst].add(src)
-        outgoing[src].add(dst)
+    domains, signals, regs = design.domains, design.signals, design.regs
+    incoming, outgoing, blackbox = design.incoming, design.outgoing, design.blackbox_edges
     findings, crossings, reset_crossings = [], [], []
 
     def emit(rule, src, dst, message, severity='warning'):

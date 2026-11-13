@@ -376,10 +376,19 @@ rvw query path request result --db design.db --json
 The importer preserves module instances and named nets. Yosys lowers processes
 before import. Generated bit signals connect the lowered cells. Paths are
 conservative: each cell input can affect each output, and a named vector can
-join disjoint slices. `sel` edges identify mux selects and enable/reset ports.
-Clock inputs do not become value dependencies. State outputs stop combinational
-traversal. Register stage counts can include multiple aliases of the same state.
-Clock-domain and reset-value extraction are not implemented.
+join disjoint slices. `sel` edges identify mux selects and enable ports.
+Clock and reset pins do not become value dependencies. State outputs stop
+combinational traversal. When one visible name holds a bit, hidden Yosys
+temporaries are its aliases; only visible names become registers.
+
+Each flip-flop cell gives a `clock_domains` row: the clock and reset nets are
+followed through ports to a toplevel input, `clock_edge` comes from
+`CLK_POLARITY`, `$adff`/`$adffe`/`$adlatch` give `ASYNC` resets and
+`$sdff*` give `SYNC` resets with their polarity, and `reset_value` holds the
+cell's reset value parameter. Registers record `clock_domain_id`; clock and
+reset roots get `clock_role`. Synchronous resets written as plain mux logic
+stay data, because `proc` does not make `$sdff` cells. `rvw lint` CDC/RDC uses
+these rows for non-Spinal designs.
 Assignment text describes the lowered cell or net alias. Process source ranges
 can cover several statements. These results are navigation evidence.
 
