@@ -53,7 +53,11 @@ def build_server(registry: Registry):
             return types.ListToolsResult(tools=tool_list())
 
         async def on_call_tool(ctx, params):
-            return result(*await run_tool(params.name, params.arguments))
+            text, structured, is_error = await run_tool(params.name, params.arguments)
+            out = result(text, structured, is_error)
+            if params.name == "rvw_tools_load" and not is_error:
+                await ctx.session.send_tool_list_changed()
+            return out
 
         async def on_list_resources(ctx, params):
             return types.ListResourcesResult(resources=resource_list())
@@ -87,6 +91,8 @@ def build_server(registry: Registry):
         text, structured, is_error = await run_tool(name, arguments)
         if is_error:
             raise RuntimeError(text)  # 1.x turns exceptions into isError results
+        if name == "rvw_tools_load":
+            await server.request_context.session.send_tool_list_changed()
         return [types.TextContent(type="text", text=text)]
 
     return server
@@ -98,6 +104,7 @@ async def serve_stdio(registry: Registry) -> None:
     server = build_server(registry)
     try:
         async with stdio_server() as (read, write):
-            await server.run(read, write, server.create_initialization_options())
+            from mcp.server.lowlevel import NotificationOptions
+            await server.run(read, write, server.create_initialization_options(NotificationOptions(tools_changed=True)))
     finally:
         registry.jobs.shutdown()
