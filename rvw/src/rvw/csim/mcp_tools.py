@@ -24,6 +24,14 @@ def _qualify(traces, job, **kw):
     return run_function(job, "rvw.csim.cli", "qualify_json", dict(traces=traces, **kw))
 
 
+def _simpoint(trace, interval, job, **kw):
+    return run_function(job, "rvw.csim.cli", "simpoint_json", dict(trace=trace, interval=interval, **kw))
+
+
+def _run_points(study, trace, points, job, **kw):
+    return run_function(job, "rvw.csim.cli", "run_points_json", dict(study=study, trace=trace, points=points, **kw))
+
+
 def _budget(study, sets=None):
     from .cli import _overrides
     from .study import budget
@@ -77,6 +85,16 @@ def mcp_tools():
                                                          "default": "cbp2016-tage-sc-l-64kb"},
                          "study": S, "format": FMT, "tolerance": {"type": "number", "default": 0.1}, "archive": S}, ["traces"]),
                  _qualify, long=True, annotations={"readOnlyHint": True}),
+        ToolSpec("csim_simpoint", "Choose weighted simulation points of a trace (basic-block vectors per interval, random "
+                 "projection, k-means with BIC). Writes rvw.csim-simpoints/1. Runs as a job.",
+                 schema({"trace": S, "interval": {"type": "integer", "minimum": 1}, "max_k": {"type": "integer", "default": 10},
+                         "dims": {"type": "integer", "default": 15}, "seed": {"type": "integer", "default": 1}, "format": FMT},
+                        ["trace", "interval"]), _simpoint, long=True, annotations={"readOnlyHint": True}),
+        ToolSpec("csim_run_points", "Run a component study on simulation points (rvw.csim-simpoints/1 path or object) and "
+                 "weight the metrics by the point weights. Runs as a job.",
+                 schema({"study": S, "trace": S, "points": {"type": ["string", "object"]}, "warmup": {"type": "integer"},
+                         "sets": SETS, "format": FMT}, ["study", "trace", "points"]),
+                 _run_points, long=True, annotations={"readOnlyHint": True}),
         ToolSpec("csim_compare_rtl", "Compare a predictor model with explicit RTL predictor events (rvw.bp-events/1 or Kanata "
                  "#rvw prediction records) on the same C2 run, branch by branch. Missing identity or events gives inconclusive. Runs as a job.",
                  schema({"study": S, "trace": S, "events": S, "roi_start": {"type": "integer"}, "roi_end": {"type": "integer"},

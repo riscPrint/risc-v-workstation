@@ -64,5 +64,5 @@ CATALOG = {
         "last-address": ["entries", "conf_bits"], "stride": ["entries", "conf_bits"],
         "context": ["entries", "context_entries", "conf_bits"]}},
     "report": {"keys": ["top_branches", "predictions_file"]},
-    "top_level": ["warmup_instructions", "simulation_instructions", "name", "source", "description"],
+    "top_level": ["warmup_instructions", "simulation_instructions", "skip_instructions", "name", "source", "description"],
 }

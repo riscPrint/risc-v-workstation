@@ -185,3 +185,26 @@ def test_qualify_against_stand_in_reference(tmp_path, monkeypatch):
     monkeypatch.setitem(qualify.REFERENCES, "test-bad", {**qualify.REFERENCES["test-bimodal"], "sha256": "0" * 64})
     with pytest.raises(ValueError, match="does not match the pinned"):
         qualify.qualify("test-bad", [t], study=study_file, archive=bad)
+
+
+def test_simpoints_find_phases_and_weight_runs(tmp_path):
+    from rvw.csim import simpoint
+    rows, o = [], 0
+    for interval in range(12):
+        phase = interval % 3 == 0  # phase A in 4 of 12 intervals
+        for i in range(100):
+            o += 10
+            pc = 0x1000 if phase else 0x8000
+            rows.append(f'B {o} {pc + 8 * (i % 4):x} cond {int(phase or i % 2)} {pc:x} 4')
+    t = trace_file(tmp_path, rows)
+    wide = simpoint.choose(t, 1000, max_k=6)
+    assert sum(p["weight"] for p in wide["points"]) == pytest.approx(1) and wide["k"] <= 6
+    sp = simpoint.choose(t, 1000, max_k=2)
+    assert sp["k"] == 2 and sp["intervals"] == 12
+    assert sorted(round(p["weight"], 3) for p in sp["points"]) == [0.333, 0.667]
+    res = simpoint.run_points({"branch": {"model": "bimodal"}}, t, sp, warmup=500)
+    per = [r["metrics"]["direction_mpki"] for r in res["points"]]
+    w = [r["point"]["weight"] for r in res["points"]]
+    assert res["weighted"]["direction_mpki"] == pytest.approx(sum(a * b for a, b in zip(per, w)))
+    assert all(r["report"]["trace"]["measured_instructions"] == 1000 for r in res["points"])
+    assert all(r["report"]["trace"]["skipped_instructions"] == max(0, r["point"]["start_instruction"] - 500) for r in res["points"])

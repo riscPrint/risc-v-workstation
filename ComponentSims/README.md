@@ -33,11 +33,14 @@ rvw csim convert bt9 trace.bt9.gz --out t.csim
 rvw csim compare-rtl STUDY.json --trace rvfi.jsonl --events EVENTS
 rvw csim qualify TRACE... [--reference cbp2016-tage-sc-l-64kb|cbp2016-tage-sc-l-8kb]
 rvw csim convert spike spike.log --out t.csim     # spike -l --log-commits ELF 2> spike.log
+rvw csim simpoint TRACE --interval 10000000 --out points.json   # weighted simulation points
+rvw csim run-points STUDY.json TRACE --points points.json --warmup 50000000
 rvw csim build                                    # engine and library paths
 ```
 
 The same operations are MCP tools: `csim_run`, `csim_sweep`, `csim_budget`,
-`csim_models`, `csim_convert`, `csim_qualify` and `csim_compare_rtl`.
+`csim_models`, `csim_convert`, `csim_qualify`, `csim_simpoint`, `csim_run_points`
+and `csim_compare_rtl`.
 The first `rvw` call compiles the engine with the system C++17 compiler into
 `~/.cache/rvw/csim/<source hash>/` (`RVW_CSIM_CACHE` changes the place).
 
@@ -64,6 +67,19 @@ the engine refuses carry an `error` and do not stop the sweep.
 Reports keep each trace apart. The aggregate is the arithmetic mean of per-trace
 values and says so. Storage is in bits per table (`storage`), with
 `metadata_kib` (without cache data arrays) for predictor budgets.
+
+## Sampled simulation
+
+`rvw csim simpoint` cuts a trace into fixed instruction intervals, builds a
+basic-block vector per interval, projects it to 15 random dimensions and runs
+k-means for k = 1..`--max-k`. It keeps the smallest k whose BIC reaches 90% of
+the observed BIC range (the SimPoint rule). Each cluster gives the interval
+nearest its centre and a weight (its share of instructions).
+`rvw csim run-points` runs a study on each point (`skip_instructions` fast
+forwards without state changes, `--warmup` instructions train state, the point
+is measured) and reports weighted metrics. It does not estimate sampling
+error. Check a few workloads against a full run first: on the qsort trace above,
+10 points at a 10 000-instruction interval give 43.6 MPKI against 42.1.
 
 ## Library interface
 
@@ -170,7 +186,8 @@ section. No result is a match or fidelity verdict.
   MPKI numbers are for comparison between models on the same traces, not for
   RTL claims.
 - BOOM settings are approximate (see the study file). No RTL fidelity claim.
-- No SMT, no multi-hart traces, no ROI sampling weights (SimPoint) yet.
+- No SMT and no multi-hart traces. Simulation points use pure-Python k-means,
+  sized for up to a few thousand intervals.
 - The BT9 reader follows the published format description; it has not been run
   on the CBP 2016 trace set here. ChampSim branch types follow the documented
   register rules.

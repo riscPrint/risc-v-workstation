@@ -3281,6 +3281,14 @@ instructions have no order and are refused. `rvw csim compare-rtl` writes
 observed direction and target counts, per-branch rows and, for Kanata input, a
 separate `inferred` section.
 
+`skip_instructions` (not above `warmup_instructions`) skips rows without any
+state change. `rvw csim simpoint` writes `rvw.csim-simpoints/1`: trace path and
+hash, `interval`, `intervals`, `instructions`, chosen `k`, `bic`, `dims`,
+`seed` and `points` (`interval`, `start_instruction`, `instructions`, `weight`,
+`members`); weights are cluster instruction shares and sum to 1.
+`rvw csim run-points` writes `rvw.csim-simpoint-report/1` with each point's
+report and metrics, the `weighted` metrics and the weighting statement.
+
 `rvw csim qualify` writes `rvw.csim-qualify/1`: `status=reported`, the
 reference name, URL, pinned `reference_sha256` and `reference_patch`, the study
 hash, the tolerance and, per trace, input hash, conditional branch count,
