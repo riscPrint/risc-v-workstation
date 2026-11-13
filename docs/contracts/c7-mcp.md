@@ -80,3 +80,12 @@ An older verdict outside this vocabulary moves to legacy_verdict and the common
 verdict is inconclusive. This does not change C4 CLI decisions or exit codes.
 The Python Registry.call API retains raw results. Registry.call_json and MCP
 apply the envelope. Artifacts and suggested next calls are empty if unknown.
+
+## Common error form
+
+Errors retain error text and add code, hint and diagnostics. Codes include
+unknown_tool, invalid_arguments, invalid_input, not_installed, tool_error and
+internal_error. Missing inventory executables or modules use not_installed and
+the inventory's exact scripts/install.sh flag. Missing input files are input
+errors. ToolError accepts an explicit code and native_tool in its data.
+Unidentified dependencies point to rvw doctor; no install flag is guessed.
