@@ -22,13 +22,14 @@ cd "$HOME/projects/VexiiRiscv"
 git checkout -b rvw-project 9f70315deb3390b283995c5b8f1bd38215ecf52b
 git submodule update --init ext/SpinalHDL ext/rvls
 cp "$RVW_HOME/examples/vexiiriscv/rvw.toml" rvw.toml
+cp "$RVW_HOME/examples/vexiiriscv/live-devices.json" live-devices.json
 cp -R "$RVW_HOME/examples/vexiiriscv/rvw" rvw
 unset VEXIIRISCV RVW_PROJECT RVW_CORE
 export RVW_PYTHON="$RVW_HOME/rvw/.venv/bin/python"
 export RVW_LOCK_PYTHON="$RVW_PYTHON"
 export RISCV_TESTS_SOURCE=/path/to/riscv-tests
 rvw/build-tests.sh
-git add rvw.toml rvw
+git add rvw.toml rvw live-devices.json
 git commit -m 'Add workstation project files'
 ```
 
@@ -452,3 +453,22 @@ Page-walk records are separate (see above).
 The initial Sv39 run used zero ASID bits. Eight root/remap cases failed their
 satp readback check because they request ASID 7. The rich profile now enables
 16 ASID bits. Those initial setup failures do not establish a TLB defect.
+
+## Interrupt-driven UART echo
+
+`live-devices.json` defines the RAM, UART FIFO, CLINT and PLIC map. The adapter
+uses `LiveDevices` for this map. It connects software, timer and external levels
+to the real core interrupt inputs. The existing DeviceApiV1 map remains available.
+A request must select one device map. Live MMIO regions must match the project
+PMA regions. Device state is fresh for each run.
+
+Run `rvw/programs/device-echo.S` with `--soc-map live-devices.json` and fixed
+memory latency zero. The program enables the UART FIFO and RX interrupt. It
+claims the PLIC source, drains five bytes, echoes `echo\n`, and completes the
+claim. It also services CLINT software and timer interrupts before reporting
+pass through `tohost`.
+
+The native control is `rvw/tests/test_live_devices.py`. Set private
+`VEXIIRISCV`, `RVW_VEX_LOCK=vex-simsrv`, `RVW_SBT_LOCK=sbt-simsrv` and
+`RISCVSIM_WORK` before running it. This example does not require a plugin
+library. OS boot and native checkpoint restore need separate checks.
