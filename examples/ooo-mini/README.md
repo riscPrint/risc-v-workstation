@@ -82,3 +82,17 @@ with C2. They do not attribute each squashed instruction's execution cost.
 The predictor comparison covers four smoke branches. Conditional direction
 has zero disagreements; one jump has a target-status classification difference.
 This is a small approximate-model comparison. See [interface results](interfaces-results.json).
+
+## Bounded formal
+
+`rvw/prepare-formal.py` prepares five generated checks at depth 8.
+`rvw formal regress` records bounded passes for ROB bound, x0 map, ROB occupancy,
+source readiness and free-list conservation. Each activation cover was reached.
+The runner retains overall `unknown`: these are engine observations, with two
+reset samples and arbitrary inputs. Input closure and universal activation are
+not certified.
+
+Set `RISCV_FORMAL` to a pinned riscv-formal checkout for `rvw formal isa`.
+The example wrapper exposes RTL retirement directly and leaves RAM data arbitrary.
+ADD, LUI and the retirement cover timed out after 15 seconds at depth 8.
+No ISA property closed. See [formal results](formal-results.json).

@@ -1,0 +1,476 @@
+{
+  "schema": "ooo-mini.bounded-formal/1",
+  "overall": "unknown",
+  "generated_checks": [
+    {
+      "id": "check_0",
+      "status": "pass",
+      "formal_status": "bounded-pass",
+      "depth": 8,
+      "requirements": [
+        "ooo.property:rob_bound"
+      ],
+      "assumptions": [
+        "reset for two initial samples; other inputs arbitrary"
+      ],
+      "job_sha256": "aae695f5409ab83a4903eb7c281b750c958b5fe8b419979e486bd3c50f9bcc6a",
+      "inconclusive": "Engine observation; transitive input closure, attribution and non-vacuity are not certified.",
+      "activation": {
+        "status": "reached",
+        "depth": 8,
+        "scope": "one bounded antecedent cover; not a proof of universal activation"
+      }
+    },
+    {
+      "id": "check_1",
+      "status": "pass",
+      "formal_status": "bounded-pass",
+      "depth": 8,
+      "requirements": [
+        "ooo.property:zero_map"
+      ],
+      "assumptions": [
+        "reset for two initial samples; other inputs arbitrary"
+      ],
+      "job_sha256": "2bd28bf9c7079aadaeb3de8564cb7609da7ad66ac70c11bb106f243badfb12be",
+      "inconclusive": "Engine observation; transitive input closure, attribution and non-vacuity are not certified.",
+      "activation": {
+        "status": "reached",
+        "depth": 8,
+        "scope": "one bounded antecedent cover; not a proof of universal activation"
+      }
+    },
+    {
+      "id": "check_2",
+      "status": "pass",
+      "formal_status": "bounded-pass",
+      "depth": 8,
+      "requirements": [
+        "queue.occupancy:rob"
+      ],
+      "assumptions": [
+        "reset for two initial samples; other inputs arbitrary"
+      ],
+      "job_sha256": "54f49af7d7d287b73599feef2af3efea8d0ff3f0fbb11a1ead272f2fd4729440",
+      "inconclusive": "Engine observation; transitive input closure, attribution and non-vacuity are not certified.",
+      "activation": {
+        "status": "reached",
+        "depth": 8,
+        "scope": "one bounded antecedent cover; not a proof of universal activation"
+      }
+    },
+    {
+      "id": "check_3",
+      "status": "pass",
+      "formal_status": "bounded-pass",
+      "depth": 8,
+      "requirements": [
+        "ooo.property:issue_operands"
+      ],
+      "assumptions": [
+        "reset for two initial samples; other inputs arbitrary"
+      ],
+      "job_sha256": "58518314afc29324eb73223508fd35a25aefd32cc36ed182fcd5bd7432f4ad00",
+      "inconclusive": "Engine observation; transitive input closure, attribution and non-vacuity are not certified.",
+      "activation": {
+        "status": "reached",
+        "depth": 8,
+        "scope": "one bounded antecedent cover; not a proof of universal activation"
+      }
+    },
+    {
+      "id": "check_4",
+      "status": "pass",
+      "formal_status": "bounded-pass",
+      "depth": 8,
+      "requirements": [
+        "freelist.conservation:rename"
+      ],
+      "assumptions": [
+        "reset for two initial samples; other inputs arbitrary"
+      ],
+      "job_sha256": "7b243e56e9abbbb43353e608d91beee78343bd2345cc2c52b96e6871f72b68d5",
+      "inconclusive": "Engine observation; transitive input closure, attribution and non-vacuity are not certified.",
+      "activation": {
+        "status": "reached",
+        "depth": 8,
+        "scope": "one bounded antecedent cover; not a proof of universal activation"
+      }
+    }
+  ],
+  "isa": [
+    {
+      "check": "insn_add_ch0",
+      "status": "inconclusive",
+      "depth": 8,
+      "reason": "wall-clock timeout"
+    },
+    {
+      "check": "insn_lui_ch0",
+      "status": "inconclusive",
+      "depth": 8,
+      "reason": "wall-clock timeout"
+    },
+    {
+      "check": "cover",
+      "status": "inconclusive",
+      "depth": 8,
+      "reason": "wall-clock timeout"
+    },
+    {
+      "check": "causal_ch0",
+      "status": "unsupported",
+      "depth": null,
+      "reason": "Check is not selected in the project."
+    },
+    {
+      "check": "insn_addi_ch0",
+      "status": "unsupported",
+      "depth": null,
+      "reason": "Check is not selected in the project."
+    },
+    {
+      "check": "insn_and_ch0",
+      "status": "unsupported",
+      "depth": null,
+      "reason": "Check is not selected in the project."
+    },
+    {
+      "check": "insn_andi_ch0",
+      "status": "unsupported",
+      "depth": null,
+      "reason": "Check is not selected in the project."
+    },
+    {
+      "check": "insn_auipc_ch0",
+      "status": "unsupported",
+      "depth": null,
+      "reason": "Check is not selected in the project."
+    },
+    {
+      "check": "insn_beq_ch0",
+      "status": "unsupported",
+      "depth": null,
+      "reason": "Check is not selected in the project."
+    },
+    {
+      "check": "insn_bge_ch0",
+      "status": "unsupported",
+      "depth": null,
+      "reason": "Check is not selected in the project."
+    },
+    {
+      "check": "insn_bgeu_ch0",
+      "status": "unsupported",
+      "depth": null,
+      "reason": "Check is not selected in the project."
+    },
+    {
+      "check": "insn_blt_ch0",
+      "status": "unsupported",
+      "depth": null,
+      "reason": "Check is not selected in the project."
+    },
+    {
+      "check": "insn_bltu_ch0",
+      "status": "unsupported",
+      "depth": null,
+      "reason": "Check is not selected in the project."
+    },
+    {
+      "check": "insn_bne_ch0",
+      "status": "unsupported",
+      "depth": null,
+      "reason": "Check is not selected in the project."
+    },
+    {
+      "check": "insn_div_ch0",
+      "status": "unsupported",
+      "depth": null,
+      "reason": "Check is not selected in the project."
+    },
+    {
+      "check": "insn_divu_ch0",
+      "status": "unsupported",
+      "depth": null,
+      "reason": "Check is not selected in the project."
+    },
+    {
+      "check": "insn_jal_ch0",
+      "status": "unsupported",
+      "depth": null,
+      "reason": "Check is not selected in the project."
+    },
+    {
+      "check": "insn_jalr_ch0",
+      "status": "unsupported",
+      "depth": null,
+      "reason": "Check is not selected in the project."
+    },
+    {
+      "check": "insn_lb_ch0",
+      "status": "unsupported",
+      "depth": null,
+      "reason": "Check is not selected in the project."
+    },
+    {
+      "check": "insn_lbu_ch0",
+      "status": "unsupported",
+      "depth": null,
+      "reason": "Check is not selected in the project."
+    },
+    {
+      "check": "insn_lh_ch0",
+      "status": "unsupported",
+      "depth": null,
+      "reason": "Check is not selected in the project."
+    },
+    {
+      "check": "insn_lhu_ch0",
+      "status": "unsupported",
+      "depth": null,
+      "reason": "Check is not selected in the project."
+    },
+    {
+      "check": "insn_lw_ch0",
+      "status": "unsupported",
+      "depth": null,
+      "reason": "Check is not selected in the project."
+    },
+    {
+      "check": "insn_mul_ch0",
+      "status": "unsupported",
+      "depth": null,
+      "reason": "Check is not selected in the project."
+    },
+    {
+      "check": "insn_mulh_ch0",
+      "status": "unsupported",
+      "depth": null,
+      "reason": "Check is not selected in the project."
+    },
+    {
+      "check": "insn_mulhsu_ch0",
+      "status": "unsupported",
+      "depth": null,
+      "reason": "Check is not selected in the project."
+    },
+    {
+      "check": "insn_mulhu_ch0",
+      "status": "unsupported",
+      "depth": null,
+      "reason": "Check is not selected in the project."
+    },
+    {
+      "check": "insn_or_ch0",
+      "status": "unsupported",
+      "depth": null,
+      "reason": "Check is not selected in the project."
+    },
+    {
+      "check": "insn_ori_ch0",
+      "status": "unsupported",
+      "depth": null,
+      "reason": "Check is not selected in the project."
+    },
+    {
+      "check": "insn_rem_ch0",
+      "status": "unsupported",
+      "depth": null,
+      "reason": "Check is not selected in the project."
+    },
+    {
+      "check": "insn_remu_ch0",
+      "status": "unsupported",
+      "depth": null,
+      "reason": "Check is not selected in the project."
+    },
+    {
+      "check": "insn_sb_ch0",
+      "status": "unsupported",
+      "depth": null,
+      "reason": "Check is not selected in the project."
+    },
+    {
+      "check": "insn_sh_ch0",
+      "status": "unsupported",
+      "depth": null,
+      "reason": "Check is not selected in the project."
+    },
+    {
+      "check": "insn_sll_ch0",
+      "status": "unsupported",
+      "depth": null,
+      "reason": "Check is not selected in the project."
+    },
+    {
+      "check": "insn_slli_ch0",
+      "status": "unsupported",
+      "depth": null,
+      "reason": "Check is not selected in the project."
+    },
+    {
+      "check": "insn_slt_ch0",
+      "status": "unsupported",
+      "depth": null,
+      "reason": "Check is not selected in the project."
+    },
+    {
+      "check": "insn_slti_ch0",
+      "status": "unsupported",
+      "depth": null,
+      "reason": "Check is not selected in the project."
+    },
+    {
+      "check": "insn_sltiu_ch0",
+      "status": "unsupported",
+      "depth": null,
+      "reason": "Check is not selected in the project."
+    },
+    {
+      "check": "insn_sltu_ch0",
+      "status": "unsupported",
+      "depth": null,
+      "reason": "Check is not selected in the project."
+    },
+    {
+      "check": "insn_sra_ch0",
+      "status": "unsupported",
+      "depth": null,
+      "reason": "Check is not selected in the project."
+    },
+    {
+      "check": "insn_srai_ch0",
+      "status": "unsupported",
+      "depth": null,
+      "reason": "Check is not selected in the project."
+    },
+    {
+      "check": "insn_srl_ch0",
+      "status": "unsupported",
+      "depth": null,
+      "reason": "Check is not selected in the project."
+    },
+    {
+      "check": "insn_srli_ch0",
+      "status": "unsupported",
+      "depth": null,
+      "reason": "Check is not selected in the project."
+    },
+    {
+      "check": "insn_sub_ch0",
+      "status": "unsupported",
+      "depth": null,
+      "reason": "Check is not selected in the project."
+    },
+    {
+      "check": "insn_sw_ch0",
+      "status": "unsupported",
+      "depth": null,
+      "reason": "Check is not selected in the project."
+    },
+    {
+      "check": "insn_xor_ch0",
+      "status": "unsupported",
+      "depth": null,
+      "reason": "Check is not selected in the project."
+    },
+    {
+      "check": "insn_xori_ch0",
+      "status": "unsupported",
+      "depth": null,
+      "reason": "Check is not selected in the project."
+    },
+    {
+      "check": "liveness_ch0",
+      "status": "unsupported",
+      "depth": null,
+      "reason": "Check is not selected in the project."
+    },
+    {
+      "check": "pc_bwd_ch0",
+      "status": "unsupported",
+      "depth": null,
+      "reason": "Check is not selected in the project."
+    },
+    {
+      "check": "pc_fwd_ch0",
+      "status": "unsupported",
+      "depth": null,
+      "reason": "Check is not selected in the project."
+    },
+    {
+      "check": "reg_ch0",
+      "status": "unsupported",
+      "depth": null,
+      "reason": "Check is not selected in the project."
+    },
+    {
+      "check": "unique_ch0",
+      "status": "unsupported",
+      "depth": null,
+      "reason": "Check is not selected in the project."
+    },
+    {
+      "check": "exception_entry",
+      "status": "unsupported",
+      "depth": null,
+      "reason": "No machine-state binding selected."
+    },
+    {
+      "check": "interrupt_entry",
+      "status": "unsupported",
+      "depth": null,
+      "reason": "No machine-state binding selected."
+    },
+    {
+      "check": "trap_return",
+      "status": "unsupported",
+      "depth": null,
+      "reason": "No machine-state binding selected."
+    },
+    {
+      "check": "csr_consistency",
+      "status": "unsupported",
+      "depth": null,
+      "reason": "No machine-state binding selected."
+    },
+    {
+      "check": "instruction_memory",
+      "status": "unsupported",
+      "depth": null,
+      "reason": "No machine-state binding selected."
+    },
+    {
+      "check": "x0",
+      "status": "unsupported",
+      "depth": null,
+      "reason": "No machine-state binding selected."
+    },
+    {
+      "check": "flush_retirement",
+      "status": "unsupported",
+      "depth": null,
+      "reason": "No machine-state binding selected."
+    },
+    {
+      "check": "trap_pc_chain",
+      "status": "unsupported",
+      "depth": null,
+      "reason": "No machine-state binding selected."
+    },
+    {
+      "check": "sail_models",
+      "status": "unsupported",
+      "depth": null,
+      "reason": "Select generated models through riscv_formal.instruction_models."
+    },
+    {
+      "check": "adapter_conformance",
+      "status": "unsupported",
+      "depth": null,
+      "reason": "RVFI export or monitor equivalence is not certified by instruction checks."
+    }
+  ],
+  "closure": "No unbounded or whole-core result. ISA instruction activation did not close within the timeout."
+}
