@@ -3222,3 +3222,17 @@ sampled-value functions use the property clock, with unconstrained history
 before the first event. `$rose` and `$fell` use bit zero; `$stable` and `$changed`
 compare full vectors. Explicit depths and nested sampled calls remain refused.
 These are sampled formal observations, not simulator-region qualification.
+### Verification obligation plans
+
+`rvw.verification-obligations/1` declares explicit `specifications` versions and
+`obligations`. Extension obligations expand operand bins, exception scenarios
+and dependency scenarios. Environment-control obligations expand project legal
+writes, contexts, transitions and enabled/disabled expectations for menvcfg,
+senvcfg or henvcfg. Each obligation includes attributed independent reference
+vectors and attributed mutants that differ from a named vector.
+`rvw.verification-plan/1` output has `status: generated` and `not_run` cases.
+No RTL execution is implied. `rvw verification-plan check` compares supplied
+observations only for reference cases and writes C3 with incomplete source
+identity. Missing observations are errors; differing observations are failures.
+Other case kinds remain unexecuted. C3 vector passes do not establish plan
+closure, mutation coverage, architectural correctness or C4 acceptance.
