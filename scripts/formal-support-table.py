@@ -39,4 +39,11 @@ functions = ast.literal_eval(next(node.value for node in sampled_live.body
                                          for t in node.targets)))
 rows += [f'| `liveness ${function}` | positive and negative native case | single-clock liveness; sampled history |'
          for function in functions]
+ranges = ast.parse((root / 'rvw/tests/formal/test_repetition_ranges.py').read_text())
+features = ast.literal_eval(next(node.value for node in ranges.body
+                                if isinstance(node, ast.Assign)
+                                and any(isinstance(t, ast.Name) and t.id == 'SUPPORT_FEATURES'
+                                        for t in node.targets)))
+rows += [f'| `{feature}` | positive and negative native case | infinite trace, single clock; literal ranges |'
+         for feature in features]
 (root / 'rvw/src/rvw/formal/TEMPORAL_SUPPORT.md').write_text('\n'.join(rows) + '\n')

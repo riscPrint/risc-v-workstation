@@ -36,7 +36,7 @@ def test_lower_unbounded(expr):
 
 @pytest.mark.parametrize('expr', [
     'req |-> strong(a[->65])', 'req |-> strong(a[=0])',
-    'req |-> strong(a[->2:4])', 'req |-> strong(a ##[65:$] b)',
+    'req |-> strong(a[->4:2])', 'req |-> strong(a ##[65:$] b)',
     'req |-> a[*]', 'req |-> strong((a ##1 b)[*2:$])',
     'req |-> strong(a[->2] ##2 b)', 'req |-> (a s_until b) s_until b',
     'req |-> s_eventually $future(b)', 'disable iff(a) req |-> s_eventually b',

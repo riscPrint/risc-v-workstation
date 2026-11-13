@@ -102,7 +102,8 @@ attribution remain unqualified. The underlying runner's state refusals remain.
 
 `rvw.formal-live/1` accepts Boolean strong/weak until operators and a tested
 single-clock unbounded sequence subset. Extended property rows record
-`operator`; sequence rows also record `strength`, a `minimum` or `count`, and
+`operator`; sequence rows also record `strength`, a `minimum` or `count`,
+optional `maximum` for a literal count range, and
 `completion` where applicable. Assert and assume sequence consequents default to
 weak. Explicit strong sequences require finite completion for every request.
 Clock-local sampled functions use the same history emitter as finite SVA.
@@ -110,7 +111,8 @@ The converted full state includes their history registers. Depth, nesting,
 width/sign and four-state comparison rules match the finite frontend. No
 cross-clock sampled history is inferred. A latched fatal predicate records
 finite impossibility. Count buckets retain
-overlapping attempts. A separate owed set gives acceptance when each old group
+overlapping attempts. Goto and nonconsecutive literal ranges keep each permitted
+completion until one succeeds or the maximum makes completion impossible. A separate owed set gives acceptance when each old group
 finishes, even when requests continue. It never resets an old attempt on a new
 request. Both native-live and liveness-to-safety routes use these predicates. Module-local
 zero-argument named properties and aliases expand before this lowering. They
