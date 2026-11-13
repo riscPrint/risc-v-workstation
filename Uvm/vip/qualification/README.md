@@ -56,3 +56,7 @@ another local campaign. Accellera DPI and HDL backdoors remain outside this
 
 Local evidence is under `$VEXRISCV/uvm-runs/` in `sv-vip-qualification`,
 `sv-vip-recheck`, `sv-vip-phase-once` and `sv-vip-ahb-stability`.
+
+The tracked native JSON now contains historical counts only. It is not a
+complete matrix. Use the commands above to regenerate all runs outside the
+repository. The raw-matrix evidence test skips until that data is supplied.
