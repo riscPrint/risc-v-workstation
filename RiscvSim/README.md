@@ -38,6 +38,13 @@ header, position and digest before opening the destination. Resume into a new
 run directory. The model and writer snapshots must come from the same stopped
 boundary. The outer native envelope must bind the writer state to the model.
 
+### Native device plugins
+
+Projects can load native device models through `src/main/cpp/DevicePlugin.h`.
+`DeviceDpi.cpp` supplies DPI-C bindings for open, close, MMIO and cycle/interrupt
+updates. See [the device ABI](src/main/cpp/DEVICES.md) for configuration,
+snapshot rules, error handling and the boundary of native qualification.
+
 ## Quick start
 
 ```sh

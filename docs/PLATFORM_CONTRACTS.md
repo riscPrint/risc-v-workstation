@@ -97,6 +97,19 @@ manifest SHA-256 and executable SHA-256. Unsupported revisions produce no run
 and remain skipped bisect evidence. See `rvw/src/rvw/runs/ADAPTERS.md` for the
 manifest and the current debug-launch-only integration boundary.
 
+### Native project device ABI
+
+Shared libraries export `rvw_device_plugin_v1`, returning `DeviceApiV1` with
+ABI number 1 and all callbacks. Calls are serialized at stopped cycle boundaries.
+Create takes project JSON and a seed. MMIO uses device-relative byte addresses,
+1 to 8 byte little-endian values and byte masks. Tick takes absolute cycles;
+project data declares cycle period and interrupt routing. Nonzero status is an
+error. Snapshot size zero declares non-restorable effects. Store versioned
+payloads under native envelope devices and bind library/configuration hashes.
+DPI-C wrappers never propagate C++ exceptions. Null handles and nonzero status
+must stop the run. Device maps, Linux behavior and TLM timing are not inferred.
+See `RiscvSim/src/main/cpp/DEVICES.md` for exact ABI and DPI declarations.
+
 ## Layout
 
 | Path | What | Language |
