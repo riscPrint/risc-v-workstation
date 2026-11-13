@@ -9,3 +9,7 @@ libraryDependencies ++= Seq(
 )
 Compile / unmanagedSourceDirectories += baseDirectory.value / "generated"
 fork := true
+Compile / unmanagedSources ++= {
+  val example = baseDirectory.value / "examples" / "stub"
+  Seq(example / "Stub.scala") ++ (if (sys.props.get("rvw.soc.stub").contains("true")) Seq(example / "Run.scala") else Nil)
+}

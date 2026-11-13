@@ -83,3 +83,10 @@ On 2026-11-13 all eight profiles compiled and elaborated with SpinalHDL
 1.15.0. `rvwsoc.PeripheralSmoke` passed in Verilator at seed 17. It checked
 four CLINT conditions and six PLIC claim/complete conditions. It did not
 execute a CPU or qualify UART/SPI/I2C behavior.
+
+## Executable example
+
+See [the RV32 stub example](examples/stub/README.md) for a C1 adapter,
+`rvw regress` configuration, UART hello-world and timer/PLIC interrupt programs.
+The example runner is enabled only with `-Drvw.soc.stub=true` in sbt. The adapter
+sets that property. The default build compiles the stub wrapper but excludes its simulation runner.
