@@ -1649,8 +1649,8 @@ usage: rvw formal cross-prove [-h] --source SOURCE --top TOP --out OUT
 ```text
 usage: rvw formal equiv-partitions [-h] --gold GOLD [GOLD ...] --gate GATE
     [GATE ...] --top TOP [--clock CLOCK] [--reset RESET] [--reset-cycles
-    RESET_CYCLES] [--settle SETTLE] [--max-partitions MAX_PARTITIONS]
-    [--timeout TIMEOUT] --out OUT [--json] [--project PROJECT]
+    RESET_CYCLES] [--settle SETTLE] [--memory-map] [--max-partitions
+    MAX_PARTITIONS] [--timeout TIMEOUT] --out OUT [--json] [--project PROJECT]
 ```
 
 ### `rvw formal ic3-lemmas`
@@ -1902,8 +1902,8 @@ usage: rvw ooo [-h] [--max-cycles MAX_CYCLES] [--effective-config
 usage: rvw perf [-h] [--json] [--window WINDOW] [--isa {none,riscv}] [--lane
     LANE] [--queue-stage QUEUE_STAGE] [--issue-stage ISSUE_STAGE]
     [--head-stage HEAD_STAGE] [--in-order-retirement] [--result RESULT]
-    [--tolerance TOLERANCE] [--top TOP] [--c2 C2] [--project PROJECT] paths
-    [paths ...]
+    [--tolerance TOLERANCE] [--top TOP] [--elf ELF] [--c2 C2] [--project
+    PROJECT] paths [paths ...]
 ```
 
 ### `rvw plan`
@@ -1957,8 +1957,8 @@ usage: rvw probes [-h] [--project PROJECT] [--json]
 ### `rvw probes check`
 
 ```text
-usage: rvw probes check [-h] (--db DB | --events EVENTS) [--require REQUIRE]
-    [--validate] [--c2 C2] [--json] [--project PROJECT]
+usage: rvw probes check [-h] (--db DB | --events EVENTS) [--consumer CONSUMER]
+    [--require REQUIRE] [--validate] [--c2 C2] [--json] [--project PROJECT]
 ```
 
 ### `rvw probes list`
@@ -2155,17 +2155,17 @@ usage: rvw query hierarchy-diff [-h] [--json] [--project PROJECT] old new
 ```text
 usage: rvw reduce [-h] [--out OUT] [--signature SIGNATURE] [--modes MODES]
     [--seeds SEEDS] [--seed-start SEED_START] [--latencies LATENCIES]
-    [--symbol SYMBOL] [--instruction-symbol INSTRUCTION_SYMBOL] [--monotone]
-    [--exhaustive] [--margin MARGIN] [--hang-cycles HANG_CYCLES] [--jobs JOBS]
-    [--batch BATCH] [--budget BUDGET] [--timeout TIMEOUT] [--json] [--project
-    PROJECT] run_dir
+    [--symbol SYMBOL] [--instruction-symbol INSTRUCTION_SYMBOL] [--hart-symbol
+    HART_SYMBOL] [--monotone] [--exhaustive] [--margin MARGIN] [--hang-cycles
+    HANG_CYCLES] [--jobs JOBS] [--batch BATCH] [--budget BUDGET] [--timeout
+    TIMEOUT] [--json] [--project PROJECT] run_dir
 ```
 
 ### `rvw regress`
 
 ```text
 usage: rvw regress [-h] [--project PROJECT] [--json]
-    {sim,speed-compare,speed-sweep,backends,uvm,uvm-ral,uvm-cpu,hdl,cocotb,random,sail-tests,privilege,mmu,vector,run,compare,gate,known,history,list,act4-build,plan,cosim}
+    {sim,speed-compare,speed-sweep,backends,uvm,uvm-ral,uvm-cpu,hdl,cocotb,random,sail-tests,privilege,mmu,vector,run,compare,gate,known,history,list,act4-build,plan,instruction-feed,cosim}
     ...
 ```
 
@@ -2477,6 +2477,13 @@ usage: rvw regress act4-build [-h] --profile PROFILE --checkout CHECKOUT --out
 ```text
 usage: rvw regress plan [-h] (--features FEATURES | --act4 ACT4) [--catalog
     CATALOG] [--json] [--project PROJECT]
+```
+
+### `rvw regress instruction-feed`
+
+```text
+usage: rvw regress instruction-feed [-h] --elf ELF --out OUT [--word-bytes
+    {4,8}] [--json] [--project PROJECT]
 ```
 
 ### `rvw regress cosim`
@@ -4204,7 +4211,7 @@ Starts a background job: yes.
 
 Prove matched register observations in independent closed cones. No internal cut equality assumptions.
 
-Arguments: `gold` (required), `gate` (required), `top` (required), `clock`, `reset`, `reset_cycles`, `settle`, `max_partitions`, `timeout`, `out` (required).
+Arguments: `gold` (required), `gate` (required), `top` (required), `clock`, `reset`, `reset_cycles`, `settle`, `memory_map`, `max_partitions`, `timeout`, `out` (required).
 
 Starts a background job: yes.
 
@@ -4804,7 +4811,15 @@ Starts a background job: yes.
 
 Commit-slot top-down attribution (retiring, bad speculation, back-end bound, front-end bound) from a run's topdown_* counter probes, checked against the C2 retirement count.
 
-Arguments: `events` (required), `c2`, `result`.
+Arguments: `events` (required), `c2`, `result`, `elf`.
+
+Starts a background job: yes.
+
+### `perf_topdown_compare`
+
+Compare top-down slot counts for the same ELF.
+
+Arguments: `base` (required), `candidate` (required).
 
 Starts a background job: yes.
 
@@ -4820,7 +4835,7 @@ Starts a background job: yes.
 
 Name missing required probe kinds or kind/name bindings. With validate (or c2), also validate an event stream against the contract (fields, end record, counters, instruction IDs, walk grouping; retired-event probes against C2) and name each misplaced probe. Clean is not a wiring proof.
 
-Arguments: `db`, `events`, `require`, `c2`, `validate`.
+Arguments: `db`, `events`, `require`, `c2`, `consumer`, `validate`.
 
 Starts a background job: no.
 
@@ -5036,7 +5051,7 @@ Starts a background job: no.
 
 Shrink a failing C1 run while preserving its signature. Tries cycles, seeds, latencies and optional integer data symbols. Returns a job; simulations take the core lock. The result's `reproduced` is false when no trial matched; a timeout matches only as a hang (no retirement in the last hang_cycles cycles, from an RVFI trace). A symbol's `smallest_failing` is the smallest tested failing value, or null when the original value did not reproduce in this search. It is `exact` only with monotone or exhaustive after the failing upper bound is confirmed.
 
-Arguments: `project`, `run_dir` (required), `out`, `signature`, `modes`, `seeds`, `seed_start`, `latencies`, `instruction_symbol`, `symbol`, `margin`, `hang_cycles`, `jobs`, `batch`, `budget`, `timeout`, `monotone`, `exhaustive`.
+Arguments: `project`, `run_dir` (required), `out`, `signature`, `modes`, `seeds`, `seed_start`, `latencies`, `hart_symbol`, `instruction_symbol`, `symbol`, `margin`, `hang_cycles`, `jobs`, `batch`, `budget`, `timeout`, `monotone`, `exhaustive`.
 
 Starts a background job: yes.
 
@@ -5085,6 +5100,14 @@ Starts a background job: yes.
 Find stored runs and their status before comparing or resuming; filter core, revision prefix or tier.
 
 Arguments: `project`, `core`, `rev`, `tier`, `limit`.
+
+Starts a background job: no.
+
+### `regress_instruction_feed`
+
+Build an offline reference-image word source for the C1 instruction port.
+
+Arguments: `elf` (required), `out` (required), `word_bytes`.
 
 Starts a background job: no.
 
