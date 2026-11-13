@@ -251,3 +251,33 @@ A completed server request does not establish process teardown. A caller can
 check this PID after EOF, shutdown or launcher cancellation. PID exit proves
 that the process and its threads stopped. It does not prove that each
 simulation thread was released between requests in a live JVM.
+
+## Live MMIO devices in a simulation map
+
+A `rvw.sim-map/1` file can contain a `devices` array. Each entry names an
+uncached MMIO `region` and a `model`. The generic `LiveDevices` harness supports
+`ns16550`, `clint` and `plic`. The map bytes, including input schedules and pin
+routes, are captured with the run. A fresh instance is required for each run.
+
+The UART uses byte accesses at 16550 register offsets. It supports RX and TX,
+a 16-byte RX FIFO, RX overrun, RX and TX interrupt enables, divisor and scratch.
+`rx` contains ordered `{cycle, byte}` input entries. Input arrives at settled
+sample boundaries. TX completes immediately into captured state. Baud timing,
+modem signals, FIFO trigger levels and DMA are unsupported and not qualified.
+
+CLINT uses aligned 32-bit accesses to MSIP at 0, MTIMECMP at 0x4000/0x4004
+and MTIME at 0xbff8/0xbffc. `cycles_per_tick` sets the timer period.
+`software_bit` and `timer_bit` name the adapter interrupt bits. MTIME writes
+are refused. One hart is supported.
+
+PLIC supports one context and sources 1 through 31. `sources` contains
+`{device, id}` routes. `interrupt_bit` names the adapter input bit. Priority,
+pending, enable, threshold, claim and completion use standard PLIC offsets.
+The gateway masks a claimed source until completion. A level that remains
+asserted after completion raises the request again. Unsupported accesses fail.
+
+The VexRiscv example connects these generated levels to its real interrupt
+pins. An explicit IRQ schedule overrides device-generated input levels.
+C1 `details.device_output` captures each UART's output. This is software
+simulation evidence. It does not qualify physical device timing or Linux boot.
+Live model snapshots for these Scala devices are not implemented.

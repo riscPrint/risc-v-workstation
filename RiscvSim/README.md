@@ -1126,3 +1126,14 @@ Spinal's initial unclocked reset, so a synchronous reset works. It reads no RVFI
 and answers no bus request until that reset ends. Trap events are not written: C2 has trap records only, so
 cosim checks trap redirection but not `cause`/`tval`. Konata, SpinalTrace models,
 `--rvfi-check` and `--soc-map` are refused.
+
+## Live core MMIO devices
+
+`LiveDevices` reads optional device entries from a captured simulation map.
+It supplies UART RX/TX with a 16-byte RX FIFO, CLINT and one PLIC context.
+The adapter owns bus handshakes and pin assignments. All addresses, input
+bytes and interrupt bit routes come from project data. See
+[the live-device contract](../docs/contracts/sim.md#live-mmio-devices-in-a-simulation-map)
+and [the VexRiscv program](../examples/vexriscv/README.md#live-uart-clint-and-plic).
+The models use simulation cycles and keep output in state. They do not call
+host console or timer services. Each run must allocate a fresh instance.

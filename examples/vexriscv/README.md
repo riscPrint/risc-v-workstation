@@ -712,3 +712,34 @@ rvw csim compare-rtl rvw/probes/btfn.json --trace RUN/rvfi.jsonl --events RUN/bp
 The first BTFN comparison found one disagreement at the loop exit. The C2 trace converter
 wrote the fall-through as the target of a not-taken branch, so the model's BTFN rule saw
 a forward branch. The converter now writes the decoded target (see `docs/contracts/csim.md`).
+
+## Live UART, CLINT and PLIC
+
+`live-devices.json` supplies uncached MMIO regions, UART input bytes and the
+interrupt routes. The generic Scala harness models UART RX and TX, its 16-byte
+RX FIFO, CLINT MSIP/MTIME/MTIMECMP and one PLIC context. The adapter connects
+MSIP, MTIP and MEIP to the real core pins. Each run gets fresh device state.
+
+`rvw/programs/device-echo.S` enables all three interrupts. Its handlers clear
+MSIP, move the timer deadline, claim the UART source, echo the RX bytes and
+complete the PLIC claim. It reports success only after all three handlers run.
+The native test requires C2 traps for all three causes and exact echoed bytes.
+Run it with the private core and native environment:
+
+```sh
+RVW_HOME=$PWD VEXRISCV=/path/to/private/VexRiscv RVW_VEX_LOCK=vex-simsrv \
+  nice -n 10 rvw/.venv/bin/python -m pytest \
+  examples/vexriscv/rvw/tests/test_live_devices.py -q
+```
+
+C1 captures the map and `details.device_output`. No IRQ schedule is used for
+this test. UART baud timing, modem inputs, multi-hart PLIC contexts and live
+snapshots of these Scala devices remain unsupported.
+
+Native sample on 2026-11-13: both echo runs passed at 4,079 cycles with 868
+retirements. Both traces contain MSIP, MTIP and MEIP traps and have the same
+SHA-256. The intervening no-RX control reached its 20,000-cycle limit and
+produced no UART output. See [the recorded sample](rvw/live-device-results.json).
+The sample used a direct captured JVM launch after compiling the adapter in
+an isolated directory. The standard launcher test was cancelled in the sbt
+queue. This sample does not qualify device snapshots.

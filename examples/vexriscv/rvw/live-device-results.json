@@ -1,0 +1,59 @@
+{
+  "schema": "rvw.live-device-sample/1",
+  "core_revision": "a62c145aa042a5de874344e0a7683bd7c8c8c870",
+  "method": "Direct JVM launch with native identity capture and isolated compiled adapter; vex-simsrv lock; Verilator; seed 1; memory latency 0",
+  "runs": [
+    {
+      "name": "run",
+      "status": "pass",
+      "cycles": 4079,
+      "instret": 868,
+      "output": {
+        "uart": "echo\n"
+      },
+      "trap_causes": [
+        "0x80000003",
+        "0x80000007",
+        "0x8000000b"
+      ],
+      "trace_sha256": "eece0956e62daecf54c5367c42795d77a4c933db98d1d3da94ebe04f8e83e83a",
+      "inconclusive": null
+    },
+    {
+      "name": "no-rx",
+      "status": "timeout",
+      "cycles": 20000,
+      "instret": 4453,
+      "output": {
+        "uart": ""
+      },
+      "trap_causes": [
+        "0x80000003",
+        "0x80000007"
+      ],
+      "trace_sha256": "b1406c4b4bfd8fccd1268edf05c2120ce951db3c4a26b6c7da20a6e1a5e88bc8",
+      "inconclusive": null
+    },
+    {
+      "name": "fresh",
+      "status": "pass",
+      "cycles": 4079,
+      "instret": 868,
+      "output": {
+        "uart": "echo\n"
+      },
+      "trap_causes": [
+        "0x80000003",
+        "0x80000007",
+        "0x8000000b"
+      ],
+      "trace_sha256": "eece0956e62daecf54c5367c42795d77a4c933db98d1d3da94ebe04f8e83e83a",
+      "inconclusive": null
+    }
+  ],
+  "limitations": [
+    "Bounded software simulation only",
+    "No baud timing or device checkpoint qualification",
+    "Standard launcher native pytest was cancelled while waiting for sbt"
+  ]
+}
