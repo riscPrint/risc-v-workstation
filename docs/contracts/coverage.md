@@ -40,3 +40,29 @@ A qualified replay requires matching execution identity. Missing or changed
 identity is inconclusive. Failed runs on a changed model do not prove failure
 reproduction in the original context. Attempts without an ELF are unsupported.
 Cross-host replay and complete cost qualification remain unverified.
+
+## Code and RTL stimulus feedback
+
+`rvw.stimulus-loop/1` accepts either `rtl_plan` or `code_plan`, paired with
+`recipes`. `rvw.code-goals/1` binds generated RTL `design`, a `database` path,
+and its `database_sha256`. Paths are relative to the code plan. The database is
+an existing `rvw.coverage/1` native point template with resolved source hashes.
+Optional `targets` selects unique template point IDs. Template counts earn no
+feedback credit. The template is captured before initial state publication.
+
+Code recipes use `rvw.event-recipes/1` with the exact code plan hash and design.
+Accepted feedback requires complete C1/Spike qualification and a C1 `coverage`
+artifact. `details.coverage_goals` must contain exactly `elf_sha256`,
+`rvfi_sha256`, `samples_sha256`, `plan_id`, `rtl_sha256` and
+`reset_at_start: true`. All hashes must match. Native point universe, keys,
+fields and source hashes must match the template. Project adapters own counter
+collection and reset. Unsupported adapters earn no credit.
+
+`guidance_coverage` keeps `declared_bins`, `full_input_bins`, `observed`,
+`unobserved` and `unsupported_targets` separate from ISA hit totals. RTL feedback
+also retains `uncompleted_sequences` and `last_sample_pending`. A target subset
+does not reduce the reported full input denominator. `generation_profile_bins`
+counts potential generator goals. `generation_groups` records declared and
+supported counts per ISA/sequence group. Generation support is the intersection
+of the candidate profile and declared semantic plan. No native qualification or
+comparative closure rate follows from these controller reports.

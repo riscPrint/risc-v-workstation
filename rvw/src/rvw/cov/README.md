@@ -1103,14 +1103,17 @@ UNSAT does not prove that a coverage bin is unreachable.
 
 No candidate earns a coverage hit. The source must still compile, pass C1,
 match the complete Spike trace, and pass ELF-bound payload sampling. The closed
-loop, payload-region qualification, full attempt CPU accounting, safe resume,
-held-out mutants and five-seed paired native campaigns in #349 remain open.
+loop and payload-region checks are available through `cov campaign` below.
+Complete attempt CPU accounting, held-out mutants and five-seed paired native
+campaigns in #349 remain open. Native resume qualification remains unverified.
 This command is not the random baseline and is not a PSS implementation.
 
 ### Bounded execution loop
 
 See [the campaign interface](CAMPAIGN.md) for `rvw cov campaign`, its project
 settings, payload sampling, resume checks and unqualified CPU accounting.
+The same interface accepts measured native code counter goals or project-declared
+RTL event goals. Its UCB policy records separate holes and coverage totals.
 
 See [bounded sequence actions](SEQUENCES.md) for `cov actions` and the execution-loop sequence settings.
 

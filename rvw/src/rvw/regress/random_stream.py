@@ -8,6 +8,7 @@ import tomllib
 from rvw.common.proc import run_group
 from rvw.cosim.cli import execute_json as cosim
 from rvw.cov.functional import functional
+from rvw.regress.run_evidence import owned_run_paths
 from rvw.results import load_run
 from .config import Suite, load_config, positive_int, finite_number
 from .plan import source_for
@@ -31,7 +32,7 @@ def complete(comparison, run):
 
 def verify(elf, results, platform, coverage_plan=None):
     """Qualify one ELF. Failed or incomplete runs earn no coverage."""
-    runs = [load_run(p) for p in Path(results).rglob('result.json')]
+    runs = [load_run(p) for p in owned_run_paths(results)]
     matches = [r for r in runs if r.elf_sha256 == digest(elf)]
     if len(matches) != 1:
         return dict(status='adapter_error', message='need exactly one C1 result for ELF')

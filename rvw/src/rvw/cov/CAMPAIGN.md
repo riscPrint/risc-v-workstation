@@ -97,6 +97,46 @@ Missing hooks, stale samples and unqualified runs remain unsupported. History
 and sample hashes are part of resume state. ISA hits and RTL events stay separate.
 No native feedback campaign or gain over random generation is claimed.
 
+## Measured code feedback
+
+Use `code_plan` instead of `rtl_plan` to guide the same bounded controller with
+native code counter holes. Keep `recipes`. The code plan has this shape:
+
+```json
+{
+  "schema":"rvw.code-goals/1",
+  "design":"<generated RTL SHA-256>",
+  "database":"coverage-template.json",
+  "database_sha256":"<template SHA-256>"
+}
+```
+
+Create the template with `rvw cov merge` from the instrumented model's native
+Verilator counters. Its existing counts earn no feedback credit. Source hashes
+must be resolved. Optional `targets` selects native point IDs from that template.
+Recipes bind the code plan hash and use those point IDs as targets. The complete
+native point universe stays in `full_input_bins`, including when targets select
+a subset. `declared_bins` counts the selected targets.
+
+The project adapter must enable counter collection and reset counters at the
+start of each attempt. The controller does not change the adapter configuration.
+C1 must have a `coverage` artifact and a `details.coverage_goals` receipt. This
+receipt has the five hashes used for RTL samples, plus `reset_at_start: true`.
+The sample hash binds the native `.dat` file. The receipt must match exactly.
+Only a complete qualified C1/Spike execution can earn code feedback. Native point
+keys, fields, source hashes, full point universe and generated RTL must match the
+template. Missing collection, reset receipts or source identity earns no credit.
+This check uses the existing native counter reader. It does not establish new
+physical-instance distinctions or Scala statement coverage.
+
+Both feedback modes report `guidance_coverage` with observed and unobserved
+targets, unsupported targets, and the full denominator. RTL mode also reports
+uncompleted sequences and pending activations from the last measured sample.
+ISA generation reports each group's declared and supported bins. The 170-bin
+generator profile does not add bins absent from the declared semantic plan.
+Code, RTL and ISA totals stay separate. Native controller validation and a paired
+comparison against random stimulus remain unverified.
+
 ## Archived ELF replay
 
 Use `rvw cov campaign --settings loop.json --work-dir out --replay 0 --json`
