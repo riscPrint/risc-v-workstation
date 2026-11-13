@@ -116,6 +116,8 @@ def check_pma(s, events, regions):
         if not region[direction] or e['opcode'] not in ((0, 1, 4) if write else (4,)):
             errors.append('device transfer direction differs from scenario or PMA declaration')
     expected = s.get('store_value', 43) if s['access'] == 'store' else s.get('value', 42)
+    if write:
+        expected &= (1 << (8 * s.get('access_width', geometry(s).width))) - 1
     final = states[-1]
     if write and (not tested or number(final['cycle']) < number(tested[-1]['cycle'])):
         return unknown

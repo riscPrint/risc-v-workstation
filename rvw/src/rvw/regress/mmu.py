@@ -268,7 +268,13 @@ check_data:
 '''
     if s['access'] == 'store':
         code += f' li t0, {pa + s.get("offset", 0)}\n {load_op} a0, 0(t0)\n'
-    code += f" li t1, {s.get('store_value', 43) if s['access'] == 'store' else s.get('value', 42)}\n bne a0, t1, fail\n"
+    expected = s.get('value', 42)
+    if s['access'] == 'store':
+        bits = 8 * s.get('access_width', g.width)
+        expected = s.get('store_value', 43) & ((1 << bits) - 1)
+        if expected & (1 << (bits - 1)):
+            expected -= 1 << bits
+    code += f" li t1, {expected}\n bne a0, t1, fail\n"
     if s.get('remap', False):
         replacement = (((DATA + 4096) >> 12) << 10) | sum(FLAGS[f] for f in set(s['flags']))
         if s.get('root_switch'):
