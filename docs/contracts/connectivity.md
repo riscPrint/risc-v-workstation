@@ -69,3 +69,23 @@ trap-handler state and the C2 writer snapshot. It binds the ELF and emitted RTL
 and the compiled harness classes with SHA-256. A SHA-256 envelope checks
 the saved payload before restore. Its fixed-latency, one-hart RAM harness has no devices or RNG.
 This is a native continuation probe, not the general snapshot-port envelope.
+## Observed transaction producer
+
+`rvw soc observe` and MCP `soc_observe` generate a read-only simulation
+monitor from `rvw.soc-observer/1`. The binding declares data bytes and all
+clock, reset, cycle, accepted-request, accepted-response and memory-retirement
+signal paths. `reset_active_low` is optional. Paths can name hierarchical
+signals and constant array indices. Arbitrary expressions are refused.
+
+`rvw.soc-observed-pins/1` starts a JSONL capture with the binding hash, run ID,
+RTL hash, ELF hash and integer seed. Later rows use the request, response and
+retirement-link event fields from `rvw.soc-events/1`. Every retirement link
+contains one independently sampled transaction tag. Unknown or non-unit
+retirement counts stop the simulation. Tags must be unique for the capture.
+
+`rvw soc observe-pack` and MCP `soc_observe_pack` check capture identity
+against C1 and package the rows as `rvw.soc-events/1`. The output header also
+records the raw pin capture and C2 hashes. The existing pairing checker
+compares the events with independent C2 memory effects. Matching samples
+remain inconclusive. Generation is not execution. Packaging is not proof.
+Core-specific signal bindings and a matching C1/C2 capture remain required.

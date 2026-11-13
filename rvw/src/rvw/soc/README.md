@@ -365,3 +365,49 @@ export directory so it can find `memory.ld`. Startup code remains project-owned.
 file. The build points to SpinalSoc sources in `RVW_HOME` at creation time.
 Replace the idle wrapper and add a C1 adapter before running programs.
 Scaffold creation is not simulation evidence.
+## Sample RTL transaction pins
+
+`rvw soc observe --binding binding.json --out observer` generates a
+simulation-only SystemVerilog monitor. MCP tool: `soc_observe`. The binding
+uses `rvw.soc-observer/1`. See `examples/soc-observer/binding.json`.
+Replace its paths with the project's sampled handshake, transaction tag,
+retirement order and retirement tag signals. No DUT signal is driven.
+
+Compile `observer/observer.sv` beside the DUT. Enable its top module
+`rvw_soc_observer`. Supply these simulation plusargs:
+
+```text
++RVW_SOC_EVENTS=pins.jsonl
++RVW_RUN_ID=the-C1-simulation-run-id
++RVW_RTL_SHA256=the-C1-RTL-hash
++RVW_ELF_SHA256=the-C1-ELF-hash
++RVW_SEED=the-C1-seed
+```
+
+The monitor samples accepted requests and responses at the bound clock edge.
+It also samples the independent memory-retirement tag. `cycle` must use the
+same clock count as C2. `retire_valid` identifies memory retirements only.
+`retire_count` must be a known one. Tags must be unique across the capture.
+The monitor does not read C2 or infer links from addresses.
+
+Package the completed pin capture and compare it with independent C2:
+
+```sh
+rvw soc observe-pack --binding binding.json --pins pins.jsonl \
+  --trace rvfi.jsonl --result result.json --out events.jsonl --json
+rvw soc pair --capture events.jsonl --trace rvfi.jsonl \
+  --result result.json --out pairs.json --json
+```
+
+MCP tool `soc_observe_pack` returns the full pairing report. Packaging checks
+the binding hash, run ID, RTL hash, ELF hash and seed. It captures the pin and
+C2 hashes. The packaged output path must be new. Matching samples exit 3 and remain
+inconclusive. Mismatched samples exit 1. Format or identity errors exit 2.
+
+This producer supports a single hart and one bus transaction per memory
+retirement. Split transactions, finite tag reuse, multi-hart links, posted
+stores, killed speculative requests and core-specific probe wiring need
+project work. The native test observes a small RTL bridge with a stalled
+request, a store and a load. It compares against separate expected memory
+effects. A corrupted read response produces a mismatch. This is a native
+bridge fixture test. It is not an ELF execution or a VexRiscv/BOOM capture.
