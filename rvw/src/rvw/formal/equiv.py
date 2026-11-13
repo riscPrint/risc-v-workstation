@@ -13,6 +13,7 @@ from .flows import _inputs
 
 def register(sub):
     p = sub.add_parser('equiv', help='prove sequential equivalence of two RTL revisions')
+    p.add_argument('--blackbox-contract', help='explicit trusted behavioral models; result remains conditional')
     p.add_argument('--gold', nargs='+', help='reference RTL files')
     p.add_argument('--gate', nargs='+', help='changed RTL files')
     p.add_argument('--gold-rev')
@@ -188,6 +189,13 @@ def _run(args):
                 result.setdefault('exports', {})[side] = record
         if not args.gold or not args.gate:
             raise ValueError('give --gold/--gate RTL or --gold-rev/--gate-rev')
+        if getattr(args, 'blackbox_contract', None):
+            from .blackbox_models import load
+            models, record = load(args.blackbox_contract, out)
+            args.gold = [*args.gold, *models]
+            args.gate = [*args.gate, *models]
+            result['blackbox_contract'] = record
+            result['restrictions']['blackboxes'] = 'trusted conditional behavioral models'
         for source in args.gold + args.gate:
             if not any(revisions) and Path(source).resolve().is_relative_to(out):
                 raise ValueError('RTL inputs must be outside --out')
@@ -282,6 +290,9 @@ def _run(args):
             if record.get('status') == 'unknown':
                 result['status'] = 'inconclusive'
         ACTIVE.reset(token)
+    if 'blackbox_contract' in result and result['status'] in ('equivalent','not_equivalent'):
+        result['contract_verdict'] = result['status']
+        result['status'] = 'conditional'
     result['wall_s'] = round(time.monotonic() - started, 3)
     try:
         common.write_json(out / 'result.json', result)

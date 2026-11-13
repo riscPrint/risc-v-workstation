@@ -2602,14 +2602,27 @@ in baseline and edited replay, without an assumption failure. It is simulation
 evidence only. Status remains `inconclusive` and CLI exit remains 1. Generated
 model and testbench files keep their existing generation-only contract.
 
+### Conditional blackbox models
+
+`rvw.equiv-blackbox/1` contains a nonempty `models` source-path list and a
+nonempty list of prose `obligations`. Paths resolve from the manifest directory.
+`rvw.formal.equiv/1.blackbox_contract` records manifest/model hashes and the
+unproved model obligations. Both source snapshots include the model files.
+A completed model-based proof has status `conditional`; `contract_verdict` is
+`equivalent` or `not_equivalent`. CLI exit is always 1 for this status. Missing
+evidence remains `inconclusive`. These models do not establish implementation
+correspondence, physical behavior or unconditional equivalence. Unresolved
+blackboxes and model assumptions/nondeterministic cells remain refused.
+
 ### Sequential equivalence result (`rvw.formal.equiv/1`)
 
 `rvw formal equiv` compares two captured RTL file sets. It writes `result.json`.
-`status` is `equivalent`, `not_equivalent`, or `inconclusive`. Exit 0 requires a
+`status` is `equivalent`, `not_equivalent`, `inconclusive`, or the model-based
+`conditional` status defined above. Exit 0 requires a
 successful eqy run, at least one partition, PASS for every output partition, and
 complete register matching by default. `--unmatched-state prove` instead checks
 closed output cones without name pairing, as specified below. A timeout or unknown
-partition cannot earn equivalence. Exit 1 covers the other two statuses. A busy or invalid
+partition cannot earn equivalence. Exit 1 covers all other statuses. A busy or invalid
 output directory exits 2. `not_equivalent` requires a failed output partition and
 a VCD counterexample in `traces`. There are no internal state equality assumptions.
 `state_mapping` records automatic or manual pairs and their widths. `unmatched`
