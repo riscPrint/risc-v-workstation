@@ -96,3 +96,15 @@ zeroed BSS segment. The reference includes shared doublewords and private
 tohost locations. Projects must load all images before release, detect each
 hart's completion and supply complete physical memory-event dependencies.
 The command does not supply a scheduling or liveness guarantee.
+
+## Generic multi-hart execution loop
+
+`MultiHartExecutor` consumes captured C1 hart images and one RVFI probe per
+hart. Project `MultiHartBackend` callbacks bind reset, shared memory, boot
+vectors, cycle steps and completion. All images load while every hart is held
+in reset. All boot vectors are set before release. Each step ends at a stable
+RVFI sample boundary. Completion includes drained earlier effects. The park
+callback prevents later effects. The executor emits independent C2/2 streams
+and per-hart completion. Unfinished harts receive timeout at the cycle or
+wall-clock limit. Dependency completeness and physical addresses default to
+unavailable. This API does not infer global memory order or HSM transitions.

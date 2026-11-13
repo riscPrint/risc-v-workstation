@@ -1040,3 +1040,31 @@ Run only this small test with `../scripts/with-lock.sh sbt nice -n 10 sbt
 `RVW_TYPED_TLC_OUT` to a fresh directory to keep the C6 database and artifacts.
 The build uses SpinalDB only in the test configuration. The generated relation
 checks finite permission safety. It does not establish full protocol refinement.
+
+## Generic multi-hart executor
+
+`MultiHartExecutor.run(ctx, probes, backend)` runs the fixed set of harts in
+captured `--hart-images` inputs. `probes` maps every hart ID to its `RvfiProbe`.
+The project implements `MultiHartBackend` with reset, memory, boot-vector,
+release, cycle-step, completion and park bindings. It can use `observe` to
+record accepted shared-memory boundary events through the session.
+
+The executor holds every hart in reset and loads shared segments once. It
+sets all boot vectors before it releases a hart. Each step must end at the
+project's stable RVFI capture point. The session captures each hart's slots
+in its own retirement order. Capture order does not define global memory
+order. Completion must mean earlier effects have drained. `park` must prevent
+later effects from that hart. Other harts continue after one hart completes.
+Cycle and wall-clock limits produce per-hart timeout records for unfinished
+harts. A failed hart cannot become an all-hart pass.
+
+The default dependency and physical-address declarations are unavailable.
+Projects can supply complete annotations through `annotate` and set the two
+declarations only when their observations support them. This loop handles a
+fixed boot-to-completion set. Dynamic HSM reset and hotplug need separate
+project lifecycle bindings.
+
+`MultiHartExecutorNativeSpec` runs three RV64 subset RTL harts from separate
+ELFs against one RAM. It checks per-hart retirement and six serialized memory
+actions with the independent byte reference and the public Python C2 reader.
+The subset fixture is not a production core or a weak-memory implementation.
