@@ -184,7 +184,8 @@ A project can keep its module and port names. Pass `--binding unit.json`:
 ```
 
 Omitted ports retain their canonical names. Every port still passes the existing
-width and direction checks. A binding cannot hide extra ports or add assumptions.
+width and direction checks. Only explicitly listed constant input ports can be removed. Other ports remain
+subject to the same interface checks.
 The `rvw.formal.datapath_binding.bind` function supplies the same rename operation
 for Python callers. `formal_datapath` accepts `binding` and `max_latency`.
 
@@ -201,8 +202,8 @@ It supplies SHA-512 sigma/sum at XLEN 64. The SHA-256 and SM3 RV64 wrappers
 sign-extend the low-word result. The source is the
 [RISC-V scalar crypto 1.0.1 specification](https://docs.riscv.org/reference/isa/v20240411/unpriv/scalar-crypto.html).
 Use wrappers such as `sha256sig0_32.c` or `sha512sum0_64.c`.
-AES, SM4, RV32 split SHA-512 instructions and the remaining Zb instructions are
-not supplied by this increment. Functional models do not check execution time.
+Additional AES, SM4 and RV32 split SHA-512 models are described below.
+Functional models do not check execution time.
 
 SoftFloat compare wrappers add `f32_eq`, `f32_lt`, `f32_le` and their F64 forms.
 The result is 0 or 1 in the selected datapath width. Exception flags come from
@@ -215,3 +216,44 @@ exception flags. A native symbolic F32 EQ fixture checks result and flags over
 all operand bits. An invalid-flag mutant must produce a counterexample.
 This fixture does not qualify project FPU add, multiply, FMA, divide, square root
 or conversion RTL. Those operations retain their separate proof obligations.
+
+### AES, SM4 and split SHA-512 references
+
+The model library adds AES32ESI/ESMI/DSI/DSMI for each byte selector 0..3.
+It adds AES64ES/ESM/DS/DSM, inverse MixColumns, KS2 and KS1I for each legal
+round immediate 0..10. The AES S-box uses arithmetic over GF(2^8). These models
+use no host cryptographic library. Native reference tests compose AES32 and
+AES64 instructions into full AES-128 encryption and decryption. They compare
+known vectors and independent OpenSSL results.
+
+SM4ED and SM4KS have each byte selector at XLEN 32 and 64. The RV64 forms
+sign-extend the 32-bit result. Reference tests compose encryption, decryption
+and key expansion against the standard SM4 vector. Split SHA-512 RV32 models
+cover SIG0H/L, SIG1H/L and SUM0R/1R. Tests reconstruct the 64-bit transforms.
+These definitions follow the scalar crypto specification linked above.
+
+Select fixed-immediate wrappers such as `aes32esmi_bs0.c`, `aes64ks1i_r9.c`,
+`sm4ed_64_bs2.c` and `sha512sig0h.c`. Reserved opcode/immediate decoding is
+outside these functional models. The KS1I wrappers do not expose reserved
+immediates 11..15. Timing and whole-core crypto qualification remain separate.
+
+A project binding can select an opcode or byte selector without an RTL wrapper:
+
+```json
+{"top":"CryptoUnit", "ports":{"a":"rs1", "b":"rs2", "y":"result"},
+ "constants":{"operation":3, "byte_selector":0}}
+```
+
+Use the project's numeric control encodings. Constants must name input ports.
+Values must fit their widths. The binding replaces those input bits throughout
+the mapped model. It retains every other interface and driver check. The proof
+applies to the recorded constant controls, not all opcodes. The captured binding
+hash records that scope. It does not remove state, hide assumptions or change
+output widths. The normalized model must still provide required reference and handshake ports.
+
+For a unary unit with no second operand, declare `"unused_inputs":{"b":64}`
+in the binding. The width must match the chosen reference width. Only reference
+operands `b` and `c` can be added this way. They stay unconstrained reference
+arguments and connect to no DUT logic. A reference that depends on an omitted
+hardware operand still produces a counterexample. This feature does not set an
+operand to zero or reduce the reference input domain.

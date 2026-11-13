@@ -138,7 +138,15 @@ A positive value selects a first-done completion bound in 1..256 clocks after
 start. Result bits and flags are checked at that first completion. Missing done
 is a completion failure. Operands stay stable. `inputs.binding.json` captures the
 optional project top and canonical-to-project port map by SHA-256. A binding
-changes names only. It does not remove ports, change widths or add assumptions.
+can rename ports and set explicitly declared constant input ports. Constants
+must fit each input width. Their bits replace every mapped use of that input.
+The proof applies only to those recorded control values. Other ports, widths,
+state and drivers remain subject to the existing checks. The normalized model must provide required reference and handshake ports.
+Optional `unused_inputs` maps absent reference operands `b`/`c` to bit widths.
+It adds fresh unconnected symbolic reference inputs. It does not fix their values
+or reduce the reference input domain. Every added width still passes the
+existing interface check. All constants and unused arguments remain in the
+captured binding.
 
 ## Sampled clock-event equivalence
 

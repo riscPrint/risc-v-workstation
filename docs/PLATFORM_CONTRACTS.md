@@ -49,7 +49,7 @@ Principles (from `ROADMAP.md`):
 - [Component simulations](contracts/csim.md)
 - [CSR and register maps](contracts/csr.md)
 - [Debug module and sessions](contracts/debug.md)
-- [Equivalence and datapath checks](contracts/equiv.md)
+- [Equivalence, datapath and control bindings](contracts/equiv.md)
 - [Cross-tool evidence](contracts/evidence.md)
 - [Farm and job queue](contracts/farm.md)
 - [Proof cores and counterexamples](contracts/formal-cex.md)
