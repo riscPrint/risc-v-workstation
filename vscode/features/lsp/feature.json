@@ -1,0 +1,16 @@
+{
+  "id": "lsp",
+  "title": "Design database navigation",
+  "description": "LSP navigation over a captured rvw design database.",
+  "activationEvents": ["onCommand:lsp.start"],
+  "contributes": {
+    "commands": [{"command": "lsp.start", "title": "RVW: Start Design Database Language Server"}],
+    "configuration": {
+      "properties": {
+        "lsp.executable": {"type": "string", "default": "rvw", "restricted": true, "description": "Path to rvw."},
+        "lsp.database": {"type": "string", "default": "", "description": "Design database path. Empty uses the selected project."},
+        "lsp.lintSettings": {"type": "string", "default": "", "restricted": true, "description": "Optional rvw lint settings. Runs lint on document open and save."}
+      }
+    }
+  }
+}

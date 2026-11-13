@@ -2442,6 +2442,55 @@ License: Artistic-2.0
 Source archive: https://registry.npmjs.org/version-range/-/version-range-4.15.0.tgz
 Integrity: sha512-Ck0EJbAGxHwprkzFO966t4/5QkRuzh+/I1RxhLgUKKwEn+Cd8NwM60mE3AqBZg5gYODoXW0EFsQvbZjRlvdqbg==
 
+## node_modules/vscode-jsonrpc
+
+Version: 8.2.0
+License: MIT
+Source archive: https://registry.npmjs.org/vscode-jsonrpc/-/vscode-jsonrpc-8.2.0.tgz
+Integrity: sha512-C+r0eKJUIfiDIfwJhria30+TYWPtuHJXHtI7J0YlOmKAo7ogxP20T0zxB7HZQIFhIyvoBPwWskjxrvAtfjyZfA==
+
+## node_modules/vscode-languageclient
+
+Version: 9.0.1
+License: MIT
+Source archive: https://registry.npmjs.org/vscode-languageclient/-/vscode-languageclient-9.0.1.tgz
+Integrity: sha512-JZiimVdvimEuHh5olxhxkht09m3JzUGwggb5eRUkzzJhZ2KjCN0nh55VfiED9oez9DyF8/fz1g1iBV3h+0Z2EA==
+
+## node_modules/vscode-languageclient/node_modules/balanced-match
+
+Version: 1.0.2
+License: MIT
+Source archive: https://registry.npmjs.org/balanced-match/-/balanced-match-1.0.2.tgz
+Integrity: sha512-3oSeUO0TMV67hN1AmbXsK4yaqU7tjiHlbxRDZOpH0KW9+CeX4bRAaX0Anxt0tx2MrpRpWwQaPwIlISEJhYU5Pw==
+
+## node_modules/vscode-languageclient/node_modules/brace-expansion
+
+Version: 2.1.8
+License: MIT
+Source archive: https://registry.npmjs.org/brace-expansion/-/brace-expansion-2.1.8.tgz
+Integrity: sha512-BnlDzDYQoplTsZSvPi86CNzmbcb07X8ufR8fk1zivaiEJlXJkiq1MQyDCVmlWcsWbj6aWXqHnrwwevbrm/Saig==
+
+## node_modules/vscode-languageclient/node_modules/minimatch
+
+Version: 5.1.9
+License: ISC
+Source archive: https://registry.npmjs.org/minimatch/-/minimatch-5.1.9.tgz
+Integrity: sha512-7o1wEA2RyMP7Iu7GNba9vc0RWWGACJOCZBJX2GJWip0ikV+wcOsgVuY9uE8CPiyQhkGFSlhuSkZPavN7u1c2Fw==
+
+## node_modules/vscode-languageserver-protocol
+
+Version: 3.17.5
+License: MIT
+Source archive: https://registry.npmjs.org/vscode-languageserver-protocol/-/vscode-languageserver-protocol-3.17.5.tgz
+Integrity: sha512-mb1bvRJN8SVznADSGWM9u/b07H7Ecg0I3OgXDuLdn307rl/J3A9YD6/eYOssqhecL27hK1IPZAsaqh00i/Jljg==
+
+## node_modules/vscode-languageserver-types
+
+Version: 3.17.5
+License: MIT
+Source archive: https://registry.npmjs.org/vscode-languageserver-types/-/vscode-languageserver-types-3.17.5.tgz
+Integrity: sha512-Ld1VelNuX9pdF39h2Hgaeb5hEZM2Z3jUrrMgWQAu82jMtZp7p3vJT3BzToKtZI7NgQssZje5o0zryOrhQvzQAg==
+
 ## node_modules/whatwg-encoding
 
 Version: 3.1.1

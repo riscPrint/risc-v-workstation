@@ -58,3 +58,14 @@ bindings with direction, width, status and LSB-first constant bits. Integer net
 IDs become null. Only all-known binary constants earn `tied`. Missing bindings
 in older databases are unavailable. Unknown bits do not prove an open port.
 Expression types cover captured signals and normalized constant selects only.
+
+## Language server
+
+`rvw lsp --db PATH` serves JSON-RPC 2.0 with LSP Content-Length framing on stdio.
+It supports initialize, shutdown, exit, full document synchronization, definition,
+hover, references and document symbols. Positions use UTF-16 code units. Source
+locations use captured declaration and assignment lines. Missing locations give
+empty results. Ambiguous names return a query error. `lsp_request` gives agents
+the same navigation without starting a server. Optional `--lint-settings PATH`
+runs the shared lint report on open and save. Active located findings become
+publishDiagnostics notifications. This is captured navigation, not live parsing.

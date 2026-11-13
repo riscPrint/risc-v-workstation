@@ -24,6 +24,7 @@
     "onCommand:debug.open",
     "onCommand:lint.run",
     "onCommand:lint.open",
+    "onCommand:lsp.start",
     "onCommand:perf.open",
     "onView:perf.results",
     "onCommand:regress.open",
@@ -90,6 +91,10 @@
       {
         "command": "lint.copyWaiver",
         "title": "Lint: Copy Waiver for Finding"
+      },
+      {
+        "command": "lsp.start",
+        "title": "RVW: Start Design Database Language Server"
       },
       {
         "command": "perf.open",
@@ -566,6 +571,28 @@
         }
       },
       {
+        "title": "Design database navigation",
+        "properties": {
+          "lsp.executable": {
+            "type": "string",
+            "default": "rvw",
+            "restricted": true,
+            "description": "Path to rvw."
+          },
+          "lsp.database": {
+            "type": "string",
+            "default": "",
+            "description": "Design database path. Empty uses the selected project."
+          },
+          "lsp.lintSettings": {
+            "type": "string",
+            "default": "",
+            "restricted": true,
+            "description": "Optional rvw lint settings. Runs lint on document open and save."
+          }
+        }
+      },
+      {
         "title": "Performance",
         "properties": {
           "perf.rvwExecutable": {
@@ -681,5 +708,8 @@
     "esbuild": "^0.25.0",
     "playwright-core": "^1.56.0",
     "typescript": "^5.6.0"
+  },
+  "dependencies": {
+    "vscode-languageclient": "^9.0.1"
   }
 }
