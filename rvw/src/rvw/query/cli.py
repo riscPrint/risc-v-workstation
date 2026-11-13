@@ -33,6 +33,13 @@ def register(subparsers) -> None:
     hdl.add_argument("sources", nargs="+")
     hdl.add_argument("--top", required=True)
     hdl.add_argument("--out", required=True)
+    hdl.add_argument("--frontend", choices=["yosys", "slang"], default="yosys",
+                     help="yosys: native read_verilog -sv subset; slang: full SystemVerilog through yosys-slang")
+    hdl.add_argument("-I", "--include", action="append", default=[], dest="include_dirs", help="include directory (slang)")
+    hdl.add_argument("-D", "--define", action="append", default=[], dest="defines", help="NAME[=VALUE] macro (slang)")
+    hdl.add_argument("-G", "--param", action="append", default=[], dest="parameters", help="NAME=VALUE top parameter (slang)")
+    hdl.add_argument("--std", help="language standard passed to slang (1800-2017, 1800-2023, latest)")
+    hdl.add_argument("--slang", help="yosys-slang plugin (default $RVW_SLANG, then the plugin bundled with Yosys)")
     hdl.add_argument("--yosys", default="yosys")
     hdl.add_argument("--timeout", type=int, default=120)
     hdl.add_argument("--json", action="store_true")
@@ -277,6 +284,8 @@ def render(command: str, r: dict) -> str:
     elif command == "component":
         w(f"{r['component']}: module {r['module']}, class {r['class']}, {r['loc']}")
         w(f"  counts {r['counts']}")
+        if r.get("parameters"):
+            w("  parameters: " + ", ".join(f"{k}={v}" for k, v in r["parameters"].items()))
         if r["interfaces"]:
             w("  interfaces:")
             for i in r["interfaces"]:
@@ -372,4 +381,6 @@ def _build(args):
 
 def _build_hdl(args):
     from .hdl import build_hdl
-    return build_hdl(args.sources, args.top, args.out, yosys=args.yosys, timeout=args.timeout)
+    return build_hdl(args.sources, args.top, args.out, yosys=args.yosys, timeout=args.timeout,
+                     frontend=args.frontend, include_dirs=args.include_dirs, defines=args.defines,
+                     parameters=args.parameters, std=args.std, slang=args.slang)

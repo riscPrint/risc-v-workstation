@@ -586,6 +586,9 @@ def component(db: DesignDB, path: str | None) -> dict:
                      "direction": s.direction, "type": s.type, "width": s.width,
                      **({"data_type": s.data_type} if s.data_type else {}),
                      **({"clock_role": s.clock_role} if s.clock_role else {})} for s in ports]
+    params = hdl_parameters(db)
+    if params is not None and c["path"] in params:
+        out["parameters"] = params[c["path"]]
     out["interfaces"] = interfaces(db, cid, c["path"], max_depth=3)
     out["children"] = [{"name": r[1], "module": r[2], "class": r[3]}
                        for r in db.q("SELECT id, name, module, class_name FROM components WHERE parent_id = ? ORDER BY name", (cid,))]
@@ -611,6 +614,15 @@ def component(db: DesignDB, path: str | None) -> dict:
                      "registers": sum(1 for s in sigs if s.kind == "reg"), "memories": len(out["memories"]),
                      "children": len(out["children"])}
     return out
+
+
+def hdl_parameters(db: DesignDB) -> dict | None:
+    """Per-instance parameter values recorded by an HDL front end ({component path: {name: value}})."""
+    rows = db.q("SELECT encoding, content FROM artifacts WHERE name = 'hdl/parameters.json'")
+    if not rows:
+        return None
+    enc, content = rows[0]
+    return json.loads(gzip.decompress(content) if enc == "gzip" else content)
 
 
 def _reg_json(db: DesignDB, s: Signal) -> dict:

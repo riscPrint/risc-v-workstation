@@ -86,6 +86,9 @@ logic; avoid optimization passes. No source text reconstruction is promised.
 1. Native Yosys subset, database writer, CLI and oracle tests.
 2. slang elaboration for a complete Ibex configuration, include capture,
    source statement precision, memory ports and explicit IP model contracts.
+   Done: `--frontend slang` (yosys-slang netlist plus JSON AST parameters and
+   types), directory capture for includes, memory ports, Ibex `ibex_core`.
+   Open: statement-level precision, exact edges, IP model contracts.
 3. Chisel FIRRTL/CIRCT adapter with source maps, configuration identity and
    tests against emitted RTL. Reject unresolved extern modules.
 4. GHDL adapter with source locations, memory semantics and a tested VHDL core.

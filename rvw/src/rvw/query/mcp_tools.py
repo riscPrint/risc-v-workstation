@@ -96,8 +96,34 @@ def _build_db(out: str, design: str | None = None, entry: str | None = None, con
     return run_on(out, ops.info)
 
 
+def _build_hdl(sources: list, top: str, out: str, frontend: str = "yosys", include_dirs: list | None = None,
+               defines: list | None = None, parameters: list | None = None, std: str | None = None,
+               timeout: int = 300) -> dict:
+    from .hdl import build_hdl
+    try:
+        result = build_hdl(sources, top, out, frontend=frontend, include_dirs=include_dirs or (),
+                           defines=defines or (), parameters=parameters or (), std=std, timeout=timeout)
+    except (ValueError, OSError) as e:
+        raise ToolError(str(e)) from None
+    return {**result, "info": run_on(out, ops.info)}
+
+
 def mcp_tools() -> list[ToolSpec]:
     return [
+        ToolSpec("query_build_hdl", "Build a navigation design database from Verilog/SystemVerilog sources so "
+                 "every query_* and lint tool works on a non-Spinal core. frontend 'yosys' takes the native "
+                 "read_verilog -sv subset (self-contained files); 'slang' elaborates full SystemVerilog through "
+                 "yosys-slang with include directories, defines and top parameters, and records per-instance "
+                 "parameters (artifact hdl/parameters.json) and declared SV types.",
+                 schema({"sources": {"type": "array", "items": {"type": "string"}}, "top": {"type": "string"},
+                         "out": {"type": "string"}, "frontend": {"type": "string", "enum": ["yosys", "slang"],
+                                                                 "default": "yosys"},
+                         "include_dirs": {"type": "array", "items": {"type": "string"}},
+                         "defines": {"type": "array", "items": {"type": "string"}, "description": "NAME[=VALUE]"},
+                         "parameters": {"type": "array", "items": {"type": "string"}, "description": "NAME=VALUE"},
+                         "std": {"type": "string"}, "timeout": {"type": "integer", "default": 300}},
+                        ["sources", "top", "out"]),
+                 _build_hdl),
         ToolSpec("query_info", "What a design database holds: toplevel, configuration, counts, clock domains, "
                  "artifacts (blocks, pdg, hgldd), RTL files, warnings.", schema(DB), _wrap(ops.info), annotations=RO),
         ToolSpec("query_where", "Where a signal (or bundle/Area) is: Scala source line, Verilog module/name/line, "
