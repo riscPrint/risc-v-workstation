@@ -196,3 +196,22 @@ SFB loop and the timing loop. The SFB arithmetic check passed and observed
 than C1/C2. This endpoint difference remains open. The approximate csim study
 reports comparisons. The two-program OoO calibration remains inconclusive.
 See [the timing report](../../examples/boom/ooo/PROBE_OBSERVATION.md).
+
+## Native fault and DPI follow-up
+
+Two cycle-200 register flips were read back from FFLAGS and mscratch.
+Offline full-state comparison detected all three affected fields at order 13,
+cycle 228: fflags, fcsr and CSR 0x340. The program itself passed. Program pass
+alone does not mean that an injected state change escaped comparison.
+
+The first DPI run reused the native cache but failed because a Spinal
+sampling callback cannot yield. The adapter now samples C2 on the main
+simulation thread only when DPI is active. It sends the end record before
+that thread stops. The ordinary callback path stays unchanged.
+
+The clean DPI fadd run matched with 218 C2 instructions, 40 FP writes and
+FP/CSR comparison active. A later one-bit FFLAGS flip produced an online
+fflags/fcsr mismatch at cycle 228. The host stopped the simulator. Its trace
+is incomplete. A native exception log is not guaranteed after host cancellation.
+Three native evidence checks passed. Both DPI launches reused Verilator.
+No extra native build was needed for the Scala scheduling fix.

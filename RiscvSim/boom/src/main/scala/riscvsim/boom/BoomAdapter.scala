@@ -135,6 +135,8 @@ object BoomAdapter extends CoreAdapter {
     var retired = 0L
     var traps = 0L
     var rvfiCode = 0
+    var usesDpi = false
+    var traceEnded = false
 
     val capture = job.socMap.map(m => new MapCapture(m, job, ctx, "map_monitor"))
     val (status, failCode, message, cycles, simCtl) = try SimSession.runCtl(compiled, job, ctx) { (dut, ctl) =>
@@ -142,6 +144,7 @@ object BoomAdapter extends CoreAdapter {
         "this configuration has no SEIP input")
       if (job.rvfiTrace) busObservations = Some(new BusObservationWriter(
         new File(job.out, "memory-bus.jsonl"), ctx.rvfiHeader, dut.io.mem.a.payload.data.getBitsWidth / 8))
+      usesDpi = dut.lockstepDpi.nonEmpty && sys.env.contains("RVW_COSIM_PORT")
       dut.lockstepDpi.foreach(_.initialize())
       rvfi = if (job.rvfiTrace) Some(new RvfiTraceWriter(new File(job.out, "rvfi.jsonl"), stateHeader,
         observe = dut.lockstepDpi.filter(_ => sys.env.contains("RVW_COSIM_PORT"))
@@ -236,7 +239,16 @@ object BoomAdapter extends CoreAdapter {
       var levels = BigInt(-1)
       var observedMsip = Option.empty[Int]
 
-      cd.onSamplings {
+      // DPI mailbox handshakes yield simulation time. Sampling callbacks have no
+      // SimThread, so only the DPI path samples from the main simulation thread.
+      def finish(s: Status, failCode: Option[Long] = None, message: Option[String] = None): Nothing = {
+        if (usesDpi) {
+          rvfi.foreach(_.end(ctl.cycle, s.name))
+          traceEnded = true
+        }
+        ctl.finish(s, failCode, message)
+      }
+      def sampleCycle(): Unit = {
         ctl.tick()
         probes.foreach(_.sample(ctl.cycle))
         busObservations.foreach { w =>
@@ -323,7 +335,7 @@ object BoomAdapter extends CoreAdapter {
                 val pc = t.iaddr.toBigInt & ((BigInt(1) << 64) - 1)
                 val epcValue = sext(epc.toBigInt, epc.getBitsWidth)
                 if (epcValue != pc)
-                  ctl.finish(Status.Assert, message = Some(f"ECALL/EBREAK at pc 0x${pc}%x: ${if (toS) "sepc" else "mepc"} " +
+                  finish(Status.Assert, message = Some(f"ECALL/EBREAK at pc 0x${pc}%x: ${if (toS) "sepc" else "mepc"} " +
                     f"is 0x${epcValue}%x, so its cause and tval were not written for it"))
                 w.trap(ctl.cycle, cause.toBigInt, sext(tval.toBigInt, tval.getBitsWidth), intr = false)
               }
@@ -343,21 +355,26 @@ object BoomAdapter extends CoreAdapter {
           rvfiCode = e.toInt
           val text = NativeOutput.await(ctx.outputMark, 500)(_.text.startsWith("Error message:"))
             .map(_.text.stripPrefix("Error message:").trim)
-          ctl.finish(Status.RvfiError, message = Some(s"riscv-formal RVFI monitor error $rvfiCode" + text.map(t => s": $t").getOrElse("")))
+          finish(Status.RvfiError, message = Some(s"riscv-formal RVFI monitor error $rvfiCode" + text.map(t => s": $t").getOrElse("")))
         }
         if (dut.io.tohost.valid.toBoolean) {
           val p = dut.io.tohost.payload
           for (b <- benchStats) b.onStore(p.addr.toBigInt, p.size.toInt, p.data.toBigInt)
           tohost.onStore(p.addr.toBigInt, p.size.toInt, p.data.toBigInt) match {
-            case Some(ToHost.Pass) => ctl.finish(Status.Pass)
-            case Some(f: ToHost.Fail) => ctl.finish(Status.Fail, failCode = Some(f.code),
+            case Some(ToHost.Pass) => finish(Status.Pass)
+            case Some(f: ToHost.Fail) => finish(Status.Fail, failCode = Some(f.code),
               message = Some(if (f.odd) s"tohost = 0x${f.raw.toString(16)} (test ${f.code} failed)"
                              else s"tohost = 0x${f.raw.toString(16)} (even value: a syscall request, not supported)"))
             case None =>
           }
         }
       }
-      while (true) cd.waitSampling(100000)
+      if (usesDpi) {
+        while (true) { cd.waitSampling(); sampleCycle() }
+      } else {
+        cd.onSamplings { sampleCycle() }
+        while (true) cd.waitSampling(100000)
+      }
     } catch {
       case e: Throwable => probes.foreach(_.abandon()); busObservations.foreach(_.close()); throw e
     } finally {
@@ -369,7 +386,10 @@ object BoomAdapter extends CoreAdapter {
 
     probes.foreach(_.close(cycles))
     busObservations.foreach { w => w.end(cycles, status.name); w.close() }
-    for (w <- rvfi) { w.end(cycles, status.name); w.close() } // a trap still waiting for its tval gets 0
+    for (w <- rvfi) {
+      if (!traceEnded && !usesDpi) w.end(cycles, status.name)
+      w.close()
+    } // a trap still waiting for its tval gets 0
     val details = ujson.Obj("traps" -> RvwJson.num(traps), "tohost" -> Hex(tohost.value),
       "mem_timing" -> ujson.Str(job.memLatency.map(l => s"fixed $l").getOrElse("random")),
       "wave_time_per_cycle" -> 10, "wave_time_of_cycle_1" -> RvwJson.num(simCtl.timeOfCycle1))
