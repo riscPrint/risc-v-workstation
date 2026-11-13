@@ -1012,3 +1012,25 @@ check result. `source_dispositions` counts all named rows.
 `unmapped_historical_checks` compares only those historical names with the
 reported original total. A later alias cannot fill an original inventory gap.
 `native_validation` remains `NOT RUN` until separate native evidence exists.
+## Wide out-of-order event checks
+
+`rvw.micro-checks/1` accepts three further kinds. `rob_pointers` checks wrapping
+allocation and free pointers. Its optional `lanes` object sets `push_lanes`,
+`pop_lanes`, `push_step` and `pop_step`, each with default 1. Each asserted lane
+moves its pointer by its step. The depth must be a power of two.
+
+`freelist_ghost` builds a free-tag mask from events. Its mask is empty after
+reset, so reset fill events must be visible. `alloc_lanes` and `free_lanes`
+default to 1. `alloc_fire` qualifies the allocation mask. The rule rejects
+allocation of a non-free tag, double free and duplicate tags in one cycle.
+The DUT needs no live-tag mask. This rule checks tag conservation, not the
+architectural mapping of each tag.
+
+`store_forward_window` checks one-hot selection of the youngest matching older
+store in the wrapping interval `[start_ptr,end_ptr)`. `active` and `is_load`
+qualify the check. Hits must already include live-entry and address filters.
+This rule checks age and selection, not byte data or physical alias detection.
+
+A binding value can be a nonempty list of signal paths. Element 0 becomes the
+least significant slice. The generator records lane parameters in its report.
+These are simulation or formal assertions, not proof results by themselves.

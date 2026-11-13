@@ -365,3 +365,28 @@ finishes in 1,087,327 model cycles, against 986,710 RTL cycles.
 [Saved counts, trace hashes and ablation](rvw/arch/memory-results-2026-11-13.json).
 This is mixed timing evidence, not a model fidelity pass. The earlier table
 records the previous description and remains for comparison.
+
+## Wide-check follow-up (2026-11-13)
+
+The project now binds nine rules. `rob_conservation` checks the two-entry
+allocation and free steps, including flushed entries. `int_freelist_ghost`
+keeps a free-tag mask from allocate and free events. It needs no DUT mask.
+`sq_forward_youngest` checks the youngest matching older store in the wrapping
+store-queue window. It is active only for loads and does not check byte data.
+
+The ISA run has 59 passes, 59 captured check reports and zero firings of all
+nine rules. Private core mutations fired each new target rule: 29 ROB
+conservation firings, 135 free-list firings and 2 forwarding firings. Other
+rules can also fire after corruption. The fixed-seed controls use seed 1. The directed positive control passes with
+zero firings and 331 complete Spike matches. An unseeded clean directed run
+fired other rules. Its cause remains unresolved. The forwarding control uses
+[`rvw/plants/forward-control.S`](rvw/plants/forward-control.S). The first
+free-list mutation did not build because a bound signal was removed. The
+first forwarding program did not fire the intended rule. Neither attempt is
+counted as a successful control.
+
+[`rvw/plants/check-results.json`](rvw/plants/check-results.json) records the
+results and limits. Apply `rvw/plants/planted-bugs.patch` only to a private
+pinned NaxRiscv checkout. `RVW_NAX_PLANT=rob|freelist|forward` selects one bug.
+Use the private `nax-dbg` and `sbt-dbg` locks. These are simulation controls,
+not formal proofs or core qualification.
