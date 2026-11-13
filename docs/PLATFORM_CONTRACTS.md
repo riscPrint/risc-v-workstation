@@ -1,5 +1,48 @@
 # Platform contracts
 
+### Persistent agent workflow plans
+
+Farm workflow plans retain node IDs, command arrays and dependency IDs separately
+from verification evidence. Queue jobs bind workflow/node IDs for resume. Only
+completed dependencies admit a node. The SQLite event sequence supports SSE
+replay by Last-Event-ID. HTTP event access is restricted to the token owner.
+Workflow completion means execution complete, not a C4 acceptance or DUT pass.
+
+### Cross-tool evidence queries
+
+`rvw.evidence-query/1` retains full recorded observations and their source path,
+SHA-256, schema and validation scope. Queries recheck originals and explicit
+`evidence_dependencies` path/hash links. Missing, changed or invalid evidence
+has inconclusive integrity. Recorded status is never replaced with an inferred
+accept. JSON-only validation is distinct from C1/C3/C4 schema validation.
+
+### Farm impact selection
+
+`rvw.impact-selection/1` binds test observations to a design database hash.
+It retains mandatory tests and unknown effects, reports deadline overruns and
+uncovered signal paths, and ranks optional tests by marginal impact per second.
+Existing coverage-selection fallback is preserved. Selection is advisory and
+cannot earn gate acceptance. Recorded wall times are estimates, not guarantees.
+
+### Farm failure clusters
+
+`rvw.failure-clusters/1` retains original per-test evidence and source identities.
+Clusters preserve core/configuration and infrastructure/DUT category boundaries.
+Known-failure matches do not waive failures. C5 creation uses one representative
+per cluster with reruns disabled. The optional diff uses existing C3/C4 identity
+and seed checks; missing or changed evidence cannot establish a fix.
+
+### Queue cumulative budgets
+
+`rvw.queue-cost/1` records cumulative run, agent or project usage and configured
+limits. Core-hours equal declared cores times attempt wall seconds divided by
+3600. Attempts include retries, cancellation and cleanup. Active attempts reserve
+their bounded maximum charge during admission. A worker timeout enforces the
+smallest remaining scope limit; cleanup can exceed that limit and stays charged.
+Execution states do not replace C4 verdicts. Monetary cost requires an explicit
+rate; absent rates stay null.
+
+
 The file formats and commands the phase 1 and 2 tools share. Every tool reads and writes these, so
 they can be built in parallel and swapped out later. Change a contract only by editing its file
 under `docs/contracts/` in the same commit as the code that needs it.

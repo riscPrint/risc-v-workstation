@@ -1,6 +1,7 @@
 """Small authenticated HTTP queue service. Tokens map to service owners."""
 import hmac
 import json
+from urllib.parse import urlsplit, parse_qs
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from .service import Queue
 
@@ -39,8 +40,18 @@ def server(root, tokens, host='127.0.0.1', port=8765):
             owner = self.owner()
             if not owner:
                 return self.respond(401, {'error': 'authentication required'})
-            if self.path == '/runs':
+            path = urlsplit(self.path)
+            if path.path == '/runs':
                 return self.respond(200, queue.jobs(owner))
+            if path.path == '/events':
+                try:
+                    after = int(parse_qs(path.query).get('after', [self.headers.get('Last-Event-ID', 0)])[0])
+                except ValueError:
+                    return self.respond(400, {'error': 'invalid event cursor'})
+                owned = {j['id'] for j in queue.jobs(owner)}
+                events = [e for e in queue.events(after) if e.get('job_id') in owned or e.get('owner') == owner]
+                body = ''.join('id: ' + str(e['seq']) + '\ndata: ' + json.dumps(e) + '\n\n' for e in events)
+                return self.respond(200, body or ': no new events\n\n', 'text/event-stream')
             return self.respond(404, {'error': 'unknown endpoint'})
 
         def do_POST(self):
@@ -52,6 +63,10 @@ def server(root, tokens, host='127.0.0.1', port=8765):
                 if self.path == '/runs':
                     data.pop('owner', None)
                     return self.respond(201, queue.submit(owner, **data))
+                if self.path == '/workflows':
+                    from .workflows import workflow
+                    data.pop('owner', None)
+                    return self.respond(200, workflow(str(queue.root), owner=owner, **data))
                 if self.path.startswith('/cancel/'):
                     return self.respond(200, queue.cancel(self.path.split('/')[-1], owner))
                 self.respond(404, {'error': 'unknown endpoint'})

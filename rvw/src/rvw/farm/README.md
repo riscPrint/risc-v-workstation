@@ -303,3 +303,25 @@ database hash retain all affected unknown tests, even beyond the time budget.
 The report shows omitted tests, uncovered signals and any budget overrun.
 This is an advisory scheduling plan. It does not replace a regression gate.
 Held-out regression validation has NOT RUN. MCP exposes `farm_select`.
+
+## Agent workflow plans and events
+
+`rvw farm workflow --root DIR --action create --plan plan.json --owner alice`
+stores a dependency plan. A plan has `nodes`, each with `id`, a `command` array,
+optional `needs` node IDs, `timeout` and `retries`. Optional `project` selects a
+queue budget scope. Unknown dependencies and cycles are refused. Save the
+returned workflow ID. Use `--action advance --workflow-id ID` to queue ready
+nodes. Run queue workers, then advance again. Repeated advances do not resubmit
+recorded nodes. `--action status` shows exact dependency and execution state.
+Failed dependencies remain blocked. Execution complete is not verified pass.
+`--action capabilities` returns tool names and argument schemas. MCP exposes
+`farm_workflow`. This service does not create a separate top-level agent.
+
+The authenticated HTTP service supplies `POST /workflows` with the same action,
+plan and workflow_id fields. Owner comes from the bearer token. `GET /events`
+replays only that owner's job and workflow events as SSE. Resume with
+`Last-Event-ID` or `?after=SEQUENCE`. The finite replay closes after the captured
+batch; reconnect for later events. No whole-result polling is needed. Sequence
+IDs are persistent. Clients can discard duplicates. Completion is emitted when
+a workflow is next advanced or inspected after its jobs finish. Webhook delivery
+is not implemented. Use SSE or the local queue events API.
