@@ -164,3 +164,28 @@ Fast IRQs, NMI, debug, PMP and S-mode are not qualified.
 
 These are conclusive C1 program passes on the declared configuration. They do
 not establish complete strict Spike agreement or architectural qualification.
+
+| ACT4 reference comparison | Result |
+| --- | --- |
+| Strict Spike | 0 complete matches; 148 mismatches; zero synchronization and masks |
+| Common first difference | Order 34, `csrr s0,mtvec`: Ibex `0x80000001`, Spike `0x0` |
+
+The boot logic initializes mtvec from `boot_addr_i[31:8]` in vectored mode.
+Spike starts mtvec at zero. The strict comparison stops at this first
+difference. It does not verify the remaining ACT4 instruction stream.
+Sail-generated self-checks and strict Spike agreement are separate results.
+No CSR mask or reset synchronization was added to obtain a match.
+
+The following smaller program isolates that reset-state difference:
+
+```sh
+mkdir -p "$IBEX_WORK/repro"
+nice -n 15 riscv64-unknown-elf-gcc -march=rv32imc_zicsr_zifencei -mabi=ilp32 \
+  -nostdlib -nostartfiles -T examples/ibex/rvw/link.ld -Wl,--build-id=none \
+  examples/ibex/rvw/boot.S examples/ibex/rvw/mtvec-reset.S \
+  -o "$IBEX_WORK/repro/mtvec-reset"
+rvw --project examples/ibex regress run --suite mtvec-reset --rvfi-trace \
+  --out "$IBEX_WORK/mtvec-reset-run" --no-index --json
+rvw regress cosim "$IBEX_WORK/mtvec-reset-run" --platform examples/ibex/rvw/platform.json \
+  --out "$IBEX_WORK/mtvec-reset-strict.json" --json
+```

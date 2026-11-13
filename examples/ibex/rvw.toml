@@ -56,3 +56,10 @@ strip_suffix = ".elf"
 max_cycles = 500000
 timeout_s = 120
 mem_latency = 0
+
+[suites.mtvec-reset]
+dir = "${IBEX_WORK}/repro"
+include = ["^mtvec-reset$"]
+max_cycles = 1000
+timeout_s = 120
+mem_latency = 0
