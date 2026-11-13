@@ -404,3 +404,10 @@ When both sides record full commit IDs, each triage cluster includes explicit
 `BASE..CANDIDATE` commit ranges. Unknown or short revisions do not create a
 range. Regression diffs still require matching test input identities; a range
 alone cannot establish a new failure or a fix.
+
+A rendered Job also passed offline validation against the Kubernetes v1.34.0
+OpenAPI Job schema at commit `f28b4c9efbca5c5c0af716d9f2d5702667ee8a45`.
+The schema SHA-256 was
+`d3b0cdc2fda15c753206d25ab459dc7c12df64e2fd652b6809687471ea751c37`.
+This check included result/cache PVC mounts and resource requests. Cluster
+admission, PVC binding and pod execution have NOT RUN.
