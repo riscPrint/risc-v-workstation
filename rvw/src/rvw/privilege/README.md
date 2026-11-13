@@ -784,3 +784,26 @@ original 2023 source `f24dd483d50e6a1448116dcf88b8b08e0863512c`. Other
 revision strings fail closed. Model subset groups remain separate from full
 architectural groups. Compilation and Python reference checks do not establish
 DUT execution, full interrupt-file state, bus delivery or whole-ISA comparison.
+
+## APLIC delegation and revocation
+
+`kind = "aplic-delegation"` selects two direct-delivery domains. Project data
+supplies parent/child bases, their contexts, the child's index, the implemented
+source count and the selected source IDs. `direct_delivery` must be true.
+The example selects sources 1 and 33, which use different pending/enable words.
+It pins AIA 1.0 document revision 20250312.
+
+Each program first makes all declared root sources inactive. It then delegates
+one source, configures the child as Detached, and injects a software pending
+bit. Parent pending/enable writes must be ignored. Only the child can claim the
+source. The program next revokes delegation. Child state must read as zero,
+and only the parent can claim. A final delegation checks that the child's
+source configuration returns to zero before software enables the source again.
+Every claim sequence must return the source once and then zero.
+
+The Python model checks domain ownership and the transaction sequence. Named
+C2 bindings check 24 MMIO observations per program, including masked pending
+and enable bits, source configuration and claims. Results and subset groups
+remain model-based. No native APLIC device, DUT execution or whole-ISA match
+is claimed. The suite does not cover arbitrary child trees, MSI delegation,
+wire-source transitions during reassignment or complete interrupt delivery.

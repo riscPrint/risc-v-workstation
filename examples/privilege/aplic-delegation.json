@@ -1,0 +1,22 @@
+{
+  "schema": "rvw.privilege/1",
+  "kind": "aplic-delegation",
+  "spec_version": "AIA-1.0",
+  "spec_revision": "20318d1b03f0ac8253458b82f8244d0d0db074e9",
+  "isa": "rv64im_zicsr_zifencei",
+  "reference_backend": "python",
+  "aplic": {
+    "parent_base": 218103808,
+    "child_base": 218136576,
+    "child_index": 0,
+    "parent_context": 0,
+    "child_context": 0,
+    "direct_delivery": true,
+    "implemented_sources": 33,
+    "source_ids": [
+      1,
+      33
+    ],
+    "poll_iterations": 1000
+  }
+}
