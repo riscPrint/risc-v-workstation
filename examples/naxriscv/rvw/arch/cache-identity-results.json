@@ -1,0 +1,42 @@
+{
+  "base": {
+    "old_sha256": "6be9e872533f767de9e0341d01de2ee64d0322943f11ae252f0f926bbaf0980d",
+    "new_sha256": "069ec57a763fb506aa0ef8c0cc58e355bec19fcf09788f4752dc1b825618d25c",
+    "old_namespace": "native-inputs-v29",
+    "new_namespace": "native-inputs-v29",
+    "changed_fields": [
+      "environment",
+      "environment_sha256",
+      "sha256"
+    ],
+    "changed_environment_fields": [
+      "PATH"
+    ],
+    "resolved_tools_equal": true,
+    "emitted_rtl_equal": true,
+    "limits": [
+      "environment_sha256 cannot reveal other inherited variable changes",
+      "PATH remains part of identity because descendant tool lookup is not fully pinned"
+    ]
+  },
+  "iq16": {
+    "old_sha256": "6be9e872533f767de9e0341d01de2ee64d0322943f11ae252f0f926bbaf0980d",
+    "new_sha256": "069ec57a763fb506aa0ef8c0cc58e355bec19fcf09788f4752dc1b825618d25c",
+    "old_namespace": "native-inputs-v29",
+    "new_namespace": "native-inputs-v29",
+    "changed_fields": [
+      "environment",
+      "environment_sha256",
+      "sha256"
+    ],
+    "changed_environment_fields": [
+      "PATH"
+    ],
+    "resolved_tools_equal": true,
+    "emitted_rtl_equal": true,
+    "limits": [
+      "environment_sha256 cannot reveal other inherited variable changes",
+      "PATH remains part of identity because descendant tool lookup is not fully pinned"
+    ]
+  }
+}

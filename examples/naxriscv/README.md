@@ -521,3 +521,47 @@ are retained. The run uses seed 1, zero memory latency and one simulation worker
 This result supersedes the six-rule coverage limit for this campaign. Native
 activation remains unmeasured. It does not establish allocator RAM-state
 conservation, forwarded byte-data correctness, full recovery or core qualification.
+
+## One-structure RTL matrix
+
+`rvw/arch/matrix.py OUT [VARIANT ...]` runs six fixed programs on the
+base, IQ16, ROB128, LQ8 and SQ8 configurations. Each variant changes one
+argument of upstream `Config.plugins`. No new core-source edit is needed.
+The script resumes completed runs. It requires passing C1 results and
+complete Spike matches before it records a sample. It retains RTL top-down
+fractions and probe counts. Use the private worker environment above and
+run the script with `rvw/.venv/bin/python` from the workstation root.
+The adapter runs at `nice -n 10`. Do not enable fault plants or generated
+negative checks for this campaign.
+
+Keep PATH stable across the campaign. Set all tool directories before the
+first native run. For example, add RISC-V GCC and the workstation venv before
+both benchmark builds and native runs:
+
+```sh
+export PATH="/opt/homebrew/opt/riscv-gnu-toolchain/bin:$RVW_HOME/rvw/.venv/bin:$PATH"
+```
+
+The first base and IQ16 runs in this campaign missed the warm cache.
+Their old receipts used these two PATH prefixes. The new launch omitted
+them. Both the explicit PATH field and the full environment digest changed.
+The namespace stayed at `native-inputs-v29`. Resolved tool records and
+emitted RTL hashes stayed equal. The full environment hash does not reveal
+any other inherited variable changes. See
+[the identity comparison](rvw/arch/cache-identity-results.json).
+`rvw/arch/cache-diff.py OLD_C1 NEW_C1` repeats this check.
+
+The collector keeps PATH in its identity because descendant tool lookup
+is not fully pinned. Removing that check would weaken cache validity.
+This campaign found environment invalidation, not a failed cache lookup.
+It used one stable new identity for all 30 runs. Five first-run receipts
+record native cache misses. The owner authorized the fifth build after
+the original four-build limit was reached. The other 25 runs hit the cache.
+
+[The retained matrix](rvw/arch/matrix-results.json) has 30 passing runs and
+30 complete Spike matches. Each uses seed 1 and zero added memory wait.
+Counter synchronization remains explicit in the Spike receipts. The full
+C1/C2/probe captures stay under `$RUN_ROOT/<variant>/<program>`; the retained
+file gives their hashes. The private fault-control edits were present
+with all plants disabled. This is simulation evidence on six programs.
+It is not ISA or whole-core qualification for the variants.
