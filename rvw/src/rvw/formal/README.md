@@ -2769,3 +2769,85 @@ address ranges or operation capabilities. They do not check cache permissions,
 independent memory data or forward progress. Generation is not a proof run.
 The slow SBY tests require exact PASS/FAIL results on independent good and
 seeded bad fixtures, including reset with pending transactions.
+
+## Installer flags and refreshed native measurements
+
+Select `--with-ric3`, `--with-ebmc`, `--with-pono`, `--with-avy`,
+`--with-suprove`, `--with-bitwuzla`, `--with-cvc5` or `--with-yices` with
+`scripts/install.sh`. rIC3 and EBMC build in the external native engine cache.
+The other flags reuse an executable already on PATH or fetch checksum-pinned
+OSS CAD Suite 2026-10-22 under `~/.cache/rvw/formal-engines`. A requested engine
+missing from that platform bundle is an error. Presence does not qualify it.
+The flags publish selected backend launchers in the external native engine
+cache. The generated `env.sh` includes that launcher directory. Pono also
+enables its `btorsim` trace dependency.
+
+On this macOS ARM64 host, the rIC3/EBMC installer flags and their `--check`
+completed on 2026-11-13. The Pono, Avy, Bitwuzla, cvc5 and Yices flags and checks
+also completed with the installed native tools. The development environment
+was restored with the locked dev and MCP extras after installation.
+
+The refreshed harness used the externally installed checksum-pinned suite.
+It ran the pinned HWMCC subset and PicoRV32 manifests
+in `examples/formal/deep`. Each native stage had a 12 s timeout at nice
+priority. Times below include preparation and sum over each case. They are
+a new measurement, not a paired speed comparison with earlier tables.
+
+HWMCC subset: two preprocessed cases. Only conclusive problem results count
+as solved. Bounded passes cannot count as unbounded proofs.
+
+| Engine | Prove solved / 2 | Prove total (s) | Bounded passes / 2 | BMC total (s) |
+|---|---:|---:|---:|---:|
+| `smtbmc:yices` | 1 | 3.632 | 2 | 1.301 |
+| `smtbmc:z3` | 1 | 1.706 | 2 | 1.178 |
+| `smtbmc:bitwuzla` | 1 | 1.748 | 2 | 1.411 |
+| `smtbmc:cvc5` | 1 | 1.692 | 2 | 1.247 |
+| `aiger:suprove` | 0 | 0.007 | N/A | N/A |
+| `abc:pdr` | 2 | 0.887 | N/A | N/A |
+| `aiger:avy` | 0 | 1.272 | N/A | N/A |
+| `aiger:rIC3` | 2 | 1.143 | 2 | 2.222 |
+| `ebmc` | 1 | 0.166 | 2 | 0.356 |
+| `btor:btormc` | N/A | N/A | 2 | 1.442 |
+| `abc:bmc3` | N/A | N/A | 0 | 1.884 |
+| `btor:pono` | N/A | N/A | 2 | 2.807 |
+
+Avy errored on both HWMCC cases. ABC BMC3 also errored on these two cases.
+The SMT prove jobs and EBMC each left one case inconclusive. Raw reports:
+`/tmp/deep-pinned-refresh-hwmcc-small-{prove,bmc}/result.json`.
+
+PicoRV32: one upstream property set. Its source assumptions remain unchecked.
+The native PDR and rIC3 passes are conditional observations. Every qualified
+solved count is zero. EBMC errors on unsupported `$initstate`.
+
+| Engine | Prove observation | Qualified solved / 1 | Prove total (s) | BMC observation | BMC total (s) |
+|---|---|---:|---:|---|---:|
+| `smtbmc:yices` | inconclusive | 0 | 8.661 | bounded_pass | 3.627 |
+| `smtbmc:z3` | timeout | 0 | 12.607 | timeout | 12.451 |
+| `smtbmc:bitwuzla` | timeout | 0 | 12.392 | bounded_pass | 2.793 |
+| `smtbmc:cvc5` | timeout | 0 | 12.289 | timeout | 12.280 |
+| `aiger:suprove` | not_installed | 0 | 0.003 | N/A | N/A |
+| `abc:pdr` | conditional_pass | 0 | 3.003 | N/A | N/A |
+| `aiger:avy` | error | 0 | 1.494 | N/A | N/A |
+| `aiger:rIC3` | conditional_pass | 0 | 2.439 | bounded_pass | 3.694 |
+| `ebmc` | error | 0 | 0.281 | error | 0.274 |
+| `btor:btormc` | N/A | N/A | N/A | bounded_pass | 5.607 |
+| `abc:bmc3` | N/A | N/A | N/A | bounded_pass | 2.065 |
+| `btor:pono` | N/A | N/A | N/A | bounded_pass | 1.769 |
+
+Raw reports: `/tmp/deep-pinned-refresh-picorv32-{prove,bmc}/result.json`. These
+small cases do not establish full-block capacity, commercial parity or
+whole-core correctness. Missing engines and unsupported modes are not passes.
+
+The checksum-verified darwin-arm64 archive has no `suprove` executable. The
+installation attempt failed explicitly and retained the 501 MiB archive in
+the external cache. Its absence is not a qualified proof-engine result.
+
+Native adapter checks with the earlier suite: 18 passed. With the pinned
+suite: 17 passed, 1 failed. The failure was
+`test_counter_quotient.py::test_native_reset_qualified_relation_and_refuted_candidate`.
+SBY returned PASS, but Yosys 0.70 wrote interned `$pub@...` module names and
+a `twines` name table in `design_prep.il`. The shared runner's assertion counter
+did not resolve the top and reported an error. The counter certificate stayed
+inconclusive. The runner needs this format support before that command can
+qualify with this suite. Its earlier Yosys 0.64 native result remains separate.
+Raw checks: `/tmp/deep-{final,pinned}-native/`.
