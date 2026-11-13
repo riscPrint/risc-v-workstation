@@ -337,7 +337,7 @@ trace values or broad CSR masks. See the exact settings and the
 [C2/Spike/Sail comparison matrix](../Cosim/README.md#architectural-comparison-coverage).
 ### C2 version 2 (`rvw.rvfi/2`)
 
-One schema supports `state`, `multihart` and `csr` capabilities. A capability
+One schema supports `state`, `multihart`, `csr` and `fault` capabilities. A capability
 can be used alone. `multihart` requires the `harts` header and the per-hart
 records below. `state` requires the FP fields below on each retirement and
 supports CSR snapshots and fault fields. The optional `csr` capability requires
@@ -369,6 +369,9 @@ It defaults to 4 and must be a power of two. Spike applies it through
 `cfg.pmpgranularity`. PMP entry priority follows the ISA: the lowest matching
 entry wins. This priority is fixed and cannot be changed by a platform setting.
 Sail refuses non-default grain until its configuration mapping is implemented.
+
+The C2/2 `fault` capability allows scalar fault-access comparison without FP
+fields. Missing FP state makes no FP claim.
 
 Sail scalar fault observations use its independent instruction operands and
 memory log. Within one virtual page, logged physical fragment offsets map to

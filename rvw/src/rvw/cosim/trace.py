@@ -28,7 +28,7 @@ class Trace:
                 raise ValueError("expected rvw.rvfi/1 header with xlen 32 or 64")
             self.multihart = "harts" in h
             caps = h.get("capabilities", ["multihart"] if self.multihart else ["state"])
-            if not isinstance(caps, list) or not caps or any(c not in ("state", "multihart", "csr") for c in caps) or len(set(caps)) != len(caps):
+            if not isinstance(caps, list) or not caps or any(c not in ("state", "multihart", "csr", "fault") for c in caps) or len(set(caps)) != len(caps):
                 raise ValueError("invalid C2 capabilities")
             self.state = "state" in caps
             if self.multihart != ("multihart" in caps) or (self.multihart and h["schema"] != "rvw.rvfi/2"):
@@ -37,6 +37,8 @@ class Trace:
                 hs = h["harts"]
                 if not isinstance(hs, list) or not hs or any(type(v) is not int or v < 0 for v in hs) or len(set(hs)) != len(hs):
                     raise ValueError("invalid harts")
+            if "fault" in caps and h["schema"] != "rvw.rvfi/2":
+                raise ValueError("fault capability requires C2/2")
             if "csr" in caps and (h["schema"] != "rvw.rvfi/2" or not h.get("csr_snapshot")):
                 raise ValueError("CSR capability requires C2/2 and a snapshot set")
             csrs = h.get("csr_snapshot", [])

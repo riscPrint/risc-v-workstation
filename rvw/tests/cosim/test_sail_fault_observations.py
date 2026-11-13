@@ -56,3 +56,40 @@ CSR mepc (0x341) <- 0x80000004
     assert rows[1]['fault_access']['rmask'] == 15
     assert rows[1]['fault_access']['completed_rmask'] == 0
     assert rows[1]['fault_access']['rdata'] is None
+
+
+def test_fault_only_capability(tmp_path):
+    header, row, model = fault_fixture()
+    header['capabilities'] = ['fault']
+    for key in ('fd_valid', 'fd', 'fd_wdata', 'fflags', 'fcsr'):
+        del row[key]
+    result = run(tmp_path, row, model, header)
+    assert result['status'] == 'match'
+    assert result['state_coverage']['fp'] is False
+
+
+def test_native_sail_fault_attempt(tmp_path, tmp_path_factory, platform, sail):
+    import json
+    from model_fixtures import Sail
+    from rvw.cosim.elf import Elf
+    from test_platform_policy import program
+    from test_lockstep import plain_trace
+    elf = program(tmp_path_factory, 'la t0, buffer\nlw a0, 1(t0)')
+    rows = plain_trace(elf, platform)
+    trace = tmp_path / 'trace.jsonl'
+    trace.write_text('\n'.join(map(json.dumps, rows)))
+    model = Sail(platform, elf, trace, sail)
+    try:
+        for _ in range(24):
+            effect = model.step()
+            if 'fault_access' in effect:
+                fault = model.fault_access(effect)
+                assert fault['addr'] == Elf(elf).symbols['buffer'] + 1
+                assert fault['rmask'] == 15
+                assert fault['completed_rmask'] == 0
+                assert fault['rdata'] is None
+                break
+        else:
+            pytest.fail('Sail fault not reached')
+    finally:
+        model.close()
