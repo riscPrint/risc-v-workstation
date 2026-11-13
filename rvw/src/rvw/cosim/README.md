@@ -106,3 +106,17 @@ A passing self-check without vector-state comparison cannot pass that flow.
 The upstream tests derive expected values from Spike. Their self-check is not
 an independent second reference. Memory partial effects and permitted agnostic
 values remain outside the current comparator.
+
+### Serialized multi-hart comparison
+
+`rvw cosim check` detects multi-hart C2 automatically. The header must declare
+`memory_profile: serialized-retirement`. One Spike machine contains all harts
+and shared RAM. Instructions execute in capture order. Each hart has separate
+register, synchronization and recent-match state. Results retain per-hart reports
+and identify the first mismatching hart. All hart end records are required.
+
+This first profile requires a shared ELF/reset PC and initial epoch zero.
+It refuses later resets, external-agent events, custom reference extensions and
+absent-PMP emulation. Stores are visible to subsequent captured retirements.
+A valid weak-memory execution can fall outside this profile. This does not check
+RVWMO, coherent bus transactions or store-buffer visibility.

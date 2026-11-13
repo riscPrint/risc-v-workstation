@@ -33,6 +33,8 @@ struct Machine : simif_t {
   std::map<uint64_t, std::array<char,4096>> pages;
   std::map<size_t, processor_t*> harts;
   std::unique_ptr<processor_t> cpu;
+  std::map<unsigned, std::unique_ptr<processor_t>> parked;
+  unsigned selected = 0;
   std::ostringstream sout;
   FILE* log = nullptr;
   uint64_t io_addr = 0, io_value = 0;
@@ -64,7 +66,7 @@ struct Machine : simif_t {
     cpu->enable_log_commits(); cpu->set_debug(true);
     cpu->get_state()->pc = pc;
   }
-  ~Machine() { cpu.reset(); if (log) fclose(log); }
+  ~Machine() { cpu.reset(); parked.clear(); if (log) fclose(log); }
   static bool contains(const Region& r, uint64_t a, size_t n=1) {
     return n <= r.size && a >= r.base && a-r.base <= r.size-n;
   }
@@ -267,6 +269,32 @@ void rvw_set_trap_tval(void* m,uint64_t value) {
 }
 void rvw_set_mscratch(void* m,uint64_t value) {
   static_cast<Machine*>(m)->cpu->put_csr(CSR_MSCRATCH,value);
+}
+int rvw_add_hart(void* m, unsigned id) {
+  try {
+    auto* machine = static_cast<Machine*>(m);
+    if(machine->harts.count(id)) return 0;
+    machine->cfg.hartids.push_back(id);
+    auto cpu = std::make_unique<processor_t>(machine->cfg.isa, machine->cfg.priv,
+      &machine->cfg, machine, id, false, machine->log, machine->sout);
+    cpu->set_pmp_granularity(machine->cfg.pmpgranularity);
+    cpu->enable_log_commits(); cpu->set_debug(true);
+    cpu->get_state()->pc = machine->cpu->get_state()->pc;
+    machine->harts[id] = cpu.get();
+    machine->parked[id] = std::move(cpu);
+    return 0;
+  } catch(const std::exception& ex) { error=ex.what(); return -1; }
+}
+int rvw_select_hart(void* m, unsigned id) {
+  auto* machine = static_cast<Machine*>(m);
+  if(id == machine->selected) return 0;
+  auto it = machine->parked.find(id);
+  if(it == machine->parked.end()) { error="unknown reference hart"; return -1; }
+  std::swap(machine->cpu, it->second);
+  machine->parked[machine->selected] = std::move(it->second);
+  machine->parked.erase(it);
+  machine->selected = id;
+  return 0;
 }
 int rvw_debug_halt(void* m) {
   try {

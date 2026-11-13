@@ -805,6 +805,21 @@ comparison prerequisite. `prepared` means the source commits were checked out.
 It does not mean the tests were built or passed. A new destination is required.
 The existing strict `rvw regress vector` comparison remains the suite verdict.
 
+### C2 serialized multi-hart reference comparison
+
+`rvw cosim check` accepts multi-hart C2 with an explicit header
+`memory_profile: serialized-retirement`. One Spike machine owns shared RAM and
+one processor per declared hart. Per-hart order, register state and comparison
+history remain separate. Each retirement executes in global `capture_seq`
+order. Thus a completed store becomes visible to all later reference steps.
+This restricted sequentially consistent profile is not an RVWMO checker.
+
+Each hart must start at epoch zero and end with `hart_end`. Reset epochs beyond
+zero, external-agent events, custom extensions and absent-PMP emulation are
+unsupported. All harts use the captured shared ELF and reset PC. Results retain
+per-hart reports and identify the first mismatching hart. Missing hart ends are
+inconclusive. No weak-memory, bus coherence or store-buffer claim is made.
+
 ## C3. Suite results (`rvw.results/1`)
 
 New regress run sets publish through C8 `current` and `generations/<id>`. The root workspace

@@ -190,6 +190,8 @@ class Spike:
         if platform.reference_extensions:
             lib.rvw_register_extension.argtypes = [C.c_void_p, C.c_char_p]
             lib.rvw_register_extension.restype = C.c_int
+        lib.rvw_add_hart.argtypes = [C.c_void_p, C.c_uint]
+        lib.rvw_select_hart.argtypes = [C.c_void_p, C.c_uint]
         lib.rvw_debug_state.argtypes = [C.c_void_p, C.POINTER(C.c_uint64)]
         lib.rvw_debug_halt.argtypes = [C.c_void_p]
         lib.rvw_error.restype = C.c_char_p
@@ -288,6 +290,18 @@ class Spike:
         result["debug"], _ = self.debug_snapshot()
         self.regs = list(result["regs"])
         return self.platform.normalize_effect(result)
+
+    def add_hart(self, hart):
+        if hart != 0 and (self.platform.reference_extensions or self.platform.absent_pmp_csrs != 'trap'):
+            raise ValueError('multi-hart custom extensions and absent-PMP emulation are unsupported')
+        if not 0 <= hart < 1 << 32:
+            raise ValueError('reference hart id exceeds 32 bits')
+        if self.lib.rvw_add_hart(self.handle, hart):
+            raise ValueError(self.error())
+
+    def select_hart(self, hart):
+        if self.lib.rvw_select_hart(self.handle, hart):
+            raise ValueError(self.error())
 
     def debug_snapshot(self):
         values = (C.c_uint64 * 4)()
