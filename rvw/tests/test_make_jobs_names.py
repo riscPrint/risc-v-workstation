@@ -35,3 +35,10 @@ def test_names_that_the_headers_declare_stay_unchanged(tmp_path):
     encoded = "CData rvwprobe___05Fcounter___05Fa___05Finc;\n"
     out = run(tmp_path, encoded, "top->Top->rvwprobe___05Fcounter___05Fa___05Finc")
     assert "___05F___05F" not in out and "rvwprobe___05Fcounter___05Fa___05Finc" in out
+
+
+def test_header_lookup_preserves_spaces_in_build_directory(tmp_path):
+    folder = tmp_path / 'build with spaces'
+    folder.mkdir()
+    out = run(folder, 'CData rvwprobe___05Fcounter;\n', 'top->Top->rvwprobe__counter')
+    assert 'top->Top->rvwprobe___05Fcounter' in out
