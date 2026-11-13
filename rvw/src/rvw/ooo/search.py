@@ -63,7 +63,8 @@ def search(plan, out, project=None):
         raise ValueError('budget must be between 1 and 32')
     if type(spec['max_cycles']) is not int or spec['max_cycles'] < 1:
         raise ValueError('max_cycles must be positive')
-    baseline = asdict(Config(**json.loads((path.parent / spec['config']).read_text())))
+    from .project import configuration
+    baseline = asdict(configuration(json.loads((path.parent / spec['config']).read_text())))
     parameters = spec['parameters']
     if not isinstance(parameters, dict) or not parameters:
         raise ValueError('parameters must be a nonempty object')

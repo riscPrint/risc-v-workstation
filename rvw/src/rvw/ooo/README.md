@@ -346,3 +346,27 @@ not execute the operation, validate its semantics, estimate software effort,
 or infer physical PPA. Compare separately generated baseline and extension
 traces under one project workload and independent RTL checks. Custom memory,
 control-flow, FP and vector operations remain unsupported.
+
+## One project description for gem5 and the own model
+
+`rvw ooo` and `arch ooo-search` can read an O3 `rvw.arch-core/1` file directly.
+Add an `ooo` object to that project-owned description. It must include the
+own-model `latencies` table. Other own-model policies can be added there.
+The native gem5 runner validates that this object is an O3 table and ignores
+it when constructing gem5 objects. The own engine also runs the common
+static description validator.
+
+Shared dimensions come from `cpu`: fetch width/queue size, rename width, ROB
+capacity, issue width, load/store capacities, commit width and integer physical
+register count. Total own issue capacity is the sum of declared issue-queue
+entries. Decode width and FTQ capacity come from `cpu.decodeWidth` and
+`cpu.numFTQEntries`. These source fields must be explicit. Duplicated own
+values must agree, or the command fails. The C2 preset must match `config`.
+
+The own model does not infer execution latencies from broad gem5 FU classes.
+Its project latency table and port bindings stay explicit. Queue partitioning,
+cache policies, predictor internals and stage boundaries can differ between
+engines. The projected issue capacity is a unified capacity unless separate
+own-model class limits are supplied. Equal dimensions do not imply equal
+microarchitecture or timing fidelity. The report keeps the normalized own
+configuration so these assumptions remain visible.

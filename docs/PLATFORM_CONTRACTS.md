@@ -3429,6 +3429,15 @@ per-size cycles and per-class signed slope errors. Missing evidence exits 2.
 The report is local timing evidence, not a C4 verdict or complete C8 capture.
 Stock llvm-mca cannot load generated TableGen. The built-in baseline does not
 validate a generated model. See `Arch/SCHED_MODELS.md` for limits.
+### Shared O3 project descriptions
+
+`rvw.arch-core/1` accepts an optional `ooo` object for O3 descriptions. gem5
+ignores this object when constructing its model. The own engine uses its
+explicit latency/policy fields and projects shared CPU widths and capacities.
+Conflicting duplicate values are errors. The own engine checks the selected
+C2 preset against the description. Shared dimensions do not establish timing
+agreement. See `rvw/ooo/README.md` for the mapping and approximation limits.
+
 ### Own-core custom operation timing
 
 `custom_instructions` declares nonoverlapping mask/match rules in reserved
