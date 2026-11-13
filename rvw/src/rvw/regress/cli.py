@@ -68,6 +68,8 @@ def register(sub) -> None:
 
     from rvw.sim.cli import register as register_sim
     register_sim(rs)
+    from . import random_stream
+    random_stream.register(rs)
     from . import mmu
     mmu.register(rs)
     from . import vector

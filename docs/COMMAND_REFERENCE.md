@@ -787,7 +787,7 @@ usage: rvw reduce [-h] [--out OUT] [--signature SIGNATURE] [--modes MODES]
 
 ```text
 usage: rvw regress [-h] [--project PROJECT]
-    {speed-compare,speed-sweep,backends,uvm,uvm-ral,uvm-cpu,hdl,cocotb,mmu,vector,run,compare,gate,known,history,list}
+    {speed-compare,speed-sweep,backends,uvm,uvm-ral,uvm-cpu,hdl,cocotb,random,mmu,vector,run,compare,gate,known,history,list}
     ...
 ```
 
@@ -851,6 +851,14 @@ usage: rvw regress hdl [-h] [--backend
 ```text
 usage: rvw regress cocotb [-h] --out OUT [--seed SEED] [--timeout TIMEOUT]
     [--json] [--project PROJECT] manifest
+```
+
+### `rvw regress random`
+
+```text
+usage: rvw regress random [-h] [--settings SETTINGS] --out OUT [--seeds SEEDS]
+    [--seed-base SEED_BASE] [--core CORE] [--config CONFIG] [--json]
+    [--project PROJECT]
 ```
 
 ### `rvw regress mmu`
@@ -1145,7 +1153,7 @@ usage: rvw workloads verify [-h] [--json] --build BUILD --out OUT [--oracle
 
 ## MCP tools
 
-The default server exposes 76 built-in tools, including the four job tools.
+The default server exposes 77 built-in tools, including the four job tools.
 `--only` filters packages. `RVW_MCP_PLUGINS` can add tools.
 `rvw mcp --list --json` returns full input schemas.
 CLI commands without an MCP entry are CLI-only.
@@ -1703,6 +1711,14 @@ Discover a core's suites, tiers and configurations before running; pass suite to
 Arguments: `project`, `core`, `suite`.
 
 Starts a background job: no.
+
+### `regress_random`
+
+Generate pinned riscv-dv programs, compile project runtime, run C1 and compare complete C2 with Spike. Only qualified runs earn functional coverage. Generator, compiler, adapter and comparison errors remain separate.
+
+Arguments: `project`, `core`, `settings`, `out` (required), `config`, `seeds`, `seed_base`.
+
+Starts a background job: yes.
 
 ### `regress_run`
 

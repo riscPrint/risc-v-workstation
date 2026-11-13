@@ -10,6 +10,7 @@ Usage: scripts/install.sh [OPTIONS]
                      $HOME/tools/risc-v-workstation for a standalone script).
   --source DIR       Clone a local checkout instead of GitHub (needs --prefix).
   --with-sim         JDK 21, sbt 1.10.7+, Verilator 5+, make and C++ compiler.
+  --with-riscv-dv    Pinned native pygen in $RVW_RISCV_DV or ~/.cache/rvw.
   --with-riscv-gcc   Bare-metal RISC-V GCC and binutils.
   --with-cosim       Spike headers/libraries and the workstation shim.
   --with-formal      OSS CAD Suite plus a pinned native yosys-slang build.
@@ -37,7 +38,7 @@ show() { printf '  +'; printf ' %q' "$@"; printf '\n'; }
 run() { show "$@"; if [ "$dry" = 0 ]; then "$@"; fi; }
 value() { [ "$#" -ge 2 ] && [ -n "$2" ] && [[ "$2" != --* ]] || fail "$1 needs a value"; }
 
-sim=0 gcc=0 cosim=0 formal=0 gem5=0 yes=0 dry=0 check=0
+dv=0 sim=0 gcc=0 cosim=0 formal=0 gem5=0 yes=0 dry=0 check=0
 prefix='' source_dir='' shell_rc=''
 waves=0 lint=0 bundle=0 sail=0 bundle_run='' bundle_dir=''
 while [ "$#" -gt 0 ]; do
@@ -52,11 +53,12 @@ while [ "$#" -gt 0 ]; do
     --with-lint) lint=1; shift ;;
     --with-sail) sail=1; shift ;;
     --with-sim) sim=1; shift ;;
+    --with-riscv-dv) dv=1; shift ;;
     --with-riscv-gcc) gcc=1; shift ;;
     --with-cosim) cosim=1; shift ;;
     --with-formal) formal=1; shift ;;
     --with-gem5) gem5=1; shift ;;
-    --all) waves=1; lint=1; sim=1; gcc=1; cosim=1; formal=1; gem5=1; shift ;;
+    --all) dv=1; waves=1; lint=1; sim=1; gcc=1; cosim=1; formal=1; gem5=1; shift ;;
     --yes) yes=1; shift ;;
     --dry-run) dry=1; shift ;;
     --check) check=1; shift ;;
@@ -271,6 +273,7 @@ optional_check() {
     fi
   fi
   if [ "$lint" = 1 ]; then "$python_cmd" "$rvw_home/scripts/install-verible.py" --home "$rvw_home" --check || failed=1; fi
+  if [ "$dv" = 1 ]; then "$python_cmd" "$rvw_home/scripts/install-riscv-dv.py" --check || failed=1; fi
   if [ "$gem5" = 1 ]; then gem5_check || failed=1; fi
   if [ "$sim" = 1 ]; then sim_check || failed=1; fi
   if [ "$gcc" = 1 ]; then
@@ -430,6 +433,12 @@ run uv venv --python "$python_cmd" --no-managed-python --allow-existing "$rvw_ho
 run uv sync --locked --no-dev --extra mcp --no-managed-python --project "$rvw_home/rvw" --python "$python_cmd"
 export RVW_PYTHON="$rvw_home/rvw/.venv/bin/python"
 export RVW_LOCK_PYTHON="$RVW_PYTHON"
+
+if [ "$dv" = 1 ]; then
+  dv_args=()
+  [ "$dry" = 0 ] || dv_args+=(--dry-run)
+  run "$python_cmd" "$script_root/scripts/install-riscv-dv.py" "${dv_args[@]}"
+fi
 
 if [ "$lint" = 1 ]; then
   lint_args=(--home "$rvw_home")
