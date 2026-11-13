@@ -29,6 +29,10 @@ def test_platform_profile(tmp_path, core):
 
 def test_runtime_defines_scratch_before_gpr_initialization():
     lines = (ROOT/'scripts/riscv-dv/user_init.s').read_text().splitlines()
+    start, end = lines.index('.ifdef RVW_TRAP_SKIP'), lines.index('.endif')
+    # The trap-class handler is assembled only when the program sets the mark.
+    assert 'csrw mtvec, t0' in lines[start:end]
+    lines = lines[:start] + lines[end+1:]
     instructions = [line.strip() for line in lines if line.strip() and not line.startswith('#')]
     assert instructions[0] == 'csrw mscratch, zero'
     assert instructions[1] == 'li x1, 0'

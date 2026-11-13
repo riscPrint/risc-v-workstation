@@ -21,7 +21,7 @@ def parser():
     p.add_argument('--checkout', type=Path, required=True)
     p.add_argument('--python', default=sys.executable)
     p.add_argument('--target', choices=['rv32imc', 'rv64imc'], required=True)
-    p.add_argument('--test-class', choices=['arithmetic', 'branches', 'load-store'], default='arithmetic')
+    p.add_argument('--test-class', choices=['arithmetic', 'branches', 'load-store', 'traps', 'csr'], default='arithmetic')
     p.add_argument('--target-profile', type=Path)
     p.add_argument('--seed', type=int, required=True)
     p.add_argument('--instructions', type=int, default=50)
@@ -50,6 +50,8 @@ def worker(a):
                 '--num_of_sub_program=0', '--no_branch_jump='+str(int(a.test_class != 'branches')),
                 '--no_load_store='+str(int(a.test_class != 'load-store')),
                 '--disable_compressed_instr=1', '--bare_program_mode=1',
+                # The trap class reserves mscratch for its skip handler.
+                '--no_csr_instr='+str(int(a.test_class == 'traps')),
                 '--asm_file_name='+str(a.out/'program'),
                 '--log_file_name='+str(a.out/'generator.log')]
     if a.test_class == 'branches':
@@ -100,12 +102,23 @@ def main():
                        '--seed', str(a.seed), '--instructions', str(a.instructions),
                        '--out', str(a.out), '--test-class', a.test_class, *extra], timeout=a.timeout, stdout=log, stderr=log)
     source = a.out/'program_0.S'
+    injected = None
+    if a.test_class in ('traps', 'csr') and source.is_file() and not r.timed_out and r.returncode == 0:
+        if not a.target_profile:
+            raise ValueError(a.test_class+' class needs --target-profile')
+        from rvw.regress.dv_inject import inject
+        text, injected = inject(source.read_text(), json.loads(a.target_profile.read_text()),
+                                a.test_class, a.seed, max(1, a.instructions // 10))
+        source.write_text(text)
     metadata = dict(status='generated' if not r.timed_out and r.returncode == 0 and source.is_file() else 'error',
                     generator_revision=revision, target=a.target, seed=a.seed,
                     instructions=a.instructions, profile='bare-integer-alu' if a.test_class == 'arithmetic' else 'bare-'+a.test_class,
                     test_class=a.test_class,
                     pyboolector='3.2.4.38488416565', pyvsc='0.9.1.10086043874',
                     returncode=r.returncode, timed_out=r.timed_out)
+    if injected is not None:
+        metadata['injected'] = injected
+        metadata['injection_sha256'] = hashlib.sha256((Path(__file__).resolve().parents[1]/'rvw/src/rvw/regress/dv_inject.py').read_bytes()).hexdigest()
     if a.test_class == 'load-store':
         metadata['compatibility_sha256'] = hashlib.sha256((Path(__file__).resolve().parents[1]/'rvw/src/rvw/regress/dv_compat.py').read_bytes()).hexdigest()
     if a.target_profile:
