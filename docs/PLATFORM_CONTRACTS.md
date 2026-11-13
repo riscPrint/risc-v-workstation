@@ -25,23 +25,6 @@ Principles (from `ROADMAP.md`):
 - Every result records how to reproduce it: source revision, config, seed, ELF hash, tool versions,
   and a replay command.
 
-## Observed SoC transaction pairs
-
-`rvw.soc-events/1` starts with `observation=rtl_request_response_retire_tags`,
-`data_bytes`, `trace_sha256`, `source`, `rtl_sha256`, `elf_sha256`, `seed` and
-`run_id`. The latter fields must match the selected C1 simulation identity.
-Ordered `request` records contain cycle, unique tag, aligned address, Boolean
-write, mask and data. `response` records contain cycle, tag, data and Boolean
-error. `retire_link` records contain cycle, C2 order and a unique request-tag list.
-Project probes must observe request-to-retirement tags independently.
-
-`rvw.soc-pairing/1` reports pairs, comparisons, unpaired requests, gaps and input
-hashes. Addresses and data use little-endian byte lanes. Contradictory observed
-values report mismatch and exit 1. Matching or missing evidence remains
-inconclusive and exits 3. Unknown/reused tags and identity errors exit 2.
-Address-only pairing is not supported. Existing harness capture version 1 does
-not supply these transaction identities. No full DUT/bridge proof is implied.
-
 ## Core contracts
 
 - [Project configuration (`rvw.project/1`)](contracts/project.md)
@@ -101,12 +84,3 @@ not supply these transaction identities. No full DUT/bridge proof is implied.
 | `SpinalKonata/` | Generic Konata pipeline-trace library for Spinal designs. | Scala |
 | `SpinalDB/` | One extraction pass over an elaborated Spinal design: the design database. | Scala |
 | `scripts/with-lock.sh` | Machine-wide lock for heavy jobs (see Resources); a wrapper around `rvw/src/rvw/common/lock.py`. | shell |
-
-### Automatic component app bindings
-
-Generated app plans can contain `fifo_stream`, `arbiter_transfer` and
-`counter_wrap`. Typed channel maps use exact valid, ready and payload endpoints.
-FIFO capacity comes from the selected component's memory structure. Counter wrap
-failures are reached observations. CAM address bounds do not establish key-match
-semantics. Public ports remain in the interface even when the database marks
-instance use as pruned; native interface validation remains required.

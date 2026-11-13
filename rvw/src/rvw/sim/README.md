@@ -365,3 +365,33 @@ resume. The offset comes from the captured writer. Both traces must include a
 C2 header and end event. Exact prefix and nonempty suffix bytes must match.
 This check proves byte equality only. Run C1 terminal checks and independent
 ISA checks separately. No bundled Spinal port is qualified by these commands.
+
+## Native Arcilator model library
+
+Install the pinned CIRCT release outside the repository:
+
+```sh
+scripts/install.sh --with-arcilator
+scripts/install.sh --with-arcilator --check
+```
+
+The release is `firtool-1.163.0`. Archive SHA-256 values are pinned for macOS
+ARM64, macOS x64 and Linux x64. The default location is
+`~/.cache/rvw/circt/firtool-1.163.0`. `RVW_CIRCT` selects another installation.
+The check rejects a different CIRCT version or missing native tools.
+Unsupported hosts fail. No source build or simulator fallback occurs.
+
+`rvw.sim.native_models.Model` compiles captured RTL with `circt-verilog`,
+Arcilator and LLVM `llc`. It exposes scalar ports up to 64 bits through the
+emitted state layout. Project adapters own clocks, reset, memory, interrupts,
+C1 terminal predicates and C2 observation. The same interface has a Verilator
+backend for paired native runs. Both start with zero state and then use the
+project reset sequence. There is no four-state or HDL-delay guarantee.
+The build record captures source, compiler, engine and shared-library hashes.
+It is not a complete C4 reuse identity. Do not use it for gate acceptance.
+
+The [VexRiscv probe](../../../../examples/vexriscv/README.md#arcilator-and-verilator-c1c2-probe)
+provides bounded C1/C2 evidence on real captured core RTL. The native scalar
+regression also checks reset and 40 seeded register updates against an
+independent arithmetic expectation. This is a cycle model API, with no timing,
+foreign-function, coverage, native checkpoint or BOOM qualification.

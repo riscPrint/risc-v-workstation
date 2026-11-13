@@ -167,3 +167,13 @@ same-build state. Capture the plugin, Python library and Python source digests
 in the run identity. Host console output and host file writes are not emitted.
 The model owns the buffered console and disk state. See
 `RiscvSim/src/main/cpp/DEVICES.md` for model selection and interrupt bits.
+
+## Scalar native engine probe
+
+The scalar model library supplies port access, not a core-specific driver.
+A project adapter can use it to write existing C1 and C2 files. The VexRiscv
+probe records its source/tool/library hash map in C1 `details.native_identity`.
+This map is a build record, not a complete captured C4 identity. Its C1
+`source` and `tools` inventories are empty. Such runs must not earn C4 reuse
+or acceptance. The probe reports complete C2 only after its terminal condition.
+A cycle-bound timeout has status `timeout`. Build failure returns inconclusive.

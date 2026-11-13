@@ -41,3 +41,31 @@ availability and positive `settle_cycles`. After that many stable request
 samples, output availability must match input availability and the declared
 control sense. Names of supply ports do not establish physical connectivity.
 No analog ramp, glitch or clock-gating semantics are inferred.
+
+## Observed SoC transaction pairs
+
+`rvw.soc-events/1` starts with `observation=rtl_request_response_retire_tags`,
+`data_bytes`, `trace_sha256`, `source`, `rtl_sha256`, `elf_sha256`, `seed` and
+`run_id`. The latter fields must match the selected C1 simulation identity.
+Ordered `request` records contain cycle, unique tag, aligned address, Boolean
+write, mask and data. `response` records contain cycle, tag, data and Boolean
+error. `retire_link` records contain cycle, C2 order and a unique request-tag list.
+Project probes must observe request-to-retirement tags independently.
+
+`rvw.soc-pairing/1` reports pairs, comparisons, unpaired requests, gaps and input
+hashes. Addresses and data use little-endian byte lanes. Contradictory observed
+values report mismatch and exit 1. Matching or missing evidence remains
+inconclusive and exits 3. Unknown/reused tags and identity errors exit 2.
+Address-only pairing is not supported. Existing harness capture version 1 does
+not supply these transaction identities. No full DUT/bridge proof is implied.
+
+|---|---|---|
+
+### Automatic component app bindings
+
+Generated app plans can contain `fifo_stream`, `arbiter_transfer` and
+`counter_wrap`. Typed channel maps use exact valid, ready and payload endpoints.
+FIFO capacity comes from the selected component's memory structure. Counter wrap
+failures are reached observations. CAM address bounds do not establish key-match
+semantics. Public ports remain in the interface even when the database marks
+instance use as pruned; native interface validation remains required.

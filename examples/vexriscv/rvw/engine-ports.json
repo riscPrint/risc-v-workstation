@@ -1,0 +1,182 @@
+{
+  "iBus_cmd_ready": [
+    "input",
+    1
+  ],
+  "iBus_rsp_valid": [
+    "input",
+    1
+  ],
+  "iBus_rsp_payload_error": [
+    "input",
+    1
+  ],
+  "iBus_rsp_payload_inst": [
+    "input",
+    32
+  ],
+  "timerInterrupt": [
+    "input",
+    1
+  ],
+  "externalInterrupt": [
+    "input",
+    1
+  ],
+  "softwareInterrupt": [
+    "input",
+    1
+  ],
+  "dBus_cmd_ready": [
+    "input",
+    1
+  ],
+  "dBus_rsp_ready": [
+    "input",
+    1
+  ],
+  "dBus_rsp_error": [
+    "input",
+    1
+  ],
+  "dBus_rsp_data": [
+    "input",
+    32
+  ],
+  "clk": [
+    "input",
+    1
+  ],
+  "reset": [
+    "input",
+    1
+  ],
+  "iBus_cmd_valid": [
+    "output",
+    1
+  ],
+  "iBus_cmd_payload_pc": [
+    "output",
+    32
+  ],
+  "rvfi_valid": [
+    "output",
+    1
+  ],
+  "rvfi_order": [
+    "output",
+    64
+  ],
+  "rvfi_insn": [
+    "output",
+    32
+  ],
+  "rvfi_trap": [
+    "output",
+    1
+  ],
+  "rvfi_halt": [
+    "output",
+    1
+  ],
+  "rvfi_intr": [
+    "output",
+    1
+  ],
+  "rvfi_mode": [
+    "output",
+    2
+  ],
+  "rvfi_ixl": [
+    "output",
+    2
+  ],
+  "rvfi_rs1_addr": [
+    "output",
+    5
+  ],
+  "rvfi_rs1_rdata": [
+    "output",
+    32
+  ],
+  "rvfi_rs2_addr": [
+    "output",
+    5
+  ],
+  "rvfi_rs2_rdata": [
+    "output",
+    32
+  ],
+  "rvfi_rd_addr": [
+    "output",
+    5
+  ],
+  "rvfi_rd_wdata": [
+    "output",
+    32
+  ],
+  "rvfi_pc_rdata": [
+    "output",
+    32
+  ],
+  "rvfi_pc_wdata": [
+    "output",
+    32
+  ],
+  "rvfi_mem_addr": [
+    "output",
+    32
+  ],
+  "rvfi_mem_rmask": [
+    "output",
+    4
+  ],
+  "rvfi_mem_wmask": [
+    "output",
+    4
+  ],
+  "rvfi_mem_rdata": [
+    "output",
+    32
+  ],
+  "rvfi_mem_wdata": [
+    "output",
+    32
+  ],
+  "dBus_cmd_valid": [
+    "output",
+    1
+  ],
+  "dBus_cmd_payload_wr": [
+    "output",
+    1
+  ],
+  "dBus_cmd_payload_mask": [
+    "output",
+    4
+  ],
+  "dBus_cmd_payload_address": [
+    "output",
+    32
+  ],
+  "dBus_cmd_payload_data": [
+    "output",
+    32
+  ],
+  "dBus_cmd_payload_size": [
+    "output",
+    2
+  ],
+  "trap_valid": [
+    "output",
+    1
+  ],
+  "trap_cause": [
+    "output",
+    32
+  ],
+  "trap_tval": [
+    "output",
+    32
+  ]
+}
