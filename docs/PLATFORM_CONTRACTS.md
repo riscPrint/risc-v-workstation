@@ -1565,6 +1565,12 @@ Lint settings may also have `rules` (rule severities and parameters) and
 select backend `rules`, whose `findings` use `lint.*` rule IDs and whose `fsm`
 list records `checked` or `inconclusive` state registers. `rvw lint --sarif PATH`
 writes the same findings as SARIF 2.1.0 with fingerprint `rvw/finding-id`.
+Backend `sdc` (settings `sdc`: `clocks`, `generated`, `multicycle`, `check`,
+`register_pattern`, `output_pin`) returns `sdc` (generated text), `clocks`,
+`spinal_synchronous`, `excepted`, `unsafe`, `check` and `sdc.*` findings.
+`--emit` also writes `constraints.sdc`. SpinalDB adds table
+`clock_frequencies(clock_domain_id, hz)` without a schema bump; a missing table
+means unknown frequencies.
 
 ## Native backend semantic profiles
 

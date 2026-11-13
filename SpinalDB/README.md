@@ -218,6 +218,7 @@ options already reflected in paths, and generated Verilog text itself.
 | `pdg_vertices`, `pdg_edges` | | SpinalTrace's statement-level PDG as tables, only with `--pdg-tables` (55 MB for BOOM small). |
 | `artifacts` | `name`, `media_type`, `encoding`, `size`, `content` | Gzipped outputs of the same elaboration: `pdg.json` (SpinalTrace, docs/PDG_FORMAT.md there), `blocks.json` (SpinalBlocks, docs/FORMAT.md there), `hgldd/<top>.dd` (SpinalWaves, for Surfer). `size` is uncompressed. `rvw query export` writes them out. |
 | `input_files` | `path`, `resolved`, `sha256`, `size`, `record` | C8 file capture records. Hashes cover the exact copied bytes. |
+| `clock_frequencies` | `clock_domain_id`, `hz` | Declared frequency of a clock domain (Spinal `FixedFrequency`), as a plain decimal in hertz. No row: unknown frequency. Added without a schema bump: older databases lack the table, and readers treat that as unknown. |
 | `rtl_files` | `path` | The generated Verilog. |
 | `warnings` | `source`, `message` | Things the extraction (`spinaldb`) or the PDG (`pdg`) could not model exactly. |
 
