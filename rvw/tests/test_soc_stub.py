@@ -13,6 +13,6 @@ def test_stub_project(tmp_path):
     assert config.name=='soc-stub'
     compose(ROOT/'SpinalSoc/examples/stub/compose.json',tmp_path/'soc')
     text=(tmp_path/'soc/ComposedSoc.scala').read_text()
-    assert 'core.interrupts(7) := clint.io.irq' in text
-    assert 'core.interrupts(11) := plic.io.irq' in text
+    assert 'interrupt_7 := clint.io.irq' in text
+    assert 'interrupt_11 := plic.io.irq' in text
     assert 'uart.io.serial.toIo()' in text
