@@ -53,7 +53,14 @@ def compare(a,b,plan):
     clauses = plan.get('clauses',['pc','memory','branch'])
     if not clauses or plan['contract'] not in CONTRACTS:
         raise ValueError('declare an architectural leakage contract')
-    if projection(a['reference'],clauses) != projection(b['reference'],clauses):
+    def region(rows):
+        start=plan.get('contract_start_pc')
+        if start is None: return rows
+        if isinstance(start,str): start=int(start,0)
+        for i,row in enumerate(rows):
+            if row['pc']==start: return rows[i:]
+        raise ValueError('contract start PC was not reached')
+    if projection(region(a['reference']),clauses) != projection(region(b['reference']),clauses):
         return dict(status='ineligible', channels=[])
     channels = [k for k in plan['observations'] if a['observations'][k] != b['observations'][k]]
     return dict(status='violation' if channels else 'no_leak_observed',channels=channels)
