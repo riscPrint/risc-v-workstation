@@ -1,0 +1,25 @@
+{
+  "schema": "rvw.soc-observer/1",
+  "data_bytes": 4,
+  "signals": {
+    "clock": "bench.clock",
+    "reset": "bench.reset",
+    "cycle": "bench.cycle",
+    "request_valid": "bench.request_valid",
+    "request_ready": "bench.request_ready",
+    "request_tag": "bench.request_tag",
+    "request_address": "bench.request_address",
+    "request_write": "bench.request_write",
+    "request_mask": "bench.request_mask",
+    "request_data": "bench.request_data",
+    "response_valid": "bench.response_valid",
+    "response_ready": "bench.response_ready",
+    "response_tag": "bench.response_tag",
+    "response_data": "bench.response_data",
+    "response_error": "bench.response_error",
+    "retire_valid": "bench.retire_valid",
+    "retire_order": "bench.retire_order",
+    "retire_tag": "bench.retire_tag",
+    "retire_count": "bench.retire_count"
+  }
+}
