@@ -178,14 +178,24 @@ source pins, per-extension records and minimal reproductions.
 | VexRiscv RV32IM instruction profile | 58 / 58 | 52 / 6 | 52 | 6 |
 | VexiiRiscv RV32IM instruction profile | 58 / 58 | 58 / 0 | 58 | 0 |
 | VexiiRiscv RV32IMA M/S/U, standard boot | 270 / 270 | 0 / 270 | 0 | 270 |
+| NaxRiscv RV32IMA instruction profile | 69 / 69 | 69 / 0 | 69 | 0 |
+| PicoRV32 mapped RV32IM instruction profile | 51 / 51 | 50 / 1 | 50 | 1 |
 | Bundled BOOM profile | NOT RUN | NOT RUN | NOT RUN | NOT RUN |
 
-The instruction profiles use a reduced CSR boot. They do not establish
-Sm compatibility. VexRiscv's six Zicsr failures retain MEPC alignment bits.
+The instruction profiles use project bootstraps. They do not establish
+standard Sm compatibility. VexRiscv's six Zicsr failures retain MEPC alignment bits.
 The supervisor suite includes 201 privileged-directory tests and 69
 instruction tests. All 270 fail on the mhpmevent3 bootstrap write before
-their test bodies. One strict comparison per group confirms that first
-difference. No failure is waived. The bootstrap CSR contract remains open.
+their test bodies. The fresh rerun confirms 270 strict first differences.
+The shared catalog and project CSR model locate one declared Sm contract
+gap: the selected profile omits the counter plugin that supplies these
+CSRs. No failure or bootstrap access is waived. All six VexRiscv MEPC
+cases remain core readback differences for IALIGN=32.
+
+NaxRiscv has 69 strict instruction-case matches. Its standard Sm and
+supervisor ACT4 remain NOT RUN. PicoRV32 has 50 strict matches under the
+shared platform's checked full-word load convention. Its FENCE rd=x1
+state difference remains failed. Neither result grants certification.
 The BOOM profile has configuration and unit tests only.
 
 | ACT4 plus riscv-tests coverage | Observed traces | Qualified traces | Observed default-domain holes |
@@ -193,8 +203,13 @@ The BOOM profile has configuration and unit tests only.
 | VexRiscv machine | 107 | 52 | 42 |
 | VexiiRiscv machine | 107 | 107 | 42 |
 | VexiiRiscv supervisor | 319 | 49 | 34 |
+| VexiiRiscv supervisor with generated random/PMP suites | 717 | 447 | 24 |
 
 These are `rvw cov functional` merges. Each includes 49 riscv-tests traces.
+The 717-trace merge also includes four freshly run random privilege
+programs and 394 PMP programs. All 398 have complete strict matches.
+Per-extension and operand holes are in the linked coverage review.
+Other generated IRQ/MMU corpora remain outside this merge.
 The qualified stream requires C1 pass and a complete strict Spike match.
 The observed stream retains failed prefixes. Coverage includes boot and
 signature checks. It does not isolate ACT4 bodies or qualify the blocked

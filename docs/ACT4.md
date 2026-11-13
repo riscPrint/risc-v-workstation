@@ -25,6 +25,14 @@ set `all_applicable: true` to let pinned ACT4 metadata select all applicable
 groups, including privileged directories by default. Do not set both.
 State absent devices and model-only devices in `limits`.
 
+An optional `csr_model` binds a project `rvw.csr-selection/1` file to the
+profile. The model must have the same XLEN. Its `binding.platform` must
+equal the profile platform path. The plan uses the shared CSR catalog to
+report explicit absences under simple extension requirements. It leaves
+omitted CSRs and complex predicates unknown. `missing-required` is a
+compatibility finding. It does not remove bootstrap accesses or skip tests.
+The build manifest hashes the CSR model.
+
 ## Build, select, run and compare
 
 Install the pinned ACT4 prerequisites, RISC-V GCC and Sail. The measured
@@ -83,28 +91,45 @@ These are native RTL simulations. Core sources were not changed.
 | VexRiscv RV32IM instruction profile | 58 | 58 | 52 | 6 | 52 | 6 |
 | VexiiRiscv RV32IM instruction profile | 58 | 58 | 58 | 0 | 58 | 0 |
 | VexiiRiscv RV32IMA M/S/U, standard boot | 270 | 270 | 0 | 270 | 0 | 270 |
+| NaxRiscv RV32IMA instruction profile | 69 | 69 | 69 | 0 | 69 | 0 |
+| PicoRV32 RV32IM mapped Verilog profile | 51 | 51 | 50 | 1 | 50 | 1 |
 | Bundled BOOM profile | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN |
 
-The instruction profiles use a reduced CSR boot. They retain every selected
-test body and signature check. They do not establish standard Sm
-compatibility. Each profile has I: 39, M: 8, Zmmul: 4, Zicsr: 6 and
-Zifencei: 1. Only VexRiscv's six Zicsr cases fail. They retain MEPC alignment
+The two Vex instruction profiles use a reduced CSR boot. They retain every
+selected test body and signature check. They do not establish standard Sm
+compatibility. Each has I: 39, M: 8, Zmmul: 4, Zicsr: 6 and Zifencei: 1.
+Only VexRiscv's six Zicsr cases fail in these two profiles. They retain MEPC alignment
 bits. Writes of 1, 2 and 3 reproduce the finding. The same controls pass
-on VexiiRiscv. The original standard bootstrap failed all 58 cases on both
-cores. Those failures remain in each profile's observation file.
+on VexiiRiscv. [The six MEPC decisions](../examples/vexriscv/rvw/act4/MEPC_DECISIONS.md)
+retain them as core readback differences. The independent MPP and interrupt
+mtval findings do not permit these MEPC values. The original standard
+bootstrap failed all 58 cases on both cores. Those failures remain in each profile's observation file.
 
 The supervisor profile keeps the standard boot. It builds 201 tests from
 privileged directories and 69 instruction tests. All 270 first traps occur
 on the mhpmevent3 write before the test body. None reaches
 `rvtest_code_begin` or retires an instruction in its symbol-delimited body.
-One strict Spike comparison per group, 37 comparisons, confirms that first
-difference. These comparisons do not qualify the complete traces.
+The fresh stable-checkout rerun has 270 C1 failures and 270 strict Spike
+first differences at that instruction. No complete match is earned. The
+earlier 37 representative comparisons remain historical evidence.
 
-The bootstrap gap is a core compatibility finding under the selected
-scaffold. The exact core and firmware CSR contract remains open. It is not
-a proved hardware defect. No failure is waived. The supervisor profile has
-no program-controlled IRQ devices. Model-only Sail devices do not establish
+The shared catalog defines mhpmevent3 under Sm. The selected profile omits
+the upstream counter plugin that supplies zero-valued event selectors.
+The project-bound CSR model records this explicit absence. This is one
+declared-profile CSR compatibility finding affecting 270 cases. It is not
+270 independent core defects. No bootstrap access or failure is waived.
+The supervisor profile has no program-controlled IRQ devices. Model-only Sail devices do not establish
 DUT interrupt-device support.
+
+NaxRiscv uses a machine-mode signature profile on the unchanged MSU RTL
+target. Its 69 tests include nine Zaamo and two Zalrsc cases. All 69 pass
+and have complete strict Spike matches. Standard Sm and supervisor ACT4
+on NaxRiscv remain NOT RUN. PicoRV32 uses a CSR-free bootstrap on the
+`rvw init --hdl sv` mapped adapter. Of 51 tests, 50 pass and match strictly.
+`I-fence-00` remains failed: FENCE with rd=x1 changes destination state.
+The shared PicoRV32 cosim platform declares its raw `full_word` load view.
+This is checked transport normalization, with zero output masks and zero
+synchronization. No core source was changed.
 
 The same supervisor profile passes all 49 riscv-tests with complete strict
 Spike matches. VexiiRiscv's machine profile also has 49 strict riscv-tests
@@ -118,6 +143,8 @@ first differences, build inputs and minimal reproductions:
 - [VexRiscv instruction profile](../examples/vexriscv/rvw/act4/README.md).
 - [VexiiRiscv instruction profile](../examples/vexiiriscv/rvw/act4/README.md).
 - [VexiiRiscv supervisor profile](../examples/vexiiriscv/rvw/act4-supervisor/README.md).
+- [NaxRiscv instruction profile](../examples/naxriscv/rvw/act4/README.md).
+- [PicoRV32 mapped Verilog profile](../examples/picorv32/rvw/act4/README.md).
 - [BOOM configuration only](../rvw/configs/act4/boom/README.md).
 
 ## Functional coverage and holes
@@ -132,6 +159,15 @@ strict Spike match. Different ISA contexts remain separate.
 | VexRiscv machine | 107 | 52 | 42 |
 | VexiiRiscv machine | 107 | 107 | 42 |
 | VexiiRiscv supervisor | 319 | 49 | 34 |
+| VexiiRiscv supervisor, with generated random/PMP suites | 717 | 447 | 24 |
+
+The final supervisor merge adds four generated random privilege programs
+and 394 generated PMP programs. All 398 were rerun and have C1 passes
+and complete strict Spike matches. The new [coverage review](../examples/vexiiriscv/rvw/act4-functional/review/README.md)
+uses pinned opcode bins. Qualified instruction holes remain in A and
+Zicsr. ECALL/EBREAK holes in the nontrapping instruction domain must be
+read with the trap groups. Other generated IRQ/MMU corpora are not merged.
+The older 319/49 row remains historical.
 
 Coverage includes boot and signature checks. It does not isolate ACT4 test
 bodies. The failed supervisor prefixes do not qualify privileged behavior.
