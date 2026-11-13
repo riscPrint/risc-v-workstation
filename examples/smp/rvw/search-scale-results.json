@@ -3,7 +3,7 @@
   "results": [
     {
       "seed": 1,
-      "seconds": 0.0029997919918969274,
+      "seconds": 0.030835082987323403,
       "schema": "rvw.axiomatic/1",
       "status": "allowed",
       "model": "rvwmo",
@@ -15,18 +15,19 @@
     },
     {
       "seed": 7,
-      "seconds": 0.0019725830061361194,
+      "seconds": 0.006722499965690076,
       "schema": "rvw.axiomatic/1",
       "status": "allowed",
       "model": "rvwmo",
       "candidates": 1,
-      "branches": 22,
+      "branches": 0,
       "exhaustive_proof": false,
-      "scope": "scalar execution under declared complete dependencies"
+      "scope": "scalar execution under declared complete dependencies",
+      "engine": "sc-witness"
     },
     {
       "seed": 17,
-      "seconds": 0.002607916947454214,
+      "seconds": 0.011375292087905109,
       "schema": "rvw.axiomatic/1",
       "status": "allowed",
       "model": "rvwmo",
@@ -38,7 +39,7 @@
     },
     {
       "seed": 23,
-      "seconds": 0.0013077909825369716,
+      "seconds": 0.005016584065742791,
       "schema": "rvw.axiomatic/1",
       "status": "allowed",
       "model": "rvwmo",
@@ -52,10 +53,10 @@
   "synthetic": {
     "events": 8000,
     "harts": 4,
-    "seconds": 0.018229792010970414,
+    "seconds": 0.10502820799592882,
     "status": "allowed",
     "engine": "sc-witness",
     "scope": "private locations; sufficient SC witness"
   },
-  "validation": "38 targeted tests; six pinned litmus outcome sets in each model"
+  "validation": "39 targeted tests; six pinned litmus outcome sets in each model"
 }

@@ -239,7 +239,7 @@ single-beat cases remain regression checks. This is scripted channel evidence.
 It does not establish refinement of a real cache/home implementation.
 
 
-## Production multicore RTL evidence
+## Multicore RTL evidence
 
 The [SMP example](../../../../examples/smp/README.md#measured-results) now declares
 two to eight cacheless VexiiRiscv RTL harts. Each hart has a C2/2 stream and
@@ -253,12 +253,28 @@ with native herd7 7.58 outcomes. Cross-hart FENCE.I passed at 191/62 cycles/
 retirements; IPI at 247/74; HSM at 1431/530. Spike matched all 38 instructions
 in a shared-RAM two-hart capture with zero masks and zero synchronizations.
 
-Generated seeds 7, 17 and 23 are allowed by the independent RVWMO checker after
-project dependency binding. Seed 1 now has a sparse SC witness.
-The original captures retain unavailable dependency status. The binding writes
-a separate trace and records its input/source hashes. These are finite results.
-They do not qualify a coherent cache, complete RVWMO implementation or all SBI
-behavior. See the example's full counts, reproduction commands and JSON evidence.
+All four original generated captures now have allowed witnesses. The later
+16-seed default and stress budgets produced 32 allowed captures. Twelve litmus
+observations across the two timing modes are consistent with native herd7.
+The original traces retain unavailable dependency status. The binding writes
+a separate trace and records its input/source hashes.
+
+Full-program serialized Spike replay matched 2622 and 2613 retirements at
+seeds 17 and 23. Both harts used zero masks and zero synchronizations.
+Separate injected result faults were rejected on each hart.
+
+The separate cached native path passed a data handoff in both directions
+in 686 cycles with 99 retirements. It binds permission observers to real LSU TileLink-C
+messages. Independent byte checks cover one selected line. The generated
+monitor passed on 688 recorded clock/reset events and rejected a corrupted
+GrantData beat. In-simulation SV bind execution is NOT RUN.
+
+Cacheless N=2..8 smoke and PLIC races passed all 14 cases. The PLIC is a
+simulation model. Each race has eight claim/complete pairs. Another 28 timing
+runs passed, with four C2 captures of identical bytes at each N. The host was
+shared. These finite results do not qualify a complete RVWMO implementation,
+all coherence states, PLIC RTL, or physical hardware.
+See the SMP example for commands, limits and measured JSON records.
 
 ### Search scale
 

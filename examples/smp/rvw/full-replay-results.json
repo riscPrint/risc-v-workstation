@@ -5,6 +5,28 @@
     {
       "seed": 17,
       "trace_sha256": "d722f4bfa9fcc0ef3fb7d93747adf6fc6302b35c75e6cf17decc9e52029f2876",
+      "rtl": {
+        "run": "run-17-gate",
+        "status": "pass",
+        "c1_inconclusive": null,
+        "seed": 17,
+        "cycles": 5631,
+        "instret": 2622,
+        "core_rev": "9f70315deb3390b283995c5b8f1bd38215ecf52b",
+        "tools_rev": "f23e0622a095b1d11f1fa5833d79dc2058b4b177",
+        "tools_dirty": true,
+        "rtl_sha256": "4f2be8aa7efc5ed2cd146aa3d099f190df9f54c4343c976c374e5d0b0ddb14c6",
+        "ordering": "not_checked",
+        "per_hart_retirements": {
+          "0": 1317,
+          "1": 1305
+        },
+        "hart_status": {
+          "0": "pass",
+          "1": "pass"
+        },
+        "trace_sha256": "d722f4bfa9fcc0ef3fb7d93747adf6fc6302b35c75e6cf17decc9e52029f2876"
+      },
       "result": {
         "schema": "rvw.cosim/1",
         "status": "match",
@@ -135,6 +157,28 @@
     {
       "seed": 23,
       "trace_sha256": "8322c5e40086845a585d685881567b39a77828fece8b814824711d4c0a08add7",
+      "rtl": {
+        "run": "run-23-gate",
+        "status": "pass",
+        "c1_inconclusive": null,
+        "seed": 23,
+        "cycles": 5606,
+        "instret": 2613,
+        "core_rev": "9f70315deb3390b283995c5b8f1bd38215ecf52b",
+        "tools_rev": "f23e0622a095b1d11f1fa5833d79dc2058b4b177",
+        "tools_dirty": true,
+        "rtl_sha256": "4f2be8aa7efc5ed2cd146aa3d099f190df9f54c4343c976c374e5d0b0ddb14c6",
+        "ordering": "not_checked",
+        "per_hart_retirements": {
+          "0": 1308,
+          "1": 1305
+        },
+        "hart_status": {
+          "0": "pass",
+          "1": "pass"
+        },
+        "trace_sha256": "8322c5e40086845a585d685881567b39a77828fece8b814824711d4c0a08add7"
+      },
       "result": {
         "schema": "rvw.cosim/1",
         "status": "match",
