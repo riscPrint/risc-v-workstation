@@ -89,6 +89,19 @@ class ProbeTapPlugin extends Plugin {
       Probe.counter("iq_push_blocked", getService[DispatchPlugin].logic.get.push.stage.isValid && !iq.push.ready)
 
       val lsu = getService[Lsu2Plugin]
+      // Read the explicit LSU control result, not cache latency or aggregate reschedules.
+      val control = lsu.logic.get.sharedPip.ctrl.stage
+      val retry = control.isFireing
+      val status = control(lsu.keys.CTRL)
+      Probe.lsuRetry("translation", retry && status === Lsu2Plugin.CTRL_ENUM.MMU_REDO,
+        control(ROB.ID), "tlb_miss")
+      Probe.lsuRetry("forward", retry && status === Lsu2Plugin.CTRL_ENUM.LOAD_HAZARD,
+        control(ROB.ID), "store_forward_miss")
+      Probe.lsuRetry("cache", retry && status === Lsu2Plugin.CTRL_ENUM.LOAD_MISS,
+        control(ROB.ID), "cache_miss_retry")
+      Probe.lsuRetry("order", retry && !control(lsu.keys.TRAP_SPECULATION) && status === Lsu2Plugin.CTRL_ENUM.SUCCESS &&
+        !control(lsu.keys.IS_LOAD) && control(lsu.keys.YOUNGER_LOAD_RESCHEDULE),
+        control(lsu.keys.YOUNGER_LOAD_ROB), "memory_order_violation")
       val lq = lsu.logic.get.lq.tracker
       val sq = lsu.logic.get.sq.tracker
       Probe.counter("lq_occupancy", U(lsu.lqSize, 8 bits) - lq.free.resize(8 bits))

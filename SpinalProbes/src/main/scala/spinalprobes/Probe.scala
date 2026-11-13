@@ -153,6 +153,14 @@ object Probe {
       lane: String = "0", first: Boolean = false): Unit =
     site("stage", name, valid, Seq("id" -> id) ++ opt("pc", pc),
       Map("stage" -> stage, "lane" -> lane) ++ (if (first) Map("first" -> "true") else Map.empty))
+  /** An LSU attempt rejected by an explicit control predicate. The collector supplies the cycle.
+    * IDs use the stage/retire namespace. Squashed attempts need not retire. */
+  def lsuRetry(name: String, valid: Bool, id: Data, cause: String): Unit = {
+    require(Set("memory_order_violation", "store_forward_miss", "cache_miss_retry", "tlb_miss")(cause),
+      "unknown LSU retry cause")
+    site("lsuretry", name, valid, Seq("id" -> id), Map("cause" -> cause))
+  }
+
   /** The instruction `id` commits this cycle. */
   def retire(name: String, valid: Bool, id: Data): Unit = site("retire", name, valid, Seq("id" -> id))
   /** The instruction `id` is squashed this cycle. */

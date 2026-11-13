@@ -843,3 +843,14 @@ Run `resource-study.py CALIBRATION_PLAN DELTA_PLAN CONFIG NEW_OUTPUT` with the
 workstation Python to repeat a stage from saved captures. The script runs the
 existing calibration and delta commands. It performs no fit and starts no RTL
 or Spike process. Retain `summary.json`; keep raw captures outside Git.
+
+## Typed LSU retry smoke
+
+[The retry receipt](retry-results.json) retains capture hashes, live-ID checks,
+retry-to-completion histograms and a complete Spike match. The retire probe
+count equals C1 `instret`. Cache retry uses the explicit LSU response.
+The mini core declares four zero-valid retry probes because it has no
+rejected LSU attempts. Zero activation is not exercised retry behavior.
+Only the NaxRiscv cache cause activates in these two short runs. Other
+causes still need directed captures. Completion spans include queue and
+service time. They are not isolated replay penalties.

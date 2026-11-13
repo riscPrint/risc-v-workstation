@@ -1,0 +1,46 @@
+{
+  "schema": "rvw.lsu-retry-statistics/1",
+  "status": "observed",
+  "causes": {
+    "cache_miss_retry": {
+      "counts": {},
+      "retry_to_completion_histogram": {}
+    },
+    "memory_order_violation": {
+      "counts": {},
+      "retry_to_completion_histogram": {}
+    },
+    "store_forward_miss": {
+      "counts": {},
+      "retry_to_completion_histogram": {}
+    },
+    "tlb_miss": {
+      "counts": {},
+      "retry_to_completion_histogram": {}
+    }
+  },
+  "findings": [],
+  "limits": [
+    "completion spans include service and queue waits; they are not isolated recovery costs",
+    "flushed, repeated and incomplete attempts do not supply a completion span"
+  ],
+  "core": "ooo-mini",
+  "rtl": {
+    "status": "pass",
+    "cycles": 54,
+    "instret": 17
+  },
+  "retire_probe_count": 17,
+  "captures": {
+    "probe-events.jsonl": "80178d73b7ece06d2451269e76cc5e2ca32e59ab920433d03c40a561679d4ef3",
+    "rvfi.jsonl": "24990af19c5b8eb9712584b83bd0324c4b81d0072d43262f32f650160ca7ec0b",
+    "result.json": "49248aa3a73ebbc99d3e6e4ae2abf6593d650a4a94e447d9d53d5c2ccce69c15"
+  },
+  "spike": {
+    "status": "match",
+    "instructions": 17,
+    "trace_complete": true,
+    "synchronized": 0
+  },
+  "seed": 1219251179
+}

@@ -116,3 +116,22 @@ Cache comparison `rtl_events` counts each observed event kind. When a
 writeback probe is present, `writeback_count_error` is model writebacks
 minus observed writebacks. Otherwise it is null. This is an aggregate
 model gap. Access alignment and hit/miss comparison remain per access.
+
+## Typed LSU retry events
+
+`Probe.lsuRetry(name, valid, id, cause)` declares kind `lsuretry`.
+Its only value field is `id`, in the stage/retire instruction namespace.
+The event row supplies the cycle. Metadata `cause` is one of
+`memory_order_violation`, `store_forward_miss`, `cache_miss_retry`, `tlb_miss`.
+Emit a row for each rejected attempt, not every cycle of a wait.
+A retry is speculative. It can precede retirement or a flush. It is not
+an architectural event and must not be counted as a C2 instruction.
+
+Use first-stage events to distinguish reused ROB IDs. A memory-order event
+names the violating load, not the store that detects it. A forwarding miss
+includes a predicted store dependence that makes the LSU reject the attempt.
+Cache retry means an explicit cache retry response, not an inferred long
+latency. TLB miss means an explicit translation redo, not a page fault.
+Register-port conflicts and branch redirects are outside these four causes.
+A core with none of these mechanisms can declare probes with false valid.
+Zero activation does not establish exercised retry behavior.

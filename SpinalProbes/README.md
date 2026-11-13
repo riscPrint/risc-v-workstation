@@ -204,3 +204,11 @@ See the [VexRiscv results](../examples/vexriscv/rvw/csim/README.md),
 The [native negative test](../examples/vexriscv/rvw/tests/test_probe_misplaced.py)
 moves a branch probe to decode in a temporary adapter. Validation returns
 1 and names `branch/misplaced_decode_branch`.
+
+## Typed LSU retries
+
+`Probe.lsuRetry(name, valid, id, cause)` samples an explicitly rejected LSU
+attempt. The cause is `memory_order_violation`, `store_forward_miss`,
+`cache_miss_retry` or `tlb_miss`. The collector supplies the cycle.
+IDs use the stage/retire namespace. Retries can be flushed and need not retire.
+See [the contract](../docs/contracts/probes.md#typed-lsu-retry-events).
