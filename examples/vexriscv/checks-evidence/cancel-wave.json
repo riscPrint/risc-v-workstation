@@ -1,0 +1,495 @@
+{
+  "schema": "rvw.check-wave-triage/1",
+  "wave_sha256": "2bb46a33ea1bcbfc0e3bdff26dc9d5a9f5fa14186d6cb3dadfd4466507b6ad01",
+  "checks": [
+    {
+      "id": "stream.valid_hold:IBusSimplePlugin_iBusRsp_stages_1_input",
+      "count": 69,
+      "source": {
+        "file": "Fetcher.scala",
+        "line": 211,
+        "class": "vexriscv.plugin.IBusFetcherImpl$FetchArea$$anon$4$$anon$5"
+      },
+      "detail": "strict: cancellation not classified; inspect valid drivers and flush/halt semantics",
+      "samples": [
+        {
+          "time_ps": 270,
+          "signals": {
+            "IBusSimplePlugin_iBusRsp_stages_1_input_valid": "1",
+            "IBusSimplePlugin_iBusRsp_stages_1_input_ready": "0",
+            "chk_IBusSimplePlugin_iBusRsp_stages_1_input_cancel": "0",
+            "IBusSimplePlugin_iBusRsp_flush": "1",
+            "IBusSimplePlugin_fetcherHalt": "0",
+            "IBusSimplePlugin_rspJoin_rspBuffer_discardCounter": "000",
+            "IBusSimplePlugin_rspJoin_rspBuffer_c_io_pop_valid": "0",
+            "IBusSimplePlugin_rspJoin_rspBuffer_c_io_pop_ready": "1",
+            "decode_arbitration_flushNext": "1",
+            "decode_arbitration_removeIt": "0",
+            "IBusSimplePlugin_externalFlush": "1"
+          }
+        },
+        {
+          "time_ps": 280,
+          "signals": {
+            "IBusSimplePlugin_iBusRsp_stages_1_input_valid": "0",
+            "IBusSimplePlugin_iBusRsp_stages_1_input_ready": "1",
+            "chk_IBusSimplePlugin_iBusRsp_stages_1_input_cancel": "0",
+            "IBusSimplePlugin_iBusRsp_flush": "0",
+            "IBusSimplePlugin_fetcherHalt": "0",
+            "IBusSimplePlugin_rspJoin_rspBuffer_discardCounter": "001",
+            "IBusSimplePlugin_rspJoin_rspBuffer_c_io_pop_valid": "1",
+            "IBusSimplePlugin_rspJoin_rspBuffer_c_io_pop_ready": "1",
+            "decode_arbitration_flushNext": "0",
+            "decode_arbitration_removeIt": "0",
+            "IBusSimplePlugin_externalFlush": "0"
+          }
+        }
+      ]
+    },
+    {
+      "id": "stream.valid_hold:IBusSimplePlugin_iBusRsp_stages_1_output",
+      "count": 69,
+      "source": {
+        "file": "Fetcher.scala",
+        "line": 212,
+        "class": "vexriscv.plugin.IBusFetcherImpl$FetchArea$$anon$4$$anon$5"
+      },
+      "detail": "cancellation-aware: Stream.continueWhen/clearValidWhen (current sample)",
+      "samples": [
+        {
+          "time_ps": 270,
+          "signals": {
+            "IBusSimplePlugin_iBusRsp_stages_1_output_valid": "1",
+            "IBusSimplePlugin_iBusRsp_stages_1_output_ready": "0",
+            "chk_IBusSimplePlugin_iBusRsp_stages_1_output_cancel": "0",
+            "IBusSimplePlugin_iBusRsp_flush": "1",
+            "IBusSimplePlugin_fetcherHalt": "0",
+            "IBusSimplePlugin_rspJoin_rspBuffer_discardCounter": "000",
+            "IBusSimplePlugin_rspJoin_rspBuffer_c_io_pop_valid": "0",
+            "IBusSimplePlugin_rspJoin_rspBuffer_c_io_pop_ready": "1",
+            "decode_arbitration_flushNext": "1",
+            "decode_arbitration_removeIt": "0",
+            "IBusSimplePlugin_externalFlush": "1"
+          }
+        },
+        {
+          "time_ps": 280,
+          "signals": {
+            "IBusSimplePlugin_iBusRsp_stages_1_output_valid": "0",
+            "IBusSimplePlugin_iBusRsp_stages_1_output_ready": "1",
+            "chk_IBusSimplePlugin_iBusRsp_stages_1_output_cancel": "0",
+            "IBusSimplePlugin_iBusRsp_flush": "0",
+            "IBusSimplePlugin_fetcherHalt": "0",
+            "IBusSimplePlugin_rspJoin_rspBuffer_discardCounter": "001",
+            "IBusSimplePlugin_rspJoin_rspBuffer_c_io_pop_valid": "1",
+            "IBusSimplePlugin_rspJoin_rspBuffer_c_io_pop_ready": "1",
+            "decode_arbitration_flushNext": "0",
+            "decode_arbitration_removeIt": "0",
+            "IBusSimplePlugin_externalFlush": "0"
+          }
+        }
+      ]
+    },
+    {
+      "id": "stream.valid_hold:IBusSimplePlugin_iBusRsp_stages_1_input_haltWhen",
+      "count": 69,
+      "source": {
+        "file": "Fetcher.scala",
+        "line": 219,
+        "class": "vexriscv.plugin.IBusFetcherImpl$FetchArea$$anon$4"
+      },
+      "detail": "cancellation-aware: Stream.continueWhen/clearValidWhen (current sample)",
+      "samples": [
+        {
+          "time_ps": 270,
+          "signals": {
+            "IBusSimplePlugin_iBusRsp_stages_1_input_haltWhen_valid": "1",
+            "IBusSimplePlugin_iBusRsp_stages_1_input_haltWhen_ready": "0",
+            "chk_IBusSimplePlugin_iBusRsp_stages_1_input_haltWhen_cancel": "0",
+            "IBusSimplePlugin_iBusRsp_flush": "1",
+            "IBusSimplePlugin_fetcherHalt": "0",
+            "IBusSimplePlugin_rspJoin_rspBuffer_discardCounter": "000",
+            "IBusSimplePlugin_rspJoin_rspBuffer_c_io_pop_valid": "0",
+            "IBusSimplePlugin_rspJoin_rspBuffer_c_io_pop_ready": "1",
+            "decode_arbitration_flushNext": "1",
+            "decode_arbitration_removeIt": "0",
+            "IBusSimplePlugin_externalFlush": "1"
+          }
+        },
+        {
+          "time_ps": 280,
+          "signals": {
+            "IBusSimplePlugin_iBusRsp_stages_1_input_haltWhen_valid": "0",
+            "IBusSimplePlugin_iBusRsp_stages_1_input_haltWhen_ready": "1",
+            "chk_IBusSimplePlugin_iBusRsp_stages_1_input_haltWhen_cancel": "0",
+            "IBusSimplePlugin_iBusRsp_flush": "0",
+            "IBusSimplePlugin_fetcherHalt": "0",
+            "IBusSimplePlugin_rspJoin_rspBuffer_discardCounter": "001",
+            "IBusSimplePlugin_rspJoin_rspBuffer_c_io_pop_valid": "1",
+            "IBusSimplePlugin_rspJoin_rspBuffer_c_io_pop_ready": "1",
+            "decode_arbitration_flushNext": "0",
+            "decode_arbitration_removeIt": "0",
+            "IBusSimplePlugin_externalFlush": "0"
+          }
+        }
+      ]
+    },
+    {
+      "id": "stream.valid_hold:IBusSimplePlugin_iBusRsp_stages_0_output_toEvent_m2sPipe",
+      "count": 69,
+      "source": {
+        "file": "Misc.scala",
+        "line": 142,
+        "class": "vexriscv.plugin.StreamVexPimper$StreamFlushPimper"
+      },
+      "detail": "strict: cancellation not classified; inspect valid drivers and flush/halt semantics",
+      "samples": [
+        {
+          "time_ps": 270,
+          "signals": {
+            "IBusSimplePlugin_iBusRsp_stages_0_output_toEvent_m2sPipe_valid": "1",
+            "IBusSimplePlugin_iBusRsp_stages_0_output_toEvent_m2sPipe_ready": "0",
+            "chk_IBusSimplePlugin_iBusRsp_stages_0_output_toEvent_m2sPipe_cancel": "0",
+            "IBusSimplePlugin_iBusRsp_flush": "1",
+            "IBusSimplePlugin_fetcherHalt": "0",
+            "IBusSimplePlugin_rspJoin_rspBuffer_discardCounter": "000",
+            "IBusSimplePlugin_rspJoin_rspBuffer_c_io_pop_valid": "0",
+            "IBusSimplePlugin_rspJoin_rspBuffer_c_io_pop_ready": "1",
+            "decode_arbitration_flushNext": "1",
+            "decode_arbitration_removeIt": "0",
+            "IBusSimplePlugin_externalFlush": "1"
+          }
+        },
+        {
+          "time_ps": 280,
+          "signals": {
+            "IBusSimplePlugin_iBusRsp_stages_0_output_toEvent_m2sPipe_valid": "0",
+            "IBusSimplePlugin_iBusRsp_stages_0_output_toEvent_m2sPipe_ready": "1",
+            "chk_IBusSimplePlugin_iBusRsp_stages_0_output_toEvent_m2sPipe_cancel": "0",
+            "IBusSimplePlugin_iBusRsp_flush": "0",
+            "IBusSimplePlugin_fetcherHalt": "0",
+            "IBusSimplePlugin_rspJoin_rspBuffer_discardCounter": "001",
+            "IBusSimplePlugin_rspJoin_rspBuffer_c_io_pop_valid": "1",
+            "IBusSimplePlugin_rspJoin_rspBuffer_c_io_pop_ready": "1",
+            "decode_arbitration_flushNext": "0",
+            "decode_arbitration_removeIt": "0",
+            "IBusSimplePlugin_externalFlush": "0"
+          }
+        }
+      ]
+    },
+    {
+      "id": "stream.valid_hold:IBusSimplePlugin_injector_decodeInput",
+      "count": 4,
+      "source": {
+        "file": "Misc.scala",
+        "line": 142,
+        "class": "vexriscv.plugin.StreamVexPimper$StreamFlushPimper"
+      },
+      "detail": "strict: cancellation not classified; inspect valid drivers and flush/halt semantics",
+      "samples": [
+        {
+          "time_ps": 1050,
+          "signals": {
+            "IBusSimplePlugin_injector_decodeInput_valid": "1",
+            "IBusSimplePlugin_injector_decodeInput_ready": "0",
+            "chk_IBusSimplePlugin_injector_decodeInput_cancel": "0",
+            "IBusSimplePlugin_iBusRsp_flush": "1",
+            "IBusSimplePlugin_fetcherHalt": "1",
+            "IBusSimplePlugin_rspJoin_rspBuffer_discardCounter": "000",
+            "IBusSimplePlugin_rspJoin_rspBuffer_c_io_pop_valid": "0",
+            "IBusSimplePlugin_rspJoin_rspBuffer_c_io_pop_ready": "1",
+            "decode_arbitration_flushNext": "0",
+            "decode_arbitration_removeIt": "1",
+            "IBusSimplePlugin_externalFlush": "1"
+          }
+        },
+        {
+          "time_ps": 1060,
+          "signals": {
+            "IBusSimplePlugin_injector_decodeInput_valid": "0",
+            "IBusSimplePlugin_injector_decodeInput_ready": "1",
+            "chk_IBusSimplePlugin_injector_decodeInput_cancel": "0",
+            "IBusSimplePlugin_iBusRsp_flush": "0",
+            "IBusSimplePlugin_fetcherHalt": "1",
+            "IBusSimplePlugin_rspJoin_rspBuffer_discardCounter": "001",
+            "IBusSimplePlugin_rspJoin_rspBuffer_c_io_pop_valid": "1",
+            "IBusSimplePlugin_rspJoin_rspBuffer_c_io_pop_ready": "1",
+            "decode_arbitration_flushNext": "0",
+            "decode_arbitration_removeIt": "0",
+            "IBusSimplePlugin_externalFlush": "0"
+          }
+        }
+      ]
+    },
+    {
+      "id": "stream.valid_hold:IBusSimplePlugin_fetchPc_output",
+      "count": 2,
+      "source": {
+        "file": "Fetcher.scala",
+        "line": 126,
+        "class": "vexriscv.plugin.IBusFetcherImpl$FetchArea$$anon$2"
+      },
+      "detail": "strict: cancellation not classified; inspect valid drivers and flush/halt semantics",
+      "samples": [
+        {
+          "time_ps": 2000,
+          "signals": {
+            "IBusSimplePlugin_fetchPc_output_valid": "1",
+            "IBusSimplePlugin_fetchPc_output_ready": "0",
+            "chk_IBusSimplePlugin_fetchPc_output_cancel": "0",
+            "IBusSimplePlugin_iBusRsp_flush": "0",
+            "IBusSimplePlugin_fetcherHalt": "0",
+            "IBusSimplePlugin_rspJoin_rspBuffer_discardCounter": "000",
+            "IBusSimplePlugin_rspJoin_rspBuffer_c_io_pop_valid": "1",
+            "IBusSimplePlugin_rspJoin_rspBuffer_c_io_pop_ready": "0",
+            "decode_arbitration_flushNext": "0",
+            "decode_arbitration_removeIt": "0",
+            "IBusSimplePlugin_externalFlush": "0"
+          }
+        },
+        {
+          "time_ps": 2010,
+          "signals": {
+            "IBusSimplePlugin_fetchPc_output_valid": "0",
+            "IBusSimplePlugin_fetchPc_output_ready": "0",
+            "chk_IBusSimplePlugin_fetchPc_output_cancel": "0",
+            "IBusSimplePlugin_iBusRsp_flush": "1",
+            "IBusSimplePlugin_fetcherHalt": "1",
+            "IBusSimplePlugin_rspJoin_rspBuffer_discardCounter": "000",
+            "IBusSimplePlugin_rspJoin_rspBuffer_c_io_pop_valid": "1",
+            "IBusSimplePlugin_rspJoin_rspBuffer_c_io_pop_ready": "1",
+            "decode_arbitration_flushNext": "0",
+            "decode_arbitration_removeIt": "1",
+            "IBusSimplePlugin_externalFlush": "1"
+          }
+        }
+      ]
+    },
+    {
+      "id": "stream.valid_hold:IBusSimplePlugin_iBusRsp_stages_0_input",
+      "count": 2,
+      "source": {
+        "file": "Fetcher.scala",
+        "line": 211,
+        "class": "vexriscv.plugin.IBusFetcherImpl$FetchArea$$anon$4$$anon$5"
+      },
+      "detail": "strict: cancellation not classified; inspect valid drivers and flush/halt semantics",
+      "samples": [
+        {
+          "time_ps": 2000,
+          "signals": {
+            "IBusSimplePlugin_iBusRsp_stages_0_input_valid": "1",
+            "IBusSimplePlugin_iBusRsp_stages_0_input_ready": "0",
+            "chk_IBusSimplePlugin_iBusRsp_stages_0_input_cancel": "0",
+            "IBusSimplePlugin_iBusRsp_flush": "0",
+            "IBusSimplePlugin_fetcherHalt": "0",
+            "IBusSimplePlugin_rspJoin_rspBuffer_discardCounter": "000",
+            "IBusSimplePlugin_rspJoin_rspBuffer_c_io_pop_valid": "1",
+            "IBusSimplePlugin_rspJoin_rspBuffer_c_io_pop_ready": "0",
+            "decode_arbitration_flushNext": "0",
+            "decode_arbitration_removeIt": "0",
+            "IBusSimplePlugin_externalFlush": "0"
+          }
+        },
+        {
+          "time_ps": 2010,
+          "signals": {
+            "IBusSimplePlugin_iBusRsp_stages_0_input_valid": "0",
+            "IBusSimplePlugin_iBusRsp_stages_0_input_ready": "0",
+            "chk_IBusSimplePlugin_iBusRsp_stages_0_input_cancel": "0",
+            "IBusSimplePlugin_iBusRsp_flush": "1",
+            "IBusSimplePlugin_fetcherHalt": "1",
+            "IBusSimplePlugin_rspJoin_rspBuffer_discardCounter": "000",
+            "IBusSimplePlugin_rspJoin_rspBuffer_c_io_pop_valid": "1",
+            "IBusSimplePlugin_rspJoin_rspBuffer_c_io_pop_ready": "1",
+            "decode_arbitration_flushNext": "0",
+            "decode_arbitration_removeIt": "1",
+            "IBusSimplePlugin_externalFlush": "1"
+          }
+        }
+      ]
+    },
+    {
+      "id": "stream.valid_hold:IBusSimplePlugin_iBusRsp_output",
+      "count": 1,
+      "source": {
+        "file": "Fetcher.scala",
+        "line": 241,
+        "class": "vexriscv.plugin.IBusFetcherImpl$FetchArea$$anon$4"
+      },
+      "detail": "cancellation-aware: Stream.continueWhen/clearValidWhen (current sample)",
+      "samples": [
+        {
+          "time_ps": 2010,
+          "signals": {
+            "IBusSimplePlugin_iBusRsp_output_valid": "1",
+            "IBusSimplePlugin_iBusRsp_output_ready": "0",
+            "chk_IBusSimplePlugin_iBusRsp_output_cancel": "0",
+            "IBusSimplePlugin_iBusRsp_flush": "1",
+            "IBusSimplePlugin_fetcherHalt": "1",
+            "IBusSimplePlugin_rspJoin_rspBuffer_discardCounter": "000",
+            "IBusSimplePlugin_rspJoin_rspBuffer_c_io_pop_valid": "1",
+            "IBusSimplePlugin_rspJoin_rspBuffer_c_io_pop_ready": "1",
+            "decode_arbitration_flushNext": "0",
+            "decode_arbitration_removeIt": "1",
+            "IBusSimplePlugin_externalFlush": "1"
+          }
+        },
+        {
+          "time_ps": 2020,
+          "signals": {
+            "IBusSimplePlugin_iBusRsp_output_valid": "0",
+            "IBusSimplePlugin_iBusRsp_output_ready": "1",
+            "chk_IBusSimplePlugin_iBusRsp_output_cancel": "0",
+            "IBusSimplePlugin_iBusRsp_flush": "0",
+            "IBusSimplePlugin_fetcherHalt": "0",
+            "IBusSimplePlugin_rspJoin_rspBuffer_discardCounter": "000",
+            "IBusSimplePlugin_rspJoin_rspBuffer_c_io_pop_valid": "0",
+            "IBusSimplePlugin_rspJoin_rspBuffer_c_io_pop_ready": "0",
+            "decode_arbitration_flushNext": "0",
+            "decode_arbitration_removeIt": "0",
+            "IBusSimplePlugin_externalFlush": "0"
+          }
+        }
+      ]
+    },
+    {
+      "id": "stream.valid_hold:IBusSimplePlugin_rspJoin_rspBuffer_output",
+      "count": 1,
+      "source": {
+        "file": "IBusSimplePlugin.scala",
+        "line": 355,
+        "class": "vexriscv.plugin.IBusSimplePlugin$$anon$1$$anon$7$$anon$8"
+      },
+      "detail": "strict: cancellation not classified; inspect valid drivers and flush/halt semantics",
+      "samples": [
+        {
+          "time_ps": 2010,
+          "signals": {
+            "IBusSimplePlugin_rspJoin_rspBuffer_output_valid": "1",
+            "IBusSimplePlugin_rspJoin_rspBuffer_output_ready": "0",
+            "chk_IBusSimplePlugin_rspJoin_rspBuffer_output_cancel": "0",
+            "IBusSimplePlugin_iBusRsp_flush": "1",
+            "IBusSimplePlugin_fetcherHalt": "1",
+            "IBusSimplePlugin_rspJoin_rspBuffer_discardCounter": "000",
+            "IBusSimplePlugin_rspJoin_rspBuffer_c_io_pop_valid": "1",
+            "IBusSimplePlugin_rspJoin_rspBuffer_c_io_pop_ready": "1",
+            "decode_arbitration_flushNext": "0",
+            "decode_arbitration_removeIt": "1",
+            "IBusSimplePlugin_externalFlush": "1"
+          }
+        },
+        {
+          "time_ps": 2020,
+          "signals": {
+            "IBusSimplePlugin_rspJoin_rspBuffer_output_valid": "0",
+            "IBusSimplePlugin_rspJoin_rspBuffer_output_ready": "0",
+            "chk_IBusSimplePlugin_rspJoin_rspBuffer_output_cancel": "0",
+            "IBusSimplePlugin_iBusRsp_flush": "0",
+            "IBusSimplePlugin_fetcherHalt": "0",
+            "IBusSimplePlugin_rspJoin_rspBuffer_discardCounter": "000",
+            "IBusSimplePlugin_rspJoin_rspBuffer_c_io_pop_valid": "0",
+            "IBusSimplePlugin_rspJoin_rspBuffer_c_io_pop_ready": "0",
+            "decode_arbitration_flushNext": "0",
+            "decode_arbitration_removeIt": "0",
+            "IBusSimplePlugin_externalFlush": "0"
+          }
+        }
+      ]
+    },
+    {
+      "id": "stream.valid_hold:IBusSimplePlugin_rspJoin_join",
+      "count": 1,
+      "source": {
+        "file": "IBusSimplePlugin.scala",
+        "line": 385,
+        "class": "vexriscv.plugin.IBusSimplePlugin$$anon$1$$anon$7"
+      },
+      "detail": "strict: cancellation not classified; inspect valid drivers and flush/halt semantics",
+      "samples": [
+        {
+          "time_ps": 2010,
+          "signals": {
+            "IBusSimplePlugin_rspJoin_join_valid": "1",
+            "IBusSimplePlugin_rspJoin_join_ready": "0",
+            "chk_IBusSimplePlugin_rspJoin_join_cancel": "0",
+            "IBusSimplePlugin_iBusRsp_flush": "1",
+            "IBusSimplePlugin_fetcherHalt": "1",
+            "IBusSimplePlugin_rspJoin_rspBuffer_discardCounter": "000",
+            "IBusSimplePlugin_rspJoin_rspBuffer_c_io_pop_valid": "1",
+            "IBusSimplePlugin_rspJoin_rspBuffer_c_io_pop_ready": "1",
+            "decode_arbitration_flushNext": "0",
+            "decode_arbitration_removeIt": "1",
+            "IBusSimplePlugin_externalFlush": "1"
+          }
+        },
+        {
+          "time_ps": 2020,
+          "signals": {
+            "IBusSimplePlugin_rspJoin_join_valid": "0",
+            "IBusSimplePlugin_rspJoin_join_ready": "1",
+            "chk_IBusSimplePlugin_rspJoin_join_cancel": "0",
+            "IBusSimplePlugin_iBusRsp_flush": "0",
+            "IBusSimplePlugin_fetcherHalt": "0",
+            "IBusSimplePlugin_rspJoin_rspBuffer_discardCounter": "000",
+            "IBusSimplePlugin_rspJoin_rspBuffer_c_io_pop_valid": "0",
+            "IBusSimplePlugin_rspJoin_rspBuffer_c_io_pop_ready": "0",
+            "decode_arbitration_flushNext": "0",
+            "decode_arbitration_removeIt": "0",
+            "IBusSimplePlugin_externalFlush": "0"
+          }
+        }
+      ]
+    },
+    {
+      "id": "stream.valid_hold:IBusSimplePlugin_rspJoin_join_haltWhen",
+      "count": 1,
+      "source": {
+        "file": "IBusSimplePlugin.scala",
+        "line": 391,
+        "class": "vexriscv.plugin.IBusSimplePlugin$$anon$1$$anon$7"
+      },
+      "detail": "cancellation-aware: Stream.continueWhen/clearValidWhen (current sample)",
+      "samples": [
+        {
+          "time_ps": 2010,
+          "signals": {
+            "IBusSimplePlugin_rspJoin_join_haltWhen_valid": "1",
+            "IBusSimplePlugin_rspJoin_join_haltWhen_ready": "0",
+            "chk_IBusSimplePlugin_rspJoin_join_haltWhen_cancel": "0",
+            "IBusSimplePlugin_iBusRsp_flush": "1",
+            "IBusSimplePlugin_fetcherHalt": "1",
+            "IBusSimplePlugin_rspJoin_rspBuffer_discardCounter": "000",
+            "IBusSimplePlugin_rspJoin_rspBuffer_c_io_pop_valid": "1",
+            "IBusSimplePlugin_rspJoin_rspBuffer_c_io_pop_ready": "1",
+            "decode_arbitration_flushNext": "0",
+            "decode_arbitration_removeIt": "1",
+            "IBusSimplePlugin_externalFlush": "1"
+          }
+        },
+        {
+          "time_ps": 2020,
+          "signals": {
+            "IBusSimplePlugin_rspJoin_join_haltWhen_valid": "0",
+            "IBusSimplePlugin_rspJoin_join_haltWhen_ready": "1",
+            "chk_IBusSimplePlugin_rspJoin_join_haltWhen_cancel": "0",
+            "IBusSimplePlugin_iBusRsp_flush": "0",
+            "IBusSimplePlugin_fetcherHalt": "0",
+            "IBusSimplePlugin_rspJoin_rspBuffer_discardCounter": "000",
+            "IBusSimplePlugin_rspJoin_rspBuffer_c_io_pop_valid": "0",
+            "IBusSimplePlugin_rspJoin_rspBuffer_c_io_pop_ready": "0",
+            "decode_arbitration_flushNext": "0",
+            "decode_arbitration_removeIt": "0",
+            "IBusSimplePlugin_externalFlush": "0"
+          }
+        }
+      ]
+    }
+  ],
+  "missing": [],
+  "limits": [
+    "Samples show observed conditions, not design intent.",
+    "Binary values; absent means the signal is not present in this wave."
+  ]
+}

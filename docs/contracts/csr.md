@@ -255,3 +255,21 @@ reads against independent last-write tracking. It does not model whole CSR RAM
 state or all instruction decoding. Runtime reports use `rvw.checks-run/1` and
 retain fail status for a seeded read-observation fault. The default adapter
 keeps this instrumentation off.
+
+## Generated stream cancellation metadata
+
+In `rvw.checks/1`, stream check `detail` states whether cancellation was
+recognised from the elaborated library assignments. `signals.cancel` is the
+one-bit effective condition at the check sample. For a registered valid clear,
+this is the previous sample's clear guard. For a combinational gate, this is
+the current sample's gate condition. Unclassified streams retain strict checks
+and a disposition hint. These optional metadata fields do not imply a waiver,
+a successful simulation, or proof. The database port-binding generator still
+requires its own reviewed stable contract.
+
+`ChecksConfig.streamCancellations` supplies reviewed project bindings for custom
+logic. A binding has an exact `path`, a local driven Bool `condition`, a Boolean
+`previous` sample selector and a nonempty `reason`. The report identifies these
+as reviewed bindings, separately from automatic recognition. Missing paths,
+missing conditions and duplicate bindings are elaboration errors. No binding
+removes a check or suppresses a failure when its condition is false.

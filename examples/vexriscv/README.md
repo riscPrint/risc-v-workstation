@@ -768,7 +768,7 @@ This is a real RTOS workload. It does not establish Linux or OpenSBI support.
 Build ISA ELFs with `rvw/build-tests.sh`. Use a private `VEXRISCV` checkout.
 Run `rvw/.venv/bin/python examples/vexriscv/rvw/qualify-checks.py --out NEW_DIR`
 from the workstation root with the native environment active. The runner uses
-locks `vex-csr` and `sbt`, nice priority 10 and a 240-second timeout.
+locks `vex-csr` and `sbt-csr`, nice priority 10 and a 240-second timeout.
 It excludes the misaligned-data test, as the existing aligned ISA suite does.
 
 The optional `RVW_CHECKS_ISA=1` runtime installs all available SpinalChecks
@@ -819,3 +819,10 @@ The native sample reproduced a deliberate tohost failure at cycle 9,023.
 It requested cycles 8,923 through 9,043. The same process and session supplied
 `wave.fst`, and the bundle produced `wave-window.vcd` with no notes. This is a
 fixture, not a newly found core defect. See [the sample](rvw/live-fst-results.json).
+The cancellation-aware rerun on 2026-11-13 completed the same 49 aligned ISA
+programs. All 49 software and C1 results passed. All 57 checks remained bound,
+with zero firings and no waivers or disables. The recognizer reads standard
+Stream gate and registered-flush assignments. Three custom equations have
+exact project cancellation bindings with source and wave evidence. See
+[the triage](checks-evidence/README.md) and [the current counts](checks-qualification.json).
+This rerun did not run formal. It does not qualify other designs or inputs.

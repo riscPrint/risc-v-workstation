@@ -1,13 +1,13 @@
 {
   "schema": "rvw.check-qualification/1",
-  "status": "findings",
-  "inventory": "rvw/out/qualification-private-final/checks.json",
+  "status": "inconclusive",
+  "inventory": "rvw/out/cancel-bound49/native/checks.json",
   "counts": {
     "csr.read": {
       "generated": 1,
       "bound": 1,
-      "proven": 0,
-      "bounded": 0,
+      "proven": null,
+      "bounded": null,
       "fired": 0,
       "firing_count": 0,
       "unbound": 0,
@@ -16,8 +16,8 @@
     "csr.state": {
       "generated": 1,
       "bound": 1,
-      "proven": 0,
-      "bounded": 0,
+      "proven": null,
+      "bounded": null,
       "fired": 0,
       "firing_count": 0,
       "unbound": 0,
@@ -26,8 +26,8 @@
     "csr.access": {
       "generated": 1,
       "bound": 1,
-      "proven": 0,
-      "bounded": 0,
+      "proven": null,
+      "bounded": null,
       "fired": 0,
       "firing_count": 0,
       "unbound": 0,
@@ -36,8 +36,8 @@
     "hpm.count": {
       "generated": 2,
       "bound": 2,
-      "proven": 0,
-      "bounded": 0,
+      "proven": null,
+      "bounded": null,
       "fired": 0,
       "firing_count": 0,
       "unbound": 0,
@@ -46,8 +46,8 @@
     "hpm.read": {
       "generated": 4,
       "bound": 4,
-      "proven": 0,
-      "bounded": 0,
+      "proven": null,
+      "bounded": null,
       "fired": 0,
       "firing_count": 0,
       "unbound": 0,
@@ -56,18 +56,18 @@
     "stream.valid_hold": {
       "generated": 22,
       "bound": 22,
-      "proven": 0,
-      "bounded": 2,
-      "fired": 11,
-      "firing_count": 8768,
+      "proven": null,
+      "bounded": null,
+      "fired": 0,
+      "firing_count": 0,
       "unbound": 0,
       "reasons": []
     },
     "stream.payload_stable": {
       "generated": 20,
       "bound": 20,
-      "proven": 0,
-      "bounded": 2,
+      "proven": null,
+      "bounded": null,
       "fired": 0,
       "firing_count": 0,
       "unbound": 0,
@@ -76,8 +76,8 @@
     "vec.index": {
       "generated": 1,
       "bound": 1,
-      "proven": 0,
-      "bounded": 0,
+      "proven": null,
+      "bounded": null,
       "fired": 0,
       "firing_count": 0,
       "unbound": 0,
@@ -86,8 +86,8 @@
     "enum.legal": {
       "generated": 5,
       "bound": 5,
-      "proven": 0,
-      "bounded": 0,
+      "proven": null,
+      "bounded": null,
       "fired": 0,
       "firing_count": 0,
       "unbound": 0,
@@ -96,252 +96,252 @@
   },
   "runs": [
     {
-      "path": "rvw/out/qualification-private-final/c1_0.json",
-      "status": "fail",
+      "path": "rvw/out/cancel-bound49/native/c1_0.json",
+      "status": "pass",
       "elf_sha256": "b95333b66888bbf6a69b68d9b0231b7fc4959d42ade5136f284af82d5fbffb9d"
     },
     {
-      "path": "rvw/out/qualification-private-final/c1_1.json",
-      "status": "fail",
+      "path": "rvw/out/cancel-bound49/native/c1_1.json",
+      "status": "pass",
       "elf_sha256": "517e9bec4638346865bc348e6b49d55cc72d2f1d3442716fcafeead7dfc88be1"
     },
     {
-      "path": "rvw/out/qualification-private-final/c1_10.json",
-      "status": "fail",
+      "path": "rvw/out/cancel-bound49/native/c1_10.json",
+      "status": "pass",
       "elf_sha256": "df3ea6c5c743876a36967663f74378ef6aea0c53a9d196d574cf2c18177381f2"
     },
     {
-      "path": "rvw/out/qualification-private-final/c1_11.json",
-      "status": "fail",
+      "path": "rvw/out/cancel-bound49/native/c1_11.json",
+      "status": "pass",
       "elf_sha256": "8fa12ffef80715a9fa2b9bc22f47926b43a2e378ae70f181d7c80b4138befd52"
     },
     {
-      "path": "rvw/out/qualification-private-final/c1_12.json",
-      "status": "fail",
+      "path": "rvw/out/cancel-bound49/native/c1_12.json",
+      "status": "pass",
       "elf_sha256": "0984f6a41fc912c9e6882a70c731525e5b2660ba3214a16a72671433f8015b9f"
     },
     {
-      "path": "rvw/out/qualification-private-final/c1_13.json",
-      "status": "fail",
+      "path": "rvw/out/cancel-bound49/native/c1_13.json",
+      "status": "pass",
       "elf_sha256": "19472a274fed8f428c7caefe600d5abac28869d78fa421cee5d9b4fd2b0426ec"
     },
     {
-      "path": "rvw/out/qualification-private-final/c1_14.json",
-      "status": "fail",
+      "path": "rvw/out/cancel-bound49/native/c1_14.json",
+      "status": "pass",
       "elf_sha256": "1e895446b31292616f3e4720a1f33da9c50cfa379e93b7a415368bbb15961692"
     },
     {
-      "path": "rvw/out/qualification-private-final/c1_15.json",
-      "status": "fail",
+      "path": "rvw/out/cancel-bound49/native/c1_15.json",
+      "status": "pass",
       "elf_sha256": "bf5b8657c63490ac6be3fc720dd69d13c3222bf7867993588b3bd492a18a886e"
     },
     {
-      "path": "rvw/out/qualification-private-final/c1_16.json",
-      "status": "fail",
+      "path": "rvw/out/cancel-bound49/native/c1_16.json",
+      "status": "pass",
       "elf_sha256": "7b7d8832387ef4a6e239cfc884f0c53031495a27b6ca8207df7a923f84b0fd36"
     },
     {
-      "path": "rvw/out/qualification-private-final/c1_17.json",
-      "status": "fail",
+      "path": "rvw/out/cancel-bound49/native/c1_17.json",
+      "status": "pass",
       "elf_sha256": "4e4171b2e817ca189a29f33def279355671c1b293b4bb1348d7003493edc506b"
     },
     {
-      "path": "rvw/out/qualification-private-final/c1_18.json",
-      "status": "fail",
+      "path": "rvw/out/cancel-bound49/native/c1_18.json",
+      "status": "pass",
       "elf_sha256": "3e02f5618dd48f7d1bdc4442d40beec770910136e1fa886c85317ce99eef50a4"
     },
     {
-      "path": "rvw/out/qualification-private-final/c1_19.json",
-      "status": "fail",
+      "path": "rvw/out/cancel-bound49/native/c1_19.json",
+      "status": "pass",
       "elf_sha256": "0456f1d8a701306b03325ddd3cfb802a9b9b004fd200a2016625df98f31804d4"
     },
     {
-      "path": "rvw/out/qualification-private-final/c1_2.json",
-      "status": "fail",
+      "path": "rvw/out/cancel-bound49/native/c1_2.json",
+      "status": "pass",
       "elf_sha256": "fbdb029141cbe7390a1436887df0ed102131636b1bc9c8ce9909d0a3ceb6843c"
     },
     {
-      "path": "rvw/out/qualification-private-final/c1_20.json",
-      "status": "fail",
+      "path": "rvw/out/cancel-bound49/native/c1_20.json",
+      "status": "pass",
       "elf_sha256": "6dac141bf9ed8f09c0e40c50f9d88d8e2e1f54090785f5a5219a1b1c4fa97a41"
     },
     {
-      "path": "rvw/out/qualification-private-final/c1_21.json",
-      "status": "fail",
+      "path": "rvw/out/cancel-bound49/native/c1_21.json",
+      "status": "pass",
       "elf_sha256": "5e94be4fb915e88be4fe54fe11dac053b2792a432d0e052b8d8eb3e487bf9186"
     },
     {
-      "path": "rvw/out/qualification-private-final/c1_22.json",
-      "status": "fail",
+      "path": "rvw/out/cancel-bound49/native/c1_22.json",
+      "status": "pass",
       "elf_sha256": "b9ce5afc7381adac1aefd9ae701e187dc1ba06cd2db35e8ed2fc1ccbef72bdb9"
     },
     {
-      "path": "rvw/out/qualification-private-final/c1_23.json",
-      "status": "fail",
+      "path": "rvw/out/cancel-bound49/native/c1_23.json",
+      "status": "pass",
       "elf_sha256": "eb7916a604484750baed6d68615dc8834a43f91801b2195e5001a357fbb4ce74"
     },
     {
-      "path": "rvw/out/qualification-private-final/c1_24.json",
-      "status": "fail",
+      "path": "rvw/out/cancel-bound49/native/c1_24.json",
+      "status": "pass",
       "elf_sha256": "93d93a6cd7df204ff564058163053d56f2509b0fae2c94723650972afa800c6a"
     },
     {
-      "path": "rvw/out/qualification-private-final/c1_25.json",
-      "status": "fail",
+      "path": "rvw/out/cancel-bound49/native/c1_25.json",
+      "status": "pass",
       "elf_sha256": "37e40939033ce60ce82fbe7498e6e6a7898b5d7d06cc57633d3eac37b10dbbce"
     },
     {
-      "path": "rvw/out/qualification-private-final/c1_26.json",
-      "status": "fail",
+      "path": "rvw/out/cancel-bound49/native/c1_26.json",
+      "status": "pass",
       "elf_sha256": "5b19669f0f28b1100bbeddba24cc029f28763cbbef1c2f82c2d591d217eebe56"
     },
     {
-      "path": "rvw/out/qualification-private-final/c1_27.json",
-      "status": "fail",
+      "path": "rvw/out/cancel-bound49/native/c1_27.json",
+      "status": "pass",
       "elf_sha256": "6e6e996ea964f21b04ac53bcc3b96847c204fbbd0ad76a60ec5e9d1f32b30722"
     },
     {
-      "path": "rvw/out/qualification-private-final/c1_28.json",
-      "status": "fail",
+      "path": "rvw/out/cancel-bound49/native/c1_28.json",
+      "status": "pass",
       "elf_sha256": "0a49ebb440af0ba1a87f3513d4f6449346b5284d2fdbae215071dfbe8b2971f0"
     },
     {
-      "path": "rvw/out/qualification-private-final/c1_29.json",
-      "status": "fail",
+      "path": "rvw/out/cancel-bound49/native/c1_29.json",
+      "status": "pass",
       "elf_sha256": "03ffced2585d75c362c30d15a5fb4a08c8cd4300b0625543dc6c56a22644cea0"
     },
     {
-      "path": "rvw/out/qualification-private-final/c1_3.json",
-      "status": "fail",
+      "path": "rvw/out/cancel-bound49/native/c1_3.json",
+      "status": "pass",
       "elf_sha256": "2e63aff6d5921394c0d9765362dff2d2a04e39795a4b30e1e4877e61f17faa2e"
     },
     {
-      "path": "rvw/out/qualification-private-final/c1_30.json",
-      "status": "fail",
+      "path": "rvw/out/cancel-bound49/native/c1_30.json",
+      "status": "pass",
       "elf_sha256": "a7a06664b041acf44d8b3533f17f5d8988d630a9827e689b5f01d9eccf7b84b7"
     },
     {
-      "path": "rvw/out/qualification-private-final/c1_31.json",
-      "status": "fail",
+      "path": "rvw/out/cancel-bound49/native/c1_31.json",
+      "status": "pass",
       "elf_sha256": "59042eadb8b218a1972eacbc5d237dcb9f8647b093c050d5e5f3559751b8c26e"
     },
     {
-      "path": "rvw/out/qualification-private-final/c1_32.json",
-      "status": "fail",
+      "path": "rvw/out/cancel-bound49/native/c1_32.json",
+      "status": "pass",
       "elf_sha256": "2a818ad9dc12f8e7c0a006d64689c5b2e3abebe8e7ae857f67577aa9c1803c27"
     },
     {
-      "path": "rvw/out/qualification-private-final/c1_33.json",
-      "status": "fail",
+      "path": "rvw/out/cancel-bound49/native/c1_33.json",
+      "status": "pass",
       "elf_sha256": "fea7c793e4bc9c29e2c0b81f405fdc91a6c03eb84b15687ab0bfdc26db6b54b0"
     },
     {
-      "path": "rvw/out/qualification-private-final/c1_34.json",
-      "status": "fail",
+      "path": "rvw/out/cancel-bound49/native/c1_34.json",
+      "status": "pass",
       "elf_sha256": "94923d7c393dc503d6388f4379dbfd946b4c49ba8167791741427fecd2b0058d"
     },
     {
-      "path": "rvw/out/qualification-private-final/c1_35.json",
-      "status": "fail",
+      "path": "rvw/out/cancel-bound49/native/c1_35.json",
+      "status": "pass",
       "elf_sha256": "067448767fb963c0c6da4efeed94623780060dec22eede2ce5735823da4d5252"
     },
     {
-      "path": "rvw/out/qualification-private-final/c1_36.json",
-      "status": "fail",
+      "path": "rvw/out/cancel-bound49/native/c1_36.json",
+      "status": "pass",
       "elf_sha256": "fc87fecb6214a47a00aebad00d15e02f85e85ba6e7dae5adcb841c8459f20f35"
     },
     {
-      "path": "rvw/out/qualification-private-final/c1_37.json",
-      "status": "fail",
+      "path": "rvw/out/cancel-bound49/native/c1_37.json",
+      "status": "pass",
       "elf_sha256": "411b0d48004abf04c3e50056c57c8113d89ce57321c502bf540a7ccd1d800168"
     },
     {
-      "path": "rvw/out/qualification-private-final/c1_38.json",
-      "status": "fail",
+      "path": "rvw/out/cancel-bound49/native/c1_38.json",
+      "status": "pass",
       "elf_sha256": "7c48e68d8389c74f6c47920b54c63a18ab9e6f6d61da0a45606512679d9f6114"
     },
     {
-      "path": "rvw/out/qualification-private-final/c1_39.json",
-      "status": "fail",
+      "path": "rvw/out/cancel-bound49/native/c1_39.json",
+      "status": "pass",
       "elf_sha256": "c01d120b03100bf6794467b38efee5cd424a57ef9c6b9ca6fa12e131852d3239"
     },
     {
-      "path": "rvw/out/qualification-private-final/c1_4.json",
-      "status": "fail",
+      "path": "rvw/out/cancel-bound49/native/c1_4.json",
+      "status": "pass",
       "elf_sha256": "7775d123d110ac27779a389eba2932c22b236474419a87e710c595adc429781c"
     },
     {
-      "path": "rvw/out/qualification-private-final/c1_40.json",
-      "status": "fail",
+      "path": "rvw/out/cancel-bound49/native/c1_40.json",
+      "status": "pass",
       "elf_sha256": "9d4fb2bc5c12de9986401d9ab99606bcf2ecd8435344e2936da687ba654c0c97"
     },
     {
-      "path": "rvw/out/qualification-private-final/c1_41.json",
-      "status": "fail",
+      "path": "rvw/out/cancel-bound49/native/c1_41.json",
+      "status": "pass",
       "elf_sha256": "db1adbe05467c6a52167d9d2b38a4c9481637c3fb4f57b9f468911f3d3924931"
     },
     {
-      "path": "rvw/out/qualification-private-final/c1_42.json",
-      "status": "fail",
+      "path": "rvw/out/cancel-bound49/native/c1_42.json",
+      "status": "pass",
       "elf_sha256": "91c0422d49b1abcedf0f09914841355d8f0ce353e785a86d0600158ff40363a9"
     },
     {
-      "path": "rvw/out/qualification-private-final/c1_43.json",
-      "status": "fail",
+      "path": "rvw/out/cancel-bound49/native/c1_43.json",
+      "status": "pass",
       "elf_sha256": "eb51dbb941fc04114e66599d1933cbb838aea363d3e805c72f873c8ef4e28f84"
     },
     {
-      "path": "rvw/out/qualification-private-final/c1_44.json",
-      "status": "fail",
+      "path": "rvw/out/cancel-bound49/native/c1_44.json",
+      "status": "pass",
       "elf_sha256": "57e8b8c2c8726641abec57e401978de7a0331e7390a4a33a2d42ceb3d0671dcd"
     },
     {
-      "path": "rvw/out/qualification-private-final/c1_45.json",
-      "status": "fail",
+      "path": "rvw/out/cancel-bound49/native/c1_45.json",
+      "status": "pass",
       "elf_sha256": "87ce369deb96946bfa28271efe3979ef1b066172db0c4561b0699d94fe14863e"
     },
     {
-      "path": "rvw/out/qualification-private-final/c1_46.json",
-      "status": "fail",
+      "path": "rvw/out/cancel-bound49/native/c1_46.json",
+      "status": "pass",
       "elf_sha256": "1a74880ff54378eb0cc68a4bd25f921792bcb07547369abd61b4c8d69b8f2a71"
     },
     {
-      "path": "rvw/out/qualification-private-final/c1_47.json",
-      "status": "fail",
+      "path": "rvw/out/cancel-bound49/native/c1_47.json",
+      "status": "pass",
       "elf_sha256": "c2b90f5eb71a23ebbfd4c75b0769875d74d9c6351821f43c2f22e5e39d92292d"
     },
     {
-      "path": "rvw/out/qualification-private-final/c1_48.json",
-      "status": "fail",
+      "path": "rvw/out/cancel-bound49/native/c1_48.json",
+      "status": "pass",
       "elf_sha256": "333597760f01ca3db4548685de8a9887ff3cbe697ec72c8eeff34473603503d0"
     },
     {
-      "path": "rvw/out/qualification-private-final/c1_5.json",
-      "status": "fail",
+      "path": "rvw/out/cancel-bound49/native/c1_5.json",
+      "status": "pass",
       "elf_sha256": "d0bbee0c7e2b53c19c1629dc7097e8bd126ab7c692896799a8f1954ed2a13061"
     },
     {
-      "path": "rvw/out/qualification-private-final/c1_6.json",
-      "status": "fail",
+      "path": "rvw/out/cancel-bound49/native/c1_6.json",
+      "status": "pass",
       "elf_sha256": "ac02f3f09373311917cde5f65f229c67841e7f6a5e9d834cd1f552d120e0b86a"
     },
     {
-      "path": "rvw/out/qualification-private-final/c1_7.json",
-      "status": "fail",
+      "path": "rvw/out/cancel-bound49/native/c1_7.json",
+      "status": "pass",
       "elf_sha256": "900972e30bd671866e6377ac2f59610710b8c9a565ed779285a400b9dbd0d6f9"
     },
     {
-      "path": "rvw/out/qualification-private-final/c1_8.json",
-      "status": "fail",
+      "path": "rvw/out/cancel-bound49/native/c1_8.json",
+      "status": "pass",
       "elf_sha256": "109f9fc1b125fe56452f076b3cc3ab1893ac0239040576526b605e2d0aa75444"
     },
     {
-      "path": "rvw/out/qualification-private-final/c1_9.json",
-      "status": "fail",
+      "path": "rvw/out/cancel-bound49/native/c1_9.json",
+      "status": "pass",
       "elf_sha256": "fc7631a142b19c5cf1a2b6be5e698ef53c1549ce7f80944020cd650d681fbd95"
     }
   ],
-  "formal": "rvw/out/checks-formal-results-v2/result.json",
+  "formal": null,
   "limitations": [
     "Null means NOT RUN. Zero means no matching observation in supplied evidence.",
     "Simulation covers exercised behavior only. Formal requirements are project associations.",
@@ -350,91 +350,19 @@
   "observed": "2026-11-13",
   "core_revision": "a62c145aa042a5de874344e0a7683bd7c8c8c870",
   "assertions_compiled": true,
-  "formal_depth": 6,
-  "formal_properties": 8,
-  "formal_activation": "not_measured",
-  "triage": [
-    {
-      "id": "stream.valid_hold:IBusSimplePlugin_fetchPc_output",
-      "classification": "tool_contract_mismatch",
-      "disposition": "open",
-      "reason": "Fetcher.scala fetchPc.output.valid is gated by fetcherHalt; a halted fetch is cancellable."
-    },
-    {
-      "id": "stream.valid_hold:IBusSimplePlugin_iBusRsp_output",
-      "classification": "tool_contract_mismatch",
-      "disposition": "open",
-      "reason": "Fetcher.scala uses m2sPipeWithFlush and haltWhen; internal fetch offers can be cancelled."
-    },
-    {
-      "id": "stream.valid_hold:IBusSimplePlugin_iBusRsp_stages_0_input",
-      "classification": "tool_contract_mismatch",
-      "disposition": "open",
-      "reason": "Fetcher.scala fetchPc.output.valid is gated by fetcherHalt; a halted fetch is cancellable."
-    },
-    {
-      "id": "stream.valid_hold:IBusSimplePlugin_iBusRsp_stages_0_output_toEvent_m2sPipe",
-      "classification": "tool_contract_mismatch",
-      "disposition": "open",
-      "reason": "Fetcher.scala uses m2sPipeWithFlush and haltWhen; internal fetch offers can be cancelled."
-    },
-    {
-      "id": "stream.valid_hold:IBusSimplePlugin_iBusRsp_stages_1_input",
-      "classification": "tool_contract_mismatch",
-      "disposition": "open",
-      "reason": "Fetcher.scala uses m2sPipeWithFlush and haltWhen; internal fetch offers can be cancelled."
-    },
-    {
-      "id": "stream.valid_hold:IBusSimplePlugin_iBusRsp_stages_1_input_haltWhen",
-      "classification": "tool_contract_mismatch",
-      "disposition": "open",
-      "reason": "Fetcher.scala uses m2sPipeWithFlush and haltWhen; internal fetch offers can be cancelled."
-    },
-    {
-      "id": "stream.valid_hold:IBusSimplePlugin_iBusRsp_stages_1_output",
-      "classification": "tool_contract_mismatch",
-      "disposition": "open",
-      "reason": "Fetcher.scala uses m2sPipeWithFlush and haltWhen; internal fetch offers can be cancelled."
-    },
-    {
-      "id": "stream.valid_hold:IBusSimplePlugin_injector_decodeInput",
-      "classification": "tool_contract_mismatch",
-      "disposition": "open",
-      "reason": "Fetcher.scala uses m2sPipeWithFlush and haltWhen; internal fetch offers can be cancelled."
-    },
-    {
-      "id": "stream.valid_hold:IBusSimplePlugin_rspJoin_join",
-      "classification": "tool_contract_mismatch",
-      "disposition": "open",
-      "reason": "IBusSimplePlugin.scala rspJoin discards responses during flush and gates join validity with fetch stage validity."
-    },
-    {
-      "id": "stream.valid_hold:IBusSimplePlugin_rspJoin_join_haltWhen",
-      "classification": "tool_contract_mismatch",
-      "disposition": "open",
-      "reason": "IBusSimplePlugin.scala rspJoin discards responses during flush and gates join validity with fetch stage validity."
-    },
-    {
-      "id": "stream.valid_hold:IBusSimplePlugin_rspJoin_rspBuffer_output",
-      "classification": "tool_contract_mismatch",
-      "disposition": "open",
-      "reason": "IBusSimplePlugin.scala rspJoin discards responses during flush and gates join validity with fetch stage validity."
-    }
-  ],
-  "triage_basis": "Inferred from source inspection; cancellation signals were not independently traced.",
-  "limits": [
-    "VexiiRiscv and composed SoC captures and native campaigns NOT RUN.",
-    "Generation on all three projects retains absent bindings. No clean connected-design qualification is claimed.",
-    "All 49 VexRiscv C1 statuses remain fail. No checks were waived or disabled to change this result.",
-    "Formal covers two command ports through depth 6 after two reset clocks. It does not prove internal fetch behavior."
-  ],
   "programs": {
-    "pass": 49,
-    "fail": 0,
-    "timeout": 0
+    "pass": 49
   },
+  "c1_status": {
+    "pass": 49
+  },
+  "limits": [
+    "VexRiscv 49 aligned ISA programs only. VexiiRiscv and composed SoC NOT RUN in this capture.",
+    "No formal run in this capture. Null formal counts mean NOT RUN.",
+    "Zero firings on these programs does not establish input closure or whole-core qualification."
+  ],
   "artifacts_sha256": {
-    "inventory": "fb883e1170957b8889239f641df073fa73b87113135390fa5ccac62cfa6a4b08",
-    "formal": "1828631347ce12d4dc35b0a80c70c93243ac82435bf0209415ffdafe0983e450"
+    "inventory": "612d3e364284ead9e5bda1581d981cf0361fd9a11df4c65f4629a3f2d6cc519f",
+    "log": "a903ae0bf10ce5ffbae1897da5a8041e6230ba22b87a0a950b3e7c2f7ed9e081"
   }
 }

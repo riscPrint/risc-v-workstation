@@ -73,6 +73,11 @@ case class StreamSemantics(pattern: String, reason: String) {
   * changing value. All matches must live in one component. */
 case class ProgressSpec(name: String, signal: String, maxCycles: Int)
 
+/** Exact stream path and local Bool name, with reviewed cancellation semantics. */
+case class StreamCancelBinding(path: String, condition: String, previous: Boolean, reason: String) {
+  require(path.nonEmpty && condition.nonEmpty && reason.trim.nonEmpty, "cancellation binding needs path, condition and reason")
+}
+
 case class ChecksConfig(
     enable: Seq[String] = Seq("*"),
     disable: Seq[String] = Nil,
@@ -90,7 +95,8 @@ case class ChecksConfig(
     monitorReports: Int = 3,
     /** Where to write the report; null means `<targetDirectory>/<toplevel>.checks.json`. */
     reportPath: String = null,
-    mayDropValid: Seq[StreamSemantics] = Nil
+    mayDropValid: Seq[StreamSemantics] = Nil,
+    streamCancellations: Seq[StreamCancelBinding] = Nil
 ) {
   private def globs(ps: Seq[String]) = ps.map(Glob(_))
   private lazy val enableR  = globs(enable)

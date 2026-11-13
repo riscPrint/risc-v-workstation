@@ -546,10 +546,23 @@ class PhaseInsertChecks(cfg: ChecksConfig, result: ChecksResult) extends PhaseNe
           if (!driven(v) || !driven(r)) result.notes += s"skipped stream ${qualify(path, name)}: valid or ready has no driver"
           else {
             val loc = SourceLoc.of(v)
-            val hold = newRecord(Kind.StreamValidHold, name, env, loc, "")
+            val bindings = cfg.streamCancellations.filter(_.path == qualify(path, name))
+            require(bindings.size <= 1, s"duplicate cancellation binding for ${qualify(path, name)}")
+            val declared = bindings.map { binding =>
+              val signals = f.signals.collect { case b: Bool if b.getName() == binding.condition && driven(b) => b }
+              require(signals.size == 1, s"cancellation binding ${binding.path}: missing or ambiguous local Bool ${binding.condition}")
+              StreamCancellation.Term(signals.head, false, binding.previous,
+                s"reviewed binding ${binding.condition}: ${binding.reason}")
+            }
+            val cancellation = StreamCancellation.discover(v) ++ declared
+            val disposition = if (cancellation.isEmpty)
+              "strict: cancellation not classified; inspect valid drivers and flush/halt semantics"
+            else "cancellation-aware: " + cancellation.map(t =>
+              t.origin + (if (t.registered) " (previous sample)" else " (current sample)")).mkString("; ")
+            val hold = newRecord(Kind.StreamValidHold, name, env, loc, disposition)
             hold.signals("valid") = Seq(v); hold.signals("ready") = Seq(r)
             val stable = if (payload.nonEmpty) newRecord(Kind.StreamPayloadStable, name, env, loc,
-              s"${payload.size} payload signals") else null
+              s"${payload.size} payload signals; $disposition") else null
             if (stable != null) { stable.signals("valid") = Seq(v); stable.signals("ready") = Seq(r); stable.signals("payload") = payload }
             Seq(hold, stable).filter(_ != null).filter(_.inserted).foreach { rec =>
               val semantics = cfg.streamReason(qualify(path, name), rec.kind).orElse(
@@ -559,14 +572,21 @@ class PhaseInsertChecks(cfg: ChecksConfig, result: ChecksResult) extends PhaseNe
               }
             }
             if (hold.inserted || (stable != null && stable.inserted)) todo += { () =>
+              val cancel = Bool().setName(uniqueName(s"chk_${sanitize(name)}_cancel"))
+              cancel := cancellation.map { t =>
+                val raw = Bool(); raw.assignFrom(t.condition)
+                val condition = if (t.inverted) !raw else raw
+                if (t.registered) RegNext(condition).init(False) else condition
+              }.foldLeft(False: Bool)(_ || _)
+              Seq(hold, stable).filter(_ != null).foreach(_.signals("cancel") = Seq(cancel))
               val stall = (v && !r)
               val stallPrev = RegNext(stall).init(False).setName(uniqueName(s"chk_${sanitize(name)}_stall_prev"))
               val act = active(ClockDomain.current)
-              if (hold.inserted) emit(hold, act && stallPrev && !v)
+              if (hold.inserted) emit(hold, act && stallPrev && !cancel && !v)
               if (stable != null && stable.inserted) {
                 val now = Cat(payload.map(_.asBits))
                 val prev = RegNext(now).setName(uniqueName(s"chk_${sanitize(name)}_payload_prev"))
-                emit(stable, act && stallPrev && v && now =/= prev)
+                emit(stable, act && stallPrev && !cancel && v && now =/= prev)
               }
             }
           }
@@ -775,6 +795,11 @@ class PhaseInsertChecks(cfg: ChecksConfig, result: ChecksResult) extends PhaseNe
       }
 
       if (todo.nonEmpty) c.rework { c.onBody { todo.foreach(_()) } }
+    }
+
+    cfg.streamCancellations.foreach { binding =>
+      require(result.records.exists(_.id == s"${Kind.StreamValidHold}:${binding.path}"),
+        s"stale cancellation binding: ${binding.path}")
     }
 
     // Progress watchdogs.

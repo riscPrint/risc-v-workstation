@@ -33,7 +33,7 @@ def main():
     command='runMain rvwvex.CsrChecksRuntime '+ ' '.join(json.dumps(str(v)) for v in
         [model/'model.json',run,'none',*elfs])
     result=run_group([str(root/'scripts/with-lock.sh'),'vex-csr',str(root/'scripts/with-lock.sh'),
-        'sbt','nice','-n','10','sbt','-batch',command],cwd=root/'examples/vexriscv/rvw',
+        'sbt-csr','nice','-n','10','sbt','-batch',command],cwd=root/'examples/vexriscv/rvw',
         env=env,capture=True,timeout=args.timeout)
     (out/'native.log').write_text(result.stdout+result.stderr)
     runs=sorted(run.glob('c1_*.json'))
