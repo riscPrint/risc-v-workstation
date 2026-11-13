@@ -106,6 +106,10 @@ single-clock unbounded sequence subset. Extended property rows record
 optional `maximum` for a literal count range, and
 `completion` where applicable. Assert and assume sequence consequents default to
 weak. Explicit strong sequences require finite completion for every request.
+Optional `throughout=true` records a Boolean guard on an unbounded sequence.
+The guard holds for every active sample, including completion. A latched failure
+retains any guard violation. Idle samples after completion do not fail that
+attempt. Nested guards combine without changing weak/strong completion rules.
 Clock-local sampled functions use the same history emitter as finite SVA.
 The converted full state includes their history registers. Depth, nesting,
 width/sign and four-state comparison rules match the finite frontend. No

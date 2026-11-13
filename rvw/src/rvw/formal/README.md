@@ -1781,6 +1781,14 @@ samples before `c`. A standalone range needs only its minimum permitted count.
 The maximum is at most 64, or 63 when there is a completion operand. Zero-count
 and unbounded-count ranges remain refused.
 
+A Boolean `g throughout sequence` modifier is accepted around these unbounded
+sequence forms. The guard holds from each request through its accepted endpoint,
+including that endpoint. A false guard during an active attempt makes the
+sequence impossible. A false guard after completion does not affect that attempt.
+Nested guards combine. Outer `first_match` wrappers can surround or follow the
+guard. Weak sequences still permit waiting forever, but their guard must hold
+while they wait. Result rows mark this modifier with `throughout=true`.
+
 The rules follow IEEE 1800-2017 clauses 16.9 and 16.12, including the weak default
 for sequence properties. The [IEEE language reference](https://rfsoc.mit.edu/6S965/_static/F25/documentation/1800-2017.pdf)
 gives the operator definitions. The generated support table includes paired native

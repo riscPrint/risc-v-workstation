@@ -18,6 +18,7 @@ class Monitor:
         self.clock, self.prefix = clock, prefix
         self.lines = []
         self.expression_count = 0
+        self.guard = None
 
     def expression(self, text):
         try:
@@ -54,7 +55,12 @@ class Monitor:
         name = self.prefix + '_fatal'
         return self.state('fatal', f'{name} || ({expr})')
 
-    def finish(self, progress):
+    def finish(self, progress, active='0'):
+        if self.guard is not None:
+            name = self.prefix + '_throughout_failed'
+            failed = self.state('throughout_failed',
+                                f'{name} || (({active}) && !({self.guard}))')
+            progress = f'({progress}) && !{failed}'
         declarations = [line for line in self.lines if line.startswith('reg ')]
         processes = [line for line in self.lines if not line.startswith('reg ')]
         return '\n'.join(declarations + processes + [f'(* keep *) wire {self.prefix} = {progress};', ''])
@@ -98,12 +104,22 @@ def emit(text, clock, prefix):
         if end != len(rhs):
             raise Unsupported('liveness_sequence_wrapper')
         strength, rhs = wrapper[1], unwrap(body)
-    first = re.match(r'first_match\s*\(', rhs)
-    if first:
-        body, end = _group(rhs, first.end()-1)
-        if end != len(rhs):
-            raise Unsupported('liveness_first_match_tail')
-        rhs = unwrap(body)
+    while True:
+        first = re.match(r'first_match\s*\(', rhs)
+        if first:
+            body, end = _group(rhs, first.end()-1)
+            if end != len(rhs):
+                raise Unsupported('liveness_first_match_tail')
+            rhs = unwrap(body)
+            continue
+        parts = split(rhs, r'\bthroughout\b')
+        if len(parts) == 1:
+            break
+        if len(parts) != 3:
+            raise Unsupported('liveness_throughout_association')
+        guard = monitor.expression(parts[0])
+        monitor.guard = f'({monitor.guard}) && ({guard})' if monitor.guard is not None else guard
+        rhs = unwrap(parts[2])
 
     # One Boolean prefix followed by an unbounded delay and Boolean endpoint.
     delay = split(rhs, r'##\s*\[\s*\d+\s*:\s*\$\s*\]')
@@ -111,11 +127,12 @@ def emit(text, clock, prefix):
         initial = monitor.expression(delay[0]) if delay[0] else '1'
         response = monitor.expression(delay[2])
         minimum = int(re.search(r'\d+', delay[1])[0])
-        eligible = monitor.delay(f'(({request}) != 0)', minimum, 'eligible')[-1]
+        taps = monitor.delay(f'(({request}) != 0)', minimum, 'eligible')
+        eligible = taps[-1]
         fatal = monitor.fatal(f'({request}) && !({initial})')
         pending = monitor.pending(eligible, response)
         progress = f'!{fatal}' + (f' && !{pending}' if strength == 'strong' else '')
-        return monitor.finish(progress), dict(operator='unbounded_delay', minimum=minimum, strength=strength)
+        return monitor.finish(progress, ' || '.join(taps+[pending])), dict(operator='unbounded_delay', minimum=minimum, strength=strength)
 
     # Consecutive repetition with no finite upper bound. An optional Boolean
     # completion is sampled one tick after the repeated segment.
@@ -133,7 +150,7 @@ def emit(text, clock, prefix):
         fatal = monitor.fatal(f'(({mandatory}) && !({value})) || '
                               f'(({pending} || ({eligible})) && !({response}) && !({value}))')
         progress = f'!{fatal}' + (f' && !{pending}' if strength == 'strong' else '')
-        return monitor.finish(progress), dict(operator='unbounded_consecutive', minimum=minimum, strength=strength)
+        return monitor.finish(progress, ' || '.join(taps+[pending])), dict(operator='unbounded_consecutive', minimum=minimum, strength=strength)
 
     # Literal goto/nonconsecutive counts. Count buckets retain overlapping
     # attempts. A separate owed set takes no new attempts until it empties.
@@ -171,7 +188,7 @@ def emit(text, clock, prefix):
         progress = f'({owed} == 0)' if strength == 'strong' else '1\'b1'
         if fatal:
             progress = f'!{fatal} && ({progress})'
-        return monitor.finish(progress), dict(operator='goto' if operator == '->' else 'nonconsecutive',
+        return monitor.finish(progress, f'({active} != 0) || ({request})'), dict(operator='goto' if operator == '->' else 'nonconsecutive',
                                               count=count, strength=strength, completion=completion is not None,
                                               **(dict(maximum=maximum) if maximum != count else {}))
     raise Unsupported('liveness_form', rhs)
@@ -198,5 +215,5 @@ def range_monitor(monitor, request, value, operator, minimum, maximum, completio
     monitor.state('active', next_active, width)
     monitor.state('owed', f'({owed} == 0) ? {next_active} : {advance(owed)}', width)
     progress = f'!{fatal}' + (f' && ({owed} == 0)' if strength=='strong' else '')
-    return monitor.finish(progress), dict(operator='goto' if operator=='->' else 'nonconsecutive',
+    return monitor.finish(progress, f'({active} != 0) || ({request})'), dict(operator='goto' if operator=='->' else 'nonconsecutive',
                                           count=minimum, maximum=maximum, strength=strength, completion=True)
