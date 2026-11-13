@@ -682,3 +682,21 @@ IFT sink checks start after public synchronous reset. An optional public
 check declared timing sinks on every cycle. Static isolation policies check
 observed grants against priority byte ranges and explicit master/privilege
 permissions. CSR policy derivation and dynamic policy updates remain unmodeled.
+
+## Raw property event replay
+
+The timed simulation route can rewrite top-level finite SVA property clocks to
+private replay pulses when a source has raw events. `property_events` in its C1
+result records each original `event`, parsed `terms` and private `clock`.
+Terms use `edge=change|posedge|negedge` and a top-input `signal`.
+The time-zero event row initializes inputs. Each later row fires matching
+monitor pulses once before updating design inputs. Monitors sample preceding
+settled values. Output observations use post-update settled values.
+
+Raw events require Icarus four-state semantics. Rising edges include 0 to X/Z
+and X/Z to 1. Falling edges include 1 to X/Z and X/Z to 0. Change events compare
+all vector bits. This scope refuses internal events, event expressions,
+same-event disable cancellation and properties outside the top module.
+It does not change the formal solver's event or state model. Simulation counts
+and code coverage retain finite-prefix evidence limits. A failed compilation
+cannot retain earlier coverage or runtime logs.

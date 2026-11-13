@@ -50,7 +50,11 @@ class InputSnapshot:
             # Bind files and checker declarations can refer to another source.
             # Keep each original captured file and seal the combined proof input.
             combined = self.directory / 'temporal.sv'
-            lowered, self.temporal_properties = lower('\n'.join(path.read_text() for path in self.sources))
+            text = '\n'.join(path.read_text() for path in self.sources)
+            if getattr(args, 'raw_events', False):
+                from .raw_events import rewrite
+                text, self.raw_events = rewrite(text, args.top)
+            lowered, self.temporal_properties = lower(text)
             combined.write_text(lowered)
             self.sources = [self.seal(combined)]
         if self.frontend == 'slang':

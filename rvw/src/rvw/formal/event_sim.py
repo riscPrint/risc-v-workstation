@@ -41,7 +41,7 @@ def events(data, inputs, clocks):
     return scale, rows
 
 
-def testbench(top, ports, observed, scale, rows):
+def testbench(top, ports, observed, scale, rows, raw_pulses=None):
     lines = [f'`timescale {scale}/{scale}', 'module rvw_event_top;']
     inputs = [p for p in ports if p.direction == 'input']
     outputs = [p for p in ports if p.direction == 'output']
@@ -50,9 +50,16 @@ def testbench(top, ports, observed, scale, rows):
     lines += [f'{top} dut(' + ', '.join(f'.{common.vid(p.name)}({common.vid(p.name)})' for p in ports) + ');',
               'initial begin']
     previous = 0
-    for at, changes in rows:
+    for index, (at, changes) in enumerate(rows):
         if at > previous:
             lines.append(f'#{at-previous};')
+        # Pulse before updating design inputs. #0 lets all monitors sample the
+        # preceding settled values, including the old value of the event input.
+        triggered = raw_pulses[index] if raw_pulses else []
+        if triggered:
+            lines += [f'dut.{name} = 1;' for name in triggered]
+            lines += ['#0;']
+            lines += [f'dut.{name} = 0;' for name in triggered]
         for name, value in changes.items():
             lines.append(f"{common.vid(name)} <= {len(value)}'b{value};")
         for name in observed:
@@ -80,17 +87,23 @@ def run(args):
     common.check_ident('top', args.top)
     fd = common.lock_out(out)
     try:
-        (out / 'result.json').unlink(missing_ok=True)
+        common.clear_outputs(out, 'result.json', 'coverage.dat', 'compile.log', 'run.log')
         spec_capture = Capture(out / 'event-inputs')
         event_file = spec_capture.file(Path(args.events))
-        snap = InputSnapshot(Namespace(verilog=args.verilog, checks=None, frontend='temporal'), out)
+        snap = InputSnapshot(Namespace(verilog=args.verilog, checks=None, frontend='temporal', raw_events=True, top=args.top), out)
         ports = common.module_ports(snap.sources, args.top, out, args.timeout,
                                     snapshot=snap, allow_async_reset=True)
         if any(p.direction == 'inout' for p in ports):
             raise ValueError('event replay refuses inout ports')
         inputs = {p.name: p.width for p in ports if p.direction == 'input'}
         event_data = json.loads(event_file.copy.read_text())
-        clocks = {p['clock'] for p in snap.temporal_properties} | set(event_data.get('clocks', []))
+        bindings = snap.raw_events
+        from .raw_events import validate, rewrite, pulses
+        validate(bindings, inputs)
+        if bindings and args.backend != 'icarus':
+            raise ValueError('raw property event replay requires Icarus')
+        clocks = {p['clock'] for p in snap.temporal_properties} - {b['clock'] for b in bindings} | set(event_data.get('clocks', []))
+        clocks |= {term['signal'] for binding in bindings for term in binding['terms'] if term['edge'] != 'change'}
         if not clocks <= inputs.keys() or any(inputs[c] != 1 for c in clocks):
             raise ValueError('property clocks must be scalar top-level inputs')
         observed = args.observe or [p.name for p in ports if p.direction == 'output']
@@ -100,11 +113,12 @@ def run(args):
         if args.backend == 'verilator' and (args.check_x or any(set(v.lower()) & set('xz') for _, row in rows for v in row.values())):
             raise ValueError('four-state replay and --check-x require Icarus')
         original = '\n'.join((out / r['frontend']).read_text() for r in snap.files if r['kind'] == 'source')
+        original, _ = rewrite(original, args.top)
         simulation, properties = lower(original, simulation=True)
         model = out / 'simulation.sv'
         model.write_text(simulation)
         bench = out / 'testbench.sv'
-        bench.write_text(testbench(args.top, ports, observed, scale, rows))
+        bench.write_text(testbench(args.top, ports, observed, scale, rows, pulses(rows, bindings, inputs)))
         snap.seal(model); snap.seal(bench)
         result = RunResult(status='error', config='formal-event-simulation',
                            source={'model_sha256': digest(model)},
@@ -151,7 +165,8 @@ def run(args):
                     coverage.append(f"C '{key}' {prop['covered'] if prop['kind'] == 'cover' else prop['passed']}")
                 (out / 'coverage.dat').write_text('\n'.join(coverage) + '\n')
         result.update(wall_s=time.monotonic()-started, backend=args.backend, x_semantics='four-state' if args.backend == 'icarus' else 'two-state; X not measured',
-                      event_capture=spec_capture.record(), tools={'backend': args.backend})
+                      event_capture=spec_capture.record(), tools={'backend': args.backend},
+                      property_events=bindings, raw_event_sampling='settled values before each timestamp input update' if bindings else None)
         snap.finish(result)
         (out / 'result.json').write_text(json.dumps(result, indent=2) + '\n')
         print(json.dumps(result, indent=2))

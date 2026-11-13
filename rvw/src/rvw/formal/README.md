@@ -1841,6 +1841,26 @@ preserves four-state values; `--check-x` fails on any observed X/Z, including
 startup. Use a declared reset sequence when startup state matters. Verilator
 uses two-state simulation and refuses X checks and X/Z input values.
 
+Icarus also replays explicit top-input raw property events: `@(irq)`,
+`@(negedge rst)` and event lists such as `@(posedge irq or negedge rst)`.
+The event input must be a top-level port. Edge terms must be scalar.
+A change event can use a vector. X/Z edges use the four-state event rules.
+
+A job with raw events samples all its top-level property clocks before each
+input update. It applies one private monitor pulse for each matching property
+event, even if several terms fire at the same timestamp. Thus `@(data) data`
+checks the old data value. A property that reads another changing clock also
+sees its old value. The time-zero row initializes inputs and does not fire raw
+monitor events. Output observations still use the settled post-update values.
+Result `property_events` records each event and its private monitor clock.
+
+This replay scope requires properties in the top module. It accepts inline
+properties and zero-argument named properties. It refuses same-event `disable
+iff`, internal/hierarchical events, event expressions, clocking blocks and raw
+events on Verilator. General asynchronous formal semantics remain separate.
+The [event scheduling reference](https://dvcon-proceedings.org/wp-content/uploads/asynchronous-behaviors-meet-their-match-with-systemverilog-assertions.pdf)
+explains why concurrent assertions sample values before an asynchronous event.
+
 The same finite SVA set runs as simulation monitors on either backend. This
 includes separate checker files and properties clocked by an asynchronous input.
 The runner records assertion pass/fail and cover hit/miss counts per property.
