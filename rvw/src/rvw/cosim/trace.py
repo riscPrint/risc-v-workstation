@@ -164,6 +164,12 @@ class Trace:
                     if not isinstance(snapshots, dict) or set(snapshots) != set(self.header.get("csr_snapshot", [])):
                         raise ValueError("csr_state must contain exactly the declared snapshot addresses")
                     obj["csr_state"] = {k: hexnum(v, xlen) for k, v in snapshots.items()}
+                if "mmu_walks" in obj:
+                    if "event" in obj or not isinstance(obj["mmu_walks"], list):
+                        raise ValueError("mmu_walks requires a retirement and a list")
+                    from rvw.regress.mmu_walk import validate_capture
+                    for capture_record in obj["mmu_walks"]:
+                        validate_capture(capture_record)
                 if "fault_access" in obj:
                     if self.header["schema"] != "rvw.rvfi/2" or "event" in obj or not obj["trap"]:
                         raise ValueError("fault_access requires a version 2 trap instruction")

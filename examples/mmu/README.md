@@ -29,9 +29,10 @@ case. Large virtual addresses do not allocate large physical memory regions.
 
 The matrix is bounded. It does not test every combination. A/D checks compare
 final PTE contents. They do not establish atomicity or concurrent PTE safety.
-The independent walk checker covers successful immutable mappings with preset
-A/D bits. Missing observations remain inconclusive. Faulting walks, mutable
-walk protocols, shared TLBs and cross-hart shootdowns need additional checks.
+The raw-request walk checker covers successful immutable mappings with preset
+A/D bits. The C2 checker below also supports faulting walks and fenced leaf
+changes. Missing observations remain inconclusive. Hardware A/D updates,
+shared TLBs and cross-hart shootdowns need additional checks.
 No RTL runs are part of the native Spike smoke test.
 
 `extensions.json` is a separate opt-in Svnapot/Svpbmt campaign. It checks each
@@ -59,3 +60,11 @@ MPRV with effective S privilege and read menvcfg.PMM back before the access.
 See the [pointer-masking specification](https://docs.riscv.org/reference/isa/priv/zpm.html).
 Instruction-fetch, U-mode Ssnpm, M-mode Smmpm, debug and guest interactions
 remain open. The installed Spike must support Smnpm for this campaign.
+
+`fault-walks.json` adds 56 short cases. Each mode tests an invalid PTE and a
+PMP-denied table read at every level, for loads and stores. Build these with
+`rvw regress mmu build` and use the same C1 suite pattern. Select the scenarios
+for the project's XLEN before building. `mmu report` also accepts ordered C2
+`mmu_walks` records. Its independent checker supports faulting walks and fenced
+leaf changes with preset A/D bits. The older raw-request checker retains its
+successful immutable scope. No DUT walk result is claimed from Spike alone.

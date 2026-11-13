@@ -56,7 +56,7 @@ def validate(s):
     from .mmu_paging import geometry
     g = geometry(s)
     required = {'id', 'level', 'flags', 'access', 'expect', 'bins'}
-    optional = {'pointer_mask', 'shootdown', 'guest', 'guest_flags', 'guest_fault', 'vmid', 'napot_ppn', 'napot', 'pbmt', 'pbmte', 'mode_switch', 'mode', 'va', 'pa', 'privilege', 'sum', 'mxr', 'ad_expect', 'asid', 'fence', 'remap', 'ad_mode', 'satp_mode', 'mprv', 'offset', 'walk_deny', 'unfenced', 'switch_asid', 'value', 'access_width', 'register_width', 'root_switch', 'nonleaf_global', 'software_rsw', 'store_value'}
+    optional = {'pte_fault_level', 'walk_deny_level', 'pointer_mask', 'shootdown', 'guest', 'guest_flags', 'guest_fault', 'vmid', 'napot_ppn', 'napot', 'pbmt', 'pbmte', 'mode_switch', 'mode', 'va', 'pa', 'privilege', 'sum', 'mxr', 'ad_expect', 'asid', 'fence', 'remap', 'ad_mode', 'satp_mode', 'mprv', 'offset', 'walk_deny', 'unfenced', 'switch_asid', 'value', 'access_width', 'register_width', 'root_switch', 'nonleaf_global', 'software_rsw', 'store_value'}
     if not isinstance(s, dict) or not required <= s.keys() or s.keys() - required - optional:
         raise ValueError('invalid scenario fields')
     if not re.fullmatch(r'[a-z][a-z0-9-]*', s['id']):
@@ -65,6 +65,12 @@ def validate(s):
         raise ValueError('level is outside the selected paging mode')
     from .mmu_extensions import validate as validate_extensions
     validate_extensions(s, g)
+    for key in ('pte_fault_level', 'walk_deny_level'):
+        if key in s:
+            if type(s[key]) is not int or not s['level'] <= s[key] < g.levels:
+                raise ValueError(f'{key} must name an allocated walk level')
+            if s['expect'] != ('page-fault' if key == 'pte_fault_level' else 'access-fault') or s.get('remap') or s.get('walk_deny'):
+                raise ValueError(f'{key} requires its fault expectation without remap/walk_deny')
     if 'mode_switch' in s and (type(s['mode_switch']) is not bool or s['access'] != 'load' or s.get('remap') or s['expect'] != 'success' or number(s.get('pa', DATA)) != DATA or s.get('value', 42) != 42 or s.get('offset', 0)):
         raise ValueError('mode_switch requires a successful data access without remap')
     if not isinstance(s['flags'], str) or set(s['flags']) - FLAGS.keys():
@@ -170,6 +176,8 @@ def assembly(s):
     asid = s.get('asid', 0)
     fence = {'all': 'sfence.vma x0, x0', 'va': 'sfence.vma t3, x0',
              'asid': 'sfence.vma x0, t4', 'va-asid': 'sfence.vma t3, t4'}[s.get('fence', 'all')]
+    denied_start = ROOT + (g.levels - 1 - s.get('walk_deny_level', g.levels - 1)) * 4096
+    denied_end = denied_start + (4096 if 'walk_deny_level' in s else len(tables) * 4096)
     # All fetches stay in M-mode. MPRV selects S/U only for the tested data access.
     code = f'''.option norvc
 .section .text
@@ -184,7 +192,7 @@ _start:
  csrw pmpaddr0, t0
  li t0, 15
  csrw pmpcfg0, t0
- {('li t0, ' + str(ROOT >> 2) + chr(10) + ' csrw pmpaddr0, t0' + chr(10) + ' li t0, ' + str((ROOT + len(tables) * 4096) >> 2) + chr(10) + ' csrw pmpaddr1, t0' + chr(10) + ' li t0, -1' + chr(10) + ' csrw pmpaddr2, t0' + chr(10) + ' li t0, 0x0f080f' + chr(10) + ' csrw pmpcfg0, t0') if s.get('walk_deny') else ''}
+ {('li t0, ' + str(denied_start >> 2) + chr(10) + ' csrw pmpaddr0, t0' + chr(10) + ' li t0, ' + str(denied_end >> 2) + chr(10) + ' csrw pmpaddr1, t0' + chr(10) + ' li t0, -1' + chr(10) + ' csrw pmpaddr2, t0' + chr(10) + ' li t0, 0x0f080f' + chr(10) + ' csrw pmpcfg0, t0') if s.get('walk_deny') or 'walk_deny_level' in s else ''}
  li t0, {0 if s.get('satp_mode') == 'bare' else g.satp(ROOT, asid)}
  csrw satp, t0
  {('li t0, ' + str(leaf) + chr(10) + ' ld t1, 0(t0)' + chr(10) + ' li t2, ' + str(s.get('software_rsw', 0) << 8) + chr(10) + ' or t1, t1, t2' + chr(10) + ' sd t1, 0(t0)') if 'software_rsw' in s else ''}
@@ -678,6 +686,10 @@ def report(directory, results, checked=None):
                     pma_check=check_pma(s, events[1:], (manifest.get("pma") or {}).get("regions")) if bound else unbound,
                     counts={k: sum(e.get('kind') == k for e in events[1:])
                             for k in ('walk_request', 'walk_response', 'bus_a')})
+            from .mmu_walk import check_c2, scenario_accesses
+            trace_name = run.artifacts.get('rvfi_trace')
+            if trace_name and (run.path / trace_name).is_file():
+                observed['c2_walk_check'] = check_c2(run.path / trace_name, scenario_accesses(s), raw)
         rows.append(dict(id=s['id'], elf_sha256=s['elf_sha256'], status=status,
                          bins=s['bins'], observations=observed))
     universe = sorted({b for s in rows for b in s['bins']})

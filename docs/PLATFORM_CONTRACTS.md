@@ -2976,6 +2976,36 @@ level-zero RV64 mapping. The Spike reference uses `-p2`. The C1 project must
 select an adapter configuration with two harts. Request, acknowledgement and
 completion use RAM mailboxes and explicit memory fences. No IPI is implied.
 Neither option supports the independent immutable-walk checker yet.
+### Ordered MMU walk observations
+
+C2 retirements may contain `mmu_walks`, a list of completed walk records.
+Each record has `kind = "mmu_walk"`, sequential integer `access_id`, `mode`
+(Sv32/39/48/57 in lower case), `access` (load/store/fetch), `va`, `root`,
+`status` (success/page-fault/access-fault), and ordered `reads`. Successful
+records also give `pa`. Addresses and PTE data use integers or integer strings.
+Each read gives integer `level`, physical `address`, boolean `fault`, and
+`data` when the read succeeds. PMP-denied reads have `fault = true`.
+The adapter captures these from project-declared probes. It must not synthesize
+walk records from retirement results. `access_id` follows the scenario's tested
+accesses, excluding harness accesses. A project must capture all tested walks
+for a complete comparison. A TLB hit that has no walk leaves this comparison
+inconclusive. No TLB hit coverage is implied.
+
+`rvw regress mmu report` checks bounded data scenarios against an independent
+Python walker. Reference PTE snapshots come from the scenario generator, never
+from DUT returned PTE data. Fenced leaf remaps use separate memory snapshots.
+The checker compares every level, PTE address, PTE value and final result.
+C2 must have a passing end and its core/config/ELF/RTL/source/seed identity must
+match C1. Missing records remain inconclusive. Incorrect or extra records are
+mismatches. These results do not fill architectural bins. Hardware A/D writes,
+extension PTEs, root switches and unfenced alternatives are unsupported here.
+
+MMU scenarios may set `pte_fault_level` or `walk_deny_level`. The named level
+must exist in the selected page table. The first option invalidates its PTE.
+The second denies PMP reads of only that table page. Programs check the exact
+page/access fault, tval and PC. These fields require the matching fault
+expectation and exclude remapping and blanket walk denial.
+
 ### Automatic formal checks
 
 `rvw.autocheck/1` extends the reviewed formal app port manifest with optional
