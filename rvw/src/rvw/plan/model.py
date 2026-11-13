@@ -104,8 +104,10 @@ class VPlan:
         if schema=='rvw.functional-coverage/1':
             if data.get('qualification_policy') != 'c1-pass-complete-c2-v1':
                 raise ValueError('functional report has no run qualification')
-            trace_contexts=[{k:v for k,v in t['header'].items() if k not in ('elf','elf_sha256','seed')} for t in data.get('traces',{}).values()]
-            context=sha256(json.dumps(sorted(trace_contexts,key=lambda t:json.dumps(t,sort_keys=True)),sort_keys=True).encode()).hexdigest()
+            trace_contexts={json.dumps({k:v for k,v in t['header'].items()
+                if k not in ('elf','elf_sha256','seed')},sort_keys=True)
+                for t in data.get('traces',{}).values()}
+            context=sha256(json.dumps([json.loads(t) for t in sorted(trace_contexts)],sort_keys=True).encode()).hexdigest()
             row['coverage_contexts'].append('functional:'+data['config_sha256']+':'+context)
             for name in groups:
                 group=data['groups'][name]
