@@ -1021,3 +1021,7 @@ The callback must run in a simulation thread, outside a clock-edge callback.
 The core clock must remain stopped until the callback returns. Send the end
 record before the native simulation closes. `rvw cosim live --lockstep` owns
 the reference connection. The default writer still uses the Scala transport.
+
+Sample all retirement, trap and CSR signals for an edge before calling the
+transport. The DPI callback can yield simulation time. Reading another signal
+after that call can combine values from different edges.
