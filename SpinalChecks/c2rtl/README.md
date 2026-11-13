@@ -323,3 +323,9 @@ Native small fixtures now check F32-to-F64 conversion, one-bit F32 comparison,
 source-format cases and signaling-NaN flags against the pinned SoftFloat tree.
 They do not qualify a project's FPU. The SoftFloat dependency helper includes
 the exception handler used by RISC-V NaN conversion macros.
+
+## Real HardFloat units
+
+Use [the native HardFloat runner](README-hardfloat.md) for binary16/binary32 unit
+exports against pinned SoftFloat. It checks result bits, rounding and flags.
+Case restrictions, transaction bounds and inconclusive runs stay explicit.

@@ -24,4 +24,8 @@ def mcp_tools():
         schema({'gold':{'type':'array','items':s},'gate':{'type':'array','items':s},'top':s,'clock':s,'reset':s,
                 'reset_cycles':{'type':'integer'},'settle':{'type':'integer'},'max_partitions':{'type':'integer','minimum':1,'maximum':64},
                 'timeout':{'type':'number','exclusiveMinimum':0},'out':s},['gold','gate','top','out']),
+<<<<<<< HEAD
         _runner('equiv-partitions'),long=True,side_effects='writes-files',native_tools=('Yosys','SymbiYosys','EQY'),result_envelope=True)]
+=======
+        _runner('equiv-partitions'),long=True,side_effects='writes-files',native_tools=('Yosys','SymbiYosys','ABC'),result_envelope=True)]
+>>>>>>> cdb39169 (feat(formal): prove real hardfloat and divider unit contracts)

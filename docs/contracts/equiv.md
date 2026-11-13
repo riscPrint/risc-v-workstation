@@ -292,3 +292,25 @@ output relation is proved. Output counterexamples keep their original verdict.
 candidates prevent a combined equivalence result. The time limit covers all
 exports and proofs. Projection preserves the captured state and initial values.
 This is not an assumed-cut abstraction or a cyclic dependency proof.
+
+## Public asynchronous reset in datapath transactions
+
+The Boolean C translator accepts `$_DFF_PP0_` and `$_DFF_PP1_` only when both
+clock and reset are the declared public ports. Reset is active high. At each
+transaction evaluation it applies asserted reset values before evaluating
+combinational logic. Clock capture therefore sees asynchronous state already in
+reset. It repeats this step after the simultaneous register update. The model
+covers transaction samples, not events between samples. Private reset sources,
+negative-edge clocks and other asynchronous controls remain unsupported. The
+recorded one-reset-clock transaction contract still applies.
+
+## Native HardFloat campaign receipts
+
+The example runner writes `rvw.hardfloat-campaign/1`. It records source file
+hashes, format, operations, first-operand case splits, rounding modes, completion
+bound, job count and per-proof results. Integer conversion input/output width
+bindings remain explicit. Each native result retains its own RTL and C captures.
+The checked-in `rvw.hardfloat-evidence/1` ledger aggregates run receipts and their
+input/tool hashes. Repeated or overlapping contracts remain separate runs. Run
+counts are not input coverage, whole-FPU qualification or ISA proof. A case pass
+applies only to its recorded format, inputs, rounding mode and transaction bound.
