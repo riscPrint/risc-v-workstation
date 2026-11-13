@@ -47,3 +47,14 @@ def test_corruption_diagnostic_requires_passing_baseline_for_qualification():
     runs[0]['checked']=True
     assert module.assessment(runs)==dict(runs_good=True,catches_bad_dut=True)
     assert module.assessment([])==dict(runs_good=False,catches_bad_dut=False)
+
+
+def test_published_matrix_parses_and_detection_has_a_passing_baseline():
+    import json
+    data=json.loads((ROOT/'Uvm/vip/qualification/native-2026-11-13.json').read_text())
+    assert len(data['agents'])==20
+    for row in data['agents']:
+        if row.get('catches_bad_dut'):
+            good=[r for r in row['runs'] if r['fault']=='']
+            corrupt=[r for r in row['runs'] if r['fault']=='buggy']
+            assert good and corrupt and all(r['checked'] for r in good+corrupt)

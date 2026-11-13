@@ -60,3 +60,7 @@ Local logs are under `$VEXRISCV/uvm-runs/sv-vip-qualification/` and
 
 Paths in `native-2026-11-13.json` use `$CHECKOUT` for the workstation checkout and
 `$RUN_ROOT` for the local run directory, so the file holds no personal paths.
+The published JSON replaces local absolute paths with `$REPO` and
+`$VEXRISCV`. `report.py --path-alias PATH=TOKEN` makes those aliases.
+The private raw reports retain the original executable commands and paths.
+Source hashes, exit codes and check outcomes stay unchanged.

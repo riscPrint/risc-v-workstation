@@ -242,7 +242,7 @@ rvw uvm coverage-merge /tmp/bench-run/coverage.dat --out /tmp/merged.dat
 
 The manifest schema is `rvw.uvm/1`. Required fields are `name`, `top`,
 `sources` and `tests`. Optional fields are `include_dirs`, `defines`,
-`build_args`, `plusargs`, `register_map` and `bindings`. `build_args` passes
+`build_args`, `plusargs`, `register_map`, `bindings` and `native_dependencies`. `build_args` passes
 native compiler and DPI link options as argument strings. It never invokes a
 shell. `bindings` stores project data for bench-specific signal adapters.
 The flow does not infer signal connections from that object.
@@ -309,3 +309,13 @@ results. That example reports zero CPU checks. See its README for scope.
 
 `rvw uvm new --db design.db --soc map.json --out DIR` generates the first
 runnable pyuvm register-reset scaffold. See [its profile and limits](../rvw/src/rvw/uvm/README.md#generate-a-register-bench).
+
+## Native dependencies in a compiled bench
+
+Declare `native_dependencies` for a DPI bench that will use C4 acceptance.
+List the bridge headers, runtime libraries, generated images and other native
+inputs. Files in declared directories are hashed recursively. The build and
+run reject changed declared inputs. The gate identity captures these bytes.
+The project must list the complete native input set. The adapter does not
+infer it from arbitrary compiler arguments. An ABI still needs native tests.
+See the [live SV VexRiscv bench](examples/vexriscv/sv/README.md).
