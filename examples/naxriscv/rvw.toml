@@ -105,3 +105,14 @@ configs = ["rv64ima", "rv64imasu"]
 max_cycles = 200000
 timeout_s = 120
 mem_latency = 0
+
+[suites.act4-rv64]
+description = "ACT4 RV64 instruction groups with a machine-mode bootstrap"
+dir = "${NAX_ACT4_OUT:-rvw/out/act4-rv64}/work/rvw-act4/elfs"
+act4_manifest = "${NAX_ACT4_OUT:-rvw/out/act4-rv64}/manifest.json"
+glob = "**/*.elf"
+strip_suffix = ".elf"
+configs = ["rv64ima", "rv64imasu"]
+max_cycles = 2000000
+timeout_s = 120
+mem_latency = 0
