@@ -202,6 +202,10 @@ FAST_MODULES = {
 
 
 def pytest_collection_modifyitems(items):
+    # A reviewed module can also opt in itself with `pytestmark = pytest.mark.fast`,
+    # so new fast modules need no edit to this shared list.
     for item in items:
+        if item.get_closest_marker("fast"):
+            continue
         relative = item.path.relative_to(HERE).as_posix()
         item.add_marker("fast" if relative in FAST_MODULES else "slow")

@@ -334,3 +334,7 @@ def register(sub) -> None:
     sweep.add_argument("--replay", choices=["icarus"], default="icarus")
     sweep.add_argument("--first-failure", action="store_true", help="stop each module after the first formal witness")
     sweep.set_defaults(func=lambda a: _flow("x_sweep", a))
+
+    # New subcommands: add a module under rvw/src/rvw/formal/commands/ (see rvw.common.subcommands).
+    from rvw.common.subcommands import register_commands
+    register_commands("rvw.formal", s)
