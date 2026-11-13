@@ -1057,3 +1057,27 @@ The native sample has four passes after the deliberate poisoning failure.
 Reset checks finish at cycle 158. Both echoes finish at cycle 4,079. Model-run
 counters prove reuse of the two compiled variants. No thread-speed gain or
 sampled OS-thread count is claimed. See [the sample](rvw/reset-thread-results.json).
+
+### Eventual stage release
+
+`CoreProperties` also writes `liveness.sv`. It checks eventual release of a
+valid stalled first stage. From the workstation root, use the same generated
+RTL directory and aligned ISA ELF list:
+
+```sh
+scripts/with-lock.sh vex-sva nice -n 10 rvw/.venv/bin/python \
+  examples/vexriscv/rvw/core-progress.py sim --rtl RTL_DIRECTORY \
+  --out NEW_SIM_DIRECTORY ELF...
+scripts/with-lock.sh vex-sva nice -n 10 rvw/.venv/bin/python \
+  examples/vexriscv/rvw/core-progress.py formal --rtl RTL_DIRECTORY \
+  --out NEW_FORMAL_DIRECTORY
+rvw formal regress NEW_FORMAL_DIRECTORY/regress.toml --jobs 1 --timeout 60 \
+  --proof-cache PROOF_CACHE --out NEW_REGRESS_DIRECTORY --json
+```
+
+Repeat the regression with a new output directory to check the exact cache.
+C1 retains completion, activation and pending counts. Pending requests prevent
+a passing result. Formal checks bounded lassos at depth 12 and separately covers
+the antecedent. It uses one startup reset clock and no progress fairness.
+Read [the measured results](property-results.md#eventual-stage-release).
+This does not prove unbounded liveness or fetched-instruction identity.

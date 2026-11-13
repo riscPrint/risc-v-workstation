@@ -1,0 +1,27 @@
+{
+  "property": "stage0_eventual_release",
+  "source": {
+    "file": "CoreProperties.scala",
+    "line": 32
+  },
+  "core_revision": "a62c145aa042a5de874344e0a7683bd7c8c8c870",
+  "simulation": {
+    "programs": 49,
+    "passed": 1742,
+    "failed": 0,
+    "activated": 1742,
+    "pending": 0
+  },
+  "formal": {
+    "status": "bounded_lasso_search",
+    "depth": 12,
+    "state_bits": 2998,
+    "antecedent": "reached",
+    "cache_hit": true
+  },
+  "limits": [
+    "one startup reset clock in formal; no progress fairness",
+    "stage release only; no instruction-identity or eventual-retirement claim",
+    "finite simulation and bounded lasso search; no unbounded proof"
+  ]
+}

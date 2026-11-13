@@ -936,3 +936,11 @@ Candidates with a refutation are omitted. Dead antecedents and insufficiently
 activated set members are omitted. The result is finite observation evidence.
 It is not a proof or a generated assumption. Review the emitted Scala DSL
 before it is added to a core's property set.
+
+## Finite core progress observations
+
+The VexRiscv example's C1 assertion rows can record `pending`. This is the
+number of eventual-release requests still open when simulation ends. Nonzero
+pending counts give `inconclusive`, even if the program writes its passing
+finisher value. `passed` counts completed requests. `activated` counts started
+requests. These finite observations do not prove infinite-trace liveness.

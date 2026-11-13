@@ -66,3 +66,32 @@ checks also remain open. The current register checks observe RVFI write rules.
 A deliberately false retirement assertion failed in the prior native `add`
 campaign. The program still reached `tohost=1`. C1 retained the assertion failure.
 The seeded assertion is a test fixture. It is not a discovered core defect.
+
+## Eventual stage release
+
+A separate 2026-11-13 run adds `stage0_eventual_release`, written with the Scala
+DSL at `CoreProperties.scala:32`. A valid stalled first stage must eventually
+become invalid, leave the stall, be removed or be flushed. Requests are gated
+during startup reset. The property has no finite deadline.
+
+| Property | Sim completed | Sim fail | Sim active | Sim pending | Formal | Antecedent cover |
+|---|---:|---:|---:|---:|---|---|
+| `stage0_eventual_release` | 1742 | 0 | 1742 | 0 | bounded lasso search 12 | reached |
+
+All 49 aligned ISA programs passed. `rvw cov merge` consumed their property
+counts. Formal snapshots 2,998 state bits. It assumes one startup reset clock
+and no progress fairness. `formal regress` writes C3 and JUnit. Its exact cache
+rerun restored the bounded result and antecedent witness. Read
+[the compact result](progress-results.json).
+
+The native monitor has separate completion, activation and pending counters.
+A finite program with pending requests is inconclusive. This result does not
+prove infinite-trace liveness. Stage release does not establish the identity
+or eventual retirement of a fetched instruction.
+
+The first formal attempt refused unprocessed synthesis directives. The wrapper
+now preprocesses with Verilator and `SYNTHESIS`, as the synthesis flow does.
+The first regression export retained an escaped `$anyseq` cell without its
+module definition. The portable job now includes a width-preserving definition
+which maps that cell to the formal `$anyseq` function. Nondeterminism is retained.
+No assumption or property is removed. Failed attempts remain in local artifacts.
