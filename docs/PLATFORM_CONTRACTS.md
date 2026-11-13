@@ -3052,6 +3052,16 @@ per-size cycles and per-class signed slope errors. Missing evidence exits 2.
 The report is local timing evidence, not a C4 verdict or complete C8 capture.
 Stock llvm-mca cannot load generated TableGen. The built-in baseline does not
 validate a generated model. See `Arch/SCHED_MODELS.md` for limits.
+### Own-core model search
+
+`rvw.ooo-search-plan/1` selects a project model, complete C2 traces, numeric
+parameter choices, grid or Bayesian search, a point budget and a cycle budget.
+Optional area and power objects are project analytic cost estimates with a
+named source. `rvw.ooo-search/1` records model-only points, trace timings,
+frontier IDs, objective names, missing cost dimensions and unmeasured
+uncertainty. `results.sqlite` retains one row per completed point. Reports
+remain inconclusive for accuracy. They are not C1 runs or hardware evidence.
+
 ### Own-core native scheduler selection
 
 `rvw.ooo-run/1` adds `backend` (`python` or `native`). The optional native

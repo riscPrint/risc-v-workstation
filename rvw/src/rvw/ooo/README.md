@@ -228,3 +228,43 @@ library. C2 parsing and input conversion still use Python.
 The parity test checks 100 seeded synthetic integer schedules against Python,
 including queue limits, dependencies, and physical-register capacity. This is
 schedule parity with the reference model. It does not establish RTL accuracy.
+
+## Design-space search
+
+Run `rvw arch ooo-search PLAN --out NEW_DIRECTORY --json`. The matching
+cancellable MCP tool is `arch_ooo_search`. The plan uses paths relative to
+its own directory:
+
+```json
+{
+  "schema": "rvw.ooo-search-plan/1",
+  "config": "model.json",
+  "traces": ["kernel-a.jsonl", "kernel-b.jsonl"],
+  "parameters": {"issue_width": [2, 4, 8], "rob_entries": [64, 128]},
+  "method": "bayesian",
+  "budget": 6,
+  "max_cycles": 1000000,
+  "area": {
+    "base": 100,
+    "coefficients": {"rob_entries": 0.2, "issue_width": 5},
+    "source": "project analytic estimate; arbitrary area units"
+  }
+}
+```
+
+`grid` visits Cartesian points in sorted parameter order. `bayesian` reuses
+the architecture search Gaussian-process expected-improvement method. Its
+objective is the sum of model cycles across the supplied traces. Each run
+has at most 32 points from a space of at most 4096 candidates. Numeric paths
+can select nested fields such as `frontend.decode_width` or `latencies.load`.
+An optional object such as `frontend` must first exist in the base config.
+
+Each point is committed to `results.sqlite`. `report.json` contains the
+configurations, individual trace results, and a Pareto frontier over cycles
+and any supplied area or power estimates. Each optional cost object defines
+`base + sum(coefficient * parameter)`. The project must name its source and
+units. These are analytic estimates. No RTL, cell area, or measured power is
+inferred. Missing costs remain unobserved. Uncertainty stays unmeasured.
+A partial failed run can retain completed SQLite points, but has no final
+report. The same committed C2 paths drive every candidate. This cannot model
+changes to the program path or validate a custom instruction's semantics.

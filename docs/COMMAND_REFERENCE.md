@@ -42,8 +42,14 @@ usage: rvw agent-bench serve [-h] --pack PACK --out OUT --task TASK [--project
 
 ```text
 usage: rvw arch [-h] [--project PROJECT]
-    {ooo-calibrate,ooo-predict,ooo-score,warmup-bias,sample,sched-generate,sched-measure,search,predict,score-prediction,memory-extract,pareto,memory-report,sweep,build,run,calibrate,compare,fit,inspect,measure,linux}
+    {ooo-search,ooo-calibrate,ooo-predict,ooo-score,warmup-bias,sample,sched-generate,sched-measure,search,predict,score-prediction,memory-extract,pareto,memory-report,sweep,build,run,calibrate,compare,fit,inspect,measure,linux}
     ...
+```
+
+### `rvw arch ooo-search`
+
+```text
+usage: rvw arch ooo-search [-h] --out OUT [--json] [--project PROJECT] plan
 ```
 
 ### `rvw arch ooo-calibrate`
@@ -1677,6 +1683,14 @@ Starts a background job: yes.
 Report declared memory observations. Missing metrics stay unobserved.
 
 Arguments: `observations` (required), `project`.
+
+Starts a background job: yes.
+
+### `arch_ooo_search`
+
+Run bounded own-model sweeps or Bayesian cycle search with project cost estimates.
+
+Arguments: `plan` (required), `out` (required), `project`.
 
 Starts a background job: yes.
 
