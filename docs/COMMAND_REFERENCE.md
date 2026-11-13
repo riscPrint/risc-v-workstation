@@ -14,7 +14,7 @@ An entry here states availability. It does not qualify a native flow.
 
 ```text
 usage: rvw [-h] [--version] [--project PROJECT]
-    {agent-bench,arch,bisect,bundle,cosim,cov,debug,doctor,farm,formal,init,lint,mcp,memory,ooo,perf,privilege,query,reduce,regress,speed-compare,speed-sweep,backends,uvm,uvm-ral,uvm-cpu,hdl,cocotb,soc,verification-plan,wave,workloads}
+    {agent-bench,arch,bisect,bundle,cosim,cov,debug,doctor,farm,formal,init,lint,mcp,memory,ooo,perf,privilege,query,reduce,regress,sim,speed-compare,speed-sweep,backends,uvm,uvm-ral,uvm-cpu,hdl,cocotb,soc,verification-plan,wave,workloads}
     ...
 ```
 
@@ -924,8 +924,36 @@ usage: rvw reduce [-h] [--out OUT] [--signature SIGNATURE] [--modes MODES]
 
 ```text
 usage: rvw regress [-h] [--project PROJECT]
-    {speed-compare,speed-sweep,backends,uvm,uvm-ral,uvm-cpu,hdl,cocotb,random,privilege,mmu,vector,run,compare,gate,known,history,list}
+    {sim,speed-compare,speed-sweep,backends,uvm,uvm-ral,uvm-cpu,hdl,cocotb,random,privilege,mmu,vector,run,compare,gate,known,history,list}
     ...
+```
+
+### `rvw regress sim`
+
+```text
+usage: rvw regress sim [-h] [--project PROJECT]
+    {checkpoint,resume,suffix-check} ...
+```
+
+### `rvw regress sim checkpoint`
+
+```text
+usage: rvw regress sim checkpoint [-h] (--cycle CYCLE | --instruction
+    INSTRUCTION) --out OUT [--project PROJECT] manifest
+```
+
+### `rvw regress sim resume`
+
+```text
+usage: rvw regress sim resume [-h] --out OUT [--project PROJECT] manifest
+    snapshot
+```
+
+### `rvw regress sim suffix-check`
+
+```text
+usage: rvw regress sim suffix-check [-h] --position POSITION [--project
+    PROJECT] original resumed
 ```
 
 ### `rvw regress speed-compare`
@@ -1143,6 +1171,32 @@ usage: rvw regress history [-h] [--core CORE] [--rev REV] [--tier TIER]
 ```text
 usage: rvw regress list [-h] [--core CORE] [--suite SUITE] [--json] [--project
     PROJECT]
+```
+
+### `rvw sim`
+
+```text
+usage: rvw sim [-h] [--project PROJECT] {checkpoint,resume,suffix-check} ...
+```
+
+### `rvw sim checkpoint`
+
+```text
+usage: rvw sim checkpoint [-h] (--cycle CYCLE | --instruction INSTRUCTION)
+    --out OUT [--project PROJECT] manifest
+```
+
+### `rvw sim resume`
+
+```text
+usage: rvw sim resume [-h] --out OUT [--project PROJECT] manifest snapshot
+```
+
+### `rvw sim suffix-check`
+
+```text
+usage: rvw sim suffix-check [-h] --position POSITION [--project PROJECT]
+    original resumed
 ```
 
 ### `rvw speed-compare`
@@ -2137,6 +2191,30 @@ Starts a background job: yes.
 Read-only setup checks. No native build/run conformance claim. Installation is CLI-only.
 
 Arguments: `project`, `features`.
+
+Starts a background job: no.
+
+### `sim_checkpoint`
+
+Save a stopped project native model and harness. Requires a snapshot port; from-reset replay is separate.
+
+Arguments: `manifest` (required), `out` (required), `cycle`, `instruction`.
+
+Starts a background job: no.
+
+### `sim_resume`
+
+Restore a native snapshot into a fresh project adapter and finish its C1/C2 run. No equivalence verdict.
+
+Arguments: `manifest` (required), `snapshot` (required), `out` (required).
+
+Starts a background job: no.
+
+### `sim_suffix_check`
+
+Require identical C2 prefix and suffix bytes with end events. Does not establish ISA correctness.
+
+Arguments: `original` (required), `resumed` (required), `position` (required).
 
 Starts a background job: no.
 
