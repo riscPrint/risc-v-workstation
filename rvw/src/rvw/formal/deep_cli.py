@@ -16,7 +16,10 @@ def run(args):
         path = Path(args.manifest).resolve()
         plan = json.loads(path.read_text())
         out = Path(args.out)
-        if args.deep_action == 'bug-hunt':
+        if args.deep_action == 'counter-quotient':
+            from .counter_quotient import run as quotient
+            return quotient(args)
+        elif args.deep_action == 'bug-hunt':
             from .bug_hunt import hunt
             data = hunt(plan, path.parent, out, budget=args.budget, timeout=args.timeout)
         elif args.deep_action == 'model-live':
@@ -60,6 +63,7 @@ def run(args):
 
 def register(sub):
     for name, help_text in (
+        ('counter-quotient', 'certify a smaller modulo counter against a typed concrete leaf'),
         ('bug-hunt', 'search pinned RTL with increasing bounds, engines and rIC3 seeds'),
         ('model-live', 'check recurrent progress with justice fairness on an explicit finite graph'),
         ('rtl-grid', 'split exported RTL properties over local and farm workers'),
@@ -75,14 +79,14 @@ def register(sub):
             p.add_argument('--manifest', required=True)
         p.add_argument('--out', required=True)
         p.add_argument('--json', action='store_true')
-        if name in ('engine-race', 'engine-bench', 'rtl-refine', 'bug-hunt'):
+        if name in ('engine-race', 'engine-bench', 'rtl-refine', 'bug-hunt', 'counter-quotient'):
             p.add_argument('--timeout', type=float, default=30)
         if name in ('rtl-refine', 'relation-strengthen', 'bug-hunt'):
             p.add_argument('--budget', type=float, default=60)
         if name == 'rtl-refine':
             p.add_argument('--max-cuts', type=int, default=8)
-        if name == 'relation-strengthen':
-            p.add_argument('--engine', default='smtbmc:yices')
+        if name in ('relation-strengthen', 'counter-quotient'):
+            p.add_argument('--engine', default='abc:pdr' if name == 'counter-quotient' else 'smtbmc:yices')
             p.add_argument('--depth', type=int, default=12)
         if name == 'engine-race':
             p.add_argument('--cross-check', action='store_true', help='retain engines until their answers or timeouts')
@@ -105,7 +109,10 @@ def mcp_tools():
     from .mcp_tools import _runner
     s = {'type': 'string'}
     common = {'out': s, 'manifest': s}
-    return [ToolSpec('formal_bug_hunt', 'Bounded engine and rIC3 seed search. Only a concrete counterexample is conclusive.',
+    return [ToolSpec('formal_counter_quotient', 'Prove a reset-qualified modulo relation between a typed concrete counter and a smaller model.',
+                    schema({**common, 'engine': s, 'depth': {'type': 'integer', 'minimum': 2},
+                            'timeout': {'type': 'number', 'exclusiveMinimum': 0}}, ['out', 'manifest']), _runner('counter-quotient'), long=True),
+            ToolSpec('formal_bug_hunt', 'Bounded engine and rIC3 seed search. Only a concrete counterexample is conclusive.',
                     schema({**common, 'budget': {'type': 'number', 'exclusiveMinimum': 0},
                             'timeout': {'type': 'number', 'exclusiveMinimum': 0}}, ['out', 'manifest']), _runner('bug-hunt'), long=True),
             ToolSpec('formal_model_live', 'Check fair recurrent progress on an explicit finite graph. No RTL translation claim.',

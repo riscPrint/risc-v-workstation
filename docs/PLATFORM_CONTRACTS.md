@@ -84,3 +84,26 @@ Principles (from `ROADMAP.md`):
 | `SpinalKonata/` | Generic Konata pipeline-trace library for Spinal designs. | Scala |
 | `SpinalDB/` | One extraction pass over an elaborated Spinal design: the design database. | Scala |
 | `scripts/with-lock.sh` | Machine-wide lock for heavy jobs (see Resources); a wrapper around `rvw/src/rvw/common/lock.py`. | shell |
+
+### Reset-policy counter quotient certificate
+
+CLI `counter-quotient` and MCP `formal_counter_quotient` read pinned Verilog
+`top` and `sources`, `width`, and `keep_bits` with
+`1 <= keep_bits < width <= 256`. Optional `ports` maps exactly `clock`, `reset`,
+`enable`, and `count` to simple identifiers. The concrete interface must match
+one-bit control inputs and the declared output width. Extra ports are refused.
+Optional `reset_active` selects high or low polarity.
+
+`rvw.formal-counter-quotient/1` certifies a generated smaller enabled counter
+only after a fresh unbounded relation proof and guarded reset reachability.
+The relation is `abstract_count = concrete_count mod 2**keep_bits` under the
+recorded initial-reset and clock policy. Source assumptions keep it
+inconclusive. A failed obligation reports `obligation_failed` and leaves the
+candidate uncertified. Source assertions remain in the obligation.
+
+The report retains source, model and manifest hashes, the proof path and
+restrictions. `abstract.sv` is the candidate model. A successful certificate
+covers projected low bits only. It does not replace a wider design. The reset
+policy resets once at startup, then holds reset inactive. Arbitrary future
+reset sequences are outside this certificate.
+

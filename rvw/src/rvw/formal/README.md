@@ -1556,6 +1556,36 @@ answer leaves its assigned properties inconclusive.
 If cut-free SMT induction is inconclusive, RTL refinement tries ABC PDR with
 the remaining budget. This is a fresh proof, not reuse of a failed induction.
 
+## Counter quotient certificates
+
+Run `rvw formal counter-quotient --manifest PLAN.json --out OUT --timeout 15`.
+MCP `formal_counter_quotient` runs the same command. The plan declares pinned
+Verilog `sources`, concrete `top`, `width`, and smaller `keep_bits`. The default
+port names are `clk`, `reset`, `enable`, and `count`. A `ports` object can map
+`clock`, `reset`, `enable`, and `count` to other names. All four ports must have
+the declared directions and widths. Extra ports are refused. `reset_active`
+can be `high` or `low`.
+
+The runner generates `abstract.sv`, an enabled modulo counter of `keep_bits`
+width. It proves the relation `abstract_count = concrete_count mod 2**keep_bits`
+against the concrete RTL through the existing guarded unbounded flow. A pass
+certifies that relation under the recorded initial-reset and clock policy.
+It covers projected low bits only. It does not replace a parent design or
+certify properties of discarded upper bits. Source environment assumptions
+keep the certificate inconclusive. A failed obligation leaves the candidate
+uncertified. It does not by itself identify a DUT bug.
+
+The certificate records source, manifest and model hashes, restrictions and the
+retained native proof. A changed source needs a new proof. The proof resets the
+leaf once at startup, then holds reset inactive. It does not certify arbitrary
+future reset sequences. A concrete counter whose enabled increment is two
+refutes the candidate that increments by one.
+
+Native reference evidence: the 32-bit counter proved against the 4-bit model.
+The increment-by-two candidate failed its obligation. Native tests also check
+16-bit to 3-bit projection with an active-low reset and renamed ports. Evidence:
+`/tmp/deep-counter-{safe,bad}/result.json`. No full-core result is implied.
+
 ## Native engine diagnostics
 
 Run `rvw formal doctor --out OUT --json` to list dependencies and enabled adapter
