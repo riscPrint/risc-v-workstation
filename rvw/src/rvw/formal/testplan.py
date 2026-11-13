@@ -60,7 +60,7 @@ def build(plan, evidence):
                    vacuity='not_established' if activation.get('status') != 'reached' else 'activation_reached',
                    proof_core={'status': core.get('status', 'unavailable'),
                                'labels': core.get('labels', []), 'scope': core.get('scope'),
-                               'cell_coverage': 'unavailable', 'captured_property_id': core.get('property_id')},
+                               'cell_coverage': core.get('cell_coverage', 'unavailable'), 'captured_property_id': core.get('property_id')},
                    mutation=[{'id': mid, 'state': mutants[mid].get('state', 'unclassified')}
                              if mid in mutants else {'id': mid, 'state': 'missing'}
                              for mid in map(str, p.get('mutation_ids', []))],
@@ -72,6 +72,7 @@ def build(plan, evidence):
             lines[(source['file'], source['line'])].append(row)
         for requirement in p.get('requirement_ids', []):
             requirements[requirement].append(key)
+    obligations = requirement_obligations(plan, rows)
     def summary(items):
         counts = defaultdict(int)
         for row in items:
@@ -82,11 +83,11 @@ def build(plan, evidence):
     return {'schema': 'rvw.formal-testplan-report/1', 'status': 'inconclusive', 'properties': rows,
             'modules': [{'module': k, **summary(v)} for k, v in sorted(modules.items())],
             'source_lines': [{'file': k[0], 'line': k[1], **summary(v)} for k, v in sorted(lines.items())],
-            'requirements': [{'requirement_id': k, 'property_ids': v, 'status': 'inconclusive'}
+            'requirements': obligations or [{'requirement_id': k, 'property_ids': v, 'status': 'inconclusive'}
                              for k, v in sorted(requirements.items())],
-            'limits': 'Inventory and explicit evidence joins only. Core labels are not cell coverage. '
+            'limits': 'Inventory and explicit evidence joins only. Cell coverage is available only from explicit cell-core evidence. '
                       'Reached activation does not establish full non-vacuity. No UNR exclusions are granted. '
-                      'Requirement obligations remain inconclusive.'}
+                      'Only explicit complete obligations can be discharged conditionally.'}
 
 
 def html(report):
@@ -137,3 +138,35 @@ def run(args):
     (out / 'report.html').write_text(html(report))
     print(json.dumps(report, indent=2) if args.json else 'inconclusive')
     return 1
+
+
+def requirement_obligations(plan, rows):
+    """Evaluate each explicit requirement obligation without filling missing rows."""
+    properties = {r['property_id']: r for r in rows}
+    result, seen = [], set()
+    for req in plan.get('requirements', []):
+        rid = req['requirement_id']
+        if not rid or rid in seen:
+            raise ValueError('requirement IDs must be unique and nonempty')
+        seen.add(rid)
+        checks = []
+        for obligation in req.get('obligations', []):
+            key = obligation['property_id']
+            row = properties.get(key)
+            missing = []
+            if row is None:
+                missing.append('property missing')
+            else:
+                if row['status'] != 'pass' or row['proof_kind'] != 'unbounded':
+                    missing.append('unbounded proof missing')
+                if obligation.get('activation', True) and row['activation']['status'] != 'reached':
+                    missing.append('activation not reached')
+                if obligation.get('cell_core', False):
+                    core = row['proof_core']['cell_coverage']
+                    if not isinstance(core, dict) or core.get('status') != 'bounded_core':
+                        missing.append('cell core missing')
+            checks.append(dict(property_id=key, status='inconclusive' if missing else 'discharged_conditional', missing=missing))
+        result.append(dict(requirement_id=rid, obligations=checks,
+            status='discharged_conditional' if checks and all(c['status'] == 'discharged_conditional' for c in checks) else 'inconclusive',
+            scope='Declared obligations under captured proof assumptions. No requirement completeness or full logical non-vacuity claim.'))
+    return result

@@ -18,6 +18,7 @@ def register(s):
     shortest_parser.set_defaults(func=shortest.run)
     from . import cores
     core = s.add_parser("proof-core", help="extract a deletion-minimal core from a named SMT query")
+    core.add_argument("--cell-level", action="store_true", help="name every mapped Boolean cell equation in the bounded query")
     core.add_argument("--smt2")
     core.add_argument("--result", help="captured formal result; export SMT from its SBY model")
     core.add_argument("--depth", type=int)

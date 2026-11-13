@@ -89,7 +89,10 @@ def run(args):
     capture = Capture(out / 'inputs')
     exported = None
     if getattr(args, "result", None):
-        from .core_model import export
+        if getattr(args, "cell_level", False):
+            from .cell_model import export
+        else:
+            from .core_model import export
         args.smt2, args.mapping, exported = export(args.result, out, capture, args.timeout, getattr(args, "depth", None), getattr(args, "property", None))
     if not args.smt2 or not args.mapping:
         raise ValueError("provide --result or both --smt2 and --mapping")
@@ -156,7 +159,26 @@ def run(args):
                 blocking_core=blocking, blocking_assumptions=[bindings['constraints'][label] for label in blocking['labels']
                     if label in bindings['constraints'] and bindings['constraints'][label].get('kind') == 'assumption'] if blocking else []))
         report['bounded_model'] = {'top': exported['top'], 'depth': exported['depth'], 'feasibility': feasibility,
-            'scope': 'Aggregate bounded assertion query from captured SBY RTLIL, including AIGER engine runs. Core units are sample constraints, not logic cells. No exclusion authority.'}
+            'scope': 'Aggregate bounded assertion query from captured SBY RTLIL, including AIGER engine runs. Core units are mapped cell equations with --cell-level; otherwise sample constraints. No exclusion authority.'}
+    if exported and exported.get('vacuity_queries'):
+        report['logical_vacuity'] = []
+        for probe in exported['vacuity_queries']:
+            statuses = []
+            if feasibility == 'sat' and report['solver_status'] == 'unsat':
+                for term in probe['replacements']:
+                    selected = {k:v for k,v in assertions.items() if k != 'failure'}
+                    selected['replacement_failure'] = '(assert (! '+term+' :named replacement_failure))'
+                    status, _ = solve(background, selected)
+                    statuses.append(status)
+            report['logical_vacuity'].append(dict(property_id=probe['property_id'], atom_bit=probe['atom_bit'],
+                status='replacement_vacuous_bounded' if statuses == ['unsat','unsat'] else 'sensitive_bounded' if 'sat' in statuses else 'inconclusive',
+                replacements=statuses, scope='Combinational assertion-leaf substitution at every bounded sample. No temporal or unbounded non-vacuity claim.'))
+    if exported and 'logic' in exported:
+        labels = report['labels'] if report['status'] == 'pass' else []
+        used = {bindings['constraints'][k].get('cell_id') for k in labels}
+        report['cell_coverage'] = {'scope': exported['coverage_scope'], 'logic': exported['logic'],
+            'core_cells': sorted(used - {None}), 'outside_core': [c['id'] for c in exported['logic'] if c['id'] not in used],
+            'status': 'bounded_core' if report['status'] == 'pass' else 'inconclusive'}
     if args.db:
         from rvw.query.db import DesignDB, QueryError
         db = DesignDB(args.db, capture=capture)

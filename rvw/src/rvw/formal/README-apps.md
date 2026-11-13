@@ -316,3 +316,28 @@ an explicit unsupported reason. This is not complete automatic app binding.
 The report counts generated, proven, bounded, failed and unsupported checks.
 A failed reachability assertion can mean that a requested observation was reached.
 Read each row's `observation` before treating it as a design failure.
+
+## Bounded cell cores and requirement obligations
+
+`rvw formal proof-core --result RUN --cell-level --depth 8 --out DIR` maps the
+captured model to Boolean cells. Each cell equation at each sample has a named
+solver constraint. The report lists every mapped logic cell, selected core cells
+and cells outside the core. This is bounded dependency coverage of the captured
+model. It includes generated reset and monitor helpers. It is not full RTL
+functional coverage. Unknown cells and multiple clocks cause an error.
+
+A testplan can declare `requirements` with `requirement_id` and `obligations`.
+Each obligation names `property_id`. It requires an unbounded pass and reached
+activation by default. Set `activation: false` only for an obligation that does
+not need this evidence. Set `cell_core: true` to require bounded cell-core evidence
+as well. Missing properties and missing evidence remain inconclusive. Discharged
+obligations remain conditional on the captured assumptions. Complete logical
+non-vacuity and requirement completeness remain unproved.
+
+Cell cores also test logical assertion-leaf replacements. For each leaf of the
+combinational assertion expression, the tool substitutes false and true in the
+specification. It keeps the design equations and assumptions unchanged. If both
+failure queries are UNSAT, that leaf is `replacement_vacuous_bounded`. A SAT
+replacement is `sensitive_bounded`. Missing solver evidence is inconclusive.
+The analysis stops at state bits and checks at most 64 atoms per assertion.
+It does not claim full temporal or unbounded non-vacuity.
