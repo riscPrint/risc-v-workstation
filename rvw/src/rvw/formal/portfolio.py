@@ -225,7 +225,9 @@ def race(plan, root, out, *, timeout=30, cross_check=False, yosys_executable=Non
                 pids.pop(name, None)
                 if name in cancelled:
                     status = 'cancelled'
-            return {**row, 'status': status, 'wall_s': time.monotonic() - began,
+            from .engine_limits import avy_failure
+            diagnostic = avy_failure(directory, text) if name == 'aiger:avy' and status == 'error' else {}
+            return {**row, **diagnostic, 'status': status, 'wall_s': time.monotonic() - began,
                     'returncode': proc.returncode, 'command': command}
         except OSError as exc:
             with lock:

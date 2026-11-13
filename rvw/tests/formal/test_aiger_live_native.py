@@ -20,7 +20,7 @@ def test_native_progress_and_fairness(tmp_path, method):
         out = tmp_path / name
         r = check(plan, tmp_path, out, method=method, k=4, timeout=12)
         (out / 'result.json').write_text(json.dumps(r, indent=2))
-        if method == 'rlive' and r.get('reason') in ('error', 'timeout', 'inconclusive'):
+        if method == 'rlive' and r.get('reason') in ('error', 'timeout', 'inconclusive', 'unsupported_backend_cli'):
             assert r['status'] == 'inconclusive' and r['proof_kind'] == 'none', r
             continue
         # K-liveness cannot turn a reachable bound into a counterexample.

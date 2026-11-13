@@ -27,7 +27,9 @@ def native(path, directory, engine, executable, timeout):
     expected = {10: 'SAT', 20: 'UNSAT', 30: 'UNKNOWN'}
     answer = answers[0] if len(answers) == 1 and expected.get(result.returncode) == answers[0] else None
     status = 'timeout' if result.timed_out else {'SAT': 'unsafe', 'UNSAT': 'safe', 'UNKNOWN': 'inconclusive'}.get(answer, 'error')
-    return {'status': status, 'returncode': result.returncode, 'wall_s': time.monotonic() - start,
+    from .engine_limits import rlive_failure
+    diagnostic = rlive_failure(stdout, stderr) if engine == 'rlive' and status == 'error' else {}
+    return {**diagnostic, 'status': status, 'returncode': result.returncode, 'wall_s': time.monotonic() - start,
             'command': command, 'engine': engine, 'stdout': str(directory / 'stdout.log'),
             'stderr': str(directory / 'stderr.log'), 'model_sha256': sha256(path.read_bytes()).hexdigest()}
 
@@ -78,7 +80,7 @@ def check(plan, root, out, *, method='l2s', k=2, timeout=15):
             report.update(status='fail', proof_kind='fair_accepting_cycle', fairness_check='counterexample_is_fair')
         return report
     if row['status'] != 'safe':
-        return {**report, 'reason': row['status']}
+        return {**report, 'reason': row.get('reason', row['status'])}
     if model.constraints or model.fairness:
         # Avoid a proof that is true only because no allowed fair path exists.
         text, reduction = aiger_live_model.reduce(model, 'l2s', feasibility=True)
