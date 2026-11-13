@@ -136,3 +136,19 @@ def test_model_probe_failure_is_inconclusive(proof, tmp_path, monkeypatch):
     result = replay(proof, tmp_path / 'probe-failed')
     assert result['disposition'] == 'inconclusive'
     assert 'Yosys replay failed' in result['error']
+
+
+def test_native_reduce_and_export(proof, tmp_path):
+    result = replay(proof, tmp_path / 'reduced', '--minimize', '--max-checks', '12', '--emit-testbench')
+    assert 'error' not in result, result
+    assert result['reduction']['status'] == 'reproduced'
+    assert Path(result['reduction']['wave']).is_file()
+    assert result['testbench']['status'] == 'generated'
+    assert Path(result['testbench']['model']).is_file()
+    # Compile and run the generated stimulus with the exported captured model.
+    if shutil.which('iverilog') and shutil.which('vvp'):
+        out = tmp_path / 'compiled'
+        proc = run_group(['iverilog', '-g2012', '-s', 'rvw_replay_tb', '-o', str(out),
+                          result['testbench']['model'], result['testbench']['path']], capture=True, timeout=20)
+        assert proc.returncode == 0, proc.stderr
+        assert run_group(['vvp', str(out)], cwd=tmp_path, capture=True, timeout=20).returncode == 0

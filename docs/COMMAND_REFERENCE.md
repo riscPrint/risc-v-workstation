@@ -496,7 +496,9 @@ usage: rvw formal bench [-h] --out OUT [--timeout TIMEOUT] [--json] [--project
 ```text
 usage: rvw formal cex [-h] --result RESULT [--trace-index TRACE_INDEX] [--edit
     EDIT] [--timeout TIMEOUT] --out OUT [--json] [--hgldd HGLDD] [--pdg PDG]
-    [--criterion CRITERION] [--at-time AT_TIME] [--open] [--project PROJECT]
+    [--criterion CRITERION] [--at-time AT_TIME] [--minimize] [--max-checks
+    MAX_CHECKS] [--emit-testbench] [--db DB] [--signal SIGNAL] [--open]
+    [--project PROJECT]
 ```
 
 ### `rvw formal sby-history`
@@ -1461,7 +1463,7 @@ Starts a background job: yes.
 
 Replay a captured failing BMC witness with edited inputs through Yosys sim. Not a proof.
 
-Arguments: `result` (required), `out` (required), `trace_index`, `edit`, `hgldd`, `pdg`, `criterion`, `at_time`, `open`, `timeout`.
+Arguments: `result` (required), `out` (required), `trace_index`, `edit`, `hgldd`, `pdg`, `criterion`, `at_time`, `open`, `minimize`, `max_checks`, `emit_testbench`, `db`, `signal`, `timeout`.
 
 Starts a background job: yes.
 

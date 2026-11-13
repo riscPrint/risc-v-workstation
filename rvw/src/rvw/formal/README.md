@@ -1258,3 +1258,26 @@ existing deadlock and livelock progress contracts. Those contracts check a
 reviewed response bound. They do not establish general liveness or discover
 all possible deadlocks. Automatic checks use declared ports and expressions;
 they do not claim automatic extraction of all RTL FSMs or source dead branches.
+### Counterexample reduction and simulation export
+
+`rvw formal cex --result FAILED_RUN --out DEBUG --minimize --max-checks 100`
+tries shorter prefixes in time order, then removes input changes. Each retained
+change must replay the same assertion path and source location without an
+assumption violation. Initial input values and the full formal model remain.
+The output retains each replay log and a `reduced.vcd`. The check budget can
+stop reduction. The result reports this limit. This is a greedy reduction, not
+a global minimum. It does not remove assumptions or authorize a proof claim.
+
+Add `--emit-testbench` to export `replay_model.v` and `replay_tb.sv` from the
+captured model and edited stimulus. Formal cells are removed from this simulation
+model. Compile with `iverilog -g2012 -s rvw_replay_tb -o replay replay_model.v
+replay_tb.sv`, then run `vvp replay`. Verilator can use `--binary --timing
+--top-module rvw_replay_tb`. Compilation and simulation do not prove that the
+original formal failure was reproduced. The Yosys replay supplies that check.
+
+Add `--db design.db --signal SIGNAL` for source locations, assignments, and a
+structural fan-in graph from the `rvw query` reader. `--pdg`, `--criterion`, and
+`--at-time` use the existing SpinalTrace dynamic cause flow. `--hgldd` and `--open`
+use the existing typed SpinalWaves and Surfer flow. The `formal_cex` MCP tool
+accepts the same options. Native viewer navigation still needs a captured Spinal
+design and the viewer tools. These additions do not establish that integration.

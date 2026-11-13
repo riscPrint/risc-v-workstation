@@ -180,6 +180,41 @@ def _run(args):
         result['wave'] = str(out / 'edited/wave.vcd')
         result['fst'] = str(out / 'edited/wave.fst')
         result['navigation'] = navigation(args, capture, out, original)
+        if getattr(args, 'minimize', False):
+            from .cex_reduce import reduce_trace
+            def same_failure(wave, index):
+                try:
+                    summary = replay(wave, f'reduce-{index}')
+                except (ValueError, OSError):
+                    return False
+                return bool(failures and not any(x['type'] == '$assume' for x in summary['assertions'])
+                            and not any(x['type'] == '$assume' for x in baseline['assertions'])
+                            and any(x['type'] == '$assert' and any(
+                                x['path'] == f['path'] and x.get('src') == f.get('src') for f in failures)
+                                for x in summary['assertions']))
+            result['reduction'] = reduce_trace(edited, out / 'reduced.vcd', ports, scope,
+                                               same_failure, args.max_checks)
+        if getattr(args, 'emit_testbench', False):
+            from .cex_reduce import testbench
+            testbench(edited, out / 'replay_tb.sv', ports, scope)
+            execute(f'read_rtlil {model}\nchformal -remove\nwrite_verilog -noattr {out / "replay_model.v"}\n',
+                    out / 'export')
+            result['testbench'] = {'path': str(out / 'replay_tb.sv'),
+                                   'model': str(out / 'replay_model.v'), 'status': 'generated',
+                                   'note': 'Stimulus only; formal cells removed. No reproduction verdict.'}
+        if getattr(args, 'db', None):
+            from rvw.query.db import DesignDB
+            from rvw.query.ops import drivers, fanin
+            if not args.signal:
+                raise ValueError('--db needs --signal for driver analysis')
+            db = DesignDB(args.db, capture=capture)
+            try:
+                result['why'] = {'drivers': drivers(db, args.signal),
+                                 'fanin': fanin(db, args.signal, depth=32, limit=2000, include_clock=True),
+                                 'staleness': db.staleness(),
+                                 'scope': 'Structural candidates; use SpinalTrace for dynamic causes.'}
+            finally:
+                db.close()
     except (OSError, ValueError) as exc:
         result['error'] = str(exc)
     try:
