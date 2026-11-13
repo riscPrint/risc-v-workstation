@@ -96,3 +96,15 @@ channels `branch_events`, `cache_events`, `tlb_events` and `probe_events` are
 lists of `{cycle, kind, name, field...}` with window-relative cycles;
 `probe_counters` is `{name: total}`; `bus_handshakes` is a sorted list of
 `[cycle, bus, "cmd"|"rsp"]`.
+
+## Leakage campaign state and results
+
+`rvw sec campaign` keeps `state.json` (`rvw.sec-campaign/1`): `iteration`,
+`pairs`, `seconds`, `corpus` (program, secrets, pair, new coverage keys),
+`coverage` (sorted keys), `signatures` (key: `signature`, `first_pair`,
+`count`, reduced `program`, `secrets`, `contracts`), `statuses` and `errors`.
+A signature is the reduced program's sorted mnemonics and the differing
+channels, `MNEMONICS|CHANNELS`. `results.json` has one C3 `fail` per signature
+(`signature` `sec:campaign:...`), else one `pass` when at least one pair was
+eligible, else an `error` with `inconclusive`. Each pair keeps its paired
+`report.json` under `pair-NNNN/run`, and its reduction under `pair-NNNN/reduced`.

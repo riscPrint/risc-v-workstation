@@ -9,6 +9,7 @@ import json
 import os
 from pathlib import Path
 import re
+from rvw.cosim.checker import masked
 from rvw.cosim.elf import Elf
 from .common import native
 
@@ -24,7 +25,7 @@ def number(v):
     return int(v, 0) if isinstance(v, str) else int(v)
 
 
-def load(path):
+def load(path, rtl_required=True):
     """Read a binding. Paths may use environment variables and are relative to the file."""
     path = Path(path).resolve()
     b = json.loads(path.read_text())
@@ -36,8 +37,13 @@ def load(path):
             raise ValueError(f'unset environment variable in {p}')
         q = Path(text)
         return (q if q.is_absolute() else path.parent/q).resolve()
-    b['rtl'] = [where(p) for p in b['rtl']]
-    for k in ('platform',):
+    try:
+        b['rtl'] = [where(p) for p in b['rtl']]
+    except ValueError:
+        if rtl_required:
+            raise
+        b['rtl'] = []  # model-only use: no RTL
+    for k in ('platform', 'soc'):
         if b.get(k):
             b[k] = where(b[k])
     b['_dir'] = path.parent
@@ -236,6 +242,8 @@ def testbench(binding, widths, ift=None):
           '  while (cycle < max_cycles && (done_at < 0 || cycle < done_at + 8)) begin',
           f'    drive; #5 {clock} = 1; #5 {clock} = 0; cycle = cycle + 1;',
           '  end',
+          *(['  for (int i = 0; i < %d; i++) if (taint[i] != 0) $fdisplay(fd, "M %%0d %%h", i, taint[i]);' % words]
+            if ift else []),
           '  $fdisplay(fd, "E %0d %0d %h", cycle, done_at, tohost_value);', '  $fclose(fd);', '  $finish;',
           'end', 'endmodule', '']
     return '\n'.join(L)
@@ -296,7 +304,7 @@ def simulate(binding, exe, elf, out, taint_words=None, max_cycles=None):
 
 
 def parse(text, mem, binding):
-    result = dict(retired=[], bus=[], traps=[], sinks=[], privilege=[], responses=[], probe_rows=[],
+    result = dict(retired=[], bus=[], traps=[], sinks=[], privilege=[], responses=[], probe_rows=[], tainted_words=[],
                   cycles=None, done=None, tohost=None)
     for line in text.splitlines():
         w = line.split()
@@ -316,6 +324,8 @@ def parse(text, mem, binding):
             result['bus'].append(dict(cycle=int(w[1]), bus=w[2], address=int(w[3], 16), write=bool(int(w[4]))))
         elif w[0] == 'T':
             result['traps'].append(dict(cycle=int(w[1]), cause=int(w[2], 16), tval=int(w[3], 16)))
+        elif w[0] == 'M':
+            result['tainted_words'].append((int(w[1]), int(w[2], 16)))
         elif w[0] == 'A':
             result['responses'].append(dict(cycle=int(w[1]), bus=w[2]))
         elif w[0] == 'Q':
@@ -381,7 +391,7 @@ def c2(result, path, elf, binding, isa):
                    rd_wdata=hex(r.get('rd_wdata', 0) if rd else 0),
                    mem_addr=hex(r.get('mem_addr', 0) if access else 0),
                    mem_rdata=hex(r.get('mem_rdata', 0) if r.get('mem_rmask') else 0),
-                   mem_wdata=hex(r.get('mem_wdata', 0) if r.get('mem_wmask') else 0),
+                   mem_wdata=hex(masked(r.get('mem_wdata', 0), r['mem_wmask']) if r.get('mem_wmask') else 0),
                    rs1=0, rs2=0, rs1_rdata='0x0', rs2_rdata='0x0', order=order, cycle=r['cycle'],
                    mode=r.get('mode', 3), rd=rd, mem_rmask=r.get('mem_rmask', 0), mem_wmask=r.get('mem_wmask', 0),
                    trap=bool(r.get('trap', 0)), intr=False, halt=False, mem_fault=False)
