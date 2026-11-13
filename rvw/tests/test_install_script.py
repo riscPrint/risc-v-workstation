@@ -538,3 +538,29 @@ def test_optional_python_selection_precedes_install(tmp_path, compatible):
         assert 'Python 3.11 through 3.14' in result.stderr
         assert 'uv venv' not in result.stdout
     assert not (tmp_path / 'install').exists()
+
+
+@pytest.mark.fast
+def test_repeat_install_pins_the_existing_base_interpreter(tmp_path):
+    import sys
+    target = tmp_path / 'workstation'
+    venv = target / 'rvw/.venv/bin'
+    venv.mkdir(parents=True)
+    (target / 'rvw/pyproject.toml').write_text((ROOT / 'rvw/pyproject.toml').read_text())
+    (target / 'Cosim').mkdir()
+    (target / 'Cosim/build.sh').write_text('#!/bin/sh\n')
+    base = tmp_path / 'python3.11-preserved'
+    base.write_text('#!/bin/sh\necho "Python 3.11.18"\n')
+    base.chmod(0o755)
+    python = venv / 'python'
+    python.write_text('#!/bin/sh\n'
+                      'if [ "$1" = --version ]; then echo "Python 3.11.18"; exit 0; fi\n'
+                      f'if [ "$1" = -c ]; then echo {shlex.quote(str(base))}; exit 0; fi\n'
+                      f'exec {shlex.quote(sys.executable)} "$@"\n')
+    python.chmod(0o755)
+    (venv / 'python3').symlink_to('python')
+    result = invoke('--dry-run', '--prefix', target)
+    assert result.returncode == 0, result.stderr
+    # uv resolves an unversioned request against system Python, not this venv.
+    assert f'--python {base}' in result.stdout
+    assert '--python python3\n' not in result.stdout

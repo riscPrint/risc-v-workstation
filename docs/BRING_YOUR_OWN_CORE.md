@@ -46,6 +46,8 @@ cocotb and pyuvm require Python 3.11 through 3.14. If `python3` is outside
 that range, the installer selects an installed `python3.11`, `python3.12`,
 `python3.13` or `python3.14` from `PATH`. It does not download a Python runtime
 for this selection. If none exists, install a compatible Python and retry.
+Repeat installs keep the existing venv's base Python interpreter. An optional
+tool can select another installed interpreter when needed.
 
 For private native workflow artifacts, use `--from-bundle --bundle-run RUN_ID`
 with the selected native flags. Use `--bundle-dir DIR` for saved artifacts.
