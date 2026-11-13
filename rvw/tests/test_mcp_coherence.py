@@ -65,3 +65,15 @@ def test_envelope_list_and_explicit_failure():
     assert envelope([1, 2])["result"] == [1, 2]
     assert envelope({"status": "fail"})["verdict"] == "fail"
     assert envelope({"verdict": "pass"})["verdict"] == "pass"
+
+
+def test_machine_errors_and_exact_install_flag():
+    from rvw.mcp.errors import error_result
+    missing = FileNotFoundError(2, "No such file", "yosys")
+    result = error_result("formal_test", missing)
+    assert result["code"] == result["verdict"] == "not_installed"
+    assert "scripts/install.sh --with-formal" in result["hint"]
+    assert error_result("test_read", FileNotFoundError(2, "No such file", "trace.json"))["code"] == "invalid_input"
+    registry = Registry([])
+    _, result, error = registry.call_json("absent_tool", {})
+    assert error and result["code"] == "unknown_tool" and result["diagnostics"]

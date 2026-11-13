@@ -50,9 +50,10 @@ class ToolSpec:
 class ToolError(Exception):
     """A tool call that failed in an expected way; `data` is returned to the agent with the message."""
 
-    def __init__(self, message: str, data: dict | None = None):
+    def __init__(self, message: str, data: dict | None = None, *, code: str | None = None):
         super().__init__(message)
         self.data = data or {}
+        self.code = code
 
 
 def schema(properties: dict, required: list[str] | None = None) -> dict:

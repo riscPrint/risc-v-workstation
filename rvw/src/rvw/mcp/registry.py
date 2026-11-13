@@ -220,14 +220,9 @@ class Registry:
         try:
             result = self.call(name, arguments)
             is_error = False
-        except ToolError as e:
-            result, is_error = {"error": str(e), **e.data}, True
-        except TypeError as e:  # wrong arguments
-            result, is_error = {"error": f"bad arguments for {name}: {e}"}, True
         except Exception as e:
-            to_json = getattr(e, "to_json", None)
-            result = to_json() if callable(to_json) else {"error": f"{type(e).__name__}: {e}"}
-            is_error = True
+            from .errors import error_result
+            result, is_error = error_result(name, e, arguments), True
         from .envelope import envelope
         result = envelope(result, error=is_error)
         text, result = fit(result, self.max_text)

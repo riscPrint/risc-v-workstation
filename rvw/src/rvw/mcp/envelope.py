@@ -10,7 +10,7 @@ def envelope(value, *, error=False):
     if verdict is None and data.get("status") in VERDICTS:
         verdict = data["status"]
     if error or data.get("error"):
-        verdict = "error"
+        verdict = "not_installed" if data.get("code") == "not_installed" else "error"
     if old_verdict is not None and old_verdict not in VERDICTS:
         data["legacy_verdict"] = old_verdict
         data["verdict"] = "inconclusive"
@@ -21,5 +21,9 @@ def envelope(value, *, error=False):
     data.setdefault("artifacts", [])
     data.setdefault("next", ([{"tool": "job_status", "arguments": {"job_id": data["job_id"], "wait_s": 60}}]
                              if data.get("job_id") and data.get("status") not in ("done", "failed", "cancelled") else []))
+    if data.get("error"):
+        data.setdefault("code", "tool_error")
+        data.setdefault("hint", "Use rvw_tools_describe to check arguments; inspect diagnostics before retrying.")
+        data.setdefault("diagnostics", [{"code": data["code"], "message": str(data["error"]), "hint": data["hint"]}])
     data.setdefault("diagnostics", [])
     return data

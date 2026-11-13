@@ -169,3 +169,10 @@ A verdict is present only when the source result has one or an explicit evidence
 status. Completion is not a pass. Existing result fields remain available.
 Older verdict terms remain in `legacy_verdict` with a common verdict of
 `inconclusive`. Direct Python `Registry.call` retains its raw return value.
+
+## Errors
+
+Read `code` and `hint` on errors. `not_installed` includes the exact installer
+flag when the missing tool matches the shared inventory. A missing input file
+is an input error. Providers can raise `ToolError(message, data, code=...)`.
+Set `native_tool` in data to an inventory name when reporting missing tools.
