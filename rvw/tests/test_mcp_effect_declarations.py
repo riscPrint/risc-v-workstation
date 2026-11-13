@@ -115,3 +115,10 @@ def test_fault_effects_and_native_requirements(name, registry):
     tool = registry.tools[name]
     assert tool.side_effects
     assert tool.native_tools is not None
+
+
+@pytest.mark.parametrize('name', ['lint_report', 'lint_emit'])
+def test_lint_effects_and_native_requirements(name, registry):
+    tool = registry.tools[name]
+    assert tool.side_effects
+    assert tool.native_tools is not None
