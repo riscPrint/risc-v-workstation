@@ -752,6 +752,34 @@ The native bus test exercises both imported SystemRDL and IP-XACT maps.
 These checks remain separate from architectural CSR checks. Multiple outstanding
 requests, back-to-back replacement and real device campaigns remain open.
 
+## Checks from Spinal clock-domain information
+
+`CdcChecks.install(config, settle = 1.5)` adds an elaboration phase before
+`PhaseInsertChecks`. Wrap the config before `SpinalChecks.install`:
+
+```scala
+val (cfg, checks) = SpinalChecks.install(CdcChecks.install(SpinalConfig()), ChecksConfig())
+```
+
+The phase finds each register with Spinal's `crossClockDomain` tag (the first
+stage of `BufferCC` and of user synchronizers) whose data comes, through plain
+copies across ports and wires, from a register in another clock. It adds a
+`DeclaredRule` in the source register's component and clock domain:
+
+- `cdc.gray`: a multi-bit source changes at most one bit per source clock.
+  A binary bus through `BufferCC` fires it.
+- `cdc.pulse_width`: a one-bit source holds each value for at least
+  `ceil(settle * f_source / f_destination)` source cycles. It needs a Spinal
+  `FixedFrequency` on both clock domains and a faster source; otherwise no check
+  is added.
+
+Ids are `cdc.gray:<path>.<source>_to_<destination>`. Waivers, modes and the
+report work as for the other declared rules. `CdcChecks.found` lists the
+inserted checks of the last elaboration. `CdcChecksSpec` runs a legal design and
+the two faults in Verilator. These are sampled digital checks: they do not
+model metastability, setup/hold or phase. `rvw lint --emit` writes the same
+Gray obligation as standalone checkers for RTL that SpinalChecks did not build.
+
 ## Selected CDC protocol references
 
 `examples/cdc/` contains event-enable handshake, depth-four FIFO and reset
