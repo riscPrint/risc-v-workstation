@@ -80,6 +80,20 @@ def _id_findings(stream) -> list[dict]:
     """Stage, retire and flush IDs: retire or flush only a staged ID, once; no stage after it."""
     if not stream.of_kind("retire") and not stream.of_kind("flush"):
         return []
+    if any(p.meta.get("first") == "true" for p in stream.of_kind("stage")):
+        from .convert import kanata
+        with tempfile.TemporaryDirectory(prefix="rvw-ids-") as d:
+            stats = kanata(stream, Path(d) / "pipeline.log")
+        out = []
+        for key in ("stale_closed", "unanchored_flushes"):
+            if stats.get(key, 0):
+                out.append(_finding("pipeline", "id", f"{key}: {stats[key]}"))
+        retires = sum(1 for _ in stream.events("retire"))
+        if stats["retired"] != retires:
+            out.append(_finding("pipeline", "id", "retire events without live first-stage IDs"))
+        if stats.get("orphan_events", 0):
+            out.append(_finding("pipeline", "id", f"orphan events: {stats['orphan_events']}", severity="warning"))
+        return out
     staged, closed, out, reported = set(), {}, [], set()
 
     def once(p, check, message, cycle):

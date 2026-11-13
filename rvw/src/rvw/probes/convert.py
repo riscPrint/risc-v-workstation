@@ -116,28 +116,52 @@ def kanata(stream: Stream, out) -> dict:
     """Kanata 0004 from stage occupancy, retire, flush and stall probes.
 
     A probe ID names one instruction from its first stage event until its retire or flush;
-    after that the same ID starts a new instruction. Instructions left open at the end stay open."""
+    after that the same ID starts a new instruction. Instructions left open at the end stay open.
+    When a stage probe has meta `first`, only such stages start instructions; other events for an
+    ID that is not live are counted as `orphan_events`. A flush with meta `range: younger` closes
+    every live instruction that started after the latest instruction with its ID (and that one
+    too when its `inclusive` value is set)."""
     live: dict[int, str] = {}
+    latest: dict[int, int] = {}
     current: dict[str, tuple[str, str]] = {}
     order = {"stage": 0, "stall": 1, "branch": 2, "retire": 3, "flush": 4}
+    gated = any(p.meta.get("first") == "true" for p in stream.of_kind("stage"))
     by_cycle = defaultdict(list)
     for cycle, p, v in stream.events("stage", "stall", "branch", "retire", "flush"):
         if p.kind == "branch" and ("id" not in v or "predicted_taken" not in v):
             continue  # a prediction record needs the instruction ID and the prediction
         by_cycle[cycle].append((order[p.kind], p.id, p, v))
-    serial = retired = flushed = stalls = predictions = 0
+    serial = retired = flushed = stalls = predictions = orphans = unanchored = stale = 0
     lines = ["Kanata\t0004"]
     last = None
+    bounds = stream.end or {}
+    first_cycle, last_cycle = bounds.get("first_cycle"), bounds.get("last_cycle")
+    if first_cycle is not None or last_cycle is not None:
+        if type(first_cycle) is not int or type(last_cycle) is not int or not 0 <= first_cycle <= last_cycle:
+            raise ValueError("invalid probe sampling bounds")
+        if by_cycle and (min(by_cycle) < first_cycle or max(by_cycle) > last_cycle):
+            raise ValueError("events outside probe sampling bounds")
+        lines.append(f"C=\t{first_cycle}")
+        last = first_cycle
 
     def start(pid_value: int, pc: int | None) -> str:
         nonlocal serial
         key = str(serial)
+        latest[pid_value] = serial
         serial += 1
         live[pid_value] = key
         lines.append(f"I\t{key}\t{key}\t0")
         if pc is not None:
             lines.append(f"L\t{key}\t0\t{pc:x}: ")
         return key
+
+    def close(ident: int, kind: int) -> None:
+        nonlocal retired, flushed
+        key = live.pop(ident)
+        lines.append(f"R\t{key}\t{retired if kind == 0 else flushed}\t{kind}")
+        retired += kind == 0
+        flushed += kind == 1
+        current.pop(key, None)
 
     for cycle in sorted(by_cycle):
         lines.append(f"C=\t{cycle}" if last is None else f"C\t{cycle - last}")
@@ -148,6 +172,15 @@ def kanata(stream: Stream, out) -> dict:
                 stalls += 1
                 continue
             ident = v["id"]
+            if p.kind == "flush" and p.meta.get("range") == "younger":
+                anchor = latest.get(ident)
+                if anchor is None:
+                    unanchored += 1
+                    continue
+                victims = [i for i, k in live.items() if int(k) > anchor or (int(k) == anchor and v.get("inclusive"))]
+                for i in sorted(victims, key=lambda i: int(live[i])):
+                    close(i, 1)
+                continue
             if p.kind == "branch":
                 key = live.get(ident)
                 if key is None:
@@ -157,7 +190,18 @@ def kanata(stream: Stream, out) -> dict:
                              f"\t{way[v['taken']]}\t?\t?\t?\t?\t?")
                 predictions += 1
                 continue
-            key = live.get(ident) or start(ident, v.get("pc"))
+            key = live.get(ident)
+            if key is None:
+                if gated and not (p.kind == "stage" and p.meta.get("first") == "true"):
+                    orphans += 1
+                    continue
+                key = start(ident, v.get("pc"))
+            elif (gated and p.kind == "stage" and p.meta.get("first") == "true"
+                  and current.get(key, ("", ""))[1] != p.meta.get("stage", p.name)):
+                # A reused ID enters again: its older instruction ended without a probe event.
+                close(ident, 1)
+                stale += 1
+                key = start(ident, v.get("pc"))
             if p.kind == "stage":
                 lane, name = p.meta.get("lane", "0"), p.meta.get("stage", p.name)
                 prev = current.get(key)
@@ -167,16 +211,19 @@ def kanata(stream: Stream, out) -> dict:
                     lines.append(f"S\t{key}\t{lane}\t{name}")
                     current[key] = (lane, name)
             else:
-                kind = 0 if p.kind == "retire" else 1
-                lines.append(f"R\t{key}\t{retired if kind == 0 else flushed}\t{kind}")
-                retired += kind == 0
-                flushed += kind == 1
-                del live[ident]
-                current.pop(key, None)
+                close(ident, 0 if p.kind == "retire" else 1)
+    if last_cycle is not None:
+        lines.append(f"C=\t{last_cycle}")
     with Path(out).open("x") as f:
         f.write("\n".join(lines) + "\n")
-    return {"format": "Kanata 0004", "instructions": serial, "retired": retired, "flushed": flushed,
-            "stall_samples": stalls, "predictions": predictions, "open": len(live)}
+    result = {"format": "Kanata 0004", "instructions": serial, "retired": retired, "flushed": flushed,
+              "stall_samples": stalls, "predictions": predictions, "open": len(live)}
+    if gated:
+        result["orphan_events"] = orphans
+        result["stale_closed"] = stale
+    if unanchored:
+        result["unanchored_flushes"] = unanchored
+    return result
 
 
 def _bytes(value: int, width: int) -> str:

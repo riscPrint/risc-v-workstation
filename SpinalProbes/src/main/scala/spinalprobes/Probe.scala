@@ -142,14 +142,25 @@ object Probe {
       "status" -> status, "pa" -> pa), Map("walker" -> walker, "event" -> "result", "mode" -> mode))
   }
 
-  /** The instruction `id` is in stage `stage` this cycle (occupancy). IDs must be unique for
-    * the run: carry a counter assigned once per instruction down the pipeline. */
+  /** The instruction `id` is in stage `stage` this cycle (occupancy). IDs must be unique among
+    * live instructions. Use stageAt with first for reused ROB indices. */
   def stage(stage: String, valid: Bool, id: Data, pc: Option[Data] = None, lane: String = "0"): Unit =
     site("stage", stage, valid, Seq("id" -> id) ++ opt("pc", pc), Map("stage" -> stage, "lane" -> lane))
+  /** Stage occupancy for a core that reuses IDs (for example ROB indices). `first` marks the stage
+    * where an instruction enters the pipeline: only a `first` stage starts an instruction, so a late
+    * event for a reused ID cannot start a false one. `name` keeps several lanes of one stage apart. */
+  def stageAt(name: String, stage: String, valid: Bool, id: Data, pc: Option[Data] = None,
+      lane: String = "0", first: Boolean = false): Unit =
+    site("stage", name, valid, Seq("id" -> id) ++ opt("pc", pc),
+      Map("stage" -> stage, "lane" -> lane) ++ (if (first) Map("first" -> "true") else Map.empty))
   /** The instruction `id` commits this cycle. */
   def retire(name: String, valid: Bool, id: Data): Unit = site("retire", name, valid, Seq("id" -> id))
   /** The instruction `id` is squashed this cycle. */
   def flush(name: String, valid: Bool, id: Data): Unit = site("flush", name, valid, Seq("id" -> id))
+  /** A recovery squashes every live instruction younger than `id` (in pipeline entry order), and
+    * `id` itself when `inclusive` is set. For cores that flush a whole ROB tail in one cycle. */
+  def flushYounger(name: String, valid: Bool, id: Data, inclusive: Bool): Unit =
+    site("flush", name, valid, Seq("id" -> id, "inclusive" -> inclusive), Map("range" -> "younger"))
   /** `scope` is blocked by `cause` this cycle. Causes: operand_wait, structural, load_miss,
     * rob_full, lsq_full or a project word. Use `measured` only for an explicit reason signal. */
   def stall(scope: String, cause: String, valid: Bool, evidence: String = "measured"): Unit = {

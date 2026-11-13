@@ -158,3 +158,10 @@ hit agreement and signed miss-rate error. Incomplete streams and missing or
 misaligned accesses are inconclusive. The aligned access stream can feed
 replacement and prefetch studies with `rvw csim run` or `sweep`. Model results
 do not establish RTL correctness or speed.
+
+For reused ROB indices, call `Probe.stageAt` at entry with `first = true`.
+Use it again at later stages with distinct probe names and the same ID.
+`Probe.flushYounger` flushes a ROB tail in entry order, including its anchor
+when requested. The Kanata converter reports orphan events, unknown anchors
+and stale live-ID replacements. Check those fields beside C2 retirement counts.
+See the NaxRiscv example for a native out-of-order binding.

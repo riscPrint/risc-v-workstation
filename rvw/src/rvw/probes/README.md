@@ -101,3 +101,11 @@ hit agreement and signed miss-rate error. Incomplete streams and missing or
 misaligned accesses are inconclusive. The aligned access stream can feed
 replacement and prefetch studies with `rvw csim run` or `sweep`. Model results
 do not establish RTL correctness or speed.
+
+Out-of-order cores can mark the first stage of each instruction with
+`Probe.stageAt(..., first = true)`. The Kanata converter then reuses ROB IDs
+only at that entry point. `Probe.flushYounger` closes a whole younger tail.
+The validator uses the same lifetime conversion for this explicit mode.
+Orphan stage events are warnings. Orphan retirements, stale replacements and
+unknown flush anchors remain errors. Sampling bounds in newer end records
+preserve startup and trailing idle cycles in `rvw perf`.

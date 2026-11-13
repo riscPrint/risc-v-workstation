@@ -46,3 +46,24 @@ verdict. `--trace-out` writes the aligned RTL access stream for further studies.
 
 Cache study levels accept `write_allocate` and `write_back` booleans.
 Both false select write-through with no allocation on store misses.
+
+## Reused instruction IDs and ROB-tail flushes
+
+A stage probe can set metadata `first: "true"`. If any stage has this flag,
+only a first-stage event starts an instruction in the Kanata converter.
+Late events for an ID that is not live count as `orphan_events`. Multiple
+lanes can share a stage name through `Probe.stageAt` with distinct probe names.
+
+A flush probe can set `range: "younger"` and provide `id` and `inclusive`.
+It closes all live instructions that entered after the last instance of the
+anchor ID. It also closes the anchor when `inclusive` is nonzero. Entry order,
+not the numeric ROB index, defines age. An unknown anchor increments
+`unanchored_flushes`. A reused live ID that reenters after another stage closes
+the old instance as flushed and increments `stale_closed`. These counts expose
+incomplete bindings. They are not proofs of pipeline tracking correctness.
+
+The end record can add `first_cycle` and `last_cycle`. They give the inclusive
+bounds of actual sampling, including idle cycles without event rows. Both must
+be present together. The Kanata converter preserves these bounds. Older streams
+without them keep their observed event window; `cycles` alone does not define
+a cycle origin. RiscvSim supplies both bounds after at least one sample.

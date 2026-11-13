@@ -5,10 +5,11 @@ import spinal.lib._
 import spinalprobes.Probe
 import naxriscv.Global
 import naxriscv.fetch.FetchCachePlugin
-import naxriscv.frontend.{DispatchPlugin, RfAllocationPlugin}
+import naxriscv.{Frontend, ROB}
+import naxriscv.frontend.{DispatchPlugin, FrontendPlugin, RfAllocationPlugin}
 import naxriscv.lsu.DataCachePlugin
 import naxriscv.lsu2.Lsu2Plugin
-import naxriscv.misc.CommitPlugin
+import naxriscv.misc.{CommitPlugin, RobPlugin}
 import naxriscv.prediction.{BranchContextPlugin, Prediction}
 import naxriscv.utilities.Plugin
 
@@ -26,6 +27,9 @@ class ProbeTapPlugin extends Plugin {
   val setup = create early new Area {
     val bcp = getService[BranchContextPlugin]
     bcp.retain()
+    // Hold the front-end pipeline until the stage probes have read their stageables.
+    val frontend = getService[FrontendPlugin]
+    frontend.retain()
   }
 
   val logic = create late new Area {
@@ -34,6 +38,7 @@ class ProbeTapPlugin extends Plugin {
     // it before waiting on any other plugin, so the branch context builds with the pipeline.
     val learnKeys = if (Probe.isEnabled) Some((bcp.learnRead(bcp.keys.BRANCH_FINAL), bcp.learnRead(Prediction.IS_BRANCH))) else None
     bcp.release()
+    if (!Probe.isEnabled) setup.get.frontend.release()
     if (Probe.isEnabled) {
       val commit = getService[CommitPlugin].logic.get
       val wb = commit.whitebox
@@ -90,6 +95,28 @@ class ProbeTapPlugin extends Plugin {
       Probe.counter("icache_refills", ibus.cmd.fire)
       Probe.counter("dcache_refills", dmem.read.cmd.fire)
       Probe.counter("dcache_writebacks", dmem.write.cmd.fire && dmem.write.cmd.last)
+
+      // Pipeline view (Kanata): one instruction per ROB entry, from ROB allocation (rename,
+      // the first stage) through dispatch, issue, operand read/execute, completion and commit.
+      // A commit-time reschedule flushes every younger entry, and the entry itself on a trap.
+      val cols = ROB.COLS
+      val allocated = setup.get.frontend.pipeline.allocated
+      val dispatch = getService[DispatchPlugin].logic.get.push.stage
+      for (i <- 0 until cols) {
+        Probe.stageAt(s"rename_$i", "Rn", allocated.isFireing && allocated(Frontend.DISPATCH_MASK, i),
+          (allocated(ROB.ID) + i).resize(ROB.ID_WIDTH bits), Some(wb.robToPc.pc(i).asUInt), first = true)
+        Probe.stageAt(s"dispatch_$i", "Ds", dispatch.isFireing && dispatch(Frontend.DISPATCH_MASK, i),
+          (dispatch(ROB.ID) + i).resize(ROB.ID_WIDTH bits))
+        Probe.retire(s"commit_$i", mask(i), (wb.commit.robId + i).resize(ROB.ID_WIDTH bits))
+      }
+      setup.get.frontend.release()
+      for ((port, i) <- getService[DispatchPlugin].logic.get.whitebox.issuePorts.zipWithIndex) {
+        Probe.stageAt(s"issue_$i", "Is", port.valid, port.payload.robId)
+        Probe.stageAt(s"execute_$i", "Ex", RegNext(port.valid) init(False), RegNext(port.payload.robId))
+      }
+      for ((port, i) <- getService[RobPlugin].logic.get.whitebox.completionsPorts.zipWithIndex)
+        Probe.stageAt(s"complete_$i", "Wb", port.valid, port.payload.id)
+      Probe.flushYounger("reschedule", wb.reschedule.valid, wb.reschedule.robId, wb.reschedule.skipCommit)
 
     }
   }

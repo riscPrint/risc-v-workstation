@@ -1,0 +1,50 @@
+{
+  "schema": "rvw.nax-kanata-study/1",
+  "program": "rv32ui-p-add",
+  "seed": 1,
+  "cycles": 1003,
+  "instret": 501,
+  "rtl_sha256": "d2e31991e8e01a1c0b84d9a9d2f811c3c38e16fb0829a47b8b4e56fc0759a5c8",
+  "elf_sha256": "6f47785fae57fb603483a0728acdc422df0b058e7593d81960b89055d3a1c5c2",
+  "c2_sha256": "eee720bb7d7e6b2cbecc2af156021eb45d210e5c0373f8eb3a0cfc0d75e2cff0",
+  "conversion": {
+    "format": "Kanata 0004",
+    "instructions": 718,
+    "retired": 501,
+    "flushed": 210,
+    "stall_samples": 0,
+    "predictions": 0,
+    "open": 7,
+    "orphan_events": 32,
+    "stale_closed": 0
+  },
+  "pc_and_cycle_matches": 501,
+  "pc_or_cycle_differences": 0,
+  "perf_summary": {
+    "start": 1,
+    "end_exclusive": 1004,
+    "cycles": 1003,
+    "fetched": 718,
+    "instret": 501,
+    "flushed": 210,
+    "open": 7,
+    "ipc": 0.4995014955134596,
+    "flush_fraction": 0.2924791086350975,
+    "dependencies": 0
+  },
+  "spike": {
+    "status": "match",
+    "instructions": 501,
+    "trap_events": 3
+  },
+  "limits": [
+    "32 late events for non-live IDs are counted, not made into instructions.",
+    "Seven instructions remain in flight when tohost stops the run.",
+    "Execute marks operand read one cycle after issue, not a per-unit completion latency."
+  ],
+  "probes_off_safety": {
+    "identical": true,
+    "with_tap_sha256": "a2005a0fcbd8e782a7050e306e68ada6bd7e394404e873e774eb28e3ff2493ef",
+    "without_tap_sha256": "a2005a0fcbd8e782a7050e306e68ada6bd7e394404e873e774eb28e3ff2493ef"
+  }
+}
