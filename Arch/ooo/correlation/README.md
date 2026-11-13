@@ -39,8 +39,12 @@ penalty can absorb predictor and fetch-policy differences. It is not an
 extracted RTL parameter. Several training kernels can have equal RTL cycles.
 The grid cannot uniquely identify all pipeline parameters from these samples.
 
-VexiiRiscv has no SpinalProbes binding in this example. Its score is IPC-only.
-An empty event map does not turn missing event measurements into zero counts.
+The current VexiiRiscv adapter has a SpinalProbes binding. The saved runs
+below contain no probe streams, so their score is IPC-only. New preparation
+manifests enable probes for both adapters. The saved-campaign scorer retains
+its IPC-only VexiiRiscv mapping. New event comparisons need declared matching
+model and RTL predicates. An empty event map does not turn missing event
+measurements into zero counts.
 Neither experiment has enough held-out programs and event families for the
 existing coverage budget. Neither experiment establishes application accuracy.
 Raw C1, C2, probe streams and fitting candidates stay in OUT. The compact

@@ -12,7 +12,9 @@ It does not copy Spike internals or create an RTL checkpoint. Restore cost
 grows with the committed prefix. Only one hart is supported. External entropy
 and custom extensions are refused.
 
-The experiment checks every committed effect against C2. It captures up to
+The experiment compares PC, next PC, instruction and privilege mode with C2.
+It also compares integer register writes and memory effects. FP register
+effects are not compared by this capture checker. It captures up to
 16 wrong-path instructions for each selected sequential-prediction miss.
 Wrong operations use shared ROB, issue, register and memory resources. They
 squash at branch resolution. Wrong stores do not change cache or memory.
