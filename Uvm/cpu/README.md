@@ -115,3 +115,25 @@ Python CPU environment to real VexTop instruction, data and RVFI pins.
 It uses seeded bus delays and independent Spike step comparison.
 Program completion requires a checked `tohost` pass store. Its separate
 corruption mode changes next PC and must fail. Use the `vex` lock for runs.
+
+## Catalog-derived CSR qualification
+
+`rvw.uvm.csr_sequence.CsrQualification` loads the checks worker's
+`rvw.csr-selection/1` catalog selections or explicit `rvw.csr/1` models.
+`CsrQualificationSequence` wraps it for the Python virtual sequencer.
+Pass a project async `execute(address, transaction)` callback. It must
+execute a CPU CSR instruction, wait for completion, and return `trap`
+and the instruction's pre-write `read_data`. It must not access a bus
+register in place of a CSR instruction.
+
+The sequence checks reads against the independent model. For CSRs with
+project `assembly_safe=true`, it adds zero, all-ones, walking-one and seeded
+random writes with checked readback. It restores the declared reset value.
+Unknown-reset safe CSRs receive an explicit initialization write before the
+first read. Other unknown resets are refused. Absent CSRs require a trap.
+The generator never infers write safety or reset values from the catalog.
+
+Unit tests qualify the generator and comparator. The live VexRiscv binding
+does not yet implement the instruction-execution callback. Native CSR,
+architectural interrupt and debug qualification remain open. The selected
+VexTop has no debug port. No pin-only test establishes debug architecture.

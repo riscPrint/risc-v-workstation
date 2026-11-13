@@ -38,3 +38,16 @@ class RandomControlSequence(pyuvm.uvm_sequence):
         if self.sequencer.controls is None:
             raise ValueError('project CPU control callbacks required')
         await self.sequencer.controls.random_requests(self.count,self.allowed_irqs,self.max_gap)
+
+
+class CsrQualificationSequence(pyuvm.uvm_sequence):
+    """Run catalog-derived CSR checks through a project CPU executor."""
+    def __init__(self, selection, execute, name='csr_qualification', *, seed=1, random_writes=8):
+        super().__init__(name)
+        self.selection, self.execute = selection, execute
+        self.seed, self.random_writes = seed, random_writes
+
+    async def body(self):
+        from rvw.uvm.csr_sequence import CsrQualification
+        self.qualification = CsrQualification(self.selection, seed=self.seed)
+        self.report = await self.qualification.run(self.execute, random_writes=self.random_writes)
