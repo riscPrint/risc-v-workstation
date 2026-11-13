@@ -105,6 +105,7 @@ class Queue:
         for job in self.jobs():
             if job['state'] not in ('running', 'cancel_requested') or time.time() - job['heartbeat'] <= stale_after:
                 continue
+            expected = json.dumps(job, sort_keys=True)
             # A controller can restart while the worker is alive. Do not steal live work.
             try:
                 os.kill(job['controller'], 0)
@@ -135,7 +136,15 @@ class Queue:
             state = ('queued' if retry else 'inconclusive') if cleaned else 'cleanup_required'
             if cleaned and job['state'] == 'cancel_requested':
                 state = 'cancelled'
-            recovered.append(self.update(job['id'], state=state, pgid=None if cleaned else job.get('pgid'), attempts=job['attempts']))
+            with self.connect() as db:
+                db.execute('BEGIN IMMEDIATE')
+                current = json.loads(db.execute('SELECT data FROM jobs WHERE id=?', (job['id'],)).fetchone()[0])
+                # Cleanup must not overwrite a claim or cancellation made since the read.
+                if json.dumps(current, sort_keys=True) != expected:
+                    continue
+                job.update(state=state, pgid=None if cleaned else job.get('pgid'))
+                self.save(db, job)
+                recovered.append(job)
         return recovered
 
     def work_once(self):
