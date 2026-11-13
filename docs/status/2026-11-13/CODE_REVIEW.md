@@ -3486,3 +3486,186 @@ The table lists source, declarations, documentation, inventory data and test mod
 | `rvw/tests/test_startup_budget.py` | 191 |
 | `scripts/install.sh` | 805 |
 | `scripts/tool-inventory.py` | 95 |
+## Debug, fault and simulation security correctness review
+
+Read 120 files, 14,511 lines. Fixed 9 confirmed defects in 9 merged PRs. Retained 2 unconfirmed trigger questions. Each confirmed defect has a regression that failed before its fix.
+
+The review started with the DM, hart and trigger models. It then covered E-Trace and N-Trace flow, packet handling, fault classification and statistics, transports, campaign state, adapters and file handling. All files in the three assigned source packages were read. Later upstream interop and lazy-import changes were read again.
+
+Checked the requested register fields against the [Debug 0.13.2 specification](https://docs.riscv.org/reference/debug-trace-ras/debug/v0.13.2/_attachments/riscv-debug.pdf) and the [Debug 1.0 register definitions](https://github.com/riscv/riscv-debug-spec/tree/1.0/xml). The mcontrol high-size field defect is listed below. This review does not establish full Debug or trace conformance.
+
+### Confirmed defects
+
+- RV64 signed DIV and REM rounded through floating point and returned wrong architectural values. [PR #1363](https://github.com/riscPrint/risc-v-workstation/pull/1363), merged.
+- Hart-array masks moved between windows, selected only the current window, and survived DM reset. [PR #1395](https://github.com/riscPrint/risc-v-workstation/pull/1395), merged.
+- Program-buffer fetch failed after compressed instructions and could not fetch a word across a halfword boundary. [PR #1415](https://github.com/riscPrint/risc-v-workstation/pull/1415), merged.
+- Instruction-counter overflow lost required branch information and broke HTM or BTM reconstruction. [PR #1433](https://github.com/riscPrint/risc-v-workstation/pull/1433), merged.
+- A short fixed packet header raised IndexError instead of a codec error. [PR #1443](https://github.com/riscPrint/risc-v-workstation/pull/1443), merged.
+- GDB exit failures could pass; a timeout after all operation markers could leave all-pass C3. [PR #1454](https://github.com/riscPrint/risc-v-workstation/pull/1454), merged.
+- RV64 mcontrol omitted sizehi[22:21] in both the reference model and compliance encoder. [PR #1459](https://github.com/riscPrint/risc-v-workstation/pull/1459), merged.
+- Generated pair manifests resolved a relative adapter script from the case directory instead of the input directory. [PR #1463](https://github.com/riscPrint/risc-v-workstation/pull/1463), merged.
+- Bare platform and local adapter filenames did not resolve from the run binding directory. [PR #1466](https://github.com/riscPrint/risc-v-workstation/pull/1466), merged.
+
+### Checks and limits
+
+Initial area unit run: 146 passed. Final merged-fix regression run: 29 passed. Reproduce the latter with:
+
+```sh
+nice -n 15 rvw/.venv/bin/python -m pytest rvw/tests/test_debug_review_*.py rvw/tests/test_sec_review_*.py -q
+```
+
+Targeted run counts below include the new regression and its existing area tests. Every push followed the required fast set. Counts differ because main changed during the review.
+
+| Fix | Targeted passed | Fast-set result before delivery |
+|---|---:|---|
+| arithmetic | 47 | 1 failed, 3300 passed, 4 skipped, 7724 deselected, 8 warnings |
+| windows | 41 | 3354 passed, 4 skipped, 7729 deselected |
+| progbuf | 42 | 3466 passed, 4 skipped, 7736 deselected |
+| ntrace_overflow | 16 | 3487 passed, 4 skipped, 7740 deselected |
+| ntrace_framing | 17 | 2 failed, 3568 passed, 4 skipped, 7744 deselected, 109 warnings |
+| interop_exit | 41 | 2 failed, 3560 passed, 4 skipped, 8167 deselected |
+| mcontrol_size | 41 | 2 failed, 3568 passed, 4 skipped, 8167 deselected |
+| campaign_paths | 6 | 2 failed, 3572 passed, 4 skipped, 8167 deselected, 1 warning |
+| run_binding_paths | 6 | 2 failed, 3577 passed, 4 skipped, 8166 deselected |
+
+The first fast set failed only `test_mcp_workflow_coverage.py::test_each_tool_has_a_profile_and_workflow`, because `cov_mutate_core` had no workflow. Later fast sets failed only `test_boot_profile.py::test_launcher_reaches_nice_ten_once[1-3]` and `[2-0]`. Each affected PR names its unrelated failures. The upstream optional-watchpoint tests also passed, 2 tests.
+
+The fault Wilson interval matches the binomial Wilson formula. The diagnostic denominator is detected plus silent corruption plus timeout. Safe and unconfirmed injections are outside that denominator. Missing planned outcomes remain inconclusive. No fault classification or statistics defect was confirmed.
+
+NOT RUN: native OpenOCD/GDB or Spike interop, upstream native E-Trace round trips, core builds, core simulations, formal proofs, and the full Python suite. Model and synthetic-adapter tests are not RTL or hardware evidence. No core or hardware was changed.
+
+### Suspected but unconfirmed
+
+- Instruction-count trigger pending behavior when an instruction changes privilege mode needs further validation. No failing reproduction was established in this review.
+- The mcontrol6 hit encoding for a data trigger that fires after retirement needs an independent check. No failing reproduction was established in this review.
+
+### What was not read
+
+No file in the assigned source packages was omitted. The upstream E-Trace encoder and decoder implementation, native core RTL, formal/security modules, and IDE capture/session modules were outside this source review. Native test files were read but their native jobs were not run.
+
+### Files read
+
+Line counts include the versions read or changed during this review. The inventory includes existing unit tests, native test drivers, shared integration tests, and fixture source.
+
+| File | Lines |
+|---|---:|
+| `rvw/src/rvw/debug/README.md` | 408 |
+| `rvw/src/rvw/debug/__init__.py` | 1 |
+| `rvw/src/rvw/debug/api.py` | 169 |
+| `rvw/src/rvw/debug/campaign.py` | 34 |
+| `rvw/src/rvw/debug/checks.py` | 1312 |
+| `rvw/src/rvw/debug/cli.py` | 297 |
+| `rvw/src/rvw/debug/cli_declarations.py` | 2 |
+| `rvw/src/rvw/debug/dm.py` | 579 |
+| `rvw/src/rvw/debug/dmi.py` | 309 |
+| `rvw/src/rvw/debug/etrace.py` | 158 |
+| `rvw/src/rvw/debug/etrace_flow.py` | 533 |
+| `rvw/src/rvw/debug/hart.py` | 596 |
+| `rvw/src/rvw/debug/ingress_check.py` | 145 |
+| `rvw/src/rvw/debug/interop.py` | 178 |
+| `rvw/src/rvw/debug/interop_gdb.py` | 104 |
+| `rvw/src/rvw/debug/jtag.py` | 262 |
+| `rvw/src/rvw/debug/mcp_tools.py` | 66 |
+| `rvw/src/rvw/debug/ntrace.py` | 407 |
+| `rvw/src/rvw/debug/ntrace_check.py` | 218 |
+| `rvw/src/rvw/debug/openocd.tcl` | 63 |
+| `rvw/src/rvw/debug/parity.py` | 75 |
+| `rvw/src/rvw/debug/profile.py` | 183 |
+| `rvw/src/rvw/debug/serve.py` | 82 |
+| `rvw/src/rvw/debug/suite.py` | 533 |
+| `rvw/src/rvw/debug/tap.py` | 206 |
+| `rvw/src/rvw/debug/triggers.py` | 365 |
+| `rvw/src/rvw/fault/README.md` | 86 |
+| `rvw/src/rvw/fault/__init__.py` | 1 |
+| `rvw/src/rvw/fault/api.py` | 30 |
+| `rvw/src/rvw/fault/campaign.py` | 344 |
+| `rvw/src/rvw/fault/cli.py` | 106 |
+| `rvw/src/rvw/fault/cli_declarations.py` | 2 |
+| `rvw/src/rvw/fault/mcp_tools.py` | 42 |
+| `rvw/src/rvw/sec/README.md` | 562 |
+| `rvw/src/rvw/sec/__init__.py` | 1 |
+| `rvw/src/rvw/sec/bindings.py` | 78 |
+| `rvw/src/rvw/sec/budget.py` | 30 |
+| `rvw/src/rvw/sec/c1_adapter.py` | 97 |
+| `rvw/src/rvw/sec/campaign.py` | 235 |
+| `rvw/src/rvw/sec/cli.py` | 25 |
+| `rvw/src/rvw/sec/cli_declarations.py` | 2 |
+| `rvw/src/rvw/sec/commands/__init__.py` | 0 |
+| `rvw/src/rvw/sec/commands/campaign.py` | 30 |
+| `rvw/src/rvw/sec/commands/contract.py` | 29 |
+| `rvw/src/rvw/sec/commands/fault.py` | 28 |
+| `rvw/src/rvw/sec/commands/gadgets.py` | 28 |
+| `rvw/src/rvw/sec/commands/ift_core.py` | 43 |
+| `rvw/src/rvw/sec/commands/isolation.py` | 28 |
+| `rvw/src/rvw/sec/commands/latency.py` | 28 |
+| `rvw/src/rvw/sec/commands/model_check.py` | 28 |
+| `rvw/src/rvw/sec/commands/spec_suite.py` | 41 |
+| `rvw/src/rvw/sec/commands/suite.py` | 26 |
+| `rvw/src/rvw/sec/common.py` | 35 |
+| `rvw/src/rvw/sec/core_adapter.py` | 181 |
+| `rvw/src/rvw/sec/gadgets.py` | 80 |
+| `rvw/src/rvw/sec/ift.py` | 157 |
+| `rvw/src/rvw/sec/ift_core.py` | 141 |
+| `rvw/src/rvw/sec/isolation.py` | 27 |
+| `rvw/src/rvw/sec/latency.py` | 66 |
+| `rvw/src/rvw/sec/mcp_tools.py` | 16 |
+| `rvw/src/rvw/sec/model_check.py` | 110 |
+| `rvw/src/rvw/sec/pairs.py` | 156 |
+| `rvw/src/rvw/sec/probe_events.py` | 96 |
+| `rvw/src/rvw/sec/rtl.py` | 468 |
+| `rvw/src/rvw/sec/run_adapter.py` | 147 |
+| `rvw/src/rvw/sec/security_fault.py` | 51 |
+| `rvw/src/rvw/sec/spec_suite.py` | 57 |
+| `rvw/src/rvw/sec/suite.py` | 38 |
+| `rvw/tests/fixtures/debug/interop.S` | 23 |
+| `rvw/tests/fixtures/debug/loop.S` | 11 |
+| `rvw/tests/fixtures/debug/trace.S` | 18 |
+| `rvw/tests/fixtures/debug/traps.S` | 39 |
+| `rvw/tests/fixtures/fault/adapter.py` | 84 |
+| `rvw/tests/fixtures/sec/adapter.py` | 46 |
+| `rvw/tests/fixtures/sec/fault_adapter.py` | 34 |
+| `rvw/tests/test_cleanroom_manifest_errors.py` | 35 |
+| `rvw/tests/test_debug_dm.py` | 416 |
+| `rvw/tests/test_debug_dm_native.py` | 137 |
+| `rvw/tests/test_debug_ingress.py` | 84 |
+| `rvw/tests/test_debug_interop_options.py` | 28 |
+| `rvw/tests/test_debug_ntrace.py` | 187 |
+| `rvw/tests/test_debug_parity.py` | 72 |
+| `rvw/tests/test_debug_review_arithmetic.py` | 22 |
+| `rvw/tests/test_debug_review_interop_exit.py` | 17 |
+| `rvw/tests/test_debug_review_mcontrol_size.py` | 26 |
+| `rvw/tests/test_debug_review_ntrace_framing.py` | 18 |
+| `rvw/tests/test_debug_review_ntrace_overflow.py` | 23 |
+| `rvw/tests/test_debug_review_progbuf.py` | 18 |
+| `rvw/tests/test_debug_review_windows.py` | 33 |
+| `rvw/tests/test_debug_spec.py` | 307 |
+| `rvw/tests/test_debug_suite_transport.py` | 30 |
+| `rvw/tests/test_debug_trace.py` | 134 |
+| `rvw/tests/test_debug_trace_native.py` | 97 |
+| `rvw/tests/test_fault.py` | 143 |
+| `rvw/tests/test_fault_report_completeness.py` | 45 |
+| `rvw/tests/test_fault_report_verdict.py` | 38 |
+| `rvw/tests/test_init_native_bindings.py` | 50 |
+| `rvw/tests/test_probes_records.py` | 116 |
+| `rvw/tests/test_reset_unknown.py` | 56 |
+| `rvw/tests/test_sec.py` | 52 |
+| `rvw/tests/test_sec_adapter_input_errors.py` | 17 |
+| `rvw/tests/test_sec_bindings.py` | 50 |
+| `rvw/tests/test_sec_cached.py` | 95 |
+| `rvw/tests/test_sec_campaign.py` | 97 |
+| `rvw/tests/test_sec_core.py` | 182 |
+| `rvw/tests/test_sec_fast.py` | 54 |
+| `rvw/tests/test_sec_fault.py` | 23 |
+| `rvw/tests/test_sec_fault_native.py` | 23 |
+| `rvw/tests/test_sec_flow_budget.py` | 35 |
+| `rvw/tests/test_sec_gadgets.py` | 14 |
+| `rvw/tests/test_sec_isolation.py` | 18 |
+| `rvw/tests/test_sec_isolation_native.py` | 20 |
+| `rvw/tests/test_sec_latency.py` | 29 |
+| `rvw/tests/test_sec_model_check.py` | 49 |
+| `rvw/tests/test_sec_review_campaign_paths.py` | 17 |
+| `rvw/tests/test_sec_review_run_binding_paths.py` | 22 |
+| `rvw/tests/test_sec_run_adapter.py` | 61 |
+| `rvw/tests/test_sec_rv64_c1.py` | 68 |
+| `rvw/tests/test_sec_suite.py` | 47 |
+| `rvw/tests/test_verdict_honesty_sweep.py` | 90 |
