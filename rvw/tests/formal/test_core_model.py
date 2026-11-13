@@ -44,3 +44,22 @@ def test_exact_property_selection():
     assert binding['property_id'] == 'top:second'
     with pytest.raises(ValueError, match='missing'):
         query(text, 'top', 2, 'unknown')
+
+
+def test_native_conflicting_environment(tmp_path):
+    if not all(shutil.which(t) for t in ('yosys', 'z3')):
+        pytest.skip('yosys and z3 required')
+    root = tmp_path / 'run'
+    (root / 'sby/model').mkdir(parents=True)
+    rtl = tmp_path / 'top.v'
+    rtl.write_text('module top(input a); always @* begin assume(a); assume(!a); assert(a); end endmodule')
+    il = root / 'sby/model/design.il'
+    proc = run_group(['yosys', '-Q', '-T', '-p', f'read_verilog -formal {rtl}; prep -top top; write_rtlil {il}'], capture=True, timeout=10)
+    assert proc.returncode == 0
+    (root / 'result.json').write_text(json.dumps(dict(schema='rvw.formal/1', assertions=1, depth=3)))
+    out = tmp_path / 'out'
+    assert run(Namespace(result=str(root), depth=None, smt2=None, mapping=None, out=str(out),
+                         solver='z3', timeout=15, db=None, json=False)) == 1
+    report = json.loads((out / 'result.json').read_text())
+    assert report['status'] == 'inconclusive' and report['environment_core']
+    assert report['bounded_model']['feasibility'] == 'unsat'
