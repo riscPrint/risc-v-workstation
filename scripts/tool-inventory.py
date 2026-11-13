@@ -4,6 +4,7 @@ import argparse
 import importlib.util
 from pathlib import Path
 import platform
+import os
 import shlex
 import subprocess
 
@@ -16,7 +17,11 @@ spec.loader.exec_module(inventory)
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--expand', nargs=argparse.REMAINDER)
+    parser.add_argument('--home', type=Path, default=ROOT)
     parser.add_argument('--extra', nargs='*')
+    parser.add_argument('--linux-plan', choices=['apt', 'dnf'])
+    parser.add_argument('--packages', choices=['brew', 'apt', 'dnf'])
+    parser.add_argument('--packages-done', action='store_true')
     parser.add_argument('--check', action='store_true')
     parser.add_argument('--dry-run', action='store_true')
     args = parser.parse_args()
@@ -37,6 +42,19 @@ def main():
         return 0
     if args.extra is None:
         parser.error('use --expand or --extra')
+    selected = [t for t in data['tools'] if t['flag'] in args.extra and not t['legacy']]
+    if set(args.extra) - {t['flag'] for t in selected}:
+        parser.error('unknown optional tool flag')
+    if args.packages:
+        key = 'macos' if args.packages == 'brew' else args.packages
+        words = dict.fromkeys(w for t in selected for w in shlex.split(t['install'][key]))
+        print('\n'.join(words))
+        return 0
+    if args.linux_plan:
+        for tool in selected:
+            recipe = tool['install'][args.linux_plan]
+            print(tool['name'] + ' [Linux untested]: ' + (recipe or tool['install']['source']))
+        return 0
     records = {r['name']: r for r in inventory.report()}
     failed = False
     python_extras = sorted({'cocotb': 'cocotb', 'pyuvm': 'pyuvm', 'wellen': 'waves'}[f] for f in args.extra if f in ('cocotb', 'pyuvm', 'wellen'))
@@ -51,16 +69,18 @@ def main():
                 print(record['status'].upper(), tool['name'], record['install_command'])
                 failed |= record['status'] != 'installed'
                 continue
+            if record['status'] == 'installed' and flag not in ('cocotb', 'pyuvm', 'wellen'):
+                continue
             extra = {'cocotb': 'cocotb', 'pyuvm': 'pyuvm', 'wellen': 'waves'}.get(flag)
             if extra:
                 if synced:
                     continue
                 synced = True
-                cmd = ['uv', 'sync', '--locked', '--extra', 'mcp', *[arg for value in python_extras for arg in ('--extra', value)], '--project', str(ROOT / 'rvw')]
+                cmd = ['uv', 'sync', '--locked', '--extra', 'mcp', *[arg for value in python_extras for arg in ('--extra', value)], '--project', str(args.home / 'rvw')]
             else:
-                recipe = tool['install']['macos' if platform.system() == 'Darwin' else 'apt']
+                recipe = tool['install']['macos' if platform.system() == 'Darwin' else ('dnf' if Path('/etc/fedora-release').exists() else 'apt')]
                 print(tool['name'] + ': ' + (recipe or tool['install']['source']))
-                if not args.dry_run:
+                if not args.dry_run and not (recipe and args.packages_done):
                     # Package approval remains with install.sh. Do not run arbitrary recipes.
                     print('Manual setup required. See inventory install recipe above.')
                     failed = True
