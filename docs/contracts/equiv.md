@@ -328,3 +328,16 @@ injection or erasure model. At least one input or internal source is required.
 The optional Boolean `memory_map` lowers finite memories exactly before IFT.
 A nonempty `source_regions` field is refused because response/address alignment
 is not modeled. Mapping and proof share the declared total timeout.
+
+## VexiiRiscv divider unit receipts
+
+The example runner writes `rvw.vexii-div-unit/1`. It records the source revision,
+source and component hashes, SpinalHDL dependency, unit width, implementation,
+operand projection, divisor restriction, completion bound, export status and
+per-operation outcomes. `zero_smoke` is an optional Icarus sample receipt.
+Its `match` or `mismatch` applies only to the recorded input. It is not a proof.
+
+The compact `rvw.vexii-div-unit-evidence/1` ledger links a campaign, a native
+datapath result summary, failed properties, native sample and a full-result hash.
+It keeps timeout attempts. Full traces stay outside the source repository.
+Neither format certifies an enclosing core or its ISA behavior.

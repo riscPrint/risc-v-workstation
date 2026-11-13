@@ -1,0 +1,238 @@
+{
+  "schema": "rvw.vexii-div-unit-evidence/1",
+  "campaign": {
+    "schema": "rvw.vexii-div-unit/1",
+    "source_revision": "3cff1cc2411ca97e6ee9ef64414ef274d30371e1",
+    "spinal_version": "1.15.0",
+    "width": 32,
+    "low_area": false,
+    "scope": "real source unit; unsigned transactions; stable operands; no pipeline or ISA integration",
+    "operand_bits": 32,
+    "divisor": "zero",
+    "max_latency": 40,
+    "source_files": {
+      "src/main/scala/vexiiriscv/misc/DivRadix.scala": {
+        "sha256": "2096c034598fbaabd7ccf1fd398a54cd5dbb5df6f600a860cf571bddf9a93670",
+        "component_sha256": "3b22fb8f86f4b93c7ae49d866d8c66671a4340723ccba9e96a7d0b9a2640a9bc"
+      },
+      "src/main/scala/vexiiriscv/misc/DivRadix2.scala": {
+        "sha256": "d4e71d73b9606ceb93c044ebd1aabf27a462cbb5882208cb408708dc6edee68d",
+        "component_sha256": "43f22ee8cf827fffe7b4d674ec002a8f71d6a2a45857c8074f179317d685f34b"
+      }
+    },
+    "results": [
+      {
+        "operation": "divu",
+        "status": "inconclusive",
+        "reason": "cbmc timed out",
+        "wall_s": 180.755
+      },
+      {
+        "operation": "remu",
+        "status": "inconclusive",
+        "reason": "cbmc timed out",
+        "wall_s": 180.916
+      }
+    ],
+    "export": {
+      "exit": 0,
+      "timed_out": false
+    },
+    "rtl_sha256": "85e6dbad789d81ea6763afea55ed5878759f4e29ad9ef147f3fcf8e5dc66005f",
+    "implementation": "DivRadix2"
+  },
+  "short_bound": {
+    "schema": "rvw.datapath/1",
+    "status": "counterexample",
+    "backend": "yosys-boolean-cbmc",
+    "width": 32,
+    "max_latency": 12,
+    "case": "all",
+    "transaction": "inputs held stable; reset one clock; start pulse one clock",
+    "scope": "one handshake-bounded transaction; operands stable until done",
+    "rtl_definedness": "proved",
+    "inputs": {
+      "dut.v": "b4784102fb5462f53efa0ef1ba334d5edcbbb2b8c29018241c41d89c2532c848",
+      "reference.c": "8cca00955b40b50fa9cc22c690faac276ac884426006a814c4e20f0c2486f1a2"
+    },
+    "solver_exit": 10,
+    "wall_s": 82.94
+  },
+  "failed_properties": [
+    {
+      "property": "main.assertion.28",
+      "description": "datapath result",
+      "status": "FAILURE"
+    }
+  ],
+  "full_result": {
+    "path": "$RUN_ROOT/vexii-div-short-1113/result.json",
+    "bytes": 173434619,
+    "sha256": "6a4aa256bdd185d3462ca6903929d91a8ef7d5423d1bfaaf87c9cdfb8eaf2205"
+  },
+  "formal_dividend": 2147707387,
+  "physical_divisor": 0,
+  "reference_divisor": 0,
+  "native_smoke": {
+    "status": "mismatch",
+    "operation": "divu",
+    "a": 1,
+    "b": 0,
+    "observed": 2155905195,
+    "expected": 4294967295,
+    "cycles_after_start_removed": 8,
+    "backend": "icarus",
+    "proof_ran": false
+  },
+  "hardfloat_full_add_retry": {
+    "schema": "rvw.hardfloat-campaign/1",
+    "format": 32,
+    "hardfloat_files": {
+      "source/8086-SSE/HardFloat_specialize.v": "5978254ad3781165833345616e4c1c3447cac4a1d8fb73689c2def15f71f52e3",
+      "source/8086-SSE/HardFloat_specialize.vi": "a6a6a3b7b86f7cc2e32e147dc9f6943422a611fd6da362f37e18950002a571c4",
+      "source/ARM-VFPv2/HardFloat_specialize.v": "49d9a51a4e8b899df33247b778df5881ee6f9e38a98efafbbfaa7e0c1e0035f9",
+      "source/ARM-VFPv2/HardFloat_specialize.vi": "1710f1ec1a2c737fd490a723101e45dde6bf4735217996dba6e4be279c6c5ed9",
+      "source/HardFloat_consts.vi": "53d4c22ee61b9b81bc763330959327914d8e1952e15f3f66361d1a4e34e2802f",
+      "source/HardFloat_localFuncs.vi": "e6e8d53f362dc2c9fe14c9b0edbc73bc6367d8899276b3384e947a17029b5d50",
+      "source/HardFloat_primitives.v": "5a1d0823a066395eda8191b3a556c414e6120b8085ff43ce383980d84af47f9f",
+      "source/HardFloat_rawFN.v": "353cad0b733c601f5c2449dc75f1ddefa34dc5c2466ac82540302303899fe355",
+      "source/RISCV/HardFloat_specialize.v": "de4442606d2c51bf30c0476d289fa7f955273c8bb58c1484f0e745b76bc8d316",
+      "source/RISCV/HardFloat_specialize.vi": "c252f7e1638f63838f66e6f469bf86fdec0e4396f6b0be69172623a26519307c",
+      "source/addRecFN.v": "15fb5387ab0deff63670ed144189e9f263c61ffc909d06697974c49d11ba5dc3",
+      "source/compareRecFN.v": "b88d572db1cea8d5275aeb1db7dcdfabad74281fdc29378940fd4b20f7326d69",
+      "source/divSqrtRecFN_small.v": "f76feb5557faa8bcb2868e51bf2ce7d1297be46dd67ae51d509b1ae91066a522",
+      "source/fNToRecFN.v": "7aca940370a4ecf1b52774cec62e90252d090f20a4acd5f577cf88565266426c",
+      "source/iNToRecFN.v": "bb7a5cd239ebc2f95a7eb9047534f1e530f148f5d017dd664c3f252bccb25f1c",
+      "source/isSigNaNRecFN.v": "77e37250ec9c18c4484c23eda48bfcf7df8dec1a3d3b2c1a1e5804386a25de8b",
+      "source/mulAddRecFN.v": "268c38c2433e66337900a4ad67daf393ffa6f4aaa43552728bc786a83604008b",
+      "source/mulRecFN.v": "5a6a263dcde9f38f0fabef87ceb41e1bdff63c46d151c7c65e404467354bee43",
+      "source/recFNToFN.v": "62d42a8f004f00f9a688c5e45302ceff22148313b3602840e5d05a13e9391e96",
+      "source/recFNToIN.v": "881c05985ee57e1006988661236708c74269352957d94f65c88696c1a7928877",
+      "source/recFNToRecFN.v": "3ec9a39057e64d7fb42893c12f0e19b36af7226669ba53671d6abe19db0722fc"
+    },
+    "softfloat_revision": "07ebd29db0cfb55723a79fbbffe99103ef38e305",
+    "operations": [
+      "add"
+    ],
+    "cases": [
+      "all"
+    ],
+    "roundings": [
+      0
+    ],
+    "scope": "binary32 units; first operand case split only; canonical NaN; tininess after rounding; all result bits and flags",
+    "jobs": 1,
+    "max_latency": 64,
+    "timeout_per_proof": 180.0,
+    "exports": {
+      "add": {
+        "exit": 0,
+        "timed_out": false
+      }
+    },
+    "results": [
+      {
+        "operation": "add",
+        "case": "all",
+        "rounding": 0,
+        "status": "inconclusive",
+        "reason": "cbmc timed out",
+        "wall_s": 180.288,
+        "max_latency": null,
+        "result": "add/all-rm0/result.json"
+      }
+    ]
+  },
+  "final_runner": {
+    "schema": "rvw.vexii-div-unit/1",
+    "source_revision": "3cff1cc2411ca97e6ee9ef64414ef274d30371e1",
+    "spinal_version": "1.15.0",
+    "implementation": "DivRadix2",
+    "width": 32,
+    "low_area": false,
+    "scope": "real source unit; unsigned transactions; stable operands; no pipeline or ISA integration",
+    "operand_bits": 32,
+    "divisor": "zero",
+    "max_latency": 12,
+    "source_files": {
+      "src/main/scala/vexiiriscv/misc/DivRadix.scala": {
+        "sha256": "2096c034598fbaabd7ccf1fd398a54cd5dbb5df6f600a860cf571bddf9a93670",
+        "component_sha256": "3b22fb8f86f4b93c7ae49d866d8c66671a4340723ccba9e96a7d0b9a2640a9bc"
+      },
+      "src/main/scala/vexiiriscv/misc/DivRadix2.scala": {
+        "sha256": "d4e71d73b9606ceb93c044ebd1aabf27a462cbb5882208cb408708dc6edee68d",
+        "component_sha256": "43f22ee8cf827fffe7b4d674ec002a8f71d6a2a45857c8074f179317d685f34b"
+      }
+    },
+    "results": [
+      {
+        "operation": "divu",
+        "status": "counterexample",
+        "reason": null,
+        "wall_s": 121.183
+      }
+    ],
+    "export": {
+      "exit": 0,
+      "timed_out": false
+    },
+    "rtl_sha256": "85e6dbad789d81ea6763afea55ed5878759f4e29ad9ef147f3fcf8e5dc66005f",
+    "zero_smoke": {
+      "status": "mismatch",
+      "operation": "divu",
+      "a": 1,
+      "b": 0,
+      "observed": 2155905195,
+      "expected": 4294967295,
+      "cycles_after_start_removed": 8,
+      "backend": "icarus",
+      "proof_ran": false
+    }
+  },
+  "pinned_example_runner": {
+    "schema": "rvw.vexii-div-unit/1",
+    "source_revision": "9f70315deb3390b283995c5b8f1bd38215ecf52b",
+    "spinal_version": "1.15.0",
+    "implementation": "DivRadix2",
+    "width": 32,
+    "low_area": false,
+    "scope": "real source unit; unsigned transactions; stable operands; no pipeline or ISA integration",
+    "operand_bits": 32,
+    "divisor": "zero",
+    "max_latency": 12,
+    "source_files": {
+      "src/main/scala/vexiiriscv/misc/DivRadix.scala": {
+        "sha256": "9a0d095aae4868daf825bab6db7e469ef87fa67cf7bf532fed273bdbcfeebede",
+        "component_sha256": "2ea6d26865dbedf1d5b535c331b7bc198e8c503fefc3fe5230c01d421d678d6f"
+      },
+      "src/main/scala/vexiiriscv/misc/DivRadix2.scala": {
+        "sha256": "d4e71d73b9606ceb93c044ebd1aabf27a462cbb5882208cb408708dc6edee68d",
+        "component_sha256": "43f22ee8cf827fffe7b4d674ec002a8f71d6a2a45857c8074f179317d685f34b"
+      }
+    },
+    "results": [
+      {
+        "operation": "divu",
+        "status": "counterexample",
+        "reason": null,
+        "wall_s": 105.869
+      }
+    ],
+    "export": {
+      "exit": 0,
+      "timed_out": false
+    },
+    "rtl_sha256": "85e6dbad789d81ea6763afea55ed5878759f4e29ad9ef147f3fcf8e5dc66005f",
+    "zero_smoke": {
+      "status": "mismatch",
+      "operation": "divu",
+      "a": 1,
+      "b": 0,
+      "observed": 2155905195,
+      "expected": 4294967295,
+      "cycles_after_start_removed": 8,
+      "backend": "icarus",
+      "proof_ran": false
+    }
+  }
+}
