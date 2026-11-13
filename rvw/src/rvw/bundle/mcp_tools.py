@@ -16,4 +16,6 @@ def mcp_tools():
                 "rerun_window": {**I, "default": 3000}, "konata": B, "core_config": S, "project": S,
                 "pdg": S, "trace_wave": S, "trace_cycles": {**I, "default": 20},
                 "no_spinaltrace": B, "timeout": {"type": "number", "exclusiveMinimum": 0}}, ["run_dir"]),
-        handler("rvw.bundle.cli"), long=True)]
+        handler("rvw.bundle.cli"), long=True,
+        side_effects='long-running; launches configured native adapter, objdump, optional SpinalTrace and waveform readers; writes bundle under out', native_tools=('RISC-V GCC', 'SpinalTrace', 'GTKWave tools', 'wellen'),
+        )]
