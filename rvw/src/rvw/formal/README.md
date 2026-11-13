@@ -1178,3 +1178,23 @@ legal and faulty RAM tests check both encodings. No capacity gain is claimed.
 `rvw formal security` runs bounded Spike contract comparisons and emits mapped-gate
 IFT instrumentation. See [security/README.md](security/README.md) for the hardware
 threat model, adapter contract, sampled ADD timing scope and explicit limits.
+
+### Solver cores
+
+`rvw formal proof-core --smt2 query.smt2 --mapping bindings.json --out core`
+extracts a solver core with Z3. Each assertion must use `(! TERM :named LABEL)`.
+The command checks the core again and removes each constraint when the remaining
+query stays unsatisfiable. It reports deletion minimality, not minimum size.
+Unknown checks keep the constraint and disable the minimality claim.
+
+The mapping has schema `rvw.smt-bindings/1`, a stable `property_id`, optional
+`requirement_ids`, and `constraints`, an object from each label to its design
+binding. Each binding can contain `signals` and source metadata. `--db design.db`
+resolves those signals with the same SpinalDB reader as `rvw query`. Unresolved
+signals and database staleness remain visible. The input query, mapping, database,
+solver identity and every reduction query are retained. MCP: `formal_proof_core`.
+
+This command accepts a single non-incremental SMT query exported by a solver
+flow. It does not convert arbitrary AIGER proofs or infer an induction query from
+an SBY PASS. Unsatisfiability applies to this query only. It does not authorize
+coverage exclusions. Use `rvw cov prove` for the existing guarded UNR export.
