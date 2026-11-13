@@ -105,11 +105,11 @@ def guess_buses(ports):
     return buses
 
 
-def link_script(base, size):
+def link_script(base, size, reset_pc=None):
     return f'''ENTRY(_start)
 MEMORY {{ ram (rwx) : ORIGIN = {hex(base)}, LENGTH = {hex(size)} }}
 SECTIONS {{
-  .text : {{ *(.text.init) *(.text*) }} > ram
+  .text {hex(base if reset_pc is None else reset_pc)} : {{ *(.text.init) *(.text*) }} > ram
   .data : {{ *(.data*) *(.sdata*) *(.rodata*) *(.srodata*) }} > ram
   .bss : {{ *(.bss*) *(.sbss*) }} > ram
   /DISCARD/ : {{ *(.riscv.attributes) *(.comment) }}
@@ -454,7 +454,7 @@ exec nice -n 10 "${{RVW_PYTHON:-$RVW_HOME/rvw/.venv/bin/python}}" -m rvw query b
                  '// Keep the adapter class directory present in sbt Runtime/fullClasspath.\n'
                  'private object RvwMappedRuntime\n'), 'rvw/project/build.properties': 'sbt.version=1.10.7\n',
              'rvw/build-smoke.sh': smoke_build, 'rvw/programs/smoke.S': SMOKE,
-             'rvw/programs/link.ld': link_script(base, size), 'rvw/build-db.sh': db,
+             'rvw/programs/link.ld': link_script(base, size, reset_value), 'rvw/build-db.sh': db,
              'rvw/cosim.json': json.dumps(platform, indent=2) + '\n', 'rvw/README.md': readme,
              'rvw/.gitignore': '/out/\n/target/\n/project/target/\n/project/project/\n'}
     if top is not None:
