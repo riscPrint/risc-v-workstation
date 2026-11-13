@@ -895,3 +895,19 @@ Only one inline clock declaration and one disable declaration are accepted per
 module. Nested defaults, skews, clocking IO declarations and separate named
 clocking selection remain unsupported. This normalization does not add an event
 model or reset semantics to an engine that previously refused those controls.
+
+## Compiled literal resource scenarios
+
+`formal scenario-compile` writes `rvw.scenario-compiled/1` with `status`,
+`actions`, `finisher` and `scope`. Status is `generated`, never executed or
+accepted. Artifacts are `program.S`, `scenario_sequence.py`, `operations.json`,
+`baremetal-plan.json` and `pyuvm-plan.json`. Both selected backend plans must
+use cycles and the same action order. Operations are aligned literal RV32
+`read32` and `write32`. Dynamic produced/consumed data is refused.
+
+A project binds the generated virtual sequence's async `start`, `observe` and
+`finish` port methods. `observe` returns the actual value and measured start/end
+cycles. The sequence checks expected values and emits the existing
+`rvw.scenario-observation/1`. The bare-metal adapter must produce separate
+observations. The existing scenario checker validates outcomes, dependencies
+and resource occupancy. The CPU-backed route is not an independent bus master.

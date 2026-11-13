@@ -1,0 +1,55 @@
+{
+  "date": "2026-11-13",
+  "core_revision": "a62c145aa042a5de874344e0a7683bd7c8c8c870",
+  "elf_sha256": "754a66a9d3a177f56d5b1d463879b7f5f66b28adc2e72853aca427bfb2ed24e9",
+  "baremetal": {
+    "status": "pass",
+    "cycles": 324,
+    "instret": 54
+  },
+  "pyuvm": {
+    "passed": 1,
+    "failed": 0
+  },
+  "comparison": {
+    "status": "match",
+    "checks": {
+      "baremetal": {
+        "schema": "rvw.scenario-check/1",
+        "status": "match",
+        "plan_id": "8a737a71720df6445c725ec27c0d68095f4311faa3a1571769ffe3a5c5dc2244",
+        "backend": "baremetal",
+        "comparisons": 12,
+        "missing": [],
+        "failures": [],
+        "scope": "supplied observation records only; no execution or hardware evidence inferred"
+      },
+      "pyuvm": {
+        "schema": "rvw.scenario-check/1",
+        "status": "match",
+        "plan_id": "fe284501718941ef1ac03a883ded00bccb8c716791599feeeea4cb667b0e5460",
+        "backend": "pyuvm",
+        "comparisons": 12,
+        "missing": [],
+        "failures": [],
+        "scope": "supplied observation records only; no execution or hardware evidence inferred"
+      }
+    },
+    "scope": "same real VexRiscv SoC CPU image; two observation consumers, not independent stimulus backends"
+  },
+  "rtl_normalization": {
+    "explicit_shift_assignment_casts": 2,
+    "memory_sha256": {
+      "ComposedSoc.v_toplevel_ram_mem_symbol0.bin": "fa4c4797e3b4b3c6e7e5f2d3de0460b94c36d943e81d1739fb4e4601da3a063b",
+      "ComposedSoc.v_toplevel_ram_mem_symbol1.bin": "42121ef435af272bf024432f8f0e0fb542a3516d081f65cddcbb4c8fced57430",
+      "ComposedSoc.v_toplevel_ram_mem_symbol2.bin": "2bbb8fd77c84d37e23c6120900abd85eca9acf1960710d3bf18dba7f061ed090",
+      "ComposedSoc.v_toplevel_ram_mem_symbol3.bin": "fefe1ab08930abaf9ec8c19f97ac0e0c2220995a0860df3183fc5506871c09ef"
+    },
+    "scope": "make the existing LHS width conversion explicit; no changed bits or disabled checks"
+  },
+  "limits": [
+    "two CPU-image consumers, not independent stimulus backends",
+    "serial literal MMIO actions only",
+    "no C4, full peripheral, CPU or hardware qualification"
+  ]
+}

@@ -3327,6 +3327,7 @@ refused. Each engine retains its existing event and reset limits. In particular,
 formal unbounded reset cancellation, general nested unbounded composition and
 full multi-clock proof remain unsupported. These defaults do not change that
 scope. The generated support table records paired native finite cases.
+<<<<<<< HEAD
 ## Conditional instruction abstraction
 
 `rvw formal riscv-abstract --project PROJECT --manifest MAP.json --checks
@@ -3373,3 +3374,14 @@ The ISA table also lists unselected instructions from the declared upstream
 ISA list and missing consistency checks for each retirement channel. They are
 unsupported gaps. A short project check list cannot silently qualify the rest
 of its declared ISA.
+=======
+
+### Executed literal resource scenarios
+
+`formal scenario-compile` and MCP `formal_scenario_compile` emit an RV32 MMIO
+program and a CPU-backed pyuvm virtual sequence from resource-aware plans.
+Generation does not execute them. The
+[scenario guide](SCENARIOS.md#literal-mmio-execution-sources) states the supported
+literal operations. The linked composed VexRiscv example ran both native
+consumers and compared the same 12 observed MMIO values per consumer.
+>>>>>>> e1d1c652 (feat(formal): execute literal scenarios on the vexriscv soc)
