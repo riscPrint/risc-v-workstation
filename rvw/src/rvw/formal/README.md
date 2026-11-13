@@ -2990,3 +2990,16 @@ native justice input path. Its result records `unsupported_backend_cli`.
 Use `l2s` or `k-live` for the existing checked reductions. No fallback result
 is substituted. The pinned darwin-arm64 suite has no suprove executable.
 Its portfolio status remains `not_installed`.
+
+### Exact PicoRV32 proof conditions
+
+Portfolio and engine-bench results retain the elaborated assumption predicates,
+enables, model hash and exact source excerpts. The pinned PicoRV32 conditions
+are `restrict property (|last_mem_nowait || mem_ready || !mem_valid)` and
+`restrict property (resetn != $initstate)`. On each rising edge,
+`last_mem_nowait` shifts in `mem_ready || !mem_valid`. Thus the memory condition
+requires progress now or in its four recorded samples. The initial history is
+unconstrained. Reset is low in the initial state and high in every later state.
+The result stays inconclusive because assumption activation is not checked.
+A native pass proves the bundled assertions under these exact restrictions.
+It does not prove the restrictions or remove them from the design.

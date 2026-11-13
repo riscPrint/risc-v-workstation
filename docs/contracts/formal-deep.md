@@ -352,3 +352,13 @@ native invocation. They do not qualify a proof or claim a root cause.
 Native AIGER rlive rows can record `reason=unsupported_backend_cli` and
 `unsupported_input_class=native_rlive_with_internal_no_ic3_pred_prop`.
 The problem remains inconclusive. Raw stdout and stderr remain evidence.
+
+## Source conditions in portfolio and benchmark results
+
+Each portfolio assumption records its module, cell, source span, `predicate_bits`
+and `enable_bits`. These bit identifiers refer to the captured `design.json`.
+`condition_model` pins that file by SHA-256. Where the source span resolves,
+`source_excerpt` retains its exact lines and `source_sha256` pins the source.
+Engine benchmark rows retain these assumptions and the model reference.
+A conditional native pass remains inconclusive. Recording a condition does not
+prove its feasibility, activation or match to the intended environment.

@@ -1,0 +1,165 @@
+{
+  "date": "2026-11-13",
+  "timeout_s": 8,
+  "raw_results": "out/deep-pico-conditions/result.json",
+  "summary": {
+    "abc:pdr": {
+      "solved": 0,
+      "conditional_passes": 1,
+      "bounded_passes": 0,
+      "cases": 1,
+      "wall_s": 4.786924207932316
+    },
+    "aiger:rIC3": {
+      "solved": 0,
+      "conditional_passes": 1,
+      "bounded_passes": 0,
+      "cases": 1,
+      "wall_s": 4.284586166962981
+    }
+  },
+  "rows": [
+    {
+      "case": "picorv32",
+      "engine": "abc:pdr",
+      "total_wall_s": 4.786924207932316,
+      "status": "pass",
+      "missing": [],
+      "modes": [
+        "prove"
+      ],
+      "wall_s": 4.404073333018459,
+      "tools": {
+        "sby": {
+          "path": "/Users/mahir/.cache/rvw/formal-engines/oss-cad-suite/bin/sby",
+          "sha256": "b43ee46c216089921ab0f84b645f7e92df8a4b024038c3d06433093921f684dc"
+        },
+        "yosys": {
+          "path": "/Users/mahir/.cache/rvw/formal-engines/oss-cad-suite/bin/yosys",
+          "sha256": "8a6175ee88d6412c3d792c47d0750b8707a8e12cc2222c1322546d47cd85edb9"
+        },
+        "yosys-abc": {
+          "path": "/Users/mahir/.cache/rvw/formal-engines/oss-cad-suite/bin/yosys-abc",
+          "sha256": "91bc02357beb61ace477cf8d8c0a84541ccb44f224c36dab4a8a6f4db689100f"
+        }
+      },
+      "returncode": 0,
+      "command": [
+        "sby",
+        "-f",
+        "problem.sby"
+      ],
+      "problem_status": "inconclusive",
+      "environment_check": "activation_not_checked",
+      "assumptions": [
+        {
+          "module": "picorv32",
+          "cell": "$input0.sv:2106$assume$699",
+          "source": "input0.sv:2106.65-2109.65",
+          "predicate_bits": [
+            1830
+          ],
+          "enable_bits": [
+            "1"
+          ],
+          "source_sha256": "0836050971b3c6cdd28ac3b1e5719a67fb645161912bef1e472e63995ceb0622",
+          "source_excerpt": "\t\tlast_mem_nowait <= {last_mem_nowait, mem_ready || !mem_valid};\n\n\t// stall the memory interface for max 4 cycles\n\trestrict property (|last_mem_nowait || mem_ready || !mem_valid);"
+        },
+        {
+          "module": "picorv32",
+          "cell": "$input0.sv:2109$assume$704",
+          "source": "input0.sv:2109.66-2112.42",
+          "predicate_bits": [
+            1831
+          ],
+          "enable_bits": [
+            "1"
+          ],
+          "source_sha256": "0836050971b3c6cdd28ac3b1e5719a67fb645161912bef1e472e63995ceb0622",
+          "source_excerpt": "\trestrict property (|last_mem_nowait || mem_ready || !mem_valid);\n\n\t// resetn low in first cycle, after that resetn high\n\trestrict property (resetn != $initstate);"
+        }
+      ],
+      "condition_model": {
+        "path": "design.json",
+        "sha256": "959d303a9205eb8417050f4f03ec42567fb3e32e89384d26643596f53118907a"
+      },
+      "source_sha256": [
+        "0836050971b3c6cdd28ac3b1e5719a67fb645161912bef1e472e63995ceb0622"
+      ],
+      "mode": "prove",
+      "depth": 20
+    },
+    {
+      "case": "picorv32",
+      "engine": "aiger:rIC3",
+      "total_wall_s": 4.284586166962981,
+      "status": "pass",
+      "missing": [],
+      "modes": [
+        "prove",
+        "bmc"
+      ],
+      "wall_s": 3.8478653330821544,
+      "tools": {
+        "sby": {
+          "path": "/Users/mahir/.cache/rvw/formal-engines/oss-cad-suite/bin/sby",
+          "sha256": "b43ee46c216089921ab0f84b645f7e92df8a4b024038c3d06433093921f684dc"
+        },
+        "yosys": {
+          "path": "/Users/mahir/.cache/rvw/formal-engines/oss-cad-suite/bin/yosys",
+          "sha256": "8a6175ee88d6412c3d792c47d0750b8707a8e12cc2222c1322546d47cd85edb9"
+        },
+        "rIC3": {
+          "path": "/Users/mahir/.cache/rvw/formal-engines/bin/rIC3",
+          "sha256": "9881155812ec6be9c3754f7f10e3d7b80c020c7bde2168afeebd3b1835ef031f"
+        }
+      },
+      "returncode": 0,
+      "command": [
+        "sby",
+        "-f",
+        "problem.sby"
+      ],
+      "problem_status": "inconclusive",
+      "environment_check": "activation_not_checked",
+      "assumptions": [
+        {
+          "module": "picorv32",
+          "cell": "$input0.sv:2106$assume$699",
+          "source": "input0.sv:2106.65-2109.65",
+          "predicate_bits": [
+            1830
+          ],
+          "enable_bits": [
+            "1"
+          ],
+          "source_sha256": "0836050971b3c6cdd28ac3b1e5719a67fb645161912bef1e472e63995ceb0622",
+          "source_excerpt": "\t\tlast_mem_nowait <= {last_mem_nowait, mem_ready || !mem_valid};\n\n\t// stall the memory interface for max 4 cycles\n\trestrict property (|last_mem_nowait || mem_ready || !mem_valid);"
+        },
+        {
+          "module": "picorv32",
+          "cell": "$input0.sv:2109$assume$704",
+          "source": "input0.sv:2109.66-2112.42",
+          "predicate_bits": [
+            1831
+          ],
+          "enable_bits": [
+            "1"
+          ],
+          "source_sha256": "0836050971b3c6cdd28ac3b1e5719a67fb645161912bef1e472e63995ceb0622",
+          "source_excerpt": "\trestrict property (|last_mem_nowait || mem_ready || !mem_valid);\n\n\t// resetn low in first cycle, after that resetn high\n\trestrict property (resetn != $initstate);"
+        }
+      ],
+      "condition_model": {
+        "path": "design.json",
+        "sha256": "959d303a9205eb8417050f4f03ec42567fb3e32e89384d26643596f53118907a"
+      },
+      "source_sha256": [
+        "0836050971b3c6cdd28ac3b1e5719a67fb645161912bef1e472e63995ceb0622"
+      ],
+      "mode": "prove",
+      "depth": 20
+    }
+  ],
+  "limits": "Wall time includes preparation. Solved counts require conclusive problem_status. Conditional native passes remain separate. Agreement compares native answers. Requested depth is not measured depth. No capacity or commercial parity claim."
+}
