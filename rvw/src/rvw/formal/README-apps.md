@@ -374,3 +374,17 @@ constant. Four failures reach toggle targets. These are observations, not FIFO
 faults. The unsupported record is the input Stream producer, which belongs to the
 environment. This run does not establish full FIFO ordering or full core coverage.
 The first default asynchronous-reset export was refused before proof.
+
+## Progress possibility and deadlock
+
+`rvw formal app-deadlock --manifest GRAPH.json --out DIR` checks that progress
+remains possible from every reachable state in an explicit finite graph. The
+input supplies `states`, `initial`, `edges` and `progress`. An optional `fairness`
+list gives state sets that must recur infinitely. The checker finds fair cyclic
+components and paths to them. A progress path must have an admissible fair suffix.
+An infeasible fair continuation is inconclusive. A reachable admissible state
+with no path to progress fails. Terminal states are reported separately.
+
+This checks progress possibility. A state can pass even if it can wait forever,
+provided a path to progress exists. Use `app-live` for universal fair eventual
+response. The graph result does not certify an RTL-to-graph translation.
