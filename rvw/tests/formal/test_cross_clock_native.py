@@ -8,12 +8,14 @@ from rvw.formal.event_sim import run
 from rvw.results import load_run
 
 
+@pytest.mark.parametrize('backend',['icarus','verilator'])
 @pytest.mark.parametrize('overlap',[False,True])
 @pytest.mark.parametrize('coincident',[False,True])
 @pytest.mark.parametrize('mutant',[False,True])
-def test_native_two_clock_implication(tmp_path,overlap,coincident,mutant):
-    if not all(shutil.which(tool) for tool in ('yosys','iverilog','vvp')):
-        pytest.skip('Yosys and Icarus required')
+def test_native_two_clock_implication(tmp_path,overlap,coincident,mutant,backend):
+    needed=('yosys','iverilog','vvp') if backend=='icarus' else ('yosys','verilator')
+    if not all(shutil.which(tool) for tool in needed):
+        pytest.skip('Yosys and selected native simulator required')
     source=tmp_path/'m.sv'
     operator='|->' if overlap else '|=>'
     source.write_text('module m(input a,b,req,ack,output q); assign q=ack; '
@@ -30,7 +32,7 @@ def test_native_two_clock_implication(tmp_path,overlap,coincident,mutant):
     events.write_text(json.dumps(dict(schema='rvw.formal-events/1',events=rows)))
     out=tmp_path/'out'
     code=run(Namespace(verilog=[str(source)],top='m',events=str(events),out=str(out),
-                       backend='icarus',observe=None,check_x=False,timeout=30))
+                       backend=backend,observe=None,check_x=False,timeout=60))
     result=load_run(out)
     assert code==int(mutant) and result.status==('assert' if mutant else 'pass'),result.to_dict()
     counts={p['id']:p for p in result.extra['assertions']}
@@ -41,10 +43,12 @@ def test_native_two_clock_implication(tmp_path,overlap,coincident,mutant):
     assert len(result.extra['cross_clock_properties'])==2
 
 
+@pytest.mark.parametrize('backend',['icarus','verilator'])
 @pytest.mark.parametrize('overlap',[False,True])
-def test_native_coincident_event_strength(tmp_path,overlap):
-    if not all(shutil.which(tool) for tool in ('yosys','iverilog','vvp')):
-        pytest.skip('Yosys and Icarus required')
+def test_native_coincident_event_strength(tmp_path,overlap,backend):
+    needed=('yosys','iverilog','vvp') if backend=='icarus' else ('yosys','verilator')
+    if not all(shutil.which(tool) for tool in needed):
+        pytest.skip('Yosys and selected native simulator required')
     source=tmp_path/'m.sv'
     source.write_text('module m(input a,b,req,ack,output q); assign q=ack; '
                       'p: assert property (@(posedge a) req '+('|->' if overlap else '|=>')+' @(posedge b) ack); endmodule')
@@ -58,16 +62,18 @@ def test_native_coincident_event_strength(tmp_path,overlap):
     ])))
     out=tmp_path/'out'
     run(Namespace(verilog=[str(source)],top='m',events=str(events),out=str(out),
-                  backend='icarus',observe=None,check_x=False,timeout=30))
+                  backend=backend,observe=None,check_x=False,timeout=60))
     result=load_run(out)
     assert result.status==('assert' if overlap else 'pass'),result.to_dict()
     assert result.extra['assertions'][0]['failed']==int(overlap)
     assert result.extra['assertions'][0]['passed']==int(not overlap)
 
 
-def test_native_falling_clock_events(tmp_path):
-    if not all(shutil.which(tool) for tool in ('yosys','iverilog','vvp')):
-        pytest.skip('Yosys and Icarus required')
+@pytest.mark.parametrize('backend',['icarus','verilator'])
+def test_native_falling_clock_events(tmp_path,backend):
+    needed=('yosys','iverilog','vvp') if backend=='icarus' else ('yosys','verilator')
+    if not all(shutil.which(tool) for tool in needed):
+        pytest.skip('Yosys and selected native simulator required')
     source=tmp_path/'m.sv'
     source.write_text('module m(input a,b,req,ack,output q); assign q=ack; '
                       'p: assert property (@(negedge a) req |=> @(negedge b) ack); endmodule')
@@ -79,7 +85,7 @@ def test_native_falling_clock_events(tmp_path):
     ])))
     out=tmp_path/'out'
     assert run(Namespace(verilog=[str(source)],top='m',events=str(events),out=str(out),
-                         backend='icarus',observe=None,check_x=False,timeout=30))==0
+                         backend=backend,observe=None,check_x=False,timeout=60))==0
     assert load_run(out).extra['assertions'][0]['passed']==1
 
 

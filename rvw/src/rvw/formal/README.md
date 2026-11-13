@@ -1921,10 +1921,11 @@ state-bit count. X checks can observe unknown loaded state and its later removal
 by an independent clock or an asynchronous reset. These are finite native
 continuation observations. They do not prove reachability or full formal replay.
 
-Icarus also replays explicit top-input raw property events: `@(irq)`,
+Both backends replay explicit top-input raw property events: `@(irq)`,
 `@(negedge rst)` and event lists such as `@(posedge irq or negedge rst)`.
 The event input must be a top-level port. Edge terms must be scalar.
-A change event can use a vector. X/Z edges use the four-state event rules.
+A change event can use a vector. Icarus X/Z edges use the four-state event rules.
+Verilator accepts only two-state inputs and does not measure X.
 
 A job with raw events samples all its top-level property clocks before each
 input update. It applies one private monitor pulse for each matching property
@@ -1936,12 +1937,12 @@ Result `property_events` records each event and its private monitor clock.
 
 This replay scope requires properties in the top module. It accepts inline
 properties and zero-argument named properties. It refuses same-event `disable
-iff`, internal/hierarchical events, event expressions, clocking blocks and raw
-events on Verilator. General asynchronous formal semantics remain separate.
+iff`, internal/hierarchical events, event expressions and clocking blocks.
+Verilator refuses unknown inputs and X checks. General asynchronous formal semantics remain separate.
 The [event scheduling reference](https://dvcon-proceedings.org/wp-content/uploads/asynchronous-behaviors-meet-their-match-with-systemverilog-assertions.pdf)
 explains why concurrent assertions sample values before an asynchronous event.
 
-Icarus timed replay also accepts inline Boolean two-clock implication:
+Both backends accept Boolean two-clock implication:
 
 ```systemverilog
 p: assert property (@(posedge source_clk) request |=> @(posedge target_clk) response);
@@ -1965,6 +1966,7 @@ simulation route. Formal lowering keeps its cross-clock refusal. C1
 The rules for simultaneous and strictly later events follow IEEE 1800-2017
 clause 16.13, [multiclocked properties](https://rfsoc.mit.edu/6S965/_static/F25/documentation/1800-2017.pdf).
 
+Runtime input updates preserve pre-event sampling on both backends.
 The same finite SVA set runs as simulation monitors on either backend. This
 includes separate checker files and properties clocked by an asynchronous input.
 The runner records assertion pass/fail and cover hit/miss counts per property.

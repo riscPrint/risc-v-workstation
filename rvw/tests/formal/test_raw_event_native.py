@@ -8,10 +8,12 @@ from rvw.formal.event_sim import run
 from rvw.results import load_run
 
 
+@pytest.mark.parametrize('backend',['icarus','verilator'])
 @pytest.mark.parametrize('mutant',[False,True])
-def test_native_raw_sampling(tmp_path,mutant):
-    if not all(shutil.which(tool) for tool in ('yosys','iverilog','vvp')):
-        pytest.skip('Yosys and Icarus required')
+def test_native_raw_sampling(tmp_path,mutant,backend):
+    needed=('yosys','iverilog','vvp') if backend=='icarus' else ('yosys','verilator')
+    if not all(shutil.which(tool) for tool in needed):
+        pytest.skip('Yosys and selected native simulator required')
     source=tmp_path/'m.sv'
     source.write_text('''module m(input clk, irq, rst, data, output q);
 assign q=data;
@@ -31,7 +33,7 @@ endmodule''')
     ])))
     out=tmp_path/'out'
     code=run(Namespace(verilog=[str(source)],top='m',events=str(events),out=str(out),
-                       backend='icarus',observe=None,check_x=True,timeout=30))
+                       backend=backend,observe=None,check_x=backend=='icarus',timeout=60))
     result=load_run(out)
     assert code==int(mutant),result.to_dict()
     assert result.status==('assert' if mutant else 'pass')
@@ -83,3 +85,16 @@ def test_failed_compile_cannot_reuse_counts(tmp_path,monkeypatch):
     assert load_run(out).status=='error'
     assert not (out/'coverage.dat').exists()
     assert not (out/'run.log').exists()
+
+
+@pytest.mark.parametrize('check_x,irq',[(True,'0'),(False,'x')])
+def test_verilator_four_state_requests_are_refused(tmp_path,check_x,irq):
+    if not shutil.which('yosys'):
+        pytest.skip('Yosys required')
+    source=tmp_path/'m.sv'
+    source.write_text('module m(input irq,output q); assign q=irq; assert property (@(irq) !irq); endmodule')
+    events=tmp_path/'events.json'
+    events.write_text(json.dumps(dict(schema='rvw.formal-events/1',events=[dict(time=0,inputs=dict(irq=irq))])))
+    with pytest.raises(ValueError,match='four-state replay'):
+        run(Namespace(verilog=[str(source)],top='m',events=str(events),out=str(tmp_path/'out'),
+                      backend='verilator',observe=None,check_x=check_x,timeout=30))
