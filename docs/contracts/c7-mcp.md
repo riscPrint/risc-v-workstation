@@ -182,3 +182,11 @@ When a provider omits `status`, the common envelope uses its explicit negative
 An ungraded completion keeps `status: ok` and has no pass verdict.
 An explicit job lifecycle status, such as `done`, stays unchanged. Read its
 `result` to determine the verification outcome.
+
+## Remote job identity and lifetime
+
+Job IDs use UUIDs across client stores and server starts. Each token can read
+only its own store. A disconnected client does not cancel its jobs. Graceful
+shutdown cancels active jobs. Records are volatile. A query after restart
+reports that the job is unknown, evicted or lost after restart. Abrupt process
+death does not promise native descendant cleanup or job recovery.

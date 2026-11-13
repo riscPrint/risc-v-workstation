@@ -230,3 +230,24 @@ Wrapped packaged wave handlers use discovery inside the worker when a direct
 function import is not possible. They keep the same sync window and job
 controls. The wrapper's indexed argument remains valid. This path has a tiny
 VCD worker-process test; native EDA behavior is not established by that test.
+
+## Real process SSE checks
+
+Run `nice -n 15 rvw/.venv/bin/python -m pytest
+rvw/tests/test_remote_processes.py -q` from the checkout root.
+The slow driver starts the CLI server on loopback and uses the official Python
+MCP SSE client from the test process. Its importable fixture launches a bounded
+Python child through the production job supervisor. No core is needed.
+
+| Check | Required behavior |
+|---|---|
+| Missing or wrong token | HTTP 401 |
+| Concurrent tokens | Unique job IDs; foreign result lookup refused |
+| Disconnect | Token-owned job continues; reconnect can fetch it |
+| Token budgets | One token can exhaust its budget while the other completes |
+| Cancel | Owned process job stops |
+| Graceful restart in flight | Shutdown cancels jobs; old ID reports unknown or lost after restart |
+
+Job records are in memory. Restart does not recover them. Abrupt server death
+can leave native children. Use an external process supervisor for group cleanup.
+These protocol checks do not establish native RTL behavior.

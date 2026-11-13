@@ -8,7 +8,7 @@ in this process can only stop at `job.check()`; until then it reports `cancellin
 Finished jobs are kept for `job_status`; only the newest `keep` of them stay listed."""
 from __future__ import annotations
 
-import itertools
+import uuid
 import os
 import signal
 import subprocess
@@ -234,13 +234,12 @@ class JobManager:
         self._pool = ThreadPoolExecutor(max_workers=workers, thread_name_prefix="rvw-job")
         self._quick = ThreadPoolExecutor(max_workers=quick_workers, thread_name_prefix="rvw-quick")
         self._jobs: dict[str, Job] = {}
-        self._ids = itertools.count(1)
         self._lock = threading.Lock()
         self.keep = keep
 
     def submit(self, tool: str, arguments: dict, fn: Callable[[Job], Any], quick: bool = False) -> Job:
         with self._lock:
-            job = Job(f"job-{next(self._ids)}-{int(time.time())}", tool, arguments)
+            job = Job(f"job-{uuid.uuid4().hex}", tool, arguments)
             job.budget = self.budget
             self._jobs[job.id] = job
         self._evict()
@@ -285,7 +284,7 @@ class JobManager:
     def get(self, job_id: str) -> Job:
         job = self._jobs.get(job_id)
         if job is None:
-            raise KeyError(f"no job {job_id!r} (unknown, or finished and evicted)")
+            raise KeyError(f"no job {job_id!r} (unknown to this client, evicted, or lost after server restart)")
         return job
 
     def list(self) -> list[Job]:
