@@ -52,3 +52,30 @@ whole-core security proof closed.
 See `resume-security-results.json` for hashes, plans, outcomes and failure
 locations. Full native job trees and VCDs remain in the private run directory.
 VexiiRiscv security and initialization were NOT RUN.
+
+## PMP environment binding, 2026-11-13
+
+The example now binds both response `bypassTranslation` metadata bits in
+`PmpResponseBinding`, from `rvw/sec/pmp-response.json`. This PMP-only variant
+uses physical addresses without page translation. Both response bits are
+true. They do not bypass the PMP permission outputs. The external core source
+is unchanged. Yosys `check -assert` accepts the fresh export. No undriven
+net is silently converted to a constant by the formal mapper.
+
+| Fresh PMP export check | Depth | Result |
+| --- | --- | --- |
+| Two-copy memory observation | 5 | Pass within bound |
+| Initial-state independence | 5 | Pass within bound |
+| Two-copy memory observation | 8 | Counterexample at cycle 5 |
+| Initial-state independence | 8 | Counterexample at cycle 5 |
+| Memory taint | 5 | Inconclusive within 45-second budget |
+
+The depth-5 checks end before the cycle-5 failure. They cannot qualify this
+core. The two depth-8 failures retain independent initial state and
+unconstrained bus inputs. They do not isolate a PMP permission violation.
+A CSR-programmed PMP permission proof remains open.
+
+An asynchronous-reset assertion fixture returns `unsupported` before a solver
+starts. The diagnostic gives the sampled-reset assertion fix and the shared
+SYNC elaboration fix for IFT. It does not remove a property to obtain a pass.
+See `pmp-bound-results.json` for compact receipts.

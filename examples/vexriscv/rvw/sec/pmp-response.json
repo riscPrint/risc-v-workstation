@@ -1,0 +1,7 @@
+{
+  "schema": "rvw.vex-pmp-response/1",
+  "variant": "rv32imu-pmp",
+  "instruction_bypass_translation": true,
+  "data_bypass_translation": true,
+  "reason": "PMP uses physical addresses without page translation. These response bits select address translation behavior, not PMP permission bypass. PMP allowRead, allowWrite and allowExecute remain driven by PmpPluginNapot."
+}

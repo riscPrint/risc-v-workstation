@@ -407,3 +407,16 @@ by SHA-256 and records the reset duration, depth and per-candidate replay
 decision. `rejected_witness` means the saved input sequences do not produce
 the claimed X in source four-state simulation from reset. It is not an
 all-input proof of unreachability. The original formal report is retained.
+
+## Unsupported security reset forms
+
+`rvw.security-pair/1` and `rvw.secure-path/1` can report `unsupported` when
+asynchronous-reset DUT properties or IFT reset cells are outside the accepted
+transform. `reason` retains the reset diagnostic and a sampled-assertion or
+shared elaboration fix hint. No proof pass follows from this status.
+
+The example `rvw.vex-pmp-binding/1` receipt records the project response
+binding, fresh RTL hash and bounded observation results. Each case includes
+its depth and proof kind. A deeper counterexample is retained beside any
+shorter pass. These results do not establish a CSR-programmed PMP permission
+proof.

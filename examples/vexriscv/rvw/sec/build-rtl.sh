@@ -7,5 +7,5 @@ export VEXRISCV="$(cd "${VEXRISCV:-$here/..}" && pwd)"
 export RVW_LOCK_PYTHON="${RVW_LOCK_PYTHON:-$RVW_HOME/rvw/.venv/bin/python}"
 mkdir -p "$1"; out="$(cd "$1" && pwd)"; shift
 cd "$here"
-"$RVW_HOME/scripts/with-lock.sh" "${RVW_VEX_LOCK:-vex}" "$RVW_HOME/scripts/with-lock.sh" sbt \
+"$RVW_HOME/scripts/with-lock.sh" "${RVW_VEX_LOCK:-vex}" "$RVW_HOME/scripts/with-lock.sh" "${RVW_SBT_LOCK:-sbt}" \
   nice -n 10 sbt -J-Xmx3g -batch -Dsbt.offline=true "root/runMain rvwvex.SecRtl $out $*"

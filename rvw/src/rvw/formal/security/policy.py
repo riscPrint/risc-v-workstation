@@ -1,5 +1,6 @@
 """Source/sink policy binding for the conservative Boolean IFT pass."""
 import hashlib
+from .unsupported import UnsupportedSecurity, check_properties, mapping_failure
 import json
 import math
 from pathlib import Path
@@ -159,8 +160,10 @@ def run(args):
         r=run_group([tool,'-Q','-s','map.ys'],cwd=out,timeout=budget(),capture=True)
         (out/'map.log').write_text((r.stdout or '')+(r.stderr or ''))
         if r.timed_out or r.returncode:
+            mapping_failure((out/'map.log').read_text())
             raise ValueError('RTL mapping failed or timed out')
         design=json.loads((out/'mapped.json').read_text())
+        check_properties(design['modules'][args.top])
         if any(c['type'] in ('$assume','$assert','$cover','$anyseq','$anyconst') for c in design['modules'][args.top]['cells'].values()):
             raise ValueError('DUT properties and nondeterministic cells are unsupported')
         wrapper=out/'secure.v'
@@ -184,6 +187,8 @@ def run(args):
                 result['status']='fail'
         if result['status']=='inconclusive':
             result['reason']='proof did not complete; see proof.log'
+    except UnsupportedSecurity as exc:
+        result.update(status='unsupported', reason=str(exc))
     except (ValueError,KeyError,TypeError,OSError) as exc:
         result['reason']=str(exc)
     (out/'result.json').write_text(json.dumps(result,indent=2)+'\n')
