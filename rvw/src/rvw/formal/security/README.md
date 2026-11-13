@@ -246,3 +246,18 @@ The project must resolve PMP/ePMP configuration into this independent policy.
 This proves static observed access isolation only. It does not check CSR decode,
 Smepmp rule derivation, policy updates with outstanding requests or unbound bus
 masters. Those obligations remain open. No whole-system security claim follows.
+
+## Bounded real-core checks
+
+Set `"mode": "bmc", "depth": 8` in a two-copy manifest to use a small bound.
+The result records `proof_kind` and `depth`. A bounded pass covers only that
+bound. The default remains an unbounded ABC PDR proof.
+
+`examples/vexriscv/formal/pair-smoke.py` prepares two checks from a supplied
+VexTop export. The memory check treats `dBus_rsp_data` as secret and compares
+bus-valid observations while the declared architectural prefixes agree. The
+initialization check gives both copies the same inputs and independent initial
+state. It compares fetch-valid, fetch-PC and data-command-valid observations.
+Both checks use one public reset clock. No bus protocol assumptions are added.
+These are bounded controls on the supplied export. They do not certify the
+source revision or establish core security. See the example's recorded limits.

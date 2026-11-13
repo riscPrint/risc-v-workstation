@@ -1,0 +1,29 @@
+{
+  "rtl_sha256": "1a791f8d828a42b774181017108324ef23675253056effdb53c405b695f33415",
+  "fresh_elaboration": false,
+  "scope": "supplied real core RTL export; no source revision certification",
+  "cases": [
+    {
+      "name": "memory-observation",
+      "status": "inconclusive",
+      "proof_kind": "bounded",
+      "depth": 8,
+      "reason": "RTL mapping failed",
+      "exit": 1
+    },
+    {
+      "name": "initialization",
+      "status": "inconclusive",
+      "proof_kind": "bounded",
+      "depth": 8,
+      "reason": "RTL mapping failed",
+      "exit": 1
+    },
+    {
+      "name": "ift",
+      "status": "inconclusive",
+      "reason": "RTL mapping failed or timed out",
+      "exit": 1
+    }
+  ]
+}
