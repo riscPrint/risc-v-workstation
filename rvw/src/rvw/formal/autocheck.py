@@ -62,6 +62,11 @@ def _run(args):
     capture_root = Path(args.out).resolve().with_name(Path(args.out).name + '-database-inputs')
     capture = Capture(capture_root)
     source = json.loads(capture.file(path).copy.read_text())
+    missing = sorted({'top', 'verilog'} - source.keys())
+    if missing:
+        raise ValueError('Autocheck manifest requires ' + ', '.join(missing) +
+                         '. Declare the RTL top and source files; see '
+                         'docs/INTEGRATION_GUIDE.md#project-input-recipes.')
     database = None
     if getattr(args, 'db', None):
         from .database_autocheck import populate

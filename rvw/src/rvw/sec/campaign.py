@@ -122,6 +122,11 @@ def signature(program, channels):
 def run(manifest, out, resume=False):
     manifest = Path(manifest).resolve()
     plan = json.loads(manifest.read_text())
+    missing = sorted({'adapter_command', 'observations'} - plan.keys())
+    if missing:
+        raise ValueError('Security campaign requires ' + ', '.join(missing) +
+                         '. Supply a paired RTL adapter and observation channels; see '
+                         'docs/INTEGRATION_GUIDE.md#project-input-recipes.')
     out = Path(out).resolve()
     state_path = out/'state.json'
     if resume:
