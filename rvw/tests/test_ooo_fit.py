@@ -32,3 +32,18 @@ def test_missing_training_counter_is_not_a_zero(tmp_path):
                                                     parameters={'latencies.alu':[1]})))
     with pytest.raises(ValueError,match='training event is missing'):
         fit(p,tmp_path/'out')
+
+
+def test_plan_cycle_budget_reaches_every_model_run(tmp_path):
+    from test_ooo_evidence import inputs
+    cal,data=inputs(tmp_path)
+    data['max_cycles']=2;cal.write_text(json.dumps(data))
+    p=tmp_path/'fit.json';p.write_text(json.dumps(dict(schema='rvw.ooo-fit-plan/1',calibration_plan=cal.name,
+                                                    parameters={'latencies.alu':[1]})))
+    with pytest.raises(ValueError,match='cycle budget exhausted'):
+        fit(p,tmp_path/'small')
+    data['max_cycles']=0;cal.write_text(json.dumps(data))
+    with pytest.raises(ValueError,match='max_cycles must be a positive integer'):
+        fit(p,tmp_path/'zero')
+    data['max_cycles']=5_000_000;cal.write_text(json.dumps(data))
+    assert fit(p,tmp_path/'large')['status']=='reported'

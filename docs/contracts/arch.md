@@ -116,6 +116,12 @@ causes younger ROB work to execute again without changing retirement order.
 Events count speculative loads, violations, store-triggered recoveries and
 replayed instructions. `issued` includes reexecution. This policy is not
 memory renaming. Translation precedes component service in cycle order.
+
+`store_policy` is `ordered` (default) or `buffered`. A buffered store issues
+when its inputs are ready, independent of older memory operations, and its
+component service delay is counted in `buffered_store_service_cycles` instead
+of being added to its completion. It needs `memory_policy` `disambiguate` or
+`speculate`.
 Completed or pending component requests are not cancelled by replay.
 Accuracy remains inconclusive. See `rvw/ooo/README.md` for limits.
 
@@ -186,7 +192,9 @@ remains `inconclusive`. Without a snapshot the configuration stays `unchecked`.
 `rvw.ooo-calibration-plan/1` selects one fixed configuration, an event map and
 training/heldout samples. Paths resolve beside the plan. Each sample binds
 saved C1, complete C2, ELF bytes and event counts. ELF and trace hash overlap
-across splits is an error. Regions cover the whole program only.
+across splits is an error. Regions cover the whole program only. An optional
+positive integer `max_cycles` (default 1,000,000) bounds every model run of
+the plan, including `rvw arch ooo-fit` candidates.
 `rvw.ooo-calibration/1` records captures, individual errors, event correlations
 and declared budget comparisons. Missing events and zero denominators remain
 explicit. Accuracy stays inconclusive. Event predicate equivalence is not

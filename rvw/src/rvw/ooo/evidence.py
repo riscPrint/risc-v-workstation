@@ -14,6 +14,14 @@ def digest(path):
     return sha256(Path(path).read_bytes()).hexdigest()
 
 
+def plan_max_cycles(data):
+    """Optional model cycle budget of a calibration plan (default one million)."""
+    value = data.get("max_cycles", 1_000_000)
+    if type(value) is not int or value < 1:
+        raise ValueError("max_cycles must be a positive integer")
+    return value
+
+
 def calibrate(plan, out, project=None):
     """Score a frozen model on saved training/held-out evidence without fitting."""
     if project is not None:
@@ -26,6 +34,7 @@ def calibrate(plan, out, project=None):
     def path(value):
         return (plan.parent / value).resolve()
     config, event_map = path(data["config"]), path(data["event_map"])
+    max_cycles = plan_max_cycles(data)
     mapping = json.loads(event_map.read_text())
     if not isinstance(mapping, dict):
         raise ValueError("event map must be an object")
@@ -65,7 +74,7 @@ def calibrate(plan, out, project=None):
             raise ValueError("C1/C2 core or configuration mismatch")
         if header["elf"] != c1.elf:
             raise ValueError("C1/C2 ELF identity mismatch")
-        predicted = run(config, paths["trace"])
+        predicted = run(config, paths["trace"], max_cycles)
         if predicted["instret"] != c1.instret:
             raise ValueError("whole-program C1/C2 instruction count mismatch")
         if type(c1.cycles) is not int or c1.cycles < 1:

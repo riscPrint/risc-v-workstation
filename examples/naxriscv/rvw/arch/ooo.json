@@ -9,12 +9,36 @@
   "store_entries": 16,
   "commit_width": 2,
   "physical_registers": 64,
-  "memory_policy": "disambiguate",
+  "memory_policy": "speculate",
+  "store_policy": "buffered",
+  "branch_speculation": true,
+  "execution": {
+    "ports": {
+      "eu0": 1
+    },
+    "bindings": {
+      "load": [
+        "eu0"
+      ],
+      "store": [
+        "eu0"
+      ],
+      "multiply": [
+        "eu0"
+      ],
+      "divide": [
+        "eu0"
+      ],
+      "csr": [
+        "eu0"
+      ]
+    }
+  },
   "latencies": {
     "alu": 1,
     "multiply": 3,
     "divide": 18,
-    "load": 3,
+    "load": 2,
     "store": 1,
     "branch": 1,
     "jump": 1,
@@ -34,7 +58,7 @@
     "fence": 1,
     "system": 1
   },
-  "branch_penalty": 6,
+  "branch_penalty": 8,
   "frontend": {
     "decode_width": 2,
     "decode_entries": 8,

@@ -6,7 +6,7 @@ import json
 from pathlib import Path
 from statistics import mean
 from .core import run
-from .evidence import calibrate
+from .evidence import calibrate, plan_max_cycles
 from .project import configuration
 from .search import set_value
 
@@ -21,6 +21,7 @@ def fit(plan,out):
     for sample in calibration['samples']:
         for key in ('elf','trace','c1','events'):
             sample[key]=str((source.parent/sample[key]).resolve())
+    max_cycles=plan_max_cycles(calibration)
     base=asdict(configuration(json.loads(Path(calibration['config']).read_text())))
     params=spec['parameters']
     if not isinstance(params,dict) or not params or any(not isinstance(v,list) or not v for v in params.values()):
@@ -42,7 +43,7 @@ def fit(plan,out):
         cp=dest/f'candidate-{i}.json';cp.write_text(json.dumps(data,sort_keys=True))
         errors=[]
         for row in training:
-            model=run(cp,paths[row['id']])
+            model=run(cp,paths[row['id']],max_cycles)
             errors.append(abs(model['cycles']/row['rtl_cycles']-1))
             for name,mapping in mappings.items():
                 measured=row['events'][name]['measured']

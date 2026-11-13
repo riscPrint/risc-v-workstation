@@ -32,6 +32,7 @@ class Config:
     branch_prediction: str = "sequential"
     issue_order: str = "out_of_order"
     memory_policy: str = "ordered"
+    store_policy: str = "ordered"
     dependence_entries: int = 1024
     replay_penalty: int = 5
     forwarding_latency: int = 1
@@ -103,6 +104,10 @@ class Config:
             raise ValueError("branch_penalty must be nonnegative")
         if self.memory_policy not in ("ordered", "disambiguate", "speculate"):
             raise ValueError("unsupported memory_policy")
+        if self.store_policy not in ("ordered", "buffered"):
+            raise ValueError("unsupported store_policy")
+        if self.store_policy == "buffered" and self.memory_policy == "ordered":
+            raise ValueError("buffered stores need memory_policy disambiguate or speculate")
         for key in ("dependence_entries", "replay_penalty"):
             if type(getattr(self, key)) is not int or getattr(self, key) < 1:
                 raise ValueError(f"{key} must be positive")
@@ -346,7 +351,7 @@ def _simulate(instructions, config, max_cycles=1_000_000, predictor=None, memory
                         else:
                             latency = config.forwarding_latency
                             forwarded = True
-                elif any(p.done is None or p.done > cycle for p in older):
+                elif config.store_policy == "ordered" and any(p.done is None or p.done > cycle for p in older):
                     continue
             if kind in ("load", "store") and translation:
                 if entry.translation_ready is None:
@@ -371,7 +376,11 @@ def _simulate(instructions, config, max_cycles=1_000_000, predictor=None, memory
                            memory.access(entry.insn.address, entry.insn.size, kind == "store", cycle))
                 if type(service) is not int or service < 0:
                     raise ValueError("memory service must return nonnegative cycles")
-                latency += service
+                if kind == "store" and config.store_policy == "buffered":
+                    # The store buffer writes after commit; the access only updates cache state.
+                    events["buffered_store_service_cycles"] += service
+                else:
+                    latency += service
             if kind in ("branch", "jump", "system") and entry.wrong_parent is None:
                 if hasattr(predictor, "predict_instruction"):
                     predicted = predictor.predict_instruction(entry.insn)
