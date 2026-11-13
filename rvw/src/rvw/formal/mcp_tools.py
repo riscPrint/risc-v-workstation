@@ -132,8 +132,8 @@ def mcp_tools():
 
         ToolSpec("formal_properties", "Generate SVA for common intents and typed Stream/Flow channels. Does not run a proof.",
                  schema({"spec": S, "channels": S, "out": S}, ["spec", "out"]), _properties, long=True),
-        ToolSpec("formal_datapath", "Bit-blast mapped RTL and a C reference with CBMC. Fixed-latency transaction checks; no streaming proof.",
-                 schema({"rtl": S, "model": S, "width": {"type": "integer", "enum": [8,16,32,64]},
+        ToolSpec("formal_datapath", "Bit-blast mapped RTL and a C reference with CBMC. Fixed or bounded-latency transactions; no streaming proof.",
+                 schema({"rtl": S, "model": S, "binding": S, "max_latency": I, "width": {"type": "integer", "enum": [8,16,32,64]},
                          "out": S, "latency": I, "unwind": I,
                          "case": {**S, "enum": ["all", "finite", "nan", "infinity", "zero", "subnormal"]},
                          "rounding": {"type": "integer", "enum": [0,1,2,3,4]},

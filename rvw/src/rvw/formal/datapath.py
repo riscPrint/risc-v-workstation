@@ -12,9 +12,11 @@ from .bitc import translate
 
 def register(sub):
     p = sub.add_parser('datapath', help='symbolic C reference against mapped RTL with CBMC')
+    p.add_argument('--binding', help='JSON with project top and canonical-to-project port names')
     p.add_argument('--rtl', required=True)
     p.add_argument('--model', required=True)
     p.add_argument('--width', type=int, choices=[8, 16, 32, 64], required=True)
+    p.add_argument('--max-latency', type=int, help='accept first done within this many clocks; operands stay stable')
     p.add_argument('--latency', type=int, default=0, help='fixed transaction clocks after one reset clock')
     p.add_argument('--unwind', type=int, default=130, help='C loop bound; unwinding assertions are enabled')
     p.add_argument('--case', choices=['all', 'finite', 'nan', 'infinity', 'zero', 'subnormal'], default='all')
@@ -46,7 +48,7 @@ def run(args):
     out.mkdir(parents=True, exist_ok=False)
     started = time.monotonic()
     result = dict(schema='rvw.datapath/1', status='inconclusive', backend='yosys-boolean-cbmc',
-                  width=args.width, latency=args.latency, case=args.case, rounding=args.rounding,
+                  width=args.width, latency=args.latency, max_latency=args.max_latency, case=args.case, rounding=args.rounding,
                   transaction='inputs held stable; reset one clock; start pulse one clock',
                   scope='one fixed-latency transaction; not a streaming or whole-core proof', inputs={}, tools={})
     def execute(argv, name):
@@ -61,6 +63,8 @@ def run(args):
     try:
         if not math.isfinite(args.timeout) or args.timeout <= 0 or not 0 <= args.latency <= 256 or args.unwind < 1:
             raise ValueError('positive finite timeout and unwind; latency in 0..256 required')
+        if args.max_latency is not None and (args.latency or not 1 <= args.max_latency <= 256):
+            raise ValueError('max-latency must be 1..256 and excludes latency')
         for tool in ('yosys', 'cbmc'):
             path = shutil.which(tool)
             if not path:
@@ -86,13 +90,27 @@ def run(args):
                     target.append(str(path))
         elif args.reference_source or args.reference_include:
             raise ValueError('reference-tree is required')
-        script = ('read_verilog dut.v\nhierarchy -check -top dut\nproc\nflatten\n'
+        binding = None
+        top = 'dut'
+        if args.binding:
+            raw = Path(args.binding).read_bytes()
+            (out/'binding.json').write_bytes(raw)
+            result['inputs']['binding.json'] = hashlib.sha256(raw).hexdigest()
+            binding = json.loads(raw)
+            top = binding['top']
+            from .common import check_ident
+            check_ident('binding top', top)
+        script = (f'read_verilog dut.v\nhierarchy -check -top {top}\nproc\nflatten\n'
                   'check -assert\ntechmap\nopt_clean\ncheck -assert\nwrite_json mapped.json\n')
         (out/'map.ys').write_text(script)
         r = execute([result['tools']['yosys']['path'], '-Q', '-s', 'map.ys'], 'yosys')
         if r.returncode:
             raise ValueError('Yosys mapping failed')
-        code, ports, put, get = translate(json.loads((out/'mapped.json').read_text()), args.width, args.latency)
+        design = json.loads((out/'mapped.json').read_text())
+        if binding:
+            from .datapath_binding import bind
+            design = bind(design, binding)
+        code, ports, put, get = translate(design, args.width, args.max_latency or args.latency)
         mask = (1 << args.width)-1
         code += '\n#include "reference.c"\n'
         code += '_Static_assert(_Generic(&reference, uint64_t (*)(uint64_t,uint64_t,uint64_t,uint8_t,uint8_t *): 1, default: 0), "reference signature");\n'
@@ -105,22 +123,30 @@ def run(args):
         for name in ('a','b','c','rm'):
             if name in ports:
                 code += '\n'.join(put(name, str(args.rounding) if name=='rm' else name))+'\n'
-        if args.latency:
+        checks = f'__CPROVER_assert({get("y")} == expected, "datapath result");\n'
+        if 'flags' in ports:
+            checks += f'__CPROVER_assert({get("flags")} == flags, "exception flags");\n'
+        if args.max_latency:
+            result['scope'] = 'one handshake-bounded transaction; operands stable until done'
+            code += '\n'.join(put('reset','1')+put('start','0'))+'\ntick();\n'
+            code += '\n'.join(put('reset','0')+put('start','1'))+'\n_Bool completed=0;\n'
+            for cycle in range(args.max_latency):
+                code += f'if (!completed) {{ tick(); if ({get("done")}) {{\n'+checks+'completed=1; } }\n'
+                if cycle == 0:
+                    code += '\n'.join(put('start','0'))+'\n'
+            code += '__CPROVER_assert(completed, "completion bound");\n'
+        elif args.latency:
             code += '\n'.join(put('reset','1')+put('start','0'))+'\ntick();\n'
             code += '\n'.join(put('reset','0')+put('start','1'))+'\n'
-            # Observe completion at the exact declared cycle. Keep operands stable.
             for cycle in range(args.latency):
                 code += 'tick();\n'
                 if cycle < args.latency-1:
                     code += f'__CPROVER_assert(!{get("done")}, "completion latency");\n'
                 if cycle == 0:
                     code += '\n'.join(put('start','0'))+'\n'
-            code += f'__CPROVER_assert({get("done")}, "completion latency");\n'
+            code += f'__CPROVER_assert({get("done")}, "completion latency");\n'+checks
         else:
-            code += 'eval();\n'
-        code += f'__CPROVER_assert({get("y")} == expected, "datapath result");\n'
-        if 'flags' in ports:
-            code += f'__CPROVER_assert({get("flags")} == flags, "exception flags");\n'
+            code += 'eval();\n'+checks
         code += '}\n'
         (out/'check.c').write_text(code)
         argv = [result['tools']['cbmc']['path'], 'check.c', *sources,
@@ -134,7 +160,7 @@ def run(args):
         result['solver_exit'] = r.returncode
         # Safety and unwinding failures invalidate the oracle, not the DUT.
         failed = [p for p in properties if p.get('status') == 'FAILURE']
-        checks = {'datapath result', 'exception flags', 'completion latency'}
+        checks = {'datapath result', 'exception flags', 'completion latency', 'completion bound'}
         if r.returncode == 0 and properties and all(p.get('status') == 'SUCCESS' for p in properties):
             if any(p.get('description') == 'datapath result' for p in properties):
                 result['status'] = 'proved'

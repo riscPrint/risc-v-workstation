@@ -135,8 +135,7 @@ For a sequential transaction, set `--latency N`. The DUT must also have scalar
 The harness holds operands stable, resets for one clock and pulses start for
 one clock. It checks that done is false before N clocks and true at N clocks.
 It checks the result at N clocks. Iterative units can use this contract.
-Back-to-back requests, variable completion latency and arbitrary initial
-transactions are outside this contract. Registers start unconstrained.
+Back-to-back requests and arbitrary initial transactions are outside this contract. Registers start unconstrained.
 Generated clocks, latches, memories, blackboxes, RTL assumptions and unsupported
 cells are refused. The Boolean translator refuses combinational loops.
 
@@ -168,3 +167,23 @@ and selects the RISC-V specialization. Conversion wrappers cover F32/F64 format
 changes and signed/unsigned integer conversions at the same width. F32/F64 format
 changes use the 64-bit interface; F32 occupies the low 32 bits.
 Native FP DUT qualification remains open.
+
+### Variable-latency transactions and project bindings
+
+Use `--max-latency N` instead of `--latency` for iterative units. The check resets
+for one clock and pulses start for one clock. Operands remain stable. The check
+compares result bits and optional flags at the first sampled done. It also proves
+that done occurs within N clocks. N must be 1..256. This is one transaction.
+It does not check throughput, backpressure or overlapping requests.
+
+A project can keep its module and port names. Pass `--binding unit.json`:
+
+```json
+{"top":"Multiplier", "ports":{"clk":"clock", "reset":"rst", "start":"go",
+ "done":"valid", "a":"lhs", "b":"rhs", "y":"result"}}
+```
+
+Omitted ports retain their canonical names. Every port still passes the existing
+width and direction checks. A binding cannot hide extra ports or add assumptions.
+The `rvw.formal.datapath_binding.bind` function supplies the same rename operation
+for Python callers. `formal_datapath` accepts `binding` and `max_latency`.
