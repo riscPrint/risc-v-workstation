@@ -187,3 +187,51 @@ def test_cycle_limit_needs_complete_trace_and_spike_divergence():
         assert native.native_verdict(task, baseline, changed, repaired) == 'inconclusive'
     seeded['broken']['cosim']['status'] = 'match'
     assert native.native_verdict(task, baseline, seeded, repaired) == 'inconclusive'
+
+
+def test_reuse_keeps_source_path_rechecks_inputs_and_preserves_attempt(tmp_path, monkeypatch):
+    source = tmp_path / 'source'
+    (source / 'src').mkdir(parents=True)
+    (source / 'src/core.scala').write_text('correct')
+    (source / 'src/.gitignore').write_text('ignored.bin\n')
+    (source / 'src/ignored.bin').write_bytes(b'pinned resource')
+    native.git(source, 'init', '-q')
+    native.git(source, 'add', '-A')
+    native.git(source, 'add', '-f', 'src/ignored.bin')
+    native.git(source, 'commit', '-qm', 'input')
+    task = {'id': 'a', 'private': {'mutation': {'file': 'src/core.scala', 'find': 'correct', 'replace': 'wrong'},
+                                  'fail_to_pass': ['broken'], 'pass_to_pass': ['control']}}
+    pack = {'schema': native.SCHEMA, 'source': {'revision': native.git(source, 'rev-parse', 'HEAD'), 'copy': ['src']},
+            'tasks': [task]}
+    path = tmp_path / 'pack.json'
+    path.write_text(json.dumps(pack))
+    calls = []
+    def run(*arguments):
+        calls.append(arguments)
+        return {n: {'status': 'inconclusive'} for n in ('broken', 'control')}
+    monkeypatch.setattr(native, 'run_tests', run)
+    out = tmp_path / 'run'
+    first = native.qualify(path, source, out)
+    pack['seed'] = 2
+    path.write_text(json.dumps(pack))
+    second = native.qualify(path, source, out, reuse_workspace=True)
+    assert first['attempt'] == 1 and second['attempt'] == 2
+    assert second['previous_pack_sha256'] == first['pack_sha256'] != second['pack_sha256']
+    assert calls[0][2] == calls[1][2] == out / 'workspace'
+    assert calls[1][3] == out / 'attempt-2/baseline'
+    assert json.loads((out / 'qualification-attempt-1.json').read_text()) == first
+    assert (source / 'src/core.scala').read_text() == 'correct'
+    assert second['tasks'][0]['status'] == 'inconclusive'
+    with pytest.raises(ValueError, match='original source checkout'):
+        native.verify_workspace(pack, source, source)
+    (out / 'workspace/src/ignored.bin').write_bytes(b'changed ignored resource')
+    with pytest.raises(ValueError, match='differs'):
+        native.verify_workspace(pack, source, out / 'workspace')
+    (out / 'workspace/src/ignored.bin').write_bytes(b'pinned resource')
+    (out / 'workspace/src/core.scala').write_text('unreviewed candidate')
+    native.git(out / 'workspace', 'add', '-A')
+    native.git(out / 'workspace', 'commit', '-qm', 'change')
+    before = (out / 'qualification.json').read_bytes()
+    with pytest.raises(ValueError, match='differs'):
+        native.qualify(path, source, out, reuse_workspace=True)
+    assert (out / 'qualification.json').read_bytes() == before

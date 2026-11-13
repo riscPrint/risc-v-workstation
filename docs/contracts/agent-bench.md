@@ -281,3 +281,15 @@ censored. No source repair can earn credit on this evidence-only surface.
 A client that claims a fix earns a false-fix result. Native repair checks and
 C4 acceptance remain separate. Parent wall and call budgets retain partial
 attempts. Client wall time excludes server startup and shutdown.
+
+## Bounded qualification retries
+
+`native-qualify --reuse-workspace` retains the existing private source path and
+its compiler caches. It first checks the original source pin, tracked path set,
+clean workspace and every source byte. Dirty or changed source copies are refused.
+It reruns the baseline and all selected seed/repair checks. No prior score or
+passing result is reused. A new `attempt` directory keeps raw outputs separate.
+The previous report is archived before the next result replaces the main report.
+Reports retain the attempt number and `previous_pack_sha256`. A changed task pack
+is recorded as a new attempt with its own digest and fresh checks. It does not
+change the pinned source requirement or combine scores across task packs.

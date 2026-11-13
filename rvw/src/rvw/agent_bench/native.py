@@ -57,13 +57,34 @@ def mutate(root, mutation, reverse=False):
     path.write_text(text[:index] + new + text[index + len(old):])
 
 
-def prepare(pack, source, out, task):
-    source, out = Path(source).resolve(), Path(out).resolve()
+def verify_source(pack, source):
+    source = Path(source).resolve()
     revision = git(source, 'rev-parse', 'HEAD')
     if revision != pack['source']['revision']:
         raise ValueError(f'source revision {revision} differs from the task pin')
     if git(source, 'status', '--porcelain', '--', *pack['source']['copy']):
         raise ValueError('source inputs are dirty')
+    return source
+
+
+def verify_workspace(pack, source, workspace):
+    source = verify_source(pack, source)
+    workspace = Path(workspace).resolve()
+    if workspace == source:
+        raise ValueError('reuse cannot use the original source checkout')
+    expected = {name for name in git(source, 'ls-files', '--', *pack['source']['copy']).splitlines()
+                if (source / name).is_file()}
+    actual = set(git(workspace, 'ls-files').splitlines())
+    if not expected or not actual or actual - expected or git(workspace, 'status', '--porcelain', '--', *pack['source']['copy']):
+        raise ValueError('reused workspace is not a clean pinned source copy')
+    if any(not (workspace / name).is_file() or (workspace / name).is_symlink()
+           or not (workspace / name).resolve().is_relative_to(workspace)
+           or (source / name).read_bytes() != (workspace / name).read_bytes() for name in expected):
+        raise ValueError('reused workspace differs from the pinned source')
+
+
+def prepare(pack, source, out, task):
+    source, out = verify_source(pack, source), Path(out).resolve()
     out.mkdir(parents=True, exist_ok=False)
     for name in pack['source']['copy']:
         shutil.copytree(source / name, out / name)
@@ -213,30 +234,54 @@ def native_verdict(task, baseline, seeded, repaired):
     return 'qualified'
 
 
-def qualify(pack_path, source, out, *, task_ids=None, timeout=110):
+def qualify(pack_path, source, out, *, task_ids=None, timeout=110, reuse_workspace=False):
     pack, digest, base = load_pack(pack_path)
     tasks = [t for t in pack['tasks'] if task_ids is None or t['id'] in task_ids]
     if not tasks or (task_ids and set(task_ids) != {t['id'] for t in tasks}):
         raise ValueError('unknown task ID')
     out = Path(out).resolve()
-    out.mkdir(parents=True, exist_ok=False)
+    attempt, previous = 1, None
+    if reuse_workspace:
+        if not out.is_dir():
+            raise ValueError('reuse needs an existing qualification directory')
+        verify_workspace(pack, source, out / 'workspace')
+        previous_path = out / 'qualification.json'
+        if previous_path.exists():
+            previous = json.loads(previous_path.read_text())
+            attempt = previous.get('attempt', 1) + 1
+        else:
+            attempt = 2
+        while (out / f'attempt-{attempt}').exists():
+            attempt += 1
+        phase = out / f'attempt-{attempt}'
+        phase.mkdir()
+        if previous is not None:
+            archive = out / f'qualification-attempt-{attempt-1}.json'
+            with archive.open('x') as stream:
+                stream.write(json.dumps(previous, indent=2) + '\n')
+    else:
+        out.mkdir(parents=True, exist_ok=False)
+        phase = out
     report = {'schema': 'rvw.agent-native-qualification/1', 'track': 'native', 'pack_sha256': digest,
               'source_revision': pack['source']['revision'], 'workstation_revision': git(HOME, 'rev-parse', 'HEAD'),
+              'attempt': attempt, 'previous_pack_sha256': previous.get('pack_sha256') if previous else None,
               'tasks': [], 'automatic_root_cause': 'NOT CLAIMED', 'c4_acceptance': 'NOT CLAIMED'}
     # One stable source path lets sbt reuse unchanged core classes between tasks.
-    workspace = prepare(pack, source, out / 'workspace', tasks[0])
-    mutate(workspace, tasks[0]['private']['mutation'], reverse=True)
-    git(workspace, 'add', '-A')
-    git(workspace, 'commit', '-qm', 'baseline task')
+    workspace = out / 'workspace'
+    if not reuse_workspace:
+        workspace = prepare(pack, source, workspace, tasks[0])
+        mutate(workspace, tasks[0]['private']['mutation'], reverse=True)
+        git(workspace, 'add', '-A')
+        git(workspace, 'commit', '-qm', 'baseline task')
     all_tests = list(dict.fromkeys(name for task in tasks for name in
                                   task['private']['fail_to_pass'] + task['private']['pass_to_pass']))
-    baseline = run_tests(pack, base, workspace, out / 'baseline', all_tests, timeout)
+    baseline = run_tests(pack, base, workspace, phase / 'baseline', all_tests, timeout)
     if all(r['status'] == 'pass' for r in baseline.values()):
         if 'platform' not in pack:
             raise ValueError('native qualification requires a Spike platform in the task pack')
         reference_checks(pack, base, workspace, baseline, min(timeout, 30))
     for task in tasks:
-        root = out / task['id']
+        root = phase / task['id']
         tests = task['private']['fail_to_pass'] + task['private']['pass_to_pass']
         control = {name: baseline[name] for name in tests}
         if any(r['status'] != 'pass' or r.get('cosim', {}).get('status') != 'match' for r in control.values()):

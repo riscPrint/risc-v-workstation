@@ -265,3 +265,19 @@ repair result. See [the workflow inputs](solver.md).
 The [fixture trial table](../../../../examples/agent-bench/external-trials.md)
 records ten scripted fixture fixes and five preserved inconclusive cases with
 zero false fixes. Those results test the fixture track, not native tools.
+
+## Bounded cold-build retries
+
+A cold Scala build can exhaust the adapter budget before simulation. Retain
+its private workspace and retry without changing the source path:
+
+```sh
+rvw agent-bench native-qualify --pack PACK --source PINNED_SOURCE --out RUN
+rvw agent-bench native-qualify --pack PACK --source PINNED_SOURCE --out RUN --reuse-workspace
+```
+
+Workspace reuse checks the source pin, tracked paths, clean state and every
+source byte. It refuses a seeded or edited workspace. Each attempt reruns the
+baseline and selected tasks. It archives the previous report and uses a fresh
+output subdirectory. It reuses compilation state, not a passing verdict. A
+changed pack gets a separate recorded digest. Keep each adapter budget short.
