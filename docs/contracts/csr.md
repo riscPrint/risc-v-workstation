@@ -273,3 +273,14 @@ logic. A binding has an exact `path`, a local driven Bool `condition`, a Boolean
 as reviewed bindings, separately from automatic recognition. Missing paths,
 missing conditions and duplicate bindings are elaboration errors. No binding
 removes a check or suppresses a failure when its condition is false.
+
+## Connected example captures
+
+The optional `RVW_CHECKS_ISA=1` paths in the VexRiscv and VexiiRiscv CSR runtimes
+write C1 with `artifacts.inventory` and `artifacts.checks`. The SoC stub adapter
+uses the same artifact roles. A firing retains a C1 failure. The SoC adapter
+reports an error when requested check observations are missing. Formal capture
+uses `RVW_CHECKS_FORMAL=1` and emits formal-mode RTL without simulation records.
+A selected formal job names the exact generated check ID in `requirements`.
+A depth-4 bounded pass does not imply activation or an unbounded proof. Native
+and formal inventories are separate captures with matching requirement IDs.

@@ -26,16 +26,25 @@ object CsrChecksRuntime {
     val out = new File(args(1)).getCanonicalFile
     require(Set("none", "read")(args(2)))
     val fault = args(2) == "read"
-    val (config, checks) = SpinalChecks.install(VexiiTop.spinalConfig.copy(targetDirectory = new File(out,"rtl").getPath),
-      ChecksConfig(mode = Mode.Both, enable = Seq("csr.*"), reportPath = new File(out,"checks.json").getPath))
-    val compiled = SimConfig.withConfig(config).workspacePath(out.getPath).workspaceName("native")
-      .withVerilator.addSimulatorFlag("--assert").compile {
-    val plugins = VexiiTop.param("rv32im").plugins()
-    plugins += new TrapTapPlugin
-    plugins += new CsrChecksPlugin(fault)
-    ParamSimple.setPma(plugins)
+    val allChecks = sys.env.get("RVW_CHECKS_ISA").contains("1")
+    require(!allChecks || !fault, "qualification requires clean observations")
+    var campaignFailed = false
+    val (config, checks) = SpinalChecks.install(VexiiTop.spinalConfig.copy(targetDirectory = new File(out,"rtl").getPath,
+      debugComponents = scala.collection.mutable.HashSet[Class[_]](classOf[VexiiRiscv])),
+      ChecksConfig(mode = Mode.Both, enable = if (allChecks) Seq("*") else Seq("csr.*"), reportPath = new File(out,"checks.json").getPath))
+    def design(): VexiiRiscv = {
+      val plugins = VexiiTop.param("rv32im").plugins()
+      plugins += new TrapTapPlugin
+      plugins += new CsrChecksPlugin(fault)
+      ParamSimple.setPma(plugins)
       VexiiRiscv(plugins)
     }
+    if (sys.env.get("RVW_CHECKS_FORMAL").contains("1")) {
+      config.includeFormal.generateVerilog(design())
+      return
+    }
+    val compiled = SimConfig.withConfig(config).workspacePath(out.getPath).workspaceName("native")
+      .withVerilator.addSimulatorFlag("--assert").compile(design())
     require(checks.inserted.count(_.kind == "csr.read") == 1)
     for ((path,index) <- args.drop(3).zipWithIndex) {
       val elf = ElfFile(path)
@@ -101,11 +110,27 @@ object CsrChecksRuntime {
           "status" -> Json.Str(if(done.nonEmpty && host.value==1) "pass" else "fail"),
           "elf" -> Json.Str(elf.file.getCanonicalPath),"elf_sha256" -> Json.Str(elf.sha256),
           "cycles" -> Json.Num(BigDecimal(cycle)),"retired" -> Json.Num(BigDecimal(retired))))
-        require(done.nonEmpty && host.value==1,s"program failed: tohost=${host.value}")
-        if(!fault) require(fs.isEmpty,fs.map(_.check.id).mkString(","))
+        val status = if(done.isEmpty) "timeout" else if(host.value != 1 || fs.nonEmpty) "fail" else "pass"
+        if (allChecks) {
+          import Json._
+          campaignFailed ||= status != "pass"
+          ChecksSim.writeFile(new File(out, s"c1_$index.json").getPath, Json.write(obj(
+            "schema" -> "rvw.run/1", "core" -> "vexiiriscv", "config" -> "rv32im-generated-checks",
+            "status" -> status, "elf" -> elf.file.getCanonicalPath, "elf_sha256" -> elf.sha256,
+            "cycles" -> cycle, "instret" -> retired, "max_cycles" -> 20000,
+            "artifacts" -> obj("checks" -> s"run_$index.json", "inventory" -> "checks.json"),
+            "details" -> obj("assertions_compiled" -> true,
+              "program_status" -> (if(done.isEmpty) "timeout" else if(host.value == 1) "pass" else "fail")),
+            "inconclusive" -> "Bounded example run. Input closure and whole-core qualification are not certified."
+          )) + "\n")
+        } else {
+          require(done.nonEmpty && host.value==1,s"program failed: tohost=${host.value}")
+          if(!fault) require(fs.isEmpty,fs.map(_.check.id).mkString(","))
+        }
         if(fault && index==0) require(fs.exists(_.check.kind=="csr.read"),"read fault was not detected")
       }
     }
+    require(!campaignFailed, "generated checks or software failed; see C1 reports")
     println("VEXII_CSR_CHECKS_RUNTIME_OK")
   }
 }

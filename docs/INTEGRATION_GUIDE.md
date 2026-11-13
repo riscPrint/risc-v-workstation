@@ -436,3 +436,26 @@ Presence does not establish activation or correct wiring. A core that cannot
 wait can declare inactive wait probes. Keep that limit in its report.
 The [second pass](DRY_RUN_2026-11-13.md#second-pass) records native evidence and
 remaining limits for the independent scratch core.
+## Connected generated check captures
+
+The 2026-11-13 captures compile generated checks into the selected simulation.
+These are native counts. A bounded count covers one selected check through BMC
+depth 4, with two initial reset samples. Activation was not measured. No
+unbounded proof was obtained. The other checks remain unproven.
+
+| Design | Generated | Bound | Proven | Bounded | Fired IDs / events | Unbound and reason |
+|---|---:|---:|---:|---:|---:|---|
+| VexRiscv | 57 | 57 | 0 | 1 | 0 / 0 | 0; native bindings present |
+| VexiiRiscv | 25 | 25 | 0 | 1 | 1 / 2 | 0; native bindings present |
+| Composed RV32 stub SoC | 17 | 17 | 0 | 1 | 0 / 0 | 0; native bindings present |
+
+VexRiscv passed 49 aligned ISA programs with 49 C1 passes. VexiiRiscv ran two
+CSR programs. The absent-CSR program has an open PC-stream valid-hold finding,
+so its C1 result is fail. The composed SoC passed hello with UART output checked.
+Its core is a limited instruction stub. These results do not qualify whole cores,
+all CSR addresses, all peripherals, or all protocol behavior.
+
+See [SpinalChecks](../SpinalChecks/README.md#connected-captures-on-three-designs)
+for selected check IDs, assumptions, capture records and reproduction commands.
+Unknown cancellation semantics retain strict checks. Project cancellation
+bindings require an exact stream path, condition, sample timing and review reason.

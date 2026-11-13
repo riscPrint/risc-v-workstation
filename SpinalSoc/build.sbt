@@ -22,3 +22,6 @@ Compile / unmanagedSources ++= {
 }
 libraryDependencies ++= (if (sys.props.get("rvw.soc.vex").contains("true"))
   Seq("org.yaml" % "snakeyaml" % "1.8") else Nil)
+
+// The example can compile generated checks into its simulation and formal capture.
+lazy val root = (project in file(".")).dependsOn(ProjectRef(file("../SpinalChecks"), "spinalchecks"))

@@ -67,7 +67,7 @@ def main():
     if generated.exists(): shutil.rmtree(generated)
     compose(HERE/'compose.json',generated,snapshot)
     if args.action=='build':
-        result=run_group([str(ROOT/'scripts/with-lock.sh'),'sbt','nice','-n','10','sbt','-Drvw.soc.stub=true','compile'],cwd=LIB,timeout=180,capture=True)
+        result=run_group([str(ROOT/'scripts/with-lock.sh'),os.environ.get('RVW_SBT_LOCK', 'sbt'),'nice','-n','10','sbt','-Drvw.soc.stub=true','compile'],cwd=LIB,timeout=180,capture=True)
         print(result.stdout)
         print(result.stderr,file=sys.stderr)
         return result.returncode
@@ -76,7 +76,11 @@ def main():
     out=Path(args.out).resolve()
     out.mkdir(parents=True,exist_ok=True)
     start=time.monotonic()
-    result=run_group([str(ROOT/'scripts/with-lock.sh'),'sbt','nice','-n','10','sbt','-Drvw.soc.stub=true',f'runMain example.Run {args.seed} {args.max_cycles}'],cwd=LIB,timeout=240,capture=True)
+    env = dict(os.environ)
+    if env.get('RVW_CHECKS_ISA') == '1':
+        env.update(RVW_SOC_CHECKS_OUT=str(out),
+                   RVW_SOC_CHECKS_ELF_SHA=hashlib.sha256(snapshot.read_bytes()).hexdigest())
+    result=run_group([str(ROOT/'scripts/with-lock.sh'),os.environ.get('RVW_SBT_LOCK', 'sbt'),'nice','-n','10','sbt','-Drvw.soc.stub=true',f'runMain example.Run {args.seed} {args.max_cycles}'],cwd=LIB,timeout=240,capture=True,env=env)
     log=(result.stdout or '')+'\n'+(result.stderr or '')
     (out/'run.log').write_text(log)
     measurements=None
@@ -103,6 +107,13 @@ def main():
                 source=source,tools=dict(spinalhdl='1.15.0',verilator=subprocess.check_output(['verilator','--version'],text=True).strip()),artifacts=dict(log='run.log'),
                 replay=f'{HERE}/run.sh run --elf {Path(args.elf).resolve()} --out REPLAY --seed {args.seed} --max-cycles {args.max_cycles}',
                 details=dict(profile='rv32-stub-word-apb3',uart=measurements.get('uart',''), external_source_at_cycle=200))
+    if env.get('RVW_CHECKS_ISA') == '1':
+        observed = json.loads((out/'checks-run.json').read_text()) if (out/'checks-run.json').is_file() else None
+        if observed is None:
+            report.update(status='error', message='generated check observations are missing')
+        elif observed['status'] != 'pass' and report['status'] == 'pass':
+            report.update(status='fail', message='generated checks fired')
+        report['artifacts'].update(inventory='checks.json', checks='checks-run.json')
     (out/'result.json').write_text(json.dumps(report,indent=2)+'\n')
     print(json.dumps(report))
     return 0 if report['status']=='pass' else 1
