@@ -1,0 +1,19 @@
+{
+  "schema": "rvw.riscv-abstraction/1",
+  "module": "VexRiscv",
+  "clock": "clk",
+  "reset": "reset",
+  "in_flight": [
+    "decode_arbitration_isValid",
+    "execute_arbitration_isValid",
+    "memory_arbitration_isValid",
+    "writeBack_arbitration_isValid"
+  ],
+  "memory": "wrapper.uut.RegFilePlugin_regFile",
+  "engines": [
+    "abc:pdr"
+  ],
+  "keep_words": [
+    0
+  ]
+}

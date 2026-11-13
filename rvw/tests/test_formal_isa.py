@@ -48,3 +48,19 @@ def test_mcp_returns_inconclusive(tmp_path):
     class Job:
         def run(self, argv): return 3
     assert mcp_run(Job(), out=str(tmp_path/'out'))['status'] == 'inconclusive'
+
+
+def test_missing_isa_checks_and_channels_are_explicit(tmp_path):
+    from rvw.formal.isa import missing_checks
+    (tmp_path/'insns').mkdir()
+    (tmp_path/'insns/isa_rv32i.txt').write_text('add\nsub\n# comment\n')
+    rows=missing_checks(dict(root=tmp_path,isa='rv32i',nret=2,checks=['insn_add_ch0','cover']))
+    names={r['check'] for r in rows}
+    assert {'insn_add_ch1','insn_sub_ch0','insn_sub_ch1','reg_ch1'}<=names
+    assert 'insn_add_ch0' not in names
+    assert all(r['status']=='unsupported' for r in rows)
+
+
+def test_missing_inventory_cannot_silently_qualify(tmp_path):
+    from rvw.formal.isa import missing_checks
+    assert missing_checks(dict(root=tmp_path,isa='rv32i'))[0]['status']=='unsupported'

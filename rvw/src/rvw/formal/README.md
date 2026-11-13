@@ -3327,3 +3327,49 @@ refused. Each engine retains its existing event and reset limits. In particular,
 formal unbounded reset cancellation, general nested unbounded composition and
 full multi-clock proof remain unsupported. These defaults do not change that
 scope. The generated support table records paired native finite cases.
+## Conditional instruction abstraction
+
+`rvw formal riscv-abstract --project PROJECT --manifest MAP.json --checks
+insn_add_ch0,insn_and_ch0,insn_lui_ch0 --out OUT --timeout 180 --budget 400`
+captures the upstream unbounded checkers. MCP tool `formal_riscv_abstract`
+returns the same report. The manifest has schema `rvw.riscv-abstraction/1`.
+It declares the core module, clock, reset, one-bit `in_flight` observations,
+collected `memory` name and proof `engines`. `--engines` can override the engine
+selection. Project signal names stay in the manifest.
+
+The generator adds an assumption that at most one tracked stage is active.
+The project must name every relevant stage. Fetch queues are not inferred.
+This is a conditional restriction, not a proven pipeline invariant. The code
+reuses the shared `lazy_ram` word abstraction. It preserves source reset and
+bus assumptions. The concrete restricted source also gets a bounded instruction
+cover. This cover does not certify every source assumption.
+
+The legacy Verilog export can leave internal `$initstate` and `$anyseq` cell
+instances that its reader cannot resolve. The command retains the cut JSON
+netlist and retries through RTLIL. It changes the representation, not the formal
+cells or assumptions. A failed cut model needs refinement. It does not reject
+the core. A conditional native proof remains separate from full ISA signoff.
+The top-level report stays inconclusive unless a concrete failure is established.
+
+The RAM phase has a budget per check. Concrete cover has a separate time limit
+of at most 60 seconds. Native proof jobs each have the selected timeout. At
+most three engines can run for one portfolio. Checks run in sequence through
+the CLI. The measured three-case experiment used one engine per case and three
+cases in parallel under the private core lock.
+
+`formal_riscv_proof` also now returns exit-3 inconclusive results through MCP.
+Its earlier shared adapter treated that valid outcome as a tool error.
+
+`keep_words` can retain selected concrete RAM words in the RTLIL retry. This
+uses their real state, writes and initial values. It adds no correctness
+assumption. The VexRiscv example retains word zero after an abstract
+counterexample corrupted the x0 storage. The other 31 words remain free inputs.
+
+`formal isa --abstraction MAP.json` runs these conditional experiments after
+the bounded instruction kit. A closed native abstraction proof gets its own
+row and scope. It does not change the full instruction row to proven.
+
+The ISA table also lists unselected instructions from the declared upstream
+ISA list and missing consistency checks for each retirement channel. They are
+unsupported gaps. A short project check list cannot silently qualify the rest
+of its declared ISA.

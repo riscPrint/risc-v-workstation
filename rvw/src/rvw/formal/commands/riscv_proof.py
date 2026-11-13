@@ -36,8 +36,19 @@ def register(subparsers):
 
 def mcp_tools():
     from rvw.mcp.spec import ToolSpec, schema
-    from rvw.formal.mcp_tools import _runner
     return [ToolSpec('formal_riscv_proof', 'Run unbounded RVFI instruction checks with the native engine portfolio.',
-                    schema({'out': {'type':'string'}, 'checks': {'type':'string'},
+                    schema({'project': {'type':'string'}, 'out': {'type':'string'}, 'checks': {'type':'string'},
                             'engines': {'type':'string'}, 'timeout': {'type':'number', 'exclusiveMinimum':0}}, ['out']),
-                    _runner('riscv-proof'), long=True, side_effects='long-running; writes generated artifacts and reports to out; launches selected native tools', native_tools=('Yosys', 'SymbiYosys', 'yosys-smtbmc', 'Yices', 'Z3', 'Boolector', 'Bitwuzla', 'CVC4', 'CVC5', 'MathSAT', 'ABC', 'suprove', 'Avy', 'rIC3', 'EBMC', 'pono', 'btormc', 'btorsim'))]
+                    mcp_run, long=True, side_effects='writes-files', native_tools=('Yosys', 'SymbiYosys', 'yosys-smtbmc', 'Yices', 'Z3', 'Boolector', 'Bitwuzla', 'CVC4', 'CVC5', 'MathSAT', 'ABC', 'suprove', 'Avy', 'rIC3', 'EBMC', 'pono', 'btormc', 'btorsim'))]
+
+
+def mcp_run(job, **args):
+    from rvw.formal.mcp_tools import _argv
+    from rvw.mcp.spec import ToolError
+    code=job.run(_argv('riscv-proof',args))
+    if code not in (1,3):
+        raise ToolError('instruction proof failed to run',{'exit_code':code,'log_tail':job.tail(30)})
+    result=json.loads((Path(args['out'])/'result.json').read_text())
+    if result.get('schema')!='rvw.riscv-proof/1' or result.get('status')!={1:'fail',3:'inconclusive'}[code]:
+        raise ToolError('invalid instruction proof result')
+    return result
