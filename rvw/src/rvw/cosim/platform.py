@@ -79,6 +79,7 @@ class Platform:
     memory_read_convention: str = "architectural"
     scalar_split_ram: bool = False
     fcsr_reset: str = "zero"
+    require_fp_state: bool = False
 
     @classmethod
     def load(cls, core, path=None):
@@ -100,6 +101,9 @@ class Platform:
                 ranges("ram"), ranges("mmio"), obj.get("pmp_regions", 8), obj.get("aligned_mem", False), obj.get("reference_isa"),
                 obj.get("illegal_insn_tval", "insn"), obj.get("mode_after_change", False),
                 obj.get("trace_from_reset", True))
+        p.require_fp_state = obj.get('require_fp_state', False)
+        if type(p.require_fp_state) is not bool:
+            raise ValueError('require_fp_state must be a boolean')
         p.scalar_split_ram = obj.get('scalar_split_ram', False)
         if type(p.scalar_split_ram) is not bool:
             raise ValueError('scalar_split_ram must be a boolean')

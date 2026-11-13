@@ -159,6 +159,9 @@ def check(trace_path, model, platform, history=10, sync=SYNC_KINDS, *, ordered_e
         return sum(1 << bit for bit, (_, low) in irq_inputs.items() if low is None or low > start)
     environment = None
     def result(status, **extra):
+        from .fp_scope import apply_scope
+        fp_observed = trace.header['schema'] == 'rvw.rvfi/2' and trace.state and last_order is not None
+        status = apply_scope(status, extra, platform, fp_observed)
         if external_replay and status == "match":
             extra["external_interrupt_evidence"] = model.finish_external_interrupts()
         return {"schema": "rvw.cosim/1", "status": status, "model": model.name if hasattr(model, "name") else "spike",
@@ -178,7 +181,7 @@ def check(trace_path, model, platform, history=10, sync=SYNC_KINDS, *, ordered_e
                                    "environment_events": environment.events if environment else 0},
                 "platform_policy": {key: getattr(platform, key) for key in
                                     ("privilege_modes", "misaligned", "endianness",
-                                     "absent_pmp_csrs", "ecall_tval", "pmp_granularity", "memory_read_convention", "scalar_split_ram")},
+                                     "absent_pmp_csrs", "ecall_tval", "pmp_granularity", "memory_read_convention", "scalar_split_ram", "require_fp_state")},
                 "applied_masks": [{"reason": reason, "csr": hex(csr), "mask": hex(mask)}
                                   for (reason, csr), mask in sorted(applied_masks.items())],
                 "synchronized": sync_count, "recent_synchronizations": list(sync_recent),

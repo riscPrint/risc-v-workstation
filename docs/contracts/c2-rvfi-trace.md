@@ -613,3 +613,15 @@ created by reference execution. No DUT RAM or GPR value seeds the reference.
 Missing pulses, observations or reference support prevent a match. This path
 supports offline single-hart capture. Checkpoint resume, DPI lockstep,
 external devices and multi-hart repeated reset remain unsupported.
+
+## Floating-point comparison scope
+
+A comparison on a core whose declared ISA has F or D reports
+`state_coverage.fp: false` and `scope: no_fp_state` when the trace does not
+supply FP state. G includes F and D. `comparison_scope` keeps the extent of
+the compared trace. The default matching status stays `match` for compatible
+integer-state comparisons. It does not establish FP state equality.
+A project can set `require_fp_state: true` in its cosim platform JSON.
+Then a matching trace without FP state is `inconclusive`, with
+`cause: fp_state_not_observed`. The setting must be Boolean. It defaults to
+false. A mismatch stays a mismatch. C2/1 cannot supply FP register state.
