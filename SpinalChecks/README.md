@@ -1252,3 +1252,20 @@ The third checks the youngest matching older store in a wrapping queue.
 See [the contract](../docs/contracts/formal.md#wide-out-of-order-event-checks).
 NaxRiscv supplies all signal bindings in its example. Its forwarding rule is
 active only for loads. It does not check forwarded byte data.
+
+## SpinalHDL API axes
+
+The library selects its API shim through `SpinalAxis.apiSources`. The release
+axis uses SpinalHDL 1.15 and Scala 2.13.14. The pinned NaxRiscv source axis
+uses Scala 2.12.18. Both compile the same checks implementation.
+
+`SpinalCompat` handles whole-string regular-expression matches, AXI3 mode,
+TileLink data opcodes and literal extraction. `SpinalApi` holds the members
+whose types differ: asynchronous memory write ports, report locations and
+AXI master burst lengths. The legacy memory-port trait is never instantiated.
+The legacy report API cannot retain the explicit source location. AXI3 mode
+is false on the legacy API, which has no AXI3 configuration member.
+
+Select `RVW_SPINAL_SOURCE` and run `sbt '++2.12.18!' 'Test/compile'` for the
+source axis. Unset it and run `sbt 'Test/compile'` for the release axis.
+Compilation is not a native simulation or formal pass.

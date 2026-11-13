@@ -48,7 +48,7 @@ object SpinalChecks {
         // Stop before naming: a discarded backend pass would rename shared SpinalEnum singletons.
         val naming = phases.indexWhere(_.isInstanceOf[PhaseNameNodesByReflection])
         require(naming >= 0, "SpinalChecks: PhaseNameNodesByReflection not found")
-        phases.dropRightInPlace(phases.size - naming)
+        phases.remove(naming, phases.size - naming)
       }
       val first = config.copy(targetDirectory = scratch.toString, phasesInserters = inserters).generateVerilog(gen)
       val classes = mutable.HashSet.empty[Class[_]] ++ config.debugComponents
@@ -204,7 +204,7 @@ class PhaseInsertChecks(cfg: ChecksConfig, result: ChecksResult) extends PhaseNe
     val streamNames = comps.map { c =>
       val taken = mutable.HashSet[String]()
       c -> found(c).streams.toSeq.map(s =>
-        s -> unique(objName(s, objName(s.valid, "stream").stripSuffix("_valid")), taken)).toMap
+        s -> unique(objName(s, objName(s.valid, "stream").stripSuffix("_valid")), taken)).toMap[Stream[_ <: Data], String]
     }.toMap
 
     // Deduplicate only a full, direct connection to an enabled, unwaived consumer check.
@@ -394,7 +394,7 @@ class PhaseInsertChecks(cfg: ChecksConfig, result: ChecksResult) extends PhaseNe
           val first = Reg(UInt(40 bits)).init(0).setName(base + "_first")
           when(fail && !fired) { first := cycles }
           if (!result.formal) when(fail && count < cfg.monitorReports) {
-            report(Seq(s"[spinalchecks] FIRE ${rec.id} at ", REPORT_TIME))(loc)
+            SpinalApi.report(Seq(s"[spinalchecks] FIRE ${rec.id} at ", REPORT_TIME), loc)
           }
           Seq(fired, count, first).foreach(s => s.simPublic().addTag(Verilator.public))
           rec.fired = fired; rec.count = count; rec.firstCycle = first
@@ -431,8 +431,8 @@ class PhaseInsertChecks(cfg: ChecksConfig, result: ChecksResult) extends PhaseNe
       // Object identities, distinct within the component before any id is formed: two unnamed
       // objects (`stream`, `mem`, `index_of24`) or two equal names get `_1`, `_2`, ... in discovery order.
       val streamName = streamNames(c)
-      val memName = { val t = mutable.HashSet[String](); f.mems.map(m => m -> unique(objName(m, "mem"), t)).toMap }
-      val enumName = { val t = mutable.HashSet[String](); f.enums.map(e => e -> unique(objName(e, "state"), t)).toMap }
+      val memName = { val t = mutable.HashSet[String](); f.mems.map(m => m -> unique(objName(m, "mem"), t)).toMap[Mem[_], String] }
+      val enumName = { val t = mutable.HashSet[String](); f.enums.map(e => e -> unique(objName(e, "state"), t)).toMap[SpinalEnumCraft[_], String] }
       val muxName = { val t = mutable.HashSet[String](); f.muxes.keys.toSeq.map { case k @ (sel, n) =>
         val selName = sel match { case b: BaseType if b.isNamed && b.getName().nonEmpty => b.getName(); case _ => "index" }
         k -> unique(s"${selName}_of$n", t) }.toMap }
@@ -457,7 +457,7 @@ class PhaseInsertChecks(cfg: ChecksConfig, result: ChecksResult) extends PhaseNe
       // Scope guards cover direct conditional uses. Unknown scopes stay conservative.
       def keyValue(e: Expression): Option[BigInt] = e match {
         case l: Literal if !l.hasPoison() => Some(l.getValue())
-        case b: BaseType => try { Some(Literal(b)) } catch { case scala.util.control.NonFatal(_) => None }
+        case b: BaseType => try { Some(SpinalCompat.literal(b)) } catch { case scala.util.control.NonFatal(_) => None }
         case _ => None
       }
       def useGuard(st: Statement): Bool = {
@@ -731,7 +731,7 @@ class PhaseInsertChecks(cfg: ChecksConfig, result: ChecksResult) extends PhaseNe
               (e: Expression) => p.address = e.asInstanceOf[Expression with WidthProvider], (e: Expression) => p.readEnable = e, p.clockDomain)
             case p: MemReadWrite => ("readwrite", p.address, p.chipSelect,
               (e: Expression) => p.address = e.asInstanceOf[Expression with WidthProvider], (e: Expression) => p.chipSelect = e, p.clockDomain)
-            case p: MemReadAsyncWrite => ("readasyncwrite", p.address, p.writeEnable,
+            case p: SpinalApi.AsyncWritePort => ("readasyncwrite", p.address, p.writeEnable,
               (e: Expression) => p.address = e.asInstanceOf[Expression with WidthProvider], (e: Expression) => p.writeEnable = e, p.clockDomain)
             case p: MemReadAsync => ("readasync", p.address, null,
               (e: Expression) => p.address = e.asInstanceOf[Expression with WidthProvider], (_: Expression) => (), null)
@@ -821,7 +821,7 @@ class PhaseInsertChecks(cfg: ChecksConfig, result: ChecksResult) extends PhaseNe
     // Progress watchdogs.
     for (p <- cfg.progress) {
       val re = p.signal.r
-      val matches = for (c <- comps; bt <- found(c).signals if bt.isNamed && re.matches(qualify(paths(c), bt.getName()))) yield (c, bt)
+      val matches = for (c <- comps; bt <- found(c).signals if bt.isNamed && SpinalCompat.matches(re, qualify(paths(c), bt.getName()))) yield (c, bt)
       require(matches.nonEmpty, s"SpinalChecks progress '${p.name}': no signal matches '${p.signal}'")
       val owners = matches.map(_._1).distinct
       require(owners.size == 1, s"SpinalChecks progress '${p.name}': matches span components ${owners.map(paths).mkString(", ")}")

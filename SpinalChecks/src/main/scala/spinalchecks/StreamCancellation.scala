@@ -47,7 +47,7 @@ private[spinalchecks] object StreamCancellation {
       val clears = assignments.toSeq.flatMap { a =>
         val clear = a.source match {
           case b: BoolLiteral => !b.value
-          case b: Bool => try { Literal(b) == 0 } catch { case scala.util.control.NonFatal(_) => false }
+          case b: Bool => try { SpinalCompat.literal(b) == 0 } catch { case scala.util.control.NonFatal(_) => false }
           case _ => false
         }
         val trusted = library(a, if (v.isReg) Set("m2sPipe", "m2sPipeWithFlush") else Set("throwWhen"))

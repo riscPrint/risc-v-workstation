@@ -105,15 +105,15 @@ case class ChecksConfig(
 
   /** `None` to insert the check, else `(status, reason)`. */
   def decide(id: String): Option[(String, String)] = {
-    if (!enableR.exists(_.matches(id))) Some(("disabled", "not matched by enable"))
-    else disableR.find(_.matches(id)) match {
+    if (!enableR.exists(SpinalCompat.matches(_, id))) Some(("disabled", "not matched by enable"))
+    else disableR.find(SpinalCompat.matches(_, id)) match {
       case Some(r) => Some(("disabled", s"matched disable pattern ${r.regex}"))
-      case None => waiverR.find(_._1.matches(id)).map { case (_, w) => ("waived", s"${w.pattern}: ${w.reason}") }
+      case None => waiverR.find(w => SpinalCompat.matches(w._1, id)).map { case (_, w) => ("waived", s"${w.pattern}: ${w.reason}") }
     }
   }
 
   def streamReason(path: String, kind: String): Option[String] =
-    mayDropValid.find(s => Glob(s.pattern).matches(path) || Glob(s.pattern).matches(s"$kind:$path")).map(_.reason)
+    mayDropValid.find(s => SpinalCompat.matches(Glob(s.pattern), path) || SpinalCompat.matches(Glob(s.pattern), s"$kind:$path")).map(_.reason)
 
   def withStreamFile(path: String): ChecksConfig = copy(mayDropValid = mayDropValid ++
     ChecksConfig.readWaivers(path).map(w => StreamSemantics(w.pattern, w.reason)))
