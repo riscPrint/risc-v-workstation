@@ -3234,3 +3234,8 @@ For constant-value ASYNC-reset FFs, `bmc`, `apps` and `autocheck` accept
 Default single-clock flows refuse ASYNC state and give a configuration fix hint.
 Use one project elaboration entry if a SYNC reset implementation is selected.
 Rebuild the database after changing that entry.
+### Datapath binding kit
+
+Use `rvw formal datapath --unit mul --db design.db --out proposal` to find
+arithmetic candidates and propose port bindings. No proof runs. Each candidate
+requires designer confirmation. See [the kit guide](README-datapath-kit.md).

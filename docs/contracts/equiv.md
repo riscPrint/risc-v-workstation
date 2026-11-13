@@ -263,3 +263,16 @@ An unbounded result records `proof_kind: "unbounded"` and a null depth. A bounde
 `pass` covers only the recorded bound. It does not imply an inductive proof.
 Reset-value coverage uses the same bound. Its scope field states that limit.
 Invalid modes and bounds produce inconclusive evidence before mapping the DUT.
+
+## Datapath binding proposals
+
+`rvw formal datapath --unit UNIT` selects proposal mode. It reads the captured
+SpinalDB selected by `--db`, the project or the normal database environment.
+It excludes `--rtl`, `--model` and `--binding`. `proposal.json` has schema
+`rvw.datapath-kit/1`. Its status is `needs_confirmation` or `no_candidates`.
+`proof_ran` is false. Each candidate records module and component identity,
+name/Area hints, the observed ports and a proposed canonical binding. Missing
+roles, ambiguous roles and unbound ports stay explicit. Width checks cover only
+the observed interface. Every candidate requires designer confirmation. No name
+or structural match establishes operation semantics, a transaction protocol or
+proof readiness. The existing datapath proof mode remains a separate action.
