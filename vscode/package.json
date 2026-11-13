@@ -19,6 +19,8 @@
   ],
   "main": "./dist/extension.js",
   "activationEvents": [
+    "onCommand:arch.open",
+    "onCommand:arch.study",
     "onCommand:cosim.open",
     "onCommand:cosim.disassembly",
     "onCommand:coverage.open",
@@ -61,6 +63,14 @@
   ],
   "contributes": {
     "commands": [
+      {
+        "command": "arch.open",
+        "title": "Architecture Reports: Open Designer Report"
+      },
+      {
+        "command": "arch.study",
+        "title": "Architecture Reports: Open Component Study"
+      },
       {
         "command": "cosim.open",
         "title": "Cosim Mismatch: Open First Divergence"

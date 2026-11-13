@@ -1,0 +1,26 @@
+{
+  "id": "arch",
+  "title": "Architecture Reports",
+  "description": "Architecture Reports saved results.",
+  "activationEvents": [
+    "onCommand:arch.open",
+    "onCommand:arch.study"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "arch.open",
+        "title": "Architecture Reports: Open Designer Report"
+      },
+      {
+        "command": "arch.study",
+        "title": "Architecture Reports: Open Component Study"
+      }
+    ]
+  },
+  "tests": {
+    "unit": [
+      "test/model.test.ts"
+    ]
+  }
+}
