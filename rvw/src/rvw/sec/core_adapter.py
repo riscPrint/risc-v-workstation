@@ -167,7 +167,13 @@ def main(argv=None):
     p.add_argument('--binding', required=True); p.add_argument('--template', required=True)
     p.add_argument('--work'); p.add_argument('request'); p.add_argument('out')
     a = p.parse_args(argv)
-    run_case(a.binding, a.template, a.request, a.out, a.work)
+    try:
+        run_case(a.binding, a.template, a.request, a.out, a.work)
+    except (ValueError, OSError) as exc:
+        print(json.dumps(dict(status='error', error=str(exc),
+                              hint='Supply readable binding, template and request files. Set RVW_SEC_RTL to the generated RTL root named by the binding.')),
+              file=sys.stderr)
+        return 2
     return 0
 
 
