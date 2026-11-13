@@ -1,0 +1,46 @@
+{
+  "schema": "rvw.security-pair/1",
+  "kind": "noninterference",
+  "top": "Seed7Leaky",
+  "rtl": "speculation.v",
+  "clock": "clk",
+  "reset": "reset",
+  "ports": {
+    "clk": {
+      "direction": "input",
+      "width": 1
+    },
+    "reset": {
+      "direction": "input",
+      "width": 1
+    },
+    "secret": {
+      "direction": "input",
+      "width": 32
+    },
+    "arch": {
+      "direction": "output",
+      "width": 35
+    },
+    "cache": {
+      "direction": "output",
+      "width": 9
+    }
+  },
+  "secrets": [
+    "secret"
+  ],
+  "architectural": [
+    "arch"
+  ],
+  "observations": [
+    "cache"
+  ],
+  "adversary": "observes cache request activity and address while choosing the operand in a squashed load",
+  "unmodeled_channels": [
+    "analog power",
+    "physical timing",
+    "cache hierarchy beyond the declared request output"
+  ],
+  "fixture_seed": 7
+}
