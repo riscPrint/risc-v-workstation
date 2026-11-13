@@ -1,8 +1,10 @@
 package ooomini
 
 import spinal.core._
+import spinal.core.sim._
 import spinal.lib._
 import spinalprobes.Probe
+import spinalchecks._
 
 case class Retire() extends Bundle {
   val valid, trap, halt, intr = Bool()
@@ -45,6 +47,10 @@ class Core(val entries: Int = 8, val physicalCount: Int = 48) extends Component 
   val head, tail = Reg(UInt(slotWidth bits)).init(0)
   val count = Reg(UInt(log2Up(entries + 1) bits)).init(0)
   val handlerPending = Reg(Bool()).init(False)
+  val nextId = Reg(UInt(32 bits)).init(0)
+  val ids = Vec.fill(entries)(Reg(UInt(32 bits)).init(0))
+  val predictedDirections = Vec.fill(entries)(Reg(Bool()).init(False))
+  val takenDirections = Vec.fill(entries)(Reg(Bool()).init(False))
   val sequence = Reg(UInt(64 bits)).init(0)
   val map = Vec((0 until 32).map(i => Reg(UInt(tagWidth bits)).init(i)))
   val committed = Vec((0 until 32).map(i => Reg(UInt(tagWidth bits)).init(i)))
@@ -97,6 +103,8 @@ class Core(val entries: Int = 8, val physicalCount: Int = 48) extends Component 
   val releasedMask = Mux(pop && writes(head) && !faults(head), B(1,physicalCount bits) |<< old(head), B(0,physicalCount bits))
   free := (free | releasedMask) & ~allocatedMask
   when(push) {
+    ids(tail) := nextId; nextId := nextId + 1
+    predictedDirections(tail) := predictTaken
     valid(tail) := True; done(tail) := False; issued(tail) := False
     insn(tail) := instruction; pcs(tail) := pc; predicted(tail) := prediction
     nextPc(tail) := pc + 4
@@ -161,21 +169,57 @@ class Core(val entries: Int = 8, val physicalCount: Int = 48) extends Component 
   }
   val effective = a.asUInt + Mux(isStore(selected), immS, immI).asUInt
   io.loadAddress := effective
+  val ageValid = valid.asBits.setName("ageValid")
+  val ageOlder = Bits(entries*entries bits).setName("ageOlder")
+  for(i <- 0 until entries;j <- 0 until entries)
+    ageOlder(i*entries+j) := valid(i) && valid(j) && (U(i,slotWidth bits)-head) < (U(j,slotWidth bits)-head)
+  ageValid.simPublic(); ageOlder.simPublic()
+  val forwardSelect = Vec(Bits(entries bits),4)
+  val forwardOlder = Bits(entries bits).setName("forwardOlder")
+  val forwardValid = Bits(entries bits).setName("forwardValid")
+  for(i <- 0 until entries) {
+    forwardOlder(i) := (U(i,slotWidth bits)-head) < selectAge
+    forwardValid(i) := valid(i) && done(i) && isStore(i)
+  }
+  forwardOlder.simPublic(); forwardValid.simPublic()
   val loadWord = Bits(32 bits)
   // Each byte takes the youngest older matching store. Partial stores merge.
   for (byte <- 0 until 4) {
     val choices = Vec(Bits(8 bits), entries + 1)
+    val selections = Vec(Bits(entries bits),entries+1)
+    selections(0) := 0
+    val matches = Bits(entries bits).setName("forwardMatch"+byte)
+    val storeBytes = Bits(entries*8 bits).setName("forwardData"+byte)
+    for(i <- 0 until entries) {
+      matches(i) := False
+      storeBytes(i*8+7 downto i*8) := 0
+      for(lane <- 0 until 4) when(address(i)+lane === effective+byte && masks(i)(lane)) {
+        matches(i) := True
+        storeBytes(i*8+7 downto i*8) := memoryData(i)(lane*8+7 downto lane*8)
+      }
+    }
+    matches.simPublic(); storeBytes.simPublic()
     choices(0) := io.loadData(byte*8+7 downto byte*8)
     for (age <- 0 until entries) {
       val s = (head + age).resize(slotWidth)
       choices(age+1) := choices(age)
+      selections(age+1) := selections(age)
       for (lane <- 0 until 4) {
         when(U(age,slotWidth bits) < selectAge && valid(s) && done(s) && isStore(s) &&
             address(s) + lane === effective + byte && masks(s)(lane)) {
+          selections(age+1) := B(1,entries bits) |<< s
           choices(age+1) := memoryData(s)(lane*8+7 downto lane*8)
         }
       }
     }
+    forwardSelect(byte) := selections(entries)
+    val selectedByte = Bits(entries bits).setName("forwardSelected"+byte)
+    selectedByte := selections(entries)
+    val forwarded = Bool().setName("forwarded"+byte)
+    forwarded := selections(entries).orR
+    val observed = Bits(8 bits).setName("forwardObserved"+byte)
+    observed := choices(entries)
+    selectedByte.simPublic(); forwarded.simPublic(); observed.simPublic()
     loadWord(byte*8+7 downto byte*8) := choices(entries)
   }
   val shifted = loadWord
@@ -246,6 +290,7 @@ class Core(val entries: Int = 8, val physicalCount: Int = 48) extends Component 
   mulDiv.io.funct := funct.asUInt
   when(issue) {
     issued(selected) := True; operand1(selected) := a; operand2(selected) := b
+    takenDirections(selected) := Mux(op === B(0x63,7 bits),branchTaken,isBranch(selected))
     nextPc(selected) := target; faults(selected) := exception; causes(selected) := cause; tvals(selected) := tval
     address(selected) := effective
     masks(selected) := mask
@@ -322,10 +367,70 @@ class Core(val entries: Int = 8, val physicalCount: Int = 48) extends Component 
   when(pop) { assert(valid(head) && issued(head), "commit must own an issued ROB slot") }
   when(push && writeRd) { assert(free(allocation), "rename must allocate a free tag") }
   when(io.store) { assert(done(head) && !faults(head), "store must commit precisely") }
-  Probe.custom("rob_occupancy",True,"count" -> count)
-  Probe.stall("rename","capacity",started && !push)
+  // These properties live with the RTL. The same predicates feed native monitors
+  // and the Scala property builder. Generation does not itself establish proof.
+  val observedToken = ids(head).setName("observedToken")
+  observedToken.simPublic()
+  val loadFire = (issue && isLoad(selected)).setName("loadFire")
+  loadFire.simPublic()
+  val propertySignals = Seq(
+    "rob_bound" -> (count <= entries),
+    "rob_count" -> (count === CountOne(valid.asBits)),
+    "zero_map" -> (map(0) === 0),
+    "zero_committed" -> (committed(0) === 0),
+    "zero_not_free" -> !free(0),
+    "zero_value" -> (values(0) === 0),
+    "zero_ready" -> ready(0),
+    "rename_capacity" -> (!push || count < entries),
+    "rename_allocation" -> (!(push && writeRd) || free(allocation)),
+    "issue_live" -> (!issue || (valid(selected) && !issued(selected))),
+    "issue_operands" -> (!issue || (ready(src1(selected)) && ready(src2(selected)))),
+    "commit_ready" -> (!pop || (valid(head) && done(head) && issued(head))),
+    "store_precise" -> (!io.store || (pop && isStore(head) && !faults(head))),
+    "map_owned" -> !map.map(t => free(t)).reduce(_ || _)
+  ).map { case(name,condition) =>
+    val signal = Bool().setName("property_" + name)
+    signal := condition
+    signal.simPublic()
+    DeclaredChecks.rule("ooo.property",name,name,trigger = True)(!signal)
+    name -> signal
+  }
+  val properties = propertySignals.map { case(name,signal) => name -> Sva.signal(signal).sequence.strong }
+  QueueChecks.fifo("rob",entries,push,pop,redirect,nextId.asBits,ids(head).asBits,count)
+  val liveTags = committed.map(t => B(1,physicalCount bits) |<< t).reduce(_ | _) |
+    (0 until entries).map(i => Mux(valid(i) && writes(i),B(1,physicalCount bits) |<< dest(i),B(0,physicalCount bits))).reduce(_ | _)
+  DeclaredChecks.rule("freelist.conservation","rename","free and owned tags partition the register file",trigger = True)(free =/= ~liveTags)
+  DeclaredChecks.rule("execution.operands","issue","both physical sources are ready",trigger = issue)(issue && (!ready(src1(selected)) || !ready(src2(selected))))
+  Probe.stageAt("rename","Rn",push,nextId,Some(pc),first = true)
+  Probe.stageAt("issue","Is",issue,ids(selected),Some(pcs(selected)))
+  Probe.stageAt("commit","Cm",pop,ids(head),Some(pcs(head)))
+  Probe.retire("commit",pop,ids(head))
+  Probe.flushYounger("recovery",redirect,ids(head),False)
+  Probe.custom("flush_reason",redirect,"reason" -> Mux(faults(head),U(1,2 bits),U(2,2 bits)))
+  Probe.branch("predictor",pop && isBranch(head) && !faults(head),pcs(head),takenDirections(head),nextPc(head),
+    predictedTaken = Some(predictedDirections(head)),predictedTarget = Some(predicted(head)),id = Some(ids(head)))
+  Probe.custom("occupancy",True,"rob" -> count,"iq" -> CountOne((0 until entries).map(i => valid(i) && !issued(i))),
+    "lsq" -> CountOne((0 until entries).map(i => valid(i) && (isLoad(i) || isStore(i)))))
+  Probe.stall("rename","rob_full",started && count === entries)
+  Probe.stall("rename","physical_full",started && writeRd && !free.orR)
+  // Commit-slot accounting. Waiting at a nonempty ROB head is backend-bound.
+  // This does not attribute execution cycles to each squashed instruction.
+  Probe.counter("topdown_slots",started)
+  Probe.counter("topdown_retiring",started && pop && !faults(head))
+  Probe.counter("topdown_bad_speculation",started && pop && faults(head))
+  Probe.counter("topdown_backend_bound",started && !pop && count =/= 0)
+  Probe.counter("topdown_frontend_bound",started && count === 0)
+  liveTags.simPublic()
+  Probe.counter("commits",pop && !faults(head))
+  Probe.counter("ooo_issues",issue && selected =/= head)
+  Probe.faultSite("rename_map1",map(1))
+  Probe.faultSite("rob_head",head)
+  Probe.faultSite("rob_count",count)
 }
 
 object Generate extends App {
-  SpinalConfig(targetDirectory = "rvw/out/rtl").generateVerilog(new Core())
+  val config = SpinalConfig(targetDirectory = "rvw/out/rtl",defaultConfigForClockDomains = ClockDomainConfig(resetKind = SYNC))
+  val (cfg,_) = SpinalChecks.install(config,ChecksConfig(mode = Mode.Assert,enable = Seq("ooo.*","queue.*","freelist.*","execution.*")))
+  val report = Probe.enabled(true) { cfg.includeFormal.generateVerilog(new Core()) }
+  Sva.write(java.nio.file.Paths.get("rvw/out/rtl/properties.sv"),report.toplevel.properties.map { case(name,p) => p.assertOn(name,Sva.signal("clk"),Some(Sva.signal("reset"))) })
 }

@@ -60,3 +60,25 @@ occurs at commit so squashed branches do not change predictor state.
 The tiny OoO fixture supplied the committed-map recovery pattern. Its four-slot,
 two-register interface cannot execute RISC-V instructions and is not instantiated
 as a core component.
+
+## Native tool interfaces
+
+The RTL contains branch prediction and resolution probes, rename stalls, ROB/IQ/LSQ
+occupancy, pipeline stages, recovery reasons, retirement and fault sites.
+`rvw probes convert --to kanata` converts the pipeline events. The smoke run has
+17 retirements, six flushed instructions, two open instructions at termination
+and no orphan events.
+
+The Scala property DSL describes 14 properties beside the RTL. Native monitors
+add ROB FIFO order/count, free-list conservation and ready-source checks. All
+50 ISA programs pass with 19 inserted monitors per run and zero firings.
+`rvw checks generate --all --out rvw/out/generated-all` emits project-bound
+SV templates. Generation does not load these SV binds into the native simulator.
+The native monitor results apply to the Scala checks.
+
+The topdown smoke partition is 54 commit slots: 17 retiring, 35 waiting at
+a nonempty ROB head, and two empty-ROB slots. These project counters agree
+with C2. They do not attribute each squashed instruction's execution cost.
+The predictor comparison covers four smoke branches. Conditional direction
+has zero disagreements; one jump has a target-status classification difference.
+This is a small approximate-model comparison. See [interface results](interfaces-results.json).

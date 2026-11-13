@@ -4,6 +4,7 @@ import java.io.File
 import spinal.core._
 import spinal.core.sim._
 import spinalprobes.Probe
+import spinalchecks._
 import riscvsim._
 
 object Adapter extends CoreAdapter {
@@ -16,7 +17,9 @@ object Adapter extends CoreAdapter {
   override def freshInstancePerRun = true
   override def supportsProbes = true
   def report(key: ModelKey, work: File) = Probe.enabled(key.probes) {
-    RiscvSimConfig.elaborate(key, work, SpinalConfig())(new Core(if(key.config == "rob16") 16 else 8))
+    val (config,_) = SpinalChecks.install(SpinalConfig(defaultConfigForClockDomains = ClockDomainConfig(resetKind = SYNC)),
+      ChecksConfig(mode = Mode.Monitor,enable = Seq("ooo.*","queue.*","freelist.*","execution.*")))
+    RiscvSimConfig.elaborate(key, work, config)(new Core(if(key.config == "rob16") 16 else 8))
   }
   def compile(key: ModelKey, work: File, cache: File): Model =
     RiscvSimConfig(key, work, cache, SpinalConfig()).compile(report(key,work))
@@ -69,6 +72,9 @@ object Adapter extends CoreAdapter {
           cycle += 1
         }
         if(!stop) outcome = RunOutcome(Status.Timeout,cycle,retired)
+        ChecksSim.writeRunReport(dut,new File(job.out,"checks-run.json").getPath)
+        if(ChecksSim.firings(dut).nonEmpty && outcome.status == Status.Pass)
+          outcome = outcome.copy(status = Status.Fail,message = Some("generated check fired"))
         writer.foreach(_.end(cycle,outcome.status.name))
         probes.foreach(_.close(cycle))
       } finally { writer.foreach(_.close()); probes.foreach(_.abandon()) }

@@ -1,0 +1,4 @@
+{
+  "schema": "rvw.check-generation/1",
+  "queues": "micro-checks.json"
+}

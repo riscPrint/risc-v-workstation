@@ -1,0 +1,96 @@
+{
+  "schema": "ooo-mini.native-interfaces/1",
+  "isa_runs": 50,
+  "native_checks_per_run": 19,
+  "native_check_firings": 0,
+  "properties": 14,
+  "topdown_smoke": {
+    "schema": "rvw.topdown/1",
+    "unit": "commit_slots",
+    "total_slots": 54,
+    "cycles": 54,
+    "width": 1.0,
+    "slots": {
+      "retiring": 17,
+      "bad_speculation": 0,
+      "backend_bound": 35,
+      "frontend_bound": 2
+    },
+    "fractions": {
+      "retiring": 0.3148148148148148,
+      "bad_speculation": 0.0,
+      "backend_bound": 0.6481481481481481,
+      "frontend_bound": 0.037037037037037035
+    },
+    "status": "checked",
+    "checks": {
+      "c2_retirements": 17
+    },
+    "method": "project-bound commit-slot partition; not hardware top-down counters"
+  },
+  "predictor_smoke": {
+    "status": "compared",
+    "fidelity": "approximate",
+    "observed": {
+      "direction": {
+        "disagree": 0,
+        "events": 3,
+        "rtl_misses": 0,
+        "model_misses": 0,
+        "both_wrong": 0,
+        "rtl_only_wrong": 0,
+        "model_only_wrong": 0,
+        "rtl_mpki": 0.0,
+        "model_mpki": 0.0,
+        "agreement": 1.0
+      },
+      "target": {
+        "rtl_btb-miss": 0,
+        "rtl_not-predicted": 1,
+        "rtl_wrong-target": 0,
+        "rtl_correct": 0,
+        "rtl_not-taken": 3,
+        "rtl_unknown": 0,
+        "model_btb-miss": 1,
+        "model_not-predicted": 0,
+        "model_wrong-target": 0,
+        "model_correct": 0,
+        "model_not-taken": 3,
+        "model_unknown": 0,
+        "status_disagreements": 1,
+        "address_comparable": 0,
+        "address_disagreements": 0,
+        "events": 4,
+        "rtl_misses": 1,
+        "model_misses": 1,
+        "disagree": 0,
+        "rtl_mpki": 58.8235294117647,
+        "model_mpki": 58.8235294117647,
+        "agreement": 1.0
+      }
+    }
+  },
+  "kanata_smoke": {
+    "status": "written",
+    "format": "Kanata 0004",
+    "instructions": 25,
+    "retired": 17,
+    "flushed": 6,
+    "stall_samples": 28,
+    "predictions": 4,
+    "open": 2,
+    "orphan_events": 0,
+    "stale_closed": 0
+  },
+  "limits": [
+    "Generated SV binds have been emitted, not loaded into the native ISA simulator.",
+    "Native monitors independently check the ROB, free-list and readiness.",
+    "The core-owned example uses no bus protocol, power or CDC bindings.",
+    "The smoke predictor sample contains only four branches."
+  ],
+  "generated_sv_bindings": 8,
+  "native_isa_repeat": {
+    "runs": 50,
+    "firings": 0
+  }
+}
