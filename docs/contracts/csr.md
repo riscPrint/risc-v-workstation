@@ -103,3 +103,15 @@ The existing `formal csr` CLI/MCP emits `rvw.csr-generation/1`, canonical-bank
 RTL, directed assembly, coverage groups and optional wrapper SBY files.
 Conditional aliases, dynamic state enables and WARL/WLRL are outside this model.
 Generation is not proof or architectural acceptance.
+
+
+## Bound entries in project check generation
+
+`rvw.check-generation/1` permits a `streams` object with database, report and
+optional contracts paths. Channel ports, widths and clock/reset controls resolve
+through the captured database. Streams need an explicit stable contract; Flows
+need explicit value bounds. `rvw.stream-generation/1` records per-instance
+bindings, failures and capture provenance. No stream policy is guessed.
+A `power` object with source and bindings paths invokes literal UPF generation.
+Legacy source-file entries retain unbound status without instance bindings.
+The combined summary does not upgrade generation to proof or physical evidence.
