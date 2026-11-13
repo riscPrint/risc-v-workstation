@@ -1401,8 +1401,10 @@ usage: rvw formal x-sweep [-h] [--verilog VERILOG [VERILOG ...]] [--top TOP]
 ```text
 usage: rvw init [-h] [--isa ISA] [--xlen {32,64}] [--name NAME] [--wire-build]
     [--sbt-project SBT_PROJECT] [--linker-script LINKER_SCRIPT] [--ram-region
-    RAM_REGION] [--reset-pc RESET_PC] [--db-top DB_TOP] [--dry-run] [--force]
-    [--json] [--project PROJECT] [path]
+    RAM_REGION] [--reset-pc RESET_PC] [--db-top DB_TOP] [--hdl
+    {sv,vhdl,chisel}] [--top TOP] [--source SOURCE] [-I INCLUDE_DIRS]
+    [--library LIBRARY] [--fir FIR] [--source-root SOURCE_ROOTS] [--dry-run]
+    [--force] [--json] [--project PROJECT] [path]
 ```
 
 ### `rvw lint`

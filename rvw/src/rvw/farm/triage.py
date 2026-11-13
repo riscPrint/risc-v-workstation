@@ -1,6 +1,7 @@
 """Evidence-backed failure clusters. Grouping never waives a failure."""
 import hashlib
 import json
+import re
 from pathlib import Path
 from rvw.results import find_results
 from rvw.regress.compare import compare, with_assertion_identity
@@ -19,6 +20,7 @@ def triage(root, baseline=None, known=None, bundles=None):
             if test.status == 'pass' and test.conclusive:
                 continue
             details = test.extra.get('details', {})
+            details = details if isinstance(details, dict) else {}
             mismatch = details.get('first_mismatch', {})
             if isinstance(mismatch, dict) and mismatch.get('pc') is not None and mismatch.get('instruction') is not None:
                 signature = 'mismatch:' + json.dumps([mismatch['pc'], mismatch['instruction']], sort_keys=True)
@@ -41,7 +43,12 @@ def triage(root, baseline=None, known=None, bundles=None):
                 if entry.matches(suite.suite, test.id, test.signature, suite.config):
                     cluster['known'].append(dict(reason=entry.reason, recorded_at_rev=entry.recorded_at_rev,
                                                   test=test.id, config=entry.config))
+    base_suites = find_results(Path(baseline)) if baseline else []
+    base_revisions = {s.source.get('core_rev_full', s.source.get('core_rev', 'unknown')) for s in base_suites}
     for cluster in clusters.values():
+        candidates = {m['revision'].get('core_rev_full', m['revision'].get('core_rev', 'unknown')) for m in cluster['members']}
+        cluster['commit_ranges'] = sorted({b + '..' + c for b in base_revisions for c in candidates
+                                          if re.fullmatch('[0-9a-f]{40}', b) and re.fullmatch('[0-9a-f]{40}', c)})
         representative = next((m['run'] for m in cluster['members'] if m['run']), None)
         cluster['representative'] = representative
         if bundles and representative:
@@ -51,7 +58,7 @@ def triage(root, baseline=None, known=None, bundles=None):
                                                   no_rerun=True, no_spinaltrace=True)
             except (ValueError, OSError, RuntimeError) as exc:
                 cluster['bundle_error'] = str(exc)
-    diff = compare(Path(baseline), Path(root), known_entries).to_dict() if baseline else None
+    diff = compare(base_suites, suites, known_entries).to_dict() if baseline else None
     return dict(schema='rvw.failure-clusters/1', clusters=list(clusters.values()), revisions=sorted(revisions),
                 baseline=str(baseline) if baseline else None, diff=diff,
                 status='no_checks' if not suites else 'reported', failures_waived=False)

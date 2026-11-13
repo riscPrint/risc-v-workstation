@@ -384,3 +384,30 @@ Budget or cleanup failures remain visible beside the original C4 observation.
 
 Budget admission skips exhausted owners so other projects can run. A job blocked
 only by an active reservation stays queued until that reservation is released.
+
+### Cluster collection state
+
+For cluster collection, pass `--executor k8s --ids 'SAVED_IDS'` with
+`--action collect`. Every planned Job ID must be present. The collector checks
+current Kubernetes state as well as C1/C3 files. Missing IDs, failed/incomplete
+Jobs or a kubectl error make collection inconclusive while retaining artifacts.
+A Complete condition and successful pod count are required for each Job.
+An empty expected-cell plan is refused. Complete collection still is not DUT
+pass or C4 acceptance.
+
+All long farm and evidence-index MCP calls now use the shared owned worker
+process path. Job cancellation and supervisor budgets apply to those calls in
+stdio as well as remote MCP. The local queue still records its own attempt and
+recovery state if its MCP worker stops.
+
+When both sides record full commit IDs, each triage cluster includes explicit
+`BASE..CANDIDATE` commit ranges. Unknown or short revisions do not create a
+range. Regression diffs still require matching test input identities; a range
+alone cannot establish a new failure or a fix.
+
+A rendered Job also passed offline validation against the Kubernetes v1.34.0
+OpenAPI Job schema at commit `f28b4c9efbca5c5c0af716d9f2d5702667ee8a45`.
+The schema SHA-256 was
+`d3b0cdc2fda15c753206d25ab459dc7c12df64e2fd652b6809687471ea751c37`.
+This check included result/cache PVC mounts and resource requests. Cluster
+admission, PVC binding and pod execution have NOT RUN.

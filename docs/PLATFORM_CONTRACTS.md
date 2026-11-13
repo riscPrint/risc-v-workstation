@@ -51,7 +51,7 @@ Principles (from `ROADMAP.md`):
 - [Debug module and sessions](contracts/debug.md)
 - [Equivalence and datapath checks](contracts/equiv.md)
 - [Cross-tool evidence](contracts/evidence.md)
-- [Farm and job queue](contracts/farm.md)
+- [Farm, budgets and cluster jobs](contracts/farm.md)
 - [Proof cores and counterexamples](contracts/formal-cex.md)
 - [Deep formal runs](contracts/formal-deep.md)
 - [Formal checks, SVA and local captures](contracts/formal.md)

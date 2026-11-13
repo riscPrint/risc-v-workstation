@@ -1,3 +1,4 @@
+from dataclasses import replace
 from rvw.mcp.spec import ToolSpec, schema
 from rvw.mcp.worker import handler
 from .dashboard import dashboard
@@ -35,7 +36,7 @@ def mcp_tools():
     from .selection import select
     from .workflows import workflow
     from .shard_plan import plan
-    return [ToolSpec("farm_plan", "Build one local/Kubernetes shard plan from a C1 manifest with hashed ELF inputs and expected cells.",
+    tools = [ToolSpec("farm_plan", "Build one local/Kubernetes shard plan from a C1 manifest with hashed ELF inputs and expected cells.",
                  schema({"manifest": string, "adapter": array, "root": string, "image": string, "claim": string,
                          "shards": {"type": "integer", "minimum": 1}, "jobs": {"type": "integer", "minimum": 1},
                          "identity": {"type": "object"}, "resources": {"type": "object"}, "timeout": {"type": "number", "exclusiveMinimum": 0}},
@@ -69,6 +70,9 @@ def mcp_tools():
                  schema({"out": string}, ["out"]), handler("rvw.farm.mcp_tools", "recover")),
         ToolSpec("farm_cancel", "Cancel shards and confirm host process-group cleanup.",
                  schema({"out": string}, ["out"]), handler("rvw.farm.mcp_tools", "cancel"), long=True)]
+
+    return [replace(t, handler=handler(t.handler.__module__, function=t.handler.__name__))
+            if t.long and not t.wants_job else t for t in tools]
 
 
 def queue_json(root, operation="list", options=None):

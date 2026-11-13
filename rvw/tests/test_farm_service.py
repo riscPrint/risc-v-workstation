@@ -99,3 +99,13 @@ r=dict(schema='rvw.run/1',status=status,core='generic',config='small',elf_sha256
     assert result['state'] == 'dut_failure'
     assert result['observed_dut_failure'] and result['unstable']
     assert [a['dut_status'] for a in result['attempts']] == ['fail', 'pass']
+
+
+def test_unknown_native_identity_does_not_claim_flakiness(tmp_path):
+    q = Queue(tmp_path)
+    code = "import json; from pathlib import Path; Path('result.json').write_text(json.dumps(dict(schema='rvw.run/1', status='pass', core='generic', config='small', tools={'native_build':None})))"
+    q.submit('a', [sys.executable, '-c', code])
+    result = q.work_once()
+    assert result['state'] == 'complete'
+    assert not result['unstable']
+    assert 'identity' not in result['attempts'][0]

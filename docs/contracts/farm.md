@@ -80,3 +80,15 @@ Missing C4 is not_recorded; invalid or multiple reports are ambiguous. Execution
 state stays separate from the recorded verdict. No acceptance is inferred.
 Active budget reservations can keep work queued; permanently exhausted scopes
 cannot block another owner's admissible work.
+
+## Cluster collection state
+
+Cluster collection requires the exact planned Job IDs and current successful
+Complete conditions. Missing IDs, failed/incomplete Jobs or query errors make
+collection inconclusive, even when artifacts exist. Valid returned evidence is
+retained. Empty expected-cell plans are refused. Collection does not infer a
+DUT pass or C4 acceptance. Long farm MCP calls use owned worker processes.
+
+Failure clusters can include commit ranges when both sides record full commit
+IDs. Short or unknown IDs do not create ranges. Range links do not replace the
+C3 input/seed identity checks used by regression comparisons.

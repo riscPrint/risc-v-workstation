@@ -33,3 +33,23 @@ def test_fake_kubectl(tmp_path):
     assert ids == [dict(name='demo-0', namespace='default')]
     assert executor.status(ids)[0]['args'][:3] == ['get', 'job', 'demo-0']
     assert executor.cancel(ids)['status'] == 'cancelled'
+
+
+def test_empty_collection_is_refused(tmp_path):
+    import pytest
+    with pytest.raises(ValueError, match='expected cells'):
+        collect(dict(shards=[]), tmp_path)
+
+
+def test_cluster_collection_requires_complete_job_state(tmp_path, monkeypatch):
+    from rvw.farm import batch as module
+    monkeypatch.setattr(module, 'collect', lambda plan, root: dict(status='complete', evidence=['retained']))
+    missing = module.batch(plan(), 'collect', 'k8s', str(tmp_path))
+    assert missing['status'] == 'inconclusive'
+    ids = [dict(name='demo-0', namespace='default')]
+    monkeypatch.setattr(KubernetesExecutor, 'status', lambda self, ids: [dict(status=dict(failed=1))])
+    failed = module.batch(plan(), 'collect', 'k8s', str(tmp_path), ids)
+    assert failed['status'] == 'inconclusive'
+    assert failed['evidence'] == ['retained']
+    monkeypatch.setattr(KubernetesExecutor, 'status', lambda self, ids: [dict(status=dict(succeeded=1, conditions=[dict(type='Complete', status='True')]))])
+    assert module.batch(plan(), 'collect', 'k8s', str(tmp_path), ids)['status'] == 'complete'

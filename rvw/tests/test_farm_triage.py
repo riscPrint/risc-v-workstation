@@ -26,3 +26,23 @@ def test_mismatch_identity_keeps_pc_and_instruction(tmp_path):
 
 def test_empty_report_does_not_claim_checks(tmp_path):
     assert triage(tmp_path)['status'] == 'no_checks'
+
+
+def test_recorded_commit_range_and_regression_diff(tmp_path):
+    import json
+    base, candidate = tmp_path / 'base', tmp_path / 'candidate'
+    identity = dict(elf_sha256='d'*64, options={})
+    report(base, [TestEntry('test', 'pass', seed=1, extra=identity)])
+    report(candidate, [TestEntry('test', 'assert', seed=1, signature='assert:Unit.scala:12', extra=identity)])
+    path = candidate / 'results.json'
+    data = json.loads(path.read_text())
+    data['source']['core_rev'] = 'b'*40
+    path.write_text(json.dumps(data))
+    result = triage(candidate, baseline=base)
+    assert result['clusters'][0]['commit_ranges'] == ['a'*40 + '..' + 'b'*40]
+    assert result['diff']['new_failures']
+
+
+def test_unknown_details_keep_assertion_identity(tmp_path):
+    report(tmp_path, [TestEntry('test', 'assert', signature='assert:Unit.scala:12', extra=dict(details=None))])
+    assert triage(tmp_path)['clusters'][0]['signature'] == 'assert:Unit.scala:12'

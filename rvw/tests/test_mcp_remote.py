@@ -62,6 +62,8 @@ def test_authenticated_sse_protocol_roundtrip():
                     assert 'fixture' in {t.name for t in tools.tools}
                     result = await session.call_tool('fixture', {})
                     assert not (result.is_error if hasattr(result, 'is_error') else result.isError)
+                    import json
+                    assert json.loads(result.content[0].text) == {'fixture': True}
         anyio.run(check)
     finally:
         server.should_exit = True

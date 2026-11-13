@@ -166,6 +166,7 @@ class Queue:
                 attempt.update(dut_status=run.status, inconclusive=run.why_inconclusive)
                 raw = run.to_dict()
                 native = raw.get('tools', {}).get('native_build', {})
+                native = native if isinstance(native, dict) else {}
                 if run.elf_sha256 and raw.get('rtl_sha256') and native.get('sha256'):
                     identity = {k: raw.get(k) for k in ('elf_sha256', 'rtl_sha256', 'config', 'seed', 'max_cycles', 'mem_latency', 'source', 'tools')}
                     attempt['identity'] = hashlib.sha256(json.dumps(identity, sort_keys=True).encode()).hexdigest()
