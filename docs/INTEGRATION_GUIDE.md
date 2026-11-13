@@ -315,3 +315,13 @@ Do not promote an issue closure, unit test, source pin or equal record count to
 DUT qualification. Keep each new core's measured results and limits in its own
 repository. See [the command reference](COMMAND_REFERENCE.md) for options and
 [the contracts](PLATFORM_CONTRACTS.md) for required records.
+
+## Machine-readable workflows
+
+Use `rvw agent guide --json` or MCP `agent_guide` for ordered tool calls and
+decision points. Select `bring-up`, `test-fails`, `add-coverage`,
+`prove-property` or `performance-question`. The same data is available at
+`rvw://agent/guide`. The playbook preserves the evidence limits in this guide.
+A repair needs a reproduced failure, matching artifact identities, passing
+repair workloads and an independent gate result. Missing evidence stays
+inconclusive.
