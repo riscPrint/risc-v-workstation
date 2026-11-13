@@ -219,16 +219,16 @@ branch and jump streams with at most two integer sources. It preserves fetch,
 rename, ROB, issue, commit, fixed latencies, class issue limits, physical-register
 pressure, queue occupancy, static sequential branch prediction, recovery and
 optional correct-path branch overlap. Memory uses fixed latency and ordered
-issue. Component caches and predictors still use their shared library through
-the Python engine. Front-end objects, translation, execution-port objects,
+issue. Component data caches, TLB and predictors can use the native issue
+service. Front-end objects, own translation, execution-port objects,
 rename policies, FP and memory disambiguation also use Python.
 
 Reports name the selected `backend`. Missing libraries use Python. An invalid
 selected library is an error. Rebuild older ABI 1 installations. Set
 `RVW_OOO_NATIVE=0` to force Python, or set it to an explicit library path.
 Python callers can select `backend="python"` or `backend="native"`. The latter
-requires a supported stream and installed library. C2 parsing and conversion
-still use Python.
+requires a supported stream and installed library. The flat C2/1 reader can
+validate and pack integer streams directly. Other inputs use Python.
 
 Parity tests check 100 seeded integer and 150 seeded mixed schedules, including
 queue limits, dependencies, physical-register capacity, branch recovery and
@@ -660,3 +660,37 @@ trials use 5,000 instructions and include Python validation and packing. The
 original result file remains a historical measurement. The host was shared
 with other workers, so the two files are not a controlled before/after study.
 C2 parsing remains outside both rates.
+
+### End-to-end native path
+
+The native reader accepts flat single-hart C2/1 integer records. It validates
+field types, widths, order, cycles, masks and the passing end marker. It packs
+scheduler arrays directly. It caches static instruction decoding within each
+read. It does not cache trace validation between runs. Other syntax, fields,
+C2/2 and unsupported instructions use the shared Python validator and decoder.
+`trace_reader` records `native-c2` or `python-c2` in the run report.
+
+Ordered-memory native schedules can now call the shared component library
+through `csim_ooo_service`. Direction prediction, BTB, RAS, indirect prediction,
+data caches and TLB service stay in the shared component implementation.
+The scheduler adds the returned service latency at issue. Cross-line and
+cross-page accesses split as in the Python adapter. Instruction cache timing,
+explicit frontend timing, replay and other advanced policies still use Python.
+Old scheduler libraries keep the Python component fallback. Rebuild with
+`python -m rvw.ooo.native --build .tools/ooo/libooo.so` to enable both paths.
+
+`Arch/ooo/benchmark-e2e.py` measures the full `run()` call. It includes file
+reads, C2 validation, packing, scheduling and identity hashes. It excludes
+trace generation and compilation. Results are in
+`Arch/ooo/benchmark-results-e2e.json`. These synthetic shared-host runs have
+large wall-time variation. The measurements are reported below. The requested
+millions/s end-to-end target is **not met**. These rates do not establish RTL
+accuracy or performance on large open workloads.
+
+| Synthetic stream | Full-run instructions/s | Instructions/CPU-second |
+|---|---:|---:|
+| integer | 491,947 | 1,617,299 |
+| components | 544,234 | 1,418,677 |
+
+CPU time includes the hashing thread. It is not elapsed run throughput. Each
+trial uses 500,000 instructions. Four trials follow one warmup.

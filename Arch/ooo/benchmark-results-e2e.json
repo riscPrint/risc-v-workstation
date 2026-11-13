@@ -1,0 +1,57 @@
+{
+  "host": "macOS-27.2-arm64-arm-64bit-Mach-O",
+  "machine": "arm64",
+  "method": "one warmup then four public run calls; includes reads, C2 validation, packing, timing, input and engine hashes; generation and native build excluded; synthetic streams",
+  "results": [
+    {
+      "workload": "integer",
+      "instructions": 500000,
+      "input_bytes": 170277954,
+      "seconds": [
+        0.6965168750612065,
+        0.9466234999708831,
+        1.0861162079963833,
+        1.1145127910422161
+      ],
+      "cpu_seconds": [
+        0.3095629999999998,
+        0.3055819999999998,
+        0.3087519999999997,
+        0.31408800000000037
+      ],
+      "instructions_per_cpu_second": 1617298.6261048184,
+      "instructions_per_second": 491946.90106191556,
+      "cycles": 62503,
+      "backend": "native",
+      "trace_reader": "native-c2",
+      "engine_sha256": "b665247a1d1f171e4e899e1fade6b32012da27480fc8be592e4068bf505d8c8d",
+      "trace_sha256": "d62b5fd471696dc0e54b73601cf78ddca71b6c166aa6bd7f492bc0fd1ed83c8b",
+      "config_sha256": "ed169c0bf5992f320c947ce4c0658b7d6ad912c2ebd466cfdc68272cb6a875a1"
+    },
+    {
+      "workload": "components",
+      "instructions": 500000,
+      "input_bytes": 170581661,
+      "seconds": [
+        1.0226809580344707,
+        0.8132741670124233,
+        0.814765082905069,
+        1.1667354579549283
+      ],
+      "cpu_seconds": [
+        0.3521649999999994,
+        0.35271700000000017,
+        0.34610899999999933,
+        0.3632970000000011
+      ],
+      "instructions_per_cpu_second": 1418677.1686608547,
+      "instructions_per_second": 544233.6687550677,
+      "cycles": 188163,
+      "backend": "native",
+      "trace_reader": "native-c2",
+      "engine_sha256": "241e0383a7c9959ac98423771e082244f5bd3d23c2625ccb54a7ebf3ccb5f08d",
+      "trace_sha256": "98db5e88bdb4ad96495375b1bda21fc07931a7f0e64d0433a4f70ae5930081fe",
+      "config_sha256": "d179af206846fbb35ea4c1de7d41a3743c0c0e7b02607df605e38e599195b347"
+    }
+  ]
+}

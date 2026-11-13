@@ -286,7 +286,8 @@ branch timing. It preserves the `rvw.ooo-run/1` fields and reports `backend:
 native`. Unsupported policies use Python in auto mode. Explicit native mode
 refuses them. Rebuild the library with `scripts/install.sh --with-ooo` after
 an ABI change. Component algorithms remain in ComponentSims. Benchmarks report
-kernel and Python-call times separately; neither includes C2 parsing.
+kernel and Python-call times separately. `benchmark-results-e2e.json` also
+measures public runs that include C2 validation, packing and hashes.
 
 ## OoO slot profiles
 
@@ -375,3 +376,21 @@ provide source, RTL revision and area_mm2/delay_ns/power_mw metrics.
 PPA deltas. It hashes check references but gives no aggregate correctness pass.
 Missing RTL and PPA remain `no_checks`. Workload equivalence and PPA provenance
 are producer declarations, not independent proofs made by this tool.
+
+## Native C2 timing reader and component issue service
+
+`rvw.ooo-run/1` adds `trace_reader`: `native-c2` identifies the narrow flat
+single-hart C2/1 reader; `python-c2` identifies the shared Python reader.
+Unsupported native syntax falls back to the shared validator. Native decoding
+uses the same Python decoder per static encoding and destination register.
+Both readers require a complete passing trace. The native reader, scheduler
+and component sources enter engine identity.
+
+`csim_ooo_service(handle, cycle, kind, info, out)` is a synchronous C interface
+for the native scheduler. `info` holds six unsigned 64-bit values: PC, next PC,
+instruction length, memory address, memory size and component branch kind.
+`out` holds service cycles, a misprediction flag and BTB level. Level -1 is a
+lookup miss; -2 means no lookup. Requests use actual-path training at issue.
+The caller owns the handle and arrays. This API does not introduce speculative
+history or wrong-path execution. End-to-end throughput remains measured
+separately from kernel throughput.

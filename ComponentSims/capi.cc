@@ -79,6 +79,51 @@ uint64_t csim_mem_access(void* p, uint64_t cycle, uint64_t pc, uint64_t addr, in
     uint64_t t = m.mmu ? m.mmu->translate(addr, pc, cycle) : cycle;
     return m.l1d->access(addr, pc, t, is_store != 0, false, UINT64_MAX, nullptr);
 }
+// One issue-time service call for a native timing scheduler. No Python callbacks.
+// info: pc, next_pc, length, address, size, branch kind (1..6 or 0).
+// out: service latency, misprediction, BTB level (-1 for a miss).
+void csim_ooo_service(void* p, uint64_t cycle, int kind, const uint64_t* info, int64_t* out) {
+    auto* h = static_cast<Handle*>(p);
+    out[0] = 0; out[1] = info[1] != info[0] + info[2]; out[2] = -2;
+    if (kind == 3 || kind == 4) {
+        uint64_t a = info[3], end = a + info[4], done = cycle;
+        unsigned bits = h->mem->l1d ? h->mem->l1d->line_bits : 6;
+        // Split at cache lines and pages, as in the Python adapter.
+        uint64_t line = uint64_t(1) << bits;
+        uint64_t page = uint64_t(1) << (h->mem->mmu ? h->mem->mmu->page_bits : 12);
+        while (a < end) {
+            done = std::max(done, csim_mem_access(p, cycle, info[0], a, kind == 4, 0));
+            a += std::min(end - a, std::min(line - a % line, page - a % page));
+        }
+        out[0] = int64_t(done - cycle);
+    } else if (kind >= 5 && info[5]) {
+        uint64_t pc = info[0], next = info[1], fallthrough = pc + info[2];
+        int bk = int(info[5]), taken = 1;
+        uint64_t ticket = bk == 1 ? csim_dir_predict(p, pc, &taken) : 0;
+        uint64_t predicted = fallthrough, ind = 0;
+        if (taken) {
+            uint64_t target = 0;
+            int level = csim_btb_lookup(p, pc, &target); out[2] = level;
+            if (level >= 0) {
+                predicted = target;
+                out[0] = h->br->btb->levels[size_t(level)].latency;
+            }
+            if (bk == 6 && h->br->ras) {
+                if (csim_ras_pop(p, &target) == 1) predicted = target;
+            } else if ((bk == 3 || bk == 5) && h->br->ind) {
+                ind = csim_ind_predict(p, pc, &target);
+                if (target) predicted = target;
+            }
+        }
+        bool actual = next != fallthrough;
+        csim_history(p, pc, bk, actual, next);
+        if (ticket) csim_dir_update(p, ticket, actual);
+        if (ind) csim_ind_update(p, ind, next);
+        csim_btb_update(p, pc, bk, actual, next);
+        if (bk == 4 || bk == 5) csim_ras_push(p, fallthrough);
+        out[1] = predicted != next;
+    }
+}
 void csim_reset_stats(void* p) {
     auto* h = static_cast<Handle*>(p); h->mem->reset_stats();
     if (h->br->btb) reset(*h->br->btb);

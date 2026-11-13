@@ -129,6 +129,12 @@ class Entry:
 def simulate(instructions, config, max_cycles=1_000_000, predictor=None, memory=None, backend="auto", observer=None):
     if not config.components:
         return _simulate(instructions, config, max_cycles, predictor, memory, backend, observer=observer)
+    instructions = list(instructions)
+    if backend != "python" and observer is None and predictor is None and memory is None:
+        # Keep the public input checks in _simulate before entering native code.
+        result = _simulate(instructions, config, max_cycles, backend=backend)
+        if result.get("backend") == "native":
+            return result
     if predictor is not None or memory is not None or backend == "native":
         raise ValueError("component configuration requires its own Python timing adapters")
     from .components import Adapter
@@ -161,7 +167,7 @@ def _simulate(instructions, config, max_cycles=1_000_000, predictor=None, memory
             raise ValueError(f"unsupported instruction class: {op.kind}")
         if any(type(r) is not int or not 0 <= r < 64 or (r >= 32 and not (op.kind.startswith("fp_") or op.kind == "store")) for r in op.sources):
             raise ValueError("invalid source register")
-        if (config.memory_policy in ("disambiguate", "speculate") or config.translation or config.memory_rename or memory is not None) and op.kind in ("load", "store"):
+        if (config.memory_policy in ("disambiguate", "speculate") or config.translation or config.memory_rename or memory is not None or config.components.get("memory")) and op.kind in ("load", "store"):
             if type(op.address) is not int or op.address < 0 or type(op.size) is not int or op.size < 1:
                 raise ValueError("disambiguate requires memory address and size")
         if op.mnemonic == "fence.i" and (config.components.get("memory", {}).get("l1i") or config.frontend.get("uop_cache_entries", 0)):
@@ -183,6 +189,8 @@ def _simulate(instructions, config, max_cycles=1_000_000, predictor=None, memory
             return dict(result, backend="native")
         if backend == "native":
             raise ValueError("native scheduler unavailable for this configuration")
+        if config.components:
+            return {}
     from .frontend import Frontend
     from .execution import Execution
     from .translation import Translation
@@ -505,13 +513,29 @@ def run(config_path, trace_path, max_cycles=1_000_000, effective_config=None):
     configuration = check_configuration(config, effective_config) if effective_config else None
     if configuration and json.loads(trace_bytes.splitlines()[0])["config"] != configuration["config"]:
         raise ValueError("effective configuration does not match C2 selected config")
-    result = simulate(_instructions(trace_bytes, config.custom_instructions), config, max_cycles)
+    if type(max_cycles) is not int or max_cycles < 1:
+        raise ValueError("max_cycles must be a positive integer")
+    from .native import parse_c2, simulate as native_simulate
+    from concurrent.futures import ThreadPoolExecutor
+    # Hash immutable input while ctypes runs the native parser and scheduler.
+    # The context also joins hashing when parsing or simulation raises.
+    with ThreadPoolExecutor(max_workers=1) as hashing:
+        trace_digest = hashing.submit(sha256, trace_bytes)
+        packed = parse_c2(trace_bytes, config)
+        result = native_simulate(packed, config, max_cycles) if packed is not None else None
+        if result is None:
+            result = simulate(_instructions(trace_bytes, config.custom_instructions), config, max_cycles)
+        else:
+            result["backend"] = "native"
+        result["trace_reader"] = "native-c2" if packed is not None else "python-c2"
+        trace_hash = trace_digest.result().hexdigest()
     # Decoder and C2 parser are part of the model identity.
     import rvw.common.riscv as decoder
     import rvw.cosim.trace as parser
     engine = b"".join(Path(p).read_bytes() for p in (__file__, str(Path(__file__).with_name("structures.py")), decoder.__file__, parser.__file__))
     engine += b"".join(Path(__file__).with_name(name + ".py").read_bytes() for name in ("frontend", "execution", "translation", "attribution", "native", "rename", "dependence", "custom", "project", "components", "control", "floating", "component_events", "regions", "memory_rename"))
     engine += Path(__file__).with_name("native.c").read_bytes()
+    engine += Path(__file__).with_name("native_c2.c").read_bytes()
     if result["backend"] == "native":
         from .native import library_path
         engine += library_path().read_bytes()
@@ -520,7 +544,7 @@ def run(config_path, trace_path, max_cycles=1_000_000, effective_config=None):
         engine += source_hash().encode()
     return dict(schema="rvw.ooo-run/1", **result, config=asdict(config),
                 config_sha256=sha256(config_bytes).hexdigest(),
-                trace_sha256=sha256(trace_bytes).hexdigest(),
+                trace_sha256=trace_hash,
                 engine_sha256=sha256(engine).hexdigest(), wall_s=perf_counter()-start,
                 accuracy_status="inconclusive", configuration_status="snapshot_checked" if configuration else "unchecked",
                 configuration_evidence=configuration,

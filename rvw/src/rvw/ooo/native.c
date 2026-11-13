@@ -11,10 +11,12 @@ typedef struct { int64_t cycles, issued, dependency_blocked, rob_full,
  store_full, branches, branch_misses, wrong_path_fetch_slots_estimate,
  port_blocked, correct_path_speculative_issues; } Result;
 int rvw_ooo_abi(void) { return 2; }
-int rvw_ooo_run(int64_t n, const Op *ops, const Config *c, Result *r) {
+typedef void (*Service)(void*, uint64_t, int, const uint64_t*, int64_t*);
+int rvw_ooo_run_components(int64_t n, const Op *ops, const Config *c, Result *r,
+ const uint64_t *info, void *handle, Service service, int64_t *counts) {
  int64_t *done = malloc(sizeof(int64_t)*n), *d0 = malloc(sizeof(int64_t)*n),
- *d1 = malloc(sizeof(int64_t)*n);
- if (!done || !d0 || !d1) { free(done);free(d0);free(d1);return -1; }
+ *d1 = malloc(sizeof(int64_t)*n), *misses = calloc((size_t)n, sizeof(int64_t));
+ if (!done || !d0 || !d1 || !misses) { free(done);free(d0);free(d1);free(misses);return -1; }
  for (int64_t i=0;i<n;i++)done[i]=-1;
  int64_t writers[32];for(int i=0;i<32;i++)writers[i]=-1;
  int64_t fetched=0, renamed=0, retired=0, waiting=0, allocated=0;
@@ -31,7 +33,7 @@ int rvw_ooo_run(int64_t n, const Op *ops, const Config *c, Result *r) {
   if(cycle<blocked_until)r->bad_speculation+=c->commit_width-committed;
   else if(renamed>retired)r->backend+=c->commit_width-committed;
   else r->frontend+=c->commit_width-committed;
-  if(retired==n){r->cycles=cycle+1;free(done);free(d0);free(d1);return 0;}
+  if(retired==n){r->cycles=cycle+1;free(done);free(d0);free(d1);free(misses);return 0;}
   if(unresolved>=0 && done[unresolved]<=cycle)unresolved=-1;
   int64_t issued=0, blocked=0, ports[7]={0};
   int branch_hold=0, speculating=0, memory_hold=0;
@@ -43,24 +45,36 @@ int rvw_ooo_run(int64_t n, const Op *ops, const Config *c, Result *r) {
    int64_t kind=ops[i].kind;
    if(ports[kind]>=c->ports[kind]){r->port_blocked++;goto scanned;}
    if((kind==3 || kind==4) && memory_hold)goto scanned;
+   int64_t latency=ops[i].latency, miss=ops[i].miss;
+   if(service) {
+    int64_t response[3]; service(handle, cycle, (int)kind, info+i*6, response);
+    latency+=response[0];
+    if(kind>=5) {
+     miss=response[1];
+     counts[0]+=response[0];
+     if(response[2]==-1)counts[1]++;
+     else if(response[2]>=0 && response[2]<16)counts[2+response[2]]++;
+    }
+   }
+   misses[i]=miss;
    if(kind>=5) {
     r->branches++;
-    if(ops[i].miss) {
+    if(miss) {
      r->branch_misses++;
-     int64_t until=cycle+ops[i].latency+c->branch_penalty;
+     int64_t until=cycle+latency+c->branch_penalty;
      if(until>blocked_until)blocked_until=until;
      r->wrong_path_fetch_slots_estimate+=c->branch_penalty*c->fetch_width;
     }
-    if(!c->branch_speculation || ops[i].miss)unresolved=i;
+    if(!c->branch_speculation || miss)unresolved=i;
    }
-   done[i]=cycle+ops[i].latency;issued++;waiting--;r->issued++;ports[kind]++;
+   done[i]=cycle+latency;issued++;waiting--;r->issued++;ports[kind]++;
    if(speculating)r->correct_path_speculative_issues++;
 scanned:
    /* Prefix state includes earlier entries issued in this phase. It replaces
       repeated walks over older branches and memory operations. */
    if(done[i]<0 || done[i]>cycle) {
     if(ops[i].kind>=5) {
-     if(c->branch_speculation && done[i]>=0 && !ops[i].miss)speculating=1;
+     if(c->branch_speculation && done[i]>=0 && !misses[i])speculating=1;
      else branch_hold=1;
     }
     if(ops[i].kind==3 || ops[i].kind==4)memory_hold=1;
@@ -89,5 +103,9 @@ scanned:
   if(loads>r->loads)r->loads=loads;
   if(stores>r->stores)r->stores=stores;
  }
- free(done);free(d0);free(d1);return 1;
+ free(done);free(d0);free(d1);free(misses);return 1;
+}
+
+int rvw_ooo_run(int64_t n, const Op *ops, const Config *c, Result *r) {
+ return rvw_ooo_run_components(n, ops, c, r, NULL, NULL, NULL, NULL);
 }
