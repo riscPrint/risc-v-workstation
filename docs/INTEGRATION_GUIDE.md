@@ -306,6 +306,14 @@ The [2026-11-13 second pass](DRY_RUN_VERILOG_2026-11-13.md#second-pass) records 
 and limits for an external PicoRV32 repository. These rows do not qualify
 every non-Spinal core.
 
+The current-main recheck at `25e761bf` confirms declared-port generation,
+bounded formal execution, compiler-only architecture build and HDL doctor.
+The fresh full regression has 46 conclusive passes. Its 46 sealed traces match
+Spike after C1 ELF hash checks.
+Rebuild the local Spike shim when the installed workstation changes its ABI.
+A stale shim reports an error and must not be counted as a cosim mismatch.
+See the report for the exact run revisions and remaining proof limits.
+
 | Flow | Status | Recorded scope and limit |
 |---|---|---|
 | Pure C++ C1/C2 and regression | 46 passes, zero inconclusive C1 results in the final full regression. | PR #911 supplies plain HDL identity capture. A committed smoke gate accepts the good revision and rejects a planted instruction-response fault. The generated run stub still needs project bus mapping. |
