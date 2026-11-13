@@ -1,0 +1,7 @@
+{
+  "schema": "rvw.csim-study/1",
+  "name": "ooo-mini-bimodal16",
+  "source": {"fidelity": "approximate", "approximations": ["The model trains in retirement trace order. RTL predicts at fetch and trains at commit.", "The RTL uses bimodal counters for jumps as well as conditional branches."]},
+  "branch": {"model": "bimodal", "entries": 16, "pc_shift": 2},
+  "btb": {"entries": 16, "ways": 1, "tag_bits": 26, "pc_shift": 2}
+}

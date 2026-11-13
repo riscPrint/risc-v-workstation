@@ -1,0 +1,132 @@
+{
+  "schema": "rvw.micro-checks/1",
+  "top": "Core",
+  "rules": [
+    {
+      "id": "rob_bound",
+      "kind": "counter_bounds",
+      "entries": 8,
+      "width": 4,
+      "ports": {
+        "clk": "clk",
+        "reset": "reset",
+        "active": "started",
+        "value": "count"
+      }
+    },
+    {
+      "id": "free_disjoint",
+      "kind": "freelist",
+      "entries": 48,
+      "width": 48,
+      "ports": {
+        "clk": "clk",
+        "reset": "reset",
+        "free_bits": "free",
+        "allocated": "liveTags"
+      }
+    },
+    {
+      "id": "age_order",
+      "kind": "age_matrix",
+      "entries": 8,
+      "ports": {
+        "clk": "clk",
+        "reset": "reset",
+        "valid": "ageValid",
+        "older": "ageOlder"
+      }
+    },
+    {
+      "id": "forward_byte0",
+      "kind": "store_forward_age",
+      "entries": 8,
+      "width": 8,
+      "ports": {
+        "clk": "clk",
+        "reset": "reset",
+        "load_fire": "loadFire",
+        "forwarded": "forwarded0",
+        "valid": "forwardValid",
+        "older": "forwardOlder",
+        "address_match": "forwardMatch0",
+        "selected": "forwardSelected0",
+        "load_data": "forwardObserved0",
+        "store_data": "forwardData0",
+        "older_than": "ageOlder"
+      }
+    },
+    {
+      "id": "forward_byte1",
+      "kind": "store_forward_age",
+      "entries": 8,
+      "width": 8,
+      "ports": {
+        "clk": "clk",
+        "reset": "reset",
+        "load_fire": "loadFire",
+        "forwarded": "forwarded1",
+        "valid": "forwardValid",
+        "older": "forwardOlder",
+        "address_match": "forwardMatch1",
+        "selected": "forwardSelected1",
+        "load_data": "forwardObserved1",
+        "store_data": "forwardData1",
+        "older_than": "ageOlder"
+      }
+    },
+    {
+      "id": "forward_byte2",
+      "kind": "store_forward_age",
+      "entries": 8,
+      "width": 8,
+      "ports": {
+        "clk": "clk",
+        "reset": "reset",
+        "load_fire": "loadFire",
+        "forwarded": "forwarded2",
+        "valid": "forwardValid",
+        "older": "forwardOlder",
+        "address_match": "forwardMatch2",
+        "selected": "forwardSelected2",
+        "load_data": "forwardObserved2",
+        "store_data": "forwardData2",
+        "older_than": "ageOlder"
+      }
+    },
+    {
+      "id": "forward_byte3",
+      "kind": "store_forward_age",
+      "entries": 8,
+      "width": 8,
+      "ports": {
+        "clk": "clk",
+        "reset": "reset",
+        "load_fire": "loadFire",
+        "forwarded": "forwarded3",
+        "valid": "forwardValid",
+        "older": "forwardOlder",
+        "address_match": "forwardMatch3",
+        "selected": "forwardSelected3",
+        "load_data": "forwardObserved3",
+        "store_data": "forwardData3",
+        "older_than": "ageOlder"
+      }
+    },
+    {
+      "id": "rob_recovery",
+      "kind": "fifo_flush",
+      "entries": 8,
+      "width": 32,
+      "ports": {
+        "clk": "clk",
+        "reset": "reset",
+        "push": "push",
+        "pop": "pop",
+        "flush": "redirect",
+        "push_data": "nextId",
+        "pop_data": "observedToken"
+      }
+    }
+  ]
+}

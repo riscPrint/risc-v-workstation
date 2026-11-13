@@ -26,6 +26,11 @@ trap 'exit 143' TERM
 trap 'exit 130' INT
 trap 'exit 129' HUP
 export OOO_MINI_SOURCE="$(cd "${OOO_MINI_SOURCE:-$here/..}" && pwd)"
+# Revision snapshots contain the workstation tree, while a live selection can
+# name this example directory directly. Build the selected RTL in both cases.
+if [ -f "$OOO_MINI_SOURCE/examples/ooo-mini/build.sbt" ]; then
+  export OOO_MINI_SOURCE="$OOO_MINI_SOURCE/examples/ooo-mini"
+fi
 if [ -n "${RISCVSIM_EXTRA_INPUTS:-}" ]; then
   echo 'input_not_captured:custom_build_layout' >&2
   exit 2
@@ -37,7 +42,7 @@ if [ "${1:-}" = identity ] && [[ "$native_identity" = *'"cache_enabled":false'* 
   exit 2
 fi
 "$RVW_PYTHON" "$sim/scripts/source-identity.py" "$OOO_MINI_SOURCE" "$repo" > "$launch_owner/source.json"
-output="$(cd "$here/.." && "$repo/scripts/with-lock.sh" "${RVW_SBT_LOCK:-sbt-mem}" nice -n "${RVW_NICE:-10}" \
+output="$(cd "$OOO_MINI_SOURCE" && "$repo/scripts/with-lock.sh" "${RVW_SBT_LOCK:-sbt-mem}" nice -n "${RVW_NICE:-10}" \
   sbt -J-Xmx3g -batch -Dsbt.offline=true 'root/compile' 'export root/Runtime/fullClasspath' 2>&1)" || {
   echo "$output" >&2; exit 2;
 }
