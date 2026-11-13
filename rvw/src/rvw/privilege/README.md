@@ -701,3 +701,23 @@ instructions. The reference ISA retains Smstateen, Sscsrind, Zfinx and H where
 selected. Native Spike checks actual programs. This suite does not establish
 DUT coverage. Ssstateen-only implementations and other extension-state gates
 remain open.
+
+## Ssstateen without Smstateen
+
+`kind = "ssstateen-only"` pins `Ssstateen-1.0`. The two examples select RV64
+with and without H. They generate 24 and 80 programs. No program writes a
+machine state-enable CSR. Probes cover the four supervisor state-enable banks,
+SENVCFG, indirect CSR access and the Zfinx FCSR gate. Optional probes select
+JVT and Zfinx arithmetic. Project data must declare their ISA extensions.
+
+Without Smstateen, there is no machine gate to block S access. With H,
+`hstateen` controls guest access. Supervisor user-state gates still control
+U and VU access. `stateen.writable_bits` declares the selected H gates and
+supervisor user-state gates. Without H, only the user-state gates need entries.
+
+The installed Spike rejects the Ssstateen extension name. The examples therefore
+select the Python reference backend. Expected causes, exact trap PCs, access
+observations and denied instruction encodings use the existing named-observation
+path. Results and subset groups are model-based. They cannot establish full ISA
+comparison or DUT coverage. RV32 Ssstateen-only and other extension-state gates
+remain open. The RV32 Smstateen suite above has separate native Spike evidence.

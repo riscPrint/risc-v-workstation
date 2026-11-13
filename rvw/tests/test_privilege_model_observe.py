@@ -161,3 +161,12 @@ def test_denied_instruction_must_match_model_even_without_retirement(tmp_path,mo
                        for address,data,size in image.segments]
     result=model_observe.observe(elf,s,path)
     assert result['status']=='inconclusive' and 'denied instruction differs' in result['reason']
+
+
+def test_ssstateen_only_observations_and_no_machine_gate(tmp_path,monkeypatch):
+    elf,s,path,rows,write=fixture(tmp_path,monkeypatch,'ssstateen-only-h',select='ssstateen-zfinx-0-vu-10')
+    result=model_observe.observe(elf,s,path)
+    assert result['status']=='pass' and result['evidence']=='model-based'
+    assert 'state_hierarchy.py' in result['model_sha256']
+    s['reference_model']['machine']=0
+    assert model_observe.observe(elf,s,path)['status']=='inconclusive'
