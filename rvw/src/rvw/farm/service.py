@@ -47,7 +47,7 @@ class Queue:
         with self.connect() as db:
             rows = db.execute('SELECT data FROM jobs ORDER BY rowid').fetchall()
         jobs = [json.loads(r[0]) for r in rows]
-        return [j for j in jobs if owner is None or j['owner'] == owner]
+        return sorted((j for j in jobs if owner is None or j['owner'] == owner), key=lambda j: (j['created'], j['id']))
 
     def events(self, after=0):
         with self.connect() as db:
