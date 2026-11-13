@@ -1079,3 +1079,12 @@ lets a later transport supply words to the same port driver.
 structured API and MCP `regress_gate` accept the same `out` argument. The
 default remains `verdict.json` beside the candidate. This permits a queue gate
 job to own its report without changing either input result directory.
+## Reviewed core findings
+
+Use `rvw regress cosim RUN --platform PLATFORM --findings CATALOG` to identify
+reviewed failures by ID. Project catalogs are in
+`examples/vexiiriscv/known-findings.json` and
+`examples/vexriscv/known-findings.json`. The match requires the exact captured
+trace hash, core, program and observed failure status. The report retains the
+failure or mismatch as `observed_status`. `known_finding` counts separately
+from `match`, and exits 1. New traces require review. Gate waivers are separate.

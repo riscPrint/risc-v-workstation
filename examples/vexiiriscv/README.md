@@ -692,3 +692,16 @@ request/response port from project data. Its matching feed passes strict Spike
 comparison. Its deliberately changed feed produces the expected mismatch.
 The stimulus plan now links the passing native port run. This is a declared
 evidence link for the tested hook, not whole-core or live TestRIG qualification.
+
+## Reviewed findings
+
+[The consolidated findings](FINDINGS.md) include suite and generated-check
+observations. Identify the 19 reviewed denied-walk failures with:
+
+```sh
+rvw regress cosim RUN --platform rvw/platform64.json --findings known-findings.json --json
+```
+
+Use `platform32.json` for RV32. Exact reviewed traces report `known_finding`
+with ID `VEXII-PTW-PMP-001`. They remain outside pass and match counts.
+Changed traces or failure reasons require review. C1 still records failure.

@@ -1409,3 +1409,13 @@ use separate paths. The recorded hashes identify the tested snapshots.
 | Cached handoff | 686 cycles, 99 retirements, 10 grants and 7 shrinks. Three fills, two reads, two stores, two writebacks and one invalidation checked. | One data line on two cached RTL cores and an RTL hub. Generated monitor replay passed on 688 clock/reset events. In-simulation SV bind NOT RUN. [Record](../examples/smp/rvw/cached-results.json). |
 | N=2..8 smoke and PLIC races | 14 RTL program passes. Each race has eight claims and eight completions. | RTL CPUs with simulation RAM and PLIC. PLIC RTL and starvation freedom remain unqualified. [Counts](../examples/smp/rvw/scaling-results.json). |
 | N=2..8 timing and replay | 28 RTL passes. Four C2 captures have identical bytes at each N. | One warmup and three measured runs per N. Shared host; model build time excluded. [All samples](../examples/smp/rvw/timing-results.json). |
+### Reviewed core findings
+
+The [VexiiRiscv findings](../examples/vexiiriscv/FINDINGS.md) and
+[VexRiscv findings](../examples/vexriscv/FINDINGS.md) collect the recorded
+suite, cosim, formal, generated-check, security and debug observations.
+No upstream reports were filed. `rvw regress cosim --findings CATALOG`
+reports exact reviewed evidence as `known_finding`, with its ID and original
+failure or mismatch. These rows never count as matches. C1 status is retained.
+The earlier table's Finding column includes 19 denied walks with ID
+`VEXII-PTW-PMP-001` and three interrupt mismatches with ID `VEX-MTVAL-IRQ-001`.
