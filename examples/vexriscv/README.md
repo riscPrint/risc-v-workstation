@@ -240,3 +240,21 @@ RV32IM smoke program. The complete resumed C2 file equalled the original.
 The generic register/RAM fixture also passed. BOOM validation, random-latency
 continuation, native `--savable` serialization and throughput measurements
 remain open under #346. This probe does not close that issue.
+
+## Spike bootstrap transfer probe
+
+Build the matched shim with `Cosim/build.sh`. With the native environment and
+`RVW_HOME` and `VEXRISCV` set, run:
+
+```sh
+nice -n 10 rvw/.venv/bin/python -m pytest examples/vexriscv/rvw/tests/test_spike_bootstrap.py -q
+```
+
+The test captures Spike after ten retirements, including a changed `mscratch`.
+It reads all GPRs and the complete declared 64 KiB RAM image. A fresh VexRiscv
+instance executes a bootstrap from reset, then jumps to the saved PC. The C2
+trace starts at that transfer point. The test compares the continuation against
+the original Spike instance through the final `tohost` store. The bootstrap
+uses `0x80008000` and replaces the reset instruction with a direct jump.
+Programs must not use those reserved bytes after transfer. Counter equivalence,
+pre-fetch readback, C1 integration and fresh-Spike import remain open.

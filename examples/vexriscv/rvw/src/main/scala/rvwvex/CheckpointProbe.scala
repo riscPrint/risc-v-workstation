@@ -11,10 +11,10 @@ import scala.collection.mutable
 /** Bounded real-core checkpoint probe. No JVM threads or reset replay are saved. */
 object CheckpointProbe {
   def main(args: Array[String]): Unit = {
-    require(args.length == 5, "ELF OUT CHECKPOINT save|restore RETIREMENT")
+    require(args.length == 5 || args.length == 6, "ELF OUT CHECKPOINT save|restore|bootstrap RETIREMENT [BOOT-IMAGE]")
     val elfFile = new File(args(0)); val out = new File(args(1)); out.mkdirs()
     val checkpoint = new File(args(2)); val mode = args(3); val at = args(4).toLong
-    require(Set("save", "restore")(mode) && at > 0)
+    require(Set("save", "restore", "bootstrap")(mode) && at > 0)
     val bridge = new BridgeState
     val config = bridge.instrument(VexTop.spinalConfig.copy(headerWithDate = false, headerWithRepoHash = false))
     val compiled = SimConfig.withConfig(config).withVerilator
@@ -46,6 +46,18 @@ object CheckpointProbe {
     def pending(p: Option[(BigInt, Boolean)]): ujson.Value = p.map { case (v, e) => ujson.Arr(v.toString, e) }.getOrElse(ujson.Null)
     def decode(v: ujson.Value): Option[(BigInt, Boolean)] = if (v == ujson.Null) None else Some(BigInt(v(0).str) -> v(1).bool)
     var captured = false
+    val boot = if (mode == "bootstrap") Some(ujson.read(Files.readString(new File(args(5)).toPath))) else None
+    boot.foreach { b =>
+      require(b("schema").str == "rvw.vex-bootstrap-image/1")
+      b("memory").arr.foreach { row =>
+        val a = row("address").num.toLong
+        val bytes = row("hex").str.grouped(2).map(Integer.parseInt(_, 16)).toSeq
+        require(mapped(a) && mapped(a + bytes.size - 1), "bootstrap memory outside RAM")
+        bytes.indices.foreach(i => memory(a + i) = bytes(i))
+      }
+    }
+    var transferred = boot.isEmpty
+    var nativeOrder = saved.map(_("retired").str.toLong).getOrElse(0L)
     try compiled.doSim(seed = 1) { dut =>
       val cd = dut.clockDomain
       cd.clockSim #= false; cd.resetSim #= true
@@ -88,8 +100,12 @@ object CheckpointProbe {
         }
         if (dut.rvfi.valid.toBoolean) {
           val r = VexAdapter.record(dut.rvfi, cycle, handler); handler = false
-          require(r.order == retired, s"order ${r.order} expected $retired")
-          retired += 1; writer.write(r)
+          require(r.order == nativeOrder, s"order ${r.order} expected $nativeOrder"); nativeOrder += 1
+          if (boot.exists(b => BigInt(b("pc").str) == r.pc)) transferred = true
+          if (transferred) {
+            require(boot.nonEmpty || r.order == retired, s"order ${r.order} expected $retired")
+            writer.write(r.copy(order = BigInt(retired))); retired += 1
+          }
           if (r.memWmask != 0 && r.memAddr == BigInt(ToHost.find(elf).get)) {
             require(r.memWdata == 1, "program failed"); finished = true
           }
@@ -106,7 +122,7 @@ object CheckpointProbe {
             "sha256" -> hash(ujson.write(state).getBytes("UTF-8"))))); captured = true
         }
       }
-      require(finished, "core did not finish")
+      require(finished && transferred, "core did not finish after transfer")
       require(mode != "save" || captured, "checkpoint retirement not reached")
       writer.end(cycle, "pass")
     } finally writer.close()
