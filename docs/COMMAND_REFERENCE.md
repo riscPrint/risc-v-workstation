@@ -13,7 +13,7 @@ An entry here states availability. It does not qualify a native flow.
 ### `rvw`
 
 ```text
-usage: rvw [-h] [--version] [--project PROJECT]
+usage: rvw [-h] [--version] [--project PROJECT] [--json]
     {agent,agent-bench,arch,bisect,bugmem,bundle,checks,cosim,cov,csim,debug,doctor,evidence,farm,fault,formal,init,lint,lsp,mcp,memory,ooo,perf,plan,privilege,probes,query,reduce,regress,sec,sim,speed-compare,speed-sweep,backends,uvm-ral,uvm-cpu,hdl,cocotb,soc,uvm,verification-plan,vip,wave,workloads}
     ...
 ```
@@ -21,7 +21,7 @@ usage: rvw [-h] [--version] [--project PROJECT]
 ### `rvw agent`
 
 ```text
-usage: rvw agent [-h] [--project PROJECT] {guide} ...
+usage: rvw agent [-h] [--project PROJECT] [--json] {guide} ...
 ```
 
 ### `rvw agent guide`
@@ -34,7 +34,7 @@ usage: rvw agent guide [-h] [--workflow WORKFLOW] [--json] [--markdown]
 ### `rvw agent-bench`
 
 ```text
-usage: rvw agent-bench [-h] [--project PROJECT]
+usage: rvw agent-bench [-h] [--project PROJECT] [--json]
     {dry-run,serve,native-qualify,repair-prepare,repair-check,trial} ...
 ```
 
@@ -42,35 +42,35 @@ usage: rvw agent-bench [-h] [--project PROJECT]
 
 ```text
 usage: rvw agent-bench dry-run [-h] --pack PACK --out OUT [--agent
-    {scripted,careless}] [--project PROJECT]
+    {scripted,careless}] [--project PROJECT] [--json]
 ```
 
 ### `rvw agent-bench serve`
 
 ```text
 usage: rvw agent-bench serve [-h] --pack PACK --out OUT --task TASK [--project
-    PROJECT]
+    PROJECT] [--json]
 ```
 
 ### `rvw agent-bench native-qualify`
 
 ```text
 usage: rvw agent-bench native-qualify [-h] --pack PACK --source SOURCE --out
-    OUT [--task TASK] [--timeout TIMEOUT] [--project PROJECT]
+    OUT [--task TASK] [--timeout TIMEOUT] [--project PROJECT] [--json]
 ```
 
 ### `rvw agent-bench repair-prepare`
 
 ```text
 usage: rvw agent-bench repair-prepare [-h] --pack PACK --task TASK --source
-    SOURCE --out OUT [--timeout TIMEOUT] [--project PROJECT]
+    SOURCE --out OUT [--timeout TIMEOUT] [--project PROJECT] [--json]
 ```
 
 ### `rvw agent-bench repair-check`
 
 ```text
 usage: rvw agent-bench repair-check [-h] --challenge CHALLENGE --out OUT
-    [--timeout TIMEOUT] [--project PROJECT]
+    [--timeout TIMEOUT] [--project PROJECT] [--json]
 ```
 
 ### `rvw agent-bench trial`
@@ -78,14 +78,14 @@ usage: rvw agent-bench repair-check [-h] --challenge CHALLENGE --out OUT
 ```text
 usage: rvw agent-bench trial [-h] --pack PACK --task TASK --out OUT
     [--budget-s BUDGET_S] [--max-calls MAX_CALLS] [--repeats REPEATS] [--model
-    MODEL] [--project PROJECT] command [command ...]
+    MODEL] [--project PROJECT] [--json] command [command ...]
 ```
 
 ### `rvw arch`
 
 ```text
-usage: rvw arch [-h] [--project PROJECT]
-    {compiler-export,compiler-check,custom-tradeoff,gem5-export,ooo-fit,ooo-profile,ooo-diff,ooo-sampled,ooo-sensitivity,system-energy,traffic,ooo-search,ooo-calibrate,ooo-predict,ooo-score,warmup-bias,sample,sched-generate,sched-measure,sched-study,search,predict,score-prediction,memory-extract,pareto,memory-report,sweep,build,run,calibrate,compare,fit,inspect,measure,linux}
+usage: rvw arch [-h] [--project PROJECT] [--json]
+    {compiler-export,compiler-check,custom-tradeoff,gem5-export,ooo-designer,ooo-fit,ooo-profile,ooo-diff,ooo-sampled,ooo-sensitivity,system-energy,traffic,ooo-search,ooo-calibrate,ooo-predict,ooo-score,warmup-bias,sample,sched-generate,sched-measure,sched-study,search,predict,score-prediction,memory-extract,pareto,memory-report,sweep,build,run,calibrate,compare,fit,inspect,measure,linux}
     ...
 ```
 
@@ -114,6 +114,12 @@ usage: rvw arch custom-tradeoff [-h] --out OUT [--json] [--project PROJECT]
 ```text
 usage: rvw arch gem5-export [-h] --out OUT [--json] [--project PROJECT]
     description
+```
+
+### `rvw arch ooo-designer`
+
+```text
+usage: rvw arch ooo-designer [-h] --out OUT [--json] [--project PROJECT] plan
 ```
 
 ### `rvw arch ooo-fit`
@@ -335,7 +341,8 @@ usage: rvw bisect [-h] --good GOOD [--bad BAD] [--core-repo CORE_REPO]
 ### `rvw bugmem`
 
 ```text
-usage: rvw bugmem [-h] [--project PROJECT] {add,match,list,evaluate} ...
+usage: rvw bugmem [-h] [--project PROJECT] [--json] {add,match,list,evaluate}
+    ...
 ```
 
 ### `rvw bugmem add`
@@ -369,16 +376,16 @@ usage: rvw bugmem evaluate [-h] [--top TOP] [--store STORE] [--json]
 
 ```text
 usage: rvw bundle [-h] [--out OUT] [-n RETIRED] [--cut-cycles CUT_CYCLES]
-    [--no-rerun] [--rerun-window RERUN_WINDOW] [--konata] [--core-config
-    CORE_CONFIG] [--pdg PDG] [--trace-wave TRACE_WAVE] [--trace-cycles
-    TRACE_CYCLES] [--no-spinaltrace] [--timeout TIMEOUT] [--json] [--project
-    PROJECT] run_dir
+    [--no-rerun] [--rerun-window RERUN_WINDOW] [--sim-server SIM_SERVER]
+    [--konata] [--core-config CORE_CONFIG] [--pdg PDG] [--trace-wave
+    TRACE_WAVE] [--trace-cycles TRACE_CYCLES] [--no-spinaltrace] [--timeout
+    TIMEOUT] [--json] [--project PROJECT] run_dir
 ```
 
 ### `rvw checks`
 
 ```text
-usage: rvw checks [-h] [--project PROJECT] {generate,report} ...
+usage: rvw checks [-h] [--project PROJECT] [--json] {generate,report} ...
 ```
 
 ### `rvw checks generate`
@@ -392,13 +399,13 @@ usage: rvw checks generate [-h] --all [--json] [--manifest MANIFEST] [--out
 
 ```text
 usage: rvw checks report [-h] --inventory INVENTORY [--run RUN] [--formal
-    FORMAL] --out OUT [--project PROJECT]
+    FORMAL] --out OUT [--project PROJECT] [--json]
 ```
 
 ### `rvw cosim`
 
 ```text
-usage: rvw cosim [-h] [--project PROJECT]
+usage: rvw cosim [-h] [--project PROJECT] [--json]
     {doctor,dii,exchange,vector-source,adjudicate,qemu-check,check,generate,live}
     ...
 ```
@@ -413,7 +420,7 @@ usage: rvw cosim doctor [-h] --trace TRACE [--core CORE] [--platform PLATFORM]
 ### `rvw cosim dii`
 
 ```text
-usage: rvw cosim dii [-h] [--project PROJECT] {replay,serve} ...
+usage: rvw cosim dii [-h] [--project PROJECT] [--json] {replay,serve} ...
 ```
 
 ### `rvw cosim dii replay`
@@ -490,7 +497,7 @@ usage: rvw cosim live [-h] --elf ELF [--core CORE] [--platform PLATFORM]
 ### `rvw cov`
 
 ```text
-usage: rvw cov [-h] [--project PROJECT]
+usage: rvw cov [-h] [--project PROJECT] [--json]
     {campaign,actions,exchange,block-check,generate,merge,report,rank,select,closure,isa-diff,isa-check,functional,rtl,prove,mutate}
     ...
 ```
@@ -616,7 +623,7 @@ usage: rvw cov mutate [-h] [--run] [--baseline BASELINE] [--timeout TIMEOUT]
 ### `rvw csim`
 
 ```text
-usage: rvw csim [-h] [--project PROJECT]
+usage: rvw csim [-h] [--project PROJECT] [--json]
     {run,sweep,budget,convert,models,compare-rtl,qualify,compare,simpoint,run-points,build}
     ...
 ```
@@ -708,7 +715,7 @@ usage: rvw csim build [-h] [--json] [--project PROJECT]
 ### `rvw debug`
 
 ```text
-usage: rvw debug [-h] [--project PROJECT]
+usage: rvw debug [-h] [--project PROJECT] [--json]
     {openocd,ingress,etrace,suite,tap,serve,interop,etrace-check,etrace-loss,ntrace-check,ntrace-loss,trace-adapter}
     ...
 ```
@@ -717,13 +724,14 @@ usage: rvw debug [-h] [--project PROJECT]
 
 ```text
 usage: rvw debug openocd [-h] --config CONFIG [--openocd OPENOCD] --log LOG
-    [--timeout TIMEOUT] [--project PROJECT]
+    [--timeout TIMEOUT] [--project PROJECT] [--json]
 ```
 
 ### `rvw debug ingress`
 
 ```text
 usage: rvw debug ingress [-h] --rvfi RVFI --out OUT [--project PROJECT]
+    [--json]
 ```
 
 ### `rvw debug etrace`
@@ -732,7 +740,7 @@ usage: rvw debug ingress [-h] --rvfi RVFI --out OUT [--project PROJECT]
 usage: rvw debug etrace [-h] --reference REFERENCE --packets PACKETS
     --static-config STATIC_CONFIG --user-config USER_CONFIG --toolchain
     TOOLCHAIN --rvfi RVFI --out OUT [--loss] [--timeout TIMEOUT] [--project
-    PROJECT]
+    PROJECT] [--json]
 ```
 
 ### `rvw debug suite`
@@ -740,14 +748,14 @@ usage: rvw debug etrace [-h] --reference REFERENCE --packets PACKETS
 ```text
 usage: rvw debug suite [-h] [--profile PROFILE] --out OUT [--group GROUP]
     [--check CHECK] [--no-reference] [--port PORT] [--log LOG] [--list]
-    [--project PROJECT]
+    [--project PROJECT] [--json]
 ```
 
 ### `rvw debug tap`
 
 ```text
 usage: rvw debug tap [-h] [--host HOST] --port PORT [--irlen IRLEN] [--idcode
-    IDCODE] [--no-busy-probe] --out OUT [--project PROJECT]
+    IDCODE] [--no-busy-probe] --out OUT [--project PROJECT] [--json]
 ```
 
 ### `rvw debug serve`
@@ -756,7 +764,7 @@ usage: rvw debug tap [-h] [--host HOST] --port PORT [--irlen IRLEN] [--idcode
 usage: rvw debug serve [-h] [--profile PROFILE] [--host HOST] [--port PORT]
     [--dtm-latency DTM_LATENCY] [--idle IDLE] [--ticks-per-ms TICKS_PER_MS]
     [--port-file PORT_FILE] [--duration DURATION] [--log LOG] [--project
-    PROJECT]
+    PROJECT] [--json]
 ```
 
 ### `rvw debug interop`
@@ -764,7 +772,7 @@ usage: rvw debug serve [-h] [--profile PROFILE] [--host HOST] [--port PORT]
 ```text
 usage: rvw debug interop [-h] [--port PORT] [--profile PROFILE] --elf ELF
     [--reset-pc RESET_PC] [--idcode IDCODE] [--openocd OPENOCD] [--gdb GDB]
-    --out OUT [--timeout TIMEOUT] [--project PROJECT]
+    --out OUT [--timeout TIMEOUT] [--project PROJECT] [--json]
 ```
 
 ### `rvw debug etrace-check`
@@ -773,7 +781,7 @@ usage: rvw debug interop [-h] [--port PORT] [--profile PROFILE] --elf ELF
 usage: rvw debug etrace-check [-h] --reference REFERENCE --static-config
     STATIC_CONFIG --user-config USER_CONFIG --toolchain TOOLCHAIN --rvfi RVFI
     --out OUT [--packets PACKETS] [--filter FILTER] [--loss-at LOSS_AT]
-    [--project PROJECT]
+    [--project PROJECT] [--json]
 ```
 
 ### `rvw debug etrace-loss`
@@ -781,7 +789,7 @@ usage: rvw debug etrace-check [-h] --reference REFERENCE --static-config
 ```text
 usage: rvw debug etrace-loss [-h] --reference REFERENCE --static-config
     STATIC_CONFIG --user-config USER_CONFIG --toolchain TOOLCHAIN --rvfi RVFI
-    --out OUT [--packets PACKETS] [--at AT] [--project PROJECT]
+    --out OUT [--packets PACKETS] [--at AT] [--project PROJECT] [--json]
 ```
 
 ### `rvw debug ntrace-check`
@@ -790,6 +798,7 @@ usage: rvw debug etrace-loss [-h] --reference REFERENCE --static-config
 usage: rvw debug ntrace-check [-h] --rvfi RVFI --elf ELF --out OUT [--mode
     {htm,btm}] [--sync-period SYNC_PERIOD] [--adapter ADAPTER] [--packets
     PACKETS] [--filter FILTER] [--loss-at LOSS_AT] [--project PROJECT]
+    [--json]
 ```
 
 ### `rvw debug ntrace-loss`
@@ -797,13 +806,13 @@ usage: rvw debug ntrace-check [-h] --rvfi RVFI --elf ELF --out OUT [--mode
 ```text
 usage: rvw debug ntrace-loss [-h] --rvfi RVFI --elf ELF --out OUT [--mode
     {htm,btm}] [--sync-period SYNC_PERIOD] [--adapter ADAPTER] [--at AT]
-    [--project PROJECT]
+    [--project PROJECT] [--json]
 ```
 
 ### `rvw debug trace-adapter`
 
 ```text
-usage: rvw debug trace-adapter [-h] [--project PROJECT] adapter
+usage: rvw debug trace-adapter [-h] [--project PROJECT] [--json] adapter
 ```
 
 ### `rvw doctor`
@@ -818,26 +827,27 @@ usage: rvw doctor [-h] [--features FEATURES] [--smoke-elf SMOKE_ELF]
 ### `rvw evidence`
 
 ```text
-usage: rvw evidence [-h] [--project PROJECT] {index,query} ...
+usage: rvw evidence [-h] [--project PROJECT] [--json] {index,query} ...
 ```
 
 ### `rvw evidence index`
 
 ```text
 usage: rvw evidence index [-h] --root ROOT --db DB [--project PROJECT]
+    [--json]
 ```
 
 ### `rvw evidence query`
 
 ```text
 usage: rvw evidence query [-h] --db DB [--text TEXT] [--schema SCHEMA]
-    [--project PROJECT]
+    [--project PROJECT] [--json]
 ```
 
 ### `rvw farm`
 
 ```text
-usage: rvw farm [-h] [--project PROJECT]
+usage: rvw farm [-h] [--project PROJECT] [--json]
     {run,cancel,notifications,classify,recover,plan,live,workflow,select,triage,budget,batch,queue,serve,dashboard}
     ...
 ```
@@ -847,31 +857,32 @@ usage: rvw farm [-h] [--project PROJECT]
 ```text
 usage: rvw farm run [-h] --hosts HOSTS --manifest MANIFEST --adapter ADAPTER
     --identity-command IDENTITY_COMMAND --identity IDENTITY --out OUT [--jobs
-    JOBS] [--timeout TIMEOUT] [--project PROJECT]
+    JOBS] [--timeout TIMEOUT] [--project PROJECT] [--json]
 ```
 
 ### `rvw farm cancel`
 
 ```text
-usage: rvw farm cancel [-h] --out OUT [--project PROJECT]
+usage: rvw farm cancel [-h] --out OUT [--project PROJECT] [--json]
 ```
 
 ### `rvw farm notifications`
 
 ```text
-usage: rvw farm notifications [-h] --out OUT [--project PROJECT]
+usage: rvw farm notifications [-h] --out OUT [--project PROJECT] [--json]
 ```
 
 ### `rvw farm classify`
 
 ```text
-usage: rvw farm classify [-h] [--project PROJECT] reports [reports ...]
+usage: rvw farm classify [-h] [--project PROJECT] [--json] reports [reports
+    ...]
 ```
 
 ### `rvw farm recover`
 
 ```text
-usage: rvw farm recover [-h] --out OUT [--project PROJECT]
+usage: rvw farm recover [-h] --out OUT [--project PROJECT] [--json]
 ```
 
 ### `rvw farm plan`
@@ -879,13 +890,14 @@ usage: rvw farm recover [-h] --out OUT [--project PROJECT]
 ```text
 usage: rvw farm plan [-h] --manifest MANIFEST --adapter ADAPTER --root ROOT
     --image IMAGE --claim CLAIM [--shards SHARDS] [--jobs JOBS] [--identity
-    IDENTITY] [--project PROJECT]
+    IDENTITY] [--project PROJECT] [--json]
 ```
 
 ### `rvw farm live`
 
 ```text
 usage: rvw farm live [-h] --root ROOT --owner OWNER [--project PROJECT]
+    [--json]
 ```
 
 ### `rvw farm workflow`
@@ -893,28 +905,28 @@ usage: rvw farm live [-h] --root ROOT --owner OWNER [--project PROJECT]
 ```text
 usage: rvw farm workflow [-h] --root ROOT [--action
     {create,status,advance,capabilities}] [--plan PLAN] [--workflow-id
-    WORKFLOW_ID] [--owner OWNER] [--project PROJECT]
+    WORKFLOW_ID] [--owner OWNER] [--project PROJECT] [--json]
 ```
 
 ### `rvw farm select`
 
 ```text
 usage: rvw farm select [-h] --db DB --changed CHANGED --catalogue CATALOGUE
-    [--seconds SECONDS] [--project PROJECT]
+    [--seconds SECONDS] [--project PROJECT] [--json]
 ```
 
 ### `rvw farm triage`
 
 ```text
 usage: rvw farm triage [-h] --root ROOT [--baseline BASELINE] [--known KNOWN]
-    [--bundles BUNDLES] [--project PROJECT]
+    [--bundles BUNDLES] [--project PROJECT] [--json]
 ```
 
 ### `rvw farm budget`
 
 ```text
 usage: rvw farm budget [-h] --root ROOT --scope SCOPE [--limits LIMITS]
-    [--rate-per-core-hour RATE_PER_CORE_HOUR] [--project PROJECT]
+    [--rate-per-core-hour RATE_PER_CORE_HOUR] [--project PROJECT] [--json]
 ```
 
 ### `rvw farm batch`
@@ -922,7 +934,7 @@ usage: rvw farm budget [-h] --root ROOT --scope SCOPE [--limits LIMITS]
 ```text
 usage: rvw farm batch [-h] --plan PLAN [--action
     {render,submit,status,cancel,collect}] [--executor {local,k8s}] [--root
-    ROOT] [--ids IDS] [--project PROJECT]
+    ROOT] [--ids IDS] [--project PROJECT] [--json]
 ```
 
 ### `rvw farm queue`
@@ -930,14 +942,14 @@ usage: rvw farm batch [-h] --plan PLAN [--action
 ```text
 usage: rvw farm queue [-h] --root ROOT [--operation
     {submit,list,work,recover,cancel,events}] [--options OPTIONS] [--project
-    PROJECT]
+    PROJECT] [--json]
 ```
 
 ### `rvw farm serve`
 
 ```text
 usage: rvw farm serve [-h] --root ROOT --tokens TOKENS [--host HOST] [--port
-    PORT] [--project PROJECT]
+    PORT] [--project PROJECT] [--json]
 ```
 
 ### `rvw farm dashboard`
@@ -945,27 +957,29 @@ usage: rvw farm serve [-h] --root ROOT --tokens TOKENS [--host HOST] [--port
 ```text
 usage: rvw farm dashboard [-h] --root ROOT --out OUT [--core CORE] [--suite
     SUITE] [--config CONFIG] [--gate GATE] [--run RUN] [--project PROJECT]
+    [--json]
 ```
 
 ### `rvw fault`
 
 ```text
-usage: rvw fault [-h] [--project PROJECT] {sites,plan,run,report} ...
+usage: rvw fault [-h] [--project PROJECT] [--json] {sites,plan,run,report} ...
 ```
 
 ### `rvw fault sites`
 
 ```text
-usage: rvw fault sites [-h] --db DB [--include INCLUDE] [--exclude EXCLUDE]
-    [--generated] [--project PROJECT]
+usage: rvw fault sites [-h] (--db DB | --sites SITES) [--include INCLUDE]
+    [--exclude EXCLUDE] [--generated] [--project PROJECT] [--json]
 ```
 
 ### `rvw fault plan`
 
 ```text
-usage: rvw fault plan [-h] --db DB [--include INCLUDE] [--exclude EXCLUDE]
-    [--generated] [--kinds KINDS] [--window WINDOW] [--samples SAMPLES]
-    [--seed SEED] [--duration DURATION] --out OUT [--project PROJECT]
+usage: rvw fault plan [-h] (--db DB | --sites SITES) [--include INCLUDE]
+    [--exclude EXCLUDE] [--generated] [--kinds KINDS] [--window WINDOW]
+    [--samples SAMPLES] [--seed SEED] [--duration DURATION] --out OUT
+    [--project PROJECT] [--json]
 ```
 
 ### `rvw fault run`
@@ -973,20 +987,20 @@ usage: rvw fault plan [-h] --db DB [--include INCLUDE] [--exclude EXCLUDE]
 ```text
 usage: rvw fault run [-h] --plan PLAN --adapter ADAPTER --elf ELF --out OUT
     [--jobs JOBS] [--max-cycles MAX_CYCLES] [--timeout TIMEOUT] [--detections
-    DETECTIONS] [--watchdog] [--project PROJECT]
+    DETECTIONS] [--watchdog] [--project PROJECT] [--json]
 ```
 
 ### `rvw fault report`
 
 ```text
-usage: rvw fault report [-h] [--project PROJECT] directory
+usage: rvw fault report [-h] [--project PROJECT] [--json] directory
 ```
 
 ### `rvw formal`
 
 ```text
-usage: rvw formal [-h] [--project PROJECT]
-    {device-events,upf,power,buses,csr,bug-hunt,model-live,rtl-grid,rtl-refine,relation-strengthen,doctor,engines,engine-race,engine-bench,model-grid,security,regress,properties,simulate,liveness,scenario,psl,sva-lower,template,contracts,strengthen,testplan,shortest,proof-core,apps,autocheck,bench,recheck,cex,app-live,app-deadlock,sby-history,sby-regress,prove,depth-search,state-generate,rvfi-generate,sail-bitmanip,sail-zicond,custom-isa,custom-effects,profiles,riscv,connectivity,internal-path,datapath,equiv,bmc,from-sim,swarm,xprop,x-context,x-sweep,aiger-live,counter-quotient,cover-hunt,ic3-lemmas,initial-split,isa,lazy-ram,machine-checks,reset-audit,revision-bench,riscv-proof,sail-state,strategy,uf-prove}
+usage: rvw formal [-h] [--project PROJECT] [--json]
+    {device-events,upf,power,buses,csr,bug-hunt,model-live,rtl-grid,rtl-refine,relation-strengthen,doctor,engines,engine-race,engine-bench,model-grid,security,regress,properties,simulate,liveness,scenario,psl,sva-lower,template,contracts,strengthen,testplan,shortest,proof-core,apps,autocheck,bench,recheck,cex,app-live,app-deadlock,sby-history,sby-regress,prove,depth-search,state-generate,rvfi-generate,sail-bitmanip,sail-zicond,custom-isa,custom-effects,profiles,riscv,connectivity,internal-path,datapath,equiv,bmc,from-sim,swarm,xprop,x-context,x-sweep,aiger-live,counter-quotient,cover-hunt,ic3-lemmas,initial-split,isa,lazy-ram,machine-checks,reset-audit,revision-bench,riscv-proof,sail-state,strategy,sva-inspect,uf-prove}
     ...
 ```
 
@@ -994,21 +1008,21 @@ usage: rvw formal [-h] [--project PROJECT]
 
 ```text
 usage: rvw formal device-events [-h] --model MODEL --trace TRACE --out OUT
-    [--project PROJECT]
+    [--project PROJECT] [--json]
 ```
 
 ### `rvw formal upf`
 
 ```text
 usage: rvw formal upf [-h] --source SOURCE --bindings BINDINGS --out OUT
-    [--project PROJECT]
+    [--project PROJECT] [--json]
 ```
 
 ### `rvw formal power`
 
 ```text
 usage: rvw formal power [-h] --intent INTENT [--db DB] --out OUT [--project
-    PROJECT]
+    PROJECT] [--json]
 ```
 
 ### `rvw formal buses`
@@ -1016,13 +1030,14 @@ usage: rvw formal power [-h] --intent INTENT [--db DB] --out OUT [--project
 ```text
 usage: rvw formal buses [-h] --db DB --out OUT [--depth DEPTH] [--max-beats
     MAX_BEATS] [--type-report TYPE_REPORT] [--clocks CLOCKS] [--project
-    PROJECT]
+    PROJECT] [--json]
 ```
 
 ### `rvw formal csr`
 
 ```text
 usage: rvw formal csr [-h] --model MODEL --out OUT [--project PROJECT]
+    [--json]
 ```
 
 ### `rvw formal bug-hunt`
@@ -1101,36 +1116,36 @@ usage: rvw formal model-grid [-h] --manifest MANIFEST --out OUT [--json]
 ### `rvw formal security`
 
 ```text
-usage: rvw formal security [-h] [--project PROJECT] {pair,ift,prove,contract}
-    ...
+usage: rvw formal security [-h] [--project PROJECT] [--json]
+    {pair,ift,prove,contract} ...
 ```
 
 ### `rvw formal security pair`
 
 ```text
 usage: rvw formal security pair [-h] --manifest MANIFEST --out OUT [--timeout
-    TIMEOUT] [--project PROJECT]
+    TIMEOUT] [--project PROJECT] [--json]
 ```
 
 ### `rvw formal security ift`
 
 ```text
 usage: rvw formal security ift [-h] --top TOP --out OUT [--project PROJECT]
-    netlist
+    [--json] netlist
 ```
 
 ### `rvw formal security prove`
 
 ```text
 usage: rvw formal security prove [-h] --rtl RTL --top TOP --policy POLICY
-    --out OUT [--timeout TIMEOUT] [--project PROJECT]
+    --out OUT [--timeout TIMEOUT] [--project PROJECT] [--json]
 ```
 
 ### `rvw formal security contract`
 
 ```text
 usage: rvw formal security contract [-h] --out OUT [--project PROJECT]
-    manifest
+    [--json] manifest
 ```
 
 ### `rvw formal regress`
@@ -1144,7 +1159,7 @@ usage: rvw formal regress [-h] --out OUT [--jobs JOBS] [--timeout TIMEOUT]
 
 ```text
 usage: rvw formal properties [-h] [--channels CHANNELS] [--db DB] --out OUT
-    [--project PROJECT] spec
+    [--project PROJECT] [--json] spec
 ```
 
 ### `rvw formal simulate`
@@ -1152,7 +1167,7 @@ usage: rvw formal properties [-h] [--channels CHANNELS] [--db DB] --out OUT
 ```text
 usage: rvw formal simulate [-h] --verilog VERILOG [VERILOG ...] --top TOP
     --events EVENTS --out OUT [--backend {icarus,verilator}] [--observe
-    OBSERVE] [--check-x] [--timeout TIMEOUT] [--project PROJECT]
+    OBSERVE] [--check-x] [--timeout TIMEOUT] [--project PROJECT] [--json]
 ```
 
 ### `rvw formal liveness`
@@ -1160,47 +1175,47 @@ usage: rvw formal simulate [-h] --verilog VERILOG [VERILOG ...] --top TOP
 ```text
 usage: rvw formal liveness [-h] --top TOP --out OUT [--run] [--backend
     {suprove,l2s}] [--reset RESET] [--engine ENGINE] [--mode {prove,bmc}]
-    [--depth DEPTH] [--timeout TIMEOUT] [--project PROJECT] source
+    [--depth DEPTH] [--timeout TIMEOUT] [--project PROJECT] [--json] source
 ```
 
 ### `rvw formal scenario`
 
 ```text
-usage: rvw formal scenario [-h] [--project PROJECT] {plan,check} ...
+usage: rvw formal scenario [-h] [--project PROJECT] [--json] {plan,check} ...
 ```
 
 ### `rvw formal scenario plan`
 
 ```text
 usage: rvw formal scenario plan [-h] --out OUT --backend BACKEND [--project
-    PROJECT] source
+    PROJECT] [--json] source
 ```
 
 ### `rvw formal scenario check`
 
 ```text
 usage: rvw formal scenario check [-h] --out OUT --observed OBSERVED [--project
-    PROJECT] source
+    PROJECT] [--json] source
 ```
 
 ### `rvw formal psl`
 
 ```text
 usage: rvw formal psl [-h] [--clock CLOCK] --out OUT [--project PROJECT]
-    source
+    [--json] source
 ```
 
 ### `rvw formal sva-lower`
 
 ```text
-usage: rvw formal sva-lower [-h] --out OUT [--project PROJECT] source
+usage: rvw formal sva-lower [-h] --out OUT [--project PROJECT] [--json] source
 ```
 
 ### `rvw formal template`
 
 ```text
 usage: rvw formal template [-h] [--entries ENTRIES] [--width WIDTH] --out OUT
-    [--project PROJECT]
+    [--project PROJECT] [--json]
     {rob,freelist,rename,issue,lsq,credit,hpm,initialized_read,axi_lite,allocation_pool,freelist_conservation,cam_match,counter_bounds,fifo_order,fifo_flush,pipeline,mutex,arbiter,age_matrix,store_forward,store_forward_age,axis,apb,ahb_lite}
 ```
 
@@ -1256,8 +1271,8 @@ usage: rvw formal apps [-h] --out OUT [--depth DEPTH] [--engine ENGINE]
 usage: rvw formal autocheck [-h] --out OUT [--db DB] [--kind
     {stuck_at,toggle,fsm_state,fsm_transition,dead_code,onehot,mutex,array_bound,arithmetic_overflow,fifo,deadlock,livelock,arbiter_starvation,handshake_progress,stream_stability,fifo_stream,arbiter_transfer,counter_wrap}]
     [--max-properties MAX_PROPERTIES] [--depth DEPTH] [--engine ENGINE]
-    [--timeout TIMEOUT] [--mode {bmc,prove}] [--xprop] [--json] [--project
-    PROJECT] manifest
+    [--timeout TIMEOUT] [--mode {bmc,prove}] [--xprop] [--json]
+    [--event-model] [--async-reset] [--project PROJECT] manifest
 ```
 
 ### `rvw formal bench`
@@ -1303,7 +1318,8 @@ usage: rvw formal app-deadlock [-h] --manifest MANIFEST --out OUT [--json]
 ### `rvw formal sby-history`
 
 ```text
-usage: rvw formal sby-history [-h] [--project PROJECT] paths [paths ...]
+usage: rvw formal sby-history [-h] [--project PROJECT] [--json] paths [paths
+    ...]
 ```
 
 ### `rvw formal sby-regress`
@@ -1412,9 +1428,11 @@ usage: rvw formal internal-path [-h] --verilog VERILOG [VERILOG ...] --top TOP
 ### `rvw formal datapath`
 
 ```text
-usage: rvw formal datapath [-h] [--binding BINDING] --rtl RTL --model MODEL
-    --width {8,16,32,64} [--max-latency MAX_LATENCY] [--latency LATENCY]
-    [--unwind UNWIND] [--case {all,finite,normal,nan,infinity,zero,subnormal}]
+usage: rvw formal datapath [-h] [--unit
+    {mul,mulh,mulhu,mulhsu,div,divu,rem,remu,fpu-add,fpu-mul,fpu-fma,fpu-div,fpu-sqrt,fpu-convert}]
+    [--db DB] [--binding BINDING] [--rtl RTL] [--model MODEL] [--width
+    {8,16,32,64}] [--max-latency MAX_LATENCY] [--latency LATENCY] [--unwind
+    UNWIND] [--case {all,finite,normal,nan,infinity,zero,subnormal}]
     [--case-width {16,32,64}] [--rounding {0,1,2,3,4}] [--reference-tree
     REFERENCE_TREE] [--reference-source REFERENCE_SOURCE] [--reference-include
     REFERENCE_INCLUDE] [--timeout TIMEOUT] --out OUT [--json] [--project
@@ -1599,6 +1617,14 @@ usage: rvw formal strategy [-h] --model MODEL [--history HISTORY] --out OUT
     [--json] [--project PROJECT]
 ```
 
+### `rvw formal sva-inspect`
+
+```text
+usage: rvw formal sva-inspect [-h] --verilog VERILOG [VERILOG ...] --top TOP
+    --out OUT [--plugin PLUGIN] [--timeout TIMEOUT] [--project PROJECT]
+    [--json]
+```
+
 ### `rvw formal uf-prove`
 
 ```text
@@ -1634,22 +1660,23 @@ usage: rvw lint [-h] [--settings SETTINGS] [--benchmark BENCHMARK] [--protocol
 
 ```text
 usage: rvw lsp [-h] [--db DB] [--lint-settings LINT_SETTINGS] [--project
-    PROJECT]
+    PROJECT] [--json]
 ```
 
 ### `rvw mcp`
 
 ```text
-usage: rvw mcp [-h] [--list] [--profile
+usage: rvw mcp [-h] [--arguments ARGUMENTS] [--dry-run] [--list] [--profile
     {core,verification,formal,arch,debug,soc,all}] [--workflow WORKFLOW]
     [--only ONLY] [--json] [--transport {stdio,sse}] [--clients CLIENTS]
-    [--host HOST] [--port PORT] [--project PROJECT] [{audit}]
+    [--host HOST] [--port PORT] [--project PROJECT]
+    [{audit,command-map,call,describe,smoke}] [tool]
 ```
 
 ### `rvw memory`
 
 ```text
-usage: rvw memory [-h] [--project PROJECT]
+usage: rvw memory [-h] [--project PROJECT] [--json]
     {images,check,axiomatic,generate,tilelink-bind,directory,concurrent-smoke,concurrent-build,concurrent-run}
     ...
 ```
@@ -1658,34 +1685,35 @@ usage: rvw memory [-h] [--project PROJECT]
 
 ```text
 usage: rvw memory images [-h] --hart-image HART=ELF [--project PROJECT]
+    [--json]
 ```
 
 ### `rvw memory check`
 
 ```text
 usage: rvw memory check [-h] --trace TRACE --reference REFERENCE [--project
-    PROJECT]
+    PROJECT] [--json]
 ```
 
 ### `rvw memory axiomatic`
 
 ```text
 usage: rvw memory axiomatic [-h] --trace TRACE --reference REFERENCE [--model
-    {rvwmo,ztso}] [--limit LIMIT] [--project PROJECT]
+    {rvwmo,ztso}] [--limit LIMIT] [--project PROJECT] [--json]
 ```
 
 ### `rvw memory generate`
 
 ```text
 usage: rvw memory generate [-h] [--seed SEED] [--harts HARTS] [--length
-    LENGTH] [--project PROJECT]
+    LENGTH] [--project PROJECT] [--json]
 ```
 
 ### `rvw memory tilelink-bind`
 
 ```text
 usage: rvw memory tilelink-bind [-h] --database DATABASE --profile PROFILE
-    --out OUT [--project PROJECT]
+    --out OUT [--project PROJECT] [--json]
 ```
 
 ### `rvw memory directory`
@@ -1694,7 +1722,7 @@ usage: rvw memory tilelink-bind [-h] --database DATABASE --profile PROFILE
 usage: rvw memory directory [-h] [--profile {mesi,moesi}] [--lines LINES]
     [--requests REQUESTS] [--limit LIMIT] [--bug
     {lost_ack,stale_data,early_grant,starvation,cyclic_wait}] [--project
-    PROJECT]
+    PROJECT] [--json]
 ```
 
 ### `rvw memory concurrent-smoke`
@@ -1702,7 +1730,7 @@ usage: rvw memory directory [-h] [--profile {mesi,moesi}] [--lines LINES]
 ```text
 usage: rvw memory concurrent-smoke [-h] --out OUT [--seed SEED] [--harts
     HARTS] [--length LENGTH] [--gcc GCC] [--spike SPIKE] [--timeout TIMEOUT]
-    [--project PROJECT]
+    [--project PROJECT] [--json]
 ```
 
 ### `rvw memory concurrent-build`
@@ -1710,7 +1738,7 @@ usage: rvw memory concurrent-smoke [-h] --out OUT [--seed SEED] [--harts
 ```text
 usage: rvw memory concurrent-build [-h] --out OUT [--seed SEED] [--harts
     HARTS] [--length LENGTH] [--gcc GCC] [--base BASE] [--shared-base
-    SHARED_BASE] [--timeout TIMEOUT] [--project PROJECT]
+    SHARED_BASE] [--timeout TIMEOUT] [--project PROJECT] [--json]
 ```
 
 ### `rvw memory concurrent-run`
@@ -1720,7 +1748,7 @@ usage: rvw memory concurrent-run [-h] --out OUT --adapter ADAPTER --config
     CONFIG [--seed SEED] [--harts HARTS] [--length LENGTH] [--model
     {rvwmo,ztso}] [--gcc GCC] [--max-cycles MAX_CYCLES] [--timeout TIMEOUT]
     [--limit LIMIT] [--base BASE] [--shared-base SHARED_BASE] [--project
-    PROJECT]
+    PROJECT] [--json]
 ```
 
 ### `rvw ooo`
@@ -1742,7 +1770,7 @@ usage: rvw perf [-h] [--json] [--window WINDOW] [--isa {none,riscv}] [--lane
 ### `rvw plan`
 
 ```text
-usage: rvw plan [-h] [--project PROJECT] {status} ...
+usage: rvw plan [-h] [--project PROJECT] [--json] {status} ...
 ```
 
 ### `rvw plan status`
@@ -1755,7 +1783,8 @@ usage: rvw plan status [-h] [--previous PREVIOUS] [--out OUT] [--json]
 ### `rvw privilege`
 
 ```text
-usage: rvw privilege [-h] [--project PROJECT] {build,reference,check} ...
+usage: rvw privilege [-h] [--project PROJECT] [--json] {build,reference,check}
+    ...
 ```
 
 ### `rvw privilege build`
@@ -1782,7 +1811,15 @@ usage: rvw privilege check [-h] --results RESULTS --platform PLATFORM
 ### `rvw probes`
 
 ```text
-usage: rvw probes [-h] [--project PROJECT] {list,summary,convert} ...
+usage: rvw probes [-h] [--project PROJECT] [--json]
+    {check,list,summary,convert} ...
+```
+
+### `rvw probes check`
+
+```text
+usage: rvw probes check [-h] (--db DB | --events EVENTS) [--require REQUIRE]
+    [--json] [--project PROJECT]
 ```
 
 ### `rvw probes list`
@@ -1795,14 +1832,14 @@ usage: rvw probes list [-h] (--db DB | --events EVENTS) [--json] [--project
 ### `rvw probes summary`
 
 ```text
-usage: rvw probes summary [-h] [--project PROJECT] events
+usage: rvw probes summary [-h] [--project PROJECT] [--json] events
 ```
 
 ### `rvw probes convert`
 
 ```text
 usage: rvw probes convert [-h] --to
-    {bp-events,bus,cache,counts,csr-writes,etrace-ingress,hpm,interrupts,kanata,mmu}
+    {bp-events,bus,cache,counts,csr-writes,etrace-ingress,fault-sites,hpm,interrupts,kanata,mmu,mmu-walks}
     --out OUT [--c2 C2] [--c1 C1] [--probe PROBE] [--roi ROI] [--json]
     [--project PROJECT] events
 ```
@@ -1810,7 +1847,7 @@ usage: rvw probes convert [-h] --to
 ### `rvw query`
 
 ```text
-usage: rvw query [-h] [--project PROJECT]
+usage: rvw query [-h] [--project PROJECT] [--json]
     {build,build-hdl,info,where,drivers,loads,fanin,fanout,path,search,hierarchy,component,regs,export,explain,diff,definition,references,port-status,parameters,explain-module,type,hierarchy-diff}
     ...
 ```
@@ -1988,7 +2025,7 @@ usage: rvw reduce [-h] [--out OUT] [--signature SIGNATURE] [--modes MODES]
 ### `rvw regress`
 
 ```text
-usage: rvw regress [-h] [--project PROJECT]
+usage: rvw regress [-h] [--project PROJECT] [--json]
     {sim,speed-compare,speed-sweep,backends,uvm,uvm-ral,uvm-cpu,hdl,cocotb,random,sail-tests,privilege,mmu,vector,run,compare,gate,known,history,list,plan}
     ...
 ```
@@ -1996,15 +2033,23 @@ usage: rvw regress [-h] [--project PROJECT]
 ### `rvw regress sim`
 
 ```text
-usage: rvw regress sim [-h] [--project PROJECT]
-    {timing-handoff,profile,checkpoint,resume,reverse-step,suffix-check} ...
+usage: rvw regress sim [-h] [--project PROJECT] [--json]
+    {server,timing-handoff,profile,checkpoint,resume,reverse-step,suffix-check}
+    ...
+```
+
+### `rvw regress sim server`
+
+```text
+usage: rvw regress sim server [-h] --socket SOCKET --command COMMAND
+    [--timeout TIMEOUT] [--project PROJECT] [--json]
 ```
 
 ### `rvw regress sim timing-handoff`
 
 ```text
 usage: rvw regress sim timing-handoff [-h] --capabilities CAPABILITIES
-    [--project PROJECT] manifest
+    [--project PROJECT] [--json] manifest
 ```
 
 ### `rvw regress sim profile`
@@ -2012,20 +2057,21 @@ usage: rvw regress sim timing-handoff [-h] --capabilities CAPABILITIES
 ```text
 usage: rvw regress sim profile [-h] [--result RESULT] [--build-profile
     {default,threads-2,threads-4,split-10000}] [--out OUT] [--project PROJECT]
+    [--json]
 ```
 
 ### `rvw regress sim checkpoint`
 
 ```text
 usage: rvw regress sim checkpoint [-h] (--cycle CYCLE | --instruction
-    INSTRUCTION) --out OUT [--project PROJECT] manifest
+    INSTRUCTION) --out OUT [--project PROJECT] [--json] manifest
 ```
 
 ### `rvw regress sim resume`
 
 ```text
-usage: rvw regress sim resume [-h] --out OUT [--project PROJECT] manifest
-    snapshot
+usage: rvw regress sim resume [-h] --out OUT [--project PROJECT] [--json]
+    manifest snapshot
 ```
 
 ### `rvw regress sim reverse-step`
@@ -2033,14 +2079,14 @@ usage: rvw regress sim resume [-h] --out OUT [--project PROJECT] manifest
 ```text
 usage: rvw regress sim reverse-step [-h] --snapshot SNAPSHOT --current CURRENT
     --target TARGET [--max-seconds MAX_SECONDS] --out OUT [--project PROJECT]
-    manifest
+    [--json] manifest
 ```
 
 ### `rvw regress sim suffix-check`
 
 ```text
 usage: rvw regress sim suffix-check [-h] --position POSITION [--project
-    PROJECT] original resumed
+    PROJECT] [--json] original resumed
 ```
 
 ### `rvw regress speed-compare`
@@ -2048,7 +2094,7 @@ usage: rvw regress sim suffix-check [-h] --position POSITION [--project
 ```text
 usage: rvw regress speed-compare [-h] --pair BASELINE CANDIDATE --out OUT
     [--min-seconds MIN_SECONDS] [--resamples RESAMPLES] [--seed SEED]
-    [--project PROJECT]
+    [--project PROJECT] [--json]
 ```
 
 ### `rvw regress speed-sweep`
@@ -2057,7 +2103,7 @@ usage: rvw regress speed-compare [-h] --pair BASELINE CANDIDATE --out OUT
 usage: rvw regress speed-sweep [-h] --adapter ADAPTER --elf ELF --config
     CONFIG --lock LOCK [--threads THREADS [THREADS ...]] [--repeats REPEATS]
     [--max-cycles MAX_CYCLES] [--timeout TIMEOUT] [--min-seconds MIN_SECONDS]
-    [--seed SEED] --out OUT [--project PROJECT]
+    [--seed SEED] --out OUT [--project PROJECT] [--json]
 ```
 
 ### `rvw regress backends`
@@ -2079,6 +2125,7 @@ usage: rvw regress uvm [-h] --out OUT [--archive ARCHIVE] [--suite SUITE]
 
 ```text
 usage: rvw regress uvm-ral [-h] --map MAP --out OUT [--project PROJECT]
+    [--json]
 ```
 
 ### `rvw regress uvm-cpu`
@@ -2125,8 +2172,8 @@ usage: rvw regress sail-tests [-h] --model MODEL --work-dir WORK_DIR
 ### `rvw regress privilege`
 
 ```text
-usage: rvw regress privilege [-h] [--project PROJECT] {build,reference,check}
-    ...
+usage: rvw regress privilege [-h] [--project PROJECT] [--json]
+    {build,reference,check} ...
 ```
 
 ### `rvw regress privilege build`
@@ -2153,7 +2200,7 @@ usage: rvw regress privilege check [-h] --results RESULTS --platform PLATFORM
 ### `rvw regress mmu`
 
 ```text
-usage: rvw regress mmu [-h] [--project PROJECT]
+usage: rvw regress mmu [-h] [--project PROJECT] [--json]
     {build,reference,check,report,iommu} ...
 ```
 
@@ -2238,7 +2285,8 @@ usage: rvw regress gate [-h] [--core CORE] [--tier TIER] [--base-rev BASE_REV]
 ### `rvw regress known`
 
 ```text
-usage: rvw regress known [-h] [--project PROJECT] {add,list,remove} ...
+usage: rvw regress known [-h] [--project PROJECT] [--json] {add,list,remove}
+    ...
 ```
 
 ### `rvw regress known add`
@@ -2287,8 +2335,9 @@ usage: rvw regress plan [-h] --features FEATURES [--catalog CATALOG] [--json]
 ### `rvw sec`
 
 ```text
-usage: rvw sec [-h] [--project PROJECT]
-    {ift,contract,fault,gadgets,isolation,latency,suite} ...
+usage: rvw sec [-h] [--project PROJECT] [--json]
+    {ift,contract,fault,gadgets,ift-core,isolation,latency,spec-suite,suite}
+    ...
 ```
 
 ### `rvw sec ift`
@@ -2296,59 +2345,86 @@ usage: rvw sec [-h] [--project PROJECT]
 ```text
 usage: rvw sec ift [-h] --rtl RTL --top TOP --policy POLICY --stimulus
     STIMULUS --out OUT [--mode {precise,conservative}] [--db DB] [--project
-    PROJECT]
+    PROJECT] [--json]
 ```
 
 ### `rvw sec contract`
 
 ```text
 usage: rvw sec contract [-h] --manifest MANIFEST --out OUT [--project PROJECT]
+    [--json]
 ```
 
 ### `rvw sec fault`
 
 ```text
 usage: rvw sec fault [-h] --manifest MANIFEST --out OUT [--project PROJECT]
+    [--json]
 ```
 
 ### `rvw sec gadgets`
 
 ```text
 usage: rvw sec gadgets [-h] --out OUT [--seed SEED] [--threshold THRESHOLD]
-    [--declares-speculation] [--project PROJECT]
+    [--declares-speculation] [--project PROJECT] [--json]
+```
+
+### `rvw sec ift-core`
+
+```text
+usage: rvw sec ift-core [-h] --binding BINDING --policy POLICY (--elf ELF |
+    --asm ASM) --out OUT [--mode {precise,conservative}] [--project PROJECT]
+    [--json]
 ```
 
 ### `rvw sec isolation`
 
 ```text
 usage: rvw sec isolation [-h] --manifest MANIFEST --out OUT [--project
-    PROJECT]
+    PROJECT] [--json]
 ```
 
 ### `rvw sec latency`
 
 ```text
 usage: rvw sec latency [-h] --manifest MANIFEST --out OUT [--project PROJECT]
+    [--json]
+```
+
+### `rvw sec spec-suite`
+
+```text
+usage: rvw sec spec-suite [-h] --binding BINDING --template TEMPLATE --out OUT
+    [--gadget GADGET] [--project PROJECT] [--json]
 ```
 
 ### `rvw sec suite`
 
 ```text
 usage: rvw sec suite [-h] --report REPORT --out OUT [--project PROJECT]
+    [--json]
 ```
 
 ### `rvw sim`
 
 ```text
-usage: rvw sim [-h] [--project PROJECT]
-    {timing-handoff,profile,checkpoint,resume,reverse-step,suffix-check} ...
+usage: rvw sim [-h] [--project PROJECT] [--json]
+    {server,timing-handoff,profile,checkpoint,resume,reverse-step,suffix-check}
+    ...
+```
+
+### `rvw sim server`
+
+```text
+usage: rvw sim server [-h] --socket SOCKET --command COMMAND [--timeout
+    TIMEOUT] [--project PROJECT] [--json]
 ```
 
 ### `rvw sim timing-handoff`
 
 ```text
 usage: rvw sim timing-handoff [-h] --capabilities CAPABILITIES [--project
-    PROJECT] manifest
+    PROJECT] [--json] manifest
 ```
 
 ### `rvw sim profile`
@@ -2356,19 +2432,21 @@ usage: rvw sim timing-handoff [-h] --capabilities CAPABILITIES [--project
 ```text
 usage: rvw sim profile [-h] [--result RESULT] [--build-profile
     {default,threads-2,threads-4,split-10000}] [--out OUT] [--project PROJECT]
+    [--json]
 ```
 
 ### `rvw sim checkpoint`
 
 ```text
 usage: rvw sim checkpoint [-h] (--cycle CYCLE | --instruction INSTRUCTION)
-    --out OUT [--project PROJECT] manifest
+    --out OUT [--project PROJECT] [--json] manifest
 ```
 
 ### `rvw sim resume`
 
 ```text
-usage: rvw sim resume [-h] --out OUT [--project PROJECT] manifest snapshot
+usage: rvw sim resume [-h] --out OUT [--project PROJECT] [--json] manifest
+    snapshot
 ```
 
 ### `rvw sim reverse-step`
@@ -2376,14 +2454,14 @@ usage: rvw sim resume [-h] --out OUT [--project PROJECT] manifest snapshot
 ```text
 usage: rvw sim reverse-step [-h] --snapshot SNAPSHOT --current CURRENT
     --target TARGET [--max-seconds MAX_SECONDS] --out OUT [--project PROJECT]
-    manifest
+    [--json] manifest
 ```
 
 ### `rvw sim suffix-check`
 
 ```text
 usage: rvw sim suffix-check [-h] --position POSITION [--project PROJECT]
-    original resumed
+    [--json] original resumed
 ```
 
 ### `rvw speed-compare`
@@ -2391,7 +2469,7 @@ usage: rvw sim suffix-check [-h] --position POSITION [--project PROJECT]
 ```text
 usage: rvw speed-compare [-h] --pair BASELINE CANDIDATE --out OUT
     [--min-seconds MIN_SECONDS] [--resamples RESAMPLES] [--seed SEED]
-    [--project PROJECT]
+    [--project PROJECT] [--json]
 ```
 
 ### `rvw speed-sweep`
@@ -2400,7 +2478,7 @@ usage: rvw speed-compare [-h] --pair BASELINE CANDIDATE --out OUT
 usage: rvw speed-sweep [-h] --adapter ADAPTER --elf ELF --config CONFIG --lock
     LOCK [--threads THREADS [THREADS ...]] [--repeats REPEATS] [--max-cycles
     MAX_CYCLES] [--timeout TIMEOUT] [--min-seconds MIN_SECONDS] [--seed SEED]
-    --out OUT [--project PROJECT]
+    --out OUT [--project PROJECT] [--json]
 ```
 
 ### `rvw backends`
@@ -2413,7 +2491,7 @@ usage: rvw backends [-h] [--backend {verilator,icarus} | --hdl] [--json]
 ### `rvw uvm-ral`
 
 ```text
-usage: rvw uvm-ral [-h] --map MAP --out OUT [--project PROJECT]
+usage: rvw uvm-ral [-h] --map MAP --out OUT [--project PROJECT] [--json]
 ```
 
 ### `rvw uvm-cpu`
@@ -2442,8 +2520,8 @@ usage: rvw cocotb [-h] --out OUT [--seed SEED] [--timeout TIMEOUT] [--json]
 ### `rvw soc`
 
 ```text
-usage: rvw soc [-h] [--project PROJECT]
-    {audit,compose,export-ipxact,feedback,handoff,mbist,new,observe,observe-pack,peripheral,pair,generate,import-ipxact,capture-check,check}
+usage: rvw soc [-h] [--project PROJECT] [--json]
+    {audit,compose,export-ipxact,feedback,handoff,mbist,new,observe,observe-pack,peripheral,verify,pair,generate,import-ipxact,capture-check,check}
     ...
 ```
 
@@ -2516,6 +2594,13 @@ usage: rvw soc peripheral [-h] --name NAME --base BASE --out OUT [--json]
     [--project PROJECT] {clint,plic,gpio,timer,finisher,uart16550,spi,i2c}
 ```
 
+### `rvw soc verify`
+
+```text
+usage: rvw soc verify [-h] --out OUT [--manifest MANIFEST] [--timeout TIMEOUT]
+    [--json] [--project PROJECT] source
+```
+
 ### `rvw soc pair`
 
 ```text
@@ -2553,7 +2638,7 @@ usage: rvw soc check [-h] --bindings BINDINGS --db DB [--transactions
 ### `rvw uvm`
 
 ```text
-usage: rvw uvm [-h] [--project PROJECT]
+usage: rvw uvm [-h] [--project PROJECT] [--json]
     {gate-config,qualification,new,features,build,run,list,regress,coverage-merge}
     ...
 ```
@@ -2562,28 +2647,28 @@ usage: rvw uvm [-h] [--project PROJECT]
 
 ```text
 usage: rvw uvm gate-config [-h] --build BUILD --source-repo SOURCE_REPO --out
-    OUT [--seeds SEEDS [SEEDS ...]] [--project PROJECT]
+    OUT [--seeds SEEDS [SEEDS ...]] [--project PROJECT] [--json]
 ```
 
 ### `rvw uvm qualification`
 
 ```text
 usage: rvw uvm qualification [-h] --cpu-results CPU_RESULTS --probes PROBES
-    --out OUT [--project PROJECT]
+    --out OUT [--project PROJECT] [--json]
 ```
 
 ### `rvw uvm new`
 
 ```text
 usage: rvw uvm new [-h] --db DB --soc SOC --out OUT [--language {pyuvm,sv}]
-    [--profile {auto,cpu,apb,axi,axi-lite,tilelink,axis,uart,spi,i2c}] [--rtl
-    RTL [RTL ...]] [--project PROJECT]
+    [--profile {auto,cpu,apb,axi,axi-lite,tilelink,axis,uart,spi,i2c}]
+    [--adapter ADAPTER] [--rtl RTL [RTL ...]] [--project PROJECT] [--json]
 ```
 
 ### `rvw uvm features`
 
 ```text
-usage: rvw uvm features [-h] [--project PROJECT] results
+usage: rvw uvm features [-h] [--project PROJECT] [--json] results
 ```
 
 ### `rvw uvm build`
@@ -2591,20 +2676,20 @@ usage: rvw uvm features [-h] [--project PROJECT] results
 ```text
 usage: rvw uvm build [-h] --out OUT [--timeout TIMEOUT] [--archive ARCHIVE]
     [--require-feature REQUIRE_FEATURE] [--verilator VERILATOR] [--project
-    PROJECT] manifest
+    PROJECT] [--json] manifest
 ```
 
 ### `rvw uvm run`
 
 ```text
 usage: rvw uvm run [-h] --out OUT [--timeout TIMEOUT] --build BUILD --test
-    TEST [--seed SEED] [--project PROJECT]
+    TEST [--seed SEED] [--project PROJECT] [--json]
 ```
 
 ### `rvw uvm list`
 
 ```text
-usage: rvw uvm list [-h] [--project PROJECT] manifest
+usage: rvw uvm list [-h] [--project PROJECT] [--json] manifest
 ```
 
 ### `rvw uvm regress`
@@ -2612,65 +2697,66 @@ usage: rvw uvm list [-h] [--project PROJECT] manifest
 ```text
 usage: rvw uvm regress [-h] --out OUT [--timeout TIMEOUT] --build BUILD
     [--tests TESTS [TESTS ...]] [--seeds SEEDS [SEEDS ...]] [--project
-    PROJECT]
+    PROJECT] [--json]
 ```
 
 ### `rvw uvm coverage-merge`
 
 ```text
 usage: rvw uvm coverage-merge [-h] --out OUT [--timeout TIMEOUT] [--tool TOOL]
-    [--project PROJECT] inputs [inputs ...]
+    [--project PROJECT] [--json] inputs [inputs ...]
 ```
 
 ### `rvw verification-plan`
 
 ```text
-usage: rvw verification-plan [-h] [--project PROJECT] {generate,check} ...
+usage: rvw verification-plan [-h] [--project PROJECT] [--json]
+    {generate,check} ...
 ```
 
 ### `rvw verification-plan generate`
 
 ```text
 usage: rvw verification-plan generate [-h] --out OUT [--project PROJECT]
-    declaration
+    [--json] declaration
 ```
 
 ### `rvw verification-plan check`
 
 ```text
-usage: rvw verification-plan check [-h] --out OUT [--project PROJECT] plan
-    observations
+usage: rvw verification-plan check [-h] --out OUT [--project PROJECT] [--json]
+    plan observations
 ```
 
 ### `rvw vip`
 
 ```text
-usage: rvw vip [-h] [--project PROJECT] {list,buses,bench} ...
+usage: rvw vip [-h] [--project PROJECT] [--json] {list,buses,bench} ...
 ```
 
 ### `rvw vip list`
 
 ```text
-usage: rvw vip list [-h] [--project PROJECT]
+usage: rvw vip list [-h] [--project PROJECT] [--json]
 ```
 
 ### `rvw vip buses`
 
 ```text
-usage: rvw vip buses [-h] --db DB [--project PROJECT]
+usage: rvw vip buses [-h] --db DB [--project PROJECT] [--json]
 ```
 
 ### `rvw vip bench`
 
 ```text
 usage: rvw vip bench [-h] --db DB [--bus BUS] --out OUT [--clock CLOCK]
-    [--reset RESET] [--project PROJECT]
+    [--reset RESET] [--project PROJECT] [--json]
 ```
 
 ### `rvw wave`
 
 ```text
-usage: rvw wave [-h] [--project PROJECT]
+usage: rvw wave [-h] [--project PROJECT] [--json]
     {index,verify,list,changes,sample,cut,find,edges,why,seq,txn,diff,session,value,bench,profile,info}
     ...
 ```
@@ -2771,7 +2857,7 @@ usage: rvw wave diff [-h] [--json] [--period PERIOD] [--clock CLOCK]
 ### `rvw wave session`
 
 ```text
-usage: rvw wave session [-h] [--project PROJECT] {save,open} ...
+usage: rvw wave session [-h] [--project PROJECT] [--json] {save,open} ...
 ```
 
 ### `rvw wave session save`
@@ -2821,7 +2907,7 @@ usage: rvw wave info [-h] [--json] [--period PERIOD] [--clock CLOCK]
 ### `rvw workloads`
 
 ```text
-usage: rvw workloads [-h] [--project PROJECT] {list,build,verify} ...
+usage: rvw workloads [-h] [--project PROJECT] [--json] {list,build,verify} ...
 ```
 
 ### `rvw workloads list`
@@ -2988,6 +3074,14 @@ Starts a background job: yes.
 Report declared memory observations. Missing metrics stay unobserved.
 
 Arguments: `observations` (required), `project`.
+
+Starts a background job: yes.
+
+### `arch_ooo_designer`
+
+Write JSON and Markdown workload designer reports; model evidence only.
+
+Arguments: `plan` (required), `out` (required).
 
 Starts a background job: yes.
 
@@ -3171,7 +3265,7 @@ Starts a background job: no.
 
 Build a failure bundle with retirement history, waveform window and suspected unit. May re-run the adapter and invoke SpinalTrace. Returns a job; re-runs take the core lock.
 
-Arguments: `run_dir` (required), `out`, `retired`, `cut_cycles`, `no_rerun`, `rerun_window`, `konata`, `core_config`, `project`, `pdg`, `trace_wave`, `trace_cycles`, `no_spinaltrace`, `timeout`.
+Arguments: `run_dir` (required), `out`, `retired`, `cut_cycles`, `no_rerun`, `sim_server`, `rerun_window`, `konata`, `core_config`, `project`, `pdg`, `trace_wave`, `trace_cycles`, `no_spinaltrace`, `timeout`.
 
 Starts a background job: yes.
 
@@ -3389,7 +3483,7 @@ Convert a C2 RVFI trace or a Spike -l --log-commits log (optionally with registe
 
 Arguments: `source_format` (required), `source` (required), `out` (required), `values`.
 
-Starts a background job: no.
+Starts a background job: yes.
 
 ### `csim_models`
 
@@ -3659,7 +3753,7 @@ Starts a background job: yes.
 
 Check per-bit constants, declared dead code and FSM coverage. Optional output X propagation.
 
-Arguments: `manifest` (required), `out` (required), `db`, `kind`, `max_properties`, `depth`, `engine`, `timeout`, `mode`, `xprop`.
+Arguments: `manifest` (required), `out` (required), `db`, `kind`, `max_properties`, `depth`, `engine`, `timeout`, `mode`, `xprop`, `event_model`, `async_reset`.
 
 Starts a background job: yes.
 
@@ -3748,6 +3842,14 @@ Starts a background job: yes.
 Bit-blast mapped RTL and a C reference with CBMC. Fixed or bounded-latency transactions; no streaming proof.
 
 Arguments: `rtl` (required), `model` (required), `binding`, `max_latency`, `width` (required), `out` (required), `latency`, `unwind`, `case`, `case_width`, `rounding`, `reference_tree`, `reference_source`, `reference_include`, `timeout`.
+
+Starts a background job: yes.
+
+### `formal_datapath_kit`
+
+Propose datapath port bindings from SpinalDB. Designer confirmation is required. No proof runs.
+
+Arguments: `unit` (required), `db`, `width`, `out` (required).
 
 Starts a background job: yes.
 
@@ -4087,6 +4189,14 @@ Arguments: `model` (required), `history`, `out` (required).
 
 Starts a background job: yes.
 
+### `formal_sva_inspect`
+
+Inspect the native typed SVA AST. Parsing is not lowering or proof; missing dependency evidence stays inconclusive.
+
+Arguments: `verilog` (required), `top` (required), `out` (required), `plugin`, `timeout`.
+
+Starts a background job: yes.
+
 ### `formal_sva_lower`
 
 Lower finite clocked SVA to native Yosys assertions. Unsupported constructs give named errors.
@@ -4159,6 +4269,14 @@ Arguments: `job_id` (required).
 
 Starts a background job: no.
 
+### `job_events`
+
+Read recent progress log events from a background job.
+
+Arguments: `job_id` (required), `tail`.
+
+Starts a background job: no.
+
 ### `job_list`
 
 All background jobs of this server and their status.
@@ -4172,6 +4290,14 @@ Starts a background job: no.
 Last lines of a background job's log.
 
 Arguments: `job_id` (required), `tail`.
+
+Starts a background job: no.
+
+### `job_result`
+
+Fetch a completed background result or its current state.
+
+Arguments: `job_id` (required).
 
 Starts a background job: no.
 
@@ -4335,9 +4461,17 @@ Arguments: `plan` (required), `previous`, `out`.
 
 Starts a background job: yes.
 
+### `probes_check`
+
+Name missing required probe kinds or kind/name bindings. Presence is not runtime correctness.
+
+Arguments: `db`, `events`, `require`.
+
+Starts a background job: no.
+
 ### `probes_convert`
 
-Convert a rvw.probe-events/1 stream into a consumer format: bp-events, bus, cache, counts, csr-writes, etrace-ingress, hpm, interrupts, kanata, mmu. bp-events, counts and interrupts need the run C2 (c2); counts also needs C1 (c1). Refuses events that do not align with C2.
+Convert a rvw.probe-events/1 stream into a consumer format: bp-events, bus, cache, counts, csr-writes, etrace-ingress, fault-sites, hpm, interrupts, kanata, mmu, mmu-walks. bp-events, counts and interrupts need the run C2 (c2); counts also needs C1 (c1). Refuses events that do not align with C2.
 
 Arguments: `events` (required), `to` (required), `out` (required), `c2`, `c1`, `probe`, `roi_start`, `roi_end`.
 
@@ -4735,6 +4869,14 @@ Arguments: `rtl` (required), `top` (required), `policy` (required), `stimulus` (
 
 Starts a background job: yes.
 
+### `sec_ift_core`
+
+Track secret memory words and registers through a whole core in Verilator.
+
+Arguments: `binding` (required), `policy` (required), `out` (required), `elf`, `asm`, `mode`.
+
+Starts a background job: yes.
+
 ### `sec_isolation`
 
 Run declared PMP/ePMP or privilege-boundary paired leakage tests.
@@ -4748,6 +4890,14 @@ Starts a background job: yes.
 Measure operand-paired declared instruction or crypto-unit latency.
 
 Arguments: `manifest` (required), `out` (required).
+
+Starts a background job: yes.
+
+### `sec_spec_suite`
+
+Run RV32 speculative-leakage self-tests on a bound core in Verilator.
+
+Arguments: `binding` (required), `template` (required), `out` (required), `gadget`.
 
 Starts a background job: yes.
 
@@ -4765,7 +4915,7 @@ Save a stopped project native model and harness. Requires a snapshot port; from-
 
 Arguments: `manifest` (required), `out` (required), `cycle`, `instruction`.
 
-Starts a background job: no.
+Starts a background job: yes.
 
 ### `sim_profile`
 
@@ -4781,7 +4931,7 @@ Restore a native snapshot into a fresh project adapter and finish its C1/C2 run.
 
 Arguments: `manifest` (required), `snapshot` (required), `out` (required).
 
-Starts a background job: no.
+Starts a background job: yes.
 
 ### `sim_reverse_step`
 
@@ -4791,13 +4941,21 @@ Arguments: `manifest` (required), `snapshots` (required), `out` (required), `cur
 
 Starts a background job: yes.
 
+### `sim_server_request`
+
+Submit a serial job to a running local native simulation server. An op:shutdown request closes it.
+
+Arguments: `endpoint` (required), `job` (required), `timeout`.
+
+Starts a background job: yes.
+
 ### `sim_suffix_check`
 
 Require identical C2 prefix and suffix bytes with end events. Does not establish ISA correctness.
 
 Arguments: `original` (required), `resumed` (required), `position` (required).
 
-Starts a background job: no.
+Starts a background job: yes.
 
 ### `sim_timing_handoff`
 
@@ -4813,7 +4971,7 @@ Check complete declared bindings and export structural SoC checks. No proof resu
 
 Arguments: `source` (required), `db_path` (required), `bindings` (required), `out` (required).
 
-Starts a background job: no.
+Starts a background job: yes.
 
 ### `soc_compose`
 
@@ -4895,6 +5053,14 @@ Arguments: `kind` (required), `name` (required), `base` (required).
 
 Starts a background job: no.
 
+### `soc_verify`
+
+Generate SoC checks and run bound consumers. Missing evidence remains inconclusive.
+
+Arguments: `source` (required), `out` (required), `manifest`, `timeout`.
+
+Starts a background job: yes.
+
 ### `uvm_build`
 
 Build a pinned Accellera UVM bench on Verilator.
@@ -4939,7 +5105,7 @@ Starts a background job: no.
 
 Generate a database-selected project profile or an automatic APB reset bench.
 
-Arguments: `db` (required), `soc` (required), `out` (required), `rtl`, `language`, `profile`.
+Arguments: `db` (required), `soc` (required), `out` (required), `rtl`, `language`, `profile`, `adapter`.
 
 Starts a background job: no.
 
