@@ -112,7 +112,7 @@ def register(sub):
     p.set_defaults(func=run)
 
 
-def invoke(job,**args):
+def invoke(**args):
     return plan(args.get('project'),args.get('manifest'),args.get('inventory'))
 
 

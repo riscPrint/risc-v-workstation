@@ -51,3 +51,12 @@ def test_inventory_keeps_native_binding_separate(tmp_path):
     rows={r['kind']:r for r in plan(p,inventory='checks.json')['checks']}
     assert rows['custom']['native_inserted']==1
     assert rows['custom']['native_bindings'][0]['trigger_signal']=='trigger'
+
+
+def test_mcp_plan_uses_short_tool_dispatch(tmp_path):
+    from rvw.checks.commands.plan import mcp_tools
+    from rvw.mcp.registry import Registry
+    registry = Registry(mcp_tools())
+    result = registry.call('checks_plan', {'project': str(project(tmp_path))})
+    assert result['schema'] == 'rvw.check-plan/1'
+    assert any(row['kind'] == 'req_rsp' for row in result['checks'])
