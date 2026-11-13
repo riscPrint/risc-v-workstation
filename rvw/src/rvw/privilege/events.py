@@ -8,6 +8,8 @@ request is acknowledged only after its callback completes. No RTL names live her
 class MailboxDriver:
     def __init__(self, events):
         self.events = list(events)
+        if any(e.get('phase_gate') for e in self.events):
+            raise ValueError('phased reset requires PhaseDriver')
         steps = [e['step'] for e in events]
         if steps != sorted(set(steps)) or any(type(s) is not int or s <= 0 for s in steps):
             raise ValueError('mailbox steps must be positive and strictly increasing')

@@ -1,0 +1,123 @@
+{
+  "schema": "rvw.privilege/1",
+  "kind": "reset-inflight",
+  "reset": {
+    "pulses": 3,
+    "kinds": [
+      "cold",
+      "warm",
+      "local"
+    ],
+    "state": {
+      "privilege": {
+        "value": 3,
+        "mask": 3
+      }
+    },
+    "invalid_outputs": [
+      "request_valid"
+    ],
+    "phases": [
+      {
+        "name": "fetch",
+        "prepare": [
+          {
+            "action": "prepare_fetch"
+          }
+        ],
+        "cleanup": [
+          {
+            "action": "release_fetch"
+          }
+        ],
+        "state": {
+          "fetch_inflight": {
+            "value": 1,
+            "mask": 1
+          }
+        },
+        "min_wait_ticks": 2
+      },
+      {
+        "name": "load",
+        "prepare": [
+          {
+            "action": "prepare_load"
+          }
+        ],
+        "cleanup": [
+          {
+            "action": "release_load"
+          }
+        ],
+        "state": {
+          "load_inflight": {
+            "value": 1,
+            "mask": 1
+          }
+        },
+        "min_wait_ticks": 2
+      },
+      {
+        "name": "store",
+        "prepare": [
+          {
+            "action": "prepare_store"
+          }
+        ],
+        "cleanup": [
+          {
+            "action": "release_store"
+          }
+        ],
+        "state": {
+          "store_inflight": {
+            "value": 1,
+            "mask": 1
+          }
+        },
+        "min_wait_ticks": 2
+      },
+      {
+        "name": "trap",
+        "prepare": [
+          {
+            "action": "prepare_trap"
+          }
+        ],
+        "cleanup": [
+          {
+            "action": "release_trap"
+          }
+        ],
+        "state": {
+          "trap_inflight": {
+            "value": 1,
+            "mask": 1
+          }
+        },
+        "min_wait_ticks": 2
+      },
+      {
+        "name": "debug",
+        "prepare": [
+          {
+            "action": "prepare_debug"
+          }
+        ],
+        "cleanup": [
+          {
+            "action": "release_debug"
+          }
+        ],
+        "state": {
+          "debug_inflight": {
+            "value": 1,
+            "mask": 1
+          }
+        },
+        "min_wait_ticks": 2
+      }
+    ]
+  }
+}
