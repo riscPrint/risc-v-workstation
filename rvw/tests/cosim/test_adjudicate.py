@@ -1,4 +1,3 @@
-import copy
 from rvw.cosim.adjudicate import adjudicate
 
 
@@ -41,37 +40,19 @@ def test_coverage_or_missing_reference_never_passes():
     assert adjudicate(reports)['status'] == 'inconclusive'
 
 
-def test_native_spike_and_sail_flow(tmp_path, tmp_path_factory, monkeypatch):
-    from pathlib import Path
-    import pytest
-    from cosim_build import _build
-    from model_fixtures import generate
-    from rvw.cosim.platform import Platform
+
+def test_execute_uses_both_references(monkeypatch):
+    from rvw.cosim import cli
     from rvw.cosim.adjudicate import execute_json
-    import os
-    import shutil
-    selected = os.environ.get('RVW_SAIL') or shutil.which('sail_riscv_sim')
-    sail = Path(selected) if selected else None
-    if sail is None or not sail.is_file():
-        pytest.skip('native Sail executable not installed')
-    monkeypatch.setenv('RVW_SAIL', str(sail))
-    source = tmp_path/'both.S'
-    source.write_text('''.section .text
-.globl _start
-_start:
- li a0, 7
- la t0, tohost
- li t1, 1
- sd t1, 0(t0)
-1: j 1b
-.section .tohost,"aw",@progbits
-.balign 64
-.globl tohost
-tohost: .dword 0
-''')
-    elf = _build(tmp_path_factory, source)
-    trace = tmp_path/'trace.jsonl'
-    assert generate(elf, trace, Platform.load('boom'), 100)['termination'] == 'pass'
-    result = execute_json(elf=str(elf), trace=str(trace), core='boom', strict=True)
-    assert result['status'] == 'match', result
-    assert set(result['matched_references']) == {'spike', 'sail'}
+    calls = []
+    def check(action, **options):
+        calls.append((action, options))
+        return result()
+    monkeypatch.setattr(cli, 'execute_json', check)
+    for sail in ('/missing/sail', '/another/sail'):
+        monkeypatch.setenv('RVW_SAIL', sail)
+        report = execute_json(elf='input.elf', trace='trace.jsonl', strict=True)
+        assert report['status'] == 'match'
+        assert report['matched_references'] == ['spike', 'sail']
+    assert [options['model'] for _, options in calls] == ['spike', 'sail'] * 2
+    assert all(action == 'check' and options['strict'] for action, options in calls)
