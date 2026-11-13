@@ -4016,3 +4016,11 @@ Portfolio manifests can set `ric3_seed`. BMC probes the rIC3 help interface.
 When it has `--end`, a recorded wrapper translates SBY's older bounded flags.
 The wrapper clears inherited Python launcher variables and preserves native
 output and exit status. `compatibility_sha256` identifies its captured bytes.
+
+
+Composite SVA intents use `payloads` with per-field signal and width for Stream,
+or per-field maximum value for Flow. Single-payload intent inputs remain valid.
+Optional database binding emits `rvw.channel-bindings/1` beside the generated
+SVA. It contains `bindings`, `input_capture` and `db_warnings`. Domain anchors,
+clock/reset ports and widths resolve from SpinalDB. Ambiguous or mixed domains
+are refused. A database warning is not a current-RTL match or timing result.

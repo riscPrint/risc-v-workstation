@@ -137,7 +137,7 @@ def mcp_tools():
 
 
         ToolSpec("formal_properties", "Generate SVA for common intents and typed Stream/Flow channels. Does not run a proof.",
-                 schema({"spec": S, "channels": S, "out": S}, ["spec", "out"]), _properties, long=True),
+                 schema({"spec": S, "channels": S, "db": S, "out": S}, ["spec", "out"]), _properties, long=True),
         ToolSpec("formal_datapath", "Bit-blast mapped RTL and a C reference with CBMC. Fixed or bounded-latency transactions; no streaming proof.",
                  schema({"rtl": S, "model": S, "binding": S, "max_latency": I, "width": {"type": "integer", "enum": [8,16,32,64]},
                          "out": S, "latency": I, "unwind": I,
@@ -223,6 +223,8 @@ def _properties(job, **args):
     argv = [sys.executable, "-m", "rvw", "formal", "properties", args["spec"], "--out", args["out"]]
     if args.get("channels"):
         argv += ["--channels", args["channels"]]
+    if args.get("db"):
+        argv += ["--db", args["db"]]
     code = job.run(argv)
     if code:
         raise ToolError("SVA intent generation failed", {"exit_code": code, "log_tail": job.tail(30)})

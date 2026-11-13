@@ -1783,3 +1783,30 @@ Results: `/tmp/rvw-deep-ric3-bmc-after3-{counter,fault}/result.json`.
 The EBMC source build uses a macOS 14 deployment target on Darwin because the
 current Xcode C++ library rejects the upstream macOS 10.15 target. This changes
 build compatibility only. It does not change the verification source.
+
+
+### Composite channel payloads and database bindings
+
+Stream intents accept `payloads`, a list of `signal` and `width` entries.
+Every field gets its own stability check. Flow intents accept per-field
+`signal` and `max_value` entries. A Flow still has no backpressure contract.
+The earlier single-payload form remains supported.
+
+```sh
+rvw formal properties contracts.json --channels checks.json --db design.db --out channels.sv
+```
+
+Database binding resolves channel names to local RTL ports and payload widths.
+It uses the recorded clock domain. If the channel signals have no domain id,
+set `domain_signal` to a register path in that channel's component. The register
+provides a domain anchor; it does not supply a hand-written clock name. A direct
+clock/reset connection to a local input port must exist in the database.
+Mixed domains, ambiguous clocks, derived control expressions, clock enables,
+soft reset, pruned signals and nonlocal channel ports remain refused.
+Reset polarity comes from the database. Only rising-edge domains are supported.
+Use reviewed `max_values` keyed by payload path for composite Flow bounds.
+
+The generator writes `channels.sv.bindings.json` with `rvw.channel-bindings/1`,
+the resolved bindings, captured database identity and database staleness warnings.
+This records the supplied database, not physical timing or current RTL parity.
+`formal_properties` accepts the same `db` option through MCP.

@@ -28,7 +28,10 @@ def render(spec):
     reset = spec.get('reset')
     if reset is not None:
         reset = ident(reset)
-    disable = f'disable iff ({reset}) ' if reset else ''
+    reset_active = spec.get('reset_active', 'high')
+    if reset_active not in ('high', 'low'):
+        raise ValueError('reset_active must be high or low')
+    disable = f'disable iff ({"!" if reset_active == "low" else ""}{reset}) ' if reset else ''
     header = f'@(posedge {clock}) {disable}'
     declarations = []
     properties = []
@@ -43,17 +46,31 @@ def render(spec):
     if kind == 'handshake':
         valid, ready = signal('valid'), signal('ready')
         prop('hold', f'{valid} && !{ready} |=> {valid}')
-        width = spec.get('width', 1)
-        _positive(width, 'width')
-        old = previous('payload', width)
-        prop('stable', f'{valid} && !{ready} |=> {signal("payload")} == {old}')
+        payloads = spec.get('payloads')
+        if payloads is None:
+            payloads = [dict(signal=signal('payload'), width=spec.get('width', 1))]
+        if not payloads:
+            raise ValueError('handshake needs a nonempty payload')
+        for index, field in enumerate(payloads):
+            width, net = field['width'], ident(field['signal'])
+            _positive(width, 'width')
+            old = f'rvw_intent_{name}_payload_{index}'
+            declarations.append(f'reg [{width-1}:0] {old};\nalways @(posedge {clock}) {old} <= {net};')
+            prop('stable' if len(payloads) == 1 else f'stable_{index}',
+                 f'{valid} && !{ready} |=> {net} == {old}')
     elif kind == 'flow':
-        # Flow has no backpressure. Holding payload or valid on the next cycle
-        # would impose Stream semantics. Only check a declared value bound.
-        bound = spec.get('max_value')
-        if type(bound) is not int or bound < 0:
-            raise ValueError('Flow needs an explicit nonnegative max_value contract')
-        prop('payload_range', f'{signal("valid")} |-> {signal("payload")} <= {bound}')
+        # Every composite field needs its own reviewed range contract.
+        payloads = spec.get('payloads')
+        if payloads is None:
+            payloads = [dict(signal=signal('payload'), max_value=spec.get('max_value'))]
+        if not payloads:
+            raise ValueError('Flow needs a nonempty payload')
+        for index, field in enumerate(payloads):
+            bound = field.get('max_value')
+            if type(bound) is not int or bound < 0:
+                raise ValueError('Flow needs an explicit nonnegative max_value contract for each field')
+            suffix = 'payload_range' if len(payloads) == 1 else f'payload_range_{index}'
+            prop(suffix, f'{signal("valid")} |-> {ident(field["signal"])} <= {bound}')
     elif kind == 'one-hot':
         bits = signal('bits')
         prop('onehot0', f'({bits} & ({bits} - 1\'b1)) == 0')
@@ -116,11 +133,17 @@ def from_channels(report, bindings):
             if channel.get(role) is not None and channel[role] not in ports:
                 raise Unsupported('channel_port_binding', channel[role])
         payloads = channel.get('payload', [])
-        if len(payloads) != 1 or payloads[0] not in ports:
+        if not payloads or any(p not in ports for p in payloads):
             raise Unsupported('channel_payload_binding', key)
         spec = dict(binding)
         spec.update(kind='handshake' if channel['kind'].lower() == 'stream' else 'flow',
                     valid=ports[channel['valid']], payload=ports[payloads[0]])
+        if len(payloads) > 1:
+            widths = binding.get('widths', {})
+            if any(p not in widths for p in payloads):
+                raise Unsupported('channel_payload_width', key)
+            spec['payloads'] = [dict(signal=ports[p], width=widths[p],
+                                     max_value=binding.get('max_values', {}).get(p)) for p in payloads]
         if channel.get('ready') is not None:
             spec['ready'] = ports[channel['ready']]
         specs.append(spec)
@@ -129,8 +152,22 @@ def from_channels(report, bindings):
 
 def run(args):
     spec = json.loads(Path(args.spec).read_text())
+    binding_report = None
+    if getattr(args, 'db', None) and not args.channels:
+        raise ValueError('--db requires --channels')
     if args.channels:
-        intents = from_channels(json.loads(Path(args.channels).read_text()), spec)
+        report = json.loads(Path(args.channels).read_text())
+        if getattr(args, 'db', None):
+            from .channel_bindings import bind_database
+            from rvw.query.db import DesignDB
+            db = DesignDB(args.db)
+            try:
+                spec = bind_database(report, spec, db)
+                binding_report = dict(schema='rvw.channel-bindings/1', bindings=spec,
+                                      input_capture=db.capture.record(), db_warnings=db.staleness())
+            finally:
+                db.close()
+        intents = from_channels(report, spec)
     else:
         intents = spec['properties']
     ids = [i['id'] for i in intents]
@@ -141,4 +178,6 @@ def run(args):
     # mismatch between this library and the finite temporal frontend.
     lower('module rvw_intents;\n' + source + '\nendmodule')
     Path(args.out).write_text(source)
+    if binding_report is not None:
+        Path(str(args.out) + '.bindings.json').write_text(json.dumps(binding_report, indent=2) + '\n')
     return 0

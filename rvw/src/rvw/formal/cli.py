@@ -100,6 +100,7 @@ def register(sub) -> None:
     library = s.add_parser("properties", help="generate SVA intents or typed Stream/Flow assertions")
     library.add_argument("spec", help="JSON intent list or channel bindings")
     library.add_argument("--channels", help="SpinalChecks rvw.checks/1 report")
+    library.add_argument("--db", help="SpinalDB database for automatic channel port and clock binding")
     library.add_argument("--out", required=True)
     library.set_defaults(func=property_library.run)
 
