@@ -927,7 +927,8 @@ selected to compare fresh and resumed console output, retirements, final RTL
 state and RAM. A slice result has status `bounded`. It does not claim a Linux
 boot or shutdown. Bounded C2 and wave capture use the simulation-only observer
 described in [checkpoint debugging](rvw/linux/CHECKPOINT_DEBUG.md).
-Spike sampling remains separate. Checkpoints are trusted same-build data,
+Sampled Spike comparison uses [compact input history](rvw/linux/SAMPLED_REFERENCE.md).
+Checkpoints are trusted same-build data,
 not portable images.
 Set `RVW_BOOT_SECONDS=600` for a wall-time slice. The harness checks this limit
 every 1,024 cycles and saves the state at the next settled boundary. It excludes
@@ -1134,3 +1135,17 @@ CSR and FPR access, SBA, reset-halt, lower privilege modes, and load/store
 triggers. CSR access uses abstract postexec commands through the program
 buffer. `ndmreset` is exported but has no reset controller in this example.
 Its check is skipped with that reason. None of these omissions is a pass.
+## Sampled Linux checkpoint comparison
+
+The [project reference helper](rvw/linux/SAMPLED_REFERENCE.md) executes the
+prefix from original boot bytes, then compares N retirements after a
+checkpoint. It checks external-interrupt evidence and counter inputs without
+seeding the reference from saved DUT state. The Linux project profile models
+32-bit PMP width, Sv39-only SATP, absent debug triggers and read-only MTOPI.
+It does not enable a full AIA profile.
+
+A real Linux checkpoint sample matched 1,024 retirements after 2,044,149
+prefix retirements. It checked 205 trap events and 124 interrupts through
+that sample. Those event counts include the prefix. The sample does not
+establish full-prefix or whole-boot instruction parity. See the linked
+commands and native controls for the exact scope.
