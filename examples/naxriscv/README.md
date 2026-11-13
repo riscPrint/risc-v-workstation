@@ -982,3 +982,17 @@ RV64 ISA results on 2026-11-13, seed 1, zero added memory wait:
 Both comparisons have zero synchronization and no output masks.
 These are physical-memory ISA tests. They do not qualify Sv39 translation,
 interrupts or a whole core. C/F/D configurations are NOT RUN.
+
+
+## RV64 ACT4
+
+| Config | Selected / built | C1 pass | Complete strict Spike match |
+|---|---:|---:|---:|
+| `rv64ima` | 98 / 98 | 98 | 98 |
+| `rv64imasu` | 98 / 98 | 98 | 98 |
+
+Both runs use the [RV64 instruction profile](rvw/act4-rv64/README.md).
+The signatures use machine mode. S/U, standard Sm and Sv39 ACT4 are NOT RUN.
+Both comparisons have zero synchronization and no output masks.
+Use `NAX_ACT4_OUT` for the external build output. The existing RV32 suite
+and defaults are unchanged.

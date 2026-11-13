@@ -94,6 +94,8 @@ These are native RTL simulations. Core sources were not changed.
 | VexiiRiscv RV64IMA M/S/U, Sv39 | 302 | 302 | 0 | 302 | 0 | 302 |
 | VexiiRiscv RV32IMA M/S/U, standard boot | 270 | 270 | 0 | 270 | 0 | 270 |
 | NaxRiscv RV32IMA instruction profile | 69 | 69 | 69 | 0 | 69 | 0 |
+| NaxRiscv `rv64ima` instruction profile | 98 | 98 | 98 | 0 | 98 | 0 |
+| NaxRiscv `rv64imasu` instruction profile, M boot | 98 | 98 | 98 | 0 | 98 | 0 |
 | PicoRV32 RV32IM mapped Verilog profile | 51 | 51 | 50 | 1 | 50 | 1 |
 | Bundled BOOM profile | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN | NOT RUN |
 
@@ -196,3 +198,13 @@ The [RV64 supervisor profile](../examples/vexiiriscv/rvw/act4-64su/README.md)
 keeps standard boot and the explicit missing `mhpmevent3` finding. All 302 cases fail at the standard boot write to `mhpmevent3`, before their
 test bodies. No complete strict match is claimed. This is one compatibility
 finding across 302 cases. Its PMP granularity is 16 bytes and NA4 is absent.
+
+
+## NaxRiscv RV64 instruction profile
+
+The [RV64 profile](../examples/naxriscv/rvw/act4-rv64/README.md) uses a
+machine-mode Sail signature model for both target configs. It retains all
+98 selected test bodies and signature checks. Both targets have 98 C1
+passes and 98 complete strict Spike matches, with zero synchronization
+and no output masks. Standard Sm, S/U ACT4 and Sv39 ACT4 remain NOT RUN.
+The generated supervisor suites are separate results.
