@@ -105,6 +105,8 @@ def testbench(top, ports, observed, scale, rows, raw_pulses=None, state=None, cr
         prefix=prop['monitor']
         pending=f'dut.{prefix}_pending'+(f' + dut.{prefix}_delayed' if prop['nonoverlap'] else '')
         lines.append(f'$display("RVW_PENDING {prefix} %0d", {pending});')
+        if prop.get('disable_iff') is not None:
+            lines.append(f'$display("RVW_CANCELLED {prefix} %0d", dut.{prefix}_cancelled);')
     lines += ['$display("RVW_EVENT_DONE"); $finish;', 'end', 'endmodule']
     return '\n'.join(lines) + '\n'
 
@@ -121,6 +123,10 @@ def counts(output, properties):
         if tag not in result:
             raise ValueError('unattributed pending obligation output')
         result[tag]['pending']=int(value)
+    for tag,value in re.findall(r'^RVW_CANCELLED (\w+) (\d+)$',output,re.M):
+        if tag not in result:
+            raise ValueError('unattributed cancellation output')
+        result[tag]['cancelled']=int(value)
     return list(result.values())
 
 
@@ -164,6 +170,8 @@ def _run(args):
         if set(observed) - {p.name for p in ports if p.direction == 'output'}:
             raise ValueError('observations must name top-level outputs')
         scale, rows = events(event_data, inputs, clocks)
+        from .live_sim import validate_events
+        validate_events(rows,snap.unbounded_properties,inputs)
         state = None
         if event_data.get('state') is not None:
             if args.backend != 'icarus':

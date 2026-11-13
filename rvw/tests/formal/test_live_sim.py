@@ -34,7 +34,6 @@ def test_finite_local_scope_unchanged():
 @pytest.mark.parametrize('expr',[
     'req |-> s_eventually (b ##1 b)',
     'req |-> s_eventually @(posedge other) b',
-    'disable iff(a) req |-> s_eventually b',
 ])
 def test_refusals(expr):
     with pytest.raises(ValueError):

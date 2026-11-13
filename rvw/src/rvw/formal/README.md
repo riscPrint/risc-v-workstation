@@ -2005,10 +2005,24 @@ only witnessed completions. Cover obligations can remain pending without hits.
 
 This subset uses the existing clock-local sampled history. It accepts explicit
 top-input event clocks and Boolean operands. Unbounded sequence composition,
-local captures, cross-clock eventual response and disable cancellation remain
-outside native unbounded replay. C1 `unbounded_properties` records each property,
+local captures and cross-clock eventual response remain outside native
+unbounded replay. C1 `unbounded_properties` records each property,
 operator, event clock and implication form. These are finite native observations.
 They are not unbounded proofs or full simulator scheduling qualification.
+
+Native unbounded replay accepts `disable iff` from top-level input controls.
+An asserted condition cancels active and delayed requests between property
+events. Reports add `cancelled` counts. Cancellation produces neither success
+nor failure and does not erase an earlier failed observation. Clock history is
+not reset by cancellation.
+
+Disable controls must stay stable at every property event timestamp. They must
+not read their own event inputs. Internal expressions and sampled disable calls
+remain refused. These limits keep the current disable value separate from the
+pre-event values used by the property. Unknown disable values do not cancel.
+Finite native monitors also use Boolean-true cancellation, so X/Z disable values
+cannot hide a failed check. Four-state cases require Icarus. Formal unbounded
+cancellation remains outside the existing engine adapter.
 
 Runtime input updates preserve pre-event sampling on both backends.
 The same supported SVA set runs as simulation monitors on either backend. This

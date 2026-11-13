@@ -214,11 +214,12 @@ class Property:
             checks.append(f'(!{match(a, 0)} || {rhs})' if self.antecedents is not None else rhs)
         condition = ' && '.join(checks)
         enable = '1'
+        if self.disable:
+            lines.append(f"wire {prefix}_cancel = ((!(!({self.disable}))) === 1'b1);")
         if horizon:
             lines.append(f'reg [{horizon-1}:0] {prefix}_valid = 0;')
             sensitivity = f'posedge {self.clock}'
             if self.disable:
-                lines.append(f'wire {prefix}_cancel = ({self.disable});')
                 sensitivity += f' or posedge {prefix}_cancel'
             shift = (f'{{{prefix}_valid[{horizon-2}:0], 1\'b1}}' if horizon > 1 else "1'b1")
             lines.append(f'always @({sensitivity}) ' +
@@ -226,7 +227,7 @@ class Property:
                          f'{prefix}_valid <= {shift};')
             enable = f'{prefix}_valid[{horizon-1}]'
         if self.disable:
-            enable += f' && !({self.disable})'
+            enable += f' && !{prefix}_cancel'
         action = f'{self.kind} ({condition});'
         if simulation:
             yes = 'cover' if self.kind == 'cover' else 'pass'
