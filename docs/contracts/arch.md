@@ -320,3 +320,12 @@ paths, perturbation fraction and cycle budget. `rvw.ooo-sensitivity/1` records
 input hashes, baseline pooled IPC, per-trace runs, both perturbations, explicit
 invalid candidates and ranking by absolute IPC elasticity. Zero-valued switches
 and lists are excluded. Results measure local model effects, not RTL limits.
+
+## Shared compiler scheduling exports
+
+`compiler-export` consumes an O3 shared description and creates a new directory
+with LLVM and GCC fragments, an issue-rate include and source projection data.
+`rvw.compiler-roundtrip/1` reports parsed widths, resources, latency/occupancy
+pairs and reservations. The checker rejects drift from the projection.
+Assumed independent resources and unit occupancy remain explicit. Partial
+opcode mappings do not establish native compiler integration or RTL accuracy.
