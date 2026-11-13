@@ -441,8 +441,10 @@ for Scala 2.13.14 and 2.12.18. Each source checkout writes to its own
 lines above, and add `project/spinal-axis.sbt` with
 `Compile / unmanagedSourceDirectories += file(sys.env("RVW_HOME")) / "scripts" / "sbt"`.
 The [NaxRiscv example](../examples/naxriscv/README.md) uses this axis with
-Scala 2.12.18. RiscvSim, SpinalProbes, SpinalTrace and SpinalWaves compile on
-it. A member that older SpinalHDL versions lack is reached through the
+Scala 2.12.18. RiscvSim, SpinalProbes, SpinalTrace, SpinalWaves and SpinalDB
+compile on it. SpinalDB keeps typed shims for each SpinalHDL API level in
+`src/main/scala-spinal-1.15/` and `src/main/scala-spinal-legacy/`; the axis
+selects one (`SpinalAxis.api`). A member that older SpinalHDL versions lack is reached through the
 `SpinalCompat` objects, which state the fallback. Library code must stay
 source-compatible with Scala 2.12: use `mutable.Map(xs: _*)`, not
 `mutable.Map.from(xs)`, and `regex.pattern.matcher(s).matches()`, not

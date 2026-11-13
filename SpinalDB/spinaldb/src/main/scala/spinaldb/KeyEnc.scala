@@ -35,7 +35,7 @@ object KeyEnc {
   }
 
   private val Plain = "[A-Za-z0-9_$.]+".r
-  def name(s: String): String = if (s != null && s != "null" && Plain.matches(s)) s else str(s)
+  def name(s: String): String = if (s != null && s != "null" && Plain.pattern.matcher(s).matches()) s else str(s)
 
   /** `-` for null, else `<length>:<text>`: for text that is already a key or may hold register tokens. */
   def framed(s: String): String = if (s == null) "-" else s"${s.length}:$s"

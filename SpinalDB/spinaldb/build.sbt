@@ -14,6 +14,7 @@ lazy val spinaldb = (project in file("."))
   .dependsOn(spinalwaves, spinaltrace)
   .dependsOn(SpinalAxis.projects("core", "lib"): _*)
   .settings(SpinalAxis.settings("core", "lib"))
+  .settings(SpinalAxis.apiSources)
   .settings(
     name := "spinaldb",
     libraryDependencies ++= Seq(

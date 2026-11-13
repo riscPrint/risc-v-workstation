@@ -21,6 +21,17 @@ object SpinalAxis {
     s"source-${if (head.nonEmpty) head else Integer.toHexString(dir.getPath.hashCode)}"
   }
 
+  /** API level of the selected SpinalHDL: `1.15` (the release, or a source with its members) or
+    * `legacy` (a source without `MemReadAsyncWrite`, for example NaxRiscv's pin). */
+  lazy val api: String = source.fold("1.15") { dir =>
+    val mem = dir / "core/src/main/scala/spinal/core/Mem.scala"
+    if (mem.isFile && IO.read(mem).contains("class MemReadAsyncWrite")) "1.15" else "legacy"
+  }
+
+  /** Adds `src/main/scala-spinal-<api>` for libraries that keep version-specific shims there. */
+  def apiSources: Seq[Setting[_]] = Seq(
+    Compile / unmanagedSourceDirectories += (Compile / sourceDirectory).value / s"scala-spinal-$api")
+
   private def ref(module: String): ProjectReference = ProjectRef(source.get, module)
 
   /** `dependsOn` targets of the source axis (empty on the release axis). */

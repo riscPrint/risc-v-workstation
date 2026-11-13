@@ -80,3 +80,7 @@ runs = [{ suite = "isa", configs = ["rv32imasu"] }, { suite = "smoke", configs =
 
 [cosim]
 platform = "rvw/platform.json"
+
+[query]
+build = ["./rvw/build-db.sh"]
+db = "rvw/out/nax.db"

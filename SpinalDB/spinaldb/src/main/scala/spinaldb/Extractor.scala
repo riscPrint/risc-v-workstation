@@ -561,7 +561,7 @@ class Extractor(report: SpinalReport[_ <: Component], opts: DbOptions) {
         case Some(e) => s"${bt.getClass.getSimpleName}[${width(bt)}] ${KeyEnc.framed(text.key(e, if (bb.parent != null) bb.parent else bb))}"
         case None    => s"$$incomplete:generic ${bt.getClass.getName}"
       }
-    case v @ VerilogValues(x) if LibraryClasses.exact(v.getClass, classOf[VerilogValues]) => s"verilog ${KeyEnc.str(x)}"
+    case v @ SpinalApi.VerilogValue(x) if LibraryClasses.exact(v.getClass, classOf[SpinalApi.VerilogValue]) => s"verilog ${KeyEnc.str(x)}"
     case x: String        => s"String ${KeyEnc.str(x)}"
     case x: Int           => s"Int $x"
     case x: Double        => s"Double $x"
@@ -581,7 +581,7 @@ class Extractor(report: SpinalReport[_ <: Component], opts: DbOptions) {
     case x: BigInt if KeyEnc.scalar(x).isDefined    => Right(x.bigInteger.toString)
     case x: Boolean                                => Right(if (x) "1'b1" else "1'b0")
     case x: String if !x.exists(c => c == '"' || c == '\\' || c.isControl || c == ';' || c == '#') => Right("\"" + x + "\"")
-    case v @ VerilogValues(x) if LibraryClasses.exact(v.getClass, classOf[VerilogValues]) && x.nonEmpty && !x.exists(c => c.isWhitespace || c == ';' || c == '#' || c == '"') => Right(x)
+    case v @ SpinalApi.VerilogValue(x) if LibraryClasses.exact(v.getClass, classOf[SpinalApi.VerilogValue]) && x.nonEmpty && !x.exists(c => c.isWhitespace || c == ';' || c == '#' || c == '"') => Right(x)
     case bt: BaseType => bt.getTags().collectFirst { case t: GenericValue if LibraryClasses.exact(t.getClass, classOf[GenericValue]) => t.e } match {
       case Some(b: BoolLiteral) if ExprText.modelled(b.getClass) => Right(if (b.value) "1'b1" else "1'b0")
       case Some(l: BitVectorLiteral) if ExprText.plainLiteral(l).exists(_.signum >= 0) =>
@@ -692,7 +692,7 @@ class Extractor(report: SpinalReport[_ <: Component], opts: DbOptions) {
       case r: MemReadAsync      => memIdOf(r.mem).foreach(out(_, kind)); reads(r.address, "sel", out)
       case r: MemReadSync       => out(readState(r), kind)
       case r: MemReadWrite      => out(readState(r), kind)
-      case r: MemReadAsyncWrite => memIdOf(r.mem).foreach(out(_, kind)); reads(r.address, "sel", out)
+      case r: SpinalApi.AsyncWritePort => memIdOf(r.mem).foreach(out(_, kind)); reads(r.address, "sel", out)
       case other           => other.foreachExpression(reads(_, kind, out))
     }
 
@@ -749,7 +749,7 @@ class Extractor(report: SpinalReport[_ <: Component], opts: DbOptions) {
         case r: MemReadAsync      => (ExprText.rw(r.readUnderWrite), "", r.width)
         case r: MemReadSync       => (ExprText.rw(r.readUnderWrite), "", r.width)
         case r: MemReadWrite      => (ExprText.rw(r.readUnderWrite), ExprText.dw(r.duringWrite), r.width)
-        case r: MemReadAsyncWrite => (ExprText.rw(r.readUnderWrite), ExprText.dw(r.duringWrite), r.width)
+        case r: SpinalApi.AsyncWritePort => (ExprText.rw(r.readUnderWrite), ExprText.dw(r.duringWrite), r.width)
         case w: MemWrite          => ("", "", w.width)
         case _                    => ("", "", -1)
       }
@@ -758,7 +758,7 @@ class Extractor(report: SpinalReport[_ <: Component], opts: DbOptions) {
       val key = (if (known) "" else s"$$incomplete:port ${port.getClass.getName} ") +
         s"$kind<width=$width,$rw,$dw,vital=${port.isVital}> address ${key0(address, c)} data ${key0(data, c)} " +
         s"enable ${key0(enable, c)} write_enable ${key0(wen, c)} mask ${key0(mask, c)}" +
-        Option(tagsText(port.getTags())).map(" tags " + _).getOrElse("")
+        Option(tagsText(port match { case t: SpinalTagReady => t.getTags(); case _ => Nil })).map(" tags " + _).getOrElse("")
       val output: Integer = port match {
         case _: MemReadSync | _: MemReadWrite => Int.box(readState(port))
         case _ => null
@@ -849,7 +849,7 @@ class Extractor(report: SpinalReport[_ <: Component], opts: DbOptions) {
           memPort(r.mem, ctx, "read_sync", r, r.address, null, r.readEnable, null, null, r.clockDomain, r)
         case r: MemReadAsync =>
           memPort(r.mem, ctx, "read_async", r, r.address, null, null, null, null, null, r)
-        case r: MemReadAsyncWrite =>
+        case r: SpinalApi.AsyncWritePort =>
           // Its clock domain is the write's: compared like the other write ports.
           memPort(r.mem, ctx, "read_async_write", r, r.address, r.data, null, r.writeEnable, r.mask, r.clockDomain, r)
           memWrite(r.mem, ctx, r.address, r.data, Seq(r.writeEnable), r.mask, r)
@@ -930,7 +930,7 @@ class Extractor(report: SpinalReport[_ <: Component], opts: DbOptions) {
         .foreach { case (io, i) => portIndex.put(io, i) }
     }
     sigList.foreach { bt =>
-      if (!generated(bt) && LocName.matches(bt.getName()) && !bt.isReg && !bt.isInput && !bt.isOutput)
+      if (!generated(bt) && LocName.pattern.matcher(bt.getName()).matches() && !bt.isReg && !bt.isInput && !bt.isOutput)
         warn("signal named like a Spinal line name (when_/switch_..._lNN) but not named by Spinal: compared by its name")
       val c = bt.component
       // A bundle field defined in another file (MicroOp's fields) is reported where its bundle/Vec is
@@ -985,7 +985,7 @@ class Extractor(report: SpinalReport[_ <: Component], opts: DbOptions) {
         s"$$incomplete:mem ${m.getClass.getName} ${unmodelled.toSeq.sorted.mkString(",")} " else "") +
         s"words=${m.wordCount} width=${m.width} layout=${m._widths.mkString(",")} address=${m.addressWidth} " +
         s"technology=${Option(m.technology).map(t => if (LibraryClasses.isSpinal(t.getClass)) KeyEnc.str(t.technologyKind) else "$incomplete:memory technology").orNull} blackbox=${m.forceMemToBlackboxTranslation}/" +
-        s"${m.preventMemToBlackboxTranslation} init=${initHash}" + Option(tagsText(m.getTags())).map(" tags " + _).getOrElse("")
+        s"${SpinalApi.preventBlackbox(m)} init=${initHash}" + Option(tagsText(m.getTags())).map(" tags " + _).getOrElse("")
       tMem.add(memId.get(m), memSig.get(m), compId.get(c), m.getName(), memPath(m), m.width, m.wordCount,
         Option(m.technology).map(_.technologyKind).orNull, initHash, init.map(a => Int.box(a.length)).orNull, memKey, f, l)
     }

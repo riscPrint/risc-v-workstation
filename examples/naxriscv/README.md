@@ -71,7 +71,14 @@ Generic changes this needed (all version-neutral; the release axis still compile
   to `SPINAL_VERILATOR_FLAGS`, so Verilator reads its own context time. SpinalHDL
   1.15.0 has a null check instead.
 
-SpinalDB and SpinalChecks do not compile on this axis yet.
+- SpinalDB selects its API shim directory through `SpinalAxis.apiSources`:
+  `scala-spinal-legacy/` for this SpinalHDL revision. The legacy shim declares
+  the missing port and operator types (`MemReadAsyncWrite`, `Repeat`,
+  `VerilogValues`) as types that are never instantiated, so their cases never
+  match. `PhaseDeviceDefault`, `ObfuscateConfig` and
+  `preventMemToBlackboxTranslation` have stated fallbacks.
+
+SpinalChecks does not compile on this axis yet.
 
 ## Run from the core project
 
@@ -80,6 +87,9 @@ rvw regress list
 rvw regress run --suite isa --rvfi-trace --out rvw/out/isa --no-index --json
 rvw/run.sh run --elf rvw/out/isa/rv32ui-p-add --out rvw/out/add --seed 1 --mem-latency 0 --rvfi-trace --json
 rvw cosim check --elf rvw/out/isa/rv32ui-p-add --trace rvw/out/add/rvfi.jsonl --json
+rvw query build --config rv32imasu
+rvw query path integer_RfAllocationPlugin_logic_push_physicalRdNew_0 CommitPlugin_logic_commit_continue_1
+rvw query export blocks.json rvw/out/nax-blocks.json
 ```
 
 From the workstation checkout, also pass `--source "$NAXRISCV"` to
@@ -101,6 +111,15 @@ checkout.
 - Random memory timing (seeds 3 and 7, zero to three wait cycles per refill) on
   `lw`, `sb`, `div`, `amoadd_w`, `lrsc` and `fence_i`: 12 pass, 12 match.
 - No negative control was run.
+- `rvw/build-db.sh rv32imasu rvw/out/nax.db`: 17 s (elaboration 3.3 s,
+  extraction 6.0 s). 30 components, 8278 signals, 1482 registers, 154 memories,
+  10,826 assignments, 17,363 dependency edges. PDG, SpinalBlocks and HGLDD
+  artifacts written; 50 warnings (mixed-width memory writes are not modelled in
+  the PDG). `info`, `search`, `drivers`, `fanin`, `path`, `hierarchy` and `regs`
+  answer; for example `rvw query path integer_RfAllocationPlugin_logic_push_physicalRdNew_0
+  CommitPlugin_logic_commit_continue_1` finds the free-list path through the
+  commit stage. `rvw query export blocks.json` writes 24 module diagrams for
+  SpinalBlocks.
 
 These checks do not prove full ISA, privileged-mode, interrupt, MMU, formal or
 hardware correctness. They apply only to this configuration.
@@ -145,5 +164,7 @@ stores, because the data cache is write-back.
 - One configuration. No RVC, FPU, interrupts schedules, devices, Konata or
   riscv-formal monitor (`--irq-schedule`, `--konata`, `--rvfi-check` and
   `--soc-map` are refused).
-- `rvw query` and generated checks need SpinalDB and SpinalChecks on the source
-  axis; they are not available yet.
+- Generated checks need SpinalChecks on the source axis; not available yet.
+- `rvw query build` sets `NAXRISCV` to the project root. Keep the project files in
+  the NaxRiscv checkout, or call `rvw/build-db.sh rv32imasu rvw/out/nax.db` with
+  `NAXRISCV` set.

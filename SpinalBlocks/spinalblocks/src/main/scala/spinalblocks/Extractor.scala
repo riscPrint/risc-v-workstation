@@ -62,7 +62,7 @@ class Extractor(sourceRoots: Seq[Path]) {
     case bt: BaseType =>
       val p = SpinalBlocksAccess.anonymSignalPrefix(bt)
       val name = bt.getName()
-      bt.isUnnamed || name.startsWith("_" + p) || name.startsWith(p + "_") || GeneratedName.matches(name) ||
+      bt.isUnnamed || name.startsWith("_" + p) || name.startsWith(p + "_") || GeneratedName.pattern.matcher(name).matches() ||
         SpinalBlocksAccess.namePriority(bt) == Nameable.REMOVABLE
     case other => other.isUnnamed
   }
