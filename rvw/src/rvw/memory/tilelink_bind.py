@@ -1,4 +1,4 @@
-"""Generate a bounded single-beat TL-C monitor from project-selected SpinalDB signals."""
+"""Generate a bounded TL-C monitor from project-selected SpinalDB signals."""
 import json
 from pathlib import Path
 import re
@@ -140,8 +140,12 @@ def generate(database, profile, out):
     address = int(config['line_address'], 0)
     if address < 0 or address >= 1 << config['address_bits'] or address % config['line_bytes']:
         raise ValueError('line address must fit the bus and be aligned')
-    if config['line_bytes']*8 != config['data_bits'] or config['line_bytes'] & (config['line_bytes']-1):
-        raise ValueError('this monitor supports one power-of-two single-beat line only')
+    if config['line_bytes'] & (config['line_bytes']-1) or config['data_bits'] <= 0 or config['data_bits']%8 or config['line_bytes']*8%config['data_bits'] or config['line_bytes']*8 < config['data_bits']:
+        raise ValueError('line must contain a positive whole number of equal power-of-two data beats')
+    if (config['data_bits']//8) & ((config['data_bits']//8)-1):
+        raise ValueError('power-of-two data beat width required')
+    if config['line_bytes'].bit_length()-1 >= 1 << config['size_bits']:
+        raise ValueError('line size does not fit the TL-C size field')
     if not (1 <= config['source_bits'] <= 8 and 1 <= config['sink_bits'] <= 8 and config['bound_cycles'] > 0):
         raise ValueError('invalid bounded monitor dimensions')
     if len(config['clients']) != 2:
@@ -171,7 +175,7 @@ def generate(database, profile, out):
             if row['component_id'] != component or row['width'] != width or row.get('pruned', 0):
                 raise ValueError('binding signal scope, width or pruning mismatch')
             return identifier(row['name'])
-        for port, width in [('clock', 1), ('reset', 1), ('expected_data', config['data_bits'])]:
+        for port, width in [('clock', 1), ('reset', 1), ('expected_data', config['line_bytes']*8)]:
             mappings.append(f'.{port}({signal(config[port], width)})')
         if any(config['expected_data'] in client['signals'].values() for client in config['clients']):
             raise ValueError('oracle must not be a captured channel field')
@@ -180,8 +184,11 @@ def generate(database, profile, out):
                 raise ValueError('complete TL-C channel field mapping required')
             for name, width in FIELDS.items():
                 mappings.append(f'.c{c}_{name}({signal(client["signals"][name], widths.get(width, width))})')
-        rtl = monitor(config['source_bits'], config['sink_bits'], config['address_bits'], config['data_bits'],
+        rtl = monitor(config['source_bits'], config['sink_bits'], config['address_bits'], config['line_bytes']*8,
                       int(config['line_address'], 0), config['bound_cycles'], config.get('trunk_dirty', False), config['size_bits'])
+        from .tilelink_beats import wrap
+        rtl = wrap(rtl, FIELDS, config['source_bits'], config['sink_bits'], config['address_bits'], config['data_bits'],
+                   config['size_bits'], config['line_bytes'], config['bound_cycles'])
         binding = f'bind {module} rvw_tlc_monitor rvw_tlc_bound(\n  '+',\n  '.join(mappings)+'\n);\n'
     finally:
         connection.close()
@@ -193,4 +200,5 @@ def generate(database, profile, out):
             stream.write(data)
     return {'schema': 'rvw.tlc-monitor/1', 'status': 'generated', 'monitor': str(monitor_path),
             'bind': str(bind_path), 'executed': False, 'fairness': config['fairness'],
-            'scope': 'two-client single-line single-beat accepted channels; bounded progress'}
+            'beats_per_line': config['line_bytes']*8//config['data_bits'],
+            'scope': 'two-client single-line complete accepted messages; bounded progress'}

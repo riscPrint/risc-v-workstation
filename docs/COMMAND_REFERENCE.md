@@ -3366,7 +3366,7 @@ Starts a background job: no.
 
 ### `memory_tilelink_bind`
 
-Generate a bounded two-client single-beat TL-C monitor and bind from SpinalDB.
+Generate a bounded two-client TL-C complete-message monitor and bind from SpinalDB.
 
 Arguments: `database` (required), `profile` (required), `out` (required).
 

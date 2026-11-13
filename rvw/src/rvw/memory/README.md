@@ -99,7 +99,8 @@ SystemVerilog monitor and bind. Existing output files are not overwritten.
 The project profile uses `rvw.tlc-bind/1`. It supplies `source_bits`, `sink_bits`,
 `address_bits`, `data_bits`, `size_bits`, `line_bytes`, hex `line_address`,
 positive `bound_cycles`, and a named `fairness` service assumption. The line
-must fit in one beat. Multi-beat and other-line traffic are outside this profile.
+contains one or more complete power-of-two data beats. Other-line traffic is
+outside this profile.
 
 `clients` has two rows with `bundle_id` and a `signals` map from channel field
 name to SpinalDB signal ID. `FIELDS` in `tilelink_bind.py` lists every required
@@ -110,7 +111,11 @@ The profile also supplies signal IDs for active-high `clock` and `reset` and
 come from a project stimulus/reference signal. It must not come from channel
 read data. The generator cannot prove that independence from a signal ID.
 
-The monitor checks accepted Acquire, Probe, ProbeAck, Release, Grant,
+The monitor assembles accepted C/D data beats into complete messages. Headers
+must stay constant through a message. Partial messages retain a bounded age.
+The expected-data signal has one full line of bits. The project must hold the
+correct reference value for each message epoch, including simultaneous C/D
+completions. The monitor checks accepted Acquire, Probe, ProbeAck, Release, Grant,
 ReleaseAck and GrantAck actions. It tracks source and sink lifetimes, probe
 responses, N/B/T permission safety, complete-line data and bounded outstanding
 ages. Set `trunk_dirty` only if the project model treats every Trunk copy as
@@ -123,8 +128,7 @@ The native test uses a scripted two-client channel fixture and a typed SQL
 fixture. Verilator elaborates the generated bind and runs five injected defects:
 early grant, stale grant data, lost GrantAck, missing grant and stale intervention
 data. This is monitor runtime evidence. It is not a real home/cache refinement
-proof or a production design-database integration result. Multi-beat channels,
-real coherent-fabric campaigns and independent protocol-model cross-checks
+proof or a production design-database integration result. Real coherent-fabric campaigns and independent protocol-model cross-checks
 remain open.
 
 ## Queued directory experiments
@@ -151,3 +155,9 @@ inconclusive. The report records source/ELF hashes, ISA, seed, hart count and
 the Spike command. It also records `ordering:not_checked` and `rtl:not_run`.
 A pass establishes native completion only. It is not an RVWMO result. Capture
 a project C2/2 trace with complete dependencies to use the axiomatic checker.
+
+The multi-beat native smoke uses 64-byte lines over 64-bit data beats. It rejects
+an early grant, a corrupt middle D beat, a truncated ProbeAckData, a changed D
+header, a corrupt middle C beat and a truncated ReleaseData. The original
+single-beat cases remain regression checks. This is scripted channel evidence.
+It does not establish refinement of a real cache/home implementation.
