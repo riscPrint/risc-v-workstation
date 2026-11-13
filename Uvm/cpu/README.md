@@ -137,10 +137,13 @@ Unknown-reset safe CSRs receive an explicit initialization write before the
 first read. Other unknown resets are refused. Absent CSRs require a trap.
 The generator never infers write safety or reset values from the catalog.
 
-Unit tests qualify the generator and comparator. The live VexRiscv binding
-does not yet implement the instruction-execution callback. Native CSR,
-architectural interrupt and debug qualification remain open. The selected
-VexTop has no debug port. No pin-only test establishes debug architecture.
+Unit tests cover the generator and comparator. The later
+[VexRiscv native sequences](../examples/vexriscv/README.md#native-interrupt-and-csr-sequences)
+run 88 catalog CSR checks and 145 Spike retirement comparisons. Two IRQ
+seeds check eight synchronized events each. These finite runs supersede
+the initial missing-callback limit. Denied CSR accesses, wider architectural
+state and debug qualification remain open. The selected VexTop has no
+debug port. No pin-only test establishes debug architecture.
 
 ## Architectural event service
 
@@ -163,7 +166,11 @@ See [the measured matrix](../QUALIFICATION.md). On 2026-11-13, the SV CPU
 fixture built once on Verilator 5.049 in about 109 seconds. Its two normal
 runs and three corruption checks passed. The runner now accepts
 `--build-timeout` with a 600-second default. The run timeout remains short.
-This is the ADDI/MISA fixture. VexRiscv SV CPU qualification remains open.
+This is the ADDI/MISA fixture. The later
+[live VexRiscv CPU record](../examples/vexriscv/README.md) adds native ISA,
+interrupt and CSR slices. Full SV CPU and UVM qualification remain open.
+[PR #1183](https://github.com/riscPrint/risc-v-workstation/pull/1183)
+retains the installed Verilator covergroup failure after data-check repair.
 
 Refresh the matrix after native runs:
 

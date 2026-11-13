@@ -52,7 +52,8 @@ are outside this profile. Python refuses unknown pin samples. SV uses
 two-state pins. Projects must reset scoreboards with the DUT and cancel
 in-flight sends during reset.
 
-UVM runtime builds, cocotb RTL runs and DUT FIFO tests were not run.
+The initial test set had no runtime campaign. See the measured SV and
+Python RTL results below. General DUT FIFO qualification remains open.
 Issue #204 remains open for native runtime and project FIFO qualification.
 
 ## Bounded Python RTL evidence

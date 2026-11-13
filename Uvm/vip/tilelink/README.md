@@ -55,7 +55,8 @@ reset hook. A project must reset its scoreboard with its DUT.
 The provided memory scoreboards use serial request order. A project with
 concurrent overlapping writes must supply its own visibility policy.
 SV and Python share the declared operations, but each runtime still needs
-qualification. UVM runtime builds and cocotb RTL runs were not run.
+qualification. The initial test set had no runtime campaign. The measured SV and Python
+RTL results below supersede that initial limit.
 Lint and Python cycle tests do not prove native subordinate behavior.
 
 ## Bounded Python RTL evidence

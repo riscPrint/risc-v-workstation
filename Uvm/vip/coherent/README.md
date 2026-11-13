@@ -22,8 +22,8 @@ The fixture copies events and `+buggy` changes data. Reset the scoreboard
 with the DUT between campaigns; mid-transaction reset is not qualified.
 
 Run `rvw/.venv/bin/python -m pytest rvw/tests/test_vip_coherent.py -q`.
-Lint the four SV files with pinned UVM. UVM runtime builds, coherent RTL
-bridges and licensed CHI qualification were not run for this change.
+Lint the four SV files with pinned UVM. The later seeded RTL and SV campaigns below supply bounded fixture
+evidence. General coherent bridges and licensed CHI qualification remain open.
 
 ## Seeded RTL endpoint result
 

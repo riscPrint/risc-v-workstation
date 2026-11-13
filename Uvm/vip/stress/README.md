@@ -17,7 +17,8 @@ fixture is not a NoC or DRAM controller. Python's scheduler is not RTL.
 
 Run `rvw/.venv/bin/python -m pytest rvw/tests/test_vip_stress.py -q`.
 Lint the four SV files with pinned UVM. Native controller/NoC campaigns,
-UVM runtime builds and electrical memory validation were not run.
+The measured SV campaign below supplies runtime fixture evidence.
+Electrical memory validation remains open.
 
 ## Measured SV campaign
 
