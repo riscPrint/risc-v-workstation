@@ -1344,7 +1344,8 @@ usage: rvw lint [-h] [--settings SETTINGS] [--benchmark BENCHMARK] [--protocol
 ### `rvw mcp`
 
 ```text
-usage: rvw mcp [-h] [--list] [--only ONLY] [--json] [--project PROJECT]
+usage: rvw mcp [-h] [--list] [--only ONLY] [--json] [--transport {stdio,sse}]
+    [--clients CLIENTS] [--host HOST] [--port PORT] [--project PROJECT]
 ```
 
 ### `rvw memory`

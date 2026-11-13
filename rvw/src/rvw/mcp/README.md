@@ -102,3 +102,42 @@ A budget stop fails the worker call and retains its cost report in job status.
 
 See the complete [CLI and MCP reference](../../../../docs/COMMAND_REFERENCE.md) for command paths,
 options and built-in tool arguments. The reference is checked against the code.
+
+## Authenticated remote MCP
+
+`rvw mcp --transport sse --clients clients.json --host 127.0.0.1 --port 8766`
+serves MCP over HTTP/SSE. Connect to `/sse` with `Authorization: Bearer TOKEN`.
+The SDK advertises `/messages` for client messages. Both endpoints require the
+same token. Each token owns its transport sessions, registry and job manager.
+Another client cannot read, list or cancel its jobs. Disconnecting SSE does not
+cancel a job. Reconnect with the same token to inspect it. Server shutdown stops
+owned jobs. Process-owned locks and cancellation retain their existing behavior.
+
+The JSON file maps secret tokens to policy objects, for example:
+
+```json
+{"replace-with-a-secret":{"tools":["evidence_query"],"read_only":true,
+ "project":"/path/rvw.toml","budget":{"wall_seconds":60,"job_count":5}}}
+```
+
+Every policy needs an explicit tool allowlist. Unknown tools are refused.
+`read_only: true` permits only the implemented read-only query role:
+`query_drivers`, `query_loads`, `query_path`, `query_where`, `evidence_query`.
+Job status/log/list/cancel remain available for that client's own calls.
+Project selection is fixed by policy; calls cannot override it with project or
+core. This is a trusted-project service, not a filesystem sandbox.
+
+All allowed remote tools run as background jobs in owned workers, including
+short queries. Their calls return job IDs. `budget` uses the existing supervisor's
+CPU-seconds, wall-seconds and launch-count units for each run. The policy applies
+without changing another client's environment. Cost reports remain in job status.
+Budget exhaustion is an error or inconclusive result, never accept. Unimportable
+third-party handlers are refused. Client totals across multiple runs are not
+cumulative budgets; use farm queue project budgets for that scheduling model.
+
+Install the `mcp` extra, including uvicorn. Bind locally and put TLS at an
+existing reverse proxy for remote clients. The SDK retains its transport host
+checks. Tokens grant trusted tool access. There are no token expiry, arbitrary
+read-only roles, durable remote MCP job stores or hostile-input guarantees.
+Tests cover a local HTTP/SSE protocol roundtrip, auth, ownership and budgeted
+worker errors. No cloud agent or external proxy was tested.
