@@ -90,7 +90,7 @@ async def contracts(d):
                 agent.issue(Command(2+index*2,'WR',column=index,data=value))
                 agent.issue(Command(3+index*2,'RD',column=index))
             agent.issue(Command(12,'PRE'))
-            require_evidence(agent.monitor.count==4, "missing conformance evidence")
+            require_evidence(agent.monitor.count==8, "missing conformance evidence")
         else:
             from rvw.vip.coherent import Manager, Directory, Event
             scoreboard=Directory(); transaction=0

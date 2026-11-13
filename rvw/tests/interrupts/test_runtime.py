@@ -21,6 +21,9 @@ def test_core_interrupts(tmp_path, core):
     adapter = ROOT / 'RiscvSim/boom/run.sh'
     platform_args = ['--core', 'boom']
     xlen = 64
+    sources = [('external', 11), ('timer', 7), ('software', 3)]
+    if core == 'boom':
+        sources.append(('delegated', 9))
     if core == 'vexriscv':
         if not os.environ.get('VEXRISCV'):
             pytest.skip('set VEXRISCV to run the VexRiscv adapter')
@@ -29,13 +32,18 @@ def test_core_interrupts(tmp_path, core):
         platform_args = ['--core', 'boom', '--platform', str(ROOT / 'examples/vexriscv/rvw/platform.json')]
         programs = tmp_path / 'programs'
         programs.mkdir()
-        for name in ['external', 'timer', 'software', 'delegated']:
+        for name, _ in sources:
             source = ROOT / f'RiscvSim/tests/programs/interrupt-{name}.S'
             subprocess.run([os.environ.get('RISCV_GCC', 'riscv64-unknown-elf-gcc'), '-march=rv32im_zicsr',
                 '-mabi=ilp32', '-DNO_PMP', '-nostdlib', '-nostartfiles', '-static',
                 '-T', str(source.parent / 'link.ld'), '-o', str(programs / source.stem), str(source)], check=True)
+    if core == 'vexriscv':
+        unsupported = run_group([str(adapter), 'run', '--elf', str(programs / 'interrupt-external'),
+            '--out', str(tmp_path / 'unsupported'), '--irq-schedule', '1:0x200'], capture=True, timeout=30)
+        assert unsupported.returncode == 2
+        assert 'adapter does not support these IRQ inputs' in unsupported.stdout + unsupported.stderr
     jobs = []
-    for name, bit in [('external', 11), ('timer', 7), ('software', 3), ('delegated', 9)]:
+    for name, bit in sources:
         for masked in [False, True]:
             level = 1 << bit
             schedule = f'1:0x0,100:0x{level:x},200:0x0' + ('' if masked else f',1000:0x{level:x}')
