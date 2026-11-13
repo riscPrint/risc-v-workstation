@@ -1,0 +1,16 @@
+{
+  "isolation_kind": "pmp",
+  "boundary": "M to U with a denied private word",
+  "contract": "sandboxing",
+  "clauses": ["pc", "memory", "branch"],
+  "observer_mode": 0,
+  "contract_start_pc": "0x80000100",
+  "policy": {"denied_region": "private_word, four-byte NA4 PMP entry", "cleanup": "denied load has no bus request or destination write"},
+  "observations": ["cycles", "retire_cycles", "dbus_addresses"],
+  "public": {"reset": "cold"},
+  "program": ["lw a1, 0(a0)", "addi a3, zero, 7"],
+  "secrets": [{"@private_word": [1]}, {"@private_word": [305419896]}],
+  "minimize_runs": 0,
+  "timeout": 115,
+  "adapter_command": ["{python}", "-m", "rvw.sec.core_adapter", "--binding", "core.json", "--template", "pmp.S", "{request}", "{out}"]
+}

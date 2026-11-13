@@ -7,7 +7,7 @@ import spinalprobes.Probe
 import spinalchecks._
 
 case class Retire() extends Bundle {
-  val valid, trap, halt, intr = Bool()
+  val valid, trap, halt, intr, mem_fault = Bool()
   val order = UInt(64 bits)
   val insn = Bits(32 bits)
   val mode = UInt(2 bits)
@@ -35,6 +35,7 @@ class Core(val entries: Int = 8, val physicalCount: Int = 48) extends Component 
     val interruptCause = out Bits(32 bits)
     val fetch = out UInt(32 bits)
     val instruction = in Bits(32 bits)
+    val load = out Bool()
     val loadAddress = out UInt(32 bits)
     val loadData = in Bits(32 bits) // four little-endian bytes at loadAddress
     val store = out Bool()
@@ -46,7 +47,12 @@ class Core(val entries: Int = 8, val physicalCount: Int = 48) extends Component 
   val started = Reg(Bool()).init(False)
   val pc = Reg(UInt(32 bits)).init(0)
   when(!started) { pc := io.boot; started := True }
-  io.fetch := pc
+  val privilege = Reg(UInt(2 bits)).init(3)
+  val pmpConfig = Vec.fill(4)(Reg(Bits(8 bits)).init(0))
+  val pmpAddress = Vec.fill(4)(Reg(UInt(32 bits)).init(0))
+  val mcounteren = Reg(Bits(32 bits)).init(0)
+  val fetchAllowed = Pmp.allowed(pmpConfig,pmpAddress,pc,U(4,3 bits),privilege === 3,2)
+  io.fetch := Mux(fetchAllowed,pc,U(0,32 bits))
   val head, tail = Reg(UInt(slotWidth bits)).init(0)
   val count = Reg(UInt(log2Up(entries + 1) bits)).init(0)
   val handlerPending = Reg(Bool()).init(False)
@@ -69,6 +75,7 @@ class Core(val entries: Int = 8, val physicalCount: Int = 48) extends Component 
   val result, operand1, operand2 = Vec.fill(entries)(Reg(Bits(32 bits)).init(0))
   val address = Vec.fill(entries)(Reg(UInt(32 bits)).init(0))
   val memoryData = Vec.fill(entries)(Reg(Bits(32 bits)).init(0))
+  val fetchFault = Vec.fill(entries)(Reg(Bool()).init(False))
   val faults = Vec.fill(entries)(Reg(Bool()).init(False))
   val causes = Vec.fill(entries)(Reg(UInt(5 bits)).init(0))
   val tvals = Vec.fill(entries)(Reg(Bits(32 bits)).init(0))
@@ -107,14 +114,17 @@ class Core(val entries: Int = 8, val physicalCount: Int = 48) extends Component 
   when(pendingInterrupts(3)) { interruptCode := 3 }
   when(pendingInterrupts(11)) { interruptCode := 11 }
   // Select a boundary before the completed head. No instruction retires on this edge.
-  val interrupt = started && count =/= 0 && done(head) && mstatus(3) && pendingInterrupts.orR
+  val interrupt = started && count =/= 0 && done(head) && (privilege =/= 3 || mstatus(3)) && pendingInterrupts.orR
   io.interruptTaken := interrupt
   io.interruptCause := B(0x80000000L,32 bits) | interruptCode.asBits.resize(32)
   val interruptTarget = (mtvec.asUInt & U(0xfffffffcL,32 bits)) +
     Mux(mtvec(1 downto 0) === B(1,2 bits),(interruptCode.resize(32) << 2).resize(32),U(0,32 bits))
   val pop = started && count =/= 0 && done(head) && !interrupt
   val fenceInstruction = insn(head)(6 downto 0) === B(0xf,7 bits) && insn(head)(14 downto 12) === B(1,3 bits)
-  val redirect = interrupt || (pop && (faults(head) || nextPc(head) =/= predicted(head) || fenceInstruction))
+  val systemRedirect = pop && !faults(head) && (insn(head) === B(0x30200073,32 bits) ||
+    (csrWrite(head) && (csrAddress(head) === 0x300 || csrAddress(head) === 0x3a0 ||
+      (csrAddress(head) >= 0x3b0 && csrAddress(head) < 0x3b4))))
+  val redirect = systemRedirect || interrupt || (pop && (faults(head) || nextPc(head) =/= predicted(head) || fenceInstruction))
   val push = started && count < entries && (!writeRd || free.orR) && !redirect
   val allocatedMask = Mux(push && writeRd, B(1,physicalCount bits) |<< allocation, B(0,physicalCount bits))
   val releasedMask = Mux(pop && writes(head) && !faults(head), B(1,physicalCount bits) |<< old(head), B(0,physicalCount bits))
@@ -131,6 +141,7 @@ class Core(val entries: Int = 8, val physicalCount: Int = 48) extends Component 
     src2(tail) := Mux(read2, map(instruction(24 downto 20).asUInt), U(0,tagWidth bits))
     rds(tail) := Mux(writeRd, rd, U(0,5 bits)); writes(tail) := writeRd
     dest(tail) := Mux(writeRd, allocation, U(0,tagWidth bits)); old(tail) := map(rd)
+    fetchFault(tail) := !fetchAllowed
     faults(tail) := False; causes(tail) := U(0,5 bits); tvals(tail) := B(0,32 bits)
     masks(tail) := B(0,4 bits); address(tail) := U(0,32 bits); memoryData(tail) := B(0,32 bits); csrWrite(tail) := False
     isLoad(tail) := opcode === B(3,7 bits); isStore(tail) := opcode === B(0x23,7 bits)
@@ -185,7 +196,15 @@ class Core(val entries: Int = 8, val physicalCount: Int = 48) extends Component 
     is(6) { branchTaken := a.asUInt < b.asUInt }; is(7) { branchTaken := a.asUInt >= b.asUInt }
   }
   val effective = a.asUInt + Mux(isStore(selected), immS, immI).asUInt
-  io.loadAddress := effective
+  val accessBytes = UInt(3 bits)
+  accessBytes := 4
+  when(funct(1 downto 0) === 0) { accessBytes := 1 }
+  when(funct(1 downto 0) === 1) { accessBytes := 2 }
+  val memoryMachine = privilege === 3 && (!mstatus(17) || mstatus(12 downto 11) === B(3,2 bits))
+  val readAllowed = Pmp.allowed(pmpConfig,pmpAddress,effective,accessBytes,memoryMachine,0)
+  val writeAllowed = Pmp.allowed(pmpConfig,pmpAddress,effective,accessBytes,memoryMachine,1)
+  io.load := issue && isLoad(selected) && readAllowed && !fetchFault(selected)
+  io.loadAddress := Mux(io.load,effective,U(0,32 bits))
   val ageValid = valid.asBits.setName("ageValid")
   val ageOlder = Bits(entries*entries bits).setName("ageOlder")
   for(i <- 0 until entries;j <- 0 until entries)
@@ -196,7 +215,7 @@ class Core(val entries: Int = 8, val physicalCount: Int = 48) extends Component 
   val forwardValid = Bits(entries bits).setName("forwardValid")
   for(i <- 0 until entries) {
     forwardOlder(i) := (U(i,slotWidth bits)-head) < selectAge
-    forwardValid(i) := valid(i) && done(i) && isStore(i)
+    forwardValid(i) := valid(i) && done(i) && isStore(i) && !faults(i)
   }
   forwardOlder.simPublic(); forwardValid.simPublic()
   val loadWord = Bits(32 bits)
@@ -216,13 +235,13 @@ class Core(val entries: Int = 8, val physicalCount: Int = 48) extends Component 
       }
     }
     matches.simPublic(); storeBytes.simPublic()
-    choices(0) := io.loadData(byte*8+7 downto byte*8)
+    choices(0) := Mux(readAllowed,io.loadData(byte*8+7 downto byte*8),B(0,8 bits))
     for (age <- 0 until entries) {
       val s = (head + age).resize(slotWidth)
       choices(age+1) := choices(age)
       selections(age+1) := selections(age)
       for (lane <- 0 until 4) {
-        when(U(age,slotWidth bits) < selectAge && valid(s) && done(s) && isStore(s) &&
+        when(U(age,slotWidth bits) < selectAge && valid(s) && done(s) && isStore(s) && !faults(s) &&
             address(s) + lane === effective + byte && masks(s)(lane)) {
           selections(age+1) := B(1,entries bits) |<< s
           choices(age+1) := memoryData(s)(lane*8+7 downto lane*8)
@@ -260,11 +279,14 @@ class Core(val entries: Int = 8, val physicalCount: Int = 48) extends Component 
   val csrRead = Bits(32 bits); val csrKnown = Bool()
   csrRead := 0; csrKnown := True
   switch(csr) {
-    is(0x300) { csrRead := mstatus }; is(0x301) { csrRead := B(0x40001100L,32 bits) }
+    is(0x300) { csrRead := mstatus }; is(0x301) { csrRead := B(0x40101100L,32 bits) }
     is(0x304) { csrRead := mie }; is(0x305) { csrRead := mtvec }; is(0x340) { csrRead := mscratch }
     is(0x341) { csrRead := mepc }; is(0x342) { csrRead := mcause }; is(0x343) { csrRead := mtval }
+    is(0x306) { csrRead := mcounteren }
+    is(0x3a0) { csrRead := pmpConfig.asBits }
+    is(0x3b0,0x3b1,0x3b2,0x3b3) { csrRead := pmpAddress(csr(1 downto 0)).asBits }
     is(0x344) { csrRead := io.interrupts & B(0x888,32 bits) }
-    is(0xf11,0xf12,0xf13,0xf14,0x3a0,0x3a1,0x3a2,0x3a3,0x3b0,0x3b1,0x3b2,0x3b3,0x3b4,0x3b5,0x3b6,0x3b7,0x3b8,0x3b9,0x3ba,0x3bb,0x3bc,0x3bd,0x3be,0x3bf) { csrRead := 0 }
+    is(0xf11,0xf12,0xf13,0xf14,0x3a1,0x3a2,0x3a3,0x3b4,0x3b5,0x3b6,0x3b7,0x3b8,0x3b9,0x3ba,0x3bb,0x3bc,0x3bd,0x3be,0x3bf) { csrRead := 0 }
     is(0xc00,0xb00) { csrRead := cycles(31 downto 0).asBits }
     is(0xc80,0xb80) { csrRead := cycles(63 downto 32).asBits }
     is(0xc02,0xb02) { csrRead := retiredCount(31 downto 0).asBits }
@@ -284,6 +306,9 @@ class Core(val entries: Int = 8, val physicalCount: Int = 48) extends Component 
     is(0x63) { when(branchTaken) { target := pcs(selected)+immB } }
     is(3,0x23) {
       execution := loaded
+      when((isLoad(selected) && !readAllowed) || (isStore(selected) && !writeAllowed)) {
+        execution := 0; exception := True; cause := Mux(isStore(selected),U(7,5 bits),U(5,5 bits)); tval := effective.asBits
+      }
       
     }
     is(0xf) { } // FENCE.I discards younger ROB slots at commit.
@@ -292,9 +317,11 @@ class Core(val entries: Int = 8, val physicalCount: Int = 48) extends Component 
       when(funct === 0) {
         when(inst === B(0x30200073L,32 bits)) { target := mepc.asUInt }
         .elsewhen(inst === B(0x10500073L,32 bits)) { } // WFI may complete as a hint; enabled pending interrupts still trap.
-        .otherwise { exception := True; cause := Mux(inst(20),U(3,5 bits),U(11,5 bits)) }
+        .otherwise { exception := True; cause := Mux(inst(20),U(3,5 bits),Mux(privilege === 3,U(11,5 bits),U(8,5 bits))) }
       } otherwise {
-        when(!csrKnown || (csr(11 downto 10) === 3 && csrWillWrite)) { exception := True; cause := 2; tval := inst }
+        when(!csrKnown || csr(9 downto 8) > privilege || (csr(11 downto 10) === 3 && csrWillWrite) ||
+          (privilege === 0 && (csr === 0xc00 || csr === 0xc80) && !mcounteren(0)) ||
+          (privilege === 0 && (csr === 0xc02 || csr === 0xc82) && !mcounteren(2))) { exception := True; cause := 2; tval := inst }
       }
     }
     default { exception := True; cause := 2; tval := inst }
@@ -321,6 +348,11 @@ class Core(val entries: Int = 8, val physicalCount: Int = 48) extends Component 
     }
   }
   when(!legalEncoding) { exception := True; cause := 2; tval := inst }
+  when(privilege =/= 3 && (inst === B(0x30200073,32 bits) ||
+      (inst === B(0x10500073,32 bits) && mstatus(21)))) {
+    exception := True; cause := 2; tval := inst
+  }
+  when(fetchFault(selected)) { exception := True; cause := 1; tval := pcs(selected).asBits }
   val multiply = op === B(0x33,7 bits) && inst(31 downto 25) === B(1,7 bits)
   mulDiv.io.start := issue && multiply
   mulDiv.io.flush := redirect
@@ -356,8 +388,9 @@ class Core(val entries: Int = 8, val physicalCount: Int = 48) extends Component 
   io.storeAddress := address(head)
   io.storeMask := masks(head); io.storeData := memoryData(head)
   val r = io.retire
+  r.mem_fault := pop && faults(head) && (causes(head) === 1 || causes(head) === 5 || causes(head) === 7)
   r.valid := pop; r.trap := faults(head); r.halt := False; r.intr := handlerPending
-  r.order := sequence; r.insn := insn(head); r.mode := 3; r.ixl := 1
+  r.order := sequence; r.insn := insn(head); r.mode := privilege; r.ixl := 1
   r.rs1_addr := rs1s(head); r.rs2_addr := rs2s(head)
   r.rs1_rdata := operand1(head); r.rs2_rdata := operand2(head)
   r.rd_addr := Mux(writes(head) && !faults(head),rds(head),U(0,5 bits))
@@ -383,18 +416,38 @@ class Core(val entries: Int = 8, val physicalCount: Int = 48) extends Component 
     }
     when(csrWrite(head) && !faults(head)) {
       switch(csrAddress(head)) {
-        is(0x300) { mstatus := (csrData(head) & B(0x88,32 bits)) | B(0x1800,32 bits) }; is(0x304) { mie := csrData(head) }
+        is(0x300) {
+          mstatus := (csrData(head) & B(0x220088,32 bits)) |
+            Mux(csrData(head)(12 downto 11) === B(3,2 bits),B(0x1800,32 bits),B(0,32 bits))
+        }; is(0x304) { mie := csrData(head) }
         is(0x305) { mtvec := (csrData(head) & B(0xfffffffcL,32 bits)) | Mux(csrData(head)(1 downto 0) === B(1,2 bits),B(1,32 bits),B(0,32 bits)) }; is(0x340) { mscratch := csrData(head) }
         is(0x341) { mepc := csrData(head) & B(0xfffffffcL,32 bits) }
+        is(0x306) { mcounteren := csrData(head) & B(5,32 bits) }
+        is(0x3a0) {
+          for(i <- 0 until 4) when(!pmpConfig(i)(7)) {
+            val incoming = csrData(head)(i*8+7 downto i*8)
+            pmpConfig(i) := incoming & B(0x9f,8 bits)
+            when(!incoming(0) && incoming(1)) { pmpConfig(i)(1) := False }
+          }
+        }
+        is(0x3b0,0x3b1,0x3b2,0x3b3) {
+          for(i <- 0 until 4) {
+            val nextLockedTor = if(i == 3) False else pmpConfig(i+1)(7) && pmpConfig(i+1)(4 downto 3) === B(1,2 bits)
+            when(csrAddress(head)(1 downto 0) === i && !pmpConfig(i)(7) && !nextLockedTor) { pmpAddress(i) := csrData(head).asUInt }
+          }
+        }
         is(0x342) { mcause := csrData(head) }; is(0x343) { mtval := csrData(head) }
       }
     }
     when(faults(head)) {
       mepc := pcs(head).asBits; mcause := causes(head).asBits.resize(32); mtval := tvals(head)
       mstatus(7) := mstatus(3); mstatus(3) := False
+      mstatus(12 downto 11) := privilege.asBits; privilege := 3
     }
     when(!faults(head) && insn(head) === B(0x30200073,32 bits)) {
       mstatus(3) := mstatus(7); mstatus(7) := True
+      privilege := mstatus(12 downto 11).asUInt; mstatus(12 downto 11) := 0
+      when(mstatus(12 downto 11) =/= B(3,2 bits)) { mstatus(17) := False }
     }
   }
   when(push && !pop) { count := count+1 }
@@ -411,6 +464,7 @@ class Core(val entries: Int = 8, val physicalCount: Int = 48) extends Component 
   when(interrupt) {
     mepc := pcs(head).asBits; mcause := io.interruptCause; mtval := 0
     mstatus(7) := mstatus(3); mstatus(3) := False
+      mstatus(12 downto 11) := privilege.asBits; privilege := 3
     handlerPending := True
   }
   assert(count <= entries, "ROB occupancy")
@@ -437,6 +491,8 @@ class Core(val entries: Int = 8, val physicalCount: Int = 48) extends Component 
     "issue_live" -> (!issue || (valid(selected) && !issued(selected))),
     "issue_operands" -> (!issue || (ready(src1(selected)) && ready(src2(selected)))),
     "commit_ready" -> (!pop || (valid(head) && done(head) && issued(head))),
+    "protection_precise" -> (!r.mem_fault || (r.trap && !io.store && r.rd_addr === 0)),
+    "load_permission" -> (!io.load || readAllowed),
     "interrupt_precise" -> (!interrupt || (!pop && !io.store && !push && !issue)),
     "store_precise" -> (!io.store || (pop && isStore(head) && !faults(head))),
     "map_owned" -> !map.map(t => free(t)).reduce(_ || _)
@@ -464,6 +520,7 @@ class Core(val entries: Int = 8, val physicalCount: Int = 48) extends Component 
   Probe.retire("commit",pop && !faults(head),ids(head))
   Probe.flushYounger("recovery",redirect,ids(head),faults(head) || interrupt)
   Probe.custom("flush_reason",redirect,"reason" -> Mux(interrupt,U(3,2 bits),Mux(faults(head),U(1,2 bits),U(2,2 bits))))
+  Probe.custom("protection_fault",pop && r.mem_fault,"cause" -> causes(head),"pc" -> pcs(head),"address" -> tvals(head),"privilege" -> privilege)
   Probe.custom("interrupt",interrupt,"cause" -> io.interruptCause,"pc" -> pcs(head),"occupancy" -> count)
   Probe.branch("predictor",pop && isBranch(head) && !faults(head),pcs(head),takenDirections(head),nextPc(head),
     predictedTaken = Some(predictedDirections(head)),predictedTarget = Some(predicted(head)),id = Some(ids(head)))

@@ -1,0 +1,20 @@
+{
+  "schema": "rvw.sec-core/1",
+  "name": "ooo-mini",
+  "rtl": ["${RVW_SEC_RTL}/Core.v"],
+  "top": "Core",
+  "clock": "clk",
+  "reset": "reset",
+  "reset_cycles": 4,
+  "ties": {"io_boot": "0x80000000", "io_interrupts": 0},
+  "ram": {"base": "0x80000000", "size": "0x10000"},
+  "max_cycles": 10000,
+  "march": "rv32im_zicsr",
+  "link": "../link.ld",
+  "platform": "../platform.json",
+  "buses": [
+    {"name": "ibus", "kind": "fetch", "latency": 0, "cmd_valid": "1'b1", "cmd_address": "io_fetch", "rsp_data": "io_instruction"},
+    {"name": "dbus", "kind": "data", "latency": 0, "cmd_valid": "(io_load || io_store)", "cmd_address": "(io_store ? io_storeAddress : io_loadAddress)", "cmd_write": "io_store", "cmd_data": "io_storeData", "cmd_mask": "io_storeMask", "rsp_data": "io_loadData"}
+  ],
+  "retire": {"kind": "rvfi", "prefix": "io_retire_"}
+}

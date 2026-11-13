@@ -22,10 +22,17 @@ def test_project_owns_sources_and_configs():
     assert '1.15.0' in (ROOT / 'build.sbt').read_text()
 
 
-def test_platform_declares_only_supported_machine_features():
+def test_platform_declares_supported_privilege_features():
     platform = json.loads((ROOT / 'rvw/platform.json').read_text())
     assert platform['xlen'] == 32
-    assert platform['privilege_modes'] == 'M'
+    assert platform['privilege_modes'] == 'MU'
     assert platform['irq_inputs'] == [3, 7, 11]
     assert platform['misaligned']['load'] == 'emulate'
     assert platform['misaligned']['store'] == 'emulate'
+
+
+def test_platform_binds_four_pmp_entries():
+    platform = json.loads((ROOT / 'rvw/platform.json').read_text())
+    features = json.loads((ROOT / 'rvw/features.json').read_text())
+    assert platform['pmp_regions'] == features['pmp_regions'] == 4
+    assert platform['privilege_modes'] == features['privilege_modes']
