@@ -398,3 +398,27 @@ Read-only recovery saves x5 before the handler uses it and restores it before
 retry. Ordinary loads check the value stored by SSPUSH. Guest shadow stacks,
 SSAMOSWAP and compressed shadow instructions remain open. Native Spike
 self-checks do not establish DUT coverage.
+
+## State-enable hierarchy and zeroing behavior
+
+`kind = "stateen-hierarchy"` selects Smstateen 1.0 tests from the pinned
+20260120 ISA. `stateen.probes` selects `stateen`, `envcfg` and `zfinx`.
+`stateen.writable_bits` declares the selected gates as writable: bits 63, 62
+and 1 respectively. The generator checks all four matching state-enable CSR
+indices and actual M/S/U entry. With H, it adds VS/VU and independent machine,
+hypervisor and supervisor gates. It distinguishes cause 2 from cause 22 and
+checks the fault PC. Supervisor CSR access from U raises cause 2. VU access raises cause 22
+when the same operation is permitted in HS. A denied machine gate retains
+cause 2 priority. State-enable probes also check a different CSR index remains
+accessible. Zfinx
+FCSR tests require Zfinx in the selected ISA. Gates for other extension state
+and Ssstateen-only implementations remain open.
+
+`kind = "envcfg-zero"` checks CBO.ZERO with independent menvcfg, henvcfg and
+senvcfg CBZE settings. It checks every doubleword of the selected block and
+both neighbors after success. A denied operation must leave the block intact.
+The operation uses an address inside the block. The example selects 64 bytes
+through `envcfg.block_bytes`. Native Spike gets the same `--blocksz` value.
+The project must configure its DUT with that block size. H adds real VS/VU
+entry and virtual-instruction traps. This tests zeroing behavior. It does not
+establish cache clean/flush/invalidate effects or timing.

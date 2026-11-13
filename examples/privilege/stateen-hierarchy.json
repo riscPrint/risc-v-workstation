@@ -1,0 +1,17 @@
+{
+  "schema": "rvw.privilege/1",
+  "kind": "stateen-hierarchy",
+  "isa": "rv64ima_zicsr_zifencei_zfinx_smstateen",
+  "stateen": {
+    "probes": [
+      "stateen",
+      "envcfg",
+      "zfinx"
+    ],
+    "writable_bits": [
+      63,
+      62,
+      1
+    ]
+  }
+}

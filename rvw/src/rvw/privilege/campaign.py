@@ -16,7 +16,7 @@ def load(path):
     raw = json.loads(Path(path).read_text())
     if raw.get('schema') != 'rvw.privilege/1':
         raise ValueError('expected rvw.privilege/1')
-    if set(raw) - {'landing', 'epmp', 'disabled', 'reri', 'dvfs', 'schema', 'modes', 'isa', 'priv', 'kind', 'timer', 'wake', 'plic', 'reset', 'nmi', 'compiler_isa', 'pma', 'imsic', 'aplic', 'spec_version', 'reference_backend', 'aclint', 'fast_interrupts', 'spec_revision', 'envcfg', 'sstc'}:
+    if set(raw) - {'stateen', 'landing', 'epmp', 'disabled', 'reri', 'dvfs', 'schema', 'modes', 'isa', 'priv', 'kind', 'timer', 'wake', 'plic', 'reset', 'nmi', 'compiler_isa', 'pma', 'imsic', 'aplic', 'spec_version', 'reference_backend', 'aclint', 'fast_interrupts', 'spec_revision', 'envcfg', 'sstc'}:
         raise ValueError('unknown campaign field')
     if raw.get('reference_backend','spike') not in ('spike','python'):
         raise ValueError('reference_backend must be spike or python')
@@ -25,7 +25,7 @@ def load(path):
         raise ValueError('modes must be distinct M, S or U entries')
     if raw.get('priv', 'msu') != 'msu' and not (raw.get('kind') in ('disabled','disabled-matrix') and raw.get('priv') == 'mu'):
         raise ValueError('control campaign requires supervisor support (msu)')
-    if raw.get('kind', 'controls') not in ('landing-recovery', 'sstc-rv32', 'aplic-msi', 'epmp-matrix', 'disabled-matrix', 'reri', 'dvfs', 'controls', 'wfi', 'disabled', 'scheduled-wfi', 'plic', 'reset', 'nmi', 'pma', 'pmp', 'epmp', 'imsic', 'aplic', 'aclint', 'smnip', 'sstc', 'stateen', 'envcfg', 'landing', 'shadow'):
+    if raw.get('kind', 'controls') not in ('stateen-hierarchy', 'envcfg-zero', 'landing-recovery', 'sstc-rv32', 'aplic-msi', 'epmp-matrix', 'disabled-matrix', 'reri', 'dvfs', 'controls', 'wfi', 'disabled', 'scheduled-wfi', 'plic', 'reset', 'nmi', 'pma', 'pmp', 'epmp', 'imsic', 'aplic', 'aclint', 'smnip', 'sstc', 'stateen', 'envcfg', 'landing', 'shadow'):
         raise ValueError('kind must be controls, wfi or disabled')
     if raw.get('kind') == 'wfi':
         from .wake import programs
@@ -37,7 +37,7 @@ def load(path):
 def scenarios(config):
     from importlib import import_module
     kind = config.get('kind', 'controls')
-    module = {'landing-recovery':'cfi_recovery', 'sstc-rv32':'timer32', 'aplic-msi':'aplic_gateway', 'epmp-matrix':'epmp_matrix', 'disabled-matrix':'disabled_matrix', 'controls':'programs', 'wfi':'wake', 'scheduled-wfi':'scheduled',
+    module = {'stateen-hierarchy':'state_hierarchy', 'envcfg-zero':'env_behavior', 'landing-recovery':'cfi_recovery', 'sstc-rv32':'timer32', 'aplic-msi':'aplic_gateway', 'epmp-matrix':'epmp_matrix', 'disabled-matrix':'disabled_matrix', 'controls':'programs', 'wfi':'wake', 'scheduled-wfi':'scheduled',
               'reset':'lifecycle', 'nmi':'lifecycle', 'imsic':'aia', 'aplic':'aia',
               'aclint':'fast_interrupts', 'smnip':'fast_interrupts',
               'sstc':'extensions', 'stateen':'extensions', 'envcfg':'extensions', 'landing':'extensions'}.get(kind, kind)
@@ -138,7 +138,7 @@ def reference(directory, spike='spike', timeout=2):
                              reason=scenario['reference_unavailable']))
             continue
         command = ['nice', '-n', '10', executable, '--isa=' + manifest['config'].get('isa', 'rv64im_zicsr_zifencei'),
-                   '--priv=' + manifest['config'].get('priv', 'msu'), '-m128', str(elf)]
+                   '--priv=' + manifest['config'].get('priv', 'msu'), '-m128', *scenario.get('reference_options',[]), str(elf)]
         result = run_group(command, capture=True, timeout=timeout)
         status = 'inconclusive'
         if not result.timed_out:
