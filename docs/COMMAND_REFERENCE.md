@@ -456,7 +456,7 @@ usage: rvw farm dashboard [-h] --root ROOT --out OUT [--core CORE] [--suite
 
 ```text
 usage: rvw formal [-h] [--project PROJECT]
-    {csr,security,regress,properties,sva-lower,template,contracts,strengthen,proof-core,apps,autocheck,bench,cex,sby-history,sby-regress,prove,depth-search,riscv,connectivity,datapath,equiv,bmc,from-sim,swarm,xprop,x-context,x-sweep}
+    {csr,security,regress,properties,sva-lower,template,contracts,strengthen,testplan,proof-core,apps,autocheck,bench,cex,sby-history,sby-regress,prove,depth-search,riscv,connectivity,datapath,equiv,bmc,from-sim,swarm,xprop,x-context,x-sweep}
     ...
 ```
 
@@ -528,12 +528,19 @@ usage: rvw formal strengthen [-h] --out OUT [--budget BUDGET] [--depth DEPTH]
     [--engine ENGINE] [--json] [--project PROJECT] manifest
 ```
 
+### `rvw formal testplan`
+
+```text
+usage: rvw formal testplan [-h] --manifest MANIFEST --out OUT [--json]
+    [--project PROJECT]
+```
+
 ### `rvw formal proof-core`
 
 ```text
-usage: rvw formal proof-core [-h] --smt2 SMT2 --mapping MAPPING [--db DB]
-    [--solver SOLVER] [--timeout TIMEOUT] --out OUT [--json] [--project
-    PROJECT]
+usage: rvw formal proof-core [-h] [--smt2 SMT2] [--result RESULT] [--depth
+    DEPTH] [--property PROPERTY] [--mapping MAPPING] [--db DB] [--solver
+    SOLVER] [--timeout TIMEOUT] --out OUT [--json] [--project PROJECT]
 ```
 
 ### `rvw formal apps`
@@ -1760,7 +1767,7 @@ Starts a background job: yes.
 
 Extract a deletion-minimal solver core for one named SMT query. Not an RTL proof.
 
-Arguments: `smt2` (required), `mapping` (required), `db`, `solver`, `timeout`, `out` (required).
+Arguments: `smt2`, `mapping`, `result`, `depth`, `property`, `db`, `solver`, `timeout`, `out` (required).
 
 Starts a background job: yes.
 
@@ -1793,6 +1800,14 @@ Starts a background job: yes.
 Generate a project-bound safety monitor. No verification run.
 
 Arguments: `kind` (required), `out` (required), `entries`, `width`.
+
+Starts a background job: yes.
+
+### `formal_testplan`
+
+Join a formal inventory with captured proof, core, activation and mutation evidence. JSON and HTML.
+
+Arguments: `manifest` (required), `out` (required).
 
 Starts a background job: yes.
 
