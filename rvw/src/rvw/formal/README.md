@@ -320,7 +320,7 @@ Missing native tools cause a skip. No skipped test supplies verification evidenc
 It supports qualified TileLink bus types, including B/C/E channels when present.
 Each payload includes every recorded sideband. AXI4 checks burst encodings,
 FIXED length limits and WRAP length/alignment. AXI-Lite rejects EXOKAY responses.
-TileLink checks channel opcode encodings. Hierarchical instances use local
+TileLink checks channel opcode encodings only. Pre-acceptance offers can change. Hierarchical instances use local
 clock/reset ports. Missing fields and unresolved controls stay unsupported.
 These rows report `coverage=channel_safety`. They do not check beat counts,
 ID response order, exclusive operations or coherence state. #66 remains open.

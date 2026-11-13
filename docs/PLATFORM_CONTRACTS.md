@@ -4027,8 +4027,20 @@ monitor inputs and complete output vectors with an always-on sampled clock.
 `rvw.upf-generation/1` records input hashes, normalized intent and unmonitored
 domains. Generation is not proof or physical power evidence. No generated monitor
 returns `no_checks`, exit 3. Unsupported commands and Tcl constructs are errors.
-Retention, supply tables and clock-gating import remain unsupported.
+Clock-gating import and physical supply modeling remain unsupported.
 ### Typed simple-bus monitor generation
+
+TileLink rows use `coverage=opcode_safety`. They do not apply generic Stream
+stability to offers before acceptance.
+
+Typed multichannel bus rows include `component_id`, `class_name`, `coverage`
+and `limitations`. `coverage=channel_safety` means full payload stall stability,
+channel valid persistence and the listed opcode/burst field rules only. It is
+not transaction compliance. Burst beat accounting, ID response order,
+exclusive operations and coherence state are not proved by these rows.
+Hierarchical targets require locally resolved clock/reset controls. A missing
+control stays unsupported. Known bus classes without a generator are listed
+with a reason. A simple `Bus` class name is ambiguous and is not inferred.
 
 `rvw.bus-checks/1` records generated or unsupported typed bundle rows, derived
 ports, packed width, bind target and captured database provenance. `complete`

@@ -39,7 +39,8 @@ def render(kind, signals, name):
         nets = {k: field(k) for k in keys}
         payload = '{'+', '.join(nets.values())+'}'
         width = sum(signals[k][3] for k in keys)
-        checks.append(f'''reg {channel}_stalled=0;
+        if kind != 'tilelink':
+            checks.append(f'''reg {channel}_stalled=0;
 reg [{width-1}:0] {channel}_previous;
 always @(posedge clk) begin
  if(reset) {channel}_stalled<=0;
