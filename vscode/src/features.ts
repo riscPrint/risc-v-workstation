@@ -1,3 +1,4 @@
+import arch from '../features/arch/src/feature';
 import formal from '../features/formal/src/feature';
 import cosim from '../features/cosim/src/feature';
 import project from '../features/project/src/feature';
@@ -19,6 +20,7 @@ export const features: Feature[] = [
   project,
   cosim,
   formal,
+  arch,
   spinalblocks,
   lsp,
   regress,
