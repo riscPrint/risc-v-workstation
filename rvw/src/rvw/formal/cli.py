@@ -123,6 +123,7 @@ def register(sub) -> None:
     regress.add_argument("--jobs", type=int, default=1)
     regress.add_argument("--timeout", type=float, default=60)
     regress.add_argument("--json", action="store_true")
+    regress.add_argument("--proof-cache", help="reuse exact self-contained SBY observations")
     regress.set_defaults(func=regression.run)
 
     from . import property_library

@@ -896,3 +896,50 @@ OpenOCD logs failed program-buffer memory reads at low addresses.
 These configurations change the RTL. Their results do not qualify `rv32im`.
 The debug configurations keep `TrapProbePlugin`, so a debug entry or `dret` can
 appear as a trap event in C2. Use them for debug sessions, not for C2 regression.
+
+## Scala DSL property campaign
+
+`rvw/src/main/scala/rvwvex/CoreProperties.scala` binds 34 assertions and two
+covers beside the example elaboration. It observes the four pipeline stages,
+PC transfers, instruction and data command buses, RVFI writes and trap CSRs.
+It does not change upstream sources. Use a private core copy and private locks.
+Set `RVW_HOME` to this workstation checkout. Set `VEXRISCV` to the private copy.
+From `examples/vexriscv/rvw`, generate the RTL and DSL statements:
+
+```sh
+"$RVW_HOME/scripts/with-lock.sh" sbt-sva nice -n 10 sbt -batch \
+  'runMain rvwvex.CoreProperties /tmp/vex-properties/rtl'
+```
+
+From the workstation root, prepare and run the checks:
+
+```sh
+rvw/.venv/bin/python examples/vexriscv/rvw/core-properties.py \
+  --rtl /tmp/vex-properties/rtl --out /tmp/vex-properties/jobs --depth 12
+rvw formal regress /tmp/vex-properties/jobs/regress.toml \
+  --jobs 3 --timeout 20 --proof-cache /tmp/vex-properties/cache \
+  --out /tmp/vex-properties/proof-1 --json
+rvw formal regress /tmp/vex-properties/jobs/regress.toml \
+  --jobs 3 --timeout 20 --proof-cache /tmp/vex-properties/cache \
+  --out /tmp/vex-properties/proof-2 --json
+scripts/with-lock.sh vex-sva nice -n 10 rvw/.venv/bin/python \
+  examples/vexriscv/rvw/core-properties-sim.py --rtl /tmp/vex-properties/rtl \
+  --out /tmp/vex-properties/sim examples/vexriscv/rvw/out/isa/rv32ui-p-add
+rvw cov merge add=/tmp/vex-properties/sim/rv32ui-p-add/coverage.dat \
+  --source-root /tmp/vex-properties/sim --json
+```
+
+Pass all 49 aligned ISA ELFs to the simulation script for the full example
+campaign. Exclude dump files and `rv32ui-p-ma_data`. Compile once for the whole
+list. Each program starts a fresh native process with initialized memory.
+C1 records assertion counts and ELF/RTL hashes. Cover counts record sampled
+hits. They are not RTL toggle coverage. Formal writes C3 and JUnit.
+Read [the measured table](property-results.md) for the exact observations.
+
+The simulation memory model returns ordered responses with one pending request
+per bus. It stops on a nonzero `tohost` store. It has no interrupt stimulus.
+Formal assumes two initial reset clocks and leaves other inputs arbitrary.
+A bounded pass does not prove later behavior. Assertion pass counts include
+false antecedents. Antecedent reachability and complete DSL source attribution
+remain unmeasured. The fetched-instruction identity and eventual retirement or
+flush property is not implemented in this campaign. No liveness proof is claimed.

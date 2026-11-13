@@ -1,0 +1,559 @@
+{
+  "schema": "rvw.example-properties/1",
+  "date": "2026-11-13",
+  "core_revision": "a62c145aa042a5de874344e0a7683bd7c8c8c870",
+  "programs": 49,
+  "program_statuses": {
+    "pass": 49
+  },
+  "source": {
+    "rtl_sha256": "d3c6b83df5577408bc495011244f9219e30ebf98ea2a95d47771cbec7a213bd8"
+  },
+  "properties": [
+    {
+      "property": "stage0_fire_valid",
+      "kind": "assert",
+      "simulation": {
+        "passed": 42769,
+        "failed": 0,
+        "covered": 0,
+        "missed": 0
+      },
+      "formal": {
+        "status": "bounded-pass",
+        "depth": 12,
+        "cache_hit": true
+      }
+    },
+    {
+      "property": "stage0_fire_not_stuck",
+      "kind": "assert",
+      "simulation": {
+        "passed": 42769,
+        "failed": 0,
+        "covered": 0,
+        "missed": 0
+      },
+      "formal": {
+        "status": "bounded-pass",
+        "depth": 12,
+        "cache_hit": true
+      }
+    },
+    {
+      "property": "stage0_fire_not_removed",
+      "kind": "assert",
+      "simulation": {
+        "passed": 42769,
+        "failed": 0,
+        "covered": 0,
+        "missed": 0
+      },
+      "formal": {
+        "status": "bounded-pass",
+        "depth": 12,
+        "cache_hit": true
+      }
+    },
+    {
+      "property": "stage0_stall_pc",
+      "kind": "assert",
+      "simulation": {
+        "passed": 42720,
+        "failed": 0,
+        "covered": 0,
+        "missed": 0
+      },
+      "formal": {
+        "status": "bounded-pass",
+        "depth": 12,
+        "cache_hit": true
+      }
+    },
+    {
+      "property": "stage1_fire_valid",
+      "kind": "assert",
+      "simulation": {
+        "passed": 42769,
+        "failed": 0,
+        "covered": 0,
+        "missed": 0
+      },
+      "formal": {
+        "status": "bounded-pass",
+        "depth": 12,
+        "cache_hit": true
+      }
+    },
+    {
+      "property": "stage1_fire_not_stuck",
+      "kind": "assert",
+      "simulation": {
+        "passed": 42769,
+        "failed": 0,
+        "covered": 0,
+        "missed": 0
+      },
+      "formal": {
+        "status": "bounded-pass",
+        "depth": 12,
+        "cache_hit": true
+      }
+    },
+    {
+      "property": "stage1_fire_not_removed",
+      "kind": "assert",
+      "simulation": {
+        "passed": 42769,
+        "failed": 0,
+        "covered": 0,
+        "missed": 0
+      },
+      "formal": {
+        "status": "bounded-pass",
+        "depth": 12,
+        "cache_hit": true
+      }
+    },
+    {
+      "property": "stage1_stall_pc",
+      "kind": "assert",
+      "simulation": {
+        "passed": 42720,
+        "failed": 0,
+        "covered": 0,
+        "missed": 0
+      },
+      "formal": {
+        "status": "bounded-pass",
+        "depth": 12,
+        "cache_hit": true
+      }
+    },
+    {
+      "property": "stage2_fire_valid",
+      "kind": "assert",
+      "simulation": {
+        "passed": 42769,
+        "failed": 0,
+        "covered": 0,
+        "missed": 0
+      },
+      "formal": {
+        "status": "bounded-pass",
+        "depth": 12,
+        "cache_hit": true
+      }
+    },
+    {
+      "property": "stage2_fire_not_stuck",
+      "kind": "assert",
+      "simulation": {
+        "passed": 42769,
+        "failed": 0,
+        "covered": 0,
+        "missed": 0
+      },
+      "formal": {
+        "status": "bounded-pass",
+        "depth": 12,
+        "cache_hit": true
+      }
+    },
+    {
+      "property": "stage2_fire_not_removed",
+      "kind": "assert",
+      "simulation": {
+        "passed": 42769,
+        "failed": 0,
+        "covered": 0,
+        "missed": 0
+      },
+      "formal": {
+        "status": "bounded-pass",
+        "depth": 12,
+        "cache_hit": true
+      }
+    },
+    {
+      "property": "stage2_stall_pc",
+      "kind": "assert",
+      "simulation": {
+        "passed": 42720,
+        "failed": 0,
+        "covered": 0,
+        "missed": 0
+      },
+      "formal": {
+        "status": "bounded-pass",
+        "depth": 12,
+        "cache_hit": true
+      }
+    },
+    {
+      "property": "stage3_fire_valid",
+      "kind": "assert",
+      "simulation": {
+        "passed": 42769,
+        "failed": 0,
+        "covered": 0,
+        "missed": 0
+      },
+      "formal": {
+        "status": "bounded-pass",
+        "depth": 12,
+        "cache_hit": true
+      }
+    },
+    {
+      "property": "stage3_fire_not_stuck",
+      "kind": "assert",
+      "simulation": {
+        "passed": 42769,
+        "failed": 0,
+        "covered": 0,
+        "missed": 0
+      },
+      "formal": {
+        "status": "bounded-pass",
+        "depth": 12,
+        "cache_hit": true
+      }
+    },
+    {
+      "property": "stage3_fire_not_removed",
+      "kind": "assert",
+      "simulation": {
+        "passed": 42769,
+        "failed": 0,
+        "covered": 0,
+        "missed": 0
+      },
+      "formal": {
+        "status": "bounded-pass",
+        "depth": 12,
+        "cache_hit": true
+      }
+    },
+    {
+      "property": "stage3_stall_pc",
+      "kind": "assert",
+      "simulation": {
+        "passed": 42720,
+        "failed": 0,
+        "covered": 0,
+        "missed": 0
+      },
+      "formal": {
+        "status": "bounded-pass",
+        "depth": 12,
+        "cache_hit": true
+      }
+    },
+    {
+      "property": "pc_chain_0",
+      "kind": "assert",
+      "simulation": {
+        "passed": 42720,
+        "failed": 0,
+        "covered": 0,
+        "missed": 0
+      },
+      "formal": {
+        "status": "bounded-pass",
+        "depth": 12,
+        "cache_hit": true
+      }
+    },
+    {
+      "property": "pc_chain_1",
+      "kind": "assert",
+      "simulation": {
+        "passed": 42720,
+        "failed": 0,
+        "covered": 0,
+        "missed": 0
+      },
+      "formal": {
+        "status": "bounded-pass",
+        "depth": 12,
+        "cache_hit": true
+      }
+    },
+    {
+      "property": "pc_chain_2",
+      "kind": "assert",
+      "simulation": {
+        "passed": 42720,
+        "failed": 0,
+        "covered": 0,
+        "missed": 0
+      },
+      "formal": {
+        "status": "bounded-pass",
+        "depth": 12,
+        "cache_hit": true
+      }
+    },
+    {
+      "property": "ibus_hold_valid",
+      "kind": "assert",
+      "simulation": {
+        "passed": 42720,
+        "failed": 0,
+        "covered": 0,
+        "missed": 0
+      },
+      "formal": {
+        "status": "bounded-pass",
+        "depth": 12,
+        "cache_hit": true
+      }
+    },
+    {
+      "property": "ibus_hold_pc",
+      "kind": "assert",
+      "simulation": {
+        "passed": 42720,
+        "failed": 0,
+        "covered": 0,
+        "missed": 0
+      },
+      "formal": {
+        "status": "bounded-pass",
+        "depth": 12,
+        "cache_hit": true
+      }
+    },
+    {
+      "property": "ibus_pc_aligned",
+      "kind": "assert",
+      "simulation": {
+        "passed": 42769,
+        "failed": 0,
+        "covered": 0,
+        "missed": 0
+      },
+      "formal": {
+        "status": "bounded-pass",
+        "depth": 12,
+        "cache_hit": true
+      }
+    },
+    {
+      "property": "dbus_hold_valid",
+      "kind": "assert",
+      "simulation": {
+        "passed": 42720,
+        "failed": 0,
+        "covered": 0,
+        "missed": 0
+      },
+      "formal": {
+        "status": "bounded-pass",
+        "depth": 12,
+        "cache_hit": true
+      }
+    },
+    {
+      "property": "dbus_hold_address",
+      "kind": "assert",
+      "simulation": {
+        "passed": 42720,
+        "failed": 0,
+        "covered": 0,
+        "missed": 0
+      },
+      "formal": {
+        "status": "bounded-pass",
+        "depth": 12,
+        "cache_hit": true
+      }
+    },
+    {
+      "property": "dbus_hold_data",
+      "kind": "assert",
+      "simulation": {
+        "passed": 42720,
+        "failed": 0,
+        "covered": 0,
+        "missed": 0
+      },
+      "formal": {
+        "status": "bounded-pass",
+        "depth": 12,
+        "cache_hit": true
+      }
+    },
+    {
+      "property": "dbus_hold_write",
+      "kind": "assert",
+      "simulation": {
+        "passed": 42720,
+        "failed": 0,
+        "covered": 0,
+        "missed": 0
+      },
+      "formal": {
+        "status": "bounded-pass",
+        "depth": 12,
+        "cache_hit": true
+      }
+    },
+    {
+      "property": "dbus_hold_size",
+      "kind": "assert",
+      "simulation": {
+        "passed": 42720,
+        "failed": 0,
+        "covered": 0,
+        "missed": 0
+      },
+      "formal": {
+        "status": "bounded-pass",
+        "depth": 12,
+        "cache_hit": true
+      }
+    },
+    {
+      "property": "x0_write_zero",
+      "kind": "assert",
+      "simulation": {
+        "passed": 42769,
+        "failed": 0,
+        "covered": 0,
+        "missed": 0
+      },
+      "formal": {
+        "status": "bounded-pass",
+        "depth": 12,
+        "cache_hit": true
+      }
+    },
+    {
+      "property": "retire_machine",
+      "kind": "assert",
+      "simulation": {
+        "passed": 42769,
+        "failed": 0,
+        "covered": 0,
+        "missed": 0
+      },
+      "formal": {
+        "status": "bounded-pass",
+        "depth": 12,
+        "cache_hit": true
+      }
+    },
+    {
+      "property": "retire_rv32",
+      "kind": "assert",
+      "simulation": {
+        "passed": 42769,
+        "failed": 0,
+        "covered": 0,
+        "missed": 0
+      },
+      "formal": {
+        "status": "bounded-pass",
+        "depth": 12,
+        "cache_hit": true
+      }
+    },
+    {
+      "property": "retire_pc_aligned",
+      "kind": "assert",
+      "simulation": {
+        "passed": 42769,
+        "failed": 0,
+        "covered": 0,
+        "missed": 0
+      },
+      "formal": {
+        "status": "bounded-pass",
+        "depth": 12,
+        "cache_hit": true
+      }
+    },
+    {
+      "property": "trap_mie_clear",
+      "kind": "assert",
+      "simulation": {
+        "passed": 42769,
+        "failed": 0,
+        "covered": 0,
+        "missed": 0
+      },
+      "formal": {
+        "status": "bounded-pass",
+        "depth": 12,
+        "cache_hit": true
+      }
+    },
+    {
+      "property": "trap_mpp_machine",
+      "kind": "assert",
+      "simulation": {
+        "passed": 42769,
+        "failed": 0,
+        "covered": 0,
+        "missed": 0
+      },
+      "formal": {
+        "status": "bounded-pass",
+        "depth": 12,
+        "cache_hit": true
+      }
+    },
+    {
+      "property": "trap_mepc_aligned",
+      "kind": "assert",
+      "simulation": {
+        "passed": 42769,
+        "failed": 0,
+        "covered": 0,
+        "missed": 0
+      },
+      "formal": {
+        "status": "bounded-pass",
+        "depth": 12,
+        "cache_hit": true
+      }
+    },
+    {
+      "property": "retirement_reached",
+      "kind": "cover",
+      "simulation": {
+        "passed": 0,
+        "failed": 0,
+        "covered": 17686,
+        "missed": 25083
+      },
+      "formal": {
+        "status": "not_run",
+        "reason": "simulation cover"
+      }
+    },
+    {
+      "property": "trap_reached",
+      "kind": "cover",
+      "simulation": {
+        "passed": 0,
+        "failed": 0,
+        "covered": 196,
+        "missed": 42573
+      },
+      "formal": {
+        "status": "not_run",
+        "reason": "simulation cover"
+      }
+    }
+  ],
+  "limits": [
+    "finite simulation",
+    "formal bound 12",
+    "antecedent reachability not measured",
+    "instruction-identity liveness not implemented",
+    "formal inputs arbitrary after startup reset"
+  ]
+}

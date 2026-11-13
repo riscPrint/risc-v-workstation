@@ -3248,3 +3248,17 @@ requires designer confirmation. See [the kit guide](README-datapath-kit.md).
 proves each observation in its full state cone. It keeps output equivalence and
 internal-relation results separate. No internal cut equality is assumed.
 See [the partition guide](README-equiv-partitions.md).
+### Real-core Scala DSL campaign and regression reuse
+
+The [VexRiscv campaign](../../../../examples/vexriscv/README.md#scala-dsl-property-campaign)
+compiles project-owned DSL assertions into a native Verilator ISA harness.
+It prepares one SBY BMC task per assertion for `formal regress`. Its measured
+table states each simulation and formal result. The campaign does not measure
+antecedent reachability or instruction-identity liveness.
+
+Use `formal regress --proof-cache DIR` to reuse exact self-contained engine
+observations. The MCP argument is `proof_cache`. A C3 `cache.hit` preserves the
+original conditional result and bound. It does not establish non-vacuity.
+Only restricted self-contained Verilog jobs qualify. Read the
+[cache contract](../../../../docs/contracts/formal.md#exact-regression-observation-cache)
+for the input closure and artifact checks.

@@ -317,7 +317,7 @@ def mcp_tools():
                  schema({"model": S, "out": S}, ["model", "out"]), _csr, long=True),
 
         ToolSpec("formal_regress", "Run declared SBY property tasks with a CPU worker cap. Return conditional C3 and JUnit observations.",
-                 schema({"manifest": S, "project": S, "out": S, "jobs": {"type": "integer", "minimum": 1},
+                 schema({"manifest": S, "project": S, "out": S, "proof_cache": S, "jobs": {"type": "integer", "minimum": 1},
                          "timeout": {"type": "number", "exclusiveMinimum": 0}}, ["out"]),
                  _regress, long=True),
         ToolSpec("formal_sva_lower", "Lower finite clocked SVA to native Yosys assertions. Unsupported constructs give named errors.",
