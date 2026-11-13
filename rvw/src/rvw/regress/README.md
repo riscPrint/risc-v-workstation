@@ -1025,3 +1025,17 @@ exclude a family. Selection gives no execution evidence.
 campaigns. A family can contain additional optional scenarios. Select those
 scenarios from the source description before generation. The planner does not
 claim that all combinations within a family are supported.
+
+## ACT4 builds
+
+Use `rvw regress plan --act4 PROJECT_PROFILE.json --json` to select ACT4
+extensions from project data. Use `rvw regress act4-build --profile
+PROJECT_PROFILE.json --checkout PINNED_ACT4 --out NEW_DIRECTORY` to build them.
+See [the ACT4 contract](../../../../docs/contracts/act4.md).
+Declare the output ELF directory as an `elf-dir` suite with `glob = "**/*.elf"`,
+`strip_suffix = ".elf"` and `act4_manifest = "path/to/manifest.json"`.
+Run the suite with `--rvfi-trace`. Compare its C1 results with `rvw regress cosim`.
+The upstream final ELF checks Sail's expected signature before tohost success.
+The build manifest binds the discovered ELF set to the build. It does not
+establish certification. Project macros, Sail options and linker settings
+still need review against the adapter.
