@@ -146,3 +146,29 @@ No DUT run, NMI injection or physical reset is claimed by a generated file.
 `isa`. The Smrnmi example uses numeric CSR and MNRET encodings because the
 installed assembler does not recognize the Smrnmi ISA name. This does not
 change the reference or DUT extension requirement.
+
+## Physical memory protection
+
+`kind = "pmp"` generates 394 RV64 base-PMP programs. The matrix covers TOR,
+NA4, NAPOT, read/write/execute permission, M/S/U entry, MPRV effective S/U,
+locked permission enforcement, locked address/config writes, TOR predecessor
+locking and overlapping-entry priority. Stores also check the resulting data.
+Denied accesses check cause, PC and mtval. The selected project must provide
+at least eight PMP entries and four-byte granularity for this matrix.
+
+`kind = "epmp"` requires Smepmp. Four separate programs check MMWP unmatched
+access denial, MML S/U-only and M-only rules, sticky security policy bits,
+RLB changes to locked entries and failed RLB re-enable after locks take effect.
+They follow Smepmp 1.0 in the 20260120 specification. They do not count as a
+complete ePMP permission truth table or reset qualification. Base PMP programs
+never count as ePMP coverage.
+
+`kind = "pma"` uses project `pma.regions`. Each row declares name, base, size,
+scalar widths, read/write permissions and expected value. `test_writes` must be
+explicit. The generator probes the first and last aligned access for each width.
+The project supplies `bus_count_allowed`, `bus_count_denied` and `device_state`.
+C1 must provide `privilege_bus`: a JSON object with `complete`, `transfers`
+(address/width/write) and independent `device_state`. Missing observation or
+contract stays inconclusive. Spike CLI cannot implement arbitrary project PMA.
+These initial boundary probes do not cover conflicting regions, atomic PMAs,
+cache coherence or idempotency effects.

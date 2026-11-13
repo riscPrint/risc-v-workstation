@@ -3403,6 +3403,13 @@ walk and PMA checks remain inconclusive.
 
 ### Privilege campaign artifacts
 
+Kinds `pmp`, `epmp` and `pma` generate separate protection matrices. PMA
+scenarios require a `privilege_bus` C1 artifact: `complete` is Boolean,
+`transfers` hold address/width/write and `device_state` holds independent
+project state. The configured counts, transfer shapes and state must agree.
+Missing state or an incomplete capture remains inconclusive. Reports bind the
+artifact hash. These observations do not replace the strict architectural check.
+
 `compiler_isa` optionally selects compiler instruction parsing. `isa` still
 selects the reference model architecture. Numeric encodings can therefore be
 compiled with a base assembler without claiming extension model support.

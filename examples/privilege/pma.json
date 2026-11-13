@@ -1,0 +1,24 @@
+{
+  "schema": "rvw.privilege/1",
+  "kind": "pma",
+  "pma": {
+    "regions": [
+      {
+        "name": "device",
+        "base": 268435456,
+        "size": 16,
+        "widths": [
+          4
+        ],
+        "read": true,
+        "write": false,
+        "value": 0,
+        "device_state": {
+          "irq": 0
+        },
+        "bus_count_allowed": 1,
+        "bus_count_denied": 0
+      }
+    ]
+  }
+}

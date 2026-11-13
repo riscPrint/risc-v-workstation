@@ -16,14 +16,14 @@ def load(path):
     raw = json.loads(Path(path).read_text())
     if raw.get('schema') != 'rvw.privilege/1':
         raise ValueError('expected rvw.privilege/1')
-    if set(raw) - {'schema', 'modes', 'isa', 'priv', 'kind', 'timer', 'wake', 'plic', 'reset', 'nmi', 'compiler_isa'}:
+    if set(raw) - {'schema', 'modes', 'isa', 'priv', 'kind', 'timer', 'wake', 'plic', 'reset', 'nmi', 'compiler_isa', 'pma'}:
         raise ValueError('unknown campaign field')
     modes = raw.get('modes', ['M', 'S', 'U'])
-    if not modes or len(set(modes)) != len(modes) or any(m not in ('M', 'S', 'U') for m in modes):
+    if not modes or len(set(modes)) != len(modes) or any(m not in (('M', 'S', 'U', 'mprv-s', 'mprv-u') if raw.get('kind') == 'pmp' else ('M', 'S', 'U')) for m in modes):
         raise ValueError('modes must be distinct M, S or U entries')
     if raw.get('priv', 'msu') != 'msu' and not (raw.get('kind') == 'disabled' and raw.get('priv') == 'mu'):
         raise ValueError('control campaign requires supervisor support (msu)')
-    if raw.get('kind', 'controls') not in ('controls', 'wfi', 'disabled', 'scheduled-wfi', 'plic', 'reset', 'nmi'):
+    if raw.get('kind', 'controls') not in ('controls', 'wfi', 'disabled', 'scheduled-wfi', 'plic', 'reset', 'nmi', 'pma', 'pmp', 'epmp'):
         raise ValueError('kind must be controls, wfi or disabled')
     if raw.get('kind') == 'wfi':
         from .wake import programs
@@ -33,7 +33,10 @@ def load(path):
 
 def build(description, out, gcc='riscv64-unknown-elf-gcc'):
     config = load(description)
-    if config.get('kind') == 'plic':
+    if config.get('kind') in ('pma', 'pmp', 'epmp'):
+        from importlib import import_module
+        rows = import_module('rvw.privilege.' + config['kind']).programs(config)
+    elif config.get('kind') == 'plic':
         from .plic import programs
         rows = programs(config)
     elif config.get('kind') in ('reset', 'nmi'):
@@ -164,6 +167,18 @@ def check(directory, results, platform, timeout=10):
                 row['reason'] = 'C1 stimulus options differ'
                 rows.append(row)
                 continue
+            if scenario.get('pma_expectation'):
+                from .pma import observe
+                artifact = run.artifacts.get('privilege_bus')
+                observed = observe(scenario['pma_expectation'],
+                                   json.loads((run.path / artifact).read_text()) if artifact else None)
+                row['pma'] = observed
+                if artifact:
+                    row['pma_sha256'] = digest(run.path / artifact)
+                if observed['status'] != 'pass':
+                    row.update(status=observed['status'], reason=observed['reason'])
+                    rows.append(row)
+                    continue
             if scenario.get('reset_contract'):
                 from .events import reset_check
                 artifact = run.artifacts.get('privilege_reset')
