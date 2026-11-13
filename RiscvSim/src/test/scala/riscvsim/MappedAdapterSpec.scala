@@ -14,6 +14,18 @@ class MappedAdapterSpec extends AnyFunSuite {
        "ram": {"base": "0x80000000", "size": 4096}, "buses": [$bus],
        "rvfi": {"prefix": "rvfi_"}, "irq": {"7": "mtip"}, "constants": {"x": "0x5"}$extra}"""
 
+  test("completion stores preserve nonzero byte lanes on RV32 and RV64 buses") {
+    for (bytes <- Seq(4, 8); lane <- 0 until bytes) {
+      val target = 0x1000L + lane
+      val tohost = new ToHost(target, bytes)
+      assert(MappedAdapter.completionStore(tohost, 0x1000, BigInt(1) << lane,
+        BigInt(1) << (8 * lane)).contains(ToHost.Pass))
+    }
+    val upper = new ToHost(0x1000, 8)
+    MappedAdapter.completionStore(upper, 0x1000, BigInt(0xf0), BigInt(5) << 32)
+    assert(upper.value == BigInt(5) << 32)
+  }
+
   test("a complete map parses") {
     val m = CoreMap.parse(file, map())
     assert(m.topClass.contains("demo.Top") && m.verilog.isEmpty)

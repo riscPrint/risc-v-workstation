@@ -156,6 +156,17 @@ class MappedRvfi(prefix: String, lookup: String => Option[Data]) {
     memRdata = n("mem_rdata"), memWdata = n("mem_wdata"), memFault = memFault.exists(big(_) != 0)))
 }
 
+object MappedAdapter {
+  /** Pass bus-aligned data to ToHost, which selects the addressed byte lanes. */
+  private[riscvsim] def completionStore(tohost: ToHost, address: BigInt, mask: BigInt,
+      data: BigInt): Option[ToHost.Result] = {
+    val lane = mask.lowestSetBit
+    val count = mask.bitCount
+    require(lane >= 0 && Set(1, 2, 4, 8)(count), "unsupported store mask")
+    tohost.onStore(address + lane, Integer.numberOfTrailingZeros(count), data)
+  }
+}
+
 /** A generic C1 adapter for a core described by a [[CoreMap]]. It names no core signals itself. */
 class MappedAdapter(val map: CoreMap) extends CoreAdapter {
   override def freshInstancePerRun = true
@@ -253,8 +264,8 @@ class MappedAdapter(val map: CoreMap) extends CoreAdapter {
         for (n <- map.irq.values) set(n, 0)
         val random = new scala.util.Random(job.seed)
         def latency(): Long = job.memLatency.map(_.toLong).getOrElse(random.nextInt(4).toLong)
-        def onStore(addr: BigInt, sizeLog2: Int, data: BigInt): Unit =
-          tohost.onStore(addr, sizeLog2, data) match {
+        def onStore(addr: BigInt, mask: BigInt, data: BigInt): Unit =
+          MappedAdapter.completionStore(tohost, addr, mask, data) match {
             case Some(ToHost.Pass) => ctl.finish(Status.Pass)
             case Some(f: ToHost.Fail) => ctl.finish(Status.Fail, Some(f.code), Some(s"tohost = ${Hex(f.raw)}"))
             case None =>
@@ -272,7 +283,7 @@ class MappedAdapter(val map: CoreMap) extends CoreAdapter {
               if (map.rvfiPrefix.isEmpty && ok) {
                 val lane = mask.lowestSetBit
                 val count = mask.bitCount
-                if (lane >= 0 && Set(1, 2, 4, 8)(count)) onStore(addr + lane, Integer.numberOfTrailingZeros(count), data >> (8 * lane))
+                if (lane >= 0 && Set(1, 2, 4, 8)(count)) onStore(addr, mask, data)
               }
               (BigInt(0), !ok)
             } else (if (ok) read(addr, bytes) else BigInt(0), !ok)
@@ -335,10 +346,9 @@ class MappedAdapter(val map: CoreMap) extends CoreAdapter {
             if (r.trap) traps += 1
             writer.foreach(_.write(r))
             if (r.memWmask != 0 && !r.trap) {
-              val lane = Integer.numberOfTrailingZeros(r.memWmask)
               val count = Integer.bitCount(r.memWmask)
               require(Set(1, 2, 4, 8)(count), "unsupported RVFI store mask")
-              onStore(r.memAddr + lane, Integer.numberOfTrailingZeros(count), r.memWdata >> (8 * lane))
+              onStore(r.memAddr, BigInt(r.memWmask), r.memWdata)
             }
           }
         }
