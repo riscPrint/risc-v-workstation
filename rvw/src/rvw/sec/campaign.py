@@ -158,8 +158,9 @@ def run(manifest, out, resume=False):
         case = dict(contract=contract, clauses=plan.get('clauses', ['pc', 'memory', 'branch']),
                     observations=plan['observations'], public=plan.get('public', {}), program=program,
                     secrets=secrets, minimize_runs=0, timeout=plan.get('timeout', 1800),
-                    adapter_command=[a if not a.endswith(('.json', '.S')) or a.startswith('/') else
-                                     str(manifest.parent/a) for a in plan['adapter_command']])
+                    adapter_command=[str((manifest.parent/a).resolve())
+                                     if not Path(a).is_absolute() and (manifest.parent/a).is_file()
+                                     else a for a in plan['adapter_command']])
         folder = out/f'pair-{i:04d}'
         folder.mkdir(exist_ok=True)
         path = folder/'manifest.json'; path.write_text(json.dumps(case, indent=2))
