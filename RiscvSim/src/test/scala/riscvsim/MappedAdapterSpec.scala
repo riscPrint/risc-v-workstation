@@ -45,6 +45,8 @@ class MappedAdapterSpec extends AnyFunSuite {
     val m = CoreMap.parse(file, verilog("clk"))
     assert(m.verilog.get.files == Seq(v.getCanonicalFile) && !m.verilog.get.resetActiveLow)
     assert(m.verilog.get.parameters("P") == BigInt(2147483648L))
+    val absolute = CoreMap.parse(file, verilog("clk").replace("core.v", v.getAbsolutePath))
+    assert(absolute.verilog.get.files == Seq(v.getCanonicalFile))
     intercept[IllegalArgumentException](CoreMap.parse(file, verilog("nope")))
   }
 }

@@ -62,7 +62,10 @@ object CoreMap {
           require(dir == "in" || dir == "out", s"core map: port ${p("name").str} has direction $dir; only in and out are supported")
           MappedPort(p("name").str, dir == "in", p("width").num.toInt)
         }.toSeq
-        val v = Verilog(top("module").str, top("files").arr.map(f => new File(dir, f.str).getCanonicalFile).toSeq,
+        val v = Verilog(top("module").str, top("files").arr.map { f =>
+          val path = new File(f.str)
+          (if (path.isAbsolute) path else new File(dir, f.str)).getCanonicalFile
+        }.toSeq,
           top.get("defines").map(_.obj.map { case (k, v) => k -> v.str }.toMap).getOrElse(Map.empty),
           top.get("parameters").map(_.obj.map { case (k, v) => k -> (v match {
             case ujson.Num(n) => BigInt(n.toLong): Any

@@ -9,7 +9,8 @@ import json
 from pathlib import Path
 import re
 import shutil
-import subprocess
+import shlex
+from rvw.common.proc import run_group
 import tempfile
 
 import rvw
@@ -87,7 +88,7 @@ def check_bus(bus):
     return bus
 
 
-def verilog_ports(files, top, *, defines=(), yosys='yosys', timeout=120):
+def verilog_ports(files, top, *, defines=(), params=(), yosys='yosys', timeout=120):
     """Top-level ports of a Verilog module, from Yosys JSON: [{name, dir, width}]."""
     if shutil.which(yosys) is None:
         raise ValueError(f'Yosys not found ({yosys}); it reads the Verilog ports. Install the formal tools.')
@@ -95,8 +96,9 @@ def verilog_ports(files, top, *, defines=(), yosys='yosys', timeout=120):
         out = Path(tmp) / 'ports.json'
         flags = ' '.join(f'-D{d}' for d in defines)
         reads = '; '.join(f'read_verilog -sv {flags} {json.dumps(str(f))}' for f in files)
-        script = f'{reads}; hierarchy -top {top}; proc; write_json {json.dumps(str(out))}'
-        result = subprocess.run([yosys, '-q', '-p', script], capture_output=True, text=True, timeout=timeout)
+        overrides = ' '.join(f'-chparam {k} {parse_int(v, k)}' for k, v in (p.split('=', 1) for p in params))
+        script = f'{reads}; hierarchy -top {top} {overrides}; proc; write_json {json.dumps(str(out))}'
+        result = run_group([yosys, '-q', '-p', script], capture=True, text=True, timeout=timeout)
         if result.returncode != 0 or not out.exists():
             raise ValueError('Yosys could not read the Verilog top: ' + (result.stderr or result.stdout).strip()[-800:])
         module = json.loads(out.read_text())['modules'].get(top)
@@ -260,7 +262,7 @@ def mapped_scaffold(path='.', *, isa, name=None, top=None, verilog_top=None, ver
         for f in files:
             if not f.is_file():
                 raise ValueError(f'Verilog file not found: {f}')
-        ports = verilog_ports(files, verilog_top, defines=defines, yosys=yosys)
+        ports = verilog_ports(files, verilog_top, defines=defines, params=params, yosys=yosys)
         names = {p['name'] for p in ports}
         for port in (clock, reset):
             if port not in names:
@@ -418,7 +420,16 @@ exec "$RVW_HOME/scripts/with-lock.sh" {name} \\
   "$RVW_HOME/SpinalDB/build-db.sh" class {top} "$2" --sbt-dir "$here" --source-root "$here/../src"
 '''
     else:
-        sources = ' '.join(f'"$here/{f}"' for f in top_entry['files'])
+        sources = ' '.join(shlex.quote(f) if Path(f).is_absolute() else '"$here/"' + shlex.quote(f)
+                           for f in top_entry['files'])
+        query_options = []
+        if defines or params:
+            query_options += ['--frontend', 'slang']
+        for value in defines:
+            query_options += ['--define', value]
+        for key, value in top_entry['parameters'].items():
+            query_options += ['--param', f'{key}={value}']
+        query_flags = shlex.join(query_options)
         db = f'''#!/usr/bin/env bash
 # C6 navigation entry for the Verilog top (Yosys front end; see rvw query build-hdl).
 set -euo pipefail
@@ -426,7 +437,7 @@ set -euo pipefail
 here="$(cd "$(dirname "$0")" && pwd)"
 : "${{RVW_HOME:?Set RVW_HOME to the installed workstation}}"
 exec nice -n 10 "${{RVW_PYTHON:-$RVW_HOME/rvw/.venv/bin/python}}" -m rvw query build-hdl \\
-  --top {verilog_top} --out "$2" {sources}
+  --top {verilog_top} --out "$2" {query_flags} {sources}
 '''
     platform = dict(name=name, isa=isa, xlen=xlen, reset_pc=hex(reset_value),
                     ram=[dict(base=hex(base), size=hex(size))], mmio=[],
@@ -447,7 +458,8 @@ exec nice -n 10 "${{RVW_PYTHON:-$RVW_HOME/rvw/.venv/bin/python}}" -m rvw query b
    Add RVFI with `rvw/templates/RvfiPort.scala` (Spinal) or the core's riscv-formal ports.
 6. Review `rvw/cosim.json` (privilege modes, misaligned policy, PMP, ECALL `tval`).
    {'Remove `review_required` after the review.' if not accept_platform_defaults else 'It uses the platform defaults; check them.'}
-7. Run `rvw doctor --json` and `rvw doctor --conformance --json`.
+7. Run `rvw doctor --json`. Check conformance with
+   `rvw doctor --conformance --smoke-elf rvw/out/programs/smoke --smoke-options rvfi --smoke-platform rvw/cosim.json --json`.
 8. Review all result-changing inputs before enabling `input_complete` and `identity`.
 9. Commit the project files before a gate.
 '''

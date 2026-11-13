@@ -49,19 +49,22 @@ def register(subparsers):
 
 def run(args):
     try:
-        if args.hdl:
+        if args.hdl and not (args.hdl == 'sv' and args.reset_pc is not None):
             from .hdl import scaffold_hdl
             result = scaffold_hdl(args.path, hdl=args.hdl, top=args.top, isa=args.isa, name=args.name,
                                   sources=args.source, include_dirs=args.include_dirs, library=args.library,
                                   fir=args.fir, source_roots=args.source_roots, force=args.force,
                                   dry_run=args.dry_run)
             return _print(args, result)
-        if args.spinal_top or args.verilog_top:
+        if args.spinal_top or args.verilog_top or args.hdl == 'sv':
             from .mapped import mapped_scaffold
+            if args.hdl == 'sv' and args.include_dirs:
+                raise ValueError('Mapped SV init does not yet support -I. Supply self-contained --source files.')
             if args.reset_pc is None:
                 raise ValueError('The mapped adapter needs --reset-pc from the core specification.')
             result = mapped_scaffold(args.path, isa=args.isa, name=args.name, top=args.spinal_top,
-                                     verilog_top=args.verilog_top, verilog=args.verilog, defines=args.define,
+                                     verilog_top=args.verilog_top or (args.top if args.hdl == 'sv' else None),
+                                     verilog=args.verilog or args.source, defines=args.define,
                                      params=args.param, clock=args.clock, reset=args.reset,
                                      reset_active=args.reset_active, buses=args.bus, rvfi_prefix=args.rvfi_prefix,
                                      irq=args.irq, constants=args.const, reset_pc=args.reset_pc, ram=args.ram,

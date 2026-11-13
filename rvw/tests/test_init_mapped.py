@@ -131,3 +131,13 @@ def test_spinal_mapping_refuses_incompatible_scala(tmp_path):
                                reset_pc='0x80000000', buses=[
             'm:valid-ready:valid=v,ready=r,address=a,rdata=d'])
     assert not (tmp_path / 'rvw').exists()
+
+
+def test_query_preserves_external_source_and_simulation_options(verilog_core, tmp_path):
+    source = tmp_path / 'external core.sv'
+    source.write_text('module core(input clk); endmodule\n')
+    make(verilog_core, verilog=[source], defines=['RISCV_FORMAL'], params=['WIDTH=32'])
+    script = (verilog_core / 'rvw/build-db.sh').read_text()
+    assert "--frontend slang --define RISCV_FORMAL --param WIDTH=32" in script
+    assert str(source) in script
+    assert '"$here/"' + str(source) not in script
