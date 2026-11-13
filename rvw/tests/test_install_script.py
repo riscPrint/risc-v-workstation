@@ -82,6 +82,7 @@ def test_native_dry_run_never_executes_package_manager(tmp_path):
         path.chmod(0o755)
     env = {**os.environ, 'PATH': f'{binaries}:{os.environ["PATH"]}'}
     env.pop('JAVA_HOME', None)
+    env.pop('RVW_GEM5', None)
     result = invoke('--all', '--dry-run', '--prefix', tmp_path / 'install', env=env)
     assert result.returncode == 0, result.stderr
     assert not (tmp_path / 'mutations').exists()
