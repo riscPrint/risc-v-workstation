@@ -20,4 +20,4 @@ def command(args):
 def mcp_tools():
     def handler(job,**kw):return run_function(job,'rvw.arch.energy','energy',kw)
     return [ToolSpec('arch_system_energy','Abstract system energy from workload counts and declared power states.',
-                     schema({k:{'type':'string'} for k in ['plan','out']},['plan','out']),handler,long=True)]
+                     schema({k:{'type':'string'} for k in ['plan','out']},['plan','out']),handler,long=True, side_effects='long-running; writes generated artifacts or saved evidence under out', native_tools=())]

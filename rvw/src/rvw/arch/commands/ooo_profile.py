@@ -46,5 +46,5 @@ def mcp_tools():
         def handler(job, _action=action, **kw):
             return run_function(job, __name__, 'execute', dict(action=_action, **kw))
         tools.append(ToolSpec('arch_'+action.replace('-','_'), 'Model slot estimates; accuracy inconclusive.',
-                              schema(props, list(fields)), handler, long=True))
+                              schema(props, list(fields)), handler, long=True, side_effects={'arch_ooo_profile': 'long-running; reads trace and configuration; may build native component cache', 'arch_ooo_diff': 'read-only; long-running'}['arch_' + action.replace('-', '_')], native_tools={'arch_ooo_profile': ('native csim',), 'arch_ooo_diff': ()}['arch_' + action.replace('-', '_')]))
     return tools

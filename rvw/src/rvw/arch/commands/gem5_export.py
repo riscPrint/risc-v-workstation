@@ -21,4 +21,4 @@ def mcp_tools():
     def handler(job,**kw):
         return run_function(job,'rvw.arch.gem5_export','export',kw)
     return [ToolSpec('arch_gem5_export','Export shared O3 configuration files; does not run gem5.',
-                     schema({k:{'type':'string'} for k in ['description','out']},['description','out']),handler,long=True)]
+                     schema({k:{'type':'string'} for k in ['description','out']},['description','out']),handler,long=True, side_effects='long-running; writes generated artifacts or saved evidence under out', native_tools=())]
