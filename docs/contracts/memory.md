@@ -108,3 +108,12 @@ callback prevents later effects. The executor emits independent C2/2 streams
 and per-hart completion. Unfinished harts receive timeout at the cycle or
 wall-clock limit. Dependency completeness and physical addresses default to
 unavailable. This API does not infer global memory order or HSM transitions.
+
+
+## Axiomatic reset and maintenance limits
+
+The scalar axiomatic profile supports one boot epoch per hart. A second
+reset, a trap event or an external maintenance event gives `inconclusive`.
+These events do not silently disappear from the candidate graph. An LR
+before reset cannot pair with an SC after reset. Initial reset records and
+ordinary single-epoch executions remain supported under RVWMO and Ztso.

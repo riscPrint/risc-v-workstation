@@ -218,6 +218,12 @@ def check(trace, reference, model='rvwmo', limit=100000):
         events = []
         for r in records:
             if r.get('event'):
+                if r['event'] == 'reset' and r['epoch'] != 0:
+                    return {'status': 'inconclusive', 'reason': 'independent reset epochs are unsupported by the axiomatic profile'}
+                if r['event'] == 'trap':
+                    return {'status': 'inconclusive', 'reason': 'trap events are unsupported by the axiomatic profile'}
+                if r['event'] == 'external' and r['action'] == 'maintenance':
+                    return {'status': 'inconclusive', 'reason': 'external maintenance events are unsupported'}
                 if r['event'] == 'external' and r['action'] in ('write', 'atomic'):
                     return {'status': 'inconclusive', 'reason': 'external writers are unsupported'}
                 continue
