@@ -304,6 +304,12 @@ def execute(cmd: Command, out: Path, core: str | None = None, log: Path | None =
     `timeout` starts once the core lock is held."""
     d = fresh_dir(out)
     c = cmd.set(out=str(d))
+    resolution_error = c.env.get('RVW_ADAPTER_RESOLUTION_ERROR')
+    if resolution_error:
+        message = 'unsupported revision: ' + resolution_error
+        failure_log = d / 'rerun.log'
+        failure_log.write_text(message + '\n')
+        return Attempt(None, d, 0.0, log=failure_log, error=message)
     argv = c.argv()
     log = Path(log) if log else (d / "rerun.log")
     with open(log, "w") as lf:
