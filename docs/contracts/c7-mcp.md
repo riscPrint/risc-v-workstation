@@ -159,3 +159,17 @@ An empty tuple must not hide an unknown dependency.
 Git is a base installer prerequisite. Replay tools name Git in their effects.
 The audit baseline contains only these three findings.
 The fast inventory test checks this boundary and the replay/SVA discovery paths.
+
+## Profiles and workflow tool sets
+
+Each discovered tool belongs to a named profile and a guide workflow.
+The core profile contains at most 40 tools. It includes each named bring-up call.
+Guide `tools` lists are optional tool sets. They are not executed as a sequence.
+The ordered `steps` retain their decision rules and explicit calls.
+Clients can load another profile through `rvw_tools_load` before an optional call.
+The guide supplies schema-valid example arguments for each bring-up MCP call.
+Angle-bracket values remain inputs that the caller must supply.
+Installation and core adapter mapping remain explicit CLI or manual steps.
+`rvw_doctor` is read-only. `doctor_smoke` runs the native smoke path as a job.
+`init_scaffold` writes project files through the existing scaffold generator.
+Neither scaffold generation nor workflow membership is verification evidence.

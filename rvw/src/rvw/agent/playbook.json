@@ -23,7 +23,10 @@
             "--json"
           ],
           "mcp": {
-            "tool": "rvw_doctor"
+            "tool": "rvw_doctor",
+            "arguments": {
+              "features": "sim,riscv-gcc,cosim"
+            }
           },
           "decide": [
             {
@@ -78,7 +81,16 @@
               "if": "exit 0",
               "then": "init"
             }
-          ]
+          ],
+          "mcp": {
+            "tool": "init_scaffold",
+            "arguments": {
+              "isa": "<ISA>",
+              "wire_build": true,
+              "dry_run": true,
+              "out": "<PROJECT>"
+            }
+          }
         },
         {
           "id": "init",
@@ -95,7 +107,16 @@
               "if": "exit 0",
               "then": "map-adapter"
             }
-          ]
+          ],
+          "mcp": {
+            "tool": "init_scaffold",
+            "arguments": {
+              "isa": "<ISA>",
+              "wire_build": true,
+              "dry_run": false,
+              "out": "<PROJECT>"
+            }
+          }
         },
         {
           "id": "map-adapter",
@@ -120,9 +141,11 @@
             "--json"
           ],
           "mcp": {
-            "tool": "rvw_doctor",
+            "tool": "doctor_smoke",
             "arguments": {
-              "smoke_elf": "<ELF>"
+              "conformance": false,
+              "elf": "<ELF>",
+              "options": "rvfi"
             }
           },
           "decide": [
@@ -145,7 +168,8 @@
             "--json"
           ],
           "mcp": {
-            "tool": "regress_list"
+            "tool": "regress_list",
+            "arguments": {}
           },
           "decide": [
             {
@@ -173,7 +197,19 @@
             "--json"
           ],
           "mcp": {
-            "tool": "regress_run"
+            "tool": "regress_run",
+            "arguments": {
+              "tier": "quick",
+              "out": "<RUN>",
+              "fresh": false,
+              "no_index": false,
+              "dry_run": false,
+              "seed_base": 1,
+              "random_seeds": false,
+              "filter": [],
+              "rvfi_trace": true,
+              "no_cache": false
+            }
           },
           "decide": [
             {
@@ -199,7 +235,16 @@
             "--json"
           ],
           "mcp": {
-            "tool": "cosim_check"
+            "tool": "cosim_check",
+            "arguments": {
+              "elf": "<ELF>",
+              "trace": "<RUN>/rvfi.jsonl",
+              "model": "spike",
+              "history": 10,
+              "strict": false,
+              "strict_sync": [],
+              "timeout": 120
+            }
           },
           "decide": [
             {
@@ -225,7 +270,18 @@
             "--json"
           ],
           "mcp": {
-            "tool": "regress_gate"
+            "tool": "regress_gate",
+            "arguments": {
+              "tier": "quick",
+              "base_rev": "<REV>",
+              "allow_missing": false,
+              "seed_policy": "auto",
+              "seed_base": 1,
+              "random_seeds": false,
+              "filter": [],
+              "rvfi_trace": false,
+              "no_cache": false
+            }
           },
           "decide": [
             {
@@ -253,7 +309,10 @@
             "--json"
           ],
           "mcp": {
-            "tool": "query_build_db"
+            "tool": "query_build_db",
+            "arguments": {
+              "out": "<OUT>"
+            }
           },
           "decide": [
             {
@@ -262,6 +321,31 @@
             }
           ]
         }
+      ],
+      "profile": "core",
+      "tools": [
+        "agent_bringup_check",
+        "agent_guide",
+        "cosim_check",
+        "doctor_smoke",
+        "evidence_index",
+        "evidence_query",
+        "init_scaffold",
+        "job_cancel",
+        "job_events",
+        "job_list",
+        "job_log",
+        "job_result",
+        "job_status",
+        "plan_status",
+        "query_build_db",
+        "regress_gate",
+        "regress_list",
+        "regress_run",
+        "rvw_doctor",
+        "rvw_tools_describe",
+        "rvw_tools_load",
+        "rvw_tools_search"
       ]
     },
     {
@@ -518,6 +602,64 @@
             }
           ]
         }
+      ],
+      "profile": "debug",
+      "tools": [
+        "bisect_run",
+        "bugmem_add",
+        "bugmem_evaluate",
+        "bugmem_list",
+        "bugmem_match",
+        "bundle_make",
+        "debug_checks",
+        "debug_ingress_check",
+        "debug_interop",
+        "debug_suite",
+        "debug_tap",
+        "lsp_request",
+        "query_build_hdl",
+        "query_component",
+        "query_definition",
+        "query_diff",
+        "query_drivers",
+        "query_explain",
+        "query_explain_module",
+        "query_export",
+        "query_fanin",
+        "query_fanout",
+        "query_hierarchy",
+        "query_hierarchy_diff",
+        "query_info",
+        "query_loads",
+        "query_parameters",
+        "query_path",
+        "query_port_status",
+        "query_references",
+        "query_regs",
+        "query_search",
+        "query_type",
+        "query_where",
+        "reduce_run",
+        "replay_pack",
+        "replay_run",
+        "wave_bench",
+        "wave_changes",
+        "wave_cut",
+        "wave_diff",
+        "wave_edges",
+        "wave_find",
+        "wave_index",
+        "wave_index_verify",
+        "wave_info",
+        "wave_list",
+        "wave_profile",
+        "wave_sample",
+        "wave_seq",
+        "wave_session_open",
+        "wave_session_save",
+        "wave_txn",
+        "wave_value",
+        "wave_why"
       ]
     },
     {
@@ -648,6 +790,85 @@
             }
           ]
         }
+      ],
+      "profile": "verification",
+      "tools": [
+        "checks_generate",
+        "checks_report",
+        "cosim_adjudicate",
+        "cosim_doctor",
+        "cosim_exchange",
+        "cosim_generate",
+        "cosim_qemu_check",
+        "cosim_vector_source",
+        "cov_actions",
+        "cov_block_check",
+        "cov_campaign",
+        "cov_closure",
+        "cov_exchange",
+        "cov_functional",
+        "cov_generate",
+        "cov_merge",
+        "cov_mutate",
+        "cov_prove",
+        "cov_rank",
+        "cov_report",
+        "cov_rtl",
+        "cov_select",
+        "cov_source_report",
+        "fault_report",
+        "fault_run",
+        "fault_sites",
+        "memory_axiomatic",
+        "memory_check",
+        "memory_concurrent_build",
+        "memory_concurrent_run",
+        "memory_concurrent_smoke",
+        "memory_directory",
+        "memory_generate",
+        "memory_images",
+        "memory_tilelink_bind",
+        "regress_act4_build",
+        "regress_act4_plan",
+        "regress_compare",
+        "regress_cosim",
+        "regress_history",
+        "regress_known_add",
+        "regress_known_list",
+        "regress_known_remove",
+        "regress_mmu_iommu",
+        "regress_mmu_iommu_generate",
+        "regress_plan",
+        "regress_privilege_build",
+        "regress_privilege_check",
+        "regress_privilege_reference",
+        "regress_random",
+        "regress_sail_tests",
+        "sec_campaign",
+        "sec_contract",
+        "sec_fault",
+        "sec_gadgets",
+        "sec_ift",
+        "sec_ift_core",
+        "sec_isolation",
+        "sec_latency",
+        "sec_model_check",
+        "sec_spec_suite",
+        "sec_suite",
+        "uvm_build",
+        "uvm_coverage_merge",
+        "uvm_features",
+        "uvm_gate_config",
+        "uvm_list",
+        "uvm_new",
+        "uvm_qualification",
+        "uvm_regress",
+        "uvm_run",
+        "verification_plan_check",
+        "verification_plan_generate",
+        "vip_bench",
+        "vip_buses",
+        "vip_list"
       ]
     },
     {
@@ -764,6 +985,83 @@
             }
           ]
         }
+      ],
+      "profile": "formal",
+      "tools": [
+        "formal_aiger_live",
+        "formal_app_deadlock",
+        "formal_app_live",
+        "formal_apps",
+        "formal_autocheck",
+        "formal_bmc",
+        "formal_bug_hunt",
+        "formal_buses",
+        "formal_cex",
+        "formal_connectivity",
+        "formal_counter_quotient",
+        "formal_cover_hunt",
+        "formal_cross_prove",
+        "formal_csr",
+        "formal_custom_effects",
+        "formal_custom_isa",
+        "formal_datapath",
+        "formal_datapath_kit",
+        "formal_device_events",
+        "formal_doctor",
+        "formal_engine_bench",
+        "formal_engine_race",
+        "formal_engines",
+        "formal_equiv",
+        "formal_equiv_partitions",
+        "formal_from_sim",
+        "formal_ic3_lemmas",
+        "formal_initial_split",
+        "formal_internal_path",
+        "formal_isa",
+        "formal_lazy_ram",
+        "formal_liveness",
+        "formal_machine_checks",
+        "formal_model_grid",
+        "formal_model_live",
+        "formal_power",
+        "formal_profiles",
+        "formal_proof_core",
+        "formal_properties",
+        "formal_psl",
+        "formal_recheck",
+        "formal_regress",
+        "formal_relation_strengthen",
+        "formal_reset_audit",
+        "formal_revision_bench",
+        "formal_riscv",
+        "formal_riscv_abstract",
+        "formal_riscv_proof",
+        "formal_rtl_grid",
+        "formal_rtl_refine",
+        "formal_rvfi_generate",
+        "formal_sail_bitmanip",
+        "formal_sail_m",
+        "formal_sail_state",
+        "formal_sail_zicond",
+        "formal_scenario_check",
+        "formal_scenario_compile",
+        "formal_scenario_plan",
+        "formal_security_pair",
+        "formal_security_prove",
+        "formal_shortest",
+        "formal_simulate",
+        "formal_state_generate",
+        "formal_strategy",
+        "formal_sva_inspect",
+        "formal_sva_lower",
+        "formal_swarm",
+        "formal_template",
+        "formal_testplan",
+        "formal_trace_mine",
+        "formal_uf_prove",
+        "formal_upf",
+        "formal_x_sweep",
+        "formal_xprop"
       ]
     },
     {
@@ -845,6 +1143,157 @@
               "note": "Model results show trends. RTL is the truth."
             }
           ]
+        }
+      ],
+      "profile": "arch",
+      "tools": [
+        "arch_build",
+        "arch_calibrate",
+        "arch_compare",
+        "arch_compiler_check",
+        "arch_compiler_export",
+        "arch_custom_tradeoff",
+        "arch_fit",
+        "arch_gem5_export",
+        "arch_inspect",
+        "arch_measure",
+        "arch_memory_extract",
+        "arch_memory_report",
+        "arch_ooo_designer",
+        "arch_ooo_diff",
+        "arch_ooo_fit",
+        "arch_ooo_profile",
+        "arch_ooo_sampled",
+        "arch_ooo_search",
+        "arch_ooo_sensitivity",
+        "arch_ooo_what_if",
+        "arch_ooo_wrong_path",
+        "arch_pareto",
+        "arch_predict",
+        "arch_run",
+        "arch_sample",
+        "arch_sched_study",
+        "arch_score_prediction",
+        "arch_search",
+        "arch_sweep",
+        "arch_system_energy",
+        "arch_traffic",
+        "arch_warmup_bias",
+        "csim_budget",
+        "csim_compare",
+        "csim_compare_rtl",
+        "csim_convert",
+        "csim_models",
+        "csim_qualify",
+        "csim_run",
+        "csim_run_points",
+        "csim_simpoint",
+        "csim_sweep",
+        "ooo_calibrate",
+        "ooo_predict",
+        "ooo_run",
+        "ooo_score_prediction",
+        "perf_compare",
+        "perf_report",
+        "perf_topdown",
+        "workloads_build",
+        "workloads_evaluate",
+        "workloads_list",
+        "workloads_verify"
+      ]
+    },
+    {
+      "id": "soc-integration",
+      "title": "SoC and execution infrastructure",
+      "when": "A project needs peripheral, lint, multi-run or simulation infrastructure checks.",
+      "steps": [
+        {
+          "id": "review",
+          "manual": true,
+          "do": "Review the project map, adapter and required evidence. Choose the tools listed for this workflow."
+        },
+        {
+          "id": "discover",
+          "manual": true,
+          "do": "Describe the selected tool. Load its profile. Keep transport completion separate from verification.",
+          "mcp": {
+            "tool": "rvw_tools_search",
+            "arguments": {
+              "keyword": "soc"
+            }
+          }
+        }
+      ],
+      "profile": "soc",
+      "tools": [
+        "farm_batch",
+        "farm_budget",
+        "farm_cancel",
+        "farm_classify",
+        "farm_dashboard",
+        "farm_live",
+        "farm_notifications",
+        "farm_plan",
+        "farm_queue",
+        "farm_recover",
+        "farm_run",
+        "farm_select",
+        "farm_triage",
+        "farm_workflow",
+        "lint_emit",
+        "lint_report",
+        "probes_check",
+        "probes_convert",
+        "probes_list",
+        "probes_summary",
+        "sim_checkpoint",
+        "sim_profile",
+        "sim_resume",
+        "sim_reverse_step",
+        "sim_server_request",
+        "sim_suffix_check",
+        "sim_timing_handoff",
+        "soc_audit",
+        "soc_compose",
+        "soc_export_ipxact",
+        "soc_feedback",
+        "soc_handoff",
+        "soc_mbist",
+        "soc_new",
+        "soc_observe",
+        "soc_observe_pack",
+        "soc_pair",
+        "soc_peripheral",
+        "soc_verify"
+      ]
+    },
+    {
+      "id": "agent-evaluation",
+      "title": "Agent evaluation",
+      "when": "Measure a bounded fixture or native repair task with independent checks.",
+      "profile": "verification",
+      "tools": [
+        "agent_bench_native_qualify",
+        "agent_bench_repair_check",
+        "agent_bench_repair_prepare",
+        "agent_bench_trial"
+      ],
+      "steps": [
+        {
+          "id": "select",
+          "manual": true,
+          "do": "Select a task pack and its independent checks. Keep fixture scores separate from native repair evidence."
+        },
+        {
+          "id": "inspect",
+          "manual": true,
+          "do": "Describe the benchmark tool before a trial. Record budgets, partial attempts and evidence limits.",
+          "mcp": {
+            "tool": "rvw_tools_search",
+            "arguments": {
+              "keyword": "agent bench"
+            }
+          }
         }
       ]
     }
