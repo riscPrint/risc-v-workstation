@@ -60,6 +60,13 @@ class Queue:
             # Priority first. Within a priority, choose the least served owner.
             served = lambda owner: sum(len(j['attempts']) for j in rows if j['owner'] == owner)
             job = min(waiting, key=lambda j: (-j['priority'], served(j['owner']), j['created']))
+            from .costs import admit
+            allowed = admit(db, rows, job)
+            if allowed <= 0:
+                job.update(state='budget_exhausted')
+                self.save(db, job)
+                return None
+            job['effective_timeout'] = allowed
             job.update(state='running', controller=os.getpid(), heartbeat=time.time(), pgid=None)
             job['attempts'].append(dict(start=time.time(), status='running'))
             self.save(db, job)
@@ -130,7 +137,7 @@ class Queue:
         status = 'infrastructure_error'
         try:
             with (folder / f"attempt-{len(job['attempts'])}.log").open('w') as log:
-                result = run_group(job['command'], cwd=folder, timeout=job['timeout'], stdout=log, stderr=log,
+                result = run_group(job['command'], cwd=folder, timeout=job.get('effective_timeout', job['timeout']), stdout=log, stderr=log,
                                    on_start=lambda pid: self.update(job['id'], pgid=pid, process_stamp=process_stamp(pid)))
             status = 'timeout' if result.timed_out else ('complete' if result.returncode == 0 else 'error')
         except OSError as exc:
@@ -139,6 +146,7 @@ class Queue:
             stopped.set()
             thread.join()
         current = next(j for j in self.jobs() if j['id'] == job['id'])
+        status = ('budget_exhausted' if status == 'timeout' and job.get('effective_timeout', job['timeout']) < job['timeout'] else status)
         status = 'cancelled' if current['state'] == 'cancel_requested' else status
         job['attempts'][-1].update(status=status, end=time.time())
         outcomes = {a['status'] for a in job['attempts']}

@@ -30,7 +30,10 @@ def mcp_tools():
     string = {"type": "string"}
     array = {"type": "array", "items": string, "minItems": 1}
     from .service import manage
-    return [ToolSpec("farm_batch", "Render, submit, inspect, cancel or collect explicit local/Kubernetes shards.",
+    from .costs import budget
+    return [ToolSpec("farm_budget", "Set cumulative queue budgets or report costs. CPU charge is declared cores times wall time.",
+                 schema({"root": string, "scope": string, "limits": {"type": "object"},
+                         "rate_per_core_hour": {"type": "number", "minimum": 0}}, ["root", "scope"]), budget), ToolSpec("farm_batch", "Render, submit, inspect, cancel or collect explicit local/Kubernetes shards.",
                  schema({"plan": {"type": "object"}, "action": string, "executor": string, "root": string,
                          "ids": {"type": "array"}}, ["plan"]), batch_json, long=True), ToolSpec("farm_queue", "Manage persistent local jobs. Completion is not DUT pass.",
                  schema({"root": string, "operation": string, "options": {"type": "object"}}, ["root"]),

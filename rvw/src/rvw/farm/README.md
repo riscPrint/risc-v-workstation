@@ -247,3 +247,24 @@ and exercise a fake kubectl. No cluster or kind execution has run. This does not
 supply tool images, object storage, automatic cache builds, C3 gate publication,
 `regress gate --executor`, or a scale/parity result. Each command and its result
 paths must be supplied in the shard plan. Existing SSH plans remain unchanged.
+
+## Cumulative service budgets
+
+`rvw farm budget --root DIR --scope project:demo --limits
+'{"core_hours":2,"wall_seconds":3600,"jobs":100}'` sets a persistent budget.
+Scopes are `run:JOB_ID`, `agent:OWNER`, and `project:NAME`. Queue submissions
+can set `project` and positive `cores` in their options. The default project is
+`default`, with one declared core. All configured scopes apply. Active attempts
+reserve their maximum remaining charge under the queue transaction. Shared
+project and agent limits therefore include simultaneous workers.
+
+The worker reduces its timeout to the remaining wall/core-hour budget. Exhaustion
+cannot earn a DUT pass. Every launch and retry consumes one job. Cleanup time is
+charged, including any overrun beyond the timeout. The report groups charges by
+execution state and retains every attempt. It does not infer a DUT verdict from
+process status. `--rate-per-core-hour` sets an explicit money rate in caller units.
+Without a rate, cost is null. MCP `farm_budget` has the same interface.
+
+These budgets govern the local service queue. CPU is declared cores times wall
+time, not measured CPU or an OS quota. Memory/disk reservations remain in the SSH
+host scheduler. Kubernetes admission and external plugin accounting are separate.
