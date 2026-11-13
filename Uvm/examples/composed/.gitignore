@@ -1,0 +1,5 @@
+generated/
+rtl/
+spinal/target/
+spinal/project/target/
+__pycache__/
