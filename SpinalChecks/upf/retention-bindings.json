@@ -1,0 +1,9 @@
+{
+  "schema": "rvw.upf-bindings/1",
+  "top": "Top",
+  "event_model": "always_on_sampled",
+  "domains": {"PD": {}},
+  "retention": {
+    "RET": {"width": 8, "clk": "clk", "reset": "reset", "power_good": "power_good", "functional_use": "functional_use", "state": "state"}
+  }
+}

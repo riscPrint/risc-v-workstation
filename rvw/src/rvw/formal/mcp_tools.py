@@ -213,7 +213,7 @@ def mcp_tools():
                  _liveness, long=True),
         ToolSpec("formal_device_events", "Check concurrent device requests against independent reset state. Matching samples remain inconclusive.",
                  schema({"model": S, "trace": S, "out": S}, ["model", "trace", "out"]), _device_events, long=True),
-        ToolSpec("formal_upf", "Import literal UPF domain/isolation declarations and generate sampled checks. No verification run.",
+        ToolSpec("formal_upf", "Import literal UPF isolation, retention and supply tables. No verification run.",
                  schema({"source": S, "bindings": S, "out": S}, ["source", "bindings", "out"]), _upf, long=True),
         ToolSpec("formal_sail_zicond", "Compile pinned Sail RV32 CZERO rules into instruction checks. This is a result slice with an explicit RVFI shell, not a full-machine proof.",
                  schema({"model": S, "compiler": S, "out": S}, ["model", "out"]), _sail_zicond, long=True),

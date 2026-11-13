@@ -69,7 +69,7 @@ def load(path):
         if type(csr.get('reset_known', True)) is not bool:
             raise ValueError('reset_known must be boolean')
         if not csr.get('reset_known', True):
-            if used != (1 << width)-1 or csr.get('read_only') or csr['address'] >> 10 == 3 or any(
+            if csr['privilege'] != 'M' or used != (1 << width)-1 or csr.get('read_only') or csr['address'] >> 10 == 3 or any(
                 f['access']['M'] != 'RW' or f.get('effect', 'none') != 'none'
                 for f in csr.get('fields', [])):
                 raise ValueError('unknown reset requires full-width ordinary M-mode writes')

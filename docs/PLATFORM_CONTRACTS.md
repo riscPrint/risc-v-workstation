@@ -3666,6 +3666,38 @@ proof, physical-power, scan-coverage or ATPG evidence. UPF import is unsupported
 
 ### Project CSR generation
 
+#### Literal retention and supply tables
+
+`rvw.upf-subset/1` can also retain `retention` and `psts` declarations.
+`rvw.upf-bindings/1` has optional maps with the same names. Every imported
+retention strategy and power-state table needs a binding. Retention uses
+sampled high/low save and restore controls. Supply tables compare declared
+integer state codes against legal tuples. Neither feature infers analog
+availability or voltage semantics. Generation retains the existing hashes,
+limitations and no_checks behavior.
+
+#### Project check generation
+
+`rvw.check-generation/1` selects relative input files for streams, buses, csrs,
+queues and power. `rvw checks generate --all` writes
+`rvw.check-generation-summary/1`, with per-kind status, reasons, instance rows
+and output paths. Status `generated` means at least one bound generator result.
+`complete` requires every kind and instance to be generated. Unbound emitted
+sources do not count. This is generation evidence, not a proof verdict.
+`rvw.micro-checks/1` declares a top target and rules with id, kind, width, entries,
+ports and optional bounded arbiter fairness. `rvw.micro-generation/1` retains
+per-rule generated/unsupported status. Port mappings remain project declarations.
+
+#### CSR storage without a reset initializer
+
+A CSR row can set `reset_known=false`. The default is true. Unknown reset
+requires full-width ordinary M-mode RW fields. Partial writes, read-clear,
+W1C and read-only registers are refused for this mode. State and read-data
+checks start after the first accepted full write. Access checks remain active.
+`reset` supplies the software initialization value in this mode. It does not
+claim a DUT reset value. Generated safe assembly writes this value before its
+first comparison. Scala `CsrModel.resetKnown` has the same restriction.
+
 `rvw.csr/1` describes CSR addresses, project reset values, privilege, presence,
 field ranges, per-privilege access, legal values, legalization tables and bounded
 side effects. See `SpinalChecks/csr/README.md` for the exact transaction binding.

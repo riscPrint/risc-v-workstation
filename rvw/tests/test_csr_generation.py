@@ -153,3 +153,13 @@ def test_unknown_reset_requires_full_write_and_initializes_assembly(tmp_path):
     asm = (tmp_path/'out/scratch.S').read_text()
     assert asm.index('csrw 0x340, t0') < asm.index('csrr s2, 0x340')
     assert 'known_scratch' in (tmp_path/'out/csr.sv').read_text()
+
+
+def test_unknown_reset_refuses_modes_without_full_write(tmp_path):
+    m=model()
+    c=m['csrs'][0]
+    c.update(reset_known=False,privilege='U')
+    c['fields']=[dict(lsb=0,width=32,access=dict(U='RO',S='RO',M='RW'))]
+    p=tmp_path/'model.json';p.write_text(json.dumps(m))
+    with pytest.raises(ValueError,match='full-width'):
+        load(p)
