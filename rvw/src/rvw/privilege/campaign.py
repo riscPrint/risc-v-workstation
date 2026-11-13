@@ -16,14 +16,14 @@ def load(path):
     raw = json.loads(Path(path).read_text())
     if raw.get('schema') != 'rvw.privilege/1':
         raise ValueError('expected rvw.privilege/1')
-    if set(raw) - {'schema', 'modes', 'isa', 'priv', 'kind', 'timer', 'wake', 'plic', 'reset', 'nmi', 'compiler_isa', 'pma', 'imsic', 'aplic', 'spec_version', 'reference_backend', 'aclint', 'fast_interrupts', 'spec_revision'}:
+    if set(raw) - {'reri', 'dvfs', 'schema', 'modes', 'isa', 'priv', 'kind', 'timer', 'wake', 'plic', 'reset', 'nmi', 'compiler_isa', 'pma', 'imsic', 'aplic', 'spec_version', 'reference_backend', 'aclint', 'fast_interrupts', 'spec_revision'}:
         raise ValueError('unknown campaign field')
     modes = raw.get('modes', ['M', 'S', 'U'])
     if not modes or len(set(modes)) != len(modes) or any(m not in (('M', 'S', 'U', 'mprv-s', 'mprv-u') if raw.get('kind') == 'pmp' else ('M', 'S', 'U')) for m in modes):
         raise ValueError('modes must be distinct M, S or U entries')
     if raw.get('priv', 'msu') != 'msu' and not (raw.get('kind') == 'disabled' and raw.get('priv') == 'mu'):
         raise ValueError('control campaign requires supervisor support (msu)')
-    if raw.get('kind', 'controls') not in ('controls', 'wfi', 'disabled', 'scheduled-wfi', 'plic', 'reset', 'nmi', 'pma', 'pmp', 'epmp', 'imsic', 'aplic', 'aclint', 'smnip'):
+    if raw.get('kind', 'controls') not in ('reri', 'dvfs', 'controls', 'wfi', 'disabled', 'scheduled-wfi', 'plic', 'reset', 'nmi', 'pma', 'pmp', 'epmp', 'imsic', 'aplic', 'aclint', 'smnip'):
         raise ValueError('kind must be controls, wfi or disabled')
     if raw.get('kind') == 'wfi':
         from .wake import programs
@@ -44,6 +44,8 @@ def scenarios(config):
 def build(description, out, gcc='riscv64-unknown-elf-gcc'):
     config = load(description)
     rows = scenarios(config)
+    if not rows:
+        raise ValueError('campaign has no scenarios')
     out = Path(out).resolve()
     out.mkdir(parents=True, exist_ok=True)
     if any(out.iterdir()):
@@ -106,11 +108,16 @@ def reference(directory, spike='spike', timeout=2):
                 raise ValueError('ELF changed since build')
             if 'reference_model' not in scenario:
                 raise ValueError('no Python reference model for this scenario')
-            model = fast_interrupts if scenario['reference_model']['kind'] in ('aclint', 'smnip') else aia
+            from importlib import import_module
+            model_kind = scenario['reference_model']['kind']
+            model = import_module('rvw.privilege.' + model_kind) if model_kind in ('reri','dvfs') else fast_interrupts if model_kind in ('aclint','smnip') else aia
             rows.append(model.reference(scenario))
+        models = [aia, fast_interrupts, controllers]
+        if manifest['config'].get('kind') in ('reri','dvfs'):
+            models.append(import_module('rvw.privilege.' + manifest['config']['kind']))
         return dict(schema='rvw.privilege-reference/1', scope='model-based Python reference; no DUT coverage',
                     evidence='model-based', manifest_sha256=digest(directory / 'manifest.json'),
-                    model_sha256={Path(m.__file__).name:digest(m.__file__) for m in (aia,fast_interrupts,controllers)},
+                    model_sha256={Path(m.__file__).name:digest(m.__file__) for m in models},
                     status=verdict(rows), scenarios=rows)
     executable = shutil.which(spike)
     if not executable:
@@ -172,6 +179,22 @@ def check(directory, results, platform, timeout=10):
                 row['reason'] = 'C1 stimulus options differ'
                 rows.append(row)
                 continue
+            if not run.why_inconclusive and run.status != 'pass':
+                row.update(status='fail', reason='C1 self-check failed')
+                rows.append(row)
+                continue
+            if scenario.get('dvfs_contract'):
+                from .dvfs import observe
+                artifact = run.artifacts.get('privilege_dvfs')
+                observed = observe(scenario['dvfs_contract'],
+                                   json.loads((run.path / artifact).read_text()) if artifact else [])
+                row['dvfs'] = observed
+                if artifact:
+                    row['dvfs_sha256'] = digest(run.path / artifact)
+                if observed['status'] != 'pass':
+                    row.update(status=observed['status'],reason=observed['reason'])
+                    rows.append(row)
+                    continue
             if scenario.get('pma_expectation'):
                 from .pma import observe
                 artifact = run.artifacts.get('privilege_bus')

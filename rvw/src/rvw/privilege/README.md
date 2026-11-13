@@ -210,3 +210,38 @@ context. Guest files, full virtualization, level-to-MSI conversion, vector
 entry and asynchronous preemption need additional program campaigns. The model
 rejects level-to-MSI requests rather than assume a gateway rule. Old CLIC drafts
 are not silently mapped onto ACLIC. These limits keep #158, #165 and #186 open.
+
+## RERI and digital DVFS
+
+RERI project data pins `RERI-v1.0`, ratified 2024-05-24, source commit
+`12eef3f549fe54f817185b1e084b85537f442999`. See the
+[RERI v1.0 source](https://github.com/riscv-non-isa/riscv-ras-eri/tree/v1.0).
+`reri.base`, supported `classes`, `priority_supported` and `control` describe
+one implemented record. Programs first invalidate and initialize that record.
+The specification does not define a universal reset value. Seven full-capability
+cases check CE/UED/UEC logging, severity and priority overwrite, sticky history,
+multiple occurrence and read/invalidate recovery. The model also implements
+valid-write protection, RDIP/SINV races and corrected-error counting/overflow.
+
+The project driver must inject an actual hardware error event, not silently
+substitute a software status-register write. An optional `irq_routes` map from
+RERI signal selection to interrupt cause adds an interrupt handler check. The
+program requires observed delivery, the correct cause, a PC in the event region
+and a valid error record. The example routes low and high RAS requests to MEIP.
+That route is fixture data. It is not a RERI-mandated route. Python reference
+reports cover record behavior and expected signal requests. They are model-based.
+They do not establish physical poison propagation or successful DUT recovery.
+
+`kind = "dvfs"` declares frequency/voltage states and a sequence of state names.
+The program checks retained register state and completion across mailbox-driven
+transitions. The Python reference lists expected digital handshake phases. It
+requires voltage readiness before a frequency increase and a frequency decrease
+before voltage reduction. A `privilege_dvfs` C1 artifact contains reference-tick
+samples with step, phase, frequency_hz, voltage_uv, clock_ready and voltage_ready.
+The checker requires every phase in order and ready target state before ack.
+It checks the declared frequency/voltage-state limits. Missing samples stay
+inconclusive. The report binds the observation hash. This is a digital sequencing
+check. It does not qualify analog voltage, PLL behavior or physical timing.
+
+The C1 checker gives a matching architectural self-check failure precedence over
+missing optional device observations. A model-based report cannot override it.

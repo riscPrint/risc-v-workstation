@@ -1,0 +1,21 @@
+{
+  "schema": "rvw.privilege/1",
+  "kind": "reri",
+  "reference_backend": "python",
+  "spec_version": "RERI-v1.0",
+  "spec_revision": "12eef3f549fe54f817185b1e084b85537f442999",
+  "reri": {
+    "base": 805306368,
+    "priority_supported": true,
+    "classes": [
+      "ce",
+      "ued",
+      "uec"
+    ],
+    "control": 149,
+    "irq_routes": {
+      "1": 11,
+      "2": 11
+    }
+  }
+}

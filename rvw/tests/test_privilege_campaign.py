@@ -115,3 +115,18 @@ def test_wfi_bad_config(timer):
     from rvw.privilege.wake import programs
     with pytest.raises(ValueError):
         programs({'timer': timer})
+
+
+def test_c1_failure_precedes_missing_device_samples(tmp_path,monkeypatch):
+    import rvw.results
+    elf=make_build(tmp_path)
+    manifest=json.loads((tmp_path/'manifest.json').read_text())
+    manifest['scenarios'][0]['pma_expectation']={'address':8}
+    (tmp_path/'manifest.json').write_text(json.dumps(manifest))
+    (tmp_path/'result.json').write_text('{}')
+    run=SimpleNamespace(elf_sha256=campaign.digest(elf),path=tmp_path,
+        why_inconclusive=None,status='fail',artifacts={},extra={})
+    monkeypatch.setattr(rvw.results,'load_run',lambda _:run)
+    checked=campaign.check(tmp_path,tmp_path,'platform.json')
+    assert checked['status']=='fail'
+    assert checked['scenarios'][0]['reason']=='C1 self-check failed'
