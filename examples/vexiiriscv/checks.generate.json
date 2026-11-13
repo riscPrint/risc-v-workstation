@@ -6,5 +6,6 @@
   },
   "buses": {
     "database": "rvw/out/vexii.db"
-  }
+  },
+  "csrs": "csr.json"
 }

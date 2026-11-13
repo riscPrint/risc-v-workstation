@@ -31,7 +31,7 @@ val pinnedSpinal = Seq(
 // Compile the external core sources and the rvls trace interface here.
 // Consume the generic simulator as a library. The core build files stay unused.
 lazy val root = (project in file("."))
-  .dependsOn(ProjectRef(workstation / "RiscvSim", "riscvsim"), spinalIdsl, spinalCore, spinalLib, spinalSim)
+  .dependsOn(ProjectRef(workstation / "RiscvSim", "riscvsim"), ProjectRef(workstation / "SpinalChecks", "spinalchecks"), spinalIdsl, spinalCore, spinalLib, spinalSim)
   .settings(pinnedSpinal)
   .settings(
     name := "rvw-vexiiriscv",
