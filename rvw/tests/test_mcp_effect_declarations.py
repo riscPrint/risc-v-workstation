@@ -157,3 +157,10 @@ def test_bisect_effects_and_native_requirements(name, registry):
     tool = registry.tools[name]
     assert tool.side_effects
     assert (tool.native_tools is None) == (name == 'farm_batch')
+
+
+@pytest.mark.parametrize('name', ['bundle_make'])
+def test_bundle_effects_and_native_requirements(name, registry):
+    tool = registry.tools[name]
+    assert tool.side_effects
+    assert (tool.native_tools is None) == (name == 'farm_batch')
