@@ -329,7 +329,7 @@ def check_state_controls(probe_json: Path, *, allow_async_reset=False, allow_lat
             die('unsupported asynchronous or latched state in event BMC; only constant-value async reset FFs '
                 'are enabled. Refusing:\n  ' + shown)
         die('unsupported asynchronous or latched state: rvw formal uses a single-clock model '
-            '(sby multiclock off), which can miss events between clock edges. Refusing:\n  ' + shown)
+            '(sby multiclock off), which can miss events between clock edges. For constant-value ASYNC reset FFs use BMC/apps/autocheck --event-model --async-reset; otherwise select SYNC reset in the shared project elaboration and rebuild the database. Refusing:\n  ' + shown)
 
 
 def need(tool: str) -> str:

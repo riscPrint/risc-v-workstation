@@ -52,3 +52,10 @@ evidence only. It cannot earn an executed C3 pass.
 
 IFT reports checked_cycles. Zero enabled sink samples is inconclusive. Optional
 C6 dependency paths retain query capture identity and structural-path limits.
+
+## Boolean unknown constants and reset support
+
+IFT treats X/Z constants as unknown Boolean values with taint set. Reports name
+this policy in `unknown_constants`. Z does not model electrical high impedance.
+Unsupported state cells refuse instrumentation before native simulation with a
+hint to rebuild every flow from the same project-owned SYNC elaboration entry.

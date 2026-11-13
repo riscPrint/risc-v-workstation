@@ -230,3 +230,15 @@ still needs executed core suites. PMP/ePMP, predictor/cache cleanup and declared
 Zkt decoding need independent project models and native core evidence. IFT
 memory regions need mapped signal declarations; dynamic source-level taint
 provenance is not implemented. These limits remain open work.
+
+## Generated RTL reset and unknown constants
+
+The Boolean IFT shadow pass accepts public rising-edge synchronous state.
+Other reset/clock cells return `unsupported` with a shared elaboration fix hint
+before native compilation. Set SYNC reset in the project entry, then rebuild
+simulation and SpinalDB. Do not change only the database configuration.
+
+X and Z constants represent either Boolean value. Their representative value
+is zero and their taint is one. This can add findings. It cannot establish
+absence of leakage through an unknown constant. It does not model electrical
+high impedance. Both precise and conservative modes retain this uncertainty.
