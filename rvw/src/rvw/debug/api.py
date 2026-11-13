@@ -109,3 +109,40 @@ def _write_tests(out, tests, *, suite_name, core, config, extra=None):
     status, code = suite.verdict(results)
     return {'status': status, 'exit': code, 'results': str(out / 'results.json'),
             'counts': {s: sum(t['status'] == s for t in tests) for s in {t['status'] for t in tests}}}
+
+
+def _ntrace_options(mode='htm', sync_period=0, adapter=None):
+    from . import ntrace_check
+    if adapter:
+        return None, ntrace_check.load_adapter(adapter)
+    return {'mode': mode, 'sync_period': sync_period}, None
+
+
+def ntrace_check(out, rvfi, elf, packets=None, filter_path=None, losses=(), mode='htm', sync_period=0, adapter=None):
+    import json
+    from . import ntrace_check as nc
+    profile, loaded = _ntrace_options(mode, sync_period, adapter)
+    out = Path(out)
+    out.mkdir(parents=True, exist_ok=True)
+    result, expected = nc.check(rvfi, elf, packets=packets, profile=profile, adapter=loaded,
+                                filter_spec=_filter(filter_path), losses=losses)
+    (out / 'expected.ntrace').write_bytes(expected)
+    (out / 'result.json').write_text(json.dumps(result, indent=2) + '\n')
+    result['result'] = str(out / 'result.json')
+    return result
+
+
+def ntrace_loss(out, rvfi, elf, positions=None, mode='htm', sync_period=0, adapter=None):
+    from . import ntrace_check as nc
+    profile, loaded = _ntrace_options(mode, sync_period, adapter)
+    tests = nc.loss_campaign(rvfi, elf, profile=profile, adapter=loaded, positions=positions)
+    params = nc.params_for(profile, loaded)
+    return _write_tests(out, tests, suite_name='ntrace-loss', core='reference-encoder',
+                        config=f'n-trace-{params["mode"]}', extra={'codec': 'rvw-ntrace/1'})
+
+
+def trace_adapter(path):
+    from . import ntrace_check
+    adapter = ntrace_check.load_adapter(path)
+    return {'name': adapter['name'], 'vendor': adapter['vendor'], 'verified': adapter['verified'],
+            'vectors': adapter['vectors'], 'sha256': adapter['sha256'], 'specification': adapter['specification']}

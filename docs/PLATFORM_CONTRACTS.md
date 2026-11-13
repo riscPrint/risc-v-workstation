@@ -686,6 +686,17 @@ result lists `leaked_pcs` and `leaked_addresses`. `partial_match` is not a
 match of the whole run. `rvw debug etrace-loss` writes C3 with
 `suite: "etrace-loss"`; each test records `windows` and `unknown_instructions`.
 
+### N-Trace results and trace adapters
+
+`rvw debug ntrace-check` writes `result.json` with the E-Trace flow statuses and
+`codec` (`rvw-ntrace/1`), `mode`, `expected_messages`, `messages` (message
+comparison), `trailing_bytes`, `windows` and an optional `adapter` (name, SHA-256).
+It writes the expected stream as `expected.ntrace`. `rvw debug ntrace-loss` writes C3
+with `suite: "ntrace-loss"`. A trace adapter file (`rvw.trace-adapter/1`, TOML) has
+`name`, `vendor`, `codec`, `specification`, `license`, an `[ntrace]` table of codec
+parameters and one or more `[[vectors]]` with `bytes` (hexadecimal) and `messages`.
+An adapter with a failing or missing vector is refused.
+
 ### Optional multi-hart extension (C1 and C2)
 
 C1 stays `rvw.run/1`. An adapter can opt in with `details.multihart`.

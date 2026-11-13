@@ -525,6 +525,10 @@ class Asm:
         return ((imm20 & 0xfffff) << 12) | (rd << 7) | 0x37
 
     @staticmethod
+    def auipc(rd, imm20):
+        return ((imm20 & 0xfffff) << 12) | (rd << 7) | 0x17
+
+    @staticmethod
     def ld(rd, rs1, imm=0):
         return _i(0x03, rd, 3, rs1, imm)
 

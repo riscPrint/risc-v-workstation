@@ -252,6 +252,55 @@ lost the start) and `truncate`, at sampled positions (`--at`). A test passes whe
 every observed window matches C2 and the lost span is reported as unknown. Results
 are C3 (`etrace-loss`). Resynchronization at trap syncs (subformat 1) is not used.
 
+## N-Trace
+
+N-Trace support is separate from E-Trace (#194). An E-Trace result never counts
+as N-Trace support. `ntrace.py` holds the codec `rvw-ntrace/1`: a reference
+encoder from C2, MDO/MSEO byte packing, and a decoder. The decoder uses the program
+image from the ELF, not C2.
+
+```sh
+rvw debug ntrace-check --rvfi run/rvfi.jsonl --elf prog.elf --mode htm --sync-period 2 \
+  --packets capture.ntrace [--filter filter.toml] [--loss-at N] --out /tmp/ntrace
+rvw debug ntrace-loss --rvfi run/rvfi.jsonl --elf prog.elf --mode btm --sync-period 2 --out /tmp/ntrace-loss
+```
+
+- Messages: Ownership (2, privilege), DirectBranch (3), IndirectBranch (4), Error (8),
+  ProgTraceSync (9), ResourceFull (27, history or ICNT overflow), IndirectBranchHist
+  (28), ProgTraceCorrelation (33, trace stop with ICNT and history). Bytes carry six
+  MDO bits and two MSEO bits. Variable fields end on a byte boundary. Sync messages
+  carry full halfword addresses; other messages carry the XOR with the last address.
+- Modes: `btm` (a message for every taken direct branch and jump) and `htm` (branch
+  history; a message for each indirect jump and trap). Traps use BTYPE 1.
+  `--sync-period N` adds a periodic ProgTraceSync after N address messages.
+- The SYNC, EVCODE, ETYPE, RCODE and BTYPE values are profile parameters with rvw
+  defaults. Check them against the encoder documentation before a conformance claim.
+- Decoding stops at Error messages, known gaps (`--loss-at`, message index) and
+  decode failures. It resumes only at a ProgTraceSync. Windows and verdicts are
+  the same as for E-Trace. A capture without its stop message is not a full match.
+  A message dropped without a gap marker gives `mismatch`.
+- `ntrace-loss` drops messages, replaces them with Error (overflow), discards the
+  start (wrap) or cuts the end, at positions that have a later sync point.
+
+## Vendor trace adapters
+
+A vendor adapter (`rvw.trace-adapter/1`) configures the N-Trace codec for one
+encoder (#207). It must cite the vendor `specification`, state its `license`, and
+give known packet `vectors` (bytes and the messages they encode). The adapter is
+used only when every vector unpacks to its messages and packs back to its bytes.
+An adapter without vectors is refused: a vendor name is not evidence of format
+compatibility.
+
+```sh
+rvw debug trace-adapter examples/trace/nexus-htm-template.toml
+rvw debug ntrace-check --adapter my-encoder.toml --rvfi ... --elf ... --packets ... --out ...
+```
+
+`examples/trace/nexus-htm-template.toml` is a template. Its vectors come from the rvw
+codec, not from a vendor. No SiFive or Andes adapter is bundled: this repository has
+no vendor packet vectors with a usable license. Add one from the vendor
+documentation with its vectors.
+
 ## Native validation
 
 ```sh
@@ -285,6 +334,8 @@ Open items:
 - #168: context changes (no C2 context field) and options beyond the baseline encoder are not tested.
 - #172: recovery at trap syncs and DUT overflow markers other than qual_status 2 are not used.
 - #195: authentication controls and encoder-side trigger inputs are not modelled.
+- #194: timestamps, multiple sources (SRC), data trace and repeat-branch messages are not modelled; no RTL N-Trace encoder capture exists yet.
+- #207: no vendor adapter with vendor vectors is bundled.
 
 ## Decisions and sources
 
