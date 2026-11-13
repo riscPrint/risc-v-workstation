@@ -13,6 +13,34 @@ input ties, assumptions, and reset settings. Missing replay state starts free an
 spurious failures. Exit 0 means `pass`. Other written results exit 1. Invalid input exits 2.
 
 
+## Profile clauses and source catalogs
+
+`rvw formal profiles PLAN.json --out OUT` imports named RVA23/RVB23 extensions,
+mandatory base/endian/ECALL clauses, nested Sha constituents and the RVB23
+hypervisor pointer-mask condition. Attached NOTE paragraphs remain in each
+captured obligation. Supervisor profiles inherit user requirements. Optional Sha
+activates its pinned constituent requirements. Selecting Sha without a pinned
+constituent definition is refused.
+
+Base and standalone clauses are implemented only when `declarations` maps their
+stable obligation ID to Boolean true. An ISA string alone does not establish
+endianness, ECALL behavior or PMM settings. Implementation declarations remain
+separate from mapped, hash-bound proof evidence. Canonical ISA strings can
+include H, such as `rv64ih`.
+
+The command writes `index.json` and `catalogs/<source-sha256>.json`. Catalogs use
+`rvw.spec-obligations/1`. Each clause retains its source text and explicit checker
+and test mappings. `unmapped_checkers` lists missing mappings. Empty mappings
+must be reviewed before these files can be adopted by specification diff tools.
+The index stores source spans and hashes without copying specification prose.
+
+`examples/profiles/source-index.json` records 273 imported and inherited
+obligations from the pinned source revision. `profile_clauses.materialize`
+checks source hashes and exact spans before reconstructing catalogs. This data
+is a source inventory. It does not establish execution, parameter conformance,
+recommendation coverage, complete checker mappings or full profile compliance.
+ISA, debug and platform catalogs beyond these profile sources remain open.
+
 ## Internal forbidden paths
 
 Use `rvw formal internal-path SECRET PUBLIC --verilog dut.sv --top Unit --out OUT`.

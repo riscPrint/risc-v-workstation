@@ -29,9 +29,8 @@ def extract(path, digest):
             continue
         bullet = re.match(r'- \*([A-Za-z][A-Za-z0-9]*)\* ', line)
         if category and bullet:
-            end = i + 1
-            while end < len(lines) and lines[end] and not lines[end].startswith(('- ', '===')):
-                end += 1
+            from .profile_clauses import bullet_end
+            end = bullet_end(lines,i)
             text = '\n'.join(lines[i:end])
             records.append(dict(id=profile + '.' + bullet[1].lower(), profile=profile,
                                 extension=bullet[1].lower(), requirement=category, text=text,
@@ -39,7 +38,8 @@ def extract(path, digest):
                                 source=dict(path=str(Path(path).resolve()), sha256=digest, line=i+1)))
     if not records:
         raise ValueError('no supported named profile obligations found')
-    return records
+    from .profile_clauses import additional
+    return sorted(records+additional(Path(path),digest,lines),key=lambda row:row['source']['line'])
 
 
 def proof_evidence(entry, obligation, root):
@@ -62,6 +62,9 @@ def assess(manifest):
     plan = json.loads(path.read_text())
     if plan.get('schema') != 'rvw.profile-plan/1':
         raise ValueError('expected rvw.profile-plan/1')
+    declarations=plan.get('declarations',{})
+    if not isinstance(declarations,dict) or any(type(value) is not bool for value in declarations.values()):
+        raise ValueError('declarations must map clause IDs to Boolean values')
     isa_path = path.parent / os.path.expandvars(plan['isa_manifest'])
     isa = load_manifest(isa_path)
     xlen, implemented = extensions(isa['isa'])
@@ -71,6 +74,8 @@ def assess(manifest):
         for row in imported:
             row['source'].update({k: document[k] for k in ('revision', 'url') if k in document})
         rows += imported
+    from .profile_clauses import expand_sha, active as obligation_active, declared
+    rows = expand_sha(rows,implemented)
     selected = plan['profiles']
     available = {r['profile'] for r in rows}
     if not selected or set(selected) - available:
@@ -95,13 +100,13 @@ def assess(manifest):
             if row['id'] in seen:
                 raise ValueError('duplicate profile obligation')
             seen.add(row['id'])
-            required = row['requirement'] == 'mandatory' or row['extension'] in implemented
+            required = obligation_active(row,implemented)
             row['active'] = required
             if not required:
                 row['status'] = 'not_selected'
             elif row['id'] in plan.get('unsupported', []) or row['extension'] in plan.get('unsupported', []):
                 row['status'] = 'unsupported'
-            elif row['extension'] not in implemented or xlen != 64:
+            elif not declared(row,implemented,xlen,plan):
                 row['status'] = 'missing'
             else:
                 row['status'] = 'implemented'
@@ -128,8 +133,9 @@ def assess(manifest):
                                    for s in ('implemented','verified','missing','unsupported','not_selected')})
     return dict(schema='rvw.profile-report/1', status='inconclusive', profiles=reports,
                 isa_configuration=check_manifest(isa_path), manifest_sha256=sha(path.read_bytes()),
-                limits=['Named extension inventory only. Base/endian/ECALL clauses, notes and recommendations are not expanded.',
-                        'Optional extensions activate when selected in the ISA manifest.',
+                limits=['Captured extension, mandatory-base and recognized conditional clauses. Recommendations are not requirements.',
+                        'Optional extensions activate when selected in the ISA manifest. Base and standalone clauses require explicit project declarations.',
+                        'Attached notes remain part of each obligation. Parameter conditions still need reviewed property mappings.',
                         'Normative conditions within each captured requirement remain part of its reviewed proof obligation.',
                         'Implemented means declared in project data. Verified means a hash-bound mapped unbounded proof with reachability.',
                         'No full profile compliance or design acceptance verdict.'])
@@ -141,7 +147,7 @@ def compare(before, after):
     changes = []
     for key in sorted(old.keys() | new.keys()):
         a, b = old.get(key), new.get(key)
-        if a is None or b is None or any(a[k] != b[k] for k in ('obligation_sha256','requirement','active')):
+        if a is None or b is None or any(a.get(k) != b.get(k) for k in ('obligation_sha256','requirement','active','kind','when_any','parent_extension','checkers')):
             changes.append(dict(id=key, kind='added' if a is None else 'removed' if b is None else 'changed',
                                 before=a, after=b, affected_checkers=(b or a)['checkers']))
     return dict(changes=changes, requires_explicit_adoption=bool(changes),
@@ -156,6 +162,15 @@ def main(args):
             result['specification_diff'] = compare(assess(args.baseline), result)
         out = Path(args.out)
         out.mkdir(parents=True, exist_ok=False)
+        from .profile_clauses import catalogs,source_index
+        (out/'index.json').write_text(json.dumps(source_index(result),indent=2)+'\n')
+        directory=out/'catalogs'
+        directory.mkdir()
+        generated=catalogs(result)
+        for digest,catalog in generated.items():
+            (directory/(digest+'.json')).write_text(json.dumps(catalog,indent=2)+'\n')
+        result['artifacts']={'index':'index.json','catalogs':['catalogs/'+digest+'.json' for digest in generated]}
+        result['unmapped_checkers']=sorted({key for catalog in generated.values() for key in catalog['unmapped_checkers']})
         (out / 'result.json').write_text(json.dumps(result, indent=2) + '\n')
         print(json.dumps(result) if args.json else result['status'])
         return 3
