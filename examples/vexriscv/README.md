@@ -398,3 +398,36 @@ rvw/.venv/bin/python examples/vexriscv/rvw/check-isa.py jobs.jsonl summary.json
 The comparison script saves every original C5 report, its input identity and
 its exit code. It returns failure for an empty campaign, an incomplete trace,
 a mismatch or missing evidence.
+
+## Whole-core four-state reset probe
+
+Run the captured core Verilog with native Icarus:
+
+```sh
+scripts/with-lock.sh vex-simsrv nice -n 10 rvw/.venv/bin/python \
+  examples/vexriscv/rvw/four-state-probe.py --rtl /path/to/VexTop.v \
+  --elf /path/to/smoke --out /path/to/new-four-state-run
+```
+
+The testbench applies X on reset for two falling edges. It then applies a
+known asserted reset for five falling edges and runs the smoke ELF from RAM.
+A retired `tohost` store of 1 is required. The script records the RTL, ELF and
+testbench hashes, Icarus version, cycle bound, return code and X observations.
+It checks unknown RVFI validity after reset, instruction/control fields,
+selected register values and memory values selected by active byte masks.
+Unused memory read/write data fields are counted separately.
+
+On 2026-11-13, Icarus 14.0 devel at `s20251012-154-g50ca27fdf` completed
+17 instructions in 60 cycles on the same captured RTL used by the Arcilator
+probe. It observed two reset windows with unknown retirement outputs, zero
+unknown values in the checked active retirement fields, and 16 unknown
+inactive memory-data observations. A second test injected X into
+`rvfi_rd_wdata`. The checker rejected that run. Both native tests passed.
+
+These inactive unknowns are unselected RTL values. They do not establish
+X-pessimism. Ordinary Icarus procedural `if` semantics can be X-optimistic.
+This probe does not implement pessimistic X propagation or compare all binary
+concretizations. It shows recovery after the explicit known reset for this
+program. It does not prove that arbitrary reset release or unknown state is
+safe. BOOM, gate-level timing and a production four-state C1 adapter remain
+outside this probe.
