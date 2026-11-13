@@ -833,6 +833,20 @@ unsupported. All harts use the captured shared ELF and reset PC. Results retain
 per-hart reports and identify the first mismatching hart. Missing hart ends are
 inconclusive. No weak-memory, bus coherence or store-buffer claim is made.
 
+### C2 independent reference adjudication
+
+`rvw cosim adjudicate` and MCP `cosim_adjudicate` produce
+`rvw.cosim-adjudication/1`. They preserve the complete Spike and Sail reports.
+ELF, trace and platform capture hashes must agree across both runs. Missing or
+unsupported reference evidence makes the result inconclusive. A match requires
+both references to cover the same complete trace with no uncompared instructions.
+
+At the first mismatching instruction boundary, the report records which other
+reference still matches the DUT prefix. Different expected values produce
+`disagreement`, never a majority-vote pass. If both references reject the same
+value at the same boundary, the result is `mismatch`. The first version does not
+reduce the trace or assign a specification rule to the disagreement.
+
 ## C3. Suite results (`rvw.results/1`)
 
 New regress run sets publish through C8 `current` and `generations/<id>`. The root workspace
