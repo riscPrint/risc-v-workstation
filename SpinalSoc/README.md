@@ -163,7 +163,7 @@ lint extraction and formal CDC/reset checks were NOT RUN.
 captured-input regression setup. [The VexiiRiscv example](examples/vexii/README.md)
 has a separate source build for its pinned Spinal dependencies. Both expose
 AXI4 masters through `AxiCoreWrapper` and wire machine interrupt inputs.
-Debug transport and debug module integration remain open.
+The additive composed debug profiles are described below.
 
 ## Simple CPU memory bus
 
@@ -398,3 +398,13 @@ The pinned imported UART passed 23 directed checks, two transmit frames and
 one receive frame through the composer at seed 31 on Icarus. The UART VIP
 checked the serial bytes. The wrapper also compiled and elaborated with
 SpinalHDL 1.15.0. This test executes no CPU and is not full UART qualification.
+
+## Composed debug transports
+
+[The debug example](examples/debug/README.md) reuses the existing VexRiscv
+`rv32im_dmi` and `rv32im_jtag` configurations. Both first execute a CPU GPIO
+write through the composed fabric. At seed 31, the native DMI test passed
+8 accesses with halt/resume retirement checks. The public `rvw debug tap`
+command passed all nine checks through the composed RTL JTAG pins.
+The exported ndmreset request still needs a project reset-controller binding.
+Complete debug compliance, system reset and composed OpenOCD/GDB are unrun.

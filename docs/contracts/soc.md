@@ -519,3 +519,13 @@ The independent-master composition benches accept known-reset readable
 registers of 8, 16 or 32 bits on the 32-bit bus. Subword register values use
 their declared width in the register oracle. This permits the actual UART
 register width without declaring unused upper bits as storage.
+
+## Composed debug example
+
+The Vex debug example exports its real DMI or JTAG transport through the
+project wrapper. The C3 JTAG bench invokes the public TAP CLI over a local
+remote_bitbang socket bound to those RTL pins. The DMI bench checks halt and
+resume against the retirement counter. Both require a CPU write through the
+composed GPIO before debug checks. The ndmreset output is a request requiring
+a project system reset-controller binding. The example does not assert
+complete Debug Specification compliance or system reset qualification.

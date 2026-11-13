@@ -1062,7 +1062,11 @@ the composer. Host-owned RAM keeps its software map without a duplicate RTL
 memory. The [external-IP importer](../SpinalSoc/examples/import/README.md) uses an
 explicit TOML port/bus/register description. A pinned OpenCores UART passed
 23 checks, two transmit frames and one receive frame through the composer
-at seed 31 on Icarus. Composed debug-module integration remains work.
+at seed 31 on Icarus. The [composed debug profiles](../SpinalSoc/examples/debug/README.md)
+reuse rv32im_dmi and rv32im_jtag. The native DMI test checked halt/resume in
+8 accesses. The public TAP CLI passed all nine checks through the real JTAG
+pins. The ndmreset request needs a project reset controller. Complete debug
+compliance and composed OpenOCD/GDB are unrun.
 The existing standalone SMP example is unchanged. The optional two-hart test
 passed in 133 cycles at seed 31. Retirements were 21 and 22. Each hart
 completed two RTL GPIO accesses and a RAM store/load before its own tohost.

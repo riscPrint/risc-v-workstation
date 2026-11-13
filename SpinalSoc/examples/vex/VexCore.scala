@@ -8,7 +8,7 @@ import vexriscv.plugin._
 import rvwsoc.AxiCoreWrapper
 
 /** Project-owned RV32IM wrapper. No cache, MMU, supervisor mode or debug unit. */
-class VexCore extends Component with AxiCoreWrapper {
+class VexCore(coreConfig: Option[VexRiscvConfig] = None) extends Component with AxiCoreWrapper {
   val config = DBusSimpleBus.getAxi4Config().copy(useId = true, idWidth = 1, readIssuingCapability = 2, writeIssuingCapability = 2, combinedIssuingCapability = 4)
   val io = new Bundle {
     val bus = master(Axi4(config))
@@ -20,7 +20,7 @@ class VexCore extends Component with AxiCoreWrapper {
   def interrupts = io.interrupts
   def debugReset = io.debugReset
   val area = new ClockingArea(ClockDomain.current.copy(reset = ClockDomain.current.readResetWire || io.debugReset)) {
-    val cpu = new VexRiscv(VexRiscvConfig(plugins = List(
+    val cpu = new VexRiscv(coreConfig.getOrElse(VexRiscvConfig(plugins = List(
       new IBusSimplePlugin(resetVector = 0x80000000L, cmdForkOnSecondStage = false,
         cmdForkPersistence = true, prediction = STATIC, catchAccessFault = true, compressedGen = false),
       new DBusSimplePlugin(catchAddressMisaligned = true, catchAccessFault = true),
@@ -39,7 +39,7 @@ class VexCore extends Component with AxiCoreWrapper {
         scauseAccess = CsrAccess.NONE, sbadaddrAccess = CsrAccess.NONE,
         scycleAccess = CsrAccess.NONE, sinstretAccess = CsrAccess.NONE,
         satpAccess = CsrAccess.NONE, medelegAccess = CsrAccess.NONE, midelegAccess = CsrAccess.NONE)),
-      new BranchPlugin(earlyBranch = false, catchAddressMisaligned = true), new FormalPlugin)))
+      new BranchPlugin(earlyBranch = false, catchAddressMisaligned = true), new FormalPlugin))))
     val ibus = cpu.config.get(classOf[IBusSimplePlugin]).iBus.toAxi4ReadOnly().arValidPipe()
     val dbus = cpu.config.get(classOf[DBusSimplePlugin]).dBus.toAxi4Shared(stageCmd = true)
     val csr = cpu.config.get(classOf[CsrPlugin])
