@@ -248,3 +248,32 @@ def test_mcp_build_hdl(tmp_path):
     spec = next(t for t in mcp_tools() if t.name == 'query_build_hdl')
     r = spec.handler(sources=[str(source)], top='top', out=str(tmp_path / 'a.db'))
     assert r['frontend'] == 'yosys-verilog' and r['info']['counts']['components'] == 1
+
+
+@needs_slang
+def test_serv_core(tmp_path):
+    """Second complete core; compare cross-instance paths with native bit connectivity."""
+    from rvw.common.proc import run_group
+    root = Path(os.environ.get('RVW_HDL_REF', Path(__file__).parents[3] / 'ref')) / 'serv'
+    if not (root / 'rtl/serv_top.v').is_file():
+        pytest.skip('SERV reference checkout absent; set RVW_HDL_REF')
+    sources = sorted((root / 'rtl').glob('*.v'))
+    out = tmp_path / 'serv.db'
+    build_hdl(sources, 'serv_top', out, yosys=YOSYS, frontend='slang')
+    netlist = tmp_path / 'oracle.json'
+    script = tmp_path / 'oracle.ys'
+    script.write_text('read_slang --keep-hierarchy --ignore-assertions --top serv_top '
+                      + ' '.join(map(str, sources)) + f'\nproc\nwrite_json {netlist}\n')
+    p = run_group([YOSYS, '-Q', '-T', '-m', 'slang', '-s', str(script)], capture=True, timeout=60)
+    assert p.returncode == 0, p.stderr
+    oracle = _oracle(netlist, 'serv_top')
+    db = DesignDB(out)
+    try:
+        for a in ('i_ibus_rdt', 'i_dbus_rdt', 'i_rf_ready', 'i_timer_irq'):
+            for b in ('o_ibus_adr', 'o_dbus_dat', 'o_rf_wreq', 'o_wdata0'):
+                assert ops.path(db, a, b)['found'] == oracle(a, b), (a, b)
+        assert len(ops.hierarchy(db, depth=1)['root']['children']) >= 10
+        assert ops.component(db, None)['parameters']['W'] == "1"
+        print('SERV counts:', ops.info(db)['counts'])
+    finally:
+        db.close()
