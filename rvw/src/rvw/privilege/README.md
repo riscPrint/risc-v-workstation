@@ -895,3 +895,27 @@ clear all declared root source configurations before using a Detached source.
 Python and native Spike/Python-APLIC backends are available. Named MMIO
 observations and all results remain model-based. Reserved WLRL threshold writes,
 IRQ-line delivery, wired inputs and DUT qualification remain open.
+
+## Cache-management environment controls
+
+`kind = "envcfg-cbom"` pins `CMO-1.0.0` from the 20260120 ISA manual.
+The four examples select RV32/RV64 with and without H. Each XLEN has 51
+non-H and 215 H programs. Project data declares legal CBIE and CBCFE values
+separately for machine, supervisor and hypervisor registers. The generator
+does not guess WARL support. Reserved CBIE value 2 is rejected.
+
+Programs check masked field readback before entering the selected mode. They
+execute `CBO.CLEAN`, `CBO.FLUSH` or `CBO.INVAL` and require the exact completion
+or fault PC and cause. The matrix checks machine denial before guest denial,
+supervisor controls on U/VU, and M-mode bypass of lower-mode controls. Fields
+at one level do not change readback at other levels. RV32 guest entry uses
+`mstatush.MPV`, and RV32 completion writes both tohost words.
+
+`envcfg.block_bytes` supplies the block alignment and Spike block-size option.
+The buffer uses Bare translation with uniform RAM protection. `operations`,
+base `modes` and `virtualization` can restrict a project campaign. Metadata
+records the expected invalidate/flush selection for CBIE. This selection is
+not a measured cache effect and earns no cache-effect group. The suite checks
+permission, legal writes and traps. Cache data writeback, eviction, MPRV,
+translation/protection faults, memory ordering and DUT qualification remain
+separate. Native Spike self-checks do not establish physical cache behavior.
