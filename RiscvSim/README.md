@@ -850,3 +850,21 @@ RVFI orders. Capture order is not memory order.
 This is an opt-in generic adapter path. Existing single-hart adapters reject
 these inputs. No production core integration or multi-hart ISA result is
 claimed by the driver tests.
+
+### Independent atomic observer
+
+`AtomicMemoryObserver` checks a declared serialized memory boundary. Supply
+initial bytes and each operand from independent stimulus or architectural
+reference state. Call its methods for accepted actions, with consecutive
+serialization IDs. It checks LR values, matching SC reservations, failed SC
+byte retention, all nine word/doubleword AMOs and word/doubleword/quadword CAS.
+Observed bytes never update the reference image. Stores invalidate overlapping
+reservation sets of the declared power-of-two size. This is a project policy.
+
+The SC failure limit applies only when the caller certifies a constrained loop
+and the named service condition holds. It is a bounded project service check,
+not an ISA limit on spurious failures. Use `ProgressMonitor` with a persistent
+logical request ID to detect missing attempts or cycle-based livelock. No
+unbounded eventuality or aq/rl ordering follows from these byte checks. Bind
+accepted actions and independent operands in the project adapter before using
+this observer for RTL. The unit tests supply model events only.
