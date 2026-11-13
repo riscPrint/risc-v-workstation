@@ -33,6 +33,8 @@ def register(sub):
     planning.add_argument("--shards", type=int, default=1)
     planning.add_argument("--jobs", type=int, default=1)
     planning.add_argument("--identity", default="{}", help="JSON expected nested C1 identity claims")
+    planning.add_argument('--persistent', action='store_true', help='serial persistent C1 server and C3 collection')
+    planning.add_argument('--python', default='python3', help='worker Python with rvw installed')
     planning.set_defaults(func=plan_command)
     live = commands.add_parser("live")
     live.add_argument("--root", required=True)
@@ -67,10 +69,11 @@ def register(sub):
     costs.set_defaults(func=budget_command)
     batch = commands.add_parser("batch")
     batch.add_argument("--plan", required=True)
-    batch.add_argument("--action", choices=("render", "submit", "status", "cancel", "collect"), default="render")
+    batch.add_argument("--action", choices=("render", "validate", "submit", "status", "cancel", "collect"), default="render")
     batch.add_argument("--executor", choices=("local", "k8s"), default="local")
     batch.add_argument("--root", default=".")
     batch.add_argument("--ids", default="[]")
+    batch.add_argument("--openapi", help="local Kubernetes OpenAPI v2 JSON for offline validation")
     batch.set_defaults(func=batch_command)
     queue = commands.add_parser("queue")
     queue.add_argument("--root", required=True)
@@ -139,7 +142,7 @@ def serve_command(args):
 
 def batch_command(args):
     from .batch import batch
-    print(json.dumps(batch(json.loads(Path(args.plan).read_text()), args.action, args.executor, args.root, json.loads(args.ids))))
+    print(json.dumps(batch(json.loads(Path(args.plan).read_text()), args.action, args.executor, args.root, json.loads(args.ids), openapi=args.openapi)))
 
 
 def budget_command(args):
@@ -174,4 +177,4 @@ def live_command(args):
 
 def plan_command(args):
     from .shard_plan import plan
-    print(json.dumps(plan(args.manifest, json.loads(args.adapter), args.root, args.image, args.claim, args.shards, args.jobs, json.loads(args.identity))))
+    print(json.dumps(plan(args.manifest, json.loads(args.adapter), args.root, args.image, args.claim, args.shards, args.jobs, json.loads(args.identity), persistent=args.persistent, python=args.python)))
