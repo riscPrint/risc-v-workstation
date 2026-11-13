@@ -232,6 +232,16 @@ its simulation through `SimSession`. No adapter code names a signal.
   run ends when no client connects within `idle_timeout_s`. The run ends with status
   `timeout` and message `debug session ended: ...`; it is never a pass.
   `details.debug` has `mode`, `requests`, `clients`, `ended` and `port`.
+- `--trace-ingress FILE` writes `te_ingress.csv` (artifact `trace_ingress`) with
+  the reference encoder ingress columns. `FILE` is `rvw.trace-ingress-binding/1`:
+  `sources`, each with a top-level `valid` port and `fields` that map ingress
+  columns to a port name or an integer. Rows are written in source order at each
+  clock sample where `valid` is 1. `tval` and `iaddr_0` are hexadecimal without a
+  prefix. `rvw debug ingress-check` (`rvw.trace-ingress-check/1`: `ingress`,
+  `ntrace`, optional `etrace`, `rebuilt_trap_rows`, `status`) compares the rows with
+  C2 and traces the run from them. With the ELF, a C2 trap event that has no
+  retirement row for its trapping instruction is rebuilt at the previous row's
+  `pc_next`; without the ELF such a trace is refused.
 
 ### Optional multi-hart extension (C1 and C2)
 

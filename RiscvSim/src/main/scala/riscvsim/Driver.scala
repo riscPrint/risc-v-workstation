@@ -194,7 +194,8 @@ class Driver(val adapter: CoreAdapter) {
 
   // ---------------------------------------------------------------- one run
   val artifactFiles: Seq[(String, String)] = Seq("soc_map" -> "sim-map.json", "soc_transactions" -> "soc-transactions.jsonl", "log" -> "run.log", "rvfi_trace" -> "rvfi.jsonl",
-    "wave" -> SimSession.waveFile, "konata" -> "konata.log", "coverage" -> SimSession.coverageFile, "probe_events" -> "probe-events.jsonl")
+    "wave" -> SimSession.waveFile, "konata" -> "konata.log", "coverage" -> SimSession.coverageFile, "probe_events" -> "probe-events.jsonl",
+    "trace_ingress" -> TraceIngress.file)
 
   private def q(s: String): String = if (s.matches("[A-Za-z0-9_./=:,+@%-]+")) s else "'" + s.replace("'", "'\\''") + "'"
 
@@ -224,6 +225,7 @@ class Driver(val adapter: CoreAdapter) {
       job.irqSchedule.toSeq.flatMap(s => Seq("--irq-schedule", s.text)) ++
       job.fault.toSeq.flatMap(f => Seq("--fault", f.file.getPath)) ++
       job.debug.toSeq.flatMap(m => Seq("--debug", m.text, "--debug-binding", m.binding.file.getPath)) ++
+      job.traceIngress.toSeq.flatMap(b => Seq("--trace-ingress", b.file.getPath)) ++
       job.memLatency.toSeq.flatMap(l => Seq("--mem-latency", l.toString)) ++
       job.wallTimeoutS.toSeq.flatMap(s => Seq("--wall-timeout", s.toString)) ++
       (if (job.rvfiTrace) Seq("--rvfi-trace") else Nil) ++
@@ -393,6 +395,7 @@ class Driver(val adapter: CoreAdapter) {
     }
     val details = outcome.details
     FaultInjector.finish(job).foreach(f => details("fault") = f.details(outcome.cycles))
+    TraceIngress.finish(job).foreach(t => details("trace_ingress") = t)
     if (job.debug.nonEmpty) details("debug") = DebugPort.finish(job).map(_.details)
       .getOrElse(ujson.Obj("mode" -> job.debug.get.text, "attached" -> false))
     Option(capturedHartImages.get(job)).foreach(h => details("hart_images") = h.identity)

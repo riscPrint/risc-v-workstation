@@ -837,14 +837,15 @@ exact project cancellation bindings with source and wave evidence. See
 [the triage](checks-evidence/README.md) and [the current counts](checks-qualification.json).
 This rerun did not run formal. It does not qualify other designs or inputs.
 
-## Debug Module configurations
+## Debug Module and trace ingress configurations
 
-Two additive configurations sit beside `rv32im`. They use the same adapter.
+Three additive configurations sit beside `rv32im`. They use the same adapter.
 
 | Config | Adds |
 |---|---|
 | `rv32im_dmi` | CSR plugin official debug support and the SpinalHDL `DebugModule`, with its DMI bus on top-level `dmi_*` ports |
 | `rv32im_jtag` | The same Debug Module behind the upstream `EmbeddedRiscvJtag` DTM, on top-level `jtag_*` pins |
+| `rv32im_trace` | `TraceIngressPlugin`: an E-Trace encoder ingress port (`trace_*`) from the write-back stage and the trap CSRs |
 
 Build the loop program, then run the compliance suite. rvw starts the simulation
 through the profile's `dmi_process` command:
@@ -866,6 +867,16 @@ port=$(cat /tmp/vex-jtag/debug-port)
 rvw debug tap --port "$port" --out /tmp/vex-tap
 rvw debug suite --profile examples/vexriscv/rvw/debug/profile-jtag.toml --port "$port" --out /tmp/vex-jtag-suite
 rvw debug interop --port "$port" --elf examples/vexriscv/rvw/out/programs/debug-loop --out /tmp/vex-interop
+```
+
+Trace ingress from a real run, checked against C2 (see the debug README,
+"Trace ingress from a core"):
+
+```sh
+examples/vexriscv/rvw/run.sh run --config rv32im_trace --elf rvw/out/programs/smoke --out /tmp/vex-trace \
+  --mem-latency 0 --rvfi-trace --trace-ingress examples/vexriscv/rvw/trace/ingress-binding.json
+rvw debug ingress-check --ingress /tmp/vex-trace/te_ingress.csv --rvfi /tmp/vex-trace/rvfi.jsonl \
+  --elf rvw/out/programs/smoke --out /tmp/vex-ingress
 ```
 
 Measured on 2026-11-13 (VexRiscv `a62c145a`, SpinalHDL 1.15.0, Verilator 5.049,
