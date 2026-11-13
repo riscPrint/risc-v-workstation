@@ -46,3 +46,19 @@ def test_invalid_c1_and_no_matches(tmp_path):
     build(tmp_path, db)
     assert query(db)['matches'][0]['integrity'] == 'inconclusive'
     assert query(db, 'no such claim')['status'] == 'no_checks'
+
+
+@pytest.mark.parametrize('schema', [
+    'rvw.functional-coverage/1', 'rvw.rtl-coverage/1', 'rvw.probe-coverage/1',
+])
+def test_index_includes_all_measured_coverage_families(tmp_path, schema):
+    report = tmp_path/'coverage.json'
+    data = {'schema': schema, 'groups': {}, 'status': 'reported'}
+    report.write_text(json.dumps(data))
+    database = tmp_path/'index.sqlite'
+    assert build(tmp_path, database)['indexed'] == 1
+    matches = query(database, schema=schema)['matches']
+    assert len(matches) == 1
+    assert matches[0]['observations'] == data
+    assert matches[0]['validation'] == 'json_only'
+    assert matches[0]['integrity'] == 'unchanged'
