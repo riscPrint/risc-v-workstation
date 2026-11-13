@@ -14,14 +14,16 @@ pytestmark = pytest.mark.slow
 
 
 def fixture(kind, bad):
-    if kind == 'csr':
+    if kind in ('csr', 'csr_resetless'):
         obj = dict(xlen=32, csrs=[dict(name='scratch', address=0x340, reset=5,
             privilege='M', fields=[dict(lsb=0, width=32, access=dict(U='RO', S='RO', M='RW'), legal=[], legalize={})])])
-        source = monitor(obj)
+        if kind == 'csr_resetless':
+            obj['csrs'][0]['reset_known'] = False
+        source = monitor(obj).replace('module rvw_csr(', 'module rvw_'+kind+'(')
         ports = f'''wire valid=phase==1, rd=0, wr=1, trap=0;
 wire [1:0] privilege=3; wire [11:0] address=12'h340;
 wire [31:0] data=9, rdata=0, hw_set=0, hw_clear=0;
-wire [31:0] state_scratch=phase<2 ? 5 : {8 if bad else 9};'''
+wire [31:0] state_scratch=phase<2 ? {7 if kind == 'csr_resetless' else 5} : {8 if bad else 9};'''
     elif kind == 'axis':
         source = bus(kind, 8, 4)
         ports = f'wire valid=phase==1 || phase==2, ready=phase==2; wire [7:0] payload=phase==2 ? {2 if bad else 1} : 1;'
@@ -83,7 +85,7 @@ endmodule
 '''
 
 
-@pytest.mark.parametrize('kind', ['csr', 'hpm', 'initialized_read', 'axi_lite',
+@pytest.mark.parametrize('kind', ['csr', 'csr_resetless', 'hpm', 'initialized_read', 'axi_lite',
                                   'allocation_pool', 'cam_match', 'counter_bounds',
                                   'rob', 'credit', 'freelist', 'rename', 'issue', 'lsq',
                                   'axis', 'apb', 'ahb_lite'])

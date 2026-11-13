@@ -3770,6 +3770,16 @@ proof, physical-power, scan-coverage or ATPG evidence. UPF import is unsupported
 
 ### Project CSR generation
 
+#### CSR storage without a reset initializer
+
+A CSR row can set `reset_known=false`. The default is true. Unknown reset
+requires full-width ordinary M-mode RW fields. Partial writes, read-clear,
+W1C and read-only registers are refused for this mode. State and read-data
+checks start after the first accepted full write. Access checks remain active.
+`reset` supplies the software initialization value in this mode. It does not
+claim a DUT reset value. Generated safe assembly writes this value before its
+first comparison. Scala `CsrModel.resetKnown` has the same restriction.
+
 `rvw.csr/1` describes CSR addresses, project reset values, privilege, presence,
 field ranges, per-privilege access, legal values, legalization tables and bounded
 side effects. See `SpinalChecks/csr/README.md` for the exact transaction binding.

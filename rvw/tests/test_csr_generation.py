@@ -137,3 +137,19 @@ def test_native_assembly_build(tmp_path):
                         '-nostartfiles', '-Wl,-Ttext=0x80000000', str(source), '-o', str(tmp_path/'csr.elf')],
                        capture=True, timeout=20)
     assert result.returncode == 0, result.stdout + result.stderr
+
+
+def test_unknown_reset_requires_full_write_and_initializes_assembly(tmp_path):
+    m = model()
+    c = m['csrs'][0]
+    c['reset_known'] = False
+    p = tmp_path/'model.json'
+    p.write_text(json.dumps(m))
+    with pytest.raises(ValueError, match='full-width'):
+        load(p)
+    c['fields'] = [dict(lsb=0, width=32, access=dict(U='RO', S='RO', M='RW'))]
+    p.write_text(json.dumps(m))
+    generate(p, tmp_path/'out')
+    asm = (tmp_path/'out/scratch.S').read_text()
+    assert asm.index('csrw 0x340, t0') < asm.index('csrr s2, 0x340')
+    assert 'known_scratch' in (tmp_path/'out/csr.sv').read_text()

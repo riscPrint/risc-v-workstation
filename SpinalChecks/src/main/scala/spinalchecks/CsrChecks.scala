@@ -7,7 +7,10 @@ case class CsrModel(version: Int, width: Int, reset: BigInt, writeMask: BigInt,
                     minPrivilege: Int, allowed: Seq[BigInt] = Nil,
                     w1cMask: BigInt = 0, readClearMask: BigInt = 0,
                     legalize: Map[BigInt, BigInt] = Map.empty,
-                    wlrl: Boolean = false, readOnly: Boolean = false) {
+                    wlrl: Boolean = false, readOnly: Boolean = false, resetKnown: Boolean = true) {
+  require(resetKnown || (writeMask == (BigInt(1) << width) - 1 &&
+    w1cMask == 0 && readClearMask == 0 && allowed.isEmpty && legalize.isEmpty && !readOnly && !wlrl),
+    "unknown reset requires unrestricted full-width ordinary writes")
   require(version == 1 && width > 0 && minPrivilege >= 0 && minPrivilege <= 3)
   require((Seq(reset, writeMask, w1cMask, readClearMask) ++ allowed ++ legalize.keys ++ legalize.values).forall(x => x >= 0 && x.bitLength <= width))
   require((writeMask & w1cMask) == 0, "ordinary and W1C masks overlap")
@@ -26,6 +29,8 @@ object CsrChecks {
     val w = model.width
     require(Seq(observed, data, hwSet, hwClear).forall(_.getWidth == w))
     val expected = Reg(Bits(w bits)).init(model.reset)
+    // Unknown DUT reset state becomes checkable after an independent full write.
+    val known = RegInit(Bool(model.resetKnown))
     val mask = B(model.writeMask, w bits)
     val candidate = (expected & ~mask) | (data & mask)
     val legalized = Bits(w bits)
@@ -43,13 +48,14 @@ object CsrChecks {
       next := ((afterRead & ~mask) | (legalized & mask)) & ~(data & B(model.w1cMask, w bits))
     }
     expected := (next & ~hwClear) | hwSet
+    when(write && !accessDenied && legal) { known := True }
     if (readData != null) {
       require(readData.getWidth == w)
       DeclaredChecks.rule("csr.read", name, "granted read data before side effects")(
-        read && !accessDenied && readData =/= expected)
+        known && read && !accessDenied && readData =/= expected)
     }
     DeclaredChecks.rule("csr.state", name, "v1 independent reset, WARL/WLRL, read-only, read-clear, W1C, hardware priority")(
-      observed =/= expected)
+      known && observed =/= expected)
     DeclaredChecks.rule("csr.access", name, "v1 declared minimum privilege")(
       (read || write) && (denied =/= accessDenied))
   }

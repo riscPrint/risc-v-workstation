@@ -28,7 +28,7 @@ def load(path):
     seen = set()
     names = set()
     for csr in obj['csrs']:
-        if set(csr) - {'name', 'address', 'reset', 'privilege', 'present', 'read_only', 'fields', 'assembly_safe'}:
+        if set(csr) - {'name', 'address', 'reset', 'privilege', 'present', 'read_only', 'fields', 'assembly_safe', 'reset_known'}:
             raise ValueError('unsupported CSR attribute')
         name = csr['name']
         if not re.fullmatch(r'[A-Za-z_][A-Za-z0-9_]*', name) or name in names:
@@ -66,6 +66,13 @@ def load(path):
                 raise ValueError('invalid legalization table')
             if field.get('effect', 'none') not in ('none', 'w1c', 'read_clear'):
                 raise ValueError('unsupported field side effect')
+        if type(csr.get('reset_known', True)) is not bool:
+            raise ValueError('reset_known must be boolean')
+        if not csr.get('reset_known', True):
+            if used != (1 << width)-1 or csr.get('read_only') or csr['address'] >> 10 == 3 or any(
+                f['access']['M'] != 'RW' or f.get('effect', 'none') != 'none'
+                for f in csr.get('fields', [])):
+                raise ValueError('unknown reset requires full-width ordinary M-mode writes')
     return obj
 
 
@@ -111,7 +118,7 @@ def monitor(obj):
              'always @(posedge clk) begin', '  if (!initialized) assume(reset);', '  initialized <= 1;', 'end']
     for c in csrs:
         n = c['name']
-        lines += [f'reg [{w-1}:0] expected_{n}, next_{n};', f'reg denied_{n};', 'always @* begin',
+        lines += [f'reg known_{n} = {int(c.get("reset_known", True))};', f'reg [{w-1}:0] expected_{n}, next_{n};', f'reg denied_{n};', 'always @* begin',
                   f' next_{n} = expected_{n};',
                   f' denied_{n} = {int(not c.get("present", True))} || privilege < 2\'d{MODES[c["privilege"]]} || privilege == 2;',
                   f' if (wr && {int(c.get("read_only", False) or c["address"] >> 10 == 3)}) denied_{n} = 1;']
@@ -140,11 +147,12 @@ def monitor(obj):
                     lines += [f'   next_{n}{sl} = {value};']
                 lines += [' end']
         lines += [f' if (denied_{n}) next_{n} = expected_{n};', 'end', 'always @(posedge clk) begin',
-                  f' if (reset) expected_{n} <= {w}\'d{c["reset"]};',
-                  ' else begin', f'  if (initialized) assert(state_{n} == expected_{n});',
+                  f' if (reset) begin expected_{n} <= {w}\'d{c["reset"]}; known_{n} <= {int(c.get("reset_known", True))}; end',
+                  ' else begin', f'  if (initialized && known_{n}) assert(state_{n} == expected_{n});',
                   f'  if (valid && address == 12\'d{c["address"]}) begin',
                   f'   assert(trap == denied_{n});',
-                  f'   if (rd && !denied_{n}) assert(rdata == expected_{n});',
+                  f'   if (rd && !denied_{n} && known_{n}) assert(rdata == expected_{n});',
+                  f'   if (wr && !denied_{n}) known_{n} <= 1;',
                   f'   expected_{n} <= (next_{n} & ~hw_clear) | hw_set;', '  end', ' end', 'end']
     return '\n'.join(lines + ['endmodule', ''])
 
@@ -157,6 +165,8 @@ def assembly(c, width):
     if not c.get('present', True):
         lines += ['li s1, 1', f'csrr t0, {addr}', 'li t0, 1', 'bne s0, t0, fail']
     else:
+        if not c.get('reset_known', True) and c.get('assembly_safe', False):
+            lines += [f'li t0, {c["reset"]}', f'csrw {addr}, t0']
         lines += [f'csrr s2, {addr}']
         if c.get('assembly_safe', False):
             _, state = step(c, c['reset'], dict(read=True, write=False, data=0, privilege=3), width)

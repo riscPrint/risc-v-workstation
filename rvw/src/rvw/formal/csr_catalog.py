@@ -40,7 +40,7 @@ def materialize(selection):
         # The existing completed-transaction monitor cannot represent V or debug state.
         if definition['priv_mode'] not in ('M', 'S', 'U') or (address >> 8) & 3 == 2:
             raise ValueError(f'{name} requires a hypervisor/debug access model')
-        if set(override) - {'name', 'reset', 'present', 'read_only', 'fields', 'assembly_safe'}:
+        if set(override) - {'name', 'reset', 'present', 'read_only', 'fields', 'assembly_safe', 'reset_known'}:
             raise ValueError('unsupported CSR override attribute')
         if definition.get('length') == 32 and selection['xlen'] == 64 and name.endswith('h'):
             raise ValueError(f'{name} is an RV32 high-half CSR')

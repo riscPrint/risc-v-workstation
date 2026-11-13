@@ -15,4 +15,18 @@ class CsrChecksSpec extends AnyFunSuite with ApplicationTest {
     exercise("csr_ref", Set("csr.state", "csr.access"))(new Ref)
   }
   test("reject unsupported or ambiguous project intent") { intercept[IllegalArgumentException](CsrModel(2, 4, 0, 3, 3)) }
+  class Resetless extends ApplicationRef {
+    val state = Reg(Bits(4 bits)).init(7)
+    when(write && privilege === 3) { state := data }
+    CsrChecks.bind("resetless", CsrModel(1, 4, 0, 15, 3, resetKnown = false),
+      state ^ Mux(corrupt, B(1, 4 bits), B(0, 4 bits)), read, write, data, privilege,
+      privilege =/= 3, B(0, 4 bits), B(0, 4 bits))
+  }
+  test("unknown reset is checked only after the first accepted full write") {
+    exercise("csr_resetless", Set("csr.state"))(new Resetless)
+  }
+  test("unknown reset refuses partial writes and side effects") {
+    intercept[IllegalArgumentException](CsrModel(1, 4, 0, 3, 3, resetKnown = false))
+    intercept[IllegalArgumentException](CsrModel(1, 4, 0, 15, 3, readClearMask = 1, resetKnown = false))
+  }
 }
