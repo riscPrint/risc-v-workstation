@@ -88,10 +88,15 @@ rvw_selected_check rvw_selected_check_instance(.clk({clock}), .reset_active({act
             job = (directory/'job.sby').read_text()
             cover_job = job.replace('mode ' + mode, 'mode cover').replace('monitor.sv', 'activation.sv')
             activation_files = {}
+            occupied = {p.name for p in directory.iterdir()}
             for source in list(directory.glob('*.v')):
                 text = source.read_text()
-                (directory/('activation_' + source.name)).write_text(text.replace('.fail(' + fail + ')', '.fail(' + trigger + ')'))
-                activation_files[source.name] = 'activation_' + source.name
+                name = 'activation_' + source.name
+                while name in occupied:
+                    name = 'activation_' + name
+                occupied.add(name)
+                (directory/name).write_text(text.replace('.fail(' + fail + ')', '.fail(' + trigger + ')'))
+                activation_files[source.name] = name
             # Replace whole tokens once. A.v can also be a suffix of BA.v.
             cover_job = re.sub(r'\S+', lambda token: activation_files.get(token.group(), token.group()), cover_job)
             cover_job = cover_job.replace('chformal -assert -remove', 'chformal -assert -remove\nchformal -cover -remove')
