@@ -29,7 +29,8 @@ Usage: scripts/install.sh [OPTIONS]
   --bundle-run ID    Download artifacts from this private Actions run (needs gh).
   --bundle-dir DIR   Use artifacts saved in DIR. No artifact network requests.
   --profile NAME     minimal, verification, formal, arch or all (inventory).
-  --all              Select all inventory components; some need manual setup.
+  --all              Select the legacy tool set.
+                     Use --profile all for the full inventory.
   --shell-rc FILE    Add the env.sh source line to FILE. Default: print it only.
   --yes             Approve package commands without a prompt.
   --dry-run         Print actions. Do not write files or install packages.
