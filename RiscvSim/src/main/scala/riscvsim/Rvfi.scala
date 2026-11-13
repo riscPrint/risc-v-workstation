@@ -37,7 +37,7 @@ case class RvfiRecord(order: BigInt, cycle: Long, insn: Long, trap: Boolean, hal
       sb.setLength(sb.length - 1)
       sb ++= ", \"csr_state\": {"
       sb ++= csrState.toSeq.sortBy(_._1).map { case (address, value) =>
-        s"\"${Hex(BigInt(address))}\": \"${Hex(value)}\""
+        "\"" + Hex(BigInt(address)) + "\": \"" + Hex(value) + "\""
       }.mkString(", ")
       sb ++= "}}"
     }

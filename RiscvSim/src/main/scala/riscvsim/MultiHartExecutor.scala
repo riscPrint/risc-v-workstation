@@ -32,7 +32,7 @@ object MultiHartExecutor {
     ctx.loadMemory(backend.writeMemory)
     val session = new MultiHartSession(ctx, probes, dependenciesComplete, annotate, addressesPhysical)
     var cycle = 0L
-    val pending = scala.collection.mutable.Set.from(ids)
+    val pending = scala.collection.mutable.Set(ids: _*)
     try {
       images.harts.foreach { case (hart, elf) => backend.boot(hart, elf.entry) }
       ids.foreach(session.reset(_, 0))

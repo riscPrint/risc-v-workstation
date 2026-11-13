@@ -75,7 +75,7 @@ final class SpinalWavesCompiled[T <: Component](val compiled: SimCompiled[T], va
     val index = compiled.testNameMap.synchronized { compiled.testNameMap.getOrElse(name, 0) }
     val allocated = if (index == 0) name else s"${name}_$index"
     simulation
-    val prefix = Option(compiled.simConfig._waveFilePrefix).map(_.replace("$TEST", allocated) + "_").getOrElse("")
+    val prefix = SpinalCompat.waveFilePrefix(compiled.simConfig).map(_.replace("$TEST", allocated) + "_").getOrElse("")
     val wave = Paths.get(compiled.simConfig.getTestPath(allocated)).resolve(prefix + "wave.vcd").toAbsolutePath.normalize
     require(Files.isRegularFile(wave), s"Simulation produced no VCD at configured path $wave")
     lastWave = Some(wave)

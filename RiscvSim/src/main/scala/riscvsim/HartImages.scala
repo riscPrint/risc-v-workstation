@@ -7,7 +7,7 @@ import java.nio.file.Files
 final class HartImages(val harts: Seq[(Int, ElfFile)], xlen: Int) {
   require(harts.size >= 2 && harts.map(_._1).distinct.size == harts.size)
   require(harts.forall { case (id, elf) => id >= 0 && elf.xlen == xlen })
-  private val parts = harts.flatMap(_._2.segments).filter(_.memsz > 0)
+  private val parts = harts.flatMap(h => h._2.segments.toSeq: Seq[ElfFile#Segment]).filter(_.memsz > 0)
   // Identical shared segments are allowed. Conflicting images, including BSS, are not.
   private val unique = parts.foldLeft(Vector.empty[(Long, Array[Byte], Long)]) { (out, s) =>
     out.find { case (a, _, size) => a == s.paddr && size == s.memsz } match {

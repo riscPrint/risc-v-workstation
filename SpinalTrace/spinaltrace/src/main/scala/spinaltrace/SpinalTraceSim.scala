@@ -93,7 +93,7 @@ class TracedSim[T <: Component](val compiled: SimCompiled[T], val pdg: File, val
 
   /** VCD of a test, at SpinalSim's configured path (as SpinalWaves computes it). */
   def waveFile(test: String): Option[File] = {
-    val prefix = Option(compiled.simConfig._waveFilePrefix).map(_.replace("$TEST", test) + "_").getOrElse("")
+    val prefix = spinalwaves.SpinalCompat.waveFilePrefix(compiled.simConfig).map(_.replace("$TEST", test) + "_").getOrElse("")
     Some(new File(compiled.simConfig.getTestPath(test), prefix + "wave.vcd")).filter(_.isFile)
   }
 

@@ -7,8 +7,8 @@ import scala.collection.mutable
 final class MultiHartTrace(file: File, header: ujson.Obj, hartIds: Seq[Int]) extends AutoCloseable {
   require(hartIds.nonEmpty && hartIds.distinct.size == hartIds.size && hartIds.forall(_ >= 0))
   require(!header.value.contains("schema") && !header.value.contains("harts"))
-  private val epoch = mutable.Map.from(hartIds.map(_ -> -1))
-  private val nextOrder = mutable.Map.from(hartIds.map(_ -> BigInt(0)))
+  private val epoch = mutable.Map(hartIds.map(_ -> -1): _*)
+  private val nextOrder = mutable.Map(hartIds.map(_ -> BigInt(0)): _*)
   private val done = mutable.Map.empty[Int, Status]
   private var cycle = -1L
   private var seq = 0L

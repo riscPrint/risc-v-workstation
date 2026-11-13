@@ -1,0 +1,166 @@
+package rvwnax
+
+import java.io.File
+import naxriscv.platform.{TraceBackend, TraceIo}
+import riscvsim.{RvfiRecord}
+import spinal.lib.bus.misc.AddressMapping
+import scala.collection.mutable
+
+/** Turns the upstream `NaxriscvProbe` events into C2 retirement records and trap events.
+  *
+  * For each committed micro-op the probe reports its load commit, store commit, integer write and
+  * CSR effects, then `commit(pc)`. It does not report the instruction word, so `insn` comes from
+  * `fetch(pc)`: the adapter's architectural memory image (the ELF plus all committed stores).
+  * A trap is reported after the commit of the previous instruction; its xepc comes from
+  * `nextTrap()` (the ROB pc of the trapping entry, queued by the adapter).
+  * Register numbers and source values come from the instruction bits and a shadow register file
+  * that only the core's committed writes update. `pc_next` is the next retirement's pc, or xepc
+  * when a trap follows. The last record of a run uses the decoded fall-through target. */
+class C2Backend(xlen: Int, cycle: () => Long, mode: () => Int, fetch: Long => Long, nextTrap: () => BigInt,
+                sink: RvfiRecord => Unit, trapSink: (Long, BigInt, BigInt, Boolean) => Unit,
+                onStore: (BigInt, Int, BigInt) => Unit) extends TraceBackend {
+  private val mask = (BigInt(1) << xlen) - 1
+  val regs: Array[BigInt] = Array.fill(32)(BigInt(0))
+  var retired = 0L
+  var traps = 0L
+  private var order = BigInt(0)
+  private var handler = false
+  private var pending: Option[RvfiRecord] = None
+  def pendingCycle: Option[Long] = pending.map(_.cycle)
+
+  private var rdData: Option[BigInt] = None
+  private val loads = mutable.LongMap.empty[(Long, Long, BigInt)]
+  private var load: Option[(Long, Long, BigInt)] = None
+  private var store: Option[(Long, Long, BigInt)] = None
+  private var scFailed = false
+
+  private def field(data: Long, len: Long): BigInt =
+    BigInt(data) & ((BigInt(1) << (8 * len.toInt)) - 1)
+
+  private def emit(next: BigInt): Unit = {
+    pending.foreach(r => sink(r.copy(pcNext = next & mask)))
+    pending = None
+  }
+
+  /** Writes the buffered record with its decoded fall-through target. Call at the end of a run. */
+  def drain(): Unit = pending.foreach(r => emit(C2Backend.fallThrough(r, xlen)))
+
+  override def commit(hartId: Int, pc: Long): Unit = {
+    val pcValue = BigInt(pc) & mask
+    val insn = fetch(pcValue.toLong) & 0xffffffffL
+    emit(pcValue)
+    val (rs1, rs2) = C2Backend.sources(insn)
+    val rdField = ((insn >> 7) & 31).toInt
+    val (rd, wdata) = rdData match {
+      case Some(v) if rdField != 0 && C2Backend.writesRd(insn) => (rdField, v & mask)
+      case _ => (0, BigInt(0))
+    }
+    val (memAddr, rmask, rdataMem, wmask, wdataMem) = (load, store) match {
+      case (Some((a, n, d)), None) => (BigInt(a), ((1 << n) - 1).toInt, d, 0, BigInt(0))
+      case (None, Some((a, n, d))) => (BigInt(a), 0, BigInt(0), ((1 << n) - 1).toInt, d)
+      case (None, None) => (BigInt(0), 0, BigInt(0), 0, BigInt(0))
+      case (Some((a, n, d)), Some((sa, sn, sd))) =>
+        require(a == sa && n == sn, "atomic read/write addresses differ")
+        (BigInt(a), ((1 << n) - 1).toInt, d, ((1 << sn) - 1).toInt, sd)
+    }
+    val r = RvfiRecord(order, cycle(), insn, trap = false, halt = false, intr = handler, mode = mode(), ixl = (if (xlen == 64) 2 else 1),
+      rs1 = rs1, rs1Rdata = regs(rs1), rs2 = rs2, rs2Rdata = regs(rs2), rd = rd, rdWdata = wdata,
+      pc = pcValue, pcNext = 0, memAddr = memAddr & mask, memRmask = rmask, memWmask = wmask,
+      memRdata = rdataMem, memWdata = wdataMem, memFault = false)
+    if (rd != 0) regs(rd) = wdata
+    order += 1
+    retired += 1
+    handler = false
+    rdData = None; load = None; scFailed = false
+    pending = Some(r)
+    store.foreach { case (a, n, d) => onStore(BigInt(a) & mask, Integer.numberOfTrailingZeros(n.toInt), d) }
+    store = None
+  }
+
+  override def trap(hartId: Int, interrupt: Boolean, code: Int, faultAddr: Long): Unit = {
+    val epc = nextTrap()
+    emit(epc)
+    val cause = if (interrupt) (BigInt(1) << (xlen - 1)) | code else BigInt(code)
+    trapSink(cycle(), cause, BigInt(faultAddr) & mask, interrupt)
+    traps += 1
+    handler = true
+    rdData = None; load = None; store = None
+  }
+
+  override def writeRf(hartId: Int, rfKind: Int, address: Int, data: Long): Unit =
+    if (rfKind == 0) rdData = Some(BigInt(data) & mask)
+  override def loadExecute(hartId: Int, id: Long, addr: Long, len: Long, data: Long): Unit =
+    loads(id) = (addr, len, field(data, len))
+  override def loadCommit(hartId: Int, id: Long): Unit = load = loads.get(id)
+  override def storeCommit(hartId: Int, id: Long, addr: Long, len: Long, data: Long): Unit =
+    store = Some((addr, len, field(data, len)))
+  override def storeConditional(hartId: Int, failure: Boolean): Unit = scFailed = failure
+  override def ioAccess(hartId: Int, access: TraceIo): Unit =
+    throw new IllegalStateException(f"I/O access at 0x${access.address}%x: the adapter maps no devices")
+
+  override def newCpuMemoryView(viewId: Int, readIds: Long, writeIds: Long): Unit = ()
+  override def newCpu(hartId: Int, isa: String, priv: String, physWidth: Int, memoryViewId: Int): Unit = ()
+  override def loadElf(offset: Long, path: File): Unit = ()
+  override def loadU32(address: Long, data: Int): Unit = ()
+  override def loadBin(offset: Long, path: File): Unit = ()
+  override def setPc(hartId: Int, pc: Long): Unit = ()
+  override def readRf(hardId: Int, rfKind: Int, address: Int, data: Long): Unit = ()
+  override def setInterrupt(hartId: Int, intId: Int, value: Boolean): Unit = ()
+  override def addRegion(hartId: Int, kind: Int, base: Long, size: Long): Unit = ()
+  override def loadFlush(hartId: Int): Unit = ()
+  override def storeBroadcast(hartId: Int, id: Long): Unit = ()
+  override def time(value: Long): Unit = ()
+  override def flush(): Unit = ()
+  override def close(): Unit = ()
+}
+
+object C2Backend {
+  /** RVFI source register fields for the RV32I/M/A base opcodes; 0 when the format has no such source. */
+  def sources(insn: Long): (Int, Int) = {
+    val rs1 = ((insn >> 15) & 31).toInt
+    val rs2 = ((insn >> 20) & 31).toInt
+    (insn & 0x7f).toInt match {
+      case 0x33 | 0x3b | 0x23 | 0x63 => (rs1, rs2)
+      case 0x2f => (rs1, if (((insn >> 27) & 31) == 2) 0 else rs2) // LR has no rs2
+      case 0x13 | 0x1b | 0x03 | 0x67 => (rs1, 0)
+      case 0x73 if Set(1, 2, 3)(((insn >> 12) & 7).toInt) => (rs1, 0)
+      case _ => (0, 0)
+    }
+  }
+
+  /** False for formats without rd (stores, branches, fences, ECALL/xRET/WFI/SFENCE). */
+  def writesRd(insn: Long): Boolean = (insn & 0x7f).toInt match {
+    case 0x23 | 0x63 | 0x0f => false
+    case 0x73 => ((insn >> 12) & 7) != 0
+    case _ => true
+  }
+
+  private def signed(v: Long, bits: Int): Long = (v << (64 - bits)) >> (64 - bits)
+
+  /** The architectural next pc of `r` from its own bits and source values. */
+  def fallThrough(r: RvfiRecord, xlen: Int): BigInt = {
+    val insn = r.insn
+    val pc = r.pc
+    (insn & 0x7f).toInt match {
+      case 0x6f =>
+        val imm = ((insn >> 31) & 1) << 20 | ((insn >> 12) & 0xff) << 12 | ((insn >> 20) & 1) << 11 | ((insn >> 21) & 0x3ff) << 1
+        pc + signed(imm, 21)
+      case 0x67 => (r.rs1Rdata + signed(insn >> 20, 12)) & ~BigInt(1)
+      case 0x63 =>
+        val imm = ((insn >> 31) & 1) << 12 | ((insn >> 7) & 1) << 11 | ((insn >> 25) & 0x3f) << 5 | ((insn >> 8) & 0xf) << 1
+        val (a, b) = (r.rs1Rdata, r.rs2Rdata)
+        def s(v: BigInt) = if (v.testBit(xlen - 1)) v - (BigInt(1) << xlen) else v
+        val taken = ((insn >> 12) & 7).toInt match {
+          case 0 => a == b
+          case 1 => a != b
+          case 4 => s(a) < s(b)
+          case 5 => s(a) >= s(b)
+          case 6 => a < b
+          case 7 => a >= b
+          case _ => false
+        }
+        if (taken) pc + signed(imm, 13) else pc + 4
+      case _ => pc + 4
+    }
+  }
+}

@@ -12,9 +12,11 @@ final class TileLinkDmaTransport(agent: MemoryAgent, physicalBase: Long) extends
   private def transaction[T](address: Int, count: Int, coherent: Boolean, write: Boolean)(body: Long => T): T = {
     require(address >= 0 && count > 0 && physicalBase >= 0 && physicalBase <= Long.MaxValue - address)
     val physical = physicalBase + address
-    require(physical <= Long.MaxValue - count && agent.blockSize > 0)
-    val block = physical - physical % agent.blockSize
-    require(physical + count <= block + agent.blockSize, "split DMA access at cache-line boundary")
+    val blockSize = SpinalCompat.intMember(agent, "blockSize").getOrElse(
+      throw new UnsupportedOperationException("MemoryAgent.blockSize is missing in this SpinalHDL version"))
+    require(physical <= Long.MaxValue - count && blockSize > 0)
+    val block = physical - physical % blockSize
+    require(physical + count <= block + blockSize, "split DMA access at cache-line boundary")
     agent.reserve(block)
     try {
       if (coherent) agent.handleCoherency(block, false, null,

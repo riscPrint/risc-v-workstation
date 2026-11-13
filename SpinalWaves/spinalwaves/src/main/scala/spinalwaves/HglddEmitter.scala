@@ -83,7 +83,7 @@ object HglddEmitter {
     private def ordered(n: Node): Seq[Node] = {
       val children = n.children.values.toSeq
       // Vec elements in index order; a Vec node can also hold non-index names (BOOM: `f0_pc`), keep those after
-      if (n.data.exists(_.isInstanceOf[Vec[_]])) children.sortBy(c => (c.name.toIntOption.getOrElse(Int.MaxValue), c.name))
+      if (n.data.exists(_.isInstanceOf[Vec[_]])) children.sortBy(c => (scala.util.Try(c.name.toInt).getOrElse(Int.MaxValue), c.name))
       else children
     }
     private def expression(n: Node): ujson.Value = n.leaf match {

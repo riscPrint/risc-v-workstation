@@ -20,7 +20,7 @@ object SpinalWaves {
         // singleton SpinalEnums and their elements before the real elaboration.
         val naming = phases.indexWhere(_.isInstanceOf[PhaseNameNodesByReflection])
         require(naming >= 0, "Spinal 1.15 naming phase missing from discovery pipeline")
-        phases.dropRightInPlace(phases.size - naming)
+        phases.remove(naming, phases.size - naming)
       }
       val first = generate(config.copy(targetDirectory = scratch.toString,
         phasesInserters = discoveryInserters))
@@ -31,7 +31,7 @@ object SpinalWaves {
     } finally {
       import scala.jdk.CollectionConverters._
       val files = Files.walk(scratch)
-      try files.iterator().asScala.toVector.sortBy(_.getNameCount).reverse.foreach(Files.delete)
+      try files.iterator().asScala.toVector.sortBy(_.getNameCount).reverse.foreach(Files.delete(_))
       finally files.close()
     }
   }

@@ -426,6 +426,28 @@ libraries that your adapter uses. Add a `compile->test` mapping only if it needs
 the core's test sources. Match Scala, SpinalHDL and compiler-plugin versions.
 The current workstation builds use Scala 2.13.14 and SpinalHDL 1.15.0.
 
+### A core that pins its own SpinalHDL
+
+The Spinal libraries (RiscvSim, SpinalProbes, SpinalChecks, SpinalTrace,
+SpinalWaves, SpinalDB) have a second SpinalHDL version axis
+(`scripts/sbt/SpinalAxis.scala`). Set `RVW_SPINAL_SOURCE` to the core's
+SpinalHDL source checkout. The libraries then compile against that checkout's
+`core`, `lib`, `sim` and `idslplugin` projects, not the release jars. Select
+the Scala version with `'++V!'` on the sbt command line. Both axes cross-build
+for Scala 2.13.14 and 2.12.18. Each source checkout writes to its own
+`target/spinal-source-<rev>/` directory. In the adapter build, use
+`.dependsOn(SpinalAxis.projects("core", "lib", "sim"): _*)` and
+`.settings(SpinalAxis.settings("core", "lib", "sim"))` instead of the jar
+lines above, and add `project/spinal-axis.sbt` with
+`Compile / unmanagedSourceDirectories += file(sys.env("RVW_HOME")) / "scripts" / "sbt"`.
+The [NaxRiscv example](../examples/naxriscv/README.md) uses this axis with
+Scala 2.12.18. RiscvSim, SpinalProbes, SpinalTrace and SpinalWaves compile on
+it. A member that older SpinalHDL versions lack is reached through the
+`SpinalCompat` objects, which state the fallback. Library code must stay
+source-compatible with Scala 2.12: use `mutable.Map(xs: _*)`, not
+`mutable.Map.from(xs)`, and `regex.pattern.matcher(s).matches()`, not
+`regex.matches(s)`.
+
 The `RiscvSim` build loads only the generic library. It needs no core checkout.
 The bundled BOOM adapter has a separate build under `RiscvSim/boom`.
 Use the library `ProjectRef` above for external adapters.
