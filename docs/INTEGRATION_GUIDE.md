@@ -48,7 +48,8 @@ rvw init --hdl chisel --top Core --isa rv64gc --fir out/Core.fir --dry-run --jso
 ```
 
 Choose one path. Supply sources in dependency order. SV needs `RVW_SLANG` and
-Yosys. VHDL needs GHDL and its matching Yosys plugin. Chisel needs firtool and
+Yosys. VHDL queries need GHDL and its matching Yosys plugin. VHDL simulation
+uses standalone GHDL Verilog synthesis. Chisel needs firtool and
 an existing FIRRTL output. These scaffolds create a query build and a C++
 harness skeleton. The harness does not map buses or completion. Its run still
 refuses execution. HDL graph navigation is conservative; semantic diff remains
@@ -60,6 +61,49 @@ clock, reset polarity, reset address, parameters, memory map and bus bindings.
 See [PicoRV32](../examples/picorv32/README.md). This mode uses the installed
 Scala/sbt runtime. The `--hdl sv` C++ stub has no Scala dependency. Its project
 still needs a complete C1 implementation and input audit before regression.
+
+
+### Per-HDL status measured on 2026-11-13
+
+This table reports the named dry runs. It does not transfer a result to every
+core in that language. Spinal and SystemVerilog rows use the two earlier
+reports. Chisel and VHDL use the whole-core run linked below. A generated
+monitor is not a proof. A diagram export is not a rendered-view check.
+
+| Tool or step | Spinal | SystemVerilog | Chisel | VHDL |
+| --- | --- | --- | --- | --- |
+| Doctor / init | Wired scaffold tested | Native scaffold tested | FIRRTL scaffold and doctor tested | GHDL scaffold tested |
+| Native C1 simulation | Whole core tested | PicoRV32 tested | riscv-mini tested | NEORV32 tested |
+| C2 capture | Project RVFI | Core RVFI | Generated state monitor | Core trace port |
+| Regression | 42 RV32UI programs pass | 46 programs pass | Four-program slice passes | Four-program slice passes |
+| Spike cosim | 41 matches; split-access refusal | 46 matches | Four matches and smoke | Four matches and smoke |
+| Failure bundle | Native planted fault | Native failure | Native planted fault | Native planted fault |
+| Design query | SpinalDB; Scala locations | Yosys; HDL locations | FIRRTL; Scala locations | GHDL; VHDL locations |
+| Diagram export | Export tested | Export tested | Export tested | Export tested |
+| Lint / CDC | Reports; no signoff | Reports; no signoff | Reports; no signoff | Reports; no signoff |
+| Structural coverage | C1 merge/report tested | C1 merge/report tested | C1 merge/report; emitted RTL | C1 merge/report; emitted RTL |
+| Declared bus checks | Explicit bindings required | Ready/valid binding tested | Request/response map unsupported | Request/response map unsupported |
+| State-monitor generation | Available; not needed in this run | PicoRV32 comparison has an open mismatch | Generated and simulated on riscv-mini | Not used; native trace port selected |
+| Committed gate | Not measured in the Spinal dry run | Accept and reject tested | Accept and reject tested | Accept and reject tested |
+
+See [the Spinal report](DRY_RUN_2026-11-13.md),
+[the SystemVerilog report](DRY_RUN_VERILOG_2026-11-13.md) and
+[the Chisel/VHDL report](DRY_RUN_CHISEL_VHDL_2026-11-13.md) for pins,
+commands, native evidence and limits. Full ISA and whole-core proof remain
+open. The four-program slice is add, beq, lw and sw. It does not test the
+full riscv-tests environment or privilege matrix.
+
+VHDL simulation now uses standalone GHDL Verilog synthesis. Its query front
+end still needs a matching GHDL Yosys plugin. The measured whole-core run
+uses Verilator 5.052 after 5.049 failed internally on memory RTL. A project
+must also honor the core's request and response timing. NEORV32 needs the
+acknowledgment after its single-shot strobe.
+
+Chisel builds must emit FIRRTL through the core's own build. The native
+state-monitor path needs Yosys-compatible Verilog. Use reviewed firtool
+lowering options when default emission contains unsupported local variables.
+Keep the source map and build pin. Do not infer source statement coverage
+from emitted-Verilog coverage counts.
 
 
 ## 3. Bind the adapter
