@@ -15,7 +15,7 @@ Remove credentials and private design data from reports.
 
 ## C8 scope
 
-[C8](docs/PLATFORM_CONTRACTS.md#c8-input-capture-and-result-generations)
+[C8](docs/contracts/c8-capture.md)
 protects against honest mistakes in normal work. Results must not grant a pass,
 match, accept or exclusion without enough evidence. Normal mistakes include
 stale files, wrong options, missing tools, interrupted builds, resume,

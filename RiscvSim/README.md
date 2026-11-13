@@ -650,7 +650,7 @@ rule. Forcing a writer cannot recover instance observations from shared counters
 BOOM `--rvfi-trace` also writes `memory-bus.jsonl`. It samples accepted A and D
 handshakes at the external TileLink port. Source IDs, data, masks, response errors
 and cycles come from bus wires. They do not come from retirement records.
-See the [bus format](../docs/PLATFORM_CONTRACTS.md#passive-bus-observations).
+See the [bus format](../docs/contracts/formal.md#passive-bus-observations).
 The port is outside the caches. A cache hit has no external request. A D response
 is not a device-side completion promise. FENCE checks must declare that boundary
 and match requests from an independent test plan. This capture alone is not a

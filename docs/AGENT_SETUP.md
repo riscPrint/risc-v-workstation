@@ -305,7 +305,7 @@ Enable `identity = true` and `identity_capture = true` only with the supported
 `identity --config NAME --options JSON` implementation.
 It must emit `rvw.adapter-capture/2` with a complete source descriptor and
 nonempty dotted C1 `result_claims`. Each C1 result must match those claims.
-Read [C8](PLATFORM_CONTRACTS.md#c8-input-capture-and-result-generations).
+Read [C8](contracts/c8-capture.md).
 
 **Human decision:** present the input list and its limits for review.
 Set `input_complete = true` only when that claim is justified.

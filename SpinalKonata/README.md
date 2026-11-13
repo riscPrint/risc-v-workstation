@@ -239,7 +239,7 @@ emits two direction outcomes at write-back (ID 1 mispredicts while marked
 cold), and the test reads them back through `rvw perf`'s effects report.
 
 The writer uses the `#rvw` version 1 comment extension described in
-[PLATFORM_CONTRACTS.md](../docs/PLATFORM_CONTRACTS.md#pipeline-cause-event-extension).
+[PLATFORM_CONTRACTS.md](../docs/contracts/perf.md#pipeline-cause-event-extension).
 Ordinary stage and R records remain intact. `rvw perf` reports cause unions,
 overlaps, unknown intervals, replay counts and commit kinds. These measurements
 are producer claims from sampled signals, not proof that a cause blocks all
@@ -252,7 +252,7 @@ retirement. BOOM probe changes remain core-owned. See
 wrongPathInstructions, warmup, alias, context)` records explicit observations.
 Optional values default to unknown. Bind project signals through
 `PipelineTags.event`; generic code does not name predictor implementations.
-See the [wire contract](../docs/PLATFORM_CONTRACTS.md#observed-prediction-outcome-extension)
+See the [wire contract](../docs/contracts/cosim.md#observed-prediction-outcome-extension)
 and [perf report guide](../rvw/src/rvw/perf/README.md#observed-predictor-outcomes).
 Emit outcomes while the instruction ID is live. Do not estimate missing
 recovery or wrong-path counts from flush records. Project-level predictor

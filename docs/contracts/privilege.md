@@ -1,0 +1,117 @@
+# Privilege and interrupt suites contracts
+
+Part of the [platform contracts](../PLATFORM_CONTRACTS.md).
+
+## Pointer-masking privilege matrices
+
+`rvw.mmu/1` may contain `pointer_matrix` with `modes`, `extensions` and
+`controllers`. Supported modes are sv39, sv48 and sv57. Extensions are smnpm,
+ssnpm, smmpm, sspm and supm. Sspm/Supm require explicit controller declarations
+in the project: `sspm = "smnpm"` and `supm = "ssnpm"` for this backend.
+These capability names do not define separate CSRs. Scenarios may declare
+`pointer_extension` and `pointer_controller`. Ssnpm selects senvcfg.PMM with
+MPRV effective U privilege. Smmpm selects mseccfg.PMM for Bare M-mode data.
+Smnpm selects menvcfg.PMM with effective S privilege. Tagged instruction fetch
+under Ssnpm/Smnpm must fault even when data masking is enabled. The programs
+check PMM readback, exact trap cause/tval/PC and successful data values.
+The guest-pointer campaign below covers VS/VU HLV/HSV controls and HLVX
+exemption. Debug interactions and nonstandard environment controls remain unsupported. The backend refuses inconsistent controller declarations.
+
+## Privilege campaign artifacts
+
+`kind = "epmp-matrix"` selects the complete 16-encoding MML permission table.
+Each scenario records `expected_allowed` and its pinned Smepmp specification
+URL. Separate bins cross L/R/W/X with actual/effective privilege and access
+kind. RLB is cleared before the access probe. Existing C1 and strict-reference
+requirements still apply.
+
+`kind = "disabled-matrix"` selects `disabled.feature` and all 64 requested
+six-control masks. Profiles cover disabled FS/VS state and absent F/V/S
+features. `requested_controls` in each scenario records the requested mstatus
+word. Programs capture WARL readback and account for MRET clearing MPRV.
+Requested-bin membership never asserts that an optional WARL bit latched.
+
+Kinds `reri` and `dvfs` use the same model-based reference report and mailbox
+stimulus contract. RERI pins its revision in project data and derives expected
+record updates and signal requests from the versioned model. Its error payload
+is a hardware-injection request, not proof that the error was handled.
+`privilege_dvfs` is a C1 JSON sample-list artifact. Samples contain `tick`,
+`step`, `phase`, `frequency_hz`, `voltage_uv`, `clock_ready`, `voltage_ready`.
+The checker binds its hash and checks the complete ordered handshake against
+project states. Digital sequencing never implies analog voltage or PLL proof.
+Known C1 self-check failures remain failures when optional observations are
+missing.
+
+Kinds `sstc`, `stateen`, `envcfg`, `landing` and `shadow` select RV64
+extension campaigns. Sstc requires Zicntr in the reference ISA. Optional
+`sstc.virtualization` requires H and adds VS control cases. `envcfg` declares
+`implemented_mask` and optional `henvcfg_mask`; these are implemented-bit
+expectations, not permissive WARL guesses. The existing strict C1 check is
+required before any architectural group passes.
+
+Kinds `imsic`, `aplic`, `aclint` and `smnip` select versioned controller
+programs. `spec_version` pins the implemented version; `spec_revision` records
+an optional immutable source revision. `reference_backend = "python"` selects
+small executable reference models. The reference report adds `evidence =
+"model-based"` and `model_sha256`, mapping model source files to hashes.
+Its scenario outcomes are model observations, not native Spike or DUT results.
+The normal C1 plus complete strict-reference gate remains unchanged.
+
+Kinds `pmp`, `epmp` and `pma` generate separate protection matrices. PMA
+scenarios require a `privilege_bus` C1 artifact: `complete` is Boolean,
+`transfers` hold address/width/write and `device_state` holds independent
+project state. The configured counts, transfer shapes and state must agree.
+Missing state or an incomplete capture remains inconclusive. Reports bind the
+artifact hash. These observations do not replace the strict architectural check.
+
+`compiler_isa` optionally selects compiler instruction parsing. `isa` still
+selects the reference model architecture. Numeric encodings can therefore be
+compiled with a base assembler without claiming extension model support.
+
+Kinds `plic`, `reset` and `nmi` emit `rvw.stimulus/1` device events. Each
+payload has a positive `step`, request/ack ELF symbols and project event data.
+The adapter applies events in order and acknowledges each step after driving
+it. Optional `when_pc` requires the resolved architectural PC. Build manifests
+bind the stimulus hash; C1 must record `stimulus_sha256`. Reset campaigns also
+require a `privilege_reset` artifact containing one list of ResetSample objects
+per requested pulse. Samples use `cycle`, `asserted`, `state` and `valid`.
+The report binds the observation hash and requires the existing independent
+reset contract check. Missing evidence remains inconclusive.
+
+`kind = "scheduled-wfi"` emits per-program suites with C1 `irq_schedule`.
+`wake` declares assertion/clear cycles and optional retained-state masks in
+`clock_state`. The optional C1 artifact `privilege_clock` holds a JSON sample
+list: `tick` is the reference edge, `clock_running` is a Boolean, `state` maps
+names to integers, `retired` is cumulative retirement and `pending` is Boolean.
+Unknown values can be null. The checker requires a complete observed pause
+and restart, stable masked state and a pending event during the pause. It binds
+the artifact hash. A missing artifact is inconclusive. The artifact reports
+project harness observations; Spike CLI cannot supply clock-stop evidence.
+
+The optional `kind = "disabled"` selects FS-Off or absent-supervisor matrices.
+`priv = "mu"` selects absent supervisor operations. Otherwise FS-Off requires
+F in `isa`. The reference forwards `priv` to Spike. These cases use the same
+build, reference and check schemas.
+
+`rvw regress privilege build` reads `rvw.privilege/1`: `modes` selects distinct
+M/S/U modes and `isa` selects an RV64 compiler and Spike ISA string. The current
+control matrix requires `priv = "msu"` when given. It writes self-checking ELFs,
+sources, a linker script, a suite fragment and `rvw.privilege-build/1` manifest.
+The manifest records the description hash, specification URL, configuration,
+scenario IDs, ELF/source hashes and functional group names in `bins`.
+
+`reference` writes `rvw.privilege-reference/1` JSON to stdout. It records command,
+return code, model hash and per-scenario self-check status. It is reference-only.
+`check` writes `rvw.privilege-check/1`: it binds the build manifest and each C1
+result by SHA-256. A group passes only if every member has a passing C1 result
+and a complete strict Spike match with a passing end event, positive instruction
+count and zero synchronizations. Missing or duplicate evidence is inconclusive.
+These artifacts do not change C1, C2 or C3 and do not grant C4 acceptance.
+
+The privilege description also accepts `kind = "wfi"` and a `timer` object with
+integer `mtime`, `mtimecmp`, `msip` and `delta`. The generator programs the
+project-owned timer/software device and crosses the two sources with MIE
+clear/set. The delta is in timer ticks. C1 execution bounds the wait. It makes
+no minimum sleep or physical clock-gating claim. Builds include
+`functional-groups.json` for C2 observation coverage. Observation hits do not
+grant the architectural pass groups from `privilege check`.

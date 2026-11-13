@@ -14,7 +14,8 @@ reusing open-source tools and extending them where they fall short.
 
 - `ROADMAP.md`: the plan for every area, and where each area stands against commercial tools.
 - GitHub issues: the tasks. `TODO.md` lists them under the roadmap areas.
-- `docs/PLATFORM_CONTRACTS.md`: the file formats and commands the tools share (C1–C9).
+- `docs/PLATFORM_CONTRACTS.md`: the index of the file formats and commands the tools share
+  (C1–C9 and area extensions). Each topic has its own file under `docs/contracts/`.
 - [docs/BRING_YOUR_OWN_CORE.md](docs/BRING_YOUR_OWN_CORE.md): install once, then use a
   separate core repository with `rvw.toml`, core adapters and project selection.
 
@@ -191,7 +192,8 @@ its tip; a PR checks all commits after its merge base. PR title edits rerun CI.
   repository, beside `rvw.toml`. The existing bundled BOOM examples stay in
   `RiscvSim/boom/`, `rvw/configs/boom.toml`, `rvw/src/rvw/cosim/configs/boom.json`,
   `SpinalChecks/boom/` and `SpinalDB/boom/` for compatibility.
-- Change a shared format only by editing `docs/PLATFORM_CONTRACTS.md` in the same commit.
+- Change a shared format only by editing its file under `docs/contracts/` in the same commit
+  (index: `docs/PLATFORM_CONTRACTS.md`).
 - A tool must never report a pass, a match or an accept that it has not earned. When evidence is
   missing or ambiguous, report `inconclusive`, `no_checks` or an error. Every fix gets a test that
   fails before the fix.

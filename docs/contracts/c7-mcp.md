@@ -1,0 +1,47 @@
+# C7. MCP tools (`rvw mcp`)
+
+`rvw mcp` is one stdio MCP server for every rvw tool. Each subpackage plugs in without editing
+the server:
+
+- Add `rvw/src/rvw/<tool>/mcp_tools.py` with a function `mcp_tools()` returning a list of
+  `rvw.mcp.ToolSpec`. Discovery imports `rvw.<pkg>.mcp_tools` for every subpackage, as `rvw`
+  imports `rvw.<pkg>.cli`. A package whose import fails is skipped with a message on stderr.
+  Modules outside rvw can be added with `RVW_MCP_PLUGINS=module[,module]`.
+- `ToolSpec(name, description, input_schema, handler, long=False, annotations={}, isolate=False)`:
+  - `name` is `<tool>_<verb>` (`query_drivers`, `regress_run`, `bundle_make`), unique;
+  - `description` tells an agent when to use it;
+  - `input_schema` is a JSON Schema object (`rvw.mcp.schema(properties, required)` helps);
+  - `handler(**arguments)` returns a JSON-serialisable value, normally the same dict the CLI
+    prints with `--json`, so CLI and MCP never disagree. Raise `rvw.mcp.ToolError(message, data)`
+    for expected failures; the agent gets `{"error": message, **data}` with `isError`.
+  - `annotations`: MCP tool annotations, e.g. `{"readOnlyHint": True}` for queries.
+- `mcp_tools.py` must not import the MCP SDK (only `rvw.mcp.spec`), so declaring tools works
+  without the optional dependency and `rvw mcp --list` works everywhere.
+- **Long jobs**: anything that can take more than a few seconds (builds, simulations,
+  regressions, bundles) sets `long=True`. The server runs it in a worker thread and returns
+  `{"job_id": ...}` at once. If the handler has a `job` parameter it receives a
+  `rvw.mcp.jobs.Job`: `job.log(line)`, `job.set_progress(text)`, `job.run(cmd, cwd, env)` (runs a
+  subprocess, streams its output into the log, kills it on cancel), `job.check()` /
+  `job.cancelled`. Built-in tools follow jobs: `job_status(job_id, wait_s)` (status, result when
+  done; `wait_s` up to 60 blocks until it finishes), `job_log(job_id, tail)`,
+  `job_cancel(job_id)`, `job_list()`. Heavy jobs still take the `boom` lock themselves
+  (`rvw.mcp.worker.handler(..., lock="boom")` or the adapter's `with-lock.sh`).
+- **Cancel**: `job_cancel` sends SIGTERM to the process group of every subprocess the job
+  started with `job.run`, SIGKILL to what is left after 15 s (`Job.GRACE_S`, longer than the
+  5 s `rvw.common.proc.GRACE_S` a worker gives its own adapter or solver groups), and reaps them.
+  It returns `cancelled` once the job has ended, or `cancelling` while a handler that runs Python
+  in the server has not reached `job.check()` yet. Processes that left the job's group (their
+  own `start_new_session`) are stopped only by the handler's own cleanup (`rvw.common.proc`).
+- **Job retention**: the server keeps the newest 100 finished jobs; `job_status` of an older one
+  is an error that says it was evicted.
+- **Isolated short tools**: `isolate=True` (or a name matching `RVW_MCP_ISOLATE`, default
+  `wave_*`) runs a short tool's handler in a worker process. It answers inline if it ends within
+  `RVW_MCP_SYNC_S` (20 s); otherwise the call returns `{"job_id": ...}` and continues as a
+  cancellable job. The handler must be a module-level function.
+- Results larger than 400 000 characters of JSON are shortened, not cut: the largest lists and
+  strings are trimmed, the result keeps its shape (a non-object result is wrapped as
+  `{"result": ...}`), and it gains `"truncated": true` and `"truncation": {note, original_chars,
+  cuts: [{path, total, kept}]}`. It is always valid JSON. Give tools `limit`, `depth` or `scope`
+  arguments instead of relying on that.
+- Test a package's tools through `rvw.mcp.registry.Registry([...]).call_json(name, args)`, and
+  end to end with an MCP client over stdio as `rvw/tests/test_mcp.py` does.
