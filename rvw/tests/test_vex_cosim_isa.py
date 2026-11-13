@@ -36,6 +36,7 @@ def test_empty_campaign_cannot_match(tmp_path):
     assert check_isa.compare(manifest, tmp_path / 'summary.json') == 1
 
 
-def test_private_lock_in_launcher():
-    script = (ROOT / 'examples/vexriscv/rvw/run.sh').read_text()
+@pytest.mark.parametrize('core', ['vexriscv', 'vexiiriscv'])
+def test_private_lock_in_launcher(core):
+    script = (ROOT / f'examples/{core}/rvw/run.sh').read_text()
     assert '"${RVW_VEX_LOCK:-vex}"' in script

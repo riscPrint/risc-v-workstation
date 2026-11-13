@@ -22,6 +22,7 @@ object VexiiTop {
   def apply(config: String): VexiiRiscv = {
     val plugins = param(config).plugins()
     plugins += new TrapTapPlugin
+    if (sys.env.get("RVW_COSIM_DPI").contains("1")) plugins += new LockstepTapPlugin
     ParamSimple.setPma(plugins)
     VexiiRiscv(plugins)
   }
@@ -41,6 +42,16 @@ class TrapTapPlugin extends FiberPlugin {
     val tval = CombInit(trap.fsm.buffer.trap.tval).setName("rvw_trap_tval").simPublic()
     val fire = CombInit(trap.whitebox.trap).setName("rvw_trap_fire").simPublic()
     val privilege = CombInit(host[PrivilegedPlugin].logic.harts(0).privilege).setName("rvw_privilege").simPublic()
+    buildBefore.release()
+  }
+}
+
+/** Project-owned exposure of the generic native transport. */
+class LockstepTapPlugin extends FiberPlugin {
+  val logic = during setup new Area {
+    val buildBefore = retains(host[PipelineBuilderPlugin].elaborationLock)
+    awaitBuild()
+    val transport = new riscvsim.LockstepDpi
     buildBefore.release()
   }
 }
