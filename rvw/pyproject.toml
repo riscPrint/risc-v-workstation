@@ -34,5 +34,6 @@ packages = ["src/rvw"]
 [tool.pytest.ini_options]
 markers = [
     "fast: public CI; no core checkout or optional native EDA tools",
+    "native_light(*tools): bounded native fixtures; inventory tool names",
     "slow: nightly tests; optional native tools can cause skips",
 ]

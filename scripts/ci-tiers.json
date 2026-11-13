@@ -1,0 +1,78 @@
+{
+  "fast": {
+    "tools": [],
+    "seconds": 300
+  },
+  "native-light": {
+    "tools": [
+      "Verilator",
+      "Yosys",
+      "SymbiYosys",
+      "Z3",
+      "Spike"
+    ],
+    "seconds": 120
+  },
+  "examples": {
+    "tools": [
+      "JDK",
+      "sbt",
+      "Verilator",
+      "RISC-V GCC"
+    ],
+    "seconds": 1800
+  },
+  "nightly": {
+    "tools": [
+      "JDK",
+      "sbt",
+      "Verilator",
+      "RISC-V GCC",
+      "Spike",
+      "Sail",
+      "Yosys",
+      "SymbiYosys",
+      "Yices",
+      "Z3",
+      "Boolector",
+      "ABC",
+      "Avy",
+      "btorsim",
+      "suprove",
+      "yosys-slang",
+      "rIC3",
+      "EBMC",
+      "CBMC",
+      "pono",
+      "GHDL",
+      "CIRCT/arcilator",
+      "riscv-dv",
+      "cocotb",
+      "pyuvm",
+      "wellen",
+      "gem5",
+      "native csim",
+      "native OoO",
+      "QEMU",
+      "herd7",
+      "OpenOCD",
+      "GDB",
+      "Verible",
+      "Icarus",
+      "typed waves",
+      "SpinalTrace",
+      "Surfer",
+      "GTKWave tools",
+      "VS Code",
+      "Bitwuzla",
+      "CVC4",
+      "CVC5",
+      "MathSAT",
+      "btormc",
+      "yosys-smtbmc",
+      "firtool",
+      "EQY"
+    ],
+    "seconds": 7200
+  }
+}

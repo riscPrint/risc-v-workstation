@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 # Run the same checks in Actions and in a disposable local work directory.
 set -euo pipefail
+if [ "${1:-}" = --tier ]; then shift; fi
 mode="${1:-fast}"
-case "$mode" in fast|javascript|rust|nightly-python|nightly-scala|messages) ;; *) echo "usage: $0 [fast|nightly-python|nightly-scala|messages]" >&2; exit 2 ;; esac
+case "$mode" in fast|native-light|examples|nightly|javascript|rust|nightly-python|nightly-scala|messages) ;; *) echo "usage: $0 [fast|nightly-python|nightly-scala|messages]" >&2; exit 2 ;; esac
 root="$(cd "$(dirname "$0")/.." && pwd)"
 # Commit policy needs only the standard library and the event's Git history.
 if [ "$mode" = messages ]; then
@@ -96,12 +97,10 @@ case "$mode" in
     (cd SpinalTrace; "$RVW_CI_WORK/scripts/with-lock.sh" suite nice -n 10 cargo test --locked -p spinaltrace-rs)
     ;;
   nightly-python)
-    pytest_report nightly-results.xml "" rvw/tests --strict-markers -q -ra --durations=20
+    python scripts/ci-tiers.py --tier nightly --component python
     ;;
   nightly-scala)
-    scala SpinalKonata test inputs/test
-    scala SpinalDB/spinaldb Test/compile
-    scala SpinalChecks Test/compile
+    python scripts/ci-tiers.py --tier nightly --component scala
     ;;
   messages)
     # The policy reads the original event and Git history, but never changes it.
