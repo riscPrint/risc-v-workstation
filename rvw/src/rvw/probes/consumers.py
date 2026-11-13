@@ -1,0 +1,79 @@
+"""Which consumer tools each probe kind enables. Generic: no core names.
+
+Each consumer lists `needs`: (kind, required fields) pairs that must all be present,
+the existing format the converter writes, and the `rvw probes convert --to` name.
+`converter=None` means no writer exists yet; such a consumer is reported as a gap.
+"""
+from __future__ import annotations
+
+CONSUMERS = [
+    dict(id="csim-compare-rtl", tool="rvw csim compare-rtl", needs=[("branch", ["pc", "taken", "target", "predicted_taken"])],
+         format="rvw.bp-events/1", converter="bp-events",
+         note="branch events at the commit point, aligned to C2 retirements"),
+    dict(id="perf-pipeline", tool="rvw perf", needs=[("stage", ["id"]), ("retire", ["id"])],
+         format="Kanata 0004", converter="kanata", note="stage occupancy, retire and flush per instruction ID"),
+    dict(id="perf-stalls", tool="rvw perf (stall causes)", needs=[("stage", ["id"]), ("retire", ["id"]), ("stall", [])],
+         format="Kanata 0004 #rvw stall records", converter="kanata", note="one measured sample per blocked cycle"),
+    dict(id="cache-observer", tool="RiscvSim CacheEventObserver", needs=[("cache", ["address", "data"])],
+         format="cache observer event JSONL", converter="cache", note="bytes are needed for the content scoreboard"),
+    dict(id="mmu-protocol", tool="rvw regress mmu report --protocol-config", needs=[("tlb", ["va", "pa"])],
+         format="rvw.mmu-observations/1", converter="mmu", note="tlb_fill, tlb_hit and tlb_invalidate rows"),
+    dict(id="mmu-walk-capture", tool="rvw regress mmu report (observations)", needs=[("walk", ["address"])],
+         format="rvw.mmu-observations/1", converter="mmu", note="walk_request and walk_response rows"),
+    dict(id="ooo-calibration", tool="rvw arch ooo-calibrate", needs=[("counter", ["inc"])],
+         format="RTL event counts (c1_sha256, trace_sha256, counts)", converter="counts",
+         note="name counters as the plan's rtl_event names"),
+    dict(id="hpm-bindings", tool="SpinalChecks HpmControlChecks and HPM monitors", needs=[("counter", ["inc"], "hpm")],
+         format="rvw.hpm-bindings/1", converter="hpm", note="counter probes with an hpm selector value"),
+    dict(id="etrace", tool="rvw debug etrace", needs=[("trace", ["itype", "iaddr", "iretire", "ilastsize", "priv"])],
+         format="E-Trace encoder ingress CSV", converter="etrace-ingress", note="DUT encoder ingress, not C2-derived"),
+    dict(id="cosim-interrupts", tool="rvw cosim (interrupt-taken evidence)", needs=[("interrupt", ["cause", "pc"])],
+         format="rvw.probe-interrupts/1 check against C2 trap events", converter="interrupts",
+         note="independent check of C2 interrupt traps"),
+    dict(id="cosim-csr-slots", tool="rvw cosim (per-slot CSR state)", needs=[("csr", ["address", "value"])],
+         format="C2/2 csr_snapshot", converter=None,
+         note="needs per-slot CSR state through RvfiProbe csrSlots; write events alone cannot fill a snapshot"),
+    dict(id="fault-sites", tool="rvw fault", needs=[("fault", ["value"])],
+         format="design database register sites", converter=None,
+         note="rvw fault reads register sites from the design database; the adapter must implement C1 --fault"),
+]
+
+
+def _have(probes, kind, fields, meta=None):
+    """Probes of `kind` with all `fields` (and the meta key, when the meta is known)."""
+    out = []
+    for p in probes:
+        if p["kind"] != kind or not set(fields) <= set(p["fields"]):
+            continue
+        if meta and p.get("meta") is not None and meta not in p["meta"]:
+            continue
+        out.append(p)
+    return out
+
+
+def matrix(probes: list[dict]) -> list[dict]:
+    """One row per consumer: status `enabled`, `missing` or `no_converter`.
+
+    `probes` are dicts with `kind`, `name`, `fields` (names) and `meta` (None when unknown,
+    as in a design database)."""
+    rows = []
+    for c in CONSUMERS:
+        missing, used = [], []
+        for need in c["needs"]:
+            kind, fields = need[0], need[1]
+            meta = need[2] if len(need) > 2 else None
+            found = _have(probes, kind, fields, meta)
+            if found:
+                used += [f"{p['kind']}/{p['name']}" for p in found]
+            else:
+                missing.append(f"{kind}({', '.join(fields)}{', meta ' + meta if meta else ''})")
+        status = "missing" if missing else ("enabled" if c["converter"] else "no_converter")
+        unknown = [f"{p['kind']}/{p['name']}" for need in c["needs"] if len(need) > 2
+                   for p in _have(probes, need[0], need[1]) if p.get("meta") is None]
+        row = dict(consumer=c["id"], tool=c["tool"], status=status, format=c["format"], converter=c["converter"],
+                   probes=sorted(set(used)), missing=missing, note=c["note"])
+        if unknown and status == "enabled":
+            row["status"] = "unknown"
+            row["missing"] = ["probe meta is not in the design database; check an event stream"]
+        rows.append(row)
+    return rows
