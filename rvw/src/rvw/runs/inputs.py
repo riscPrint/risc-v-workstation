@@ -223,11 +223,20 @@ class DebugInputs(WaveInputs):
         Bisect supplies a different source and pinned revision for each trial.
         Each descriptor is immutable and stays available to saved shell replays.
         """
+        from .versions import resolve
+        try:
+            selected = resolve(source.copy, revision)
+        except (OSError, ValueError, KeyError, TypeError) as exc:
+            c = cmd.set()
+            c.env['RVW_ADAPTER_RESOLUTION_ERROR'] = str(exc)
+            return c
         key = (source.copy, revision)
         if key not in self.launcher_descriptors:
             identity = {'core_repo': str(source.copy), 'core_rev': revision[:7] if revision else None,
                         'core_rev_full': revision, 'core_dirty': True,
                         'core_sha256': source.sha256, 'core_fingerprint': source.sha256}
+            if selected is not None:
+                identity['adapter_selection'] = selected[1]
             # Do not assert a clean Git tree: the captured set can include local edits.
             trees = [source, *([self.tools_tree] if self.tools_tree is not None else [])]
             descriptor = {'source': identity, 'files': [
@@ -240,6 +249,17 @@ class DebugInputs(WaveInputs):
             self.launcher_descriptors[key] = (item.copy, identity)
         path, identity = self.launcher_descriptors[key]
         c = cmd.set()
+        if selected is not None:
+            c.exe = list(selected[0])
+            with Path(c.exe[0]).open('rb') as stream:
+                first_line = stream.readline(4096)
+            if first_line.startswith(b'#!'):
+                shebang = script_interpreter(first_line)
+                interpreter = self.interpreter(shebang[0], env=c.child_environment())
+                c.exe[:0] = [str(interpreter), *shebang[1:]]
+            else:
+                c.exe[0] = self.program(Path(c.exe[0]))
+        c.env.pop('RVW_ADAPTER_RESOLUTION_ERROR', None)
         c.env['RVW_CAPTURE_INPUTS'] = str(path)
         c.env['RVW_CAPTURE_SOURCE'] = json.dumps(identity, sort_keys=True)
         return c

@@ -86,6 +86,17 @@ The result lists history, selected count, target and time budget. `saved` means
 a stopped checkpoint exists. It does not mean native replay qualification or
 ISA correctness. A target before available history is refused.
 
+### Captured historical adapter selection
+
+An optional captured `.rvw-adapters.json` uses `rvw.adapter-versions/1`.
+Exact revision mappings take precedence over a captured version marker.
+Only adapter API 1 is supported. Its command uses C1 options. Paths stay inside
+the captured core tree. Selection pins the interpreter under C8 and adds
+`adapter_selection` to source identity. It records API, version, revision,
+manifest SHA-256 and executable SHA-256. Unsupported revisions produce no run
+and remain skipped bisect evidence. See `rvw/src/rvw/runs/ADAPTERS.md` for the
+manifest and the current debug-launch-only integration boundary.
+
 ## Layout
 
 | Path | What | Language |
