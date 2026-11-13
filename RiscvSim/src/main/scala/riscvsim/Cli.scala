@@ -7,7 +7,7 @@ object Cli {
   class UsageError(msg: String) extends Exception(msg)
 
   /** Flags without a value, and options with one. Dashes and underscores are equivalent. */
-  val flags = Set("rvfi-trace", "rvfi-check", "rvfi", "wave", "konata", "coverage", "spinaltrace", "json", "help", "persistent")
+  val flags = Set("rvfi-trace", "rvfi-check", "rvfi", "wave", "konata", "coverage", "spinaltrace", "probes", "json", "help", "persistent")
   val options = Set("elf", "out", "config", "seed", "max-cycles", "mem-latency", "wave-from", "wave-to",
     "manifest", "jobs", "summary", "wall-timeout", "irq-schedule", "elf-load-bias", "boot-payloads", "soc-map", "hart-images")
   private val integerOptions = Set("seed", "max-cycles", "mem-latency", "wave-from", "wave-to", "jobs")
@@ -109,6 +109,8 @@ object Cli {
       if ((s.mask & ~adapter.irqInputMask) != 0) throw new UsageError("adapter does not support these IRQ inputs")
       if (s.changes.last._1 >= maxCycles) throw new UsageError("IRQ schedule must finish before --max-cycles")
     })
+    if (bool(m, "probes") && !adapter.supportsProbes)
+      throw new UsageError("adapter does not support --probes")
     if (m.contains("boot-payloads") && !adapter.supportsBootPayloads)
       throw new UsageError("adapter does not support boot payload loading")
     if (m.contains("hart-images") && adapter.hartIds(config).size < 2)
@@ -120,7 +122,7 @@ object Cli {
       maxCycles = maxCycles, memLatency = memLatency,
       rvfiTrace = bool(m, "rvfi-trace"), rvfiCheck = bool(m, "rvfi-check") || bool(m, "rvfi"),
       wave = bool(m, "wave") || waveFrom.isDefined || waveTo.isDefined, waveFrom = waveFrom, waveTo = waveTo,
-      konata = bool(m, "konata"), coverage = bool(m, "coverage"), spinaltrace = bool(m, "spinaltrace"),
+      konata = bool(m, "konata"), coverage = bool(m, "coverage"), spinaltrace = bool(m, "spinaltrace"), probes = bool(m, "probes"),
       hartImages = m.get("hart-images").map(file(cwd, _)),
       bootPayloads = m.get("boot-payloads").map(file(cwd, _)), irqSchedule = schedule, elfLoadBias = long(m, "elf-load-bias", min = 0).getOrElse(0L), socMap = m.get("soc-map").map(p => SimMap.load(file(cwd, p))),
       wallTimeoutS = m.get("wall-timeout").map { v =>
@@ -133,10 +135,10 @@ object Cli {
 
   val usage: String =
     """usage:
-      |  run.sh build    --config NAME[,NAME...] [--rvfi] [--wave] [--coverage] [--konata] [--spinaltrace] [--json]
+      |  run.sh build    --config NAME[,NAME...] [--rvfi] [--wave] [--coverage] [--konata] [--spinaltrace] [--probes] [--json]
       |  run.sh run      --elf PATH --out DIR [--config NAME] [--seed N] [--max-cycles N] [--mem-latency N]
       |                  [--rvfi-trace] [--rvfi-check] [--wave [--wave-from CYCLE] [--wave-to CYCLE]]
-      |                  [--hart-images JSON] [--elf-load-bias BYTES] [--boot-payloads JSON] [--soc-map PATH] [--konata] [--coverage] [--spinaltrace] [--wall-timeout SECONDS] [--irq-schedule CYCLE:0xLEVELS,...] [--json]
+      |                  [--hart-images JSON] [--elf-load-bias BYTES] [--boot-payloads JSON] [--soc-map PATH] [--konata] [--coverage] [--spinaltrace] [--probes] [--wall-timeout SECONDS] [--irq-schedule CYCLE:0xLEVELS,...] [--json]
       |  run.sh run-many --manifest jobs.jsonl [--jobs N] [--persistent] [--summary FILE] [--json] [defaults for every job...]
       |  run.sh serve    [defaults for every request...] # JSONL stdin; JSONL stdout
       |  run.sh identity [--config NAME] [--options JSON]

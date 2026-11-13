@@ -9,6 +9,7 @@ val spinalVersion = "1.15.0"
 // No core-specific code here.
 lazy val riscvsim = (project in file("."))
   .dependsOn(ProjectRef(file("../SpinalTrace/spinaltrace"), "spinaltrace"))
+  .dependsOn(ProjectRef(file("../SpinalProbes"), "spinalprobes"))
   .dependsOn(ProjectRef(file("../SpinalChecks"), "spinalchecks") % "test->compile")
   .settings(
     name := "riscvsim",
