@@ -48,7 +48,7 @@ output="$(cd "$OOO_MINI_SOURCE" && "$repo/scripts/with-lock.sh" "${RVW_SBT_LOCK:
 }
 cp="$(printf '%s\n' "$output" | grep -v '^\[' | grep 'scala-library' | tail -1)"
 if [ -z "$cp" ]; then echo "$output" >&2; echo 'No classpath in sbt output.' >&2; exit 2; fi
-exec "$RVW_PYTHON" "$sim/scripts/native-identity.py" launch "$native_identity" "$launch_owner" \
+exec nice -n 10 "$RVW_PYTHON" "$sim/scripts/native-identity.py" launch "$native_identity" "$launch_owner" \
   -Xss64m -Xmx"${RISCVSIM_XMX:-3g}" -XX:+UseParallelGC \
   -Driscvsim.cwd="$PWD" -Driscvsim.script="$here/run.sh" \
   -Driscvsim.tools="$repo" -Driscvsim.source="$launch_owner/source.json" \

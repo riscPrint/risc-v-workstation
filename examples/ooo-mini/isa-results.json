@@ -5,11 +5,12 @@
   "strict_spike_match": 50,
   "synchronizations": 0,
   "unit_arithmetic_vectors": 456,
-  "source_sha256": {
+  "published_source_sha256": {
     "src/main/scala/ooomini/MulDiv.scala": "e53dc2654c64c046937ca16fc3e08b2ab557a199fc8a121239a04bf249a1f292",
     "src/main/scala/ooomini/MulDivSmoke.scala": "a4309d886e7bcb6932825b74b6a55b02775ae1f11764ed027d5c057cd9bbb034",
-    "src/main/scala/ooomini/Core.scala": "2de7dde88b0f97bfa11fe4dcb33db602d464e049e99e90f731393b79c79aa20c",
-    "src/main/scala/ooomini/Adapter.scala": "9c72738fec13bb1f19e7d950e16c9f0c6de7fd22d81922c1a321949f6909ebca"
+    "src/main/scala/ooomini/BuildDb.scala": "a52f09bd9e39e4bbcaf739c734c22aaf52bebd5fbafade632eb1c67a548ac9c6",
+    "src/main/scala/ooomini/Core.scala": "f5d496f8a3edea968734cae0b518401a178226bc9af16b3730dbc9c7326ca559",
+    "src/main/scala/ooomini/Adapter.scala": "95b54e50b112e13adc45c09196f32d34f57469ad7cb2d542f7db957be50d04ba"
   },
   "tests": [
     {
@@ -22,7 +23,8 @@
       "pc": null,
       "message": null,
       "cycles": 582,
-      "instret": 504
+      "instret": 504,
+      "core_rtl_sha256": "31393b7da1e399d39512ffca7f752c5447295989f5e1318030c0e595579b814e"
     },
     {
       "test": "rv32ui-p-addi",
@@ -34,7 +36,8 @@
       "pc": null,
       "message": null,
       "cycles": 341,
-      "instret": 281
+      "instret": 281,
+      "core_rtl_sha256": "31393b7da1e399d39512ffca7f752c5447295989f5e1318030c0e595579b814e"
     },
     {
       "test": "rv32ui-p-and",
@@ -46,7 +49,8 @@
       "pc": null,
       "message": null,
       "cycles": 612,
-      "instret": 524
+      "instret": 524,
+      "core_rtl_sha256": "31393b7da1e399d39512ffca7f752c5447295989f5e1318030c0e595579b814e"
     },
     {
       "test": "rv32ui-p-andi",
@@ -58,7 +62,8 @@
       "pc": null,
       "message": null,
       "cycles": 297,
-      "instret": 237
+      "instret": 237,
+      "core_rtl_sha256": "31393b7da1e399d39512ffca7f752c5447295989f5e1318030c0e595579b814e"
     },
     {
       "test": "rv32ui-p-auipc",
@@ -70,7 +75,8 @@
       "pc": null,
       "message": null,
       "cycles": 137,
-      "instret": 97
+      "instret": 97,
+      "core_rtl_sha256": "31393b7da1e399d39512ffca7f752c5447295989f5e1318030c0e595579b814e"
     },
     {
       "test": "rv32ui-p-beq",
@@ -82,7 +88,8 @@
       "pc": null,
       "message": null,
       "cycles": 438,
-      "instret": 330
+      "instret": 330,
+      "core_rtl_sha256": "31393b7da1e399d39512ffca7f752c5447295989f5e1318030c0e595579b814e"
     },
     {
       "test": "rv32ui-p-bge",
@@ -94,7 +101,8 @@
       "pc": null,
       "message": null,
       "cycles": 474,
-      "instret": 348
+      "instret": 348,
+      "core_rtl_sha256": "31393b7da1e399d39512ffca7f752c5447295989f5e1318030c0e595579b814e"
     },
     {
       "test": "rv32ui-p-bgeu",
@@ -106,7 +114,8 @@
       "pc": null,
       "message": null,
       "cycles": 505,
-      "instret": 373
+      "instret": 373,
+      "core_rtl_sha256": "31393b7da1e399d39512ffca7f752c5447295989f5e1318030c0e595579b814e"
     },
     {
       "test": "rv32ui-p-blt",
@@ -118,7 +127,8 @@
       "pc": null,
       "message": null,
       "cycles": 438,
-      "instret": 330
+      "instret": 330,
+      "core_rtl_sha256": "31393b7da1e399d39512ffca7f752c5447295989f5e1318030c0e595579b814e"
     },
     {
       "test": "rv32ui-p-bltu",
@@ -130,7 +140,8 @@
       "pc": null,
       "message": null,
       "cycles": 469,
-      "instret": 355
+      "instret": 355,
+      "core_rtl_sha256": "31393b7da1e399d39512ffca7f752c5447295989f5e1318030c0e595579b814e"
     },
     {
       "test": "rv32ui-p-bne",
@@ -142,7 +153,8 @@
       "pc": null,
       "message": null,
       "cycles": 442,
-      "instret": 330
+      "instret": 330,
+      "core_rtl_sha256": "31393b7da1e399d39512ffca7f752c5447295989f5e1318030c0e595579b814e"
     },
     {
       "test": "rv32ui-p-fence_i",
@@ -153,8 +165,9 @@
       "differences": null,
       "pc": null,
       "message": null,
-      "cycles": 389,
-      "instret": 335
+      "cycles": 393,
+      "instret": 335,
+      "core_rtl_sha256": "31393b7da1e399d39512ffca7f752c5447295989f5e1318030c0e595579b814e"
     },
     {
       "test": "rv32ui-p-jal",
@@ -166,7 +179,8 @@
       "pc": null,
       "message": null,
       "cycles": 138,
-      "instret": 94
+      "instret": 94,
+      "core_rtl_sha256": "31393b7da1e399d39512ffca7f752c5447295989f5e1318030c0e595579b814e"
     },
     {
       "test": "rv32ui-p-jalr",
@@ -178,7 +192,8 @@
       "pc": null,
       "message": null,
       "cycles": 218,
-      "instret": 154
+      "instret": 154,
+      "core_rtl_sha256": "31393b7da1e399d39512ffca7f752c5447295989f5e1318030c0e595579b814e"
     },
     {
       "test": "rv32ui-p-lb",
@@ -190,7 +205,8 @@
       "pc": null,
       "message": null,
       "cycles": 352,
-      "instret": 292
+      "instret": 292,
+      "core_rtl_sha256": "31393b7da1e399d39512ffca7f752c5447295989f5e1318030c0e595579b814e"
     },
     {
       "test": "rv32ui-p-lbu",
@@ -202,7 +218,8 @@
       "pc": null,
       "message": null,
       "cycles": 352,
-      "instret": 292
+      "instret": 292,
+      "core_rtl_sha256": "31393b7da1e399d39512ffca7f752c5447295989f5e1318030c0e595579b814e"
     },
     {
       "test": "rv32ui-p-ld_st",
@@ -214,7 +231,8 @@
       "pc": null,
       "message": null,
       "cycles": 1042,
-      "instret": 1002
+      "instret": 1002,
+      "core_rtl_sha256": "31393b7da1e399d39512ffca7f752c5447295989f5e1318030c0e595579b814e"
     },
     {
       "test": "rv32ui-p-lh",
@@ -226,7 +244,8 @@
       "pc": null,
       "message": null,
       "cycles": 366,
-      "instret": 308
+      "instret": 308,
+      "core_rtl_sha256": "31393b7da1e399d39512ffca7f752c5447295989f5e1318030c0e595579b814e"
     },
     {
       "test": "rv32ui-p-lhu",
@@ -238,7 +257,8 @@
       "pc": null,
       "message": null,
       "cycles": 377,
-      "instret": 317
+      "instret": 317,
+      "core_rtl_sha256": "31393b7da1e399d39512ffca7f752c5447295989f5e1318030c0e595579b814e"
     },
     {
       "test": "rv32ui-p-lui",
@@ -250,7 +270,8 @@
       "pc": null,
       "message": null,
       "cycles": 144,
-      "instret": 104
+      "instret": 104,
+      "core_rtl_sha256": "31393b7da1e399d39512ffca7f752c5447295989f5e1318030c0e595579b814e"
     },
     {
       "test": "rv32ui-p-lw",
@@ -262,7 +283,8 @@
       "pc": null,
       "message": null,
       "cycles": 380,
-      "instret": 322
+      "instret": 322,
+      "core_rtl_sha256": "31393b7da1e399d39512ffca7f752c5447295989f5e1318030c0e595579b814e"
     },
     {
       "test": "rv32ui-p-ma_data",
@@ -274,7 +296,8 @@
       "pc": null,
       "message": null,
       "cycles": 459,
-      "instret": 419
+      "instret": 419,
+      "core_rtl_sha256": "31393b7da1e399d39512ffca7f752c5447295989f5e1318030c0e595579b814e"
     },
     {
       "test": "rv32ui-p-or",
@@ -286,7 +309,8 @@
       "pc": null,
       "message": null,
       "cycles": 613,
-      "instret": 527
+      "instret": 527,
+      "core_rtl_sha256": "31393b7da1e399d39512ffca7f752c5447295989f5e1318030c0e595579b814e"
     },
     {
       "test": "rv32ui-p-ori",
@@ -298,7 +322,8 @@
       "pc": null,
       "message": null,
       "cycles": 302,
-      "instret": 244
+      "instret": 244,
+      "core_rtl_sha256": "31393b7da1e399d39512ffca7f752c5447295989f5e1318030c0e595579b814e"
     },
     {
       "test": "rv32ui-p-sb",
@@ -310,7 +335,8 @@
       "pc": null,
       "message": null,
       "cycles": 581,
-      "instret": 493
+      "instret": 493,
+      "core_rtl_sha256": "31393b7da1e399d39512ffca7f752c5447295989f5e1318030c0e595579b814e"
     },
     {
       "test": "rv32ui-p-sh",
@@ -322,7 +348,8 @@
       "pc": null,
       "message": null,
       "cycles": 634,
-      "instret": 546
+      "instret": 546,
+      "core_rtl_sha256": "31393b7da1e399d39512ffca7f752c5447295989f5e1318030c0e595579b814e"
     },
     {
       "test": "rv32ui-p-simple",
@@ -334,7 +361,8 @@
       "pc": null,
       "message": null,
       "cycles": 119,
-      "instret": 80
+      "instret": 80,
+      "core_rtl_sha256": "31393b7da1e399d39512ffca7f752c5447295989f5e1318030c0e595579b814e"
     },
     {
       "test": "rv32ui-p-sll",
@@ -346,7 +374,8 @@
       "pc": null,
       "message": null,
       "cycles": 606,
-      "instret": 532
+      "instret": 532,
+      "core_rtl_sha256": "31393b7da1e399d39512ffca7f752c5447295989f5e1318030c0e595579b814e"
     },
     {
       "test": "rv32ui-p-slli",
@@ -358,7 +387,8 @@
       "pc": null,
       "message": null,
       "cycles": 334,
-      "instret": 280
+      "instret": 280,
+      "core_rtl_sha256": "31393b7da1e399d39512ffca7f752c5447295989f5e1318030c0e595579b814e"
     },
     {
       "test": "rv32ui-p-slt",
@@ -370,7 +400,8 @@
       "pc": null,
       "message": null,
       "cycles": 580,
-      "instret": 498
+      "instret": 498,
+      "core_rtl_sha256": "31393b7da1e399d39512ffca7f752c5447295989f5e1318030c0e595579b814e"
     },
     {
       "test": "rv32ui-p-slti",
@@ -382,7 +413,8 @@
       "pc": null,
       "message": null,
       "cycles": 336,
-      "instret": 276
+      "instret": 276,
+      "core_rtl_sha256": "31393b7da1e399d39512ffca7f752c5447295989f5e1318030c0e595579b814e"
     },
     {
       "test": "rv32ui-p-sltiu",
@@ -394,7 +426,8 @@
       "pc": null,
       "message": null,
       "cycles": 336,
-      "instret": 276
+      "instret": 276,
+      "core_rtl_sha256": "31393b7da1e399d39512ffca7f752c5447295989f5e1318030c0e595579b814e"
     },
     {
       "test": "rv32ui-p-sltu",
@@ -406,7 +439,8 @@
       "pc": null,
       "message": null,
       "cycles": 580,
-      "instret": 498
+      "instret": 498,
+      "core_rtl_sha256": "31393b7da1e399d39512ffca7f752c5447295989f5e1318030c0e595579b814e"
     },
     {
       "test": "rv32ui-p-sra",
@@ -418,7 +452,8 @@
       "pc": null,
       "message": null,
       "cycles": 625,
-      "instret": 551
+      "instret": 551,
+      "core_rtl_sha256": "31393b7da1e399d39512ffca7f752c5447295989f5e1318030c0e595579b814e"
     },
     {
       "test": "rv32ui-p-srai",
@@ -430,7 +465,8 @@
       "pc": null,
       "message": null,
       "cycles": 353,
-      "instret": 295
+      "instret": 295,
+      "core_rtl_sha256": "31393b7da1e399d39512ffca7f752c5447295989f5e1318030c0e595579b814e"
     },
     {
       "test": "rv32ui-p-srl",
@@ -442,7 +478,8 @@
       "pc": null,
       "message": null,
       "cycles": 623,
-      "instret": 545
+      "instret": 545,
+      "core_rtl_sha256": "31393b7da1e399d39512ffca7f752c5447295989f5e1318030c0e595579b814e"
     },
     {
       "test": "rv32ui-p-srli",
@@ -454,7 +491,8 @@
       "pc": null,
       "message": null,
       "cycles": 349,
-      "instret": 289
+      "instret": 289,
+      "core_rtl_sha256": "31393b7da1e399d39512ffca7f752c5447295989f5e1318030c0e595579b814e"
     },
     {
       "test": "rv32ui-p-st_ld",
@@ -466,7 +504,8 @@
       "pc": null,
       "message": null,
       "cycles": 562,
-      "instret": 522
+      "instret": 522,
+      "core_rtl_sha256": "31393b7da1e399d39512ffca7f752c5447295989f5e1318030c0e595579b814e"
     },
     {
       "test": "rv32ui-p-sub",
@@ -478,7 +517,8 @@
       "pc": null,
       "message": null,
       "cycles": 576,
-      "instret": 496
+      "instret": 496,
+      "core_rtl_sha256": "31393b7da1e399d39512ffca7f752c5447295989f5e1318030c0e595579b814e"
     },
     {
       "test": "rv32ui-p-sw",
@@ -490,7 +530,8 @@
       "pc": null,
       "message": null,
       "cycles": 651,
-      "instret": 553
+      "instret": 553,
+      "core_rtl_sha256": "31393b7da1e399d39512ffca7f752c5447295989f5e1318030c0e595579b814e"
     },
     {
       "test": "rv32ui-p-xor",
@@ -502,7 +543,8 @@
       "pc": null,
       "message": null,
       "cycles": 612,
-      "instret": 526
+      "instret": 526,
+      "core_rtl_sha256": "31393b7da1e399d39512ffca7f752c5447295989f5e1318030c0e595579b814e"
     },
     {
       "test": "rv32ui-p-xori",
@@ -514,7 +556,8 @@
       "pc": null,
       "message": null,
       "cycles": 304,
-      "instret": 246
+      "instret": 246,
+      "core_rtl_sha256": "31393b7da1e399d39512ffca7f752c5447295989f5e1318030c0e595579b814e"
     },
     {
       "test": "rv32um-p-div",
@@ -526,7 +569,8 @@
       "pc": null,
       "message": null,
       "cycles": 430,
-      "instret": 135
+      "instret": 135,
+      "core_rtl_sha256": "31393b7da1e399d39512ffca7f752c5447295989f5e1318030c0e595579b814e"
     },
     {
       "test": "rv32um-p-divu",
@@ -538,7 +582,8 @@
       "pc": null,
       "message": null,
       "cycles": 430,
-      "instret": 136
+      "instret": 136,
+      "core_rtl_sha256": "31393b7da1e399d39512ffca7f752c5447295989f5e1318030c0e595579b814e"
     },
     {
       "test": "rv32um-p-mul",
@@ -550,7 +595,8 @@
       "pc": null,
       "message": null,
       "cycles": 644,
-      "instret": 498
+      "instret": 498,
+      "core_rtl_sha256": "31393b7da1e399d39512ffca7f752c5447295989f5e1318030c0e595579b814e"
     },
     {
       "test": "rv32um-p-mulh",
@@ -562,7 +608,8 @@
       "pc": null,
       "message": null,
       "cycles": 644,
-      "instret": 498
+      "instret": 498,
+      "core_rtl_sha256": "31393b7da1e399d39512ffca7f752c5447295989f5e1318030c0e595579b814e"
     },
     {
       "test": "rv32um-p-mulhsu",
@@ -574,7 +621,8 @@
       "pc": null,
       "message": null,
       "cycles": 644,
-      "instret": 498
+      "instret": 498,
+      "core_rtl_sha256": "31393b7da1e399d39512ffca7f752c5447295989f5e1318030c0e595579b814e"
     },
     {
       "test": "rv32um-p-mulhu",
@@ -586,7 +634,8 @@
       "pc": null,
       "message": null,
       "cycles": 644,
-      "instret": 498
+      "instret": 498,
+      "core_rtl_sha256": "31393b7da1e399d39512ffca7f752c5447295989f5e1318030c0e595579b814e"
     },
     {
       "test": "rv32um-p-rem",
@@ -598,7 +647,8 @@
       "pc": null,
       "message": null,
       "cycles": 430,
-      "instret": 135
+      "instret": 135,
+      "core_rtl_sha256": "31393b7da1e399d39512ffca7f752c5447295989f5e1318030c0e595579b814e"
     },
     {
       "test": "rv32um-p-remu",
@@ -610,7 +660,8 @@
       "pc": null,
       "message": null,
       "cycles": 430,
-      "instret": 135
+      "instret": 135,
+      "core_rtl_sha256": "31393b7da1e399d39512ffca7f752c5447295989f5e1318030c0e595579b814e"
     }
   ]
 }

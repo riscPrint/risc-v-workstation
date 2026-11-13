@@ -21,29 +21,49 @@ object Adapter extends CoreAdapter {
       ChecksConfig(mode = Mode.Monitor,enable = Seq("ooo.*","queue.*","freelist.*","execution.*")))
     RiscvSimConfig.elaborate(key, work, config)(new Core(if(key.config == "rob16") 16 else 8))
   }
-  def compile(key: ModelKey, work: File, cache: File): Model =
-    RiscvSimConfig(key, work, cache, SpinalConfig()).compile(report(key,work))
+  def compile(key: ModelKey, work: File, cache: File): Model = {
+    val rtl = report(key,work)
+    val config = RiscvSimConfig(key, work, cache, SpinalConfig())
+    if(key.config == "default") {
+      import scala.sys.process._
+      val bindings = new File(work,key.name + "-bindings")
+      val command = Seq(new File(sys.env("RVW_HOME"),"rvw/.venv/bin/rvw").getPath,
+        "checks","generate","--all","--project",sourceDir.getPath,"--out",bindings.getAbsolutePath)
+      val output = new StringBuilder
+      val exit = Process(command).!(ProcessLogger(line => output.append(line).append('\n')))
+      require(exit == 0,s"check binding generation failed: $output")
+      config.addRtl(new File(bindings,"queues/monitors.sv").getAbsolutePath)
+      config.addRtl(new File(bindings,"queues/binds.sv").getAbsolutePath)
+      config.addSimulatorFlag("--assert")
+    }
+    config.compile(rtl)
+  }
   override def elaborate(key: ModelKey, work: File): Seq[File] =
     report(key,work).generatedSourcesPaths.toSeq.map(new File(_))
   override def generatedVerilog(model: Model): Seq[File] = model.report.generatedSourcesPaths.toSeq.map(new File(_))
   def run(model: Model, job: RunJob, ctx: RunContext): RunOutcome = {
-    require(!job.konata && !job.spinaltrace && job.fault.isEmpty && !job.rvfiCheck,
-      "use probe conversion for Kanata; fault and runtime RVFI monitor are not mapped yet")
+    require(!job.konata && !job.spinaltrace && !job.rvfiCheck,
+      "use probe conversion for Kanata; runtime RVFI monitor are not mapped yet")
     require(job.memLatency.forall(_ == 0), "only zero-latency RAM is mapped")
     val ram = scala.collection.mutable.LongMap.empty[Int]
     ctx.loadMemory { (base, bytes) => bytes.indices.foreach(i => ram(base+i) = bytes(i) & 255) }
     def word(addr: Long): BigInt = (0 until 4).foldLeft(BigInt(0))((v,i) => v | BigInt(ram.getOrElse(addr+i,0)) << (8*i))
     val host = new ToHost(ToHost.find(ctx.elf).getOrElse(throw new IllegalArgumentException("ELF requires tohost")),4)
     var outcome = RunOutcome(Status.Timeout,0,0)
-    model.doSim(job.out.getAbsolutePath,job.seed) { dut =>
+    var cycle = 0L
+    var retired = 0L
+    try model.doSim(job.out.getAbsolutePath,job.seed) { dut =>
       dut.io.boot #= ctx.elf.entry
       dut.io.instruction #= 0; dut.io.loadData #= 0
       dut.clockDomain.forkStimulus(10)
       dut.clockDomain.waitSampling()
+      val control = new SimControl(job,ctx.wallClock)
+      dut.clockDomain.onSamplings { control.cycle += 1 }
+      FaultInjector.forJob(job).foreach(_.attach(dut,control))
       val rvfi = new RvfiProbe(Seq(dut.io.retire))
       val writer = if(job.rvfiTrace) Some(new RvfiTraceWriter(new File(job.out,"rvfi.jsonl"),ctx.rvfiHeader)) else None
       val probes = ProbeCollector.open(Probe.of(dut),job,ctx.rvfiHeader)
-      var cycle = 0L; var retired = 0L; var stop = false
+      var stop = false
       try {
         while(cycle < job.maxCycles && !stop && !ctx.wallClock.over()) {
           dut.clockDomain.waitFallingEdge()
@@ -73,11 +93,16 @@ object Adapter extends CoreAdapter {
         }
         if(!stop) outcome = RunOutcome(Status.Timeout,cycle,retired)
         ChecksSim.writeRunReport(dut,new File(job.out,"checks-run.json").getPath)
+        outcome = outcome.copy(details = ujson.Obj("generated_sv_bindings" -> (if(job.config == "default") 8 else 0),
+          "generated_sv_assertions_enabled" -> (job.config == "default")))
         if(ChecksSim.firings(dut).nonEmpty && outcome.status == Status.Pass)
           outcome = outcome.copy(status = Status.Fail,message = Some("generated check fired"))
         writer.foreach(_.end(cycle,outcome.status.name))
         probes.foreach(_.close(cycle))
       } finally { writer.foreach(_.close()); probes.foreach(_.abandon()) }
+    } catch {
+      case e: spinal.sim.SimFailure =>
+        outcome = RunOutcome(Status.Assert,cycle,retired,message = Some(e.getMessage))
     }
     outcome
   }
