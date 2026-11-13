@@ -90,7 +90,7 @@ class LiveDevicesSpec extends AnyFunSuite {
     assert(d.read(0x10000004L, 1) == 0)
     d.restore(state)
     assert(d.read(0x10000004L, 1) == 3)
-    intercept[IllegalArgumentException](d.write(0x10000004L, 1, 16))
+    intercept[IllegalArgumentException](d.write(0x10000004L, 1, 32))
   }
 
   test("CLINT RV64 accesses preserve both halves and reject other wide registers") {
@@ -108,6 +108,40 @@ class LiveDevicesSpec extends AnyFunSuite {
     assert(d.read(0x2004000L, 8) == (BigInt(1) << 64) - 1)
     intercept[IllegalArgumentException](d.read(0x2000000L, 8))
     intercept[IllegalArgumentException](d.write(0xc002000L, 8, 0))
+  }
+
+  test("UART supports Linux FIFO and loopback discovery") {
+    val d = fresh()
+    d.write(0x10000001L, 1, 15)
+    assert(d.read(0x10000001L, 1) == 15)
+    d.write(0x10000001L, 1, 0)
+    d.write(0x10000002L, 1, 0xc7)
+    assert(d.read(0x10000002L, 1) == 0xc1)
+    d.write(0x10000004L, 1, 0x1a)
+    assert((d.read(0x10000006L, 1) & 0xf0) == 0x90)
+    d.write(0x10000000L, 1, 0x55)
+    assert(d.read(0x10000000L, 1) == 0x55)
+    assert(d.outputs("uart").str == "")
+    d.write(0x10000004L, 1, 0)
+    assert((d.read(0x10000006L, 1) & 0xf0) == 0xb0)
+    val snapshot = d.snapshot(); val restored = fresh(); restored.restore(snapshot)
+    assert(restored.snapshot() == snapshot)
+  }
+  test("power-off device stops only on the configured command and restores state") {
+    val path = java.nio.file.Files.createTempFile("poweroff-map", ".json")
+    try {
+      val map = ujson.read(java.nio.file.Files.readString(new File("../examples/vexriscv/live-devices.json").toPath))
+      map("regions").arr += ujson.Obj("name" -> "poweroff", "kind" -> "mmio", "base" -> "0x100000", "size" -> "0x1000",
+        "permissions" -> "rw", "cacheable" -> false, "registers" -> ujson.Arr())
+      map("devices").arr += ujson.Obj("region" -> "poweroff", "model" -> "syscon-poweroff", "value" -> "0x5555")
+      java.nio.file.Files.writeString(path, ujson.write(map))
+      val d = new LiveDevices(SimMap.load(path.toFile))
+      d.write(0x100000, 4, 0); assert(!d.poweroff)
+      d.write(0x100000, 4, 0x5555); assert(d.poweroff)
+      val restored = new LiveDevices(SimMap.load(path.toFile)); restored.restore(d.snapshot())
+      assert(restored.poweroff)
+      restored.reset(); assert(!restored.poweroff)
+    } finally java.nio.file.Files.delete(path)
   }
 
 }

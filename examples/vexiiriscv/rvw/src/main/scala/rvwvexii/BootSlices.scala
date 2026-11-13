@@ -28,6 +28,7 @@ object BootSlices {
     val memory = new ByteMemory(base, size)
     boot.load { (a, bytes) => bytes.indices.foreach(i => memory(a + i) = bytes(i) & 255) }
     val devices = new LiveDevices(map)
+    sys.props("rvwvexii.bootMap") = new File(args(2)).getCanonicalPath
     val bridge = new BridgeState
     val config = bridge.instrument(VexiiTop.spinalConfig.copy(headerWithDate = false, headerWithRepoHash = false))
     val compiled = SimConfig.withConfig(config).withVerilator
@@ -41,7 +42,7 @@ object BootSlices {
       "harness" -> hash(getClass.getResourceAsStream("BootSlices$.class").readAllBytes()),
       "memory" -> hash(classOf[ByteMemory].getResourceAsStream("ByteMemory.class").readAllBytes()),
       "bridge" -> hash(classOf[BridgeState].getResourceAsStream("BridgeState.class").readAllBytes()),
-      "devices" -> hash(Seq("LiveDevices", "LiveDevices$Device", "LiveDevices$Uart", "LiveDevices$Clint", "LiveDevices$Plic").flatMap(n =>
+      "devices" -> hash(Seq("LiveDevices", "LiveDevices$Device", "LiveDevices$Uart", "LiveDevices$Clint", "LiveDevices$Plic", "LiveDevices$Poweroff").flatMap(n =>
         classOf[LiveDevices].getResourceAsStream(n + ".class").readAllBytes()).toArray))
     val saved = if (restore) {
       val zip = new ZipFile(checkpoint)
@@ -60,6 +61,10 @@ object BootSlices {
     var cycle = saved.map(_("cycle").str.toLong).getOrElse(0L)
     var retired = saved.map(_("retired").str.toLong).getOrElse(0L)
     require(stop > cycle, "stop must follow restored cycle")
+    var lastLevels = BigInt(0)
+    val byMode = saved.map(_("retired_by_mode").arr.map(_.str.toLong).toArray).getOrElse(Array.fill(4)(0L))
+    var lastMode = saved.map(_("mode").num.toInt).getOrElse(3)
+    def address(value: BigInt, width: Int): BigInt = if (width < 64 && value.testBit(width-1)) value | (((BigInt(1)<<64)-1) ^ ((BigInt(1)<<width)-1)) else value
     var lastPc = saved.map(_("pc").str).getOrElse("0x0")
     var lastTrap: ujson.Value = saved.map(_("trap")).getOrElse(ujson.Null)
     var reservation = saved.flatMap(s => if (s("reservation") == ujson.Null) None else Some(s("reservation").str.toLong))
@@ -83,7 +88,7 @@ object BootSlices {
       val tap = dut.host[TrapTapPlugin].logic
       val commits = dut.host[WhiteboxerPlugin].logic.commits.ports
       def inputs(): Unit = {
-        val levels = devices.tick(cycle)
+        val levels = devices.tick(cycle); lastLevels = levels
         priv.int.m.timer #= levels.testBit(7); priv.int.m.software #= levels.testBit(3)
         priv.int.m.external #= levels.testBit(11); priv.int.s.external #= levels.testBit(9)
         dut.host[PrivilegedPlugin].logic.rdtime #= cycle
@@ -98,7 +103,7 @@ object BootSlices {
       cd.resetSim #= false; sleep(1)
       saved.foreach { s => devices.restore(s("devices")); bridge.restore(s("rtl")); inputs(); sleep(1)
         require(bridge.capture() == s("rtl"), "RTL restore readback mismatch") }
-      while (cycle < stop && !wallExpired) {
+      while (cycle < stop && !wallExpired && !devices.poweroff) {
         inputs(); sleep(1)
         val ni: Response = if (ib.cmd.valid.toBoolean) {
           val n = ib.p.dataWidth / 8; val a = ib.cmd.address.toLong & ~(n-1L)
@@ -126,8 +131,8 @@ object BootSlices {
           val result = if (device && !write) devices.read(address,width)<<shift else if (atomic || !write) old else BigInt(0)
           Some((result, !inRam(a,n) && !device, c.id.toInt, miss))
         } else None
-        commits.foreach(p => if (p.valid.toBoolean) { retired += 1; lastPc = Hex(p.pc.toBigInt) })
-        if (tap.fire.toBoolean) lastTrap = ujson.Obj("cycle" -> cycle.toString, "epc" -> Hex(tap.epc.toBigInt), "tval" -> Hex(tap.tval.toBigInt))
+        commits.foreach(p => if (p.valid.toBoolean) { retired += 1; lastPc = Hex(address(p.pc.toBigInt,p.pc.getBitsWidth)); lastMode = tap.privilege.toInt & 3; byMode(lastMode) += 1 })
+        if (tap.fire.toBoolean) lastTrap = ujson.Obj("cycle" -> cycle.toString, "epc" -> Hex(tap.epc.toBigInt), "tval" -> Hex(tap.tval.toBigInt), "cause" -> Hex(tap.cause.toBigInt))
         cd.clockSim #= true; sleep(5); cd.clockSim #= false; sleep(5)
         cycle += 1; ip = ni; dp = nd
         if ((cycle & 1023) == 0) wallExpired = wallLimit.exists((System.nanoTime()-startTime)/1e9 >= _)
@@ -135,6 +140,7 @@ object BootSlices {
       // No edge follows capture. A fresh process reconstructs all inputs before its first edge.
       val state = ujson.Obj("schema" -> "rvw.vexii-boot-slice/1", "identity" -> identity,
         "cycle" -> cycle.toString, "retired" -> retired.toString, "pc" -> lastPc, "trap" -> lastTrap,
+        "mode" -> lastMode, "retired_by_mode" -> ujson.Arr.from(byMode.map(_.toString)), "irq_levels" -> Hex(lastLevels),
         "reservation" -> reservation.map(v => ujson.Str(v.toString)).getOrElse(ujson.Null),
         "ram_sha256" -> memory.sha256, "ibus" -> encode(ip), "dbus" -> encode(dp), "devices" -> devices.snapshot(), "rtl" -> bridge.capture())
       val temp = new File(checkpoint.getPath + ".partial")
@@ -147,8 +153,9 @@ object BootSlices {
       Files.move(temp.toPath, checkpoint.toPath, java.nio.file.StandardCopyOption.REPLACE_EXISTING)
     }
     val seconds = (System.nanoTime()-startTime)/1e9
-    val result = ujson.Obj("schema" -> "rvw.vexii-boot-slice-result/1", "status" -> "bounded",
+    val result = ujson.Obj("schema" -> "rvw.vexii-boot-slice-result/1", "status" -> (if (devices.poweroff) "shutdown" else "bounded"),
       "cycle" -> cycle.toString, "retired" -> retired.toString, "pc" -> lastPc, "trap" -> lastTrap,
+        "mode" -> lastMode, "retired_by_mode" -> ujson.Arr.from(byMode.map(_.toString)), "irq_levels" -> Hex(lastLevels),
       "slice_cycles" -> (cycle-startCycle).toString, "slice_retired" -> (retired-startRetired).toString,
       "wall_seconds" -> seconds, "cycles_per_second" -> ((cycle-startCycle)/seconds),
       "instructions_per_second" -> ((retired-startRetired)/seconds), "console" -> devices.outputs)

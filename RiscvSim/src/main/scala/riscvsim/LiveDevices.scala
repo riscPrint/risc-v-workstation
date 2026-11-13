@@ -34,6 +34,8 @@ final class LiveDevices(map: SimMap) {
     require(input.map(e => SimMap.number(e("cycle"))).sliding(2).forall(p => p.size < 2 || p.head <= p.last), "unordered UART input")
     var position = 0
     var ier, divisorLow, divisorHigh, lcr, scratch, mcr = 0L
+    var trigger = 1
+    var modemDelta = 0L
     var fifo = false
     var overrun = false
     override def tick(cycle: Long): Unit = {
@@ -41,11 +43,17 @@ final class LiveDevices(map: SimMap) {
         val raw = SimMap.number(input(position)("byte"))
         require(raw >= 0 && raw <= 255, "invalid UART byte")
         val b = raw.toInt
-        if (rx.size < (if (fifo) 16 else 1)) rx.enqueue(b) else overrun = true
+        if ((mcr & 16) == 0) receive(b)
         position += 1
       }
     }
-    def save: ujson.Value = ujson.Obj("rx" -> ujson.Arr.from(rx), "tx" -> tx.toString,
+    private def receive(b: Int): Unit = if (rx.size < (if (fifo) 16 else 1)) rx.enqueue(b) else overrun = true
+    private def modem: Long = if ((mcr & 16) == 0) 0xb0L else
+      ((mcr & 2) << 3) | ((mcr & 1) << 5) | ((mcr & 4) << 4) | ((mcr & 8) << 4)
+    private def interruptId: Int = if ((ier & 4) != 0 && overrun) 6 else
+      if ((ier & 1) != 0 && rx.size >= (if (fifo) trigger else 1)) 4 else
+      if ((ier & 2) != 0) 2 else if ((ier & 8) != 0 && modemDelta != 0) 0 else 1
+    def save: ujson.Value = ujson.Obj("trigger" -> trigger, "modem_delta" -> modemDelta, "rx" -> ujson.Arr.from(rx), "tx" -> tx.toString,
       "position" -> position, "ier" -> ier, "dl" -> divisorLow, "dh" -> divisorHigh,
       "lcr" -> lcr, "scratch" -> scratch, "mcr" -> mcr, "fifo" -> fifo, "overrun" -> overrun)
     def restore(v: ujson.Value): Unit = {
@@ -55,29 +63,35 @@ final class LiveDevices(map: SimMap) {
       mcr = v.obj.get("mcr").map(SimMap.number).getOrElse(BigInt(0)).toLong
       lcr = SimMap.number(v("lcr")).toLong; scratch = SimMap.number(v("scratch")).toLong
       fifo = v("fifo").bool; overrun = v("overrun").bool
+      trigger = v("trigger").num.toInt; modemDelta = SimMap.number(v("modem_delta")).toLong
     }
-    override def irq = (ier & 1) != 0 && rx.nonEmpty || (ier & 2) != 0
+    override def irq = (interruptId & 1) == 0
     override def output = tx.toString
     def read(o: Long): Long = o match {
       case 0 if (lcr & 128) != 0 => divisorLow
       case 1 if (lcr & 128) != 0 => divisorHigh
       case 0 => if (rx.nonEmpty) rx.dequeue().toLong else 0L
       case 1 => ier
-      case 2 => (if (fifo) 0xc0 else 0) | (if ((ier & 1) != 0 && rx.nonEmpty) 4 else if ((ier & 2) != 0) 2 else 1)
+      case 2 => (if (fifo) 0xc0 else 0) | interruptId
       case 3 => lcr
       case 4 => mcr
       case 5 => val v = 0x60L | (if (rx.nonEmpty) 1 else 0) | (if (overrun) 2 else 0); overrun = false; v
+      case 6 => val result = modem | modemDelta; modemDelta = 0; result
       case 7 => scratch
       case _ => throw new IllegalArgumentException(s"unsupported UART read $o")
     }
     def write(o: Long, v: Long): Unit = o match {
       case 0 if (lcr & 128) != 0 => divisorLow = v & 255
       case 1 if (lcr & 128) != 0 => divisorHigh = v & 255
-      case 0 => tx.append((v & 255).toChar)
-      case 1 => require((v & ~3L) == 0, "unsupported UART interrupt enable"); ier = v
-      case 2 => require((v & ~7L) == 0, "unsupported UART FIFO control"); fifo = (v & 1) != 0; if ((v & 2) != 0) rx.clear()
+      case 0 => if ((mcr & 16) != 0) receive((v & 255).toInt) else tx.append((v & 255).toChar)
+      case 1 => require((v & ~15L) == 0, "unsupported UART interrupt enable"); ier = v
+      case 2 => require((v & ~0xcfL) == 0, "unsupported UART FIFO control"); fifo = (v & 1) != 0; trigger = Seq(1,4,8,14)(((v >> 6) & 3).toInt); if ((v & 2) != 0) rx.clear()
       case 3 => lcr = v & 255
-      case 4 => require((v & ~15L) == 0, "unsupported UART modem control"); mcr = v
+      case 4 =>
+        require((v & ~31L) == 0, "unsupported UART modem control")
+        val old = modem; mcr = v; val next = modem
+        val changed = old ^ next
+        modemDelta |= ((changed & 0x30) >> 4) | ((changed & 0x80) >> 4) | (if ((old & 0x40) != 0 && (next & 0x40) == 0) 4 else 0)
       case 7 => scratch = v & 255
       case _ => throw new IllegalArgumentException(s"unsupported UART write $o")
     }
@@ -144,6 +158,15 @@ final class LiveDevices(map: SimMap) {
       case _ => throw new IllegalArgumentException(s"unsupported PLIC write $o")
     }
   }
+  private class Poweroff(c: ujson.Value) extends Device {
+    private val command = SimMap.number(c("value")).toLong
+    var stopped = false
+    var value = 0L
+    def save: ujson.Value = ujson.Obj("stopped" -> stopped, "value" -> value.toString)
+    def restore(v: ujson.Value): Unit = { stopped = v("stopped").bool; value = v("value").str.toLong }
+    def read(offset: Long): Long = { require(offset == 0); value }
+    def write(offset: Long, data: Long): Unit = { require(offset == 0); value = data; if (data == command) stopped = true }
+  }
   private val entries = config.map { c =>
     val name = c("region").str
     val r = map.regions.find(_.name == name).getOrElse(throw new IllegalArgumentException(s"unknown device region $name"))
@@ -152,6 +175,7 @@ final class LiveDevices(map: SimMap) {
       case "ns16550" => new Uart(c)
       case "clint" => new Clint(c)
       case "plic" => new Plic(c)
+      case "syscon-poweroff" => new Poweroff(c)
       case m => throw new IllegalArgumentException(s"unsupported device $m")
     }
     (r, c, d)
@@ -215,5 +239,9 @@ final class LiveDevices(map: SimMap) {
   /** Reset the complete device set for a new run whose cycle origin is zero. */
   def reset(): Unit = restore(resetState)
 
+  def poweroff: Boolean = entries.exists { case (_, _, d) => d match {
+    case p: Poweroff => p.stopped
+    case _ => false
+  }}
   def outputs: ujson.Value = ujson.Obj.from(entries.collect { case (r, _, u: Uart) => r.name -> ujson.Str(u.output) })
 }

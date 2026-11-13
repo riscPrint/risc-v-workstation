@@ -14,6 +14,7 @@ def main():
     p=argparse.ArgumentParser(__doc__)
     p.add_argument('--source',type=Path,required=True,help='private OpenSBI checkout')
     p.add_argument('--out',type=Path,required=True)
+    p.add_argument('--linux',action='store_true',help='1 MHz simulation clock and SBI power-off device')
     p.add_argument('--llvm-prefix',type=Path,required=True)
     a=p.parse_args()
     source=a.source.resolve();out=a.out.resolve();out.mkdir(parents=True,exist_ok=True)
@@ -35,7 +36,7 @@ def main():
         'PLATFORM_RISCV_ISA=rv64ima_zicsr_zifencei','PLATFORM_RISCV_ABI=lp64',
         'FW_JUMP=y','FW_PAYLOAD=n','FW_DYNAMIC=n','FW_OPTIONS=1',
         'FW_TEXT_START=0x80200000','FW_JUMP_ADDR=0x80400000','FW_JUMP_FDT_OFFSET=',
-        'platform-cflags-y=-Wno-error=unused-but-set-variable -Wno-error=unused-but-set-global']
+        'platform-cflags-y=-Wno-error=unused-but-set-variable -Wno-error=unused-but-set-global'+(' -DRVW_LINUX_BOOT=1' if a.linux else '')]
     built=run_group(command,capture=True,timeout=600,env=env)
     (out/'build.log').write_text(built.stdout+built.stderr)
     if built.returncode:raise RuntimeError(built.stdout[-2000:]+built.stderr[-2000:])

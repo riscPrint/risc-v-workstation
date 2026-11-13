@@ -12,7 +12,7 @@ import vexiiriscv.misc.{PipelineBuilderPlugin, PrivilegedPlugin, TrapPlugin}
 /** RV32IM, machine mode only, cacheless native fetch and LSU buses, no MMU, PMP or debug unit.
   * `*_cached` adds the upstream fetch and LSU L1 caches and the BTB/GShare/RAS predictors. */
 object VexiiTop {
-  def liveMap = riscvsim.SimMap.load(new java.io.File(new java.io.File(sys.props("riscvsim.script")).getParentFile, "live-devices.json"))
+  def liveMap = riscvsim.SimMap.load(sys.props.get("rvwvexii.bootMap").map(new java.io.File(_)).getOrElse(new java.io.File(new java.io.File(sys.props("riscvsim.script")).getParentFile, "live-devices.json")))
   val configs = Seq("rv32im", "rv32imasu", "rv64imasu", "rv64ima", "rv64imacsu", "rv64imacsu_linux", "rv32im_cached", "rv32im_bitpasta", "rv32im_bitpasta_ipc")
 
   def supervisor(config: String) = config.endsWith("asu") || config.startsWith("rv64imacsu")
@@ -82,10 +82,11 @@ class TrapTapPlugin extends FiberPlugin {
     val buildBefore = retains(pbp.elaborationLock)
     awaitBuild()
     val trap = host[TrapPlugin].logic.harts(0).trap
-    val epc = CombInit(trap.pending.pc).setName("rvw_trap_epc").simPublic()
+    val epc = CombInit(vexiiriscv.Global.expendPc(trap.pending.pc, vexiiriscv.riscv.Riscv.XLEN.get)).setName("rvw_trap_epc").simPublic()
     // The CSR write path widens the buffered tval with expendPc (sign extension above TVAL_WIDTH).
     val tval = CombInit(vexiiriscv.Global.expendPc(trap.fsm.buffer.trap.tval.asUInt, vexiiriscv.riscv.Riscv.XLEN.get))
       .setName("rvw_trap_tval").simPublic()
+    val cause = CombInit(trap.whitebox.interrupt ## trap.whitebox.code.resize(vexiiriscv.riscv.Riscv.XLEN.get - 1)).setName("rvw_trap_cause").simPublic()
     val fire = CombInit(trap.whitebox.trap).setName("rvw_trap_fire").simPublic()
     // Cacheless LSU only: the address that its bus command carries before translation.
     val lsuVirtualAddress = host.get[vexiiriscv.execute.lsu.LsuCachelessPlugin].map(_.logic).map(lsu =>

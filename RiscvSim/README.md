@@ -1213,3 +1213,16 @@ Mapped adapters accept `--konata` for cores with declared pipeline probes.
 The flag enables probe capture and uses the workstation's Kanata converter.
 The terminal completion cycle is sampled before a tohost store ends the run.
 The probe stream and pipeline log retain the final retirement.
+
+### Live power-off requests
+
+The live device map accepts `model: "syscon-poweroff"` with a `region` and a
+32-bit command `value`. A matching write at offset zero sets `poweroff` on the
+`LiveDevices` instance. The adapter ends execution after the settled edge.
+The device state includes the latch and last value. It does not exit the host.
+A shutdown request alone does not establish that an OS reached userspace.
+Check an independent userspace marker in the console output.
+
+The live 16550 model supports Linux FIFO and modem-loopback discovery accesses.
+FIFO trigger state and modem delta state survive checkpoints. Receiver-timeout
+interrupts and baud-rate timing remain unsupported.

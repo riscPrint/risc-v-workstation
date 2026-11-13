@@ -11,20 +11,24 @@ def main():
     p=argparse.ArgumentParser(__doc__)
     p.add_argument('--firmware',type=Path,required=True)
     p.add_argument('--kernel',type=Path)
+    p.add_argument('--resumable',action='store_true',help='32 MiB boot-slice platform with a 1 MHz clock and power-off device')
     p.add_argument('--out',type=Path,required=True)
     a=p.parse_args()
     here=Path(__file__).resolve().parent
     out=a.out.resolve();out.mkdir(parents=True,exist_ok=False)
     linux=a.kernel is not None
-    ram=0x8000000 if linux else 0x1000000
-    dtb=0x87e00000 if linux else 0x80f00000
+    if a.resumable and not linux: raise ValueError('--resumable requires --kernel')
+    ram=(0x2000000 if a.resumable else 0x8000000) if linux else 0x1000000
+    dtb=(0x81e00000 if a.resumable else 0x87e00000) if linux else 0x80f00000
     reset=here.joinpath('reset.S').read_text().replace('0x80f00000',hex(dtb))
     (out/'reset.S').write_text(reset)
     dts=here.joinpath('soc.dts').read_text()
     if linux:
         dts=dts.replace('/dts-v1/;', '/dts-v1/;\n/memreserve/ 0x80000000 0x00400000;')
-        dts=dts.replace('0x01000000','0x08000000').replace('rv64ima_zicsr','rv64imac_zicsr')
-        dts=dts.replace('chosen {', 'chosen { bootargs = "console=ttyS0,115200 earlycon=uart8250,mmio,0x10000000 keep_bootcon loglevel=8";')
+        dts=dts.replace('0x01000000',hex(ram)).replace('rv64ima_zicsr','rv64imac_zicsr')
+        dts=dts.replace('\"a\", \"zicsr\"', '\"a\", \"c\", \"zicsr\"')
+        if a.resumable: dts=dts.replace('100000000', '1000000')
+        dts=dts.replace('chosen {', 'chosen { bootargs = "console=ttyS0,115200 earlycon=uart8250,mmio,0x10000000 keep_bootcon rdinit=/init lpj=1000 loglevel=7";')
     (out/'soc.dts').write_text(dts)
     def command(argv):
         r=run_group(argv,timeout=30,capture=True)
@@ -45,6 +49,9 @@ def main():
     live=json.loads(here.parent.joinpath('live-devices.json').read_text())
     live['address_bits']=64;live['regions'][0]['size']=hex(ram)
     live['devices'][0]['rx']=[];live['devices'][1]['cycles_per_tick']=1
+    if a.resumable:
+        live['regions'].append(dict(name='poweroff', kind='mmio', base='0x100000', size='0x1000', permissions='rw', cacheable=False, registers=[]))
+        live['devices'].append(dict(region='poweroff', model='syscon-poweroff', value='0x5555'))
     (out/'devices.json').write_text(json.dumps(live,indent=2)+'\n')
     identities={name:hashlib.sha256((out/name).read_bytes()).hexdigest() for name in ('firmware.bin','payload.bin','soc.dtb','reset.elf')}
     (out/'inputs.json').write_text(json.dumps(dict(schema='rvw.vexii-boot-inputs/1',linux=linux,sha256=identities),indent=2)+'\n')

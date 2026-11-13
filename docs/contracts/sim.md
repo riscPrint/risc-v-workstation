@@ -523,3 +523,18 @@ supports the project's single-clock cacheless RV64 supervisor profile only.
 counts are cumulative decimal strings. `slice_cycles` and `slice_retired` count
 only this process. Rates include the cycle loop, RTL restore and checkpoint writes. They exclude
 compilation and initial input and RAM loading. A bounded result does not establish Linux userspace or shutdown.
+
+## Live device power-off and UART discovery
+
+A live `syscon-poweroff` device names its `region` and integer `value` in the
+project map. It accepts 32-bit access at offset zero. A write of that value
+latches power-off until reset. The latch and last written value are checkpoint
+state. The adapter must decide how to end its run on this request. The device
+does not terminate the host process. The boot-slice harness reports `shutdown`
+on this request. Userspace completion still needs the expected console marker.
+
+The live 16550 model accepts FIFO trigger levels, all four interrupt-enable
+bits and modem loopback. Modem status has active CTS, DSR and DCD outside
+loopback. In loopback, modem control drives modem status and transmitted bytes
+enter the RX FIFO. RX trigger, overrun, TX-empty and modem-delta interrupts use
+the IIR priority order. There is no baud-rate timing or receiver-timeout IRQ.
