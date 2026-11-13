@@ -262,6 +262,8 @@ class Property:
 
 
 def lower(source):
+    from .bindings import expand
+    source = expand(source)
     # Mask comments and strings without shifting source offsets.
     text = re.sub(r'//[^\n]*|/\*.*?\*/|"(?:\\.|[^"\\])*"',
                   lambda m: ' ' * len(m[0]), source, flags=re.S)
@@ -276,6 +278,13 @@ def lower(source):
     reports = []
     for module_index, module in enumerate(module_spans):
         names = {}
+        properties = {}
+        used_properties = set()
+        for decl in re.finditer(r'\bproperty\s+(\w+)\s*;(.*?)\bendproperty\b', module[0], re.S):
+            if decl[1] in properties:
+                raise Unsupported('duplicate_property', decl[1])
+            properties[decl[1]] = decl[2].strip().removesuffix(';').strip()
+            edits.append((module.start() + decl.start(), module.start() + decl.end(), ''))
         for decl in re.finditer(r'\bsequence\s+(\w+)\s*;(.*?)\bendsequence\b', module[0], re.S):
             if decl[1] in names:
                 raise Unsupported('duplicate_sequence', decl[1])
@@ -286,6 +295,14 @@ def lower(source):
         for index, prop in enumerate(re.finditer(r'\b(assert|assume|cover)\s+property\s*\(', module[0])):
             pos = module.start() + prop.start()
             body, end = _group(text, module.start() + prop.end() - 1)
+            seen = set()
+            while body.strip() in properties:
+                name = body.strip()
+                if name in seen:
+                    raise Unsupported('recursive_property', name)
+                seen.add(name)
+                used_properties.add(name)
+                body = properties[name]
             clock = re.match(r'\s*@\(\s*posedge\s+(\w+)\s*\)\s*', body)
             if not clock:
                 raise Unsupported('clock_event', 'explicit posedge clock required')
@@ -321,6 +338,8 @@ def lower(source):
             edits.append((pos, end + semi.end(), emitted))
             reports.append({'id': item.name, 'kind': item.kind, 'clock': item.clock,
                             'disable_iff': disable, 'horizon': horizon})
+        if set(properties) - used_properties:
+            raise Unsupported('property', 'unused declarations need explicit checks')
     remainder = text
     for start, end, _ in sorted(edits, reverse=True):
         remainder = remainder[:start] + ' ' * (end - start) + remainder[end:]

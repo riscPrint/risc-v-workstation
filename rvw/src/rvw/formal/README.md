@@ -1302,7 +1302,7 @@ antecedent matches create separate obligations. Checks wait for the latest
 finite consequent deadline. Bounds are at most 64 samples, with at most 512
 expanded paths. Zero-length repetitions are refused. There is no implicit
 fairness assumption. Unbounded liveness,
-nonconsecutive repetition, nested implication, clocking blocks, macros, named
+nonconsecutive repetition, nested implication, clocking blocks, macros, parameterized
 properties, and action blocks give `unsupported:CONSTRUCT` diagnostics.
 The slang frontend retains its separate qualified sampled-value subset.
 No licensed tool is required. sv2v does not supply temporal assertion lowering.
@@ -1427,3 +1427,23 @@ corpus. It records test scope, not a complete SystemVerilog conformance claim.
 Finite `first_match` excludes every earlier matching endpoint. It retains ties
 at the first endpoint. The same path and delay capacity limits apply.
 Run `python3 scripts/formal-support-table.py` to regenerate the table.
+
+### Named properties and checker bindings
+
+The temporal frontend accepts module-local, argument-free named properties.
+Each referenced declaration must resolve to an explicit rising-edge property.
+Recursive references and unused declarations are refused.
+
+Checkers with explicit ANSI input ports can bind to a module type with named
+port connections. Each instance of that module gets the checker instance.
+For separate files, pass both files to BMC:
+
+```sh
+rvw formal bmc --frontend temporal --verilog dut.sv checks.sv --top dut --out proof
+```
+
+The input snapshot retains both source files. It seals one combined lowered
+file before the native frontend reads it. Instance-target binds, checker output
+ports, event arguments, default arguments and positional binds remain refused.
+Checker port and RTL type errors remain native frontend errors. The lowering
+does not infer an environment contract or qualify simulator scheduling regions.
