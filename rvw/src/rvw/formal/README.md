@@ -3304,3 +3304,26 @@ these as `source` in property reports and C1. A generated regression manifest
 can retain the same `source` field for C3 failure attribution. The VexRiscv
 campaign supplies both activation jobs and locations. A wrapper around the DSL
 can use `sourceDepth = 1` to attribute the statement to its caller.
+
+### Module-local property defaults
+
+The temporal frontend accepts a simple module-local default clocking block:
+
+```systemverilog
+default clocking cb @(posedge clk); endclocking
+default disable iff (reset);
+response: assert property (request |=> acknowledge);
+```
+
+It expands the defaults to explicit controls before finite lowering or named
+property expansion. An explicit clock overrides the default clock. An explicit
+`disable iff` overrides the default disable. Named aliases receive the controls
+at their resolved definition. Defaults do not cross module boundaries.
+
+This subset accepts one empty inline default clocking block and one default
+disable declaration per module. Clocking skews, clocking IO declarations,
+separate named clocking selection, nested defaults and duplicate defaults remain
+refused. Each engine retains its existing event and reset limits. In particular,
+formal unbounded reset cancellation, general nested unbounded composition and
+full multi-clock proof remain unsupported. These defaults do not change that
+scope. The generated support table records paired native finite cases.

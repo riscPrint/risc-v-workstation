@@ -6,6 +6,8 @@ from .temporal import Unsupported,unwrap
 
 
 def expand(source,select):
+    from .sva_defaults import expand as expand_defaults
+    source = expand_defaults(source)
     text=re.sub(r'//[^\n]*|/\*.*?\*/|"(?:\\.|[^"\\])*"',lambda m:' '*len(m[0]),source,flags=re.S)
     edits=[]
     for module in re.finditer(r'\bmodule\b.*?\bendmodule\b',text,re.S):
