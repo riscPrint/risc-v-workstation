@@ -105,3 +105,23 @@ end
             assert 'RVW' in run.stdout or 'rvw' in run.stdout + run.stderr
         else:
             assert run.returncode == 0 and 'RVW_DONE' in run.stdout, run.stdout + run.stderr
+
+
+@pytest.mark.fast
+def test_nine_bit_hub_sinks_remain_bounded_and_typed(tmp_path):
+    db,profile,config,_,_=fixture(tmp_path)
+    config['sink_bits']=9
+    connection=sqlite3.connect(db)
+    for client in config['clients']:
+        for field in ('d_sink','e_sink'):
+            connection.execute('UPDATE signals SET width=9 WHERE id=?',(client['signals'][field],))
+    connection.commit();connection.close()
+    profile.write_text(json.dumps(config))
+    result=generate(db,profile,tmp_path/'wide')
+    assert not result['executed']
+    text=Path(result['monitor']).read_text()
+    assert '[8:0] c0_d_sink' in text and 'grant[0:1][0:511]' in text
+    config['sink_bits']=11
+    profile.write_text(json.dumps(config))
+    with pytest.raises(ValueError,match='bounded monitor dimensions'):
+        generate(db,profile,tmp_path/'too-wide')

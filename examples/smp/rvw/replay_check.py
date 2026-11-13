@@ -1,15 +1,21 @@
 #!/usr/bin/env python3
 """Check full-program DUT-order Spike replay and one fault per hart."""
-import argparse,hashlib,json,subprocess,runpy
+import argparse,hashlib,json,runpy
 from pathlib import Path
+from rvw.common.proc import run_group
 root=Path(__file__).resolve().parents[3]
 p=argparse.ArgumentParser();p.add_argument('--inputs',type=Path,required=True);p.add_argument('--run-suffix',default='')
 a=p.parse_args();base=a.inputs.resolve()
 exe=root/'rvw/.venv/bin/rvw'
 summarize=runpy.run_path(str(Path(__file__).with_name('summarize.py')))['summarize']
 def check(trace):
- r=subprocess.run([str(exe),'--project','examples/smp/rvw.toml','cosim','check','--elf',str(base/'shared.elf'),'--trace',str(trace),'--json'],capture_output=True,text=True,timeout=90)
- try:return json.loads(r.stdout)
+ r=run_group([str(exe),'--project','examples/smp/rvw.toml','cosim','check','--elf',str(base/'shared.elf'),'--trace',str(trace),'--json'],capture=True,timeout=90)
+ if r.timed_out:raise RuntimeError('Spike comparison timed out')
+ try:
+  report=json.loads(r.stdout)
+  if report['status']=='match' and r.returncode!=0:raise RuntimeError('match returned a failing exit code')
+  if report['status']=='mismatch' and r.returncode!=1:raise RuntimeError('mismatch returned an unexpected exit code')
+  return report
  except ValueError:raise RuntimeError(r.stdout+r.stderr)
 reports=[]
 for seed in (17,23):

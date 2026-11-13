@@ -64,6 +64,12 @@ final class CacheScoreboard(val oracle: MemoryImage, val lineBytes: Int, sets: I
     require(observed == oracle.read(address, observed.size), "stale data")
     touch(b)
   }
+  /** Accepted dirty transfer that retains the cache line after a downgrade. */
+  def writeback(address: Int, observed: Seq[Byte]): Unit = {
+    require(address == base(address) && resident.contains(address), "writeback needs a resident line")
+    require(observed == resident(address) && observed == oracle.read(address, lineBytes), "writeback mismatch")
+    dirty -= address
+  }
   /** replacementEviction distinguishes a demand replacement from maintenance. */
   def evict(address: Int, writeback: Option[Seq[Byte]], replacementEviction: Boolean = false): Unit = {
     require(address == base(address) && resident.contains(address))
