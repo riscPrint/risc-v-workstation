@@ -142,11 +142,16 @@ def register(sub) -> None:
     simulation.set_defaults(func=event_sim.run)
 
     from . import liveness
-    live = s.add_parser("liveness", help="lower eventual response SVA to a native SBY live job")
+    live = s.add_parser("liveness", help="lower eventual response SVA to native live or liveness-to-safety jobs")
     live.add_argument("source")
     live.add_argument("--top", required=True)
     live.add_argument("--out", required=True)
     live.add_argument("--run", action="store_true")
+    live.add_argument("--backend", choices=["suprove", "l2s"], default="suprove")
+    live.add_argument("--reset", help="active-high reset input for the l2s backend")
+    live.add_argument("--engine", help="l2s safety engine (default abc:pdr for prove, smtbmc:yices for bmc)")
+    live.add_argument("--mode", choices=["prove", "bmc"], default="prove", help="l2s safety mode")
+    live.add_argument("--depth", type=int, default=20, help="l2s lasso-search depth")
     live.add_argument("--timeout", type=float, default=60)
     live.set_defaults(func=liveness.run)
 

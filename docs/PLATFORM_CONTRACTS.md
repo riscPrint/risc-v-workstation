@@ -54,7 +54,7 @@ Principles (from `ROADMAP.md`):
 - [Cross-tool evidence](contracts/evidence.md)
 - [Farm, budgets and cluster jobs](contracts/farm.md)
 - [Proof cores and counterexamples](contracts/formal-cex.md)
-- [Deep formal runs](contracts/formal-deep.md)
+- [Deep formal runs and SVA liveness](contracts/formal-deep.md)
 - [Formal checks, SVA and local captures](contracts/formal.md)
 - [Installation and release diagnostics](contracts/install.md)
 - [Hardware leakage](contracts/leakage.md)

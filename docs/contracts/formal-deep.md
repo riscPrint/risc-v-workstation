@@ -85,6 +85,19 @@ Only `pass` and `fail` count as solved. Missing tools and unsupported modes do
 not count. SBY `UNKNOWN` with exit 4 is inconclusive. Inconsistent status and
 exit code pairs are errors.
 
+## SVA liveness-to-safety adapter
+
+`rvw.formal-live/1` can select `backend=l2s`. The runner exposes generated live
+and fair predicates, then uses `rvw.liveness-app/1` jobs. Result `jobs` retain
+property id, engine status, proof kind, converted state-bit count, justice list,
+limits and the native report path. Engine passes remain unknown at the frontend.
+Bounded searches retain `bounded_lasso_search`; they do not become liveness proofs.
+
+This adapter requires `--run`, one synchronous clock, a scalar active-high reset
+and canonical net ranges. It applies one startup reset cycle, then deasserts
+reset permanently. Fairness is conditional. Feasibility, activation and full
+attribution remain unqualified. The underlying runner's state refusals remain.
+
 ## Eventual-response liveness jobs
 
 `rvw.formal-live/1` records `status`, `observation`, property ids, clock names,

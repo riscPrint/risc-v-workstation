@@ -73,3 +73,28 @@ def test_native_live_cells(tmp_path):
     assert run.returncode == 0, run.stdout + run.stderr
     cells = json.loads((tmp_path / 'model.json').read_text())['modules']['m']['cells']
     assert sum(c['type'] == '$live' for c in cells.values()) == 1
+
+
+def test_nonzero_exit_cannot_reuse_pass(tmp_path, monkeypatch):
+    from types import SimpleNamespace
+    import rvw.formal.liveness as module
+    source=tmp_path/'m.sv'
+    source.write_text(SOURCE)
+    out=tmp_path/'proof'
+    monkeypatch.setattr(shutil,'which',lambda tool:'/tool/'+tool)
+    def failed(command, **kwargs):
+        (out/'job').mkdir()
+        (out/'job/status').write_text('PASS\n')
+        return SimpleNamespace(returncode=1,timed_out=False)
+    monkeypatch.setattr(module,'run_group',failed)
+    run(Namespace(source=str(source),top='m',out=str(out),run=True,timeout=2))
+    assert json.loads((out/'result.json').read_text())['observation']=='error'
+
+
+def test_assumptions_alone_are_no_checks(tmp_path):
+    source=tmp_path/'m.sv'
+    source.write_text(SOURCE.replace('assert property','assume property'))
+    out=tmp_path/'proof'
+    assert run(Namespace(source=str(source),top='m',out=str(out),run=True,timeout=2))==1
+    result=json.loads((out/'result.json').read_text())
+    assert result['status']=='unknown' and result['observation']=='no_checks'
