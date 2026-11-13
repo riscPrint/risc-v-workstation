@@ -212,9 +212,40 @@ def run(args):
             result['reason'] = 'incomplete proof or C safety/unwind failure; see properties and cbmc.log'
     except (ValueError, KeyError, OSError, TypeError) as exc:
         result['reason'] = str(exc)
+    qualify_domain(result)
     if result.get('operand_partition'):
         result['scope'] += '; only the recorded operand b partition'
     result['wall_s'] = round(time.monotonic()-started, 3)
     (out/'result.json').write_text(json.dumps(result, indent=2)+'\n')
     print(json.dumps(result) if args.json else f'datapath: {result["status"]} ({out})')
-    return {'proved': 0, 'counterexample': 1, 'inconclusive': 3}[result['status']]
+    return {'proved': 0, 'counterexample': 1, 'inconclusive': 3, 'partial': 3}[result['status']]
+
+
+def qualify_domain(result):
+    """A successful restricted job proves its part, not its complement."""
+    case = result['case']
+    operand = result.get('operand_partition')
+    # The unsplit condition is the literal 1. No solver assumption restricts a/b/c.
+    try:
+        unrestricted = case_expression(case, result['case_width']) == '1'
+    except ValueError:
+        unrestricted = False
+    complete = unrestricted and operand is None
+    result['split_completeness'] = {'checked': True, 'complete': complete,
+                                    'method': 'unrestricted condition is literal 1'}
+    result['open_parts'] = []
+    if case != 'all':
+        result['open_parts'].append({'operand': 'a', 'condition': 'complement of '+case})
+        result['scope'] += '; only FP case '+case
+    if operand is not None:
+        if operand['lower']:
+            result['open_parts'].append({'operand': 'b', 'lower': 0, 'upper': operand['lower']-1})
+        if operand['upper'] < (1 << result['width'])-1:
+            result['open_parts'].append({'operand': 'b', 'lower': operand['upper']+1,
+                                          'upper': (1 << result['width'])-1})
+    result['part_status'] = result['status']
+    if result['part_status'] != 'proved':
+        result['open_parts'].append({'case': case, 'operand_partition': operand,
+                                     'status': result['part_status']})
+    if result['status'] in ('proved', 'inconclusive') and not complete:
+        result['status'] = 'partial'

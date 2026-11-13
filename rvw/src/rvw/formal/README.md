@@ -3562,3 +3562,9 @@ cover the full operand domain. Each result names its exact interval. A subset
 of passing partitions is a partial proof. For a specific divisor in a 16-bit
 unit, use N=16 and K equal to that divisor. Check every remaining divisor
 before claiming a whole-unit proof.
+
+
+A restricted datapath result uses `part_status` for the selected domain.
+Its top-level status is `partial`, exit 3, with `open_parts` for the rest.
+Only an unrestricted successful job returns top-level `proved`.
+Saved part reports are not combined by this command.
