@@ -200,3 +200,11 @@ def test_imsic_claim_requires_combined_read_and_write(tmp_path,monkeypatch):
     image.segments[:]=[(address,insn.to_bytes(4,'little') if address==pc else data,size) for address,data,size in image.segments]
     row['insn']=hex(insn);write()
     assert model_observe.observe(elf,s,path)['status']=='inconclusive'
+
+
+def test_aplic_delegation_named_ownership_and_claims(tmp_path,monkeypatch):
+    elf,s,path,rows,write=fixture(tmp_path,monkeypatch,'aplic-delegation',select='aplic-delegation-33')
+    assert model_observe.observe(elf,s,path)['status']=='pass'
+    assert len(s['model_bindings'])==24
+    rows[1]['rd_wdata']='0x1';rows[1]['mem_rdata']='0x1';write()
+    assert model_observe.observe(elf,s,path)['status']=='fail'

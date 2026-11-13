@@ -365,3 +365,18 @@ exact CSR. It checks the returned claim value and count. A read-only CSRRS
 cannot satisfy this binding. These results earn only the existing model-based
 subset groups. They do not replace complete ISA comparison or prove full bus
 or interrupt-file state.
+
+## APLIC direct-domain ownership
+
+`kind = "aplic-delegation"` requires AIA 1.0 and a supported document revision.
+The `aplic` object declares `parent_base`, `child_base`, `child_index`, optional
+parent/child contexts, `direct_delivery = true`, `implemented_sources` from
+1 to 1023, distinct implemented `source_ids` and an optional `poll_iterations`.
+Programs initialize all declared root source configurations to Inactive.
+
+The reference plan records root/child maps, selected source, ordered route,
+write and read operations and expected read values. Named 32-bit MMIO bindings
+check delegated parent masking, revoked child state, sourcecfg reset on new
+delegation, pending updates and direct claims. Pending/enable observations mask
+only the selected source bit. Model groups require the existing complete C1
+and named-observation evidence. They do not establish full ISA or device state.
