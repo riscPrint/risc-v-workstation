@@ -613,8 +613,13 @@
   ],
   "reset": {
     "generated": 3,
-    "applicable": 0,
-    "run": 0,
-    "reason": "no harness:reset-events binding; no claim about reset correctness"
+    "applicable": 3,
+    "run": 3,
+    "c1_pass": 3,
+    "c1_fail": 0,
+    "spike_match": 3,
+    "finding": 0,
+    "not_run": 0,
+    "evidence": "reset-results.json"
   }
 }

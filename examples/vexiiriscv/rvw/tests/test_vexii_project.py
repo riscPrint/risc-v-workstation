@@ -142,7 +142,7 @@ def test_prepare_random_privilege_selected_family(tmp_path, monkeypatch, bits):
     module = runpy.run_path(str(EXAMPLE / 'rvw/prepare-suites.py'))
     features = EXAMPLE / f'rvw/features{bits}.json'
     selection = applicability.plan(features)
-    assert not next(r for r in selection['suites'] if r['name'] == 'reset-rv64')['applicable']
+    assert next(r for r in selection['suites'] if r['name'] == 'reset-rv64')['applicable'] == (bits == 64)
     selection['suites'] = [r for r in selection['suites'] if r['name'] == f'random-privilege-rv{bits}']
     monkeypatch.setattr(applicability, 'plan', lambda path: selection)
     seen = []
@@ -160,3 +160,29 @@ def test_prepare_random_privilege_selected_family(tmp_path, monkeypatch, bits):
     assert seen == ['random-privilege']
     family = json.loads((tmp_path / 'build/selection.json').read_text())['families'][0]
     assert family['generated'] == family['applicable'] == 4
+
+
+def test_prepare_selected_reset_family(tmp_path, monkeypatch):
+    import runpy
+    import sys
+    from rvw.privilege import campaign
+    from rvw.regress.commands import applicability
+    module = runpy.run_path(str(EXAMPLE / 'rvw/prepare-suites.py'))
+    features = EXAMPLE / 'rvw/features64.json'
+    selection = applicability.plan(features)
+    selection['suites'] = [r for r in selection['suites'] if r['name'] == 'reset-rv64']
+    assert selection['suites'][0]['applicable']
+    monkeypatch.setattr(applicability, 'plan', lambda path: selection)
+    def capture(description, out, gcc):
+        config = campaign.load(description)
+        rows = campaign.scenarios(config)
+        assert len(rows) == 3
+        assert all(len(r['events']) == 3 for r in rows)
+        assert out.name == 'reset'
+        return dict(scenarios=rows)
+    monkeypatch.setattr(campaign, 'build', capture)
+    monkeypatch.setenv('RVW_HOME', str(EXAMPLE.parents[1]))
+    monkeypatch.setattr(sys, 'argv', ['prepare', '--features', str(features), '--out', str(tmp_path / 'built')])
+    assert module['main']() == 0
+    report = json.loads((tmp_path / 'built/selection.json').read_text())
+    assert report['families'][0]['generated'] == report['families'][0]['applicable'] == 3

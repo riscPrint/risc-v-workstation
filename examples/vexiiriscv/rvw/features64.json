@@ -15,6 +15,7 @@
   "capabilities": [
     "ad:fault",
     "asid:16",
-    "pmp-granularity:16"
+    "pmp-granularity:16",
+    "harness:reset-events"
   ]
 }

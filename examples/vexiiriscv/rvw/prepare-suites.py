@@ -92,6 +92,12 @@ def main():
         count = len(built['scenarios'])
         families.append(dict(family='random-privilege', source=random_row['source'],
                              generated=count, applicable=count, excluded=[]))
+    if 'reset-rv64' in applicable:
+        source = Path(__file__).resolve().parent / 'reset64.json'
+        built = privilege_build(source, out / 'reset', args.gcc)
+        count = len(built['scenarios'])
+        families.append(dict(family='reset', source='examples/vexiiriscv/rvw/reset64.json',
+                             generated=count, applicable=count, excluded=[]))
     if 'pmp-rv32' in applicable:
         granularity = next((int(c.split(':')[1]) for c in capabilities if c.startswith('pmp-granularity:')), 4)
         config = json.loads((root / 'examples/privilege/pmp-rv32.json').read_text())

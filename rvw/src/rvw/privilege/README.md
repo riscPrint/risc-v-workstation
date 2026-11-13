@@ -970,3 +970,18 @@ synchronization. Legacy captures without these events retain their limit.
 The VexiiRiscv device profile has 12 fresh RTL passes and 12 strict matches:
 six PLIC programs and six M/S delivery programs. See the
 [ordered events and negative controls](../../../../examples/vexiiriscv/plic-results.json).
+
+## Repeated reset RTL results
+
+The VexiiRiscv RV64 project binds the reset mailbox to its main reset pin.
+Three generated programs pass RTL and strict Spike comparison: fetch, load
+and store activity, with three pulses each. Generated/applicable/run/pass are
+3/3/3/3. Fail, known finding and not run are zero. The 507 compared instructions
+use zero synchronizations and no masks. All nine receipts check M privilege
+and inactive bus requests. Load and store loops each retire 11 accesses in
+each pre-reset delay window. See
+[the project record](../../../../examples/vexiiriscv/reset-results.json).
+The native reference reset retains reference RAM; the Spike CLI generator
+self-check still cannot drive external resets. Local, warm and cold use the
+same one-hart pin. Device reset, separate SoC reset domains, phase-gated bus
+transactions, debug reset and multi-hart repeated reset remain open.

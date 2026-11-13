@@ -1,0 +1,699 @@
+{
+  "core_revision": "9f70315deb3390b283995c5b8f1bd38215ecf52b",
+  "config": "rv64imasu",
+  "counts": {
+    "generated": 3,
+    "applicable": 3,
+    "run": 3,
+    "pass_count": 3,
+    "fail": 0,
+    "known_finding": 0,
+    "not_run": 0
+  },
+  "reference": "Spike shim 8; processor reset with reference RAM retained; no DUT-state seeding",
+  "reset_pin": "main; one hart; cold/warm/local use the same pin and state contract",
+  "limitations": [
+    "offline single-hart only",
+    "no device reset or separate SoC reset domains",
+    "no checkpoint or DPI reset support"
+  ],
+  "rows": [
+    {
+      "program": "reset-cold",
+      "activity": "fetch",
+      "c1_status": "pass",
+      "cycles": 1049,
+      "instret": 155,
+      "comparison": "match",
+      "synchronized": 0,
+      "elf_sha256": "b78d3a0d4d82b760f0dac3490276cf26e36f5dfcd047ac74ea65f16a8706c00a",
+      "rtl_sha256": "5e2e8ff7f63e9fcf89e0c4469860cf2193c6486597aa6e95d720901935e6eb97",
+      "trace_sha256": "6e868764691940c55e0df180c4d168a6f49c554f02794d9bcbb107217bc91049",
+      "pulses": [
+        {
+          "event": "reset_pulse",
+          "cycle": 277,
+          "step": 1,
+          "samples": [
+            {
+              "state": {
+                "privilege": 3
+              },
+              "valid": {
+                "request_valid": false
+              },
+              "cycle": 272,
+              "asserted": true
+            },
+            {
+              "state": {
+                "privilege": 3
+              },
+              "valid": {
+                "request_valid": false
+              },
+              "cycle": 273,
+              "asserted": true
+            },
+            {
+              "state": {
+                "privilege": 3
+              },
+              "valid": {
+                "request_valid": false
+              },
+              "cycle": 274,
+              "asserted": true
+            },
+            {
+              "state": {
+                "privilege": 3
+              },
+              "valid": {
+                "request_valid": false
+              },
+              "cycle": 275,
+              "asserted": true
+            },
+            {
+              "state": {
+                "privilege": 3
+              },
+              "valid": {
+                "request_valid": false
+              },
+              "cycle": 276,
+              "asserted": true
+            },
+            {
+              "state": {
+                "privilege": 3
+              },
+              "valid": {
+                "request_valid": false
+              },
+              "cycle": 277,
+              "asserted": false
+            }
+          ]
+        },
+        {
+          "event": "reset_pulse",
+          "cycle": 553,
+          "step": 2,
+          "samples": [
+            {
+              "state": {
+                "privilege": 3
+              },
+              "valid": {
+                "request_valid": false
+              },
+              "cycle": 548,
+              "asserted": true
+            },
+            {
+              "state": {
+                "privilege": 3
+              },
+              "valid": {
+                "request_valid": false
+              },
+              "cycle": 549,
+              "asserted": true
+            },
+            {
+              "state": {
+                "privilege": 3
+              },
+              "valid": {
+                "request_valid": false
+              },
+              "cycle": 550,
+              "asserted": true
+            },
+            {
+              "state": {
+                "privilege": 3
+              },
+              "valid": {
+                "request_valid": false
+              },
+              "cycle": 551,
+              "asserted": true
+            },
+            {
+              "state": {
+                "privilege": 3
+              },
+              "valid": {
+                "request_valid": false
+              },
+              "cycle": 552,
+              "asserted": true
+            },
+            {
+              "state": {
+                "privilege": 3
+              },
+              "valid": {
+                "request_valid": false
+              },
+              "cycle": 553,
+              "asserted": false
+            }
+          ]
+        },
+        {
+          "event": "reset_pulse",
+          "cycle": 829,
+          "step": 3,
+          "samples": [
+            {
+              "state": {
+                "privilege": 3
+              },
+              "valid": {
+                "request_valid": false
+              },
+              "cycle": 824,
+              "asserted": true
+            },
+            {
+              "state": {
+                "privilege": 3
+              },
+              "valid": {
+                "request_valid": false
+              },
+              "cycle": 825,
+              "asserted": true
+            },
+            {
+              "state": {
+                "privilege": 3
+              },
+              "valid": {
+                "request_valid": false
+              },
+              "cycle": 826,
+              "asserted": true
+            },
+            {
+              "state": {
+                "privilege": 3
+              },
+              "valid": {
+                "request_valid": false
+              },
+              "cycle": 827,
+              "asserted": true
+            },
+            {
+              "state": {
+                "privilege": 3
+              },
+              "valid": {
+                "request_valid": false
+              },
+              "cycle": 828,
+              "asserted": true
+            },
+            {
+              "state": {
+                "privilege": 3
+              },
+              "valid": {
+                "request_valid": false
+              },
+              "cycle": 829,
+              "asserted": false
+            }
+          ]
+        }
+      ],
+      "activity_retirements_in_delay_window": [
+        17,
+        17,
+        17
+      ]
+    },
+    {
+      "program": "reset-warm",
+      "activity": "load",
+      "c1_status": "pass",
+      "cycles": 1049,
+      "instret": 176,
+      "comparison": "match",
+      "synchronized": 0,
+      "elf_sha256": "b3bc46ae78108e44bfc7aa90a0f1a7607b49353a4b90d8c89e8f31d55acfd499",
+      "rtl_sha256": "5e2e8ff7f63e9fcf89e0c4469860cf2193c6486597aa6e95d720901935e6eb97",
+      "trace_sha256": "fdd9d2a1e8d7fe44477ba31503eb3ce87ab0c36e577afe7ec739c0a4be32c795",
+      "pulses": [
+        {
+          "event": "reset_pulse",
+          "cycle": 277,
+          "step": 1,
+          "samples": [
+            {
+              "state": {
+                "privilege": 3
+              },
+              "valid": {
+                "request_valid": false
+              },
+              "cycle": 272,
+              "asserted": true
+            },
+            {
+              "state": {
+                "privilege": 3
+              },
+              "valid": {
+                "request_valid": false
+              },
+              "cycle": 273,
+              "asserted": true
+            },
+            {
+              "state": {
+                "privilege": 3
+              },
+              "valid": {
+                "request_valid": false
+              },
+              "cycle": 274,
+              "asserted": true
+            },
+            {
+              "state": {
+                "privilege": 3
+              },
+              "valid": {
+                "request_valid": false
+              },
+              "cycle": 275,
+              "asserted": true
+            },
+            {
+              "state": {
+                "privilege": 3
+              },
+              "valid": {
+                "request_valid": false
+              },
+              "cycle": 276,
+              "asserted": true
+            },
+            {
+              "state": {
+                "privilege": 3
+              },
+              "valid": {
+                "request_valid": false
+              },
+              "cycle": 277,
+              "asserted": false
+            }
+          ]
+        },
+        {
+          "event": "reset_pulse",
+          "cycle": 553,
+          "step": 2,
+          "samples": [
+            {
+              "state": {
+                "privilege": 3
+              },
+              "valid": {
+                "request_valid": false
+              },
+              "cycle": 548,
+              "asserted": true
+            },
+            {
+              "state": {
+                "privilege": 3
+              },
+              "valid": {
+                "request_valid": false
+              },
+              "cycle": 549,
+              "asserted": true
+            },
+            {
+              "state": {
+                "privilege": 3
+              },
+              "valid": {
+                "request_valid": false
+              },
+              "cycle": 550,
+              "asserted": true
+            },
+            {
+              "state": {
+                "privilege": 3
+              },
+              "valid": {
+                "request_valid": false
+              },
+              "cycle": 551,
+              "asserted": true
+            },
+            {
+              "state": {
+                "privilege": 3
+              },
+              "valid": {
+                "request_valid": false
+              },
+              "cycle": 552,
+              "asserted": true
+            },
+            {
+              "state": {
+                "privilege": 3
+              },
+              "valid": {
+                "request_valid": false
+              },
+              "cycle": 553,
+              "asserted": false
+            }
+          ]
+        },
+        {
+          "event": "reset_pulse",
+          "cycle": 829,
+          "step": 3,
+          "samples": [
+            {
+              "state": {
+                "privilege": 3
+              },
+              "valid": {
+                "request_valid": false
+              },
+              "cycle": 824,
+              "asserted": true
+            },
+            {
+              "state": {
+                "privilege": 3
+              },
+              "valid": {
+                "request_valid": false
+              },
+              "cycle": 825,
+              "asserted": true
+            },
+            {
+              "state": {
+                "privilege": 3
+              },
+              "valid": {
+                "request_valid": false
+              },
+              "cycle": 826,
+              "asserted": true
+            },
+            {
+              "state": {
+                "privilege": 3
+              },
+              "valid": {
+                "request_valid": false
+              },
+              "cycle": 827,
+              "asserted": true
+            },
+            {
+              "state": {
+                "privilege": 3
+              },
+              "valid": {
+                "request_valid": false
+              },
+              "cycle": 828,
+              "asserted": true
+            },
+            {
+              "state": {
+                "privilege": 3
+              },
+              "valid": {
+                "request_valid": false
+              },
+              "cycle": 829,
+              "asserted": false
+            }
+          ]
+        }
+      ],
+      "activity_retirements_in_delay_window": [
+        11,
+        11,
+        11
+      ]
+    },
+    {
+      "program": "reset-local",
+      "activity": "store",
+      "c1_status": "pass",
+      "cycles": 1049,
+      "instret": 176,
+      "comparison": "match",
+      "synchronized": 0,
+      "elf_sha256": "d78ddbf1c4abd7b77106cf47b4e89ba6dea1e88452cf21c82ca80d0a1d70ab8d",
+      "rtl_sha256": "5e2e8ff7f63e9fcf89e0c4469860cf2193c6486597aa6e95d720901935e6eb97",
+      "trace_sha256": "85800a2f98bb2b9bd79f27b3bde755e1e79bbe5e7a8b1c4a57c8da83e1059e7c",
+      "pulses": [
+        {
+          "event": "reset_pulse",
+          "cycle": 277,
+          "step": 1,
+          "samples": [
+            {
+              "state": {
+                "privilege": 3
+              },
+              "valid": {
+                "request_valid": false
+              },
+              "cycle": 272,
+              "asserted": true
+            },
+            {
+              "state": {
+                "privilege": 3
+              },
+              "valid": {
+                "request_valid": false
+              },
+              "cycle": 273,
+              "asserted": true
+            },
+            {
+              "state": {
+                "privilege": 3
+              },
+              "valid": {
+                "request_valid": false
+              },
+              "cycle": 274,
+              "asserted": true
+            },
+            {
+              "state": {
+                "privilege": 3
+              },
+              "valid": {
+                "request_valid": false
+              },
+              "cycle": 275,
+              "asserted": true
+            },
+            {
+              "state": {
+                "privilege": 3
+              },
+              "valid": {
+                "request_valid": false
+              },
+              "cycle": 276,
+              "asserted": true
+            },
+            {
+              "state": {
+                "privilege": 3
+              },
+              "valid": {
+                "request_valid": false
+              },
+              "cycle": 277,
+              "asserted": false
+            }
+          ]
+        },
+        {
+          "event": "reset_pulse",
+          "cycle": 553,
+          "step": 2,
+          "samples": [
+            {
+              "state": {
+                "privilege": 3
+              },
+              "valid": {
+                "request_valid": false
+              },
+              "cycle": 548,
+              "asserted": true
+            },
+            {
+              "state": {
+                "privilege": 3
+              },
+              "valid": {
+                "request_valid": false
+              },
+              "cycle": 549,
+              "asserted": true
+            },
+            {
+              "state": {
+                "privilege": 3
+              },
+              "valid": {
+                "request_valid": false
+              },
+              "cycle": 550,
+              "asserted": true
+            },
+            {
+              "state": {
+                "privilege": 3
+              },
+              "valid": {
+                "request_valid": false
+              },
+              "cycle": 551,
+              "asserted": true
+            },
+            {
+              "state": {
+                "privilege": 3
+              },
+              "valid": {
+                "request_valid": false
+              },
+              "cycle": 552,
+              "asserted": true
+            },
+            {
+              "state": {
+                "privilege": 3
+              },
+              "valid": {
+                "request_valid": false
+              },
+              "cycle": 553,
+              "asserted": false
+            }
+          ]
+        },
+        {
+          "event": "reset_pulse",
+          "cycle": 829,
+          "step": 3,
+          "samples": [
+            {
+              "state": {
+                "privilege": 3
+              },
+              "valid": {
+                "request_valid": false
+              },
+              "cycle": 824,
+              "asserted": true
+            },
+            {
+              "state": {
+                "privilege": 3
+              },
+              "valid": {
+                "request_valid": false
+              },
+              "cycle": 825,
+              "asserted": true
+            },
+            {
+              "state": {
+                "privilege": 3
+              },
+              "valid": {
+                "request_valid": false
+              },
+              "cycle": 826,
+              "asserted": true
+            },
+            {
+              "state": {
+                "privilege": 3
+              },
+              "valid": {
+                "request_valid": false
+              },
+              "cycle": 827,
+              "asserted": true
+            },
+            {
+              "state": {
+                "privilege": 3
+              },
+              "valid": {
+                "request_valid": false
+              },
+              "cycle": 828,
+              "asserted": true
+            },
+            {
+              "state": {
+                "privilege": 3
+              },
+              "valid": {
+                "request_valid": false
+              },
+              "cycle": 829,
+              "asserted": false
+            }
+          ]
+        }
+      ],
+      "activity_retirements_in_delay_window": [
+        11,
+        11,
+        11
+      ]
+    }
+  ],
+  "workstation_source": "working implementation before commit; no C4 gate acceptance",
+  "tested_source_sha256": {
+    "RiscvSim/src/main/scala/riscvsim/ResetSchedule.scala": "0ecc045045cf3b8ecd44bd7d83cc1a9e2b442095470fc041e70ba3b3a8f29987",
+    "RiscvSim/src/main/scala/riscvsim/Rvfi.scala": "0014b732c5fdfa46b9a751d16f5b5b5a1335f0cf44aae7cbbf8670e4c3968834",
+    "examples/vexiiriscv/rvw/src/main/scala/rvwvexii/VexiiAdapter.scala": "6da05b3f5589c4b91027df9f02212199469cb5ca636c5b5a4e791f8f1b6ade7b",
+    "examples/vexiiriscv/rvw/src/main/scala/rvwvexii/C2Backend.scala": "fc50b36b6d3c8a24b02e72ef31c7d8b1e053182985b4de616a6bd97a69b5542b",
+    "Cosim/spike_shim.cc": "4c6bea6f4f52d74618863f9c6b52e09a38c9fc7c07a54ce91808554926b4318b",
+    "rvw/src/rvw/cosim/reset_events.py": "01ed160c55e587221b035113242d1112ffdf5f7817fafef9d2fafc403ea25139",
+    "rvw/src/rvw/cosim/checker.py": "74e2f2fea08ed9cd876df07434d70b1cb152ea926bc30dfb6750e44346aa0db9",
+    "rvw/src/rvw/cosim/spike.py": "83ec1d1a1f4fc3ec1d9b005dfbe19325e68753b6c4e23ef1dd340dba77b5bc8f"
+  },
+  "instructions_compared": 507,
+  "negative_controls": {
+    "missing-pulse": "mismatch",
+    "wrong-state": "error: reset state differs",
+    "wrong-delay": "error: retired request delay differs"
+  }
+}

@@ -107,6 +107,13 @@ def check(trace_path, model, platform, history=10, sync=SYNC_KINDS, *, ordered_e
     if trace.multihart:
         from .multihart import check_multihart
         return check_multihart(trace, model, platform, history=history, sync=sync)
+    from .reset_events import ResetReplay
+    reset_address = None
+    if trace.header.get("reset_events"):
+        reset_address = getattr(getattr(model, 'elf', None), 'symbols', {}).get('stimulus_step')
+        if reset_address is None:
+            raise ValueError('reset replay needs the ELF stimulus_step symbol')
+    reset_replay = ResetReplay(trace.header.get("reset_events"), reset_address)
     recent = deque(maxlen=history)
     core_regs = [0] * 32
     count, trap_events, sync_count = 0, 0, 0
@@ -201,10 +208,12 @@ def check(trace_path, model, platform, history=10, sync=SYNC_KINDS, *, ordered_e
         for actual in records:
             if 'event' not in actual:
                 actual = platform.normalize_record(actual)
+                reset_replay.retire(actual)
             last_cycle = actual["cycle"]
             if actual.get("event") == "end":
                 if environment and (environment.read is not None or environment.write is not None):
                     raise ValueError("unconsumed device response at end")
+                reset_replay.finish()
                 ended, end_status = True, actual["status"]
                 continue
             if actual.get("event") == "environment":
@@ -213,6 +222,13 @@ def check(trace_path, model, platform, history=10, sync=SYNC_KINDS, *, ordered_e
                     if irq_inputs is None:
                         irq_inputs = {}
                     irq_level(actual['cycle'], actual['levels'])
+                continue
+            if actual.get("event") == "reset_pulse":
+                reset_replay.apply(actual, model, platform.reset_pc)
+                core_regs = [0] * 32
+                last_trap = None
+                after_trap = False
+                reference_end = None
                 continue
             if actual.get("event") == "irq":
                 if irq_inputs is None:

@@ -16,6 +16,9 @@ def has_extension(isa, letter):
 
 
 def header_fields(header):
+    if "reset_events" in header:
+        from .reset_events import ResetReplay
+        ResetReplay(header["reset_events"])
     if 'vector_memory' in header and (header['vector_memory'] is not True or not header.get('vector')):
         raise ValueError('vector_memory requires vector capture and true declaration')
     for name, letter in (("vector", "v"), ("hypervisor", "h")):

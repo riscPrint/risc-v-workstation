@@ -178,6 +178,6 @@ kind = "elf-dir"
 dir = "../../rvw/out/suites32/random-privilege"
 glob = "*.elf"
 strip_suffix = ".elf"
-config = "rv32imasu"
+configs = ["rv32imasu"]
 max_cycles = 30000
 timeout_s = 30

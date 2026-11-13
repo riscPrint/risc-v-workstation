@@ -1,0 +1,71 @@
+{
+  "schema": "rvw.privilege/1",
+  "kind": "reset",
+  "isa": "rv64ima_zicsr_zifencei",
+  "reset": {
+    "pulses": 3,
+    "kinds": [
+      "cold",
+      "warm",
+      "local"
+    ],
+    "state": {
+      "privilege": {
+        "value": 3,
+        "mask": 3
+      }
+    },
+    "invalid_outputs": [
+      "request_valid"
+    ],
+    "schedule": {
+      "cold": {
+        "pin": "main",
+        "assert_clocks": 5,
+        "delay_clocks": 64,
+        "state": {
+          "privilege": {
+            "value": 3,
+            "mask": 3
+          }
+        },
+        "invalid_outputs": [
+          "request_valid"
+        ]
+      },
+      "warm": {
+        "pin": "main",
+        "assert_clocks": 5,
+        "delay_clocks": 64,
+        "state": {
+          "privilege": {
+            "value": 3,
+            "mask": 3
+          }
+        },
+        "invalid_outputs": [
+          "request_valid"
+        ]
+      },
+      "local": {
+        "pin": "main",
+        "assert_clocks": 5,
+        "delay_clocks": 64,
+        "state": {
+          "privilege": {
+            "value": 3,
+            "mask": 3
+          }
+        },
+        "invalid_outputs": [
+          "request_valid"
+        ]
+      }
+    },
+    "activity": {
+      "cold": "fetch",
+      "warm": "load",
+      "local": "store"
+    }
+  }
+}
