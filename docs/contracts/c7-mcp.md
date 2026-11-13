@@ -126,3 +126,11 @@ A packaged isolated handler that cannot be imported directly is resolved by
 its discovered tool name in the worker. Wrappers retain their actual call
 signature, including indexed wave arguments. The sync window, job controls
 and process cancellation rules are the same as for directly importable tools.
+
+## Argument aliases
+
+Canonical database arguments use `db`. The farm dashboard filter uses `run_id`.
+The old names `db_path` and `run` remain accepted on those tools. Their schema
+properties carry `deprecated: true` and `x-alias-for` with the canonical name.
+A call must supply at most one name for each value. Required inputs accept either
+name. A boolean `run` selects execution and is not a run directory alias.

@@ -1,3 +1,4 @@
+from rvw.mcp.aliases import with_aliases
 import json
 from rvw.query.db import QueryError
 from rvw.soc.feedback import import_feedback
@@ -23,4 +24,4 @@ def run(args):
 
 def mcp_tools():
     from rvw.mcp.spec import ToolSpec,schema
-    return [ToolSpec('soc_feedback','Link external reports to RTL and Scala. Imported claims only.',schema({k:{'type':'string'} for k in ('db_path','source','out')},['db_path','source','out']),import_feedback)]
+    return [with_aliases(ToolSpec('soc_feedback','Link external reports to RTL and Scala. Imported claims only.',schema({k:{'type':'string'} for k in ('db_path','source','out')},['db_path','source','out']),import_feedback), db='db_path')]

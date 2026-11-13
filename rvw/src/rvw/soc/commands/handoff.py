@@ -1,3 +1,4 @@
+from rvw.mcp.aliases import with_aliases
 import json
 from pathlib import Path
 from rvw.query.db import QueryError
@@ -26,4 +27,4 @@ def run(args):
 
 def mcp_tools():
     from rvw.mcp.spec import ToolSpec,schema
-    return [ToolSpec('soc_handoff','Export captured implementation inputs. This is not signoff evidence.',schema({'db_path':{'type':'string'},'out':{'type':'string'},'settings':{'type':'object'}},['db_path','out']),export)]
+    return [with_aliases(ToolSpec('soc_handoff','Export captured implementation inputs. This is not signoff evidence.',schema({'db_path':{'type':'string'},'out':{'type':'string'},'settings':{'type':'object'}},['db_path','out']),export), db='db_path')]

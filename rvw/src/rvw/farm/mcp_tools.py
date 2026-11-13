@@ -1,3 +1,4 @@
+from rvw.mcp.aliases import with_aliases
 from dataclasses import replace
 from rvw.mcp.spec import ToolSpec, schema
 from rvw.mcp.worker import handler
@@ -63,9 +64,9 @@ def mcp_tools():
                  schema({"out": string}, ["out"]), handler("rvw.farm.mcp_tools", "notifications"), long=True),
         ToolSpec("farm_classify", "Classify identity-bound recorded repeats. Retain every DUT failure.",
                  schema({"reports": array}, ["reports"]), handler("rvw.farm.mcp_tools", "classify"), long=True),
-        ToolSpec("farm_dashboard", "Write filtered C3/C4 history. Missing evidence remains visible.",
+        with_aliases(ToolSpec("farm_dashboard", "Write filtered C3/C4 history. Missing evidence remains visible.",
                  schema({"root": string, "out": string, **{k: string for k in ("core", "suite", "config", "gate", "run")}},
-                        ["root", "out"]), handler("rvw.farm.mcp_tools", "dashboard"), long=True),
+                        ["root", "out"]), handler("rvw.farm.mcp_tools", "dashboard"), long=True), run_id='run'),
         ToolSpec("farm_recover", "Read crash checkpoints. Missing final collection stays inconclusive.",
                  schema({"out": string}, ["out"]), handler("rvw.farm.mcp_tools", "recover")),
         ToolSpec("farm_cancel", "Cancel shards and confirm host process-group cleanup.",
