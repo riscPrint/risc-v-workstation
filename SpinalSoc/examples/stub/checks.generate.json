@@ -1,0 +1,6 @@
+{
+  "schema": "rvw.check-generation/1",
+  "buses": {
+    "database": "out/soc.db"
+  }
+}

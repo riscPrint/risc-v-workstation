@@ -1,0 +1,10 @@
+{
+  "iBus_cmd": {
+    "stable": true,
+    "domain_signal": "IBusSimplePlugin_fetchPc_pcReg"
+  },
+  "dBus_cmd": {
+    "stable": true,
+    "domain_signal": "IBusSimplePlugin_fetchPc_pcReg"
+  }
+}

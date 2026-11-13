@@ -66,3 +66,28 @@ def test_vex_native_checks(tmp_path,programs,fault):
         assert reports[2]['status']=='fail'
         assert {f['id'] for f in reports[2]['firings']}=={
             'hpm.read:mcycle_machine','hpm.read:minstret_machine','hpm.read:mcycle_user','hpm.read:minstret_user'}
+
+
+def test_vex_isa_all_generated_checks_record_findings(tmp_path, programs):
+    root,model,_=programs
+    elfs=sorted(f for f in (root/'examples/vexriscv/rvw/out/isa').glob('rv32u[im]-p-*')
+                if f.is_file() and f.suffix!='.dump' and f.name!='rv32ui-p-ma_data')
+    if not elfs: pytest.skip('build aligned ISA ELFs with examples/vexriscv/rvw/build-tests.sh')
+    out=tmp_path/'isa'
+    args=' '.join(json.dumps(str(p)) for p in (model,out,'none',*elfs))
+    r=run_group([str(root/'scripts/with-lock.sh'),'vex-csr',str(root/'scripts/with-lock.sh'),
+        'sbt','nice','-n','10','sbt','-batch','runMain rvwvex.CsrChecksRuntime '+args],
+        cwd=root/'examples/vexriscv/rvw',env=dict(os.environ,RVW_HOME=str(root),RVW_CHECKS_ISA='1'),
+        capture=True,timeout=240)
+    (tmp_path/'native.log').write_text(r.stdout+r.stderr)
+    assert r.returncode==1 and not r.timed_out,r.stdout+r.stderr
+    from rvw.checks.qualification import summarize
+    runs=sorted(out.glob('c1_*.json'))
+    assert len(runs)==len(elfs)
+    report=summarize(out/'checks.json',runs)
+    assert report['status']=='findings'
+    assert {k for k,v in report['counts'].items() if v['fired']}=={'stream.valid_hold'}
+    for path in runs:
+        run=json.loads(path.read_text())
+        assert run['status']=='fail' and run['details']['assertions_compiled'] is True
+        assert run['instret']>0

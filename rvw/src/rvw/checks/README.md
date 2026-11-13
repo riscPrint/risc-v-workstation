@@ -108,3 +108,21 @@ This command does not compile a design or run a solver. Stream ports and widths
 come from the captured database. Microarchitecture ports remain project
 declarations. The bus generators report channel safety separately from
 transaction scoreboards. Physical power and analog behavior are not modeled.
+
+## Connected check evidence
+
+Run `rvw checks report --inventory checks.json --run c1_0.json --out summary.json`.
+Repeat `--run` for each program. MCP `checks_report` takes `inventory`, `runs`
+and optional `formal`. Inputs use `rvw.checks/1`, C1 and `rvw.checks-run/1`.
+Each C1 run names `inventory` and `checks` artifacts. ELF hashes must agree.
+A passing C1 run cannot have a failed monitor report or a firing check.
+The output uses `rvw.check-qualification/1`. It counts distinct fired checks
+and total firing observations per kind. A null count means NOT RUN.
+
+Optional `--formal` reads `rvw.formal-regress/1`. Project requirement IDs
+associate each formal property with bound check IDs. Only explicit passing
+`proven` and `bounded-pass` observations add to those counts. Every associated
+property must pass before its check counts. This association
+does not establish activation or input closure. The overall summary remains
+`inconclusive`, or `findings` when a runtime check fired. Exit codes are 3, 1
+and 2 for inconclusive, findings and input errors.
