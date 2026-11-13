@@ -77,3 +77,21 @@ def test_post_retirement_csr_snapshot():
     CpuScoreboard(Ref()).observe(record() | {'csr_state':{'0x300':0}})
     with pytest.raises(AssertionError, match='csr_state'):
         CpuScoreboard(Ref()).observe(record() | {'csr_state':{'0x300':1}})
+
+
+def test_handler_entry_after_a_synchronous_trap_is_checked():
+    class Ref(Reference):
+        def step(self): return super().step() | {'trap': 1}
+    sc = CpuScoreboard(Ref())
+    sc.observe(record() | {'trap': 1})
+    sc.reference = Reference()
+    sc.observe(record() | {'order': 1, 'intr': 1})
+    assert sc.checks == 2
+    with pytest.raises(ValueError, match='unsupported:cpu_extended'):
+        sc.observe(record() | {'order': 2, 'intr': 1})
+
+
+def test_cocotb_verilator_build_keeps_warnings_nonfatal():
+    from rvw.sim.worker import backend_args
+    assert '-Wno-fatal' in backend_args('verilator') and '--assert' in backend_args('verilator')
+    assert backend_args('icarus') == ['-g2012']

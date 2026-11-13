@@ -35,7 +35,11 @@ small fixture. Other CSR behavior remains unqualified. These limits must remain 
 The Python equivalents are `rvw.sim.cpu_env.CpuMemory`, `CpuScoreboard`,
 `CpuCoverage` and `monitor`. They use the same memory/error policy and scalar
 observation fields. Supply a captured `rvw.cosim.spike.Spike` instance as the
-reference. It steps independently. Project cocotb agents own the memory bus
+reference; `spike_reference(platform_json, elf, work_dir)` builds one from the
+selected shim. The Python scoreboard checks the handler entry that follows a
+retired synchronous trap (RVFI `intr` after `trap`). An `intr` record without
+a preceding trap is an asynchronous interrupt and stays refused. Mismatch
+messages name the field, order, PC, instruction and both values. It steps independently. Project cocotb agents own the memory bus
 pins. `monitor` takes a project binding map with `clock`, `reset_n`, `valid`,
 and a `fields` dictionary from observation names to DUT signal names. The
 optional pyuvm environment can use these services without SV class support.
