@@ -43,8 +43,8 @@ private[spinalchecks] object ProtocolChecks {
     val badResponse = d.valid && dFirst && responding && (
       !(busy(d.source) || fresh) ||
       d.size =/= expectedSize ||
-      (!expectedAcquire && Opcode.D.isData(d.opcode) =/= expectedData) ||
-      (expectedAcquire && !expectedData && Opcode.D.isData(d.opcode)) || grant =/= expectedAcquire ||
+      (!expectedAcquire && SpinalCompat.isDataD(d.opcode) =/= expectedData) ||
+      (expectedAcquire && !expectedData && SpinalCompat.isDataD(d.opcode)) || grant =/= expectedAcquire ||
       (fresh && d.ready && !a.ready))
     emit("tilelink.response_match", "_d", d.valid.isInput,
       "A/D source, opcode and size; same-cycle responses allowed", badResponse)
@@ -108,8 +108,8 @@ private[spinalchecks] object ProtocolChecks {
         (Bool(!p.withBCE) && (grant || d.opcode === Opcode.D.RELEASE_ACK)) ||
         (d.opcode === Opcode.D.RELEASE_ACK && d.denied) ||
         ((grant || d.opcode === Opcode.D.RELEASE_ACK) && d.size < log2Up(p.dataBytes)) ||
-        (if (p.withDataD) ((!Opcode.D.isData(d.opcode) && d.corrupt) ||
-          (Opcode.D.isData(d.opcode) && d.denied && !d.corrupt)) else False)))
+        (if (p.withDataD) ((!SpinalCompat.isDataD(d.opcode) && d.corrupt) ||
+          (SpinalCompat.isDataD(d.opcode) && d.denied && !d.corrupt)) else False)))
   }
   def axiAddress(ax: Axi4Ax, emit: Bool => Unit): Unit = {
     val c = ax.config

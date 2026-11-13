@@ -56,8 +56,8 @@ class ChecksSimSpec extends AnyFunSuite {
         if (broken) assert(fs.head.count >= drops)
         ChecksSim.writeRunReport(dut, report, Seq("status" -> Json.Str("pass")))
         val text = new String(Files.readAllBytes(Paths.get(report)), "UTF-8")
-        assert(text.contains(s"\"fired\": ${fs.size}"))
-        assert(text.contains(s"\"status\": \"${if (broken) "fail" else "pass"}\""))
+        assert(text.contains("\"fired\": " + fs.size))
+        assert(text.contains("\"status\": \"" + (if (broken) "fail" else "pass") + "\""))
       }
     }
   }

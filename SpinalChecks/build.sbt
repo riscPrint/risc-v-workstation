@@ -7,6 +7,7 @@ ThisBuild / version := "0.1.0-SNAPSHOT"
 lazy val spinalchecks = (project in file("."))
   .dependsOn(SpinalAxis.projects("core", "lib"): _*)
   .settings(SpinalAxis.settings("core", "lib"))
+  .settings(SpinalAxis.apiSources)
   .settings(
     name := "spinalchecks",
     libraryDependencies ++= Seq(

@@ -42,7 +42,7 @@ class NamingSpec extends AnyFunSuite {
     assert(stages.size == 2, paths)
     // Since round 13 each Stage carries its own check ids, so Spinal keeps two definitions (`Stage_1`).
     for (p <- stages; Array(w, st) = p.split('.'))
-      assert(s"(?s).*\\bWrap(_\\d+)? $w \\(.*".r.matches(verilog) && s"(?s).*\\bStage(_\\d+)? $st \\(.*".r.matches(verilog), (p, paths))
+      assert(s"(?s).*\\bWrap(_\\d+)? $w \\(.*".r.pattern.matcher(verilog).matches() && s"(?s).*\\bStage(_\\d+)? $st \\(.*".r.pattern.matcher(verilog).matches(), (p, paths))
     // Ids never have an empty segment either (they are taken before name allocation).
     assert(!result.records.exists(_.id.contains("..")), result.records.map(_.id))
     assert(result.records.exists(_.id.contains(".stage.")), result.records.map(_.id))
@@ -66,7 +66,7 @@ class NamingSpec extends AnyFunSuite {
     // Each id names one instance; the report path is that instance's final Verilog name (Spinal may add
     // suffixes the ids do not have: `wrap_1.stage_2`).
     val finals = all.filter(r => holds.contains(r.id)).map(r => SpinalChecks.instancePath(r.component))
-    assert(finals.distinct.size == 2 && finals.forall("wrap(_\\d+)?\\.stage(_\\d+)?".r.matches), finals)
+    assert(finals.distinct.size == 2 && finals.forall(SpinalCompat.matches("wrap(_\\d+)?\\.stage(_\\d+)?".r, _)), finals)
     // A glob still reaches every instance it matches.
     assert(ids(Seq(Waiver("stream.valid_hold:wrap.stage*.io_in", "both"))).count(_.status == "waived") == 2)
   }

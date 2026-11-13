@@ -78,7 +78,8 @@ Generic changes this needed (all version-neutral; the release axis still compile
   match. `PhaseDeviceDefault`, `ObfuscateConfig` and
   `preventMemToBlackboxTranslation` have stated fallbacks.
 
-SpinalChecks does not compile on this axis yet.
+SpinalChecks now compiles on this axis through version-specific API shims.
+See the SpinalChecks README for the fallback behavior.
 
 ## Run from the core project
 
@@ -321,7 +322,8 @@ and `rvw.micro-checks/1` bindings.
 - One configuration. No RVC, FPU, interrupt schedules, devices, Konata or
   riscv-formal monitor (`--irq-schedule`, `--konata`, `--rvfi-check` and
   `--soc-map` are refused).
-- SpinalChecks (Scala inserted checks) does not compile on the legacy axis yet.
+- SpinalChecks has compile support on the legacy axis. Native qualification
+  remains separate from compilation.
 - `rvw query build` sets `NAXRISCV` to the project root. Keep the project files in
   the NaxRiscv checkout, or call `rvw/build-db.sh rv32imasu rvw/out/nax.db` with
   `NAXRISCV` set.

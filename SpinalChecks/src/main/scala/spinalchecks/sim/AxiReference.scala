@@ -15,7 +15,7 @@ class AxiReference(bus: Axi4, cd: ClockDomain) {
   var writes = 0L
   def write(address: BigInt, bytes: List[Byte], id: Int = 0, len: Int = 0): Unit = {
     require(bytes.nonEmpty)
-    master.write(address, bytes, id = id, maxLen = len)
+    spinalchecks.SpinalApi.axiWrite(master, address, bytes, id, len)
     bytes.zipWithIndex.foreach { case (b, i) => expected(address + i) = b }
     writes += 1
   }
