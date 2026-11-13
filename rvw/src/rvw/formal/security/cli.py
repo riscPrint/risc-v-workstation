@@ -12,6 +12,12 @@ from .ift import instrument
 def register(sub):
     p = sub.add_parser('security', help='bounded hardware leakage and IFT checks')
     s = p.add_subparsers(dest='security_command', required=True)
+    from .pair import run as run_pair
+    pair = s.add_parser('pair', help='prove a declared two-copy digital observation contract')
+    pair.add_argument('--manifest', required=True)
+    pair.add_argument('--out', required=True)
+    pair.add_argument('--timeout', type=float, default=60)
+    pair.set_defaults(func=run_pair)
     i = s.add_parser('ift', help='instrument a mapped Yosys JSON netlist')
     i.add_argument('netlist')
     i.add_argument('--top', required=True)

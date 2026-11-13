@@ -29,7 +29,7 @@ FLAGS = {"cross_check", "free_reset", "first_failure", "outputs", "payload", "x_
 
 
 def _argv(command, args):
-    argv = [sys.executable, "-m", "rvw", "formal", command]
+    argv = [sys.executable, "-m", "rvw", "formal", *command.split()]
     for key, value in args.items():
         if value is None or value is False:
             continue
@@ -147,6 +147,9 @@ def mcp_tools():
 
         ToolSpec("formal_properties", "Generate SVA for common intents and typed Stream/Flow channels. Does not run a proof.",
                  schema({"spec": S, "channels": S, "db": S, "out": S}, ["spec", "out"]), _properties, long=True),
+        ToolSpec("formal_security_pair", "Prove declared digital two-copy observation contracts or initial-state independence.",
+                 schema({"manifest": S, "out": S, "timeout": {"type":"number", "exclusiveMinimum":0}}, ["manifest","out"]),
+                 _runner("security pair"), long=True),
         ToolSpec("formal_datapath", "Bit-blast mapped RTL and a C reference with CBMC. Fixed or bounded-latency transactions; no streaming proof.",
                  schema({"rtl": S, "model": S, "binding": S, "max_latency": I, "width": {"type": "integer", "enum": [8,16,32,64]},
                          "out": S, "latency": I, "unwind": I,

@@ -713,7 +713,14 @@ usage: rvw formal model-grid [-h] --manifest MANIFEST --out OUT [--json]
 ### `rvw formal security`
 
 ```text
-usage: rvw formal security [-h] [--project PROJECT] {ift,contract} ...
+usage: rvw formal security [-h] [--project PROJECT] {pair,ift,contract} ...
+```
+
+### `rvw formal security pair`
+
+```text
+usage: rvw formal security pair [-h] --manifest MANIFEST --out OUT [--timeout
+    TIMEOUT] [--project PROJECT]
 ```
 
 ### `rvw formal security ift`
@@ -2423,6 +2430,14 @@ Starts a background job: yes.
 Automatically cut internal RTL state and RAM read outputs, then restore drivers after abstract failures.
 
 Arguments: `out` (required), `manifest` (required), `budget`, `timeout`, `max_cuts`.
+
+Starts a background job: yes.
+
+### `formal_security_pair`
+
+Prove declared digital two-copy observation contracts or initial-state independence.
+
+Arguments: `manifest` (required), `out` (required), `timeout`.
 
 Starts a background job: yes.
 
