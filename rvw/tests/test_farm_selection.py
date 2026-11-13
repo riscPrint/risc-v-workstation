@@ -3,6 +3,11 @@ import sqlite3
 from rvw.farm.selection import select
 
 
+import pytest
+
+pytestmark = pytest.mark.fast
+
+
 def inputs(tmp_path):
     db = tmp_path / 'design.sqlite'
     with sqlite3.connect(db) as c:

@@ -469,7 +469,8 @@
       "device": "little"
     },
     "absent_pmp_csrs": "trap",
-    "ecall_tval": "zero"
+    "ecall_tval": "zero",
+    "fcsr_reset": "unspecified"
   },
   "regions": [
     {

@@ -2,6 +2,11 @@ import copy
 from rvw.regress.mmu_memory_effects import check
 
 
+import pytest
+
+pytestmark = pytest.mark.fast
+
+
 def plan():
     return [dict(id='a', access='store', address=0x1000, width=4, memory_type='io', data=7),
             dict(id='b', access='load', address=0x1004, width=4, memory_type='io', data=9)]

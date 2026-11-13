@@ -16,7 +16,9 @@ suite = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(suite)
 
 
-@pytest.mark.parametrize('name', list(suite.GENERATORS))
+# Extension generators need explicit ISA/CMO profiles and have dedicated tests
+# under tests/ordering. Keep this base-profile cross-model corpus portable.
+@pytest.mark.parametrize('name', [*suite.DEFAULT_SUITES, 'amo-fault'])
 def test_spike_sail_ordering(tmp_path_factory, tmp_path, platform, sail, name):
     source = tmp_path / (name + '.S')
     source.write_text(suite.GENERATORS[name](64, 7))

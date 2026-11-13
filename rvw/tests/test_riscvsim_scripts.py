@@ -87,6 +87,9 @@ def launcher(tmp_path):
            "PATH": f"{bin_}:{os.environ['PATH']}", "JAVA_HOME": str(tmp_path / "jdk"),
            "SPINAL_BOOM": str(tmp_path / "boom"), "RISCVSIM_CP_CACHE": str(cache), "RVW_NO_LOCK": "1",
            "LIVE_SIM": str(sim), "FAKE_CLASSES": str(classes), "FAKE_SCALA_JAR": str(scala_jar), "RVW_LOCK_DIR": str(tmp_path / "locks"), "RVW_LOCK_POLL_S": "0.05"}
+    # The fake JVM cannot consume ambient JVM or make injection options.
+    for variable in ("MAKEFLAGS", "JAVA_TOOL_OPTIONS", "JDK_JAVA_OPTIONS", "SBT_OPTS", "JAVA_OPTS"):
+        env.pop(variable, None)
     env.pop("FAKE_JAVA_GO", None)
     env.pop("RVW_LOCKS_HELD", None)
 
@@ -315,8 +318,10 @@ def test_native_identity_covers_build_environment(launcher, variable, value):
         r = run_group(["python3", str(helper)], env=env, capture=True, timeout=30)
         assert r.returncode == 0, r.stderr
         return json.loads(r.stdout)
-    before = capture(launcher.env)
-    after = capture({**launcher.env, variable: value})
+    baseline = dict(launcher.env)
+    baseline.pop(variable, None)
+    before = capture(baseline)
+    after = capture({**baseline, variable: value})
     assert before["sha256"] != after["sha256"]
     if variable != "UNLISTED_NATIVE_SETTING":
         assert after["environment"][variable] == value
@@ -416,12 +421,14 @@ def test_real_native_flags_invalidate_cache_and_enter_c1_and_replay(tmp_path):
     project = tmp_path / "generic-project"
     (project / "project").mkdir(parents=True)
     (project / "src").symlink_to(sim / "src", target_is_directory=True)
-    (tmp_path / "SpinalTrace").symlink_to(repo / "SpinalTrace", target_is_directory=True)
-    (tmp_path / "SpinalWaves").symlink_to(repo / "SpinalWaves", target_is_directory=True)
+    for library in ("SpinalTrace", "SpinalWaves", "SpinalProbes", "SpinalChecks", "SpinalDB"):
+        (tmp_path / library).symlink_to(repo / library, target_is_directory=True)
     (project / "build.sbt").write_text((sim / "build.sbt").read_text())
     shutil.copy2(sim / "project/build.properties", project / "project/build.properties")
+    shutil.copy2(repo / "scripts/sbt/SpinalAxis.scala", project / "project/SpinalAxis.scala")
     env = {**os.environ, "RVW_LOCK_PYTHON": sys.executable, "RVW_PYTHON": sys.executable}
     env.pop("SPINAL_BOOM", None)
+    env.pop("MAKEFLAGS", None)
     # Use the checked-in make wrapper. This test must also prove stable native cache hits.
     env["SPINAL_MAKE_CMD"] = str(sim / "scripts/make-jobs.sh")
     # Load the library from an external build too. sbt resolves relative
@@ -434,7 +441,7 @@ def test_real_native_flags_invalidate_cache_and_enter_c1_and_replay(tmp_path):
         'ProjectRef(file("../../generic-project"), "riscvsim"))\n')
     ref = '{' + project.as_uri() + '/}riscvsim'
     build = run_group([str(repo / "scripts/with-lock.sh"), f"sbt-{repo.name}", "nice", "-n", "10", "sbt",
-                       "-J-Xmx1g", "-Dsbt.offline=true", "-batch", f"{ref}/Test/compile", f"export {ref}/Test/fullClasspath"],
+                       "-J-Xmx2g", "-J-XX:ActiveProcessorCount=2", "-Dsbt.offline=true", "-batch", f"{ref}/Test/compile", f"export {ref}/Test/fullClasspath"],
                       cwd=consumer, env=env, capture=True, timeout=240)
     assert build.returncode == 0, (build.stdout, build.stderr)
     cp = next(line for line in reversed(build.stdout.splitlines())
@@ -589,11 +596,15 @@ def test_generic_build_does_not_load_core_projects():
     from pathlib import Path
     repo = Path(__file__).resolve().parents[2]
     build = (repo / "RiscvSim/build.sbt").read_text()
-    # The generic trace library is required by --spinaltrace. Permit that exact
-    # reference only; a core ProjectRef must still fail this check.
-    trace_ref = 'ProjectRef(file("../SpinalTrace/spinaltrace"), "spinaltrace")'
-    assert build.count(trace_ref) == 1
-    assert "ProjectRef" not in build.replace(trace_ref, "")
+    # These are generic libraries. Any other ProjectRef must fail this check.
+    for path, project in (("SpinalTrace/spinaltrace", "spinaltrace"),
+                          ("SpinalProbes", "spinalprobes"),
+                          ("SpinalChecks", "spinalchecks"),
+                          ("SpinalDB/spinaldb", "spinaldb")):
+        reference = f'ProjectRef(file("../{path}"), "{project}")'
+        assert build.count(reference) == 1
+        build = build.replace(reference, "")
+    assert "ProjectRef" not in build
     assert "SPINAL_BOOM" not in build
     adapter = (repo / "RiscvSim/boom/build.sbt").read_text()
     assert 'ProjectRef(file("..").getCanonicalFile, "riscvsim")' in adapter

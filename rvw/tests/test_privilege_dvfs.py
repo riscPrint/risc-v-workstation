@@ -1,6 +1,11 @@
 from rvw.privilege.dvfs import observe,plan,programs
 
 
+import pytest
+
+pytestmark = pytest.mark.fast
+
+
 def contract():
     return dict(states={'low':dict(frequency_hz=50,voltage_uv=800),'high':dict(frequency_hz=100,voltage_uv=1000)},sequence=['low','high','low'])
 

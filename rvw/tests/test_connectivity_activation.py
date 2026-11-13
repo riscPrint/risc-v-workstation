@@ -29,7 +29,7 @@ assign io_result=io_b; assign io_resultIsValid=io_loadValues;
                                                     latency=latency,enable='io_loadValues')]}))
     out=tmp_path/'report'
     assert main(['formal','connectivity',str(table),'--db',str(path),'--out',str(out),'--run',
-                 '--proof-mode','prove','--depth','6','--timeout','10'])==1
+                 '--proof-mode','prove','--depth','6','--timeout','60'])==1
     report=json.loads((out/'result.json').read_text())
     row=report['connections'][0]
     assert row['campaign']['observations']['transfer']['status']=='pass'

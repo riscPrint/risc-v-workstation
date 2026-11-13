@@ -42,7 +42,8 @@ def parity(database, capsys, op, args, **options):
     mcp = json.loads(text)
     assert not error, mcp
     assert mcp.pop('input_capture')['files']
-    assert api == cli == mcp
+    assert api == cli
+    assert envelope(api) == mcp
     return api
 
 

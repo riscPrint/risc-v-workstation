@@ -5,6 +5,9 @@ from rvw.arch.warmup import warmup_bias
 from test_ooo import trace
 
 
+pytestmark = pytest.mark.fast
+
+
 def fixture(tmp_path):
     elf = tmp_path/'elf'
     elf.write_bytes(b'elf')

@@ -3,6 +3,11 @@ from rvw.results import SuiteResults, TestEntry, save_results
 from rvw.farm.triage import triage
 
 
+import pytest
+
+pytestmark = pytest.mark.fast
+
+
 def report(path, tests):
     path.mkdir(exist_ok=True)
     save_results(SuiteResults('run', 'fixture', 'generic', 'small', '2026-11-13T00:00:00Z',

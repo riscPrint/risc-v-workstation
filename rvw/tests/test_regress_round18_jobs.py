@@ -24,8 +24,8 @@ def test_suite_refuses_reserved_job_options(key):
 def test_mutated_suite_cannot_override_config(fake, tmp_path):
     core = load_config(str(fake.config))
     core.suite("isa").options["config"] = "small"
-    runner = Runner(core, describe(fake.repo), tmp_path / "run", RunOptions(log=None))
     with pytest.raises(ConfigError, match="reserved"):
+        runner = Runner(core, describe(fake.repo), tmp_path / "run", RunOptions(log=None))
         runner.run(suites_plan(core, ["isa"], ["large"]))
     assert not fake.calls()
 

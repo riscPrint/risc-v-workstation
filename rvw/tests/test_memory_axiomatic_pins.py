@@ -11,6 +11,9 @@ import pytest
 from rvw.memory.axiomatic import search
 
 
+pytestmark = pytest.mark.fast
+
+
 def event(identity, hart, order, kind, address=0, value=0):
     e = dict(id=identity, hart=hart, order=order, kind=kind, address=address, size=4,
              addr=[], data=[], ctrl=[])

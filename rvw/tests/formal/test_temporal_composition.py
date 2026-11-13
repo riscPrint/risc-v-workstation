@@ -118,6 +118,18 @@ def test_support_table():
         and any(isinstance(t, ast.Name) and t.id == 'SUPPORT_FEATURES' for t in node.targets)))
     rows += [f'| `{feature}` | positive and negative native case | finite native observation; stable input disable controls |'
              for feature in features]
+    for filename, corpus, scope in (
+        ('test_sva_defaults_native.py', 'positive and negative native case',
+         'simple module-local defaults; bounded single-clock cases'),
+        ('test_nested_eventually.py', 'native lasso oracle and positive/negative l2s jobs',
+         'two to eight ordered Boolean milestones; single clock'),
+        ('test_cross_proof.py', 'native oracle and positive/negative induction jobs',
+         'pre-update sampled values; two input clocks; no fairness'),
+    ):
+        module = ast.parse((Path('rvw/tests/formal') / filename).read_text())
+        features = ast.literal_eval(next(node.value for node in module.body if isinstance(node, ast.Assign)
+            and any(isinstance(t, ast.Name) and t.id == 'SUPPORT_FEATURES' for t in node.targets)))
+        rows += [f'| `{feature}` | {corpus} | {scope} |' for feature in features]
     expected = '\n'.join(rows) + '\n'
     assert Path('rvw/src/rvw/formal/TEMPORAL_SUPPORT.md').read_text() == expected
 

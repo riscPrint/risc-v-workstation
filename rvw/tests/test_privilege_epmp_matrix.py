@@ -1,6 +1,11 @@
 from rvw.privilege.epmp_matrix import permission,programs
 
 
+import pytest
+
+pytestmark = pytest.mark.fast
+
+
 def test_shared_permissions():
     assert permission(False,2,'M')==3 and permission(False,2,'S')==1
     assert permission(False,6,'U')==3

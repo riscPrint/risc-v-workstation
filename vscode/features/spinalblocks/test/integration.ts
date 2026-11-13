@@ -97,7 +97,7 @@ export async function run(): Promise<void> {
   const themes = {
     light: ['Default Light Modern', 'light'], dark: ['Default Dark Modern', 'dark'], 'high-contrast': ['Default High Contrast', 'dark'],
   } as const;
-  const screenshotDir = path.join(extension.extensionPath, 'features', 'spinalblocks', 'screenshots');
+  const screenshotDir = path.join(extension.extensionPath, '.vscode-test', 'screenshots', 'spinalblocks');
   await fs.mkdir(screenshotDir, {recursive:true});
 
   try {

@@ -2,6 +2,11 @@ import json
 from rvw.farm.notifications import notifications
 
 
+import pytest
+
+pytestmark = pytest.mark.fast
+
+
 def test_events_keep_dut_and_infrastructure_separate(tmp_path):
     report = {'schema': 'rvw.farm/1', 'campaign_id': 'fixture', 'expected_cells': 3,
         'status': 'inconclusive', 'shards': [{'host': 'a', 'status': 'inconclusive',

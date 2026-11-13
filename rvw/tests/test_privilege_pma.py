@@ -1,6 +1,11 @@
 from rvw.privilege.pma import programs, observe
 
 
+import pytest
+
+pytestmark = pytest.mark.fast
+
+
 def test_boundary_probes():
     rows = programs({'pma':{'regions':[dict(name='dev',base=0x10000000,size=16,widths=[4],read=True,write=True,test_writes=True)]}})
     assert len(rows) == 16

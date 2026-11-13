@@ -41,7 +41,9 @@ def test_every_tool_rejects_wrong_types_before_dispatch(name, monkeypatch):
         bad_calls = [[]] if not props else []
         for key, prop in props.items():
             kinds = prop.get('type')
-            wrong = False if 'string' in ([kinds] if isinstance(kinds, str) else kinds or []) else 'false'
+            types = [kinds] if isinstance(kinds, str) else kinds or []
+            # Union schemas can accept both strings and booleans. Use a missing type.
+            wrong = [] if 'array' not in types else {} if 'object' not in types else 'false'
             bad_calls.append({**valid, key: wrong})
         bad_calls.append({**valid, 'unknown_argument': True})
         bad_calls.extend({k: v for k, v in valid.items() if k != missing} for missing in valid)

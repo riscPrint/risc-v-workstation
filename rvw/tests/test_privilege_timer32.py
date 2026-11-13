@@ -2,6 +2,9 @@ import pytest
 from rvw.privilege.timer32 import programs
 
 
+pytestmark = pytest.mark.fast
+
+
 def test_low_high_and_pending():
     rows=programs({'isa':'rv32im_zicsr_zicntr_sstc'})
     assert len(rows)==26

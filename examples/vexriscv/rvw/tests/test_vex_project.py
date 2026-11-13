@@ -16,6 +16,7 @@ EXAMPLE = Path(__file__).resolve().parents[2]
 def test_copied_project_uses_core_owned_paths(tmp_path, monkeypatch):
     core = tmp_path / 'separate core'
     core.mkdir()
+    monkeypatch.setenv('VEXRISCV', str(core))
     shutil.copy2(EXAMPLE / 'rvw.toml', core / 'rvw.toml')
     shutil.copytree(EXAMPLE / 'rvw', core / 'rvw',
                     ignore=shutil.ignore_patterns('target', 'out', '__pycache__'))

@@ -1,6 +1,11 @@
 from rvw.privilege.reri import Record,programs,reference,RDIP,CECO
 
 
+import pytest
+
+pytestmark = pytest.mark.fast
+
+
 def test_overwrite_and_read_race():
     m=Record(control=1);m.log(2,addr=10)
     assert m.status&RDIP and m.info=={'addr':10}

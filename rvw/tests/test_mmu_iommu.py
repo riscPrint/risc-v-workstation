@@ -2,6 +2,9 @@ import pytest
 from rvw.regress.mmu_iommu import Model, device_agent, UPSTREAM
 
 
+pytestmark = pytest.mark.fast
+
+
 def test_device_process_fault_queue():
     model = Model({1: {'processes': {2: {'mode': 'bare'}}}}, {}, queue_size=2)
     request = dict(device=1, process=2, address=0x1234, access='load')

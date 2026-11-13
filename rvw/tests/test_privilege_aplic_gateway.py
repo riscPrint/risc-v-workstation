@@ -1,6 +1,11 @@
 from rvw.privilege.aplic_gateway import MsiAplic,programs,reference
 
 
+import pytest
+
+pytestmark = pytest.mark.fast
+
+
 def test_level_msi_rearm_and_software_control():
     m=MsiAplic();m.configure(1,6);m.enabled={1};m.targets[1]=(0,17)
     m.set_level(1,True);assert m.msi()==[(0,17)]

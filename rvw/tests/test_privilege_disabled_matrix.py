@@ -2,6 +2,9 @@ import pytest
 from rvw.privilege.disabled_matrix import programs
 
 
+pytestmark = pytest.mark.fast
+
+
 @pytest.mark.parametrize('feature,isa,priv,count',[
     ('fs-off','rv64imf_zicsr','msu',192),('vs-off','rv64imafdv_zicsr','msu',192),
     ('no-float','rv64im_zicsr','msu',192),('no-vector','rv64im_zicsr','msu',192),

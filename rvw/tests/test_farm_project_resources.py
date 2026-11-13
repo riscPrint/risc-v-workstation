@@ -6,6 +6,9 @@ import pytest
 from rvw.farm.resources import reserve
 
 
+pytestmark = pytest.mark.fast
+
+
 @pytest.fixture
 def capacity(tmp_path, monkeypatch):
     monkeypatch.setenv('HOME', str(tmp_path))

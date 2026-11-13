@@ -4,6 +4,11 @@ from rvw.regress.mmu_cov import groups
 from rvw.cov.functional import functional
 
 
+import pytest
+
+pytestmark = pytest.mark.fast
+
+
 def test_capture_groups_and_hart_windows(tmp_path):
     plan = groups()
     plan['groups'].append(dict(name='dependency_fixture', fields=['back_to_back'], when=dict(event='retire')))

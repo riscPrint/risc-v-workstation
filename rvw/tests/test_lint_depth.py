@@ -7,6 +7,9 @@ from rvw.lint.cli import report
 from rvw.query.db import run_on
 
 
+pytestmark = pytest.mark.fast
+
+
 def add_reg(c, i, domain, width=1):
     c.execute('INSERT INTO signals(id,component_id,name,path,kind,width,clock_domain_id,file_id,line) VALUES(?,1,?,?,\'reg\',?,?,1,?)',
               (i, f'r{i}', f'r{i}', width, domain, i))

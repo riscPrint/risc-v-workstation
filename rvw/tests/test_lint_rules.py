@@ -8,6 +8,9 @@ from rvw.lint.cli import report
 from rvw.query.db import run_on
 
 
+pytestmark = pytest.mark.fast
+
+
 def lint(db, config=None):
     return run_on(db, lambda d: rules.analyze(d, config))
 

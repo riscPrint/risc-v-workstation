@@ -12,7 +12,7 @@ from rvw.sim.injection import bootstrap_rv32
 from rvw.sim.spike_bootstrap import capture
 
 EXAMPLE = Path(__file__).resolve().parents[1]
-HOME = Path(os.environ['RVW_HOME'])
+HOME = Path(os.environ.get('RVW_HOME', Path(__file__).resolve().parents[4]))
 GCC = os.environ.get('RISCV_PREFIX', 'riscv64-unknown-elf-') + 'gcc'
 
 

@@ -9,6 +9,7 @@ import pytest
 from test_query_capture import capture_classpath
 from rvw.cli import main
 from rvw.common.proc import run_group
+from rvw.mcp.envelope import envelope
 from rvw.mcp.registry import Registry
 from rvw.query import ops
 from rvw.query.db import DesignDB
@@ -46,4 +47,4 @@ def test_long_delay_path_is_bounded(round21_path, capsys, max_paths):
         {'db': str(database), 'a': 'a', 'b': 'y', 'max_paths': max_paths})
     mcp = json.loads(text)
     assert not error and mcp.pop('input_capture')['files']
-    assert mcp == result
+    assert mcp == envelope(result)
