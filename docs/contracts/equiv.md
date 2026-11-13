@@ -212,3 +212,31 @@ not establish a difference in original outputs. Traces remain available for
 inspection. The caller can rerun without the table to classify that difference.
 The extension excludes advisory dsec. Blackbox and sampled-event results keep
 their existing conditional status rules.
+
+## Internal reset audit result
+
+`rvw formal reset-audit` and MCP `formal_reset_audit` write `rvw.reset-audit/1`.
+Overall `status` is always `inconclusive`, exit 1. `analysis_status` is `complete`
+or `incomplete`. Completion records a conservative Boolean analysis, not a
+reachable counterexample, formal acceptance or simulation result.
+
+`reset_coverage` counts `retained_register_bits`, `constant_reset_bits`,
+`nonconstant_reset_bits` and `bits_with_initial_dependencies`. Register bits
+start arbitrary. One synchronous reset clock uses the declared polarity.
+Constant bits have a singleton abstract value after this clock. Nonconstant
+bits can depend on inputs, literal X/Z or initial state. The initial-dependency
+count is a subset, not an alternative definition of constant reset coverage.
+The inventory includes only retained mapped state. `registers` contains names,
+bit IDs, reset values or null, initial dependencies and literal-X/Z markers.
+`initial_bit_labels` maps the original register bit IDs to available net names.
+
+`output_influence` records output bit dependencies at `clocks_after_reset: 0`
+and after each further clock through `cycles` in 0..64. Reset is deasserted after
+its single clock. Inputs are arbitrary at each step. Per-gate value sets and
+Boolean sensitivity conservatively retain initial-state and literal-X/Z
+sources. Reconvergence can produce extra paths. Dependency presence is not
+reachability evidence. Missing paths are limited to the mapped model and
+recorded steps. Initial attributes and unsupported cells remain incomplete.
+`inputs`, `tool`, the copied RTL, Yosys script, mapped JSON and log retain the
+experimental input/tool identities. `restrictions` records clock, reset,
+polarity, bounds and the initial/input contract. No solver proof is implied.
