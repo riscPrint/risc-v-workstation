@@ -3170,3 +3170,20 @@ matching lemma. Cold median: 1.623 s. Reuse median: 1.801 s. Time saved:
 -0.178 s. Library export cost: 4.906 s. Thus this sample shows no time gain.
 The eight-second native stage limit and nice priority apply to this local run.
 These small-counter timings do not establish core-scale reuse performance.
+
+## Live proof-progress events
+
+Engine-race writes `progress.jsonl` while installed engines run. Engine-bench
+jobs retain the same file under each problem directory. The result's
+`progress_events` field names the stream. A dashboard can tail this JSONL file.
+Each started, sample and finished event contains the manifest property ID,
+engine, local sequence number, elapsed seconds and sampled process-group RSS.
+Samples run once per second. Missing memory or depth is `null`.
+
+Depth is the largest solver step seen in the native log. It means the solver
+started that step. It does not mean the bound passed. PDR frames have a separate
+field and cannot be read as unrolled depth. Requested depth is never copied into
+the observed field. Final native status is an engine observation. Source
+conditions and cross-engine disagreement still control the problem verdict.
+The property ID identifies the manifest problem, which can contain a bundle
+of assertions. This is not per-assertion progress inside one bundled engine.

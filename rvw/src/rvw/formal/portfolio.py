@@ -89,6 +89,7 @@ def race(plan, root, out, *, timeout=30, cross_check=False, yosys_executable=Non
         raise ValueError('invalid top module')
     out = Path(out)
     out.mkdir(parents=True, exist_ok=False)
+    (out / "progress.jsonl").write_text("")
     sources, hashes, transforms = [], [], []
     reads = []
     for i, source in enumerate(plan['sources']):
@@ -211,12 +212,16 @@ def race(plan, root, out, *, timeout=30, cross_check=False, yosys_executable=Non
             command = ['ebmc', *native_sources, *top_options, '--bound', str(depth), '--json-result', 'ebmc-result.json']
             if mode == 'prove':
                 command.append('--k-induction')
+        from .progress import Progress
+        tracker = Progress(out / "progress.jsonl", plan.get("id", plan["top"]), name, directory)
+        progress_status = "error"
         def on_start(pid):
             with lock:
                 pids[name] = pid
                 if stopped.is_set():
                     cancelled.add(name)
                     os.killpg(pid, signal.SIGTERM)
+            tracker.start(pid)
         began = time.monotonic()
         try:
             proc = run_group(command, cwd=directory, capture=True, timeout=timeout, on_start=on_start)
@@ -231,6 +236,7 @@ def race(plan, root, out, *, timeout=30, cross_check=False, yosys_executable=Non
                 pids.pop(name, None)
                 if name in cancelled:
                     status = 'cancelled'
+            progress_status = status
             from .engine_limits import avy_failure
             diagnostic = avy_failure(directory, text) if name == 'aiger:avy' and status == 'error' else {}
             return {**row, **diagnostic, 'status': status, 'wall_s': time.monotonic() - began,
@@ -239,6 +245,8 @@ def race(plan, root, out, *, timeout=30, cross_check=False, yosys_executable=Non
             with lock:
                 pids.pop(name, None)
             return {**row, 'status': 'error', 'reason': str(exc), 'wall_s': time.monotonic() - began}
+        finally:
+            tracker.stop(progress_status)
 
     with ThreadPoolExecutor(max_workers=min(3, len(names))) as pool:
         futures = [pool.submit(run, name) for name in names]
@@ -259,7 +267,7 @@ def race(plan, root, out, *, timeout=30, cross_check=False, yosys_executable=Non
               'environment_check': 'activation_not_checked' if assumptions else 'no_source_assumptions',
               'winner': winner, 'cross_check': 'disagree' if disagreement else 'agree' if len(decisive) > 1 else 'inconclusive',
               'proof_kind': 'unbounded' if winner and winner['status'] == 'pass' and not disagreement and not uncertified_environment else 'none',
-              'rows': rows, 'assumptions': assumptions,
+              'rows': rows, 'progress_events': 'progress.jsonl', 'assumptions': assumptions,
               'condition_model': {'path': 'design.json', 'sha256': sha256((out / 'design.json').read_bytes()).hexdigest()} if (out / 'design.json').exists() else None, 'source_transforms': transforms, 'source_sha256': hashes, 'mode': mode, 'depth': depth,
               'limits': 'Source assertions and assumptions define the problem. No reset, clock, or vacuity guards are added. '
                         'Proofs are conditional on source assumptions. Cancelled or absent answers cannot be cross-checked.'}
