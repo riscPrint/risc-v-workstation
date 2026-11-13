@@ -6,24 +6,25 @@ Run native jobs through `scripts/with-lock.sh boom nice -n 15 ...`.
 
 ## Interface inventory, 2026-11-13
 
-This inventory was read against main at `1ac5ea96`. Source support is not
+The initial inventory used main at `1ac5ea96`. The table includes the adapter
+changes below. Source support is not
 native qualification. See `docs/INTEGRATION_GUIDE.md` and `docs/contracts/`.
 
 | Interface | Current adapter state | Missing evidence or binding |
 |---|---|---|
 | C1 run, build, run-many | Implemented through generic Driver | Fresh smoke needed after harness changes |
-| C2 integer state | RvfiProbe reads core RVFI; trap cause/tval and IRQ levels captured | Stored add example fails current cosim doctor: instruction order gap at line 152 |
-| C2/2 FP registers and flags | Not exported | Need architectural FP writeback and per-retirement fcsr, not speculative FP writeback |
-| C2/2 CSR snapshots | Not exported | Need per-slot state after each instruction; one live CSR map for all slots is insufficient |
+| C2 integer state | Native add and timing captures complete; trap and IRQ levels captured | Stored legacy add example still has an order gap |
+| C2/2 FP registers and flags | Small captures raw FP writes and full flags; 40 writes in native fadd | Wider presets and independent state agreement remain open |
+| C2/2 CSR snapshots | Small declares 0x340 | More CSRs and wider-preset per-slot capture remain open |
 | C2/2 fault records | Not exported | Need attempted access and completed-byte masks on faults |
-| SpinalProbes, --probes | No binding; supportsProbes is false | Need adapter-owned taps and ProbeCollector lifecycle |
+| SpinalProbes, --probes | Optional binding; native events converted to branch, Kanata and counts formats | Prediction retention, full ROB and cache/TLB coverage remain incomplete |
 | --fault | Generic public-register phase and SimSession injector exist | BOOM native injection not qualified |
-| Online lockstep | RvfiTraceWriter has socket transport | No BOOM LockstepDpi mailbox binding; native comparison not qualified |
+| Online lockstep | Optional DPI mailbox bound; existing socket transport retained | Enabled DPI elaboration and native lockstep NOT RUN |
 | Interrupt schedules | Implemented; MSIP, MTIP, SEIP, MEIP | No new native scheduled-interrupt run in this inventory |
-| Persistent server | Opted in with freshInstancePerRun | Each request starts a fresh instance; no BOOM reuse measurement here |
+| Persistent server | Two native jobs completed in one JVM with fresh instances | No checkpoint restore or throughput qualification |
 | Checkpoint and restore | Generic C++ checkpoint and bridge-state APIs exist | BOOM Scala memory agent and devices have no complete save/restore binding |
 | Device plugins | Fixed SparseMemory with CLINT and interrupt generator | No LiveDevices/plugin dispatch; fixed map refuses other devices |
-| OoO model and csim | Predictor data in examples/boom/csim | No small OoO project description or fresh RTL IPC correlation |
+| OoO model and csim | Small description, predictor study and one native timing observation | Model IPC is 2.6875 times RTL IPC; accuracy is inconclusive |
 
 ## Diagnostics
 
@@ -37,8 +38,8 @@ This is stored evidence, not a fresh run.
 and the Spike shim. The installer check reports missing `env.sh` in this
 worktree. No smoke ELF was supplied; C1 and C2 conformance are inconclusive.
 
-`rvw probes list` requires `--db` or `--events`. There is no BOOM probe
-stream in this adapter at this revision. Do not replace it with a synthetic
+The initial `rvw probes list` check required `--db` or `--events`. There was
+no BOOM probe stream at the initial revision. Do not replace it with a synthetic
 stream to claim BOOM coverage.
 
 ## Limits
@@ -73,7 +74,8 @@ the C1 whole-run IPC or a full pipeline trace.
 no captured direction prediction. The binding captures resolved next PCs
 but does not retain the prediction through the ROB. Do not infer a
 prediction from a correction or use a wrapping ROB index as a trace ID.
-Compressed control-flow decoding, full ROB occupancy, banked/matrix issue
+Compressed control-flow decoding and conditional branches whose target equals
+fall-through need a direct taken binding. Full ROB occupancy, banked/matrix issue
 queues, D-cache hit/miss classification and full TLB-fill records remain
 open. `rob_head_occupancy` is only the head row, not the full ROB.
 

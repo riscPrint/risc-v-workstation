@@ -1,0 +1,28 @@
+{
+  "scope": "one short integer loop on small; whole C1 run from reset and complete C2 stream",
+  "status": "observed",
+  "accuracy_status": "inconclusive",
+  "instructions": 57,
+  "rtl": {
+    "cycles": 258,
+    "ipc": 0.22093023255813954,
+    "rtl_sha256": "0630f9a2cf8e627b4be5da7695567239382abd374fe956ae0dd64112996db1ae",
+    "elf_sha256": "299d1af8eb5dc968eeff851f62ab6478b5a0ebea8b6ed03e385278969c769305",
+    "c1_sha256": "d67b21d3c75fa78994828884d86ed7d23097731fde7bed3907988a024a36c6ec",
+    "trace_sha256": "887debba8480fb967018195930cb80363492e7cf65a9c8b940a8220609deaf77"
+  },
+  "model": {
+    "cycles": 96,
+    "ipc": 0.59375,
+    "config_sha256": "d0cab40b26edebd7f24a9a10f32bb5c00b05003c8358eac44b2e85ccffb3982f",
+    "report_sha256": "eb2894978b1d34113dd8053567d6dacea271b491002ec012bc8c0a104aaa1f96"
+  },
+  "ipc_ratio_model_over_rtl": 2.6875,
+  "limits": [
+    "One program; no held-out accuracy set.",
+    "RTL cycles include actual cold fetch and memory latency; model uses estimated fixed delays.",
+    "Committed trace has no wrong-path execution.",
+    "Sources were dirty; this is not C4 acceptance.",
+    "Raw artifacts remain in the local adoption run directory."
+  ]
+}
