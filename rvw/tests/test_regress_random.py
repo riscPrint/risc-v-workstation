@@ -12,7 +12,7 @@ def fixture(tmp_path, monkeypatch):
     trace = tmp_path/'rvfi.jsonl'
     trace.write_text('{}\n')
     (tmp_path/'result.json').write_text('{}')
-    run = SimpleNamespace(elf_sha256=random.digest(elf), why_inconclusive=None,
+    run = SimpleNamespace(core='fixture', elf_sha256=random.digest(elf), why_inconclusive=None,
                           status='pass', instret=2, path=tmp_path, artifact=lambda _: trace)
     monkeypatch.setattr(random, 'load_run', lambda _: run)
     monkeypatch.setattr(random, 'functional', lambda *a, **k: {'retired': 2})
@@ -128,3 +128,13 @@ def test_installer_refuses_repository_path_and_dry_run_is_read_only(tmp_path, mo
     result = subprocess.run([sys.executable, str(script), '--dry-run'], capture_output=True, text=True)
     assert result.returncode == 0 and random.REVISION in result.stdout
     assert not external.exists()
+
+
+def test_reference_uses_c1_core_outside_project_directory(tmp_path,monkeypatch):
+    elf,run,comparison=fixture(tmp_path,monkeypatch)
+    seen=[]
+    def compare(*args,**kwargs):
+        seen.append(kwargs['core']);return comparison
+    monkeypatch.setattr(random,'cosim',compare)
+    assert random.verify(elf,tmp_path,'platform')['status']=='pass'
+    assert seen==['fixture']

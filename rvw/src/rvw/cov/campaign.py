@@ -19,6 +19,7 @@ from . import captured
 from .functional import functional
 from .isa import plan
 from .stimulus import generate, profile
+from .campaign_artifacts import implementation_id,execution_identity,seal_attempt,verify_attempt,seal_inputs,verify_inputs
 
 
 def identifiers(report):
@@ -54,17 +55,21 @@ def qualify(elf, results, platform, manifest, source_root, candidate, coverage_p
     trace = run.artifact('rvfi_trace')
     if trace is None:
         return {'status': 'trace_error', 'new_hits': []}
-    comparison = cosim('check', elf=str(elf), trace=str(trace), platform=str(platform), model='spike', strict=True)
+    comparison = cosim('check', elf=str(elf), trace=str(trace), platform=str(platform), model='spike', strict=True, core=getattr(run,'core',None))
     if not complete(comparison, run) or comparison.get('synchronized', 0):
         return {'status': 'mismatch' if comparison.get('status') == 'mismatch' else 'inconclusive',
                 'comparison': comparison, 'new_hits': []}
+    try:
+        native_identity = execution_identity(run,comparison)
+    except ValueError as exc:
+        return {'status':'identity_error','comparison':comparison,'new_hits':[],'reason':str(exc)}
     coverage = functional([trace], platform=platform, manifest=manifest, source_root=source_root,
                           payload_regions={digest(trace): region}, config=coverage_plan)
     visits = next(iter(coverage['traces'].values())).get('payload_visits',{})
     expected_visits = {hex(pc):1 for start,end in region['ranges'] for pc in range(start,end,4)}
     if coverage['retired'] != len(candidate.get('instructions', [0])) or visits != expected_visits:
         return {'status': 'inconclusive', 'reason': 'each payload instruction must retire exactly once', 'new_hits': []}
-    return {'status': 'qualified', 'comparison': comparison, 'coverage': coverage,
+    return {'status': 'qualified', 'execution_identity':native_identity, 'comparison': comparison, 'coverage': coverage,
             'region': region, 'trace_sha256': digest(trace), 'c1_sha256': digest(run.path/'result.json')}
 
 
@@ -104,24 +109,29 @@ def campaign(settings, work_dir, resume=False):
         raise ValueError('rtl_plan and recipes must be declared together')
     if data.get('rtl_plan'):
         inputs.update({key:captured.sha256(path(key)) for key in ('rtl_plan','recipes')})
-    identity = sha256(json.dumps([data, inputs, pinned], sort_keys=True).encode()).hexdigest()
+    implementation = implementation_id()
+    identity = sha256(json.dumps([data, inputs, pinned, implementation], sort_keys=True).encode()).hexdigest()
     out = Path(work_dir).resolve()
     report = {'schema': 'rvw.stimulus-loop/1', 'identity': identity, 'attempts': [], 'hits': [],
               'supported_bins': len(supported), 'full_plan_bins': sum(len(g.get('bins', [])) for g in pinned['groups']+sequence_groups),
-              'status': 'inconclusive', 'cpu_accounting': 'inconclusive', 'bins_per_cpu_hour': None,
+              'implementation_sha256':implementation, 'status': 'inconclusive', 'cpu_accounting': 'inconclusive', 'bins_per_cpu_hour': None,
               'notes': ['os.times includes reaped child CPU; descendant completeness is not qualified.',
-                        'No C4 acceptance or comparative closure rate is granted.']}
+                        'No C4 acceptance or comparative closure rate is granted.',
+                        'Attempt cost samples exclude raw sealing and state publication; total costs remain unqualified.']}
     if resume:
         previous = open_current(out/'state')
         report = json.loads(previous.read_bytes('report.json'))
         if report['identity'] != identity:
             raise ValueError('resume inputs or plan changed')
+        verify_inputs(out,report['input_generation'],identity)
         for attempt in report['attempts']:
+            verify_attempt(out,attempt)
             for name, expected in attempt.get('artifacts', {}).items():
                 if digest(out/name) != expected:
                     raise ValueError('resume artifact changed: '+name)
     else:
         out.mkdir(parents=True, exist_ok=False)
+        report['input_generation']=seal_inputs(out,identity)
     selected = load_config(project=path('project'))
     if data['config'] not in selected.configs:
         raise ValueError('unknown core configuration')
@@ -181,7 +191,7 @@ def campaign(settings, work_dir, resume=False):
                 if compiled.returncode or compiled.timed_out or not elf.is_file():
                     attempt['status'] = 'compile_error'
                 else:
-                    suite = Suite('closure', dir=elf_dir, glob='*.elf', strip_suffix='.elf',
+                    suite = Suite('closure', dir=elf_dir, glob='program.elf', strip_suffix='.elf',
                                   timeout_s=data.get('timeout_s',60), max_cycles=data.get('max_cycles',100000))
                     run_plan(selected, [PlanItem(suite, data['config'])], directory/'run', source_for(selected,None),
                              RunOptions(seeds=1,seed_base=attempt['seed'],rvfi_trace=True,use_cache=False,
@@ -191,6 +201,13 @@ def campaign(settings, work_dir, resume=False):
                         coverage_plan = directory/'coverage-plan.json'
                         coverage_plan.write_text(json.dumps({'groups':[], 'sequences':sequence_settings}))
                     evidence = qualify(elf, directory/'run', path('platform'), manifest, root, candidate, coverage_plan)
+                    if evidence['status']=='qualified':
+                        native=evidence.get('execution_identity')
+                        if not native or (report.get('execution_identity') and report['execution_identity']!=native):
+                            evidence={'status':'identity_error','new_hits':[],
+                                      'reason':'missing or changed C1/reference native identity'}
+                        else:
+                            report['execution_identity']=native
                     attempt.update(evidence)
                     if guide is not None:
                         from .feedback_campaign import collect
@@ -217,8 +234,9 @@ def campaign(settings, work_dir, resume=False):
             attempt['controller_cpu_s'] = after.user+after.system-before.user-before.system
             attempt['reaped_child_cpu_s'] = after.children_user+after.children_system-before.children_user-before.children_system
             attempt['artifacts'] = {str(p.relative_to(out)): digest(p) for p in sorted(directory.rglob('*')) if p.is_file()}
+            attempt['sealed_generation']=seal_attempt(out,directory,attempt)
             save()
-        if attempt['status'] in ('mismatch','core_failure'):
+        if attempt['status'] in ('mismatch','core_failure','identity_error'):
             break
     report['status'] = 'fail' if any(a['status'] in ('mismatch','core_failure') for a in report['attempts']) else 'inconclusive'
     report['remaining_supported'] = sorted(supported-hits)
