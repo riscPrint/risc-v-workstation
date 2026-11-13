@@ -509,7 +509,7 @@ Machine-readable form: `rvw agent guide --json`, MCP tool `agent_guide`, MCP res
 - Exit codes: 0 earned result; 1 failure or mismatch; 2 usage or setup error; 3 inconclusive. Never treat 3 as a pass.
 - Stop: A step ends a workflow with `stop` when its decision says so. Record the command, exit code and log before you stop.
 - Locks: Heavy runs hold the project lock (core.lock). Do not start a second heavy run of the same core.
-- Integration guide: Follow docs/INTEGRATION_GUIDE.md for install, project binding and evidence limits. A scaffold or tool list does not qualify a core.
+- Integration guide: Follow docs/INTEGRATION_GUIDE.md for install, project binding and evidence limits. A scaffold or tool list does not qualify a core. For mapped security, use rvw/sec/flow.S with the generated flow policy and a 110-second budget. Progress reports name preparation cost. For composed SoCs, use GENERATED/verify.json and supply runtime-classpath.txt, soc.db and apb.jsonl. Fabric proof rows do not close whole-SoC verification.
 - Verdicts: Evidence producers own verification verdicts in their stated scope. The evidence index preserves reports. Plan summaries retain the weakest input verdict. Farm completion and guide steps do not grant verification or C4 acceptance.
 
 ### New core bring-up (`bring-up`)
@@ -621,7 +621,7 @@ Optional tool set: 74 tools. Load MCP profile `formal` with `rvw_tools_load`. Re
    - If fail: go to `cex`.
    - If timeout or unknown (exit 3): go to `stop`. Bounded and inconclusive. Not a proof.
    - If pass: go to `riscv`.
-3. **riscv** (optional): Optional: run the declared riscv-formal checks. Mapped single-bus Spinal RV32 init supplies a bounded formal isa kit. Review its symbolic memory assumptions. Timeouts and machine-state gaps remain inconclusive. `rvw formal riscv --out <OUT> --json` / MCP `formal_riscv`
+3. **riscv** (optional): Optional: run the declared ISA kit. Mapped single-bus Spinal RV32 init supplies the wrapper. Run smoke with --rvfi-trace, then formal isa --trace RUN/rvfi.jsonl. Review latency_measurement, memory assumptions and per-check actions. Exact instruction cycles can need check_options.cycles. Timeouts and machine-state gaps remain inconclusive. `rvw formal isa --trace <TRACE> --out <OUT> --json` / MCP `formal_isa`
    - If fail: go to `cex`.
    - If pass: go to `done`. A bounded pass is not a full ISA proof.
 4. **cex**: Explain the counterexample and replay it in simulation. `rvw formal cex --result <OUT> --out <CEX> --json` / MCP `formal_cex`
