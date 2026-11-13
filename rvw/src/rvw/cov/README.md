@@ -1210,3 +1210,14 @@ The full native point denominator stays visible.
 
 See [whole-core mutation campaigns](CORE_MUTATION.md) for `cov mutate-core`,
 MCP, build-failure classification, ordered tiers, resume and study limits.
+
+## Scalar FP class coverage
+
+`rvw cov fp TRACE... --width 32 --out fp.json --json` reports scalar F/D/C
+instruction, rounding-mode, operand-class and raised-flag crosses. Use width
+64 for D. MCP tool `cov_fp` uses the same calculation. Inputs must have complete
+passing C1-bound DUT C2/2 state. Reference-only traces are refused. Each trace
+has a separate register history. Sticky flags and unknown operands get no
+full cross hit. Full flag masks remain unwaived holes. A class projection is
+reported separately. Compare the runs with a reference before closure claims.
+See [the Vexii generator and measured holes](../../../../examples/vexiiriscv/rvw/fpu/COVERAGE.md).

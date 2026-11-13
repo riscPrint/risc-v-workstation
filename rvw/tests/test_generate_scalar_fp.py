@@ -4,7 +4,7 @@ from types import SimpleNamespace
 import pytest
 pytestmark = pytest.mark.fast
 
-@pytest.mark.parametrize('isa,schema', [('rv32imafc','rvw.rvfi/2'),('rv64imafdc','rvw.rvfi/2'),('rv64imac','rvw.rvfi/1')])
+@pytest.mark.parametrize('isa,schema', [('rv32imafc','rvw.rvfi/2'),('rv64imafdc','rvw.rvfi/2'),('rv64gc','rvw.rvfi/2'),('rv64imac','rvw.rvfi/1')])
 def test_generate_exports_scalar_fp_state(monkeypatch,tmp_path,isa,schema):
     module=importlib.import_module('rvw.cosim.generate')
     effect=dict(insn=0x13,pc=0,pc_next=4,rd=0,rd_wdata=0,before=[0]*32,mode=3,

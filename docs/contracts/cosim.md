@@ -364,7 +364,7 @@ protocol. It does not add dynamic source delivery or reset.
 
 ## Scalar FP reference generation
 
-Spike generation selects C2 version 2 with the state capability for F or D,
+Spike generation selects C2 version 2 with the state capability for F or D, including G,
 even when V and H are absent. Each retirement includes the FP destination,
 its full 64-bit transport value, fflags and fcsr. Integer-only generation
 keeps C2 version 1. The dedicated Vexii FP platforms require FP state.

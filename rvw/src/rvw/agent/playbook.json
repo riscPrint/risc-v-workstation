@@ -811,6 +811,7 @@
         "cov_campaign",
         "cov_closure",
         "cov_exchange",
+        "cov_fp",
         "cov_functional",
         "cov_generate",
         "cov_merge",
