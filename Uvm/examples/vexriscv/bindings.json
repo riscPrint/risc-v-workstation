@@ -24,7 +24,6 @@
     "timerInterrupt",
     "softwareInterrupt",
     "externalInterrupt",
-    "externalInterruptS",
     "iBus_cmd_ready",
     "iBus_rsp_valid",
     "iBus_rsp_payload_error",

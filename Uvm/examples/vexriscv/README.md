@@ -8,7 +8,7 @@ A matching prefix cannot pass. A failed program or watchdog stops the test.
 
 Install `rvw[cocotb]` and pyuvm 4. Build the matched Spike shim with
 `Cosim/build.sh`. Generate VexTop RTL from the project adapter under the
-`vex` and `sbt` locks, or copy the generated `VexTop.v` from that adapter to
+a private `vex-uvm` lock and the `sbt` lock, or copy the generated `VexTop.v` from that adapter to
 this folder. Generated RTL is ignored by Git. Do not change the core.
 Use the existing RV32IM ISA ELFs built by the VexRiscv project.
 
@@ -17,7 +17,7 @@ From the workstation checkout, with Verilator on PATH:
 ```sh
 export RVW_CPU_SHIM="$PWD/Cosim/build/librvw_spike.so"
 export RVW_CPU_ELF=/absolute/path/to/rv32ui-p-add
-scripts/with-lock.sh vex nice -n 10 rvw/.venv/bin/rvw regress cocotb \
+scripts/with-lock.sh vex-uvm nice -n 10 rvw/.venv/bin/rvw regress cocotb \
  Uvm/examples/vexriscv/bench.json --out /tmp/vex-live-add --timeout 120 --json
 ```
 
@@ -28,7 +28,7 @@ next PC before comparison. That run must fail with `SPIKE_MISMATCH:pc_next`.
 
 `bindings.json` maps the project's RVFI pins. The runner writes C3 through
 the cocotb adapter. `cpu-checks.json` records actual comparisons and observed
-coverage only after the final store passes Spike. `spike-capture` retains
+coverage only after the final store passes Spike. `spike-capture-PROGRAM` retains
 the captured reference inputs. C3 source identity remains incomplete.
 This example does not earn C4 acceptance.
 
@@ -43,7 +43,8 @@ Use the current generated RTL directory recorded in a C1 `result.json`
 privilege modes from the selected platform. Do not mix those configurations.
 
 When `RVW_CPU_ELF` names `rv32ui-p-add`, the test also runs adjacent
-`rv32ui-p-beq` and `rv32ui-p-lw` ELFs in the same native build. Each test resets
+`rv32ui-p-beq`, `rv32ui-p-lw`, `rv32ui-p-sw`, `rv32ui-p-jal` and
+`rv32ui-p-xor` ELFs in the same native build. Each test resets
 the DUT and creates a new independent reference. Missing ELFs fail explicitly.
 Per-program `cpu-checks-PROGRAM.json` files keep the actual comparison counts.
 
@@ -53,3 +54,33 @@ trap synchronization in ISA bootstrap code. `CpuEvents` also supplies a
 requested-IRQ check and independent debug halt-state comparison. Those API
 checks have unit tests. They do not qualify architectural IRQ/debug behavior
 on this core. The live example drives no interrupts or debug requests.
+
+## Native results on 2026-11-13
+
+Verilator 5.049, cocotb 2.1.0 and pyuvm ran the live M-only binding with
+memory seed 1. Each program reset the RTL and used a fresh Spike instance.
+Each program reached its checked `tohost=1` store and checked four separate
+trap events against Spike.
+
+| ISA program | Checked retirements | Cycles |
+|---|---:|---:|
+| add | 504 | 1986 |
+| beq | 330 | 1415 |
+| lw | 322 | 1250 |
+| sw | 553 | 2178 |
+| jal | 94 | 407 |
+| xor | 526 | 2068 |
+
+All six PC-corruption runs failed with `SPIKE_MISMATCH:pc_next`. None wrote
+a completion summary. The opt-in native pytest returned 2 passed, 0 skipped.
+The test checks separate capture paths, trap counts and per-program summaries.
+The private VexRiscv copy was at `a62c145aa042a5de874344e0a7683bd7c8c8c870`.
+RTL SHA-256 was
+`80b1dfec5f3dde68a490dbf05cbee620b4ae3cc4e627ffff045d1a25e0856159`.
+The rebuilt ABI 6 shim matched the current source. An older shim was refused.
+
+Local evidence is under
+`$VEXRISCV/uvm-runs/native-pytest/`.
+The runs used the private `vex-uvm` lock. The binding has no supervisor
+interrupt port because the selected RTL is M-only. These six tests do not
+establish full ISA coverage, interrupt/debug support or C4 acceptance.

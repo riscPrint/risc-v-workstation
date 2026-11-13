@@ -118,7 +118,7 @@ class VexIsa(pyuvm.uvm_test):
             elf_path = elf_path.with_name(self.program)
         elf = Elf(elf_path)
         platform = Platform.load(None, HERE.parents[2]/'examples/vexriscv/rvw/platform.json')
-        self.capture = Capture(Path('spike-capture'))
+        self.capture = Capture(Path('spike-capture-'+elf_path.name))
         shim = capture_shim(self.capture, Path(os.environ['RVW_CPU_SHIM']))
         self.reference = DiagnosticSpike(platform, elf_path, shim=shim)
         bindings = json.loads((HERE/'bindings.json').read_text())
@@ -142,13 +142,10 @@ class VexIsa(pyuvm.uvm_test):
             self.reference.close()
 
 
-# A project ISA directory can qualify several programs in one native build.
-# No absent program is treated as passing evidence.
+# Run each program with a reset DUT and a separate Spike capture.
 if Path(os.environ.get('RVW_CPU_ELF', '')).name == 'rv32ui-p-add':
-    @pyuvm.test()
-    class VexIsaBranch(VexIsa):
-        program = 'rv32ui-p-beq'
-
-    @pyuvm.test()
-    class VexIsaLoad(VexIsa):
-        program = 'rv32ui-p-lw'
+    for _name, _program in [('VexIsaBranch', 'beq'), ('VexIsaLoad', 'lw'),
+                             ('VexIsaStore', 'sw'), ('VexIsaJump', 'jal'),
+                             ('VexIsaXor', 'xor')]:
+        globals()[_name] = pyuvm.test()(type(_name, (VexIsa,),
+            {'program': 'rv32ui-p-'+_program, '__module__': __name__}))
