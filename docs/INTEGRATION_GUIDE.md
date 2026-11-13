@@ -66,32 +66,36 @@ still needs a complete C1 implementation and input audit before regression.
 ### Per-HDL status measured on 2026-11-13
 
 This table reports the named dry runs. It does not transfer a result to every
-core in that language. Spinal and SystemVerilog rows use the two earlier
-reports. Chisel and VHDL use the whole-core run linked below. A generated
+core in that language. Unsupported by this record means that these runs
+do not establish the capability. Spinal and SystemVerilog cells use the two earlier
+reports. Chisel and VHDL cells use the second pass linked below. A generated
 monitor is not a proof. A diagram export is not a rendered-view check.
 
 | Tool or step | Spinal | SystemVerilog | Chisel | VHDL |
 | --- | --- | --- | --- | --- |
-| Doctor / init | Wired scaffold tested | Native scaffold tested | FIRRTL scaffold and doctor tested | GHDL scaffold tested |
-| Native C1 simulation | Whole core tested | PicoRV32 tested | riscv-mini tested | NEORV32 tested |
-| C2 capture | Project RVFI | Core RVFI | Generated state monitor | Core trace port |
-| Regression | 42 RV32UI programs pass | 46 programs pass | Four-program slice passes | Four-program slice passes |
-| Spike cosim | 41 matches; split-access refusal | 46 matches | Four matches and smoke | Four matches and smoke |
-| Failure bundle | Native planted fault | Native failure | Native planted fault | Native planted fault |
-| Design query | SpinalDB; Scala locations | Yosys; HDL locations | FIRRTL; Scala locations | GHDL; VHDL locations |
-| Diagram export | Export tested | Export tested | Export tested | Export tested |
-| Lint / CDC | Reports; no signoff | Reports; no signoff | Reports; no signoff | Reports; no signoff |
-| Structural coverage | C1 merge/report tested | C1 merge/report tested | C1 merge/report; emitted RTL | C1 merge/report; emitted RTL |
-| Declared bus checks | Explicit bindings required | Ready/valid binding tested | Request/response map unsupported | Request/response map unsupported |
-| State-monitor generation | Available; not needed in this run | PicoRV32 comparison has an open mismatch | Generated and simulated on riscv-mini | Not used; native trace port selected |
-| Committed gate | Not measured in the Spinal dry run | Accept and reject tested | Accept and reject tested | Accept and reject tested |
+| Doctor / init | Works: Wired scaffold tested | Works: Native scaffold tested | Works: FIRRTL scaffold and doctor tested | Works: GHDL scaffold tested |
+| Native C1 simulation | Works: Whole core tested | Works: PicoRV32 tested | Works: riscv-mini tested | Works: NEORV32 tested |
+| C2 capture | Works: Project RVFI | Works: Core RVFI | Works: Generated state monitor | Works: Core trace port |
+| Regression | Works: 42 RV32UI programs pass | Works: 46 programs pass | Works: 41 pass, one timeout, zero inconclusive, 42 RV32UI programs | Works: 41 pass, one timeout, zero inconclusive, 42 RV32UI programs |
+| Spike cosim | Works: 41 matches; split-access refusal | Works: 46 matches | Works: 41 matches, one fault-read refusal; 11,807 matched instructions | Works: 41 matches, one fault-record mismatch; 12,090 matched instructions |
+| Failure bundle | Works: Native planted fault | Works: Native failure | Works: Native planted fault | Works: Native planted fault |
+| Design query | Works: SpinalDB; Scala locations | Works: Yosys; HDL locations | Works: FIRRTL; Scala locations | Works: GHDL; VHDL locations |
+| Diagram export | Works: Export tested | Works: Export tested | Works: Export tested | Works: Export tested |
+| Lint / CDC | Works: Reports; no signoff | Works: Reports; no signoff | Works: Reports; no signoff | Works: Reports; no signoff |
+| Structural coverage | Works: C1 merge/report tested | Works: C1 merge/report tested | Works: 6,562/9,716 points linked to 121 Scala lines on original RTL | Works: 2,777/57,336 points linked to 343 VHDL lines |
+| Declared bus checks | Works: Explicit bindings required | Works with declared port map: ready/valid native run | Works with declared port map: two request/acknowledgment buses; native bound add pass; 24-step replay SAT | Works with declared port map: two single-outstanding pulse buses; native bound add pass; 24-step replay SAT |
+| Bounded formal | Works: one property at depth 6; overall inconclusive | Works: three SVA properties at depth 8; activation unmeasured | Works with declared port map: two monitor replays at depth 24 | Works with declared port map: two monitor replays at depth 24 |
+| State-monitor generation | Works: Available; not needed in this run | Works: generation; comparison has an open mismatch | Works: Generated and simulated on riscv-mini | Unsupported by this record: native trace port selected |
+| Committed gate | Unsupported by this record: not measured in the Spinal dry run | Works: Accept and reject tested | Works: Accept and reject tested | Works: Accept and reject tested |
 
 See [the Spinal report](DRY_RUN_2026-11-13.md),
 [the SystemVerilog report](DRY_RUN_VERILOG_2026-11-13.md) and
 [the Chisel/VHDL report](DRY_RUN_CHISEL_VHDL_2026-11-13.md) for pins,
 commands, native evidence and limits. Full ISA and whole-core proof remain
-open. The four-program slice is add, beq, lw and sw. It does not test the
-full riscv-tests environment or privilege matrix.
+open. The first pass used add, beq, lw and sw. The second pass runs the complete
+42-program RV32UI list. See its report for final counts and platform limits.
+The source-line coverage groups native points. Individual source statement
+hits remain unsupported. Full unconstrained core proof remains unsupported.
 
 VHDL simulation now uses standalone GHDL Verilog synthesis. Its query front
 end still needs a matching GHDL Yosys plugin. The measured whole-core run
