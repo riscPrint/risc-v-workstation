@@ -294,6 +294,8 @@ def register(sub) -> None:
     swarm = s.add_parser("swarm", help="bounded checks from uniformly selected simulation cycles")
     _common(swarm, 20)
     swarm.add_argument("--trace", required=True)
+    swarm.add_argument("--state-plan", help="trace-hashed coverage-hole state priorities")
+    swarm.add_argument("--engine-pool", action="append", help="rotate engines across sampled states; repeat for diversity")
     swarm.add_argument("--start-cycle", type=int, default=1)
     swarm.add_argument("--end-cycle", type=int, required=True)
     swarm.add_argument("--samples", type=int, default=4)

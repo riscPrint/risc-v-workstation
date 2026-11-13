@@ -3721,3 +3721,22 @@ single-clock Boolean eventual response and emits SBY `mode live` with
 `not_run`. Missing tools report `missing_tool`. Engine PASS remains unknown;
 engine FAIL is a failure. The result does not certify activation or non-vacuity.
 CLI `formal liveness` and MCP `formal_liveness` share this result.
+### Coverage-directed replay selection and finite-graph fairness
+
+`rvw.formal-swarm/1` can select cycles from a state plan. The plan declares
+`trace_sha256`, unique `holes`, and `states` with unique positive `cycle` and
+`targets` from those hole IDs. The runner checks the captured trace hash. It
+selects the state with most remaining targets first, then the lowest cycle.
+Targets are priorities, not proof evidence. `selection` records the plan hash,
+trace hash and unrepresented targets. `engine_pool` rotates across attempts.
+Every attempt records its engine. The campaign remains inconclusive.
+
+`rvw.formal-model-live/1` checks `GF progress` on an explicit transition graph.
+`progress` lists states. Each entry in `fairness` is a state set that must recur
+infinitely. The checker searches reachable nonprogress strongly connected
+components that contain a cycle and meet every fairness set. Such a component
+is a counterexample. No feasible fair infinite execution is inconclusive.
+Deadlocks are listed separately. A pass proves the supplied graph only under
+its declared justice assumptions. It does not certify an RTL translation.
+`model_sha256` identifies the exact captured model. CLI `model-live` and MCP
+`formal_model_live` return the same report. MCP `formal_swarm` runs replay.

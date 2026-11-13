@@ -1669,3 +1669,36 @@ With `--run`, a missing SBY or suprove gives `missing_tool`. Engine passes remai
 An engine failure is recorded as a failure. `formal_liveness` exposes the same
 operation through MCP. Native lowering tests check `$live` creation. They do not
 establish a liveness proof when suprove is absent.
+## State selection and fair finite models
+
+`rvw formal swarm` accepts `--state-plan PLAN.json` and repeated `--engine-pool`
+options. A plan binds the trace SHA-256 to coverage-hole priorities:
+
+```json
+{"trace_sha256": "SHA256", "holes": ["full", "wrap"],
+ "states": [{"cycle": 5, "targets": ["full"]},
+            {"cycle": 17, "targets": ["wrap"]}]}
+```
+
+Use `--start-cycle`, `--end-cycle`, and `--samples` to bound the selection.
+The runner chooses states with the most remaining targets. It rotates engines
+across the chosen states. Existing `--depth`, `--timeout`, and `--budget` bound
+the searches. Supplied target labels do not prove cover reachability. Sampled
+states do not establish reset reachability. The campaign stays inconclusive.
+MCP `formal_swarm` exposes the same options.
+
+`rvw formal model-live --manifest MODEL.json --out OUT` checks recurrent progress
+on the explicit models used by `model-grid`. Add `progress` as a list of states.
+Add `fairness` as a list of state sets. Each fairness set must occur infinitely
+often. The checker finds reachable fair cycles that can avoid progress forever.
+It reports their strongly connected components. Finite deadlocks are separate.
+No feasible fair cycle gives inconclusive. MCP `formal_model_live` returns the
+same report. These are exact finite-graph results. Native RTL liveness-to-safety,
+k-liveness and RTL fairness certification remain open.
+
+Additional native qualification on 2026-11-13: rIC3 1.5.2 proved the safe
+counter and found its seeded fault. It proved both pinned HWMCC cases in
+2.194 s total wall time, including preparation. Engine-only time was 1.904 s.
+The build used Rust nightly-2025-11-20 and Homebrew GMP/MPFR. Evidence and binary
+hashes are in `/tmp/rvw-deep-ric3-{counters,hwmcc}/result.json`.
+This does not establish full-block capacity or a representative comparison.
