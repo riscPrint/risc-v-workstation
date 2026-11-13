@@ -48,5 +48,8 @@ class TapPlugin extends Plugin {
     val priv = getService[PrivilegedPlugin]
     val privilege = CombInit(priv.setup.get.privilege).setName("rvw_privilege")
     privilege.simPublic()
+    // Constant enable for generated counter-bound checks (rvw/micro-checks.json).
+    val checksActive = CombInit(True).setName("rvw_checks_active")
+    checksActive.simPublic()
   }
 }

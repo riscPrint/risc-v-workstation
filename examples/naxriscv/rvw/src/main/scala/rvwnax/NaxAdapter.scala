@@ -35,8 +35,23 @@ class NaxAdapter extends CoreAdapter {
   }
   override def elaborate(key: ModelKey, work: File): Seq[File] =
     report(key, work).generatedSourcesPaths.toSeq.map(new File(_))
-  def compile(key: ModelKey, work: File, cache: File): Model =
-    RiscvSimConfig(key, work, cache, NaxTop.spinalConfig).compile(report(key, work))
+  /** `RVW_NAX_CHECKS=DIR`: a generated `rvw.micro-checks/1` directory (monitors.sv, binds.sv) to
+    * compile into the model. Each failed assertion prints one firing line instead of stopping. */
+  val checksDir: Option[File] = sys.env.get("RVW_NAX_CHECKS").filter(_.nonEmpty).map(new File(_).getCanonicalFile)
+  def compile(key: ModelKey, work: File, cache: File): Model = {
+    val cfg = RiscvSimConfig(key, work, cache, NaxTop.spinalConfig)
+    // The pinned SpinalHDL ignores addRtl when it compiles a report; pass the files to Verilator.
+    // Content-addressed names keep the Verilator cache key (which includes the flags) exact.
+    checksDir.foreach { dir =>
+      def read(name: String) = new String(java.nio.file.Files.readAllBytes(new File(dir, name).toPath), "UTF-8")
+      val text = NaxAdapter.firingMonitors(read("monitors.sv")) + "\n" + read("binds.sv")
+      cache.mkdirs()
+      val file = new File(cache, s"rvw-checks-${ElfFile.sha256(text.getBytes("UTF-8"))}.sv")
+      if (!file.isFile) java.nio.file.Files.write(file.toPath, text.getBytes("UTF-8"))
+      cfg.addSimulatorFlag(file.getAbsolutePath)
+    }
+    cfg.compile(report(key, work))
+  }
   override def generatedVerilog(model: Model): Seq[File] =
     Option(new File(model.compiledPath, "rtl").listFiles()).toSeq.flatten
       .filter(f => f.getName.endsWith(".v") || f.getName.endsWith(".sv"))
@@ -69,7 +84,13 @@ class NaxAdapter extends CoreAdapter {
     val bench = ctx.elf.symbol("bench_stats").map(new MemWords(_, 2, busBytes))
     var backend: C2Backend = null
     var probes = Option.empty[ProbeCollector]
-    val (status, code, message, cycles) = try {
+    // Generated-check firings, counted from the monitors' output lines while this run is active.
+    val firings = mutable.LinkedHashMap.empty[String, Long]
+    val capture = checksDir.isDefined && NativeOutput.start()
+    val onLine: NativeOutput.Line => Unit = l => NaxAdapter.firedRule(l.text).foreach(id =>
+      firings.synchronized(firings(id) = firings.getOrElse(id, 0L) + 1))
+    if (capture) NativeOutput.subscribe(onLine)
+    val (status0, code0, message0, cycles) = try {
       val result = SimSession.run(model, job, ctx) { (dut, ctl) =>
         val cd = dut.clockDomain
         writer = if (job.rvfiTrace) Some(new RvfiTraceWriter(new File(job.out, "rvfi.jsonl"), ctx.rvfiHeader)) else None
@@ -211,6 +232,24 @@ class NaxAdapter extends CoreAdapter {
     } finally {
       probes.foreach(_.abandon())
       if (backend != null && !traceEnded) backend.drain()
+      if (capture) { NativeOutput.drain(); NativeOutput.unsubscribe(onLine) }
+    }
+    val checks = checksDir.map { dir =>
+      val rules = scala.io.Source.fromFile(new File(dir, "binds.sv")).getLines().count(_.startsWith("bind "))
+      val fired = firings.synchronized(firings.toSeq)
+      val report = ujson.Obj("schema" -> "rvw.checks-run/1", "toplevel" -> "NaxRiscv", "source" -> dir.getPath,
+        "inserted" -> rules, "fired" -> fired.size, "capture" -> capture,
+        "status" -> (if (!capture) "inconclusive" else if (fired.nonEmpty) "fail" else status0.name),
+        "firings" -> ujson.Arr.from(fired.map { case (id, n) => ujson.Obj("id" -> id, "count" -> RvwJson.num(n)) }))
+      java.nio.file.Files.write(new File(job.out, "checks-run.json").toPath, ujson.write(report, indent = 1).getBytes("UTF-8"))
+      (capture, fired)
+    }
+    // A pass needs zero firings; without output capture the checks are inconclusive.
+    val (status, code, message) = checks match {
+      case Some((false, _)) if status0 == Status.Pass => (Status.Error, None, Some("generated checks compiled but their output was not captured"))
+      case Some((true, fired)) if fired.nonEmpty && status0 == Status.Pass =>
+        (Status.Fail, None, Some(s"generated checks fired: ${fired.map(_._1).mkString(", ")}"))
+      case _ => (status0, code0, message0)
     }
     if (!traceEnded) writer.foreach(_.end(cycles, status.name))
     writer.foreach(_.close())
@@ -223,8 +262,20 @@ class NaxAdapter extends CoreAdapter {
     RunOutcome(status, cycles, retired, code, message,
       ujson.Obj("traps" -> RvwJson.num(if (backend == null) 0L else backend.traps), "rvfi_records" -> RvwJson.num(retired),
         "tohost" -> Hex(tohost.value), "rvfi_monitor" -> false, "memory_bytes" -> RvwJson.num(ramSize.toLong),
-        "commit_source" -> "NaxriscvProbe"), metrics)
+        "commit_source" -> "NaxriscvProbe",
+        "generated_checks" -> checks.map { case (c, f) => ujson.Obj("captured" -> c, "fired" -> f.size,
+          "firings" -> RvwJson.num(f.map(_._2).sum)) }.getOrElse(ujson.Null)), metrics)
   }
+}
+
+object NaxAdapter {
+  private val Assert = """assert\(([^;]*)\);""".r
+  private val Fired = """RVW_CHECK_FIRE \S*rvw_rule_([A-Za-z0-9_]+)_instance""".r.unanchored
+  /** The generated monitors with each `assert(e);` turned into a firing line, so that a run
+    * counts failures instead of stopping at the first one. */
+  def firingMonitors(source: String): String =
+    Assert.replaceAllIn(source, m => java.util.regex.Matcher.quoteReplacement(s"""if(!(${m.group(1)})) $$display("RVW_CHECK_FIRE %m");"""))
+  def firedRule(line: String): Option[String] = line match { case Fired(id) => Some(id); case _ => None }
 }
 
 object Main {

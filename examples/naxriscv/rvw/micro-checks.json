@@ -1,0 +1,21 @@
+{
+  "schema": "rvw.micro-checks/1",
+  "top": "NaxRiscv",
+  "rules": [
+    {"id": "lq_free_bound", "kind": "counter_bounds", "entries": 16, "width": 5,
+     "ports": {"clk": "clk", "reset": "reset", "active": "rvw_checks_active", "value": "Lsu2Plugin_logic_lq_tracker_free"}},
+    {"id": "sq_free_bound", "kind": "counter_bounds", "entries": 16, "width": 5,
+     "ports": {"clk": "clk", "reset": "reset", "active": "rvw_checks_active", "value": "Lsu2Plugin_logic_sq_tracker_free"}},
+    {"id": "branch_context_bound", "kind": "counter_bounds", "entries": 16, "width": 5,
+     "ports": {"clk": "clk", "reset": "reset", "active": "rvw_checks_active", "value": "BranchContextPlugin_logic_ptr_occupancy"}},
+    {"id": "fetch_refill_cmd", "kind": "pipeline", "width": 32,
+     "ports": {"clk": "clk", "reset": "reset", "valid": "FetchCachePlugin_mem_cmd_valid", "ready": "FetchCachePlugin_mem_cmd_ready",
+               "payload": "FetchCachePlugin_mem_cmd_payload_address"}},
+    {"id": "dcache_refill_cmd", "kind": "pipeline", "width": 32,
+     "ports": {"clk": "clk", "reset": "reset", "valid": "DataCachePlugin_mem_read_cmd_valid", "ready": "DataCachePlugin_mem_read_cmd_ready",
+               "payload": "DataCachePlugin_mem_read_cmd_payload_address"}},
+    {"id": "peripheral_cmd", "kind": "pipeline", "width": 32,
+     "ports": {"clk": "clk", "reset": "reset", "valid": "LsuPlugin_peripheralBus_cmd_valid", "ready": "LsuPlugin_peripheralBus_cmd_ready",
+               "payload": "LsuPlugin_peripheralBus_cmd_payload_address"}}
+  ]
+}
