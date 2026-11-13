@@ -198,8 +198,8 @@ class Expr:
             direct = _dotted(n.value)
             if direct is not None:
                 # Select bits from the raw value, so known bits of a partly unknown vector stay known.
-                code = self._signal(direct).code
-                a = self._bits(code)
+                signal = self._signal(direct)
+                a = self._bits(signal.code, signal.width)
             if isinstance(s, ast.Slice) and isinstance(s.lower, ast.Constant) and isinstance(s.upper, ast.Constant):
                 hi, lo = s.lower.value, s.upper.value
                 if hi < lo:
@@ -228,12 +228,15 @@ class Expr:
             return lambda: self._raw.get(code) == self._raw_prev.get(code)
         raise WaveError(f'unsupported wave expression syntax in {self.text!r}: {ast.dump(n)[:60]}')
 
-    def _bits(self, code):
+    def _bits(self, code, width):
         def read():
             raw = self._raw.get(code)
             if raw is None or raw[:1] in ('r', 'R', 's', 'S'):
                 return value_of(raw)
-            return _Bits(raw[1:] if raw[:1] in 'bB' else raw)
+            bits = (raw[1:] if raw[:1] in 'bB' else raw).lower()
+            # VCD omits repeated high bits: extend X/Z with itself, else zero.
+            fill = bits[:1] if bits[:1] in ('x', 'z') else '0'
+            return _Bits(bits.rjust(width, fill))
         return read
 
     def _width(self, n) -> int:
