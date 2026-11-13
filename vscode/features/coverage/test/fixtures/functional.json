@@ -1,1 +1,341 @@
-{"schema": "rvw.functional-coverage/1", "groups": {"mode": {"expected_bins": 2, "hits": [{"bin": ["M"], "count": 4}], "holes": [["U"]]}}, "unknown_encodings": {"unsupported": 1}}
+{
+  "schema": "rvw.functional-coverage/1",
+  "config": {
+    "groups": [
+      {
+        "name": "class_mode",
+        "fields": [
+          "class",
+          "mode"
+        ],
+        "domains": [
+          [
+            "alu",
+            "load",
+            "store",
+            "branch",
+            "jump",
+            "multiply",
+            "divide",
+            "atomic",
+            "csr",
+            "system",
+            "fence",
+            "float"
+          ],
+          [
+            "U",
+            "S",
+            "M"
+          ]
+        ]
+      },
+      {
+        "name": "mnemonic_mode",
+        "fields": [
+          "mnemonic",
+          "mode"
+        ]
+      },
+      {
+        "name": "trap_cause_mode",
+        "fields": [
+          "cause",
+          "mode"
+        ],
+        "when": {
+          "event": "trap",
+          "interrupt": false
+        }
+      },
+      {
+        "name": "interrupt_cause_mode",
+        "fields": [
+          "cause",
+          "mode"
+        ],
+        "when": {
+          "event": "trap",
+          "interrupt": true
+        }
+      },
+      {
+        "name": "handler_entry",
+        "fields": [
+          "mode"
+        ],
+        "when": {
+          "intr": true
+        },
+        "domains": [
+          [
+            "U",
+            "S",
+            "M"
+          ]
+        ]
+      },
+      {
+        "name": "memory",
+        "fields": [
+          "access",
+          "bytes",
+          "alignment"
+        ],
+        "when": {
+          "event": "memory"
+        },
+        "domains": [
+          [
+            "read",
+            "write"
+          ],
+          [
+            1,
+            2,
+            4,
+            8
+          ],
+          [
+            "aligned",
+            "misaligned"
+          ]
+        ]
+      },
+      {
+        "name": "csr",
+        "fields": [
+          "csr",
+          "csr_access",
+          "mode"
+        ],
+        "when": {
+          "class": "csr"
+        }
+      },
+      {
+        "name": "branch",
+        "fields": [
+          "branch_taken",
+          "mode"
+        ],
+        "when": {
+          "class": "branch"
+        },
+        "domains": [
+          [
+            true,
+            false
+          ],
+          [
+            "U",
+            "S",
+            "M"
+          ]
+        ]
+      },
+      {
+        "name": "rd_x0",
+        "fields": [
+          "rd_x0",
+          "class"
+        ]
+      },
+      {
+        "name": "dependency",
+        "fields": [
+          "back_to_back",
+          "class"
+        ]
+      }
+    ]
+  },
+  "config_sha256": "3c037df8835f25d08e20107bd2f134fa3d6b79d585390e66e74b2d0e005740f4",
+  "traces": {
+    "cb8ea9de86e00e46c8a36345a802205ded20e97d908d24a3947bc5962f5db1d5": {
+      "path": "/private$RUN_ROOT/trace.jsonl",
+      "header": {
+        "schema": "rvw.rvfi/1",
+        "xlen": 32,
+        "isa": "rv32im"
+      },
+      "platform": null,
+      "address_convention": "unknown"
+    }
+  },
+  "retired": 1,
+  "groups": {
+    "class_mode": {
+      "fields": [
+        "class",
+        "mode"
+      ],
+      "hits": [
+        {
+          "bin": [
+            "alu",
+            "M"
+          ],
+          "count": 1
+        }
+      ],
+      "holes": [
+        [
+          "alu",
+          "S"
+        ],
+        [
+          "alu",
+          "U"
+        ],
+        [
+          "atomic",
+          "M"
+        ],
+        [
+          "atomic",
+          "S"
+        ],
+        [
+          "atomic",
+          "U"
+        ],
+        [
+          "branch",
+          "M"
+        ],
+        [
+          "branch",
+          "S"
+        ],
+        [
+          "branch",
+          "U"
+        ],
+        [
+          "csr",
+          "M"
+        ],
+        [
+          "csr",
+          "S"
+        ],
+        [
+          "csr",
+          "U"
+        ],
+        [
+          "divide",
+          "M"
+        ],
+        [
+          "divide",
+          "S"
+        ],
+        [
+          "divide",
+          "U"
+        ],
+        [
+          "fence",
+          "M"
+        ],
+        [
+          "fence",
+          "S"
+        ],
+        [
+          "fence",
+          "U"
+        ],
+        [
+          "float",
+          "M"
+        ],
+        [
+          "float",
+          "S"
+        ],
+        [
+          "float",
+          "U"
+        ],
+        [
+          "jump",
+          "M"
+        ],
+        [
+          "jump",
+          "S"
+        ],
+        [
+          "jump",
+          "U"
+        ],
+        [
+          "load",
+          "M"
+        ],
+        [
+          "load",
+          "S"
+        ],
+        [
+          "load",
+          "U"
+        ],
+        [
+          "multiply",
+          "M"
+        ],
+        [
+          "multiply",
+          "S"
+        ],
+        [
+          "multiply",
+          "U"
+        ],
+        [
+          "store",
+          "M"
+        ],
+        [
+          "store",
+          "S"
+        ],
+        [
+          "store",
+          "U"
+        ],
+        [
+          "system",
+          "M"
+        ],
+        [
+          "system",
+          "S"
+        ],
+        [
+          "system",
+          "U"
+        ]
+      ],
+      "expected_bins": 36,
+      "observed_bins": 1,
+      "expected_hit": 1
+    }
+  },
+  "unknown_encodings": {},
+  "notes": [
+    "Default domains are a coverage plan, not claims of ISA support or reachability.",
+    "C2 trap events without mode retain mode=unknown; mode is not inferred.",
+    "RVFI intr marks trap-handler entry, including synchronous traps; actual interrupt causes use C2 trap events.",
+    "retired counts C2 instruction records, including trap=true records.",
+    "CSR/mnemonic groups without declared bins report observations, not a completeness percentage.",
+    "rd_x0 records RVFI rd=0, which also denotes instructions without a destination.",
+    "dependency: an FP destination is the instruction encoding's rd (C2 rd is the integer write); when the trace reports an integer rd for an FP-destination instruction, the next instruction's back_to_back is undetermined.",
+    "Memory alignment uses each trace's platform address convention (aligned_mem: mem_addr plus the mask's lane offset); a lane-shifted mask under an unknown or byte convention is undetermined."
+  ],
+  "cache_key": null
+}

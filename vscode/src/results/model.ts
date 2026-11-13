@@ -1,3 +1,4 @@
+import {checkProducer} from './contracts';
 import { resolve } from 'node:path';
 import { createHash } from 'node:crypto';
 export type Kind = 'regress' | 'coverage' | 'perf';
@@ -13,14 +14,24 @@ const schemas: Record<Kind, string[]> = {
 export function parseReport(kind: Kind, text: string): RecordValue {
   const data = object(JSON.parse(text));
   if (!schemas[kind].includes(String(data.schema))) throw new Error(`Unsupported ${kind} schema: ${String(data.schema)}`);
+  const names={'rvw.coverage/1':'coverage','rvw.coverage-report/1':'coverage_report',
+    'rvw.functional-coverage/1':'functional','rvw.verdict/2':'gate'} as const;
+  const name=names[data.schema as keyof typeof names];
+  if(name)checkProducer(name,data);
   return data;
+}
+/** C7 keeps the C4 decision in legacy_verdict. Do not infer it from pass/fail. */
+export function gateVerdict(data: RecordValue): string {
+  if (data.error || data.status === 'error') return 'inconclusive';
+  const decision = data.legacy_verdict ?? data.verdict;
+  return ['accept', 'reject', 'inconclusive'].includes(String(decision)) ? String(decision) : 'inconclusive';
 }
 /** These are displayed producer claims. The viewer does not issue gate verdicts. */
 export function headline(kind: Kind, data: RecordValue): string {
   if (data.error) return `inconclusive: ${String(data.error)}`;
   if (kind !== 'regress') return kind === 'perf' ? 'Measurements; no correctness verdict' : 'Coverage observations; no correctness verdict';
   if (data.schema === 'rvw.verdict/2') {
-    const verdict = ['accept', 'reject', 'inconclusive'].includes(String(data.verdict)) ? String(data.verdict) : 'inconclusive';
+    const verdict = gateVerdict(data);
     return `Reported verdict: ${verdict}; tests: ${String(data.tests ?? 'incomplete')}`;
   }
   const tests = Array.isArray(data.tests) ? data.tests : [];
