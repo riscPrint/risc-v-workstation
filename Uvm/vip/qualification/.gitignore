@@ -1,0 +1,3 @@
+# Native run output belongs outside Git.
+/native-*.json
+/out/

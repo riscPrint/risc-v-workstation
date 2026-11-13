@@ -1,5 +1,6 @@
 """Native matrix checks require positive and specific negative evidence."""
 import importlib.util
+import os
 from pathlib import Path
 from types import SimpleNamespace
 import pytest
@@ -51,7 +52,9 @@ def test_corruption_diagnostic_requires_passing_baseline_for_qualification():
 
 def test_published_matrix_parses_and_detection_has_a_passing_baseline():
     import json
-    data=json.loads((ROOT/'Uvm/vip/qualification/native-2026-11-13.json').read_text())
+    data=json.loads(Path(os.environ.get('RVW_RAW_VIP_MATRIX', ROOT/'Uvm/vip/qualification/native-2026-11-13.json')).read_text())
+    if data.get('summary_only'):
+        pytest.skip('Raw native VIP matrix is not tracked. Run Uvm/vip/qualification/run.py --out RUN_ROOT --build-timeout 1800, then set RVW_RAW_VIP_MATRIX to matrix.json to run this evidence check.')
     assert len(data['agents'])==20
     for row in data['agents']:
         if row.get('catches_bad_dut'):

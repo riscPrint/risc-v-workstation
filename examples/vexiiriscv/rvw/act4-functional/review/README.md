@@ -19,7 +19,7 @@ bootstrap and signatures. ECALL and EBREAK always trap; this instruction
 domain excludes trapping instructions. Their instruction-bin holes do not
 prove missing trap tests. Inspect the trap groups separately.
 It does not prove functional completion of an
-extension. Operand, privilege, trap and memory holes remain in the JSON.
+extension. Operand, privilege, trap and memory holes require regenerated raw JSON.
 
 | Extension | Qualified instruction bins | Missing instructions |
 |---|---:|---|

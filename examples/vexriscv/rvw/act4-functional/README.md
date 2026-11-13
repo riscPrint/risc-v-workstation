@@ -5,7 +5,7 @@ The coverage plan is the command's default plan. Coverage includes boot,
 test code and signature checks. Failed prefixes remain in `merged.json`.
 This is not a certification result or isolated test body coverage.
 
-Each profile has these files:
+Regeneration produces these external files for each profile:
 
 - `act4.json`: all ACT4 traces, including failed cases.
 - `riscv-tests.json`: all 49 riscv-tests traces.

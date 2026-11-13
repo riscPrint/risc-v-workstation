@@ -5,7 +5,7 @@ The coverage plan is the command's default plan. Coverage includes boot,
 test code and signature checks. Failed prefixes remain in `merged.json`.
 This is not a certification result or isolated test body coverage.
 
-Each profile has these files:
+Regeneration produces these external files for each profile:
 
 - `act4.json`: all ACT4 traces, including failed cases.
 - `riscv-tests.json`: all 49 riscv-tests traces.
@@ -55,7 +55,7 @@ for the complete failures and strict first-difference comparisons.
 See [the new supervisor coverage review](review/README.md). It adds a
 stable 270-case ACT4 rerun, four generated privilege programs and 394
 generated PMP programs. It has 717 observed and 447 qualified traces.
-The historical corpora above remain unchanged.
+The historical counts above remain unchanged. Raw corpora are no longer tracked.
 
 Run-output JSON files with `summary_only` contain historical counts only.
 They are not inputs to `rvw plan`, `rvw evidence`, or coverage merging.
