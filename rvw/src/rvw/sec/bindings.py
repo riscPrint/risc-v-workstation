@@ -7,7 +7,7 @@ the one design netname that stores it. A binding `csr_signals` map overrides the
 No match, or more than one, is an error that lists the candidates.
 """
 import re
-from rvw.formal.csr_catalog import catalog
+from rvw.csr.catalog import catalog
 
 
 def memory(policy, soc_path):

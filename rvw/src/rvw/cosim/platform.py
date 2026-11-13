@@ -3,6 +3,7 @@ import json
 import re
 from dataclasses import dataclass, field, fields
 from pathlib import Path
+from rvw.csr.catalog import address as csr_address
 
 
 def number(value):
@@ -11,7 +12,7 @@ def number(value):
     return int(value, 0) if isinstance(value, str) else int(value)
 
 
-PMPADDR0 = 0x3b0
+PMPADDR0 = csr_address('pmpaddr0')
 # Interrupts whose pending bit only software sets (no Sstc): never a platform input.
 SOFTWARE_ONLY_IRQS = (1, 5)
 
@@ -26,7 +27,7 @@ def parse_csr_masks(items, xlen, pmp_regions):
     out = {}
     for key, value in items.items():
         lo, _, hi = str(key).partition("-")
-        lo, hi = int(lo, 0), int(hi or lo, 0)
+        lo, hi = csr_address(lo), csr_address(hi or lo)
         mask = number(value)
         if not 0 <= lo <= hi < 4096:
             raise ValueError(f"invalid csr_masks entry {key!r}")

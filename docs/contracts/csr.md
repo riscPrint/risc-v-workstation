@@ -419,3 +419,23 @@ Optional `native_bindings` and `native_inserted` come only from an explicit
 `rvw.checks/1` inventory. Generation uses temporary output and does not modify
 project files. Neither a generated binding nor an inserted check is passing
 execution evidence.
+
+## Shared register data API
+
+`rvw.csr.catalog` is the shared data API. The base and AIA files remain the only
+pinned CSR catalog. The legacy formal import forwards to this API.
+Names, addresses, fields, static aliases and raw WARL IDL come from that catalog.
+The shared loader reads project CSR, CSR-bank and SoC map data.
+Project selections retain explicit reset, legal values and legalization policies.
+The API does not evaluate upstream IDL or relax unsupported-model refusals.
+
+Co-simulation capture lists select names through the API. CSR masks accept names
+or the existing numeric addresses and ranges. Numeric project CSR inputs remain valid.
+UVM RAL and SoC exports read project register projections through the same API.
+The `rvw.soc/1` projection uses MMIO byte addresses and whole-word fields.
+It declares no aliases or WARL rules. It does not reuse architectural CSR numbers
+as bus addresses. Existing access actions, output formats and checker logic stay in place.
+
+`rvw csr show` and `csr_describe` return `rvw.csr-description/1` with a raw
+`definition`. This is metadata only. It has no verification verdict.
+A fast source guard rejects another private pinned catalog or CSR address table.

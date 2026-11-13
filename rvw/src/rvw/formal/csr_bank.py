@@ -5,6 +5,7 @@ This model does not infer conditional AIA aliases or dynamic legalization.
 import json
 import re
 from pathlib import Path
+from rvw.csr.catalog import load_model
 
 MODES={'U':0,'S':1,'M':3}
 OPS=('read','write','read_write','set','clear')
@@ -12,7 +13,7 @@ IDENT=re.compile(r'[A-Za-z_][A-Za-z0-9_]*')
 
 
 def load(path):
-    obj=json.loads(Path(path).read_text())
+    obj=load_model(path)
     if obj.get('schema')!='rvw.csr-bank/1' or obj.get('xlen') not in (32,64):
         raise ValueError('expected rvw.csr-bank/1 with XLEN 32 or 64')
     if set(obj)-{'schema','xlen','banks','views','sequences','modes','setup','binding'}:
@@ -37,7 +38,7 @@ def load(path):
         if not IDENT.fullmatch(v['name']) or v['name'] in views or v['bank'] not in banks:
             raise ValueError('invalid or duplicate CSR view')
         if 'catalog' in v:
-            from .csr_catalog import catalog
+            from rvw.csr.catalog import catalog
             definition=catalog()['registers'][v['catalog']]['definition']
             if definition.get('requires_environment_model') or definition['priv_mode'] not in MODES:
                 raise ValueError('CSR requires an interrupt/hypervisor environment')

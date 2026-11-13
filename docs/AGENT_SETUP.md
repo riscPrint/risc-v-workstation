@@ -589,7 +589,7 @@ Optional tool set: 55 tools. Load MCP profile `debug` with `rvw_tools_load`. Rea
 
 Tests pass, and the next question is what they do not exercise.
 
-Optional tool set: 77 tools. Load MCP profile `verification` with `rvw_tools_load`. Read the tool names in `rvw agent guide --json`. Use `rvw_tools_describe` before a call.
+Optional tool set: 79 tools. Load MCP profile `verification` with `rvw_tools_load`. Read the tool names in `rvw agent guide --json`. Use `rvw_tools_describe` before a call.
 
 1. **run**: Run the suite with coverage collection. `rvw regress run --tier full --rvfi-trace --out <RUN> --json` / MCP `regress_run`
    - If runs complete: go to `functional`.
@@ -629,7 +629,7 @@ Optional tool set: 74 tools. Load MCP profile `formal` with `rvw_tools_load`. Re
 
 The question is cycles, IPC or where a pipeline stalls.
 
-Optional tool set: 53 tools. Load MCP profile `arch` with `rvw_tools_load`. Read the tool names in `rvw agent guide --json`. Use `rvw_tools_describe` before a call.
+Optional tool set: 54 tools. Load MCP profile `arch` with `rvw_tools_load`. Read the tool names in `rvw agent guide --json`. Use `rvw_tools_describe` before a call.
 
 1. **konata**: Run the workload with a Konata pipeline log (adapter option --konata). (manual)
    - If a Konata log: go to `report`.
@@ -645,7 +645,7 @@ Optional tool set: 53 tools. Load MCP profile `arch` with `rvw_tools_load`. Read
 
 A project needs peripheral, lint, multi-run or simulation infrastructure checks.
 
-Optional tool set: 39 tools. Load MCP profile `soc` with `rvw_tools_load`. Read the tool names in `rvw agent guide --json`. Use `rvw_tools_describe` before a call.
+Optional tool set: 40 tools. Load MCP profile `soc` with `rvw_tools_load`. Read the tool names in `rvw agent guide --json`. Use `rvw_tools_describe` before a call.
 
 1. **review**: Review the project map, adapter and required evidence. Choose the tools listed for this workflow. (manual)
 2. **discover**: Describe the selected tool. Load its profile. Keep transport completion separate from verification. MCP `rvw_tools_search`
