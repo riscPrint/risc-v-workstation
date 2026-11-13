@@ -2408,6 +2408,12 @@ costs stay unknown. Shared recovery costs can occur in multiple kinds. Do not
 sum these groups as global lost cycles. Context differences and alias flags
 do not establish causal effects. Project probes own the event bindings; the
 generic reader does not simulate a predictor or infer missing observations.
+`rvw.perf/1` adds `predictions.effects` (additive): per predictor and kind,
+`overall`, `steady_state` (warmup=false and alias=false only) and `by_warmup`,
+`by_alias`, `by_context` maps. Each holds `outcomes`, `correct`, `incorrect`,
+`accuracy` (null when empty) and mispredict-only `mispredict_recovery_cycles`
+and `mispredict_wrong_path_instructions` with `samples`, `unknown`, `sum`, `max`
+and, when observed, `mean`, `p50`, `p95`.
 
 ### Property activation and requirement links
 

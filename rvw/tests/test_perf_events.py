@@ -146,3 +146,24 @@ def test_prediction_refuses_duplicates_and_ended_ids(tmp_path):
                  'I|0|0|0\nR|0|0|0\n' + event):
         with pytest.raises(ValueError):
             read(log(tmp_path, body))
+
+
+def test_prediction_effects_split_warmup_alias_and_context(tmp_path):
+    body = ['I|0|0|0', 'I|1|1|0', 'I|2|2|0', 'I|3|3|0',
+            '#rvw|1|prediction|0|bim|direction|taken|not_taken|8|5|true|false|user',
+            '#rvw|1|prediction|1|bim|direction|taken|taken|0|0|false|false|user',
+            '#rvw|1|prediction|2|bim|direction|taken|not_taken|4|?|false|true|kernel',
+            '#rvw|1|prediction|3|bim|direction|not_taken|not_taken|0|0|?|false|kernel',
+            'R|0|0|0', 'R|1|1|0', 'R|2|2|0', 'R|3|3|0']
+    report = analyze(log(tmp_path, '\n'.join(body)))
+    (row,) = report['predictions']['effects']
+    assert row['predictor'] == 'bim' and row['overall']['accuracy'] == 0.5
+    assert row['by_warmup']['true']['accuracy'] == 0.0 and row['by_warmup']['false']['accuracy'] == 0.5
+    assert row['by_warmup']['?']['outcomes'] == 1          # unknown warmup is its own group
+    assert row['by_alias']['true']['incorrect'] == 1
+    assert row['by_context']['user']['outcomes'] == 2
+    assert row['steady_state']['outcomes'] == 1 and row['steady_state']['accuracy'] == 1.0
+    rec = row['overall']['mispredict_recovery_cycles']
+    assert rec['samples'] == 2 and rec['mean'] == 6 and rec['p50'] == 4 and rec['p95'] == 8
+    assert row['overall']['mispredict_wrong_path_instructions']['unknown'] == 1
+    assert 'steady-state 1.000 (1/1)' in render(report)
