@@ -270,8 +270,15 @@ usage: rvw cosim live [-h] --elf ELF [--core CORE] [--platform PLATFORM]
 
 ```text
 usage: rvw cov [-h] [--project PROJECT]
-    {generate,merge,report,rank,select,closure,isa-diff,isa-check,functional,rtl,prove,mutate}
+    {campaign,generate,merge,report,rank,select,closure,isa-diff,isa-check,functional,rtl,prove,mutate}
     ...
+```
+
+### `rvw cov campaign`
+
+```text
+usage: rvw cov campaign [-h] --settings SETTINGS --work-dir WORK_DIR
+    [--resume] [--json] [--project PROJECT]
 ```
 
 ### `rvw cov generate`
@@ -1390,7 +1397,7 @@ usage: rvw workloads verify [-h] [--json] --build BUILD --out OUT [--oracle
 
 ## MCP tools
 
-The default server exposes 106 built-in tools, including the four job tools.
+The default server exposes the built-in tools listed below, including the four job tools.
 `--only` filters packages. `RVW_MCP_PLUGINS` can add tools.
 `rvw mcp --list --json` returns full input schemas.
 CLI commands without an MCP entry are CLI-only.
@@ -1554,6 +1561,14 @@ Starts a background job: yes.
 Generate a C2 trace from Spike for an ELF, for reference fixtures or later comparison. Writes out (refused if out is the ELF or an existing file that is not a C2 trace) and returns reproduction metadata; runs as a cancellable job.
 
 Arguments: `project`, `elf` (required), `core`, `platform`, `out` (required), `max_instructions`.
+
+Starts a background job: yes.
+
+### `cov_campaign`
+
+Execute bounded ISA candidates through C1 and strict complete Spike checks. Resume validates saved artifacts. CPU-hour metrics remain unqualified.
+
+Arguments: `settings` (required), `work_dir` (required), `resume`.
 
 Starts a background job: yes.
 

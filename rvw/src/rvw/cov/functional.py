@@ -178,7 +178,7 @@ def trace_platform(header, platform=None):
 
 
 @captured.command
-def functional(paths, config=None, platform=None, manifest=None, source_root=None):
+def functional(paths, config=None, platform=None, manifest=None, source_root=None, payload_regions=None):
     saved_paths = captured.current().files(Path(p) for p in paths)
     custom = json.loads(captured.read_text(config)) if config else None
     config = json.loads(json.dumps(DEFAULT))
@@ -197,6 +197,8 @@ def functional(paths, config=None, platform=None, manifest=None, source_root=Non
         generated = plan(manifest, source_root)
         config['groups'] += generated['groups']
         config['isa_plan'] = generated['isa_plan']
+    if payload_regions is not None:
+        config['sampling_policy'] = 'payload-pc-v1'
     sequence_settings = config.get('sequences')
     if sequence_settings is not None:
         from .sequence import groups as sequence_groups
@@ -211,6 +213,8 @@ def functional(paths, config=None, platform=None, manifest=None, source_root=Non
     for item in saved_paths:
         path = item.copy
         if path.suffix == '.json':
+            if payload_regions is not None:
+                raise ValueError('payload sampling requires raw ELF-bound C2 traces')
             saved = json.loads(path.read_text())
             if saved.get('schema') != 'rvw.functional-coverage/1' or saved['config_sha256'] != fingerprint:
                 raise ValueError(f'{path}: incompatible functional coverage plan')
@@ -241,10 +245,15 @@ def functional(paths, config=None, platform=None, manifest=None, source_root=Non
             file_hash = item.sha256
             if file_hash in traces:
                 raise ValueError(f'{path}: duplicate trace content')
+            region = payload_regions.get(file_hash) if payload_regions is not None else None
+            if payload_regions is not None and (not region or region.get('policy') != 'payload-pc-v1'
+                    or first.get('elf_sha256') != region.get('elf_sha256')):
+                raise ValueError('payload region does not bind the trace ELF')
             plat = trace_platform(first, platform)
             aligned_mem = plat.aligned_mem if plat else None
             traces[file_hash] = {"path": item.resolved, "header": first,
                                  "platform": plat.name if plat else None,
+                                 **({'payload_region': region} if region is not None else {}),
                                  "address_convention": {True: "aligned_mem", False: "byte", None: "unknown"}[aligned_mem]}
             previous, order = None, -1
             history = []
@@ -256,6 +265,11 @@ def functional(paths, config=None, platform=None, manifest=None, source_root=Non
                     if row['order'] <= order:
                         raise ValueError(f'{path}:{line_no}: non-increasing RVFI order')
                     order = row['order']
+                    if region is not None and not any(start <= number(row['pc']) < end for start,end in region['ranges']):
+                        previous = None
+                        history.clear()
+                        semantic = Observer()
+                        continue
                     records += 1
                 observed, previous = observations(row, first['xlen'], previous, aligned_mem)
                 if sequence_settings is not None:

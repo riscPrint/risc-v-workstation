@@ -110,6 +110,24 @@ through an absolute `RVW_HOME`. Keep core adapter sources in the core repository
 Use offline sbt after toolchain dependencies are installed. Source-directory settings
 in reusable builds must resolve from `baseDirectory.value`, not the caller's cwd.
 
+### Bounded candidate execution loop
+
+`rvw cov campaign` and `cov_campaign` use `rvw.stimulus-loop/1` settings and
+reports. Settings and limits are defined in `rvw/src/rvw/cov/CAMPAIGN.md`.
+The controller selects remaining integer profile holes. Only conclusive C1 pass
+and complete strict Spike comparison can earn observations. Payload symbols and
+bytes bind sampling to the compiled ELF. Functional report configuration includes
+`sampling_policy=payload-pc-v1`; each trace records its ELF-bound payload region.
+These reports cannot merge with full-trace reports. Setup and termination earn
+no coverage. Generated, unsupported, UNSAT, timeout, compile errors, missing
+traces, mismatches, misses and measured hits remain separate attempt outcomes.
+Reports retain full-plan and supported denominators, input and artifact hashes,
+wall time, controller CPU and reaped-child CPU. Descendant completeness is not
+qualified. Rate stays null. No paired random comparison or C4 acceptance follows.
+State uses immutable C8 generations. Resume pins one generation and checks all
+recorded attempt artifacts and declared input identities. Raw attempts remain
+outside the state generation. Transitive dependency closure is not established.
+
 ### Bounded ISA candidate report
 
 `rvw cov generate` and `cov_generate` return `rvw.stimulus-candidate/1`.

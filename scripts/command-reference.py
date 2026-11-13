@@ -51,7 +51,7 @@ def render():
                         visit(child)
         visit(build_parser())
         lines.extend(['## MCP tools', '',
-                      f'The default server exposes {len(registry.tools)} built-in tools, including the four job tools.',
+                      'The default server exposes the built-in tools listed below, including the four job tools.',
                       '`--only` filters packages. `RVW_MCP_PLUGINS` can add tools.',
                       '`rvw mcp --list --json` returns full input schemas.',
                       'CLI commands without an MCP entry are CLI-only.',
