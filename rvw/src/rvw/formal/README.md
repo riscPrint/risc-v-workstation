@@ -2888,3 +2888,16 @@ W can still arrive before AW. Reset clears pending transaction state.
 A later response to discarded state is an orphan.
 See the read/write dependency rules in
 [Arm IHI 0022H](https://developer.arm.com/-/media/Arm%20Developer%20Community/PDF/IHI0022H_amba_axi_protocol_spec.pdf).
+
+### Flush and forwarding age variants
+
+`fifo_flush` adds explicit flush priority to the FIFO-order template. It
+discards both queued data and current-edge events.
+`store_forward_age` uses a project `older_than` matrix to choose the youngest
+eligible store. It supports circular slot layouts. The existing `store_forward`
+variant retains its declared higher-index-is-younger contract. Both variants
+require a unique forwarding source and compare the selected data unit. Use
+per-byte instances for byte merging. An inconsistent age relation cannot
+silently remove every candidate. The separate `age_matrix` rule checks the
+full active relation. All variants bind through project data and the existing
+`formal template` CLI/MCP interfaces.

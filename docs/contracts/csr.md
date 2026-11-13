@@ -198,3 +198,16 @@ a current-edge response. This applies to AXI4 and AXI4-Lite. Internal
 AW/W pairing can still use current accepted inputs. W can precede AW.
 This follows the read and write dependency rules in Arm IHI 0022H.
 TileLink's separate same-cycle response rules are unchanged.
+
+## Queue flush and age-selected forwarding
+
+Project microarchitecture kinds include `fifo_flush` and `store_forward_age`.
+FIFO flush has priority over current-edge push/pop and clears expected queue
+ownership. Data before the flush cannot be popped afterward.
+Age-selected forwarding takes the existing eligibility masks and a packed
+`older_than` matrix. Bit `i*entries+j` means `i` is older than `j`. A load
+selects the unique eligible entry with no younger eligible peer. Nonempty
+eligibility with no candidate or multiple candidates fails. The project
+must supply actual age observations; slot indices do not define age.
+Each data unit can be one byte. Projects can instantiate separate units for
+byte merging. These rules do not infer speculation, fence or recovery state.

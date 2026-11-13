@@ -66,6 +66,8 @@ Every rule requires `clk` and active-high `reset`.
 | Kind | Ports and contract |
 |---|---|
 | `fifo_order` | `push`, `pop`, `push_data`, `pop_data`. Accepted events; initially empty, no empty bypass. Full simultaneous pop/push is allowed. |
+| `fifo_flush` | FIFO-order ports plus `flush`. Flush discards queued data and current-edge events. The next push starts an empty queue. |
+| `store_forward_age` | Store-forward ports plus row-major `older_than`. Bit `i*entries+j` means store `i` is older than store `j`. Select the unique youngest eligible entry. Slot positions need not follow age. |
 | `pipeline` | `valid`, `ready`, `payload`. Valid and all payload bits remain stable during stalls. |
 | `mutex` | `grants`. At most one bit set. |
 | `arbiter` | `grants`, `requests`, `enabled`. Grants are one-hot and requested. Each enabled request waits at most `bound` cycles, default 8. This is bounded fairness. |
