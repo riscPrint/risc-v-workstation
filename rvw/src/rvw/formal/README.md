@@ -460,7 +460,7 @@ Required project fields:
 | `wrapper` | Project-owned SystemVerilog wrapper template. |
 | `verilog` | Nonempty list of design source paths. |
 | `isa` | `rv32i`, `rv32im`, `rv32ic`, `rv32imc`, or their `rv64` forms. |
-| `nret` | Must be 1 in this increment. Wider retirement is refused. |
+| `nret` | Retirement channels, 1..16. Check channel indices must be below NRET. |
 | `checks` | Exact generated task names. Must include `cover`. |
 | `depth` | Bound from 2 to 200 cycles. |
 | `solver` | `bitwuzla`, `yices`, `z3` or `boolector`. |

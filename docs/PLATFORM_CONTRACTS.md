@@ -188,7 +188,7 @@ errors. Tool input paths must exist when the command consumes them.
 | `debug_module` | `profile` | Debug profile (`rvw.debug-profile/1`) for `rvw debug suite` and `rvw debug serve`. See "C1 debug transport". |
 | `checks` | `settings`, `waivers` | Project adapter settings and waiver file paths. Their format belongs to the adapter. The launcher must consume them. |
 | `query` | `build`, `db` | Build command list and output database path. `rvw query build` calls `build CONFIG OUT`; `--config` and `--out` override the core default and `db`. Query reads use `db` unless `--db` is explicit. |
-| `riscv_formal` | `root`, `wrapper`, `verilog`, `isa`, `nret`, `checks`, `depth`, `solver`, `defines`, `ports`, `check_options`, `instruction_models` | Bounded native riscv-formal settings. See `rvw/src/rvw/formal/README.md`. NRET 1 only; unsupported settings are refused. |
+| `riscv_formal` | `root`, `wrapper`, `verilog`, `isa`, `nret`, `checks`, `depth`, `solver`, `defines`, `ports`, `check_options`, `instruction_models` | Bounded native riscv-formal settings. See `rvw/src/rvw/formal/README.md`. NRET 1..16; unsupported settings are refused. |
 | `formal` | `verilog`, `top`, `checks`, `clock`, `reset` | Defaults for existing formal arguments. `verilog` is a nonempty path list. Explicit arguments override these fields. No proof limits change. |
 
 The project file and expanded environment are captured before parsing and execution.
