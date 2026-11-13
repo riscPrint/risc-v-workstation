@@ -84,3 +84,23 @@ test list. A complete campaign needs exported RTL build adapters for both
 cores. The existing Scala launchers elaborate their own design and cannot be
 used as mutant build adapters without an explicit RTL replacement path.
 
+
+## Detection-power regression
+
+After a native campaign, pin a small reviewed plan and the expected killer for
+each mutant. Use `rvw.mutation-expectations/1` with the exact `mutant_set_sha256`
+from results and a nonempty `mutants` list. Each row has `id`, `killer`, and
+`outcome` using one of the three kill outcomes above.
+
+```sh
+rvw regress mutation --work-dir /path/to/pinned-run \
+  --expectations /path/to/expected-killers.json --budget-s 120 --json
+```
+
+MCP: `regress_mutation`. This is an explicit slow tier command. It always reruns
+the plan and the baseline. Historical detection alone cannot pass. The previous
+result moves to `previous-results.json`. A missing or invalid execution gives
+inconclusive. A surviving mutant or changed killer gives fail. The mutant set hash binds RTL and mutations. A new plan can use changed tests
+with the same mutant set. Pinning the exact
+killer is stricter than retaining some detection. Review a changed killer before
+you update the expectations. There are no qualified bundled core pins yet.

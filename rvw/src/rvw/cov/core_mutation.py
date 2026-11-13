@@ -22,6 +22,10 @@ def digest(path):
     return sha256(Path(path).read_bytes()).hexdigest()
 
 
+def mutant_set_identity(plan):
+    return sha256(json.dumps([plan['rtl_sha256'],plan['mutants']],sort_keys=True).encode()).hexdigest()
+
+
 def write(path, data):
     temp = path.with_suffix('.new')
     temp.write_text(json.dumps(data, indent=2) + '\n')
@@ -145,7 +149,7 @@ def run_campaign(work_dir, budget_s=120, resume=False):
         if digest(path) != expected: raise ValueError('input changed: '+path)
     if digest(out/'original.v') != plan['rtl_sha256']: raise ValueError('original RTL changed')
     plan_hash = digest(out/'plan.json')
-    mutant_set_hash=sha256(json.dumps([plan['rtl_sha256'],plan['mutants']],sort_keys=True).encode()).hexdigest()
+    mutant_set_hash=mutant_set_identity(plan)
     state_file = out/'results.json'
     if state_file.exists():
         if not resume: raise ValueError('results exist; use resume')
@@ -213,7 +217,10 @@ def run_campaign(work_dir, budget_s=120, resume=False):
                             and evidence.get('schema')=='rvw.formal.equiv/1'
                             and evidence.get('status')=='equivalent'):
                         row['state']='equivalent (proved)'
-                    row['test_gap'] = evidence.get('status')=='not_equivalent'
+                    row['test_gap'] = (result is not None and not result.timed_out
+                                       and result.returncode==1
+                                       and evidence.get('schema')=='rvw.formal.equiv/1'
+                                       and evidence.get('status')=='not_equivalent')
             if mutant['id']=='baseline': state['baseline']=row
             else:
                 state['mutants']=[r for r in state['mutants'] if r['id']!=row['id']]+[row]
