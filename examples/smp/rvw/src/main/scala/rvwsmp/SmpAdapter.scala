@@ -20,7 +20,9 @@ object SmpAdapter extends CoreAdapter {
   def isa(config: String) = "rv64ima_zicsr_zifencei"
   override def hartIds(config: String) = 0 until VexiiTop.count(config)
   def sourceDir = new File(sys.env("VEXIIRISCV")).getCanonicalFile
-  override def replayEnv = Seq("VEXIIRISCV" -> sourceDir.getPath, "RVW_VEX_LOCK" -> "vex-mem")
+  override def replayEnv = Seq("VEXIIRISCV" -> sourceDir.getPath, "RVW_VEX_LOCK" -> "vex-mem") ++
+    Seq("RVW_SMP_MAX_DELAY", "RVW_SMP_READY_PERCENT", "RVW_SMP_CLOCK_PERCENT")
+      .flatMap(name => sys.env.get(name).map(name -> _))
   private def report(key: ModelKey, work: File) = RiscvSimConfig.elaborate(key, work,
     VexiiTop.spinalConfig, sourceRoots = Seq(new File(sourceDir, "src/main/scala")))(new SmpTop(key.config))
   override def elaborate(key: ModelKey, work: File) = report(key, work).generatedSourcesPaths.toSeq.map(new File(_))
@@ -33,7 +35,16 @@ object SmpAdapter extends CoreAdapter {
     require(job.hartImages.nonEmpty && job.rvfiTrace, "SMP requires --hart-images and --rvfi-trace")
     require(!job.rvfiCheck && !job.konata && job.irqSchedule.isEmpty && job.socMap.isEmpty,
       "unsupported monitor, Konata, IRQ schedule or SoC map")
+    def setting(name: String, default: Int, min: Int, max: Int): Int = {
+      val value = sys.env.get(name).map(_.toInt).getOrElse(default)
+      require(value >= min && value <= max, s"$name must be $min..$max")
+      value
+    }
+    val maxDelay = setting("RVW_SMP_MAX_DELAY", 3, 0, 1024)
+    val readyPercent = setting("RVW_SMP_READY_PERCENT", 100, 1, 100)
+    val clockPercent = setting("RVW_SMP_CLOCK_PERCENT", 100, 1, 100)
     val ids = hartIds(job.config)
+    val clockStalls = Array.fill(ids.size)(0L)
     val hsmMode = job.config == "hsm2"
     val serialized = job.config == "serial2"
     val commonBoot = serialized || hsmMode
@@ -70,7 +81,9 @@ object SmpAdapter extends CoreAdapter {
     var cycle = 0L
     val result = try SimSession.run(model, job, ctx) { (top, ctl) =>
       val cd = top.clockDomain
+      top.enables #= (BigInt(1) << ids.size)-1
       val random = new scala.util.Random(job.seed)
+      def selected(percent: Int): Boolean = percent == 100 || random.nextInt(100) < percent
       val devices = new Devices(ids.size)
       val privs = top.cores.map(_.host[PrivilegedPlugin].logic)
       case class Response(due: Long, data: BigInt, error: Boolean, id: Int, miss: Boolean = false)
@@ -78,14 +91,14 @@ object SmpAdapter extends CoreAdapter {
       val dataQueues = ids.map(_ => mutable.Queue.empty[Response])
       val fetchDriven = Array.fill(ids.size)(false)
       val dataDriven = Array.fill(ids.size)(false)
-      def delay(): Long = job.memLatency.map(_.toLong).getOrElse(random.nextInt(4).toLong)
+      def delay(): Long = job.memLatency.map(_.toLong).getOrElse(random.nextInt(maxDelay+1).toLong)
       val traps = ids.map(_ => mutable.Queue.empty[(BigInt,BigInt)])
       val irqLevels = Array.fill(ids.size)(BigInt(0))
       // Sample trap values before the upstream probe can report that trap.
       cd.onSamplings {
         for(h <- ids) {
           val tap = top.cores(h).host[TrapTapPlugin].logic
-          if(tap.fire.toBoolean) traps(h).enqueue((tap.epc.toBigInt,tap.tval.toBigInt))
+          if(top.enables.toBigInt.testBit(h) && tap.fire.toBoolean) traps(h).enqueue((tap.epc.toBigInt,tap.tval.toBigInt))
         }
       }
       for(h <- ids) {
@@ -136,6 +149,7 @@ object SmpAdapter extends CoreAdapter {
       cd.onSamplings {
         cycle = ctl.cycle + 1
         devices.time += 1
+        val enabled = top.enables.toBigInt
         for(h <- random.shuffle(ids.toList)) {
           val dut = top.cores(h)
           val p = privs(h)
@@ -146,13 +160,14 @@ object SmpAdapter extends CoreAdapter {
           val ib = top.ports.fetch(h)
           val db = top.ports.lsu(h)
           val iq = fetchQueues(h); val dq = dataQueues(h)
-          if(fetchDriven(h)) { iq.dequeue(); fetchDriven(h)=false }
-          if(dataDriven(h)) { dq.dequeue(); dataDriven(h)=false }
-          if(ib.cmd.valid.toBoolean && ib.cmd.ready.toBoolean) {
+          if(!enabled.testBit(h)) clockStalls(h) += 1
+          if(fetchDriven(h) && enabled.testBit(h)) { iq.dequeue(); fetchDriven(h)=false }
+          if(dataDriven(h) && enabled.testBit(h)) { dq.dequeue(); dataDriven(h)=false }
+          if(enabled.testBit(h) && ib.cmd.valid.toBoolean && ib.cmd.ready.toBoolean) {
             val n = ib.p.dataWidth/8; val a = ib.cmd.address.toLong & ~(n-1L)
             iq.enqueue(Response(cycle+delay(), read(a,n), !inRam(a,n), ib.cmd.id.toInt))
           }
-          if(db.cmd.valid.toBoolean && db.cmd.ready.toBoolean) {
+          if(enabled.testBit(h) && db.cmd.valid.toBoolean && db.cmd.ready.toBoolean) {
             if(serialized) {
               require(memoryOwner.isEmpty, "overlapping serialized memory service")
               memoryOwner = Some(h)
@@ -215,8 +230,7 @@ object SmpAdapter extends CoreAdapter {
             case Some(r) => db.rsp.valid #= true; db.rsp.data #= r.data; db.rsp.error #= r.error; db.rsp.id #= r.id; db.rsp.scMiss #= r.miss; dataDriven(h)=true
             case None => db.rsp.valid #= false
           }
-          ib.cmd.ready #= !done.contains(h)
-          db.cmd.ready #= (!serialized && !done.contains(h))
+          // Ready and clock enables change only after every probe sampled this edge.
         }
         for(h <- ids) {
           top.ports.software(h) #= devices.msip(h)
@@ -224,10 +238,6 @@ object SmpAdapter extends CoreAdapter {
           top.ports.external(h) #= devices.external(h)
         }
         lifecycle.foreach(_.check(ctl.cycle))
-        if(serialized && memoryOwner.isEmpty) {
-          val candidates = ids.filterNot(done.contains)
-          if(candidates.nonEmpty) top.ports.lsu(candidates(random.nextInt(candidates.size))).cmd.ready #= true
-        }
       }
       fork {
         while(true) {
@@ -247,6 +257,18 @@ object SmpAdapter extends CoreAdapter {
           val ready = events.filter(_._1 <= watermark).sortBy(_._1).toVector
           events.filterInPlace(_._1 > watermark)
           ready.foreach(_._2())
+          val nextEnables = ids.foldLeft(BigInt(0)) { (bits,h) =>
+            if(selected(clockPercent)) bits.setBit(h) else bits
+          }
+          top.enables #= nextEnables
+          for(h <- ids) {
+            top.ports.fetch(h).cmd.ready #= (nextEnables.testBit(h) && !done.contains(h) && selected(readyPercent))
+            top.ports.lsu(h).cmd.ready #= (!serialized && nextEnables.testBit(h) && !done.contains(h) && selected(readyPercent))
+          }
+          if(serialized && memoryOwner.isEmpty) {
+            val candidates = ids.filter(h => nextEnables.testBit(h) && !done.contains(h) && selected(readyPercent))
+            if(candidates.nonEmpty) top.ports.lsu(candidates(random.nextInt(candidates.size))).cmd.ready #= true
+          }
           if(done.size == ids.size) ctl.finish(if(done.values.forall(_ == Status.Pass)) Status.Pass else Status.Fail)
           ctl.tick()
         }
@@ -267,6 +289,11 @@ object SmpAdapter extends CoreAdapter {
     details("memory_dependencies") = "unavailable"
     details("memory_service") = "simulation"
     details("cache_coherence") = "not_present"
+    details("timing") = ujson.Obj("seed" -> job.seed, "random_max_delay" -> maxDelay,
+      "ready_percent" -> readyPercent, "clock_enable_percent" -> clockPercent,
+      "fixed_latency" -> job.memLatency.map(v => ujson.Num(v)).getOrElse(ujson.Null),
+      "base_sample_edges" -> RvwJson.num(cycle),
+      "clock_stall_edges" -> ujson.Obj.from(ids.map(h => h.toString -> RvwJson.num(clockStalls(h)))))
     if(hsmMode) details("hsm") = ujson.Obj("starts" -> starts, "entries" -> entered,
       "stops" -> stops, "stopped" -> parked, "ipis" -> ipis, "scope" -> "SBI software lifecycle; no clock/reset/power gating")
     RunOutcome(result._1,result._4,backends.map(_.retired).sum,message=result._3,details=details)

@@ -1,0 +1,37 @@
+{
+  "run": "stress-default3",
+  "status": "pass",
+  "c1_inconclusive": null,
+  "seed": 17,
+  "cycles": 86,
+  "instret": 35,
+  "core_rev": "9f70315deb3390b283995c5b8f1bd38215ecf52b",
+  "tools_rev": "804533a43b19a5bed545abf6f7f335eb7d37ea31",
+  "tools_dirty": true,
+  "rtl_sha256": "b3f7fe7748da19ff3ec859bb2ec735848093510d6edc25f4b6157aba57548bd3",
+  "ordering": "not_checked",
+  "per_hart_retirements": {
+    "0": 11,
+    "1": 12,
+    "2": 12
+  },
+  "hart_status": {
+    "0": "pass",
+    "1": "pass",
+    "2": "pass"
+  },
+  "trace_sha256": "5a6f3a9296b3fc8cfccc5f7f2d4f95b42807b88426fc87ecd9c43db857fda5d2",
+  "timing": {
+    "seed": 17,
+    "random_max_delay": 3,
+    "ready_percent": 100,
+    "clock_enable_percent": 100,
+    "fixed_latency": null,
+    "base_sample_edges": 87,
+    "clock_stall_edges": {
+      "0": 0,
+      "1": 0,
+      "2": 0
+    }
+  }
+}

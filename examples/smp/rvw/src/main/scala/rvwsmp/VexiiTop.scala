@@ -66,7 +66,14 @@ class LockstepTapPlugin extends FiberPlugin {
 }
 
 class SmpTop(config: String) extends Component {
-  val cores = (0 until VexiiTop.count(config)).map(h => VexiiTop(config, h))
+  val enables = in Bits(VexiiTop.count(config) bits)
+  val areas = (0 until VexiiTop.count(config)).map { h =>
+    new ClockEnableArea(enables(h)) {
+      newClockEnable.simPublic()
+      val core = VexiiTop(config, h)
+    }
+  }
+  val cores = areas.map(_.core)
   val ports = spinal.core.fiber.Fiber patch new Area {
     val fetch = cores.map(_.host[vexiiriscv.fetch.FetchCachelessPlugin].logic.bus.toIo())
     val lsu = cores.map(_.host[vexiiriscv.execute.lsu.LsuCachelessPlugin].logic.bus.toIo())

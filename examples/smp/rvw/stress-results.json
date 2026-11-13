@@ -1,0 +1,220 @@
+{
+  "runs": [
+    {
+      "run": "lrsc-a-run",
+      "status": "pass",
+      "c1_inconclusive": null,
+      "seed": 17,
+      "cycles": 2132,
+      "instret": 498,
+      "core_rev": "9f70315deb3390b283995c5b8f1bd38215ecf52b",
+      "tools_rev": "804533a43b19a5bed545abf6f7f335eb7d37ea31",
+      "tools_dirty": true,
+      "rtl_sha256": "628700de10af6e97fb7bfc005d6e1691c0bec90b6cbab1cf66a8507c48caef75",
+      "ordering": "not_checked",
+      "per_hart_retirements": {
+        "0": 249,
+        "1": 249
+      },
+      "hart_status": {
+        "0": "pass",
+        "1": "pass"
+      },
+      "trace_sha256": "180a12152eb688460ac98f6602dedf610cb6f3efa2f41231b11266092eb98da1",
+      "timing": {
+        "seed": 17,
+        "random_max_delay": 11,
+        "ready_percent": 60,
+        "clock_enable_percent": 70,
+        "fixed_latency": null,
+        "base_sample_edges": 2133,
+        "clock_stall_edges": {
+          "0": 585,
+          "1": 603
+        }
+      }
+    },
+    {
+      "run": "lrsc-b-run",
+      "status": "pass",
+      "c1_inconclusive": null,
+      "seed": 17,
+      "cycles": 2132,
+      "instret": 498,
+      "core_rev": "9f70315deb3390b283995c5b8f1bd38215ecf52b",
+      "tools_rev": "804533a43b19a5bed545abf6f7f335eb7d37ea31",
+      "tools_dirty": true,
+      "rtl_sha256": "628700de10af6e97fb7bfc005d6e1691c0bec90b6cbab1cf66a8507c48caef75",
+      "ordering": "not_checked",
+      "per_hart_retirements": {
+        "0": 249,
+        "1": 249
+      },
+      "hart_status": {
+        "0": "pass",
+        "1": "pass"
+      },
+      "trace_sha256": "180a12152eb688460ac98f6602dedf610cb6f3efa2f41231b11266092eb98da1",
+      "timing": {
+        "seed": 17,
+        "random_max_delay": 11,
+        "ready_percent": 60,
+        "clock_enable_percent": 70,
+        "fixed_latency": null,
+        "base_sample_edges": 2133,
+        "clock_stall_edges": {
+          "0": 585,
+          "1": 603
+        }
+      }
+    },
+    {
+      "run": "amo-run",
+      "status": "pass",
+      "c1_inconclusive": null,
+      "seed": 23,
+      "cycles": 35860,
+      "instret": 8326,
+      "core_rev": "9f70315deb3390b283995c5b8f1bd38215ecf52b",
+      "tools_rev": "804533a43b19a5bed545abf6f7f335eb7d37ea31",
+      "tools_dirty": true,
+      "rtl_sha256": "628700de10af6e97fb7bfc005d6e1691c0bec90b6cbab1cf66a8507c48caef75",
+      "ordering": "not_checked",
+      "per_hart_retirements": {
+        "0": 4163,
+        "1": 4163
+      },
+      "hart_status": {
+        "0": "pass",
+        "1": "pass"
+      },
+      "trace_sha256": "2ee26c85efdc53962a6711786fcf7cc90627ad021c0d8dcf5693f4a91418ac65",
+      "timing": {
+        "seed": 23,
+        "random_max_delay": 11,
+        "ready_percent": 60,
+        "clock_enable_percent": 70,
+        "fixed_latency": null,
+        "base_sample_edges": 35861,
+        "clock_stall_edges": {
+          "0": 10717,
+          "1": 10830
+        }
+      }
+    },
+    {
+      "run": "random-run",
+      "status": "pass",
+      "c1_inconclusive": null,
+      "seed": 7,
+      "cycles": 230,
+      "instret": 39,
+      "core_rev": "9f70315deb3390b283995c5b8f1bd38215ecf52b",
+      "tools_rev": "804533a43b19a5bed545abf6f7f335eb7d37ea31",
+      "tools_dirty": true,
+      "rtl_sha256": "628700de10af6e97fb7bfc005d6e1691c0bec90b6cbab1cf66a8507c48caef75",
+      "ordering": "not_checked",
+      "per_hart_retirements": {
+        "0": 17,
+        "1": 22
+      },
+      "hart_status": {
+        "0": "pass",
+        "1": "pass"
+      },
+      "trace_sha256": "d5e38745e940b51cb5981e79d5fcb31d5bfcd52c7c7adbceb08dc1472a141e1f",
+      "timing": {
+        "seed": 7,
+        "random_max_delay": 11,
+        "ready_percent": 60,
+        "clock_enable_percent": 70,
+        "fixed_latency": null,
+        "base_sample_edges": 231,
+        "clock_stall_edges": {
+          "0": 66,
+          "1": 77
+        }
+      }
+    },
+    {
+      "run": "hsm-run",
+      "status": "pass",
+      "c1_inconclusive": null,
+      "seed": 17,
+      "cycles": 2813,
+      "instret": 520,
+      "core_rev": "9f70315deb3390b283995c5b8f1bd38215ecf52b",
+      "tools_rev": "804533a43b19a5bed545abf6f7f335eb7d37ea31",
+      "tools_dirty": true,
+      "rtl_sha256": "cb5ef6ffbf4a5e00e4d5d821b784ec027242fd102a0b179bbb99cdd5a0585911",
+      "ordering": "not_checked",
+      "per_hart_retirements": {
+        "0": 332,
+        "1": 188
+      },
+      "hart_status": {
+        "0": "pass",
+        "1": "pass"
+      },
+      "trace_sha256": "792001a401b975259b82949f2562f7ad8858e51dfcb8b3aac2aeacc9ba6aff56",
+      "timing": {
+        "seed": 17,
+        "random_max_delay": 11,
+        "ready_percent": 60,
+        "clock_enable_percent": 70,
+        "fixed_latency": null,
+        "base_sample_edges": 2814,
+        "clock_stall_edges": {
+          "0": 807,
+          "1": 798
+        }
+      },
+      "hsm": {
+        "starts": 2,
+        "entries": 2,
+        "stops": 1,
+        "stopped": 1,
+        "ipis": 2,
+        "scope": "SBI software lifecycle; no clock/reset/power gating"
+      }
+    },
+    {
+      "run": "serial-run",
+      "status": "pass",
+      "c1_inconclusive": null,
+      "seed": 23,
+      "cycles": 152,
+      "instret": 30,
+      "core_rev": "9f70315deb3390b283995c5b8f1bd38215ecf52b",
+      "tools_rev": "804533a43b19a5bed545abf6f7f335eb7d37ea31",
+      "tools_dirty": true,
+      "rtl_sha256": "4f2be8aa7efc5ed2cd146aa3d099f190df9f54c4343c976c374e5d0b0ddb14c6",
+      "ordering": "not_checked",
+      "per_hart_retirements": {
+        "0": 15,
+        "1": 15
+      },
+      "hart_status": {
+        "0": "pass",
+        "1": "pass"
+      },
+      "trace_sha256": "f512753bc624bacb744ced95bc28830a95c6da8f6fea98d71ec4ffcfc506676b",
+      "timing": {
+        "seed": 23,
+        "random_max_delay": 11,
+        "ready_percent": 60,
+        "clock_enable_percent": 70,
+        "fixed_latency": null,
+        "base_sample_edges": 153,
+        "clock_stall_edges": {
+          "0": 35,
+          "1": 43
+        }
+      }
+    }
+  ],
+  "replay": {
+    "status": "identical",
+    "sha256": "180a12152eb688460ac98f6602dedf610cb6f3efa2f41231b11266092eb98da1"
+  }
+}
