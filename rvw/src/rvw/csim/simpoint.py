@@ -133,6 +133,8 @@ def choose(path: Path, interval: int, max_k: int = 10, dims: int = 15, seed: int
     for k in range(1, min(max_k, len(pts)) + 1):
         cents, assign = kmeans(pts, k, seed + k)
         runs.append((k, cents, assign, bic(pts, cents, assign)))
+    finite = [r for r in runs if math.isfinite(r[3])]
+    runs = finite or [runs[0][:3] + (0.0,)]
     lo, hi = min(r[3] for r in runs), max(r[3] for r in runs)
     # Smallest k whose BIC reaches `threshold` of the observed BIC range (the SimPoint rule).
     pick = next(r for r in runs if hi == lo or (r[3] - lo) / (hi - lo) >= threshold)

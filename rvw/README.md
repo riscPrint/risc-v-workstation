@@ -149,3 +149,9 @@ New Spinal/sbt core: use [`rvw init`](src/rvw/init/README.md) to create a valid 
 
 See the complete [CLI and MCP reference](../docs/COMMAND_REFERENCE.md) for command paths,
 options and built-in tool arguments. The reference is checked against the code.
+
+## Sampled RTL IPC
+
+`rvw sample STUDY.json --out RUN_ROOT --interval 10000 --max-k 8 --warmup 1000`
+joins Spike BBVs, checkpoints, project bootstrap adapters and checked RTL intervals.
+See [the sampled flow](src/rvw/sample/README.md). Native sampling error is unmeasured.
