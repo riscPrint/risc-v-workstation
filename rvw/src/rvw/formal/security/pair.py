@@ -66,6 +66,14 @@ def generate(plan):
     return '\n'.join(body)
 
 
+def proof_settings(plan):
+    mode=plan.get('mode','prove')
+    depth=plan.get('depth',20)
+    if mode not in ('prove','bmc') or type(depth) is not int or not 1 <= depth <= 128:
+        raise ValueError('pair mode must be prove or bmc; depth must be in 1..128')
+    return mode,depth,('smtbmc:yices' if mode=='bmc' else 'abc:pdr')
+
+
 def run(args):
     out=Path(args.out).resolve();out.mkdir(parents=True,exist_ok=False)
     started=time.monotonic()
@@ -78,6 +86,9 @@ def run(args):
             return left
         path=Path(args.manifest).resolve();plan=json.loads(path.read_text())
         if plan.get('schema')!='rvw.security-pair/1':raise ValueError('expected rvw.security-pair/1')
+        mode,depth,engine=proof_settings(plan)
+        result['proof_kind']='bounded' if mode=='bmc' else 'unbounded'
+        result['depth']=depth if mode=='bmc' else None
         wrapper=generate(plan)
         if plan['top']=='rvw_security_pair':raise ValueError('reserved top')
         raw=(path.parent/plan['rtl']).read_bytes()
@@ -96,13 +107,13 @@ def run(args):
         if any(c['type'] in forbidden for c in mod['cells'].values()):raise ValueError('DUT formal properties and nondeterministic cells are refused')
         (out/'pair.sv').write_text(wrapper)
         proof=flow([out/'dut.v',out/'pair.sv'],'rvw_security_pair',plan['clock'],plan['reset'],
-                   out/'proof',20,'abc:pdr',budget(),'prove',{plan['top']:plan['ports']})
+                   out/'proof',depth,engine,budget(),mode,{plan['top']:plan['ports']})
         result['proof']=proof
         declared=sum(plan['ports'][name]['width'] for name in plan.get('reset_values',{}))
         total=sum(p['width'] for p in plan['ports'].values() if p['direction']=='output')
         result['reset_coverage']={'declared_bits':declared,'output_bits':total,
                                   'proved_bits':declared if proof.get('status')=='pass' else 0,
-                                  'scope':'declared output reset values only; no internal register coverage claim'}
+                                  'scope':('bounded declared output reset values only' if mode=='bmc' else 'declared output reset values only')+'; no internal register coverage claim'}
         if proof.get('status') in ('pass','fail'):result['status']=proof['status']
         result['semantics']='equal architectural observation prefixes imply equal simultaneous digital observation samples'
         result['limits']='Declared digital channels and reset only. No physical leakage or whole-core security claim. Architectural observation timing is part of the declared contract.'

@@ -253,3 +253,13 @@ transaction abstraction. `memory_mapping.gold` and `.gate` record the backend,
 semantics and `state_bits`, which counts all mapped register Q bits. The field
 does not measure memory capacity. Legal aliases replace debug names with array
 subscripts. Bit wiring and net attributes are preserved.
+
+## Bounded two-copy security checks
+
+A `rvw.security-pair/1` manifest can select `mode: "bmc"` and `depth` in 1..128.
+The default remains `mode: "prove"`, with the ABC PDR backend. Bounded mode uses
+`smtbmc:yices`. The result records `proof_kind: "bounded"` and its `depth`.
+An unbounded result records `proof_kind: "unbounded"` and a null depth. A bounded
+`pass` covers only the recorded bound. It does not imply an inductive proof.
+Reset-value coverage uses the same bound. Its scope field states that limit.
+Invalid modes and bounds produce inconclusive evidence before mapping the DUT.
