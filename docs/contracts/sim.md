@@ -177,3 +177,14 @@ This map is a build record, not a complete captured C4 identity. Its C1
 `source` and `tools` inventories are empty. Such runs must not earn C4 reuse
 or acceptance. The probe reports complete C2 only after its terminal condition.
 A cycle-bound timeout has status `timeout`. Build failure returns inconclusive.
+
+### Blocking TLM memory timing
+
+`TlmMemory` applies transaction bytes at call time and adds configured latency
+to the blocking transport delay annotation. It never waits or retains payload
+pointers. A caller must consume the delay before it publishes completion.
+The supplied SystemC bridge has one initiator and one outstanding transaction.
+It samples RTL requests at falling edges and consumes a 2 ns delay before the
+next rising edge of a 10 ns clock. The target alone has loosely timed
+semantics. No multi-initiator ordering, DMI, temporal decoupling or cycle-accurate
+device timing is implied.
