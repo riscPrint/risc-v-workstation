@@ -950,7 +950,10 @@ passed in 2,135 cycles with 236 CPU retirements and 33 DMA write/read pairs.
 The [optional SMP host](../SpinalSoc/examples/smp/README.md) keeps the existing
 cacheless hart and RAM interfaces. It routes 32-bit peripheral accesses through
 the composer. Host-owned RAM keeps its software map without a duplicate RTL
-memory. External-IP import and composed debug-module integration remain work.
+memory. The [external-IP importer](../SpinalSoc/examples/import/README.md) uses an
+explicit TOML port/bus/register description. A pinned OpenCores UART passed
+23 checks, two transmit frames and one receive frame through the composer
+at seed 31 on Icarus. Composed debug-module integration remains work.
 The existing standalone SMP example is unchanged. The optional two-hart test
 passed in 133 cycles at seed 31. Retirements were 21 and 22. Each hart
 completed two RTL GPIO accesses and a RAM store/load before its own tohost.

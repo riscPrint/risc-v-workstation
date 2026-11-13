@@ -93,3 +93,4 @@ Principles (from `ROADMAP.md`):
 - [Probe declaration checks](contracts/probes.md)
 
 - [ACT4 suite builds](contracts/act4.md)
+- [External SoC IP import](contracts/soc-ip.md)

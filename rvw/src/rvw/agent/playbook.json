@@ -1274,6 +1274,7 @@
         "soc_observe_pack",
         "soc_pair",
         "soc_peripheral",
+        "soc_import_ip",
         "soc_verify"
       ]
     },

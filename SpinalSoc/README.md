@@ -383,3 +383,18 @@ Hart retirements were 21 and 22. Both harts completed, each with two RTL GPIO
 accesses and three external RAM data requests. The pinned core dependencies
 were private cached class copies. Their source rebuild and standalone SMP C1
 campaigns were NOT RUN for this change.
+
+## External Verilog IP
+
+`rvw soc import-ip` accepts explicit TOML port, bus and register descriptions.
+It generates an APB3 wrapper and composer binder for APB3 or classic Wishbone
+IP. [The external UART example](examples/import/README.md) uses pinned
+OpenCores RTL outside the repository. It captures source hashes and checks
+registers and serial pins through the composed fabric. Imported declarations
+are project claims until native tests check them. IP-XACT bus import and port
+inference are outside this profile.
+
+The pinned imported UART passed 23 directed checks, two transmit frames and
+one receive frame through the composer at seed 31 on Icarus. The UART VIP
+checked the serial bytes. The wrapper also compiled and elaborated with
+SpinalHDL 1.15.0. This test executes no CPU and is not full UART qualification.

@@ -526,3 +526,11 @@ from unproved temporal obligations.
 how to supply them. JSON uses `missing_bindings`, `binding_help`, and
 `needed_evidence`. The text report prints the same instructions. Supplied
 bindings still need native evidence. A generated monitor is not a pass.
+## External Verilog IP
+
+`rvw soc import-ip DESCRIPTOR --root RTL_ROOT --base ADDRESS --out NEW_DIR`
+uses a small TOML description of APB3 or classic Wishbone ports and registers.
+MCP: `soc_import_ip`. It captures declared RTL with hashes and generates an
+APB3 wrapper, Scala binder and map region. It does not download or qualify IP.
+See [the contract](../../../../docs/contracts/soc-ip.md) and
+[the OpenCores UART example](../../../../SpinalSoc/examples/import/README.md).

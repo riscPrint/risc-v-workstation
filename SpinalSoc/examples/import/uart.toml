@@ -1,0 +1,61 @@
+schema = "rvw.soc-ip/1"
+name = "external_uart"
+module = "uart_top"
+bus = "wishbone"
+window_size = 32
+address_bits = 3
+data_bits = 8
+address_shift = 2
+defines = ["DATA_BUS_WIDTH_8"]
+sources = ["uart_top.v", "uart_wb.v", "uart_regs.v", "uart_tfifo.v", "uart_rfifo.v", "uart_transmitter.v", "uart_receiver.v", "uart_sync_flops.v", "raminfr.v"]
+
+[signals]
+clock = "wb_clk_i"
+reset = "wb_rst_i"
+address = "wb_adr_i"
+wdata = "wb_dat_i"
+rdata = "wb_dat_o"
+write = "wb_we_i"
+cycle = "wb_cyc_i"
+strobe = "wb_stb_i"
+ready = "wb_ack_o"
+byte_select = "wb_sel_i"
+irq = "int_o"
+
+[ports.srx_pad_i]
+direction = "in"
+width = 1
+[ports.stx_pad_o]
+direction = "out"
+width = 1
+[ports.cts_pad_i]
+direction = "in"
+width = 1
+[ports.dsr_pad_i]
+direction = "in"
+width = 1
+[ports.ri_pad_i]
+direction = "in"
+width = 1
+[ports.dcd_pad_i]
+direction = "in"
+width = 1
+[ports.rts_pad_o]
+direction = "out"
+width = 1
+[ports.dtr_pad_o]
+direction = "out"
+width = 1
+
+[[registers]]
+name = "scratch"
+offset = 28
+width = 8
+access = "rw"
+reset = 0
+[[registers]]
+name = "line_control"
+offset = 12
+width = 8
+access = "rw"
+reset = 3
