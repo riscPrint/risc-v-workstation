@@ -63,7 +63,7 @@ def check_online(stream, model, platform, *, stop, reproduction, history=10, syn
 
 
 def launch_online(command, model, platform, *, out, reproduction, timeout=120,
-                  env=None, history=10, sync=SYNC_KINDS, grace=20):
+                  env=None, history=10, sync=SYNC_KINDS, grace=20, lockstep=False):
     """Launch a C1 adapter which writes flushed C2 to OUT/rvfi.jsonl.
 
     The caller supplies a captured ELF in command and captured reference identity.
@@ -88,6 +88,14 @@ def launch_online(command, model, platform, *, out, reproduction, timeout=120,
     stop_lock = threading.Lock()
     environment = dict(os.environ if env is None else env)
     environment['RVW_RVFI_FLUSH'] = '1'
+    listener = None
+    if lockstep:
+        import socket
+        listener = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        listener.bind(('127.0.0.1', 0))
+        listener.listen(1)
+        listener.settimeout(timeout)
+        environment['RVW_COSIM_PORT'] = str(listener.getsockname()[1])
 
     def signal_group(pid, sig):
         try:
@@ -155,9 +163,21 @@ def launch_online(command, model, platform, *, out, reproduction, timeout=120,
 
     worker = threading.Thread(target=simulate, name='rvw-live-simulator')
     worker.start()
+    completed_lockstep = False
     try:
-        result = check_online(lines(), model, platform, stop=stop,
-                              reproduction=reproduction, history=history, sync=sync)
+        if listener is not None:
+            from .lockstep import serve_connection
+            connection, _ = listener.accept()
+            with connection:
+                connection.settimeout(timeout)
+                result = serve_connection(connection, model, platform, reproduction=reproduction,
+                                          history=history, sync=sync)
+            completed_lockstep = result['status'] == 'match'
+            if not completed_lockstep:
+                stop()
+        else:
+            result = check_online(lines(), model, platform, stop=stop,
+                                  reproduction=reproduction, history=history, sync=sync)
     except (ValueError, StopIteration) as exc:
         empty = isinstance(exc, StopIteration) or str(exc) == 'trace contains no instructions or traps'
         if done.is_set() and outcome and outcome[0].timed_out and empty:
@@ -172,9 +192,11 @@ def launch_online(command, model, platform, *, out, reproduction, timeout=120,
         raise
     finally:
         # Do not leave the process runner behind on cancellation or parser failure.
-        if not done.is_set():
+        if not done.is_set() and not completed_lockstep:
             stop()
         worker.join()
+        if listener is not None:
+            listener.close()
         for timer in timers:
             timer.cancel()
             timer.join()

@@ -31,6 +31,7 @@ def register(subparsers):
                 cmd.add_argument("--trace", required=True, type=Path)
             else:
                 import argparse
+                cmd.add_argument("--lockstep", action="store_true", help="block the simulator until each C2 record is checked")
                 cmd.add_argument("--out", required=True, type=Path, help="new simulator output directory")
                 cmd.add_argument("--simulator", nargs=argparse.REMAINDER, required=True,
                                  help="adapter command; use {elf} and {out} placeholders")
@@ -91,7 +92,7 @@ def calculate(args):
                         from .online import launch_online
                         command = [part.replace("{elf}", str(args.elf)).replace("{out}", str(args.out))
                                    for part in args.simulator]
-                        result = launch_online(command, model, platform, out=args.out,
+                        result = launch_online(command, model, platform, lockstep=getattr(args, "lockstep", False), out=args.out,
                                                reproduction=inputs.metadata(), timeout=args.timeout,
                                                env=inputs.child_env, history=args.history, sync=sync)
                     else:
@@ -101,7 +102,7 @@ def calculate(args):
                     model = None
             inputs.capture.verify_tools()
             result["reproduction"] = inputs.metadata()
-            code = 3 if result["status"] == "inconclusive" else 1 if result["status"] == "mismatch" else 0
+            code = 2 if result["status"] == "error" else 3 if result["status"] == "inconclusive" else 1 if result["status"] == "mismatch" else 0
     except CaptureError as exc:
         result = {"schema": "rvw.cosim/1", "status": "inconclusive", "cause": exc.cause,
                   "message": str(exc)}

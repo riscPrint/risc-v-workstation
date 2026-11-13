@@ -88,7 +88,7 @@ def differences(actual, expected, fields):
             for k in fields if actual[k] != expected[k]}
 
 
-def check(trace_path, model, platform, history=10, sync=SYNC_KINDS):
+def check(trace_path, model, platform, history=10, sync=SYNC_KINDS, *, ordered_events=False):
     """Compare a C2 trace with `model`. `sync` lists the enabled synchronization kinds
     (SYNC_KINDS); sync=() turns all of them off."""
     enabled = set(sync)
@@ -177,7 +177,7 @@ def check(trace_path, model, platform, history=10, sync=SYNC_KINDS):
     try:
         if trace.header["xlen"] != platform.xlen or trace.header["isa"].lower() != platform.isa.lower():
             raise ValueError("trace ISA/XLEN must exactly match the selected platform")
-        records = irq_first_by_cycle(iter(trace))
+        records = iter(trace) if ordered_events else irq_first_by_cycle(iter(trace))
         reference_end = None
         for actual in records:
             last_cycle = actual["cycle"]
