@@ -90,9 +90,16 @@ test matrix, seed matrix and the pinned Accellera identity.
 
 Every source input must be within `source_repo`. Each selected revision
 must match the compiled input bytes. A source change requires a fresh build.
-The initial bridge accepts pure SV sources with no custom `build_args`.
-DPI and custom native libraries require additional dependency capture and
-are refused. Failed, empty or incomplete matrices cannot pass. Existing C4
+Pure SV sources need no native dependency declaration. A DPI bench or a
+bench with custom `build_args` must declare `native_dependencies` in its
+manifest. The build hashes those files and all files in declared directories.
+The runner checks their bytes before execution. The C4 identity and capture
+include those hashes and files. Project-owned dependency sources must also
+match the selected revision. Generated inputs outside the source repository
+need an explicit native dependency declaration. The project must list every
+DPI header, runtime library, generated image and other native input. A missing
+declaration is refused for custom builds. This does not infer native library
+dependencies from arbitrary compiler options. Failed, empty or incomplete matrices cannot pass. Existing C4
 dirty-source and incomplete-identity checks still apply.
 
 The native regression's full C1/C3 logs remain in the output path printed

@@ -113,3 +113,15 @@ and explicit protocol pin bindings. Port names alone do not establish a bus.
 Required fields are `bus`, `profile`, `bindings` and `scenario`. The selected bus
 must be a top-level database bundle. The scenario is copied from a path relative
 to the adapter. This pyuvm path retains the generated positive-check requirement.
+## Explicit UVM native dependencies
+
+A `rvw.uvm/1` manifest can declare `native_dependencies` as file or directory
+paths relative to the manifest. The build records all declared file bytes in
+`native_dependency_sha256`. It checks those bytes after compilation and before
+each simulation. C4 includes the hashes in its identity and captures the files.
+Native source inputs within the source repository must match the selected
+revision. External generated inputs must be declared and hashed explicitly.
+A custom build without native dependencies remains refused by the C4 bridge.
+Projects must declare the complete DPI header, runtime library and generated
+input set. The flow does not infer dependencies from arbitrary build arguments.
+A native dependency declaration alone does not establish ABI or runtime support.

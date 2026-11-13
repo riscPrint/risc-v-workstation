@@ -17,13 +17,13 @@ def load(manifest):
     path = Path(manifest).resolve(strict=True)
     data = json.loads(path.read_text())
     allowed = {'schema', 'name', 'top', 'sources', 'include_dirs', 'defines',
-               'build_args', 'plusargs', 'tests', 'register_map', 'bindings'}
+               'build_args', 'plusargs', 'tests', 'register_map', 'bindings', 'native_dependencies'}
     if data.get('schema') != 'rvw.uvm/1' or set(data) - allowed:
         raise ValueError('expected rvw.uvm/1 manifest with supported fields')
     for key in ('name', 'top'):
         if not isinstance(data.get(key), str) or not re.fullmatch(r'[A-Za-z_]\w*', data[key]):
             raise ValueError(f'invalid {key}')
-    for key in ('sources', 'include_dirs', 'defines', 'build_args', 'plusargs', 'tests'):
+    for key in ('sources', 'include_dirs', 'defines', 'build_args', 'plusargs', 'tests', 'native_dependencies'):
         value = data.setdefault(key, [])
         if not isinstance(value, list) or not all(isinstance(x, str) and x for x in value):
             raise ValueError(f'{key} must be a string list')
@@ -33,7 +33,7 @@ def load(manifest):
         raise ValueError('invalid UVM test name')
     if any(not a.startswith('+') or a.startswith(('+UVM_TESTNAME', '+verilator+seed')) for a in data['plusargs']):
         raise ValueError('plusargs cannot override test or seed')
-    for key in ('sources', 'include_dirs'):
+    for key in ('sources', 'include_dirs', 'native_dependencies'):
         data[key] = [str((path.parent / p).resolve(strict=True)) for p in data[key]]
     if data.get('register_map'):
         data['register_map'] = str((path.parent / data['register_map']).resolve(strict=True))
@@ -63,6 +63,8 @@ def build(manifest, out, *, archive=None, verilator='verilator', timeout=600, re
     if data.get('register_map'):
         inputs.append(Path(data['register_map']))
     hashes = {str(p): uvm.sha(p) for p in inputs}
+    from .native_inputs import capture
+    native_hashes = capture(data['native_dependencies'])
     if archive is None:
         archive = out / 'uvm.tar.gz'
         with urllib.request.urlopen(uvm.URL, timeout=30) as src, Path(archive).open('wb') as dst:
@@ -102,8 +104,14 @@ int main(int argc, char** argv) {{
     good = not result.timed_out and result.returncode == 0 and (out / 'obj/simulation').is_file()
     if any(not Path(p).is_file() or uvm.sha(p) != digest for p, digest in hashes.items()):
         good = False
+    from .native_inputs import verify
+    try:
+        verify(native_hashes)
+    except ValueError:
+        good = False
     report = {'schema': 'rvw.uvm-build/1', 'status': 'pass' if good else 'error',
               'manifest': data, 'command': command, 'input_sha256': hashes,
+              'native_dependency_sha256': native_hashes,
               'uvm_commit': uvm.COMMIT, 'uvm_archive_sha256': uvm.ARCHIVE_SHA256,
               'binary_sha256': uvm.sha(out / 'obj/simulation') if good else None}
     write_json(out / 'build.json', report)
@@ -133,6 +141,8 @@ def run(build_dir, out, *, test, seed=1, timeout=120):
         raise ValueError('build failed or test not declared')
     if any(not Path(p).is_file() or uvm.sha(p) != digest for p, digest in built['input_sha256'].items()):
         raise ValueError('build inputs changed; rebuild the bench')
+    from .native_inputs import verify
+    verify(built.get('native_dependency_sha256', {}))
     binary = build_dir / 'obj/simulation'
     if uvm.sha(binary) != built['binary_sha256']:
         raise ValueError('simulation binary changed')
