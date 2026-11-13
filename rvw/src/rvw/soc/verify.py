@@ -238,7 +238,7 @@ def verify(source, out, manifest=None, timeout=120):
             if row['kind'] in ('uvm', 'vip') and entry.get('composition') and entry.get('classpath_file'):
                 from .uvm_run import run as run_uvm
                 report = run_uvm(entry['composition'],out/(row['kind']+'-run'),Path(entry['classpath_file']).read_text().strip(),
-                                 build_args=entry.get('build_args',[]),idle_inputs=entry.get('idle_inputs'),timeout=timeout,expected_map=source,profile=row["kind"])
+                                 build_args=entry.get('build_args',[]),idle_inputs=entry.get('idle_inputs'),timeout=timeout,expected_map=source,profile=row["kind"],lock=entry.get("lock", "sbt-soc"))
                 row.update(generated=report['generated'],ran=report['ran'],result=report['status'],details=report,complete=report['status']=='pass')
                 row.pop('reason',None)
             if row['kind'] == 'decode' and entry.get('classpath_file'):
@@ -270,6 +270,11 @@ def verify(source, out, manifest=None, timeout=120):
                 execute(row, settings.get(row['kind'], {}), root, out, timeout)
         except (OSError, ValueError, KeyError, TypeError, QueryError) as exc:
             row['reason'] = str(exc)
+    from .binding_help import diagnose
+    selected_model = load(source)
+    for row in rows:
+        if row['result'] == 'inconclusive':
+            row.update(diagnose(row['kind'], settings.get(row['kind'], {}), selected_model))
     complete = all(r['generated'] and r.get('complete', True) and r['ran'] and
                    r['result'] in ('pass','proven','findings','protected') for r in rows)
     status = 'fail' if any(r['result']=='fail' for r in rows) else (
@@ -281,6 +286,13 @@ def verify(source, out, manifest=None, timeout=120):
 
 
 def table(result):
-    return '\n'.join(['kind | generated | ran | result', '--- | --- | --- | ---'] + [
+    text = '\n'.join(['kind | generated | ran | result', '--- | --- | --- | ---'] + [
         f"{r['kind']} | {'yes' if r['generated'] else 'no'} | {'yes' if r['ran'] else 'no'} | {r['result']}"
         for r in result['checks']])
+
+    for row in result['checks']:
+        for binding, hint in row.get('binding_help', {}).items():
+            text += f"\n{row['kind']}: missing {binding}. {hint}"
+        if row.get('needed_evidence') and not row.get('missing_bindings'):
+            text += f"\n{row['kind']}: {row.get('reason', row['needed_evidence'])}"
+    return text

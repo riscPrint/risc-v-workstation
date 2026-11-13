@@ -501,3 +501,21 @@ and load its images. ELF preload into host memory is rejected. Host binders
 accept no domain, export or interrupt options. Composition supports RV32 and
 RV64 platform metadata with 32 physical address bits. The APB fabric remains
 32 bits. RV64 memory access conversion belongs to the host wrapper.
+## Missing verification bindings
+
+Each inconclusive SoC verification row contains `missing_bindings` and
+`binding_help`. The first lists exact manifest field paths. The second maps
+those paths to instructions for supplying the binding. RAM-only maps also
+name missing register declarations. A supplied command with insufficient
+evidence has no missing command binding; `needed_evidence` explains the
+required fresh result. The text table prints the same per-kind instructions.
+Generation and binding diagnostics never change a verification verdict.
+
+Composition `uvm` and `vip` consumers accept `lock` to select the sbt build
+lock. The default is `sbt-soc`. Use a private project lock when compilation
+writes only to an isolated checkout. The lock does not change check scope.
+
+The independent-master composition benches accept known-reset readable
+registers of 8, 16 or 32 bits on the 32-bit bus. Subword register values use
+their declared width in the register oracle. This permits the actual UART
+register width without declaring unused upper bits as storage.

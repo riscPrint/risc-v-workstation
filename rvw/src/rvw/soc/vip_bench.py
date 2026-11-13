@@ -11,7 +11,7 @@ def generate(directory):
         if region['kind'] != 'mmio':
             continue
         names = [region['name']+'.'+reg['name'] for reg in region['registers']
-                 if reg['width']==32 and reg['access']!='w' and reg['reset'] is not None]
+                 if reg['width'] in (8,16,32) and reg['access']!='w' and reg['reset'] is not None]
         if not names:
             raise ValueError('VIP bench needs expected readable registers for ' + region['name'])
         groups[region['name']] = names
