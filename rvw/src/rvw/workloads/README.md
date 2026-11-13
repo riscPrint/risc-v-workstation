@@ -200,3 +200,8 @@ The [seven-workload native sample](../../../../Arch/ooo/evaluation/README.md)
 contains complete Spike traces from 2026-11-13 and sampled timing for both
 reference descriptions. Input hashes and source pins accompany the table.
 Sampling error against full timing remains unmeasured.
+
+Evaluation models with the same custom instruction definitions now share one
+complete C2 validation and decoded sample windows. Each model gets fresh timing
+and component state. A raw source hash check precedes reuse. Different custom
+instruction definitions get separate validation. Report formats stay unchanged.
