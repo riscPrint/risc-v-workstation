@@ -346,3 +346,18 @@ Older comparison reports retain the prior `instructions == instret` rule. A
 legacy report that counts trapping records therefore remains inconclusive.
 Complete strict comparison, passing termination and zero synchronization are
 still required. A matching count alone does not qualify a trace.
+
+## Fixed PLIC input levels
+
+An external-interrupt declaration can include `initial_levels`, a list of
+PLIC source IDs held high at initialization. Other sources start low. The
+consumer initializes its independent model from these project inputs. They
+are not DUT register or read values. Source IDs must be integers within the
+declared PLIC source count.
+
+With an empty `stimulus` plan, request/acknowledgement mailbox bindings may be
+omitted. Accepted MMIO, pin levels, claims, completions and taken boundaries
+remain checked. An unplanned source event is still an error. A nonempty
+stimulus plan still requires both mailbox addresses and matching ELF symbols.
+A core can then test a fixed external source without an unused mailbox
+protocol. It does not add dynamic source delivery or reset.
