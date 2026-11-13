@@ -170,3 +170,11 @@ def test_ssstateen_only_observations_and_no_machine_gate(tmp_path,monkeypatch):
     assert 'state_hierarchy.py' in result['model_sha256']
     s['reference_model']['machine']=0
     assert model_observe.observe(elf,s,path)['status']=='inconclusive'
+
+
+@pytest.mark.parametrize('selected',['wfi-stop-3-0','wfi-stop-16-1'])
+def test_wfi_wake_expected_instruction_observations(tmp_path,monkeypatch,selected):
+    elf,s,path,rows,write=fixture(tmp_path,monkeypatch,'wfi-stop',select=selected)
+    assert model_observe.observe(elf,s,path)['status']=='pass'
+    rows[0]['rd_wdata']='0x0';write()
+    assert model_observe.observe(elf,s,path)['status']=='fail'

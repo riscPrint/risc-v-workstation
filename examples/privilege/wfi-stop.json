@@ -1,0 +1,33 @@
+{
+  "schema": "rvw.privilege/1",
+  "kind": "wfi-stop",
+  "isa": "rv64ima_zicsr_zifencei",
+  "reference_backend": "python",
+  "spec_version": "privileged-20260120",
+  "wake": {
+    "sources": [
+      {
+        "cause": 3,
+        "source": "machine-software"
+      },
+      {
+        "cause": 7,
+        "source": "machine-timer"
+      },
+      {
+        "cause": 11,
+        "source": "machine-external"
+      },
+      {
+        "cause": 16,
+        "source": "project-wake"
+      }
+    ],
+    "min_stop_ticks": 3,
+    "pulse_ticks": 4,
+    "max_wake_ticks": 16,
+    "state_masks": {
+      "retained_gpr": 18446744073709551615
+    }
+  }
+}

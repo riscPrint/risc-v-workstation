@@ -325,3 +325,25 @@ must appear. The model has no machine gate. A plan that adds machine denial
 is invalid. Named observation bindings follow the existing model subset contract
 and include the shared state hierarchy helper in the model source hashes.
 The examples use the Python backend because installed Spike lacks Ssstateen.
+
+## Gated WFI wake input
+
+`kind = "wfi-stop"` uses `wake.sources` entries with a source name and unique
+implemented interrupt cause, `state_masks`, and positive `min_stop_ticks`,
+`pulse_ticks` and `max_wake_ticks`. It requires RV64 and
+`spec_version = "privileged-20260120"`. Each row has one `wfi-wake` event and
+`wfi_stop_contract`. Input is asserted only after an observed WFI clock stop.
+The input remains asserted until request step 2 confirms program delivery.
+Acknowledgment step 2 follows input release after restart and the pulse bound.
+
+C1 `privilege_wfi_stop` names a JSON artifact from `StopWakeDriver.capture()`.
+It contains the exact event, capture completeness, `input_applied`, asserted/cleared ticks and
+one snapshot per independent reference tick. `input_applied` is true only after
+the assertion callback succeeds. Cleanup keeps the sampled interval intact so
+an observed restart failure remains visible. Snapshots contain clock state,
+WFI activity and PC, selected-source pending state, retired count and masked
+project state. C1 matching includes the generated stimulus digest. The report
+hashes this artifact and requires its checks before model observation groups.
+Missing or early-return-only observations are inconclusive. Complete observed
+state, timing or retirement violations fail. These sampled protocol checks and
+named C2 observations do not establish full ISA or physical clock qualification.

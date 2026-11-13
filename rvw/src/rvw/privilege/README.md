@@ -721,3 +721,38 @@ observations and denied instruction encodings use the existing named-observation
 path. Results and subset groups are model-based. They cannot establish full ISA
 comparison or DUT coverage. RV32 Ssstateen-only and other extension-state gates
 remain open. The RV32 Smstateen suite above has separate native Spike evidence.
+
+## WFI stop before wake input
+
+`kind = "wfi-stop"` is an opt-in project clock-stop campaign. It pins the
+20260120 privileged ISA. The example selects software, timer, external and
+project interrupt 16. A project selects distinct implemented causes from
+1/3/5/7/9/11 or 16..63 and supplies its source names. Each cause has global
+MIE off/on cases, with the local enable set. These are RV64 M-mode programs.
+
+`StopWakeDriver` takes the row's event and resolved ELF symbols. Call
+`service(request, drive, acknowledge, tick=..., snapshot=...)` once per
+independent reference tick. A snapshot has `clock_running`, `wfi_active`,
+`wfi_pc`, selected-source `pending`, `retired` and project `state` values.
+The driver waits for the exact WFI PC, a stopped clock and no selected pending
+input. It then waits `min_stop_ticks` before asserting that input. It keeps the
+input asserted until restart, `pulse_ticks` and the program's delivery witness
+step 2. It then releases the input and acknowledges step 2. The program waits for this acknowledgment before reporting pass.
+Call `close(drive)` in the adapter's finally block to release an input on error.
+The generic `MailboxDriver` rejects these events.
+
+Write `driver.capture()` as the C1 `privilege_wfi_stop` artifact. The checker
+requires consecutive independent ticks, actual WFI and clock-stop observations,
+retained masked state, no stopped retirement, observed pending input, restart
+within `max_wake_ticks`, input release and resumed retirement. State names and
+masks come from project data. Bind `retained_gpr` in the example to x8. Select
+state that must remain stable during the stop and after wake.
+
+Spike CLI does not model this external clock/input protocol. The examples use
+a Python outcome model and named C2 cause/PC, pending-bit and retained-register
+observations. All subset results are model-based. Complete architectural groups
+remain inconclusive without a full reference. No physical clock-gating or DUT
+result is claimed. The sampled pause is a project feature check. WFI may legally
+return early. Without an observed stop, this campaign remains inconclusive and
+does not drive the wake input. The ordinary WFI suites impose no minimum sleep.
+NMI/reset wake and guest-mode stop scenarios remain open.

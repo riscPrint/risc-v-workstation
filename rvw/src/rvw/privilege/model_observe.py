@@ -95,7 +95,7 @@ def observe(elf,scenario,trace_path,c1_identity=None):
     sources=[]
     try:
         kind=scenario['reference_model']['kind']
-        module={'ssstateen-access':'ssstateen','stateen-access':'state_hierarchy','reri-transactions':'reri_transactions','fast-preemption':'fast_preemption','fast-vector':'fast_vector'}.get(kind)
+        module={'wfi-stop':'wfi_stop','ssstateen-access':'ssstateen','stateen-access':'state_hierarchy','reri-transactions':'reri_transactions','fast-preemption':'fast_preemption','fast-vector':'fast_vector'}.get(kind)
         if module is None:raise ValueError('no bound observation model for this scenario')
         model=importlib.import_module('rvw.privilege.'+module);plan=scenario['reference_model']
         if scenario.get('spec_version')!=getattr(model,'VERSION',getattr(model,'FAST',None)):
