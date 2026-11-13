@@ -15,7 +15,7 @@ async def main():
         async with ClientSession(*streams) as session:
             await session.initialize()
             tools = {tool.name for tool in (await session.list_tools()).tools}
-            assert tools == {'bench_inspect', 'bench_diagnose', 'bench_reject', 'bench_patch', 'bench_finish',
+            assert tools == {'bench_inspect', 'bench_diagnose', 'bench_reject', 'bench_patch', 'bench_finish', 'rvw_tools_search', 'rvw_tools_describe',
                              'job_status', 'job_log', 'job_cancel', 'job_list'}
             async def call(name, arguments):
                 result = await session.call_tool(name, arguments)
