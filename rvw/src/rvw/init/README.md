@@ -136,7 +136,10 @@ and `[query]`), `rvw/core-map.json`, `rvw/run.sh` (supervised launcher with
 native and source identity), `rvw/build.sbt`, `rvw/build-smoke.sh`,
 `rvw/programs/{smoke.S,link.ld}`, `rvw/cosim.json`, `rvw/build-db.sh` (SpinalDB
 for `--spinal-top`, `rvw query build-hdl` for `--verilog-top`), `rvw/README.md`, and
-for `--spinal-top` the RVFI wiring template `rvw/templates/RvfiPort.scala`.
+for `--spinal-top` the RVFI wiring template `rvw/templates/RvfiPort.scala` and
+`rvw/templates/CoreProbes.scala`. Copy the templates into the core and bind them
+to actual retirement signals. The probe template uses `SpinalProbes`; add that
+build dependency before use. Probes stay off by default.
 
 `--bus NAME:PROTOCOL:key=port,...` maps a memory port (`req-rsp` or
 `valid-ready`; keys in RiscvSim/README.md). For a Verilog top, buses can be found

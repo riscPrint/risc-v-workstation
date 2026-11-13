@@ -110,6 +110,8 @@ def test_spinal_top_needs_explicit_bus(tmp_path):
         'rsp_valid=iBus_rsp_valid,rdata=iBus_rsp_payload_inst'], dry_run=True)
     assert 'ProjectRef(coreSource, "cpu")' in result['files']['rvw/build.sbt']
     assert 'rvw/templates/RvfiPort.scala' in result['files']
+    assert 'Probe.retire' in result['files']['rvw/templates/CoreProbes.scala']
+    assert 'ProjectRef(workstation / "SpinalDB/spinaldb", "spinaldb")' in result['files']['rvw/build.sbt']
     assert json.loads(result['files']['rvw/core-map.json'])['top'] == {'kind': 'spinal', 'class': 'demo.Top'}
     assert not (root / 'rvw').exists()
 
