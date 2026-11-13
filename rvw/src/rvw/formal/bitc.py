@@ -45,12 +45,18 @@ def translate(design, width, latency, *, definedness=False):
         raise ValueError('memory or blackbox is unsupported')
     cells = mod.get('cells', {}).values()
     registers, comb = [], []
+    public_reset_values = {}
     for cell in cells:
         kind, c = cell['type'], cell['connections']
         if kind == '$_DFF_P_' and latency:
             if c['C'] != ports['clk']['bits']:
                 raise ValueError('generated clocks are unsupported')
             registers.append((c['Q'][0], c['D'][0]))
+        elif kind in ('$_DFF_PP0_', '$_DFF_PP1_') and latency:
+            if c['C'] != ports['clk']['bits'] or c['R'] != ports['reset']['bits']:
+                raise ValueError('asynchronous state needs the declared public clock and active-high reset')
+            registers.append((c['Q'][0], c['D'][0]))
+            public_reset_values[c['Q'][0]] = int(kind == '$_DFF_PP1_')
         elif kind in GATES:
             if latency and any(ports['clk']['bits'][0] in bits for bits in c.values()):
                 raise ValueError('clock used as data is unsupported')
@@ -116,7 +122,11 @@ def translate(design, width, latency, *, definedness=False):
         comb = pending
     if bits - driven:
         raise ValueError('undriven net bits')
-    lines += ['static void eval(void) {'] + statements + ['}']
+    reset_statements = []
+    for q, value in public_reset_values.items():
+        reset_statements.append(f'if ({v(ports["reset"]["bits"][0])}) {{ {v(q)} = {value};' +
+                                (f' {u(q)} = 0;' if definedness else '') + ' }')
+    lines += ['static void eval(void) {'] + reset_statements + statements + ['}']
     lines += ['static void tick(void) {', 'eval();']
     lines += [f'_Bool next{i} = {v(d)};' for i, (q,d) in enumerate(registers)]
     if definedness:
