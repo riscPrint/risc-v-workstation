@@ -545,3 +545,35 @@ The report gives cycles saved, IPC gain, speedup, and slot changes per region.
 Slot changes are candidate minus base. Negative stall slots mean fewer stalls.
 Changed program paths require separate workload comparison. They are refused
 by this same-trace command. Reports keep input hashes. Accuracy stays inconclusive.
+
+## Oracle store-data renaming bound
+
+Set `"memory_rename": {"mode": "oracle_store_data"}` for an optimistic,
+nonpredictive experiment. At rename, a full-width integer LD can alias the data
+producer of the youngest overlapping SD in the ROB. The addresses come from
+the committed trace. This oracle can see them before address calculation.
+A younger partial overlap blocks the alias. CSR, fence and system operations
+also block the lookup. Other widths, FP and load-to-load aliases are excluded.
+
+Consumers use the store data producer directly. The load does not allocate a
+new physical register. It still occupies the ROB, issue queue and load queue.
+It executes normal ordering, translation and memory service, then commits in
+order. This verification work is not eliminated. Independent consumers can
+start before it completes. Queue limits and rename width stay unchanged.
+`memory_renamed_loads` counts successful aliases. These are neither forwarding
+hits nor dependence-predictor hits. Dependence replay mode is refused because
+its alias recovery has not been implemented.
+
+This is an upper-opportunity experiment using correct traced addresses. It
+has no alias predictor, confidence state, failed prediction or predictor repair.
+Trapping C2 inputs remain refused. It does not model fault recovery. Branch
+recovery retains the committed-path policy. It does not validate speculative
+architectural state. A timing difference is not a proven error bound on RTL.
+
+The distinction follows the communication bypass described in
+[Moshovos and Sohi, Streamlining Inter-operation Memory Communication](https://www.eecg.utoronto.ca/~moshovos/research/microcloaking.pdf).
+That work links store/load communication to register producers and requires
+verification for predicted values. This model uses an oracle instead of its
+prediction mechanism. Tests cover dependent chains, nonaliases, partial aliases
+and rename widths eight and ten. Native gem5 comparison and an upstream engine
+patch are NOT RUN. Issue #362 remains open for that work.
