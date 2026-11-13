@@ -43,6 +43,22 @@ def test_compile_reuse_and_invalidation(tmp_path, monkeypatch):
     module.classpath(here, core, repo, 'sbt-project')
     assert len(calls) == 4
 
+    sdk = tmp_path / 'spinal'
+    (sdk / 'core/src').mkdir(parents=True)
+    spinal = sdk / 'core/src/Core.scala'
+    spinal.write_text('first SDK')
+    monkeypatch.setenv('RVW_SPINAL_SOURCE', str(sdk))
+    module.classpath(here, core, repo, 'sbt-project')
+    assert len(calls) == 5
+    spinal.write_text('changed SDK')
+    module.classpath(here, core, repo, 'sbt-project')
+    assert len(calls) == 6
+    axis = repo / 'scripts/sbt/SpinalAxis.scala'
+    axis.parent.mkdir(parents=True)
+    axis.write_text('changed axis')
+    module.classpath(here, core, repo, 'sbt-project')
+    assert len(calls) == 7
+
 
 def test_compile_failure_never_reuses_stale_cache(tmp_path, monkeypatch):
     monkeypatch.setattr(module.subprocess, 'Popen', lambda *a, **kw: SimpleNamespace(stdout=iter(['failed']), wait=lambda: 1))
