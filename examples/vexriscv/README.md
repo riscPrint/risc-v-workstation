@@ -470,3 +470,33 @@ runs matched Spike completely. Total checked execution time divided by total
 baseline execution time was 5.22. This is measured adapter overhead
 for this loop. Other workers were active. It is not a stable host benchmark,
 a universal slowdown factor or a measurement of hardware speed.
+
+## Native interrupt synchronization
+
+The DPI adapter samples the trap, RVFI record and CSR snapshot before it sends
+any C2 event. This prevents a transport call from advancing simulation time
+between those signal reads. RVFI order continuity remains mandatory.
+
+The native MSIP and MTIP controls initialize `mtval` to zero. Each asserts its
+input at cycle 200 and deasserts it at cycle 220. The handler checks the actual
+`mcause`, disables the interrupt, sets `mepc`, executes `MRET` and reports through
+`tohost`. The controls require complete Spike matches and actual C2 input,
+trap, handler and return records. Run them with the private native environment:
+
+```sh
+nice -n 10 rvw/.venv/bin/python -m pytest examples/vexriscv/rvw/tests/test_lockstep_interrupts.py -q
+```
+
+The pinned core retains `mtval` on interrupt entry. Its CSR plugin writes that
+register on exceptions only. Negative controls set `mtval=7` before the same
+MSIP and MTIP inputs. Spike expects zero at the interrupt trap; RTL reports 7.
+The comparator must report that mismatch. No CSR mask or fabricated trap value
+is used. Zero initialization is an explicit positive-control precondition.
+These controls do not establish general interrupt correctness or remove the
+retained-`mtval` limit.
+
+Native validation on 2026-11-13 passed all four controls. The two positive
+runs each matched 50 instructions, one interrupt trap and a complete trace.
+The two negative runs each stopped at the interrupt trap with `tval`: expected
+0, actual 7. Input deassertion at cycle 220 was present in both complete traces.
+The core revision was `a62c145aa042a5de874344e0a7683bd7c8c8c870`.

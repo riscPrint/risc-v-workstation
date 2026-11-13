@@ -157,16 +157,19 @@ object VexAdapter extends CoreAdapter {
           dut.csr.softwareInterrupt #= levels.testBit(3)
           dut.csr.externalInterrupt #= levels.testBit(11)
           if (dut.csr.externalInterruptS != null) dut.csr.externalInterruptS #= levels.testBit(9)
+          // Snapshot every signal before the DPI transport can yield simulation time.
+          val trap = if (dut.traps.valid.toBoolean)
+            Some((dut.traps.cause.toBigInt, dut.traps.tval.toBigInt)) else None
+          if (trap.nonEmpty) handler = true
+          val sample = if (dut.rvfi.valid.toBoolean) Some(
+            record(dut.rvfi, ctl.cycle, handler).copy(
+              csrState = Map(0x340 -> dut.traps.scratch.toBigInt))) else None
           if (levels != irqLevels) { writer.foreach(_.irq(ctl.cycle, levels)); irqLevels = levels }
-          if (dut.traps.valid.toBoolean) {
+          trap.foreach { case (cause, tval) =>
             traps += 1
-            val cause = dut.traps.cause.toBigInt
-            writer.foreach(_.trap(ctl.cycle, cause, dut.traps.tval.toBigInt, cause.testBit(31)))
-            handler = true
+            writer.foreach(_.trap(ctl.cycle, cause, tval, cause.testBit(31)))
           }
-          if (dut.rvfi.valid.toBoolean) {
-            val sampled = record(dut.rvfi, ctl.cycle, handler).copy(
-              csrState = Map(0x340 -> dut.traps.scratch.toBigInt))
+          sample.foreach { sampled =>
             val r = if (sys.env.get("RVW_COSIM_FAULT_ORDER").contains(sampled.order.toString)) {
               require(sampled.rd != 0, "fault target must write a GPR")
               sampled.copy(rdWdata = sampled.rdWdata ^ 1)
