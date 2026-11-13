@@ -477,3 +477,15 @@ def test_typed_waves_check_refuses_missing_viewer(tmp_path):
     assert result.returncode == 1
     assert 'MISSING typed viewer' in result.stdout
     assert not (tmp_path / 'absent').exists()
+
+
+@pytest.mark.fast
+@pytest.mark.parametrize('profile', ['minimal', 'verification'])
+def test_profile_with_system_bash(profile, tmp_path):
+    """macOS ships Bash 3.2; empty arrays must work with nounset."""
+    result = run_group(['/bin/bash', str(SCRIPT), '--profile', profile,
+                        '--dry-run', '--prefix', str(tmp_path / 'install')],
+                       cwd=ROOT, input='', capture=True, timeout=30)
+    assert result.returncode == 0, result.stderr
+    assert 'uv sync --locked' in result.stdout
+    assert not (tmp_path / 'install').exists()

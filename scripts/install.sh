@@ -53,7 +53,7 @@ for arg in "$@"; do
     expanded=$(python3 "$script_root/scripts/tool-inventory.py" --expand "$@") || exit 2
     expanded_args=()
     while IFS= read -r arg; do [ -z "$arg" ] || expanded_args+=("$arg"); done <<< "$expanded"
-    set -- "${expanded_args[@]}"
+    set -- ${expanded_args[@]+"${expanded_args[@]}"}
     break
   fi
 done
@@ -348,7 +348,7 @@ PYTHON
   fi
   if [ "$ric3" = 1 ]; then probe rIC3 0 rIC3 --version || failed=1; fi
   if [ "$ebmc" = 1 ]; then probe EBMC 0 ebmc --version || failed=1; fi
-  for suite_engine in "${suite_engines[@]}"; do
+  for suite_engine in ${suite_engines[@]+"${suite_engines[@]}"}; do
     case "$suite_engine" in yices) suite_executable=yices-smt2 ;; *) suite_executable="$suite_engine" ;; esac
     if command -v "$suite_executable" >/dev/null 2>&1; then
       printf 'PRESENT %s; native qualification is separate\n' "$suite_engine"
@@ -428,7 +428,7 @@ if [ "${#extra_tools[@]}" -gt 0 ] && { [ "$check" = 1 ] || [ "$dry" = 1 ]; }; th
   inventory_mode=()
   if [ "$check" = 1 ]; then inventory_mode+=(--check);
   elif [ "$dry" = 1 ]; then inventory_mode+=(--dry-run); fi
-  python3 "$script_root/scripts/tool-inventory.py" "${inventory_mode[@]}" --extra "${extra_tools[@]}" || exit $?
+  python3 "$script_root/scripts/tool-inventory.py" "${inventory_mode[@]}" --extra ${extra_tools[@]+"${extra_tools[@]}"} || exit $?
 fi
 export RVW_PYTHON="$rvw_home/rvw/.venv/bin/python"
 if [ "$check" = 1 ]; then
@@ -495,23 +495,23 @@ run uv sync --locked --no-dev --extra mcp --no-managed-python --project "$rvw_ho
 export RVW_PYTHON="$rvw_home/rvw/.venv/bin/python"
 export RVW_LOCK_PYTHON="$RVW_PYTHON"
 if [ "${#extra_tools[@]}" -gt 0 ] && [ "$dry" = 0 ]; then
-  package_words=$("$RVW_PYTHON" "$script_root/scripts/tool-inventory.py" --packages "$pm" --extra "${extra_tools[@]}") || exit 2
+  package_words=$("$RVW_PYTHON" "$script_root/scripts/tool-inventory.py" --packages "$pm" --extra ${extra_tools[@]+"${extra_tools[@]}"}) || exit 2
   package_args=()
   while IFS= read -r word; do [ -z "$word" ] || package_args+=("$word"); done <<< "$package_words"
   if [ "${#package_args[@]}" -gt 0 ]; then packages "${package_args[@]}"; fi
-  "$RVW_PYTHON" "$script_root/scripts/tool-inventory.py" --home "$rvw_home" --packages-done --extra "${extra_tools[@]}" || exit $?
+  "$RVW_PYTHON" "$script_root/scripts/tool-inventory.py" --home "$rvw_home" --packages-done --extra ${extra_tools[@]+"${extra_tools[@]}"} || exit $?
 fi
 
 if [ "$dv" = 1 ]; then
   dv_args=()
   [ "$dry" = 0 ] || dv_args+=(--dry-run)
-  run "$python_cmd" "$script_root/scripts/install-riscv-dv.py" "${dv_args[@]}"
+  run "$python_cmd" "$script_root/scripts/install-riscv-dv.py" ${dv_args[@]+"${dv_args[@]}"}
 fi
 
 if [ "$lint" = 1 ]; then
   lint_args=(--home "$rvw_home")
   [ "$dry" = 0 ] || lint_args+=(--dry-run)
-  run "$python_cmd" "$script_root/scripts/install-verible.py" "${lint_args[@]}"
+  run "$python_cmd" "$script_root/scripts/install-verible.py" ${lint_args[@]+"${lint_args[@]}"}
 fi
 
 if [ "$bundle" = 1 ]; then
@@ -629,13 +629,13 @@ for optional_engine in ric3 ebmc; do
   if [ "$selected" = 1 ]; then
     engine_args=()
     if [ "$dry" = 1 ]; then engine_args+=(--dry-run); fi
-    run "$RVW_PYTHON" "$rvw_home/scripts/install-formal-engine.py" "$optional_engine" "${engine_args[@]}"
+    run "$RVW_PYTHON" "$rvw_home/scripts/install-formal-engine.py" "$optional_engine" ${engine_args[@]+"${engine_args[@]}"}
   fi
 done
-for suite_engine in "${suite_engines[@]}"; do
+for suite_engine in ${suite_engines[@]+"${suite_engines[@]}"}; do
   suite_args=()
   if [ "$dry" = 1 ]; then suite_args+=(--dry-run); fi
-  run "$RVW_PYTHON" "$rvw_home/scripts/install-formal-suite.py" "$suite_engine" "${suite_args[@]}"
+  run "$RVW_PYTHON" "$rvw_home/scripts/install-formal-suite.py" "$suite_engine" ${suite_args[@]+"${suite_args[@]}"}
 done
 if [ "$formal" = 1 ]; then
   if ! probe Yosys 0.46 yosys -V || ! probe SymbiYosys 0 sby --version || ! probe Yices 2 yices-smt2 --version; then
