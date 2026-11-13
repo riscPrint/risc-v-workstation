@@ -346,3 +346,9 @@ core ingress coverage. The format does not provide C1 identity binding.
 unknown-reset gaps. The oracle checks completed requests, read-clear,
 write-one-to-clear and partial-write state. Device-specific autonomous
 changes need a separate scoreboard. Unknown read values do not add checks.
+## Simple CPU ingress
+
+Composition `core.bus = "simple"` selects `SimpleCoreWrapper` and `SimpleToApb`.
+One valid/ready transaction completes at a time. Requests remain stable until
+ready. Read data and error accompany completion. Write byte masks become APB
+strobes. RAM byte writes are enabled. This does not infer a CPU pin binding.

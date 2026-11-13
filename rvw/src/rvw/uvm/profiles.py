@@ -18,7 +18,18 @@ def classify(class_name):
     return names.get(leaf)
 
 
-def generate(db, soc, out, *, rtl=None, language='pyuvm', profile='auto'):
+def generate(db, soc, out, *, rtl=None, language='pyuvm', profile='auto', adapter=None):
+    project = None
+    if adapter is not None:
+        adapter = Path(adapter).resolve()
+        project = json.loads(adapter.read_text())
+        if project.get('schema') != 'rvw.uvm-adapter/1' or project.get('profile') not in PROFILES:
+            raise ValueError('expected rvw.uvm-adapter/1 and a supported agent profile')
+        if language != 'pyuvm':
+            raise ValueError('project adapters currently require pyuvm')
+        scenario = (adapter.parent / project['scenario']).resolve().read_text()
+        if not isinstance(project.get('bindings'), dict):
+            raise ValueError('adapter bindings must be an object')
     if language not in ('pyuvm','sv'): raise ValueError('language must be pyuvm or sv')
     if profile not in ('auto', *PROFILES): raise ValueError('unknown UVM profile: '+profile)
     from rvw.soc.model import load
@@ -31,6 +42,12 @@ def generate(db, soc, out, *, rtl=None, language='pyuvm', profile='auto'):
         component,top=tops[0]
         buses=[dict(path=p,spinal_type=c,profile=classify(c)) for p,c in design.conn.execute(
             'SELECT path,class_name FROM bundles WHERE component_id=?',(component,)) if classify(c)]
+        if project is not None:
+            declared = design.conn.execute('SELECT path FROM bundles WHERE component_id=?', (component,)).fetchall()
+            if project['bus'] not in {p for p, in declared}:
+                raise ValueError('project adapter bus is not in the top-level database bundles')
+            buses = [dict(path=project['bus'], class_name='project-owned', profile=project['profile'])]
+            profile = project['profile']
         matches=buses if profile=='auto' else [b for b in buses if b['profile']==profile]
         if len(matches)!=1: raise ValueError('select one database bus with --profile; found '+json.dumps(buses))
         selected=matches[0]; profile=selected['profile']
@@ -49,13 +66,15 @@ def generate(db, soc, out, *, rtl=None, language='pyuvm', profile='auto'):
     config=dict(profile=profile,language=language,bus=selected,ports=ports,
                 clock_domains=domains,map='map.json',support=str(support),
                 scenario_required=True)
+    if project is not None:
+        config['project_adapter'] = project
     out.mkdir(parents=True,exist_ok=False)
     (out/'bindings.json').write_text(json.dumps(config,indent=2)+'\n')
     (out/'map.json').write_text(soc.read_text())
     if language=='pyuvm':
         module='rvw.sim.cpu_env' if profile=='cpu' else 'rvw.vip.'+agent
         (out/'test_generated.py').write_text(PYTHON.replace('AGENT_MODULE',module))
-        (out/'scenario.py').write_text(SCENARIO)
+        (out/'scenario.py').write_text(scenario if project is not None else SCENARIO)
         manifest=dict(schema='rvw.cocotb/1',name='generated_'+profile.replace('-','_'),
             backend='verilator',top=top,sources=sources,test_module='test_generated',python_paths=['.'],requires=['timer'])
     else:

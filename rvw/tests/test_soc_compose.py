@@ -135,3 +135,13 @@ def test_invalid_domains(tmp_path, domains):
     with pytest.raises(ValueError):
         compose(p, tmp_path/'out')
     assert not (tmp_path/'out').exists()
+
+
+def test_simple_cpu_bus_uses_bridge_and_byte_strobes(tmp_path):
+    p, spec = setup(tmp_path)
+    spec['core'] = dict(bus='simple', **{'class':'example.ProjectCore'})
+    p.write_text(json.dumps(spec))
+    compose(p, tmp_path/'out')
+    text = (tmp_path/'out/ComposedSoc.scala').read_text()
+    assert 'BusIngress(core.bus)' in text
+    assert 'byteWrites = true' in text
