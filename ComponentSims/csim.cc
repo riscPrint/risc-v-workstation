@@ -13,7 +13,7 @@ struct Study {
     Config cfg;
     uint64_t warmup, limit;
     std::unique_ptr<BranchStudy> br; std::unique_ptr<MemoryStudy> mem; std::unique_ptr<Frontend> fe;
-    std::unique_ptr<StoreSets> mdp; std::unique_ptr<ValuePredictor> vp;
+    std::unique_ptr<StoreSets> mdp; std::unique_ptr<ValuePredictor> vp; std::unique_ptr<AddressPredictor> lap;
     bool measuring = false; uint64_t last_ord = 0, contexts = 0;
     explicit Study(const Config& c) : cfg(c) {
         warmup = c.u("warmup_instructions", 0);
@@ -26,8 +26,9 @@ struct Study {
         }
         if (c.at("mdp").any()) mdp = std::make_unique<StoreSets>(c.at("mdp"));
         if (c.at("vp").any()) vp = std::make_unique<ValuePredictor>(c.at("vp"));
+        if (c.at("lap").any()) lap = std::make_unique<AddressPredictor>(c.at("lap"));
         c.check_all_used();
-        if (!br->active() && !mem->active && !fe && !mdp && !vp) throw Error("no component configured (branch, btb, ras, indirect, frontend, memory, mdp or vp)");
+        if (!br->active() && !mem->active && !fe && !mdp && !vp && !lap) throw Error("no component configured (branch, btb, ras, indirect, frontend, memory, mdp, vp or lap)");
     }
     Json storage() const {
         Json j = Json::object(); uint64_t total = 0, data = 0;
@@ -43,6 +44,7 @@ struct Study {
         if (mem->mmu) add("tlb", mem->mmu->storage());
         if (mdp) add("mdp", mdp->storage());
         if (vp) add("vp", vp->storage());
+        if (lap) add("lap", lap->storage());
         j["total_bits"] = total; j["total_kib"] = double(total) / 8192.0;
         j["cache_data_kib"] = double(data) / 8192.0; j["metadata_kib"] = double(total - data) / 8192.0;
         return j;
@@ -64,6 +66,7 @@ struct Study {
             if (vp) vp->branch(r.kind, r.taken);
         } else if (r.kind == K_LOAD || r.kind == K_STORE) {
             if (mem->l1d && mem->active) mem->data(r, next_use);
+            if (lap && r.kind == K_LOAD) lap->load(r.pc, r.addr, m);
             if (mdp) { if (r.kind == K_LOAD) mdp->load(r.ord, r.pc, r.addr, r.size, m); else mdp->store(r.ord, r.pc, r.addr, r.size, m); }
         } else if (r.kind == K_CONTEXT) {
             if (m) ++contexts;
@@ -88,6 +91,7 @@ struct Study {
         if (fe) j["frontend"] = fe->report(measured);
         if (mem->active || mem->l1i) j["memory"] = mem->report(measured);
         if (mdp) j["mdp"] = mdp->stats(measured);
+        if (lap) j["lap"] = lap->stats(measured);
         if (vp) { if (!rd.has_values()) throw Error("value prediction needs W rows; this trace format has none"); j["vp"] = vp->stats(measured); }
         j["storage"] = storage();
         j["training"] = "sequential-actual-path";

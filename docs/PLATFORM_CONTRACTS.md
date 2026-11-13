@@ -3203,7 +3203,7 @@ commit line is one instruction; a branch followed by an exception line gets no
 row, and access sizes come from the decoded mnemonic.
 
 `rvw.csim-study/1` is a JSON object with the sections `branch`, `btb`, `ras`,
-`indirect`, `wrong_path`, `frontend`, `memory`, `mdp`, `vp`, `report`, the
+`indirect`, `wrong_path`, `frontend`, `memory`, `mdp`, `vp`, `lap`, `report`, the
 integers `warmup_instructions` and `simulation_instructions`, and the metadata
 `name`, `description` and `source`. `source.fidelity` is `approximate` or
 `unqualified`. The engine refuses unknown keys. `rvw csim models` lists the keys.

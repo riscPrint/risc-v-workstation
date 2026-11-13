@@ -38,7 +38,8 @@ CATALOG = {
                         "<level>.prefetchers[].kind (+ kind keys)", "<level>.rrip.*", "<level>.hawkeye.*",
                         "tlb.page_bits/levels/level_bits/l1.*/l2.*/l2_enabled/pwc[].*/walk_through_cache/walk_ref_latency",
                         "tlb.context (shared|flush|tagged)"],
-               "replacement": ["lru", "random", "plru", "srrip", "brrip", "drrip", "ship", "hawkeye", "opt (l1d only)"],
+               "replacement": ["lru", "random", "plru", "srrip", "brrip", "drrip", "ship", "hawkeye",
+                               "mockingjay (<level>.mockingjay.signature_bits/sample_every/granularity)", "opt (l1d only)"],
                "prefetchers": {
                    "next-line": ["degree", "trigger (miss|access)"],
                    "ip-stride": ["entries", "degree", "distance"],
@@ -46,6 +47,8 @@ CATALOG = {
                    "bop": ["rr_entries", "round_max", "score_max", "bad_score", "max_offset"],
                    "spp": ["st_entries", "pt_entries", "threshold", "max_depth"],
                    "sms": ["region_bytes", "filter_entries", "accumulation_entries", "pht_entries"],
+                   "bingo": ["as sms; patterns keyed by PC+address, then PC+offset"],
+                   "ipcp": ["ip_entries", "cspt_entries", "regions", "cs_degree", "cplx_degree", "gs_degree"],
                    "berti": ["ip_entries", "history", "deltas", "round", "l1_coverage", "l2_coverage"],
                    "eip": ["entries", "history", "destinations"],
                }},
@@ -57,6 +60,9 @@ CATALOG = {
         "last-value": ["entries", "conf_bits", "threshold", "eligible (loads|all)"],
         "stride": ["entries", "conf_bits", "threshold", "eligible"],
         "vtage": ["entries", "tables[].entries/history", "conf_bits", "threshold", "eligible"]}},
+    "lap": {"doc": "load address prediction", "models": {
+        "last-address": ["entries", "conf_bits"], "stride": ["entries", "conf_bits"],
+        "context": ["entries", "context_entries", "conf_bits"]}},
     "report": {"keys": ["top_branches", "predictions_file"]},
     "top_level": ["warmup_instructions", "simulation_instructions", "name", "source", "description"],
 }

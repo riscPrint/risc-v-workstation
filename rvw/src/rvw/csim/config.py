@@ -11,7 +11,7 @@ import json
 from pathlib import Path
 
 SCHEMA = "rvw.csim-study/1"
-SECTIONS = {"branch", "btb", "ras", "indirect", "wrong_path", "frontend", "memory", "mdp", "vp", "report"}
+SECTIONS = {"branch", "btb", "ras", "indirect", "wrong_path", "frontend", "memory", "mdp", "vp", "lap", "report"}
 SCALARS = {"warmup_instructions", "simulation_instructions"}
 META = {"schema", "name", "source", "description"}
 

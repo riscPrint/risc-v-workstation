@@ -11,10 +11,10 @@ core. The OoO timing model (`rvw ooo`) can call them in process through
 | Direction | bimodal, gshare, local (two-level), tournament (21264 style), perceptron, hashed perceptron / GEHL, TAGE, L-TAGE, TAGE-SC-L, always-taken, BTFN, perfect bound |
 | Targets | multi-level set-associative BTB with partial tags and level latencies; RAS with `none`, `pointer`, `pointer_top` and `full` repair; indirect targets from the BTB or ITTAGE |
 | Front end | decoupled BPU → FTQ → I-cache → decode delivery model with FDIP, BTB level bubbles, decode and execute redirects, wrong-path I-cache fetch |
-| Caches | L1I, L1D, L2, LLC; LRU, random, tree PLRU, SRRIP, BRRIP, DRRIP, SHiP, Hawkeye, Belady OPT bound (L1D); perfect level |
-| Prefetchers | next-line, IP-stride, stream, BOP, SPP, SMS, Berti (data); EIP and FDIP (instruction) |
+| Caches | L1I, L1D, L2, LLC; LRU, random, tree PLRU, SRRIP, BRRIP, DRRIP, SHiP, Hawkeye, Mockingjay, Belady OPT bound (L1D); perfect level |
+| Prefetchers | next-line, IP-stride, stream, BOP, SPP, SMS, Bingo, IPCP, Berti (data); EIP and FDIP (instruction) |
 | Translation | L1/L2 TLB, radix page walks with per-level page walk caches, walks through the data cache |
-| Other | memory dependence (store sets, wait table, always/never speculate, perfect); value prediction (last value, stride, VTAGE); move and zero-idiom counts |
+| Other | memory dependence (store sets, wait table, always/never speculate, perfect); value prediction (last value, stride, VTAGE); load address prediction (last address, stride, context); move and zero-idiom counts |
 
 Every model is our own implementation from the published papers (see the header
 of each file in `include/csim/`). No ChampSim, CBP or gem5 code is copied.
@@ -48,7 +48,7 @@ detects the format from the content.
 
 A study file (`rvw.csim-study/1`) is JSON. Each section configures one component:
 `branch`, `btb`, `ras`, `indirect`, `wrong_path`, `frontend`, `memory`, `mdp`,
-`vp`, `report`, plus `warmup_instructions` and `simulation_instructions`. The
+`vp`, `lap`, `report`, plus `warmup_instructions` and `simulation_instructions`. The
 engine refuses keys that no model reads. `source` holds provenance and the list
 of approximations. Its `fidelity` can only be `approximate` or `unqualified`.
 Examples: [`examples/wide-core.json`](examples/wide-core.json) (illustrative wide

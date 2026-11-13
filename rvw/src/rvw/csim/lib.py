@@ -56,7 +56,7 @@ def _load():
 class Components:
     def __init__(self, study: dict):
         data = cfg.load(study)
-        for k in ("frontend", "mdp", "vp", "wrong_path", "report"):
+        for k in ("frontend", "mdp", "vp", "lap", "wrong_path", "report"):
             if k in data:
                 raise ValueError(f"section {k} is not available in-process; use rvw csim run")
         self._lib = _load()

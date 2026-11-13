@@ -285,7 +285,7 @@ def l1(**extra):
 def test_lru_cyclic_thrash_and_opt_bound(csim, tmp_path):
     addrs = [(i % 17) * 64 for i in range(17 * 20)]
     res = {}
-    for pol in ('lru', 'plru', 'random', 'srrip', 'brrip', 'drrip', 'ship', 'hawkeye', 'opt'):
+    for pol in ('lru', 'plru', 'random', 'srrip', 'brrip', 'drrip', 'ship', 'hawkeye', 'mockingjay', 'opt'):
         d = report(csim, tmp_path, l1(memory__l1d__replacement=pol), trace(mem_rows(addrs)))
         res[pol] = d['memory']['l1d']['demand_misses']
     assert res['lru'] == len(addrs)
@@ -300,14 +300,14 @@ def test_next_line_prefetch_coverage(csim, tmp_path):
     assert d['prefetch']['useful'] > 1900 and d['prefetch']['accuracy'] > 0.9 and d['prefetch']['late'] == 0
 
 
-@pytest.mark.parametrize('kind', ['ip-stride', 'stream', 'bop', 'spp', 'sms', 'berti'])
+@pytest.mark.parametrize('kind', ['ip-stride', 'stream', 'bop', 'spp', 'sms', 'bingo', 'ipcp', 'berti'])
 def test_data_prefetchers_reduce_stride_misses(csim, tmp_path, kind):
     addrs = [0x100000 + i * 128 for i in range(6000)]
     base = kv(memory__l1d__size_kib=32, memory__l1d__ways=8, memory__l2__size_kib=256, memory__l2__ways=8,
               memory__cycles_per_instruction=50)
     plain = report(csim, tmp_path, base, trace(mem_rows(addrs)))['memory']['l1d']['demand_misses']
     d = report(csim, tmp_path, base + f'memory.l1d.prefetchers.0.kind={kind}\n', trace(mem_rows(addrs)))['memory']['l1d']
-    if kind == 'sms':  # SMS needs repeated region generations; check it ran and stayed accurate
+    if kind in ('sms', 'bingo'):  # spatial footprints need repeated region generations; check it ran and stayed accurate
         assert d['prefetch']['issued'] >= 0
     else:
         assert d['demand_misses'] < plain, kind
@@ -445,3 +445,52 @@ def test_context_policies(csim, tmp_path):
     for pol, walks in (('shared', 4), ('flush', 8), ('tagged', 8)):
         d = report(csim, tmp_path, kv(memory__l1d__size_kib=32, memory__l1d__ways=8, memory__tlb__context=pol), trace(rows))
         assert d['memory']['tlb']['walks'] == walks, pol
+
+
+def test_mockingjay_resists_scans(csim, tmp_path):
+    rng = random.Random(8)
+    hot = [i * 64 for i in range(12)]
+    rows, o = [], 0
+    for r in range(3000):
+        o += 1; rows.append(f'L {o} 10 {rng.choice(hot):x} 8')
+        o += 1; rows.append(f'L {o} 20 {(0x100000 + r * 64):x} 8')  # streaming scan, never reused
+    res = {p: report(csim, tmp_path, kv(memory__l1d__size_kib=1, memory__l1d__ways=16, memory__l1d__replacement=p), trace(rows))['memory']['l1d']
+           for p in ('lru', 'mockingjay')}
+    assert res['mockingjay']['demand_misses'] < res['lru']['demand_misses']
+    assert res['mockingjay']['replacement_stats']['rdp_updates'] > 0
+
+
+def test_ipcp_classes(csim, tmp_path):
+    rows, o = [], 0
+    for i in range(3000):
+        o += 1; rows.append(f'L {o} 10 {0x100000 + i * 192:x} 8')          # constant stride (3 lines)
+        o += 1; rows.append(f'L {o} 20 {0x800000 + i * 64:x} 8')           # dense stream
+        o += 1; rows.append(f'L {o} 30 {0x2000000 + (i // 2) * 320 + (i % 2) * 64:x} 8')  # complex: +1, +4 lines
+    base = kv(memory__l1d__size_kib=32, memory__l1d__ways=8, memory__cycles_per_instruction=20)
+    plain = report(csim, tmp_path, base, trace(rows))['memory']['l1d']['demand_misses']
+    d = report(csim, tmp_path, base + 'memory.l1d.prefetchers.0.kind=ipcp\n', trace(rows))['memory']['l1d']
+    cls = d['prefetch']['prefetchers'][0]
+    assert d['demand_misses'] < plain / 2
+    assert cls['global_stream'] > 0 and cls['constant_stride'] > 0 and cls['complex_stride'] > 0
+
+
+def test_bingo_long_event_patterns(csim, tmp_path):
+    rows, o = [], 0
+    for rep in range(30):
+        for region in range(40):
+            for off in (0, 3, 7, 12):
+                o += 1; rows.append(f'L {o} 44 {(0x400000 + region * 2048 + off * 64):x} 8')
+    base = kv(memory__l1d__size_kib=8, memory__l1d__ways=8, memory__cycles_per_instruction=50)
+    plain = report(csim, tmp_path, base, trace(rows))['memory']['l1d']['demand_misses']
+    d = report(csim, tmp_path, base + 'memory.l1d.prefetchers.0.kind=bingo\n', trace(rows))['memory']['l1d']
+    assert d['demand_misses'] < plain and d['prefetch']['prefetchers'][0]['long_event_hits'] > 0
+
+
+def test_load_address_predictors(csim, tmp_path):
+    rows = [f'L {i + 1} 10 {0x1000 + 8 * i:x} 8' for i in range(100)]
+    rows += [f'L {101 + i} 20 {0x9000 + (i % 3) * 24:x} 8' for i in range(300)]  # period-3 pattern
+    t = trace(rows)
+    stride = report(csim, tmp_path, kv(lap__model='stride'), t)['lap']
+    ctx = report(csim, tmp_path, kv(lap__model='context'), t)['lap']
+    assert stride['correct'] >= 90 and stride['incorrect'] <= 2
+    assert ctx['correct'] > stride['correct']
