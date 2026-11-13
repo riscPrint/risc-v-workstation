@@ -79,3 +79,8 @@ Report recomputation retains every planned fault. A missing outcome counts as
 inconclusive and appears in `missing_outcomes` and `unresolved`. Duplicate,
 unknown or conflicting outcome identities are errors. Stored evidence is not
 changed by report recomputation.
+
+Both `run` and `report` return exit 1 for silent corruption, exit 3 for
+unresolved faults or an empty campaign, and exit 0 for a complete campaign.
+The JSON `status` is `fail`, `inconclusive` or `complete`, respectively.
+MCP returns the same status. A complete campaign is not a reliability pass.

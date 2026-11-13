@@ -492,3 +492,11 @@ parameters. Missing outcomes count as `inconclusive` and remain in `planned`,
 `unresolved` and `per_site`. `missing_outcomes` lists their IDs. Reports refuse
 unknown IDs, repeated IDs and parameters that differ from the plan. The report
 does not modify the stored plan or outcomes.
+
+Fault run and report results carry `status` and `summary`. Status is `fail`
+when any outcome is silent corruption. Otherwise it is `inconclusive` if any
+fault is unresolved or the plan is empty. It is `complete` when all planned
+faults have conclusive classifications. CLI exit codes are 1, 3 and 0,
+respectively. A complete campaign is not a hardware reliability pass. MCP
+uses the same report status. Silent corruption takes priority over incomplete
+evidence.
