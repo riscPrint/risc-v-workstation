@@ -205,6 +205,7 @@ def build_hdl(sources, top, out, *, yosys='yosys', timeout=120, frontend='yosys'
                 writer = _Writer(conn, data, paths, base=private, types=ast[1] if ast else {}, rename=rename)
                 writer.instance(top, '', None)
                 writer.domains()
+                _artifact(conn, "hdl/port-connections.json", writer.port_connections)
                 if locs:
                     hdl_ghdl.apply(conn, locs, paths)
                 if frontend == 'chisel':
@@ -281,6 +282,7 @@ class _Writer:
         self.base = base
         self.types = types or {}
         self.components = {}
+        self.port_connections = {}
         self.rename = rename or {}
         self.files = {}
         self.sid = self.cid = self.aid = 0
@@ -411,7 +413,15 @@ class _Writer:
             ports = cell['connections']
             if typ in self.modules:
                 child_bits = self.instance(typ,prefix+name,cid,depth+1,name)
+                bindings = []
+                self.port_connections[prefix + name] = bindings
                 for port, parent_bits in ports.items():
+                    bindings.append({'name': port, 'direction': self.modules[typ]['ports'][port]['direction'],
+                                     'width': len(parent_bits),
+                                     'status': ('unconnected' if not parent_bits else
+                                                'tied' if all(b in ('0', '1') for b in parent_bits) else
+                                                'unknown' if any(isinstance(b, str) for b in parent_bits) else 'connected'),
+                                     'bits_lsb_first': [b if isinstance(b, str) else None for b in parent_bits]})
                     child_port = self.modules[typ]['ports'][port]
                     if len(parent_bits) != len(child_port['bits']):
                         raise ValueError('port width mismatch')
