@@ -1301,10 +1301,10 @@ Each implication has one sequence on each side. Overlapping starts and all
 antecedent matches create separate obligations. Checks wait for the latest
 finite consequent deadline. Bounds are at most 64 samples, with at most 512
 expanded paths. Zero-length repetitions are refused. There is no implicit
-fairness assumption. Unbounded liveness, sampled functions in this frontend,
+fairness assumption. Unbounded liveness,
 nonconsecutive repetition, nested implication, clocking blocks, macros, named
 properties, and action blocks give `unsupported:CONSTRUCT` diagnostics.
-Use the existing slang frontend for its qualified sampled-value functions.
+The slang frontend retains its separate qualified sampled-value subset.
 No licensed tool is required. sv2v does not supply temporal assertion lowering.
 
 Sampling is the value before each rising edge in the Yosys formal event model.
@@ -1408,3 +1408,22 @@ Native event tests include properties on two distinct sampled clocks and a
 reset pulse between rising edges, with pass/fail mutants. Multi-clock replay
 from simulation state, X analysis, mixed-domain elaboration metadata, raw async
 property events and additional async state types remain open under #46.
+
+### Finite sequence composition and sampled values
+
+The temporal frontend supports finite `throughout`, `within`, and `intersect`.
+`intersect` requires equal endpoints. `within` permits each complete placement
+of the inner sequence in the outer sequence. `throughout` requires a Boolean
+left operand at every sample of the right sequence.
+
+Single-argument `$past`, `$rose`, `$fell`, `$stable`, and `$changed` use the
+property clock. Edge functions use bit zero. Stability functions compare the
+full vector. History before the first event is unconstrained in formal.
+Nested sampled calls, explicit history depths, and sampled calls in `disable iff`
+remain refused. No cross-clock history or full simulator scheduling is claimed.
+The [support table](TEMPORAL_SUPPORT.md) is generated from the semantic test
+corpus. It records test scope, not a complete SystemVerilog conformance claim.
+
+Finite `first_match` excludes every earlier matching endpoint. It retains ties
+at the first endpoint. The same path and delay capacity limits apply.
+Run `python3 scripts/formal-support-table.py` to regenerate the table.

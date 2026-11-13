@@ -3161,3 +3161,10 @@ maps each exact `path.object` to `id`, `clock`, optional `reset`, `width`, and
 Flow also requires `max_value`. Missing clock/port bindings and composite
 payloads are unsupported. This explicit mapping preserves independent channel
 clocks without guessing domain semantics absent from the report.
+
+The finite temporal frontend also accepts finite `throughout`, `within`, and
+`intersect`. Endpoints remain part of the path semantics. Single-argument
+sampled-value functions use the property clock, with unconstrained history
+before the first event. `$rose` and `$fell` use bit zero; `$stable` and `$changed`
+compare full vectors. Explicit depths and nested sampled calls remain refused.
+These are sampled formal observations, not simulator-region qualification.
