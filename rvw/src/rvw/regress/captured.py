@@ -139,8 +139,11 @@ class Inputs:
                 words = script_interpreter(header)
                 interpreter = self.interpreter(words[0])
                 self.adapter = [str(interpreter), *words[1:], str(first)]
-            else:
+            elif first.name.startswith('python'):
                 self.adapter = [str(self.interpreter(first))]
+            else:
+                # C1 adapters need no --version interface. Keep their byte identity.
+                self.adapter = [str(self.capture.tool(first, identity_only=True).path)]
             for arg in core.adapter[1:]:
                 path = Path(arg)
                 if path.exists():
