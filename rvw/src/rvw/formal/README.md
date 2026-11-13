@@ -3113,6 +3113,72 @@ The table lists missing property classes and witness-reconstruction failures.
 
 ## ISA kit signoff table
 
+### Host load and measured capacity, 2026-11-13
+
+The idle-machine capacity table is NOT yet measured. Historical ISA results
+without an explicit load have load `not recorded`. A missing historical time
+limit is also `not recorded` here. The owner reports load 60 to 120 during
+the older campaigns. That range cannot supply a missing per-check sample.
+Every timeout remains inconclusive. No real capacity limit is established.
+
+| Check kind | VexRiscv | VexiiRiscv | ooo-mini | PicoRV32 state-map profile |
+| --- | --- | --- | --- | --- |
+| Instruction assertions | Historical bounded 20 for 37 RV32I checks; new LUI attempts inconclusive | Five historical diagnostic checks inconclusive; fresh native runs NOT RUN | New ADD and LUI attempts inconclusive at cycle 8 | No qualified ISA bound; observer comparison failed |
+| Unbounded instruction proof | Historical conditional LUI model proof only; no new closure | No qualified proof | No qualified proof | No qualified proof |
+| Sail M semantics | Historical timeouts; fresh native runs NOT RUN | Not selected | Not selected | M disabled in this profile |
+| CSR and fetch pairing | Historical bounded 15; timeouts at 25; fresh native runs NOT RUN | No qualified binding in this selection | Not selected | No qualified binding in this selection |
+| Observer equivalence | Not certified | Not certified | Not measured here | Retained failure at cycle 10 in the depth-35 comparison |
+| Real capacity limit | NOT measured on an idle machine | NOT measured on an idle machine | NOT measured on an idle machine | NOT measured on an idle machine |
+
+The new native diagnostics used at most two engines and nice priority 5.
+These short limits test the tools. They do not qualify defaults for a core
+size. Existing kit time limits and project depths stay unchanged.
+
+| New check | Limit per job or engine | Result | One-minute load start / end |
+| --- | --- | --- | --- |
+| VexRiscv LUI original unbounded model, depth 20 | 15 s | PDR and Bitwuzla timed out | 151.57 / 147.75 at engine execution |
+| VexRiscv LUI RAM only, word zero retained, depth 20 | 15 s; RAM budget 45 s | Both engines timed out; general retirement cover reached | 146.31 / 137.01 for check and cover |
+| VexRiscv LUI single-flight only, concrete RAM, depth 20 | 15 s | Both engines timed out; general retirement cover reached | 141.49 / 141.93 for check and cover |
+| ooo-mini ADD assertion, cycle 8 | 20 s | Timeout, 20.088 s | 179.23 / 183.41 |
+| ooo-mini LUI assertion, cycle 8 | 20 s | Timeout, 20.194 s | 183.41 / 174.94 |
+| ooo-mini retirement cover, cycle 8 | 20 s | Timeout, 20.033 s | 174.94 / 165.99 |
+| ooo-mini ADD activation, cycle 8 | 20 s | Timeout, 20.052 s | 165.99 / 166.16 |
+| ooo-mini LUI activation, cycle 8 | 20 s | Timeout, 20.086 s | 166.16 / 163.77 |
+
+The separate corrected ooo-mini replay used Bitwuzla and Yices at native SBY
+depth 9 with a 10-second limit per check. All five jobs timed out at recorded
+loads from 141.01 to 144.11. The
+[integration table](../../../../docs/INTEGRATION_GUIDE.md#loaded-host-continuation-2026-11-13)
+lists each elapsed time and endpoint load. The earlier incompatible ABC/skip
+attempts remain configuration errors. They are not capacity results.
+The initial 1,800-second ADD attempt was cancelled when the task changed.
+No completed 30-minute comparison is claimed.
+
+The historical conditional LUI pass used PDR in 107.4 seconds, with all 32
+regfile words abstract and at most one active decode, execute, memory or
+writeback stage-valid bit. Fetch queues were excluded from the restriction.
+Source reset, checker and bus assumptions remained. Their activation and
+the observer were not certified. Its load was not recorded. The word-zero
+retained model is separate. No new closing reduction or helper invariant
+was established. See [the reduction attempts](riscv-abstract-options.md).
+
+Keep full native output outside the repository. Reproduce the later fair
+comparison with retained captures and native tools on PATH:
+
+```sh
+export RUN_ROOT=/path/to/retained/runs
+scripts/with-lock.sh vex-formal2 nice -n 5 rvw/.venv/bin/python \
+  -m rvw.formal.timeout_rerun examples/formal/isa-timeouts.json \
+  --time-limit 30m --out /path/to/new-comparison
+```
+
+Missing archives remain errors. A newly closed check is not proof that host
+load caused its earlier timeout. The replay records the assumptions of each
+native result. The three synthetic controls and their load measurements are
+in the [replay guide](timeout-rerun.md). They do not supply core ISA evidence.
+
+### Result scope and commands
+
 Unbounded and abstraction rows retain their source assumptions and condition
 model identity. A conditional native proof is labelled in the table. It does
 not change an inconclusive ISA row to proven. Abstraction rows state which
