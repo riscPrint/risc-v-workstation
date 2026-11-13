@@ -3081,3 +3081,6 @@ the same instruction checker. The command does not infer their provenance.
 Exit 1 means a check failed. Exit 3 means that full ISA signoff is incomplete.
 Use a new output directory for each run. The native trees retain exact source
 hashes, assumptions and individual cycle settings.
+Autocheck input errors return exit 2 and `rvw.autocheck-error/1` JSON.
+Declare clock and reset as one-bit input ports in the manifest. Invalid
+bindings do not produce a proof result.
