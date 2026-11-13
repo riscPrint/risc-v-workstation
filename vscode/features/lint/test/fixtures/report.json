@@ -1,0 +1,15 @@
+{
+  "schema": "rvw.lint/1", "config": "c", "top": "Top", "status": "findings", "active_findings": 3,
+  "backends": {
+    "verilator": {"status": "completed", "findings": [
+      {"rule": "verilator.UNUSEDSIGNAL", "severity": "warning", "endpoint": "rtl/Top.v:12:7", "message": "Signal is not used: x", "id": "a1", "disposition": "active"}]},
+    "verible": {"status": "not_run", "findings": []},
+    "structural": {"status": "inconclusive", "findings": [
+      {"rule": "cdc.unsynchronized", "severity": "warning", "endpoint": "b_sample", "file": "/src/Top.scala", "line": 20, "message": "Crossing needs synchronization.", "id": "b2", "disposition": "active"},
+      {"rule": "cdc.sync_candidate", "severity": "warning", "endpoint": "b_first", "file": "/src/Top.scala", "line": 30, "message": "Structural 2-stage synchronizer candidate.", "id": "c3", "disposition": "waived", "waiver_reason": "reviewed"}]},
+    "rules": {"status": "completed", "findings": [
+      {"rule": "lint.no_reset", "severity": "info", "endpoint": "r", "file": null, "line": null, "message": "Register has no reset.", "id": "d4", "disposition": "active"}]}
+  },
+  "waiver_findings": [{"rule": "lint.stale_waiver", "severity": "error", "endpoint": "gone", "disposition": "active", "message": "Waiver matches no cdc.multi_bit finding: old"}],
+  "waivers": []
+}

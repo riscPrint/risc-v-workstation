@@ -1,0 +1,10 @@
+{"$schema": "https://json.schemastore.org/sarif-2.1.0.json", "version": "2.1.0", "runs": [{
+  "tool": {"driver": {"name": "rvw lint", "rules": [{"id": "cdc.unsynchronized"}, {"id": "lint.no_reset"}]}},
+  "results": [
+    {"ruleId": "cdc.unsynchronized", "level": "warning", "message": {"text": "Crossing needs synchronization."},
+     "locations": [{"physicalLocation": {"artifactLocation": {"uri": "file:///src/Top%20A.scala"}, "region": {"startLine": 20}}}],
+     "properties": {"backend": "structural", "endpoint": "b_sample"}},
+    {"ruleId": "lint.no_reset", "level": "note", "message": {"text": "Register has no reset."},
+     "locations": [{"logicalLocations": [{"fullyQualifiedName": "r"}]}], "properties": {"backend": "rules", "endpoint": "r"},
+     "suppressions": [{"kind": "external", "justification": "data path"}]}],
+  "properties": {"status": "findings", "config": "c", "top": "Top", "backends": {"rules": "completed", "verible": "not_run"}}}]}
