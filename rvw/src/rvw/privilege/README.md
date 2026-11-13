@@ -82,3 +82,25 @@ See `examples/privilege/fs-off.json` and `no-supervisor.json`.
 
 These programs check disabled state and absent supervisor operations. They do
 not establish all possible disabled-extension combinations or DUT qualification.
+
+## Scheduled WFI and clock observation
+
+`kind = "scheduled-wfi"` generates six programs for MSIP, MTIP and MEIP with
+global MIE clear/set. `wake.assert_cycle` and `wake.clear_cycle` select the
+C1 input schedule. The generated suite has one section per program so each
+source has its own `irq_schedule`. Set each section's `dir` for the project.
+Programs allow early WFI return and check pending state or interrupt cause,
+exception-PC interval and retained register state. The C1 checker requires the
+exact requested input schedule. Spike CLI self-check is inconclusive because
+it cannot apply this external-input schedule. No program timeout becomes pass.
+
+For a project clock-stop harness, set `wake.clock_state` to a map of retained
+state names to positive bit masks. Record a `privilege_clock` C1 artifact as a
+JSON list with `tick`, `clock_running`, `state`, `retired` and `pending` samples.
+Tick is an independent reference-clock count. Retirement is a cumulative count.
+Include a running sample before the pause, samples on every reference edge
+while stopped, and resumed samples. The checker requires stable masked state,
+no retirement while stopped, pending input during the pause and retirement after
+restart. It binds the observation artifact hash in the report. Missing samples
+remain inconclusive. The project harness must drive the clock pause itself.
+This interface does not claim a clock-stop run or physical clock-gating proof.

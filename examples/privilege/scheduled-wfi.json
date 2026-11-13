@@ -1,0 +1,8 @@
+{
+  "schema": "rvw.privilege/1",
+  "kind": "scheduled-wfi",
+  "wake": {
+    "assert_cycle": 1000,
+    "clear_cycle": 20000
+  }
+}
