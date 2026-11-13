@@ -1759,3 +1759,27 @@ The source is generated `simulation.sv`. Use explicit `name=coverage.dat` inputs
 when merging multiple event tests. `formal_simulate` exposes the same runner
 through MCP. Native smoke tests cover both simulators, unrelated clocks, async
 reset, an asynchronous property input, seeded assertion faults and Icarus X data.
+## Bounded bug hunting
+
+Use `rvw formal bug-hunt --manifest PLAN.json --out OUT --budget 60 --timeout 10`.
+MCP `formal_bug_hunt` runs the same command. The plan uses pinned engine-race
+`top` and `sources`, with a schedule such as:
+
+```json
+{"depths": [20, 40, 80], "seeds": [1, 7],
+ "engines": ["aiger:rIC3", "abc:bmc3", "smtbmc:yices"]}
+```
+
+Combine these fields with the pinned source manifest. The runner freezes source
+bytes, increases bounds, varies rIC3 seeds, and runs each other engine once at
+each depth. It retains unstarted tasks after a budget stop or concrete failure.
+A completed search remains inconclusive. There is no cover-reachability claim.
+Use coverage-directed `swarm` priorities for searches from observed states.
+
+The rIC3 1.5 compatibility wrapper translates SBY's older BMC flags. It clears
+inherited Python launcher settings from OSS CAD Suite. Native checks at depth
+20 with seed 7 returned bounded success on the safe counter and found its fault.
+Results: `/tmp/rvw-deep-ric3-bmc-after3-{counter,fault}/result.json`.
+The EBMC source build uses a macOS 14 deployment target on Darwin because the
+current Xcode C++ library rejects the upstream macOS 10.15 target. This changes
+build compatibility only. It does not change the verification source.

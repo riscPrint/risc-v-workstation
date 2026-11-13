@@ -3959,3 +3959,18 @@ points in Verilator point-record format, attributed to generated simulation RTL.
 It is consumable by `rvw cov`, and is not native RTL code coverage. Source hashes
 keep different generated models separate. Pending future obligations and full
 simulator scheduling-region conformance remain outside a finite replay pass.
+### Bounded bug-hunting campaigns
+
+`rvw.formal-bug-hunt/1` captures pinned source bytes once. Its manifest has the
+same `top` and `sources` fields as engine-race, plus increasing positive
+`depths`, bounded `engines`, and unique unsigned 64-bit `seeds`. Seeds apply to
+rIC3 only. Every other engine runs once per depth. `attempts` records depth,
+engine, seed, native rows and retained result path. `unstarted` records work
+left after the budget expires or a counterexample stops the campaign. A complete
+bounded schedule remains inconclusive. Only a concrete failure earns `fail`.
+CLI `bug-hunt` and MCP `formal_bug_hunt` expose a budget and per-stage timeout.
+
+Portfolio manifests can set `ric3_seed`. BMC probes the rIC3 help interface.
+When it has `--end`, a recorded wrapper translates SBY's older bounded flags.
+The wrapper clears inherited Python launcher variables and preserves native
+output and exit status. `compatibility_sha256` identifies its captured bytes.

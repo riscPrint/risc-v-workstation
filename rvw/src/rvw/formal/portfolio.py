@@ -75,6 +75,9 @@ def race(plan, root, out, *, timeout=30, cross_check=False):
     names = plan.get('engines', list(ENGINES))
     if not names or len(names) != len(set(names)) or any(n not in ENGINES for n in names):
         raise ValueError('engines must be unique known engine IDs')
+    seed = plan.get('ric3_seed')
+    if seed is not None and (type(seed) is not int or not 0 <= seed < 2**64):
+        raise ValueError('ric3_seed must be an unsigned 64-bit integer')
     mode = plan.get('mode', 'prove')
     depth = plan.get('depth', 20)
     if mode not in ('bmc', 'prove') or type(depth) is not int or depth < 1:
@@ -165,10 +168,20 @@ def race(plan, root, out, *, timeout=30, cross_check=False):
                         for d in dependencies}
         if backend == 'sby':
             config = directory / 'problem.sby'
+            engine_line = name.replace(':', ' ')
+            if name == 'aiger:rIC3' and seed is not None:
+                engine_line += f' --rseed {seed}'
             config.write_text('[options]\nmode ' + mode + f'\ndepth {depth}\n' +
-                              '[engines]\n' + name.replace(':', ' ') + '\n[script]\n' + read_script + '\nprep -top ' + plan['top'] +
+                              '[engines]\n' + engine_line + '\n[script]\n' + read_script + '\nprep -top ' + plan['top'] +
                               '\n[files]\n' + '\n'.join(str(p) for p in sources) + '\n')
             command = ['sby', '-f', 'problem.sby']
+            if name == 'aiger:rIC3' and mode == 'bmc':
+                help_result = run_group(['rIC3', '--help'], capture=True, timeout=min(5, timeout))
+                if '--end <' in (help_result.stdout or ''):
+                    from .ric3_compat import wrapper
+                    shim = wrapper(directory, shutil.which('rIC3'))
+                    command.extend(['--rIC3', str(shim)])
+                    row['compatibility_sha256'] = sha256(shim.read_bytes()).hexdigest()
         else:
             command = ['ebmc', *map(str, sources), '--top', plan['top'], '--bound', str(depth), '--json-result', 'ebmc-result.json']
             if mode == 'prove':

@@ -569,6 +569,13 @@ if [ "$ric3" = 1 ]; then
     dnf) packages gmp-devel mpfr-devel ;;
   esac
 fi
+if [ "$ebmc" = 1 ]; then
+  case "$pm" in
+    brew) packages bison flex make curl ;;
+    apt) packages build-essential bison flex curl patch ;;
+    dnf) packages gcc-c++ bison flex make curl patch ;;
+  esac
+fi
 for optional_engine in ric3 ebmc; do
   case "$optional_engine" in ric3) selected="$ric3" ;; ebmc) selected="$ebmc" ;; esac
   if [ "$selected" = 1 ]; then
