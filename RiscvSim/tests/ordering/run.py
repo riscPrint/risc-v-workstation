@@ -29,11 +29,12 @@ def main():
     jobs = [j for seed in args.seeds for j in generate(args.out, args.xlen, seed, args.suite)]
     if args.adapter and any(Path(j['out']).exists() for j in jobs):
         p.error('DUT output directories exist; use a fresh --out directory')
-    isa = f'rv{args.xlen}ima_zicsr_zifencei'
+    base_isa = f'rv{args.xlen}ima_zicsr_zifencei'
     report = {'reference': [], 'dut': 'not_run', 'ordering': 'inconclusive',
               'limitations': 'Single-hart instruction checks do not establish concurrent ordering or atomicity.'}
     args.out.mkdir(parents=True, exist_ok=True)
     for job in jobs:
+        isa = base_isa + ('_zacas' if job['name'].startswith('zacas') else '')
         cmd = [args.gcc, f'-march={isa}', '-mabi=' + ('lp64' if args.xlen == 64 else 'ilp32'),
                '-nostdlib', '-nostartfiles', '-Wl,--no-relax', '-Wl,--build-id=none',
                '-T', str(args.linker or args.out / 'link.ld'), job['source'], '-o', job['elf']]

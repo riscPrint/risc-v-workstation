@@ -255,3 +255,38 @@ missing request or incomplete capture stays inconclusive. A cache hit cannot
 satisfy an external-access plan. Device-side completion needs another observer.
 The project must classify accesses from its PMA map. No real-device campaign
 is supplied by this converter. #102 remains open for those target checks.
+
+## Configured Zacas campaigns
+
+Zacas tests are opt-in. Run these only on a declared Zacas implementation:
+
+```sh
+python RiscvSim/tests/ordering/run.py --suite zacas --xlen 64 --seeds 7 --out /tmp/cas
+```
+
+The runner adds `_zacas` to the compiler and Spike ISA. The generator uses raw
+AMOCAS encodings. It tests W/D on RV32 and W/D/Q on RV64, all aq/rl encodings,
+success and failure, signed-extreme and seeded operands, returned values,
+word sign extension, guard bytes and double-XLEN operand pairs. Separate x0
+cases check that both halves read zero or are discarded. A nonzero x1 detects
+accidental use of the second register in an x0 pair.
+
+`--suite zacas-fault` requires locked NAPOT PMP. A read-only 64-byte region
+must raise store/AMO access fault for every tested width and aq/rl combination.
+The program checks cause, fault PC, trap address, unchanged destination pair,
+trap count and every byte in the region.
+
+`--suite zacas-align` requires a platform without a misaligned atomicity
+granule for these operands. It checks address-misaligned or access-fault
+exceptions at byte offset one. The program checks the same unchanged state.
+This profile must not run on a platform that permits those misaligned atomics.
+
+Reserved odd pair encodings are not assigned mandatory behavior. The suite
+does not require a particular trap for a reserved encoding. Unsuccessful CAS
+may write back its unchanged old value. Only the resulting bytes are checked.
+These rules follow the [Zacas 1.0 specification](https://riscv.github.io/riscv-unified-db/manual/html/isa/isa_20240411/chapters/zacas.html).
+
+Native Spike smoke tests cover the programs and injected missing CAS, wrong
+return and failed-CAS write defects. No RTL or concurrent observer is supplied
+by these programs. Integer matches do not establish contention atomicity or
+external acquire/release ordering. The default four suites are unchanged.

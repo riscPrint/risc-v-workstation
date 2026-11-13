@@ -238,6 +238,145 @@ patch{index}:
     return text.replace('.section .tohost', '\n'.join(functions) + '\n.section .tohost')
 
 
+def zacas(xlen, seed):
+    """Opt-in Zacas integer effects, including the double-XLEN register pair."""
+    rng = random.Random(seed)
+    bodies = []
+    for width in ([4, 8] if xlen == 32 else [4, 8, 16]):
+        bits = width * 8
+        unit = min(width, xlen // 8)
+        load, store = ('lw', 'sw') if unit == 4 else ('ld', 'sd')
+        mask = (1 << bits) - 1
+        def chunks(value):
+            return [(value >> shift) & ((1 << (unit*8))-1) for shift in range(0, bits, unit*8)]
+        def initialize(value):
+            return '\n'.join(f' li t1, {v}\n {store} t1, {i*unit}(a0)' for i,v in enumerate(chunks(value)))
+        def registers(base, value):
+            return '\n'.join(f' li x{base+i}, {v}' for i,v in enumerate(chunks(value)))
+        def returned(value, rd=12):
+            if rd == 0:
+                return ' li t1, 91\n bne ra, t1, fail'
+            values = chunks(value)
+            if width == 4 and xlen == 64 and value & (1 << 31):
+                values = [value - (1 << 32)]
+            return '\n'.join(f' li t1, {v}\n bne x{rd+i}, t1, fail' for i,v in enumerate(values))
+        def memory(value):
+            lines = []
+            for i, v in enumerate(chunks(value)):
+                # LW sign extends on RV64.
+                if unit == 4 and xlen == 64 and v & (1 << 31):
+                    v -= 1 << 32
+                lines.append(f' {load} t2, {i*unit}(a0)\n li t1, {v}\n bne t2, t1, fail')
+            return '\n'.join(lines)
+        for flags in range(4):
+            funct7 = (5 << 2) | flags
+            funct3 = {4: 2, 8: 3, 16: 4}[width]
+            vectors = [(1 << (bits-1), mask), (rng.getrandbits(bits), rng.getrandbits(bits))]
+            for old, new in vectors:
+                for success in [True, False]:
+                    compare = old if success else old ^ 1
+                    bodies.append(f"""la a0, cell
+{initialize(old)}
+ li t1, 0xa5
+ sb t1, -1(a0)
+ sb t1, {width}(a0)
+{registers(12, compare)}
+{registers(14, new)}
+ .insn r 0x2f, {funct3}, {funct7}, a2, a0, a4
+{returned(old)}
+{memory(new if success else old)}
+ lbu t2, -1(a0)
+ li t1, 0xa5
+ bne t2, t1, fail
+ lbu t2, {width}(a0)
+ bne t2, t1, fail
+""")
+            # x0 pair reads both halves as zero and discards both destinations.
+            # Keep x1 nonzero to detect accidental use or modification of it.
+            for rd, rs2, old, new in [(0,14,0,73), (12,0,37,0)]:
+                bodies.append(f"""la a0, cell
+{initialize(old)}
+{registers(12, old)}
+{registers(14, new)}
+ li ra, 91
+ .insn r 0x2f, {funct3}, {funct7}, x{rd}, a0, x{rs2}
+{returned(old, rd)}
+{memory(new)}
+ li t1, 91
+ bne ra, t1, fail
+""")
+    return program('\n'.join(bodies), xlen=xlen).replace('cell: .dword 0', '.dword 0\n.balign 64\ncell: .dword 0\n.dword 0\n.dword 0')
+
+
+def zacas_traps(xlen, seed, protection=True):
+    """Explicit PMP read-only or natural-alignment-only profile."""
+    body = ["""la t0, cell
+ li t1, 37
+ sw t1, 0(t0)
+ la t1, cas_trap
+ csrw mtvec, t1
+ li s1, 0
+"""]
+    if protection:
+        body.append("""srli t1, t0, 2
+ ori t1, t1, 7
+ csrw pmpaddr0, t1
+ li t1, 0x99
+ csrw pmpcfg0, t1
+ csrr t2, pmpcfg0
+ andi t2, t2, 255
+ bne t1, t2, fail
+""")
+    index = 0
+    for width in ([4,8] if xlen == 32 else [4,8,16]):
+        for flags in range(4):
+            index += 1
+            body.append(f"""la a0, cell
+ addi a0, a0, {0 if protection else 1}
+ la s0, cas_fault_{index}
+ li a2, 85
+ li a3, 102
+ li a4, 73
+ li a5, 74
+cas_fault_{index}:
+ .insn r 0x2f, { {4:2,8:3,16:4}[width]}, {20+flags}, a2, a0, a4
+ li t1, 85
+ bne a2, t1, fail
+ li t1, 102
+ bne a3, t1, fail
+ li t1, {index}
+ bne s1, t1, fail
+ la t4, cell
+ lbu t5, 0(t4)
+ li t1, 37
+ bne t5, t1, fail
+ addi t4, t4, 1
+ li t5, 63
+cas_bytes_{index}:
+ lbu t6, 0(t4)
+ bnez t6, fail
+ addi t4, t4, 1
+ addi t5, t5, -1
+ bnez t5, cas_bytes_{index}
+""")
+    cause = ' li t5, 7\n bne t4, t5, fail' if protection else ' li t5, 6\n beq t4, t5, cas_cause_ok\n li t5, 7\n bne t4, t5, fail\ncas_cause_ok:'
+    handler = f"""
+.balign 4
+cas_trap:
+ csrr t4, mcause
+{cause}
+ csrr t4, mepc
+ bne t4, s0, fail
+ csrr t4, mtval
+ bne t4, a0, fail
+ addi s1, s1, 1
+ addi t4, s0, 4
+ csrw mepc, t4
+ mret
+"""
+    return program('\n'.join(body), xlen=xlen).replace('other: .dword 0', 'other: .dword 0\n.space 48').replace('.section .tohost', handler+'\n.section .tohost')
+
+
 def generate(out, xlen=64, seed=1, suites=None):
     out = Path(out)
     out.mkdir(parents=True, exist_ok=True)
@@ -257,7 +396,8 @@ def generate(out, xlen=64, seed=1, suites=None):
 
 
 DEFAULT_SUITES = ('lrsc', 'amo', 'fence', 'fence-i')
-GENERATORS = {'amo-fault': amo_fault, 'lrsc': lrsc, 'amo': amo, 'fence': fence, 'fence-i': fence_i}
+GENERATORS = {'zacas': zacas, 'zacas-fault': zacas_traps,
+              'zacas-align': lambda xlen, seed: zacas_traps(xlen, seed, False), 'amo-fault': amo_fault, 'lrsc': lrsc, 'amo': amo, 'fence': fence, 'fence-i': fence_i}
 
 
 def main():
