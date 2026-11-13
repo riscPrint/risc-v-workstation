@@ -88,6 +88,8 @@ class SocEnvironment:
     def finish(self, retirements):
         self.cpu.finish(retirements)
         self.serial.finish()
+        if self.uart.state != 'idle':
+            raise AssertionError('SOC_PENDING_UART')
         for name, monitor in self.buses.items():
             if hasattr(monitor, 'finish'):
                 monitor.finish()

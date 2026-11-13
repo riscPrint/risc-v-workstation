@@ -39,7 +39,7 @@ qualification remain open. The RAM-only binding reports no data faults.
 It does not qualify access-fault behavior.
 
 Use the current generated RTL directory recorded in a C1 `result.json`
-`artifacts.rtl_dir` entry. An old generated VexTop can have different
+`details.rtl_dir` entry. An old generated VexTop can have different
 privilege modes from the selected platform. Do not mix those configurations.
 
 When `RVW_CPU_ELF` names `rv32ui-p-add`, the test also runs adjacent
