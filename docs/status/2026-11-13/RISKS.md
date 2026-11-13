@@ -1,5 +1,7 @@
 # Risks and evidence limits
 
+Hourly refresh collected at 2026-11-13T08:21:26.898955+00:00: 80 additional merged PRs; 563 merged PRs in total; 213 current open issues; 7 currently closed issues closed since midnight. The 218-issue midnight census and separate new issues #722 and #723 are unchanged. Earlier collection text below is historical. The refresh notes take precedence for current state. No project tests, builds, simulations or proofs ran.
+
 This is a document audit. The source ledger preserves each PR body. No code, test, build, simulation or proof ran for this audit. Evidence labels in ISSUES.md identify the strongest reported slice. They do not establish that every acceptance point passed.
 
 ## Highest risks
@@ -51,3 +53,15 @@ These are functional overlaps. This audit does not claim that duplicated code is
 The midnight census uses current issue bodies and closure/reopen event times. It does not recover historical body edits. The collection includes PR body references that can be context links. A missing reference can hide related work. Evidence labels use a conservative source review and must be checked before closure. No issue is suggested closed merely because GitHub closed it.
 
 Every refresh must retain this evidence boundary. Collect new PRs, update the census and source ledger, then review superseded limits. Keep raw JSON outside the repository. Make a small documentation PR. Do not edit issues, ROADMAP.md or TODO.md.
+
+## Refresh corrections and remaining risks
+
+The earlier closure list is historical. Nine previously closed issues are open again. See the current issue collection and TODO proposal. Closure state does not establish acceptance.
+
+PR #893 supersedes the unresolved Vex fetch-cancellation statement for its measured 49-program slice. PR #921 retains the Vexii PC-stream finding. BOOM source dispositions still have no native binding validation.
+
+PR #896 supersedes the absent real RTL debug endpoint statement. It retains five target deviations and unexplained breakpoint stop positions. PR #903 adds bounded live SV CPU evidence. PR #918 retains two misaligned-access failures and separates live pins from capture replay.
+
+PR #938 adds Vexii probe correlation, but retains a two-retirement counter difference. PR #928 exposes BOOM reset-state disagreement; native capture does not imply reference agreement. PR #931 qualifies one relocated from-reset replay, not live-state portability or a second-machine run. PR #936 remains Spike/Python APLIC evidence, not RTL interrupt delivery.
+
+PR #905 fixes the source-ledger path pattern. This refresh retains that fix and removes personal path text from new source quotes. Historical failed fast sets remain failed records. No project checks ran for this refresh.
