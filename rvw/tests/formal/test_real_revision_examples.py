@@ -16,6 +16,10 @@ spec.loader.exec_module(recipe)
 def test_private_revision_recipe(tmp_path, monkeypatch):
     original = recipe.git
     divider = '''package spinal.lib.math
+  val done = RegInit(True)
+  val waitRsp = RegInit(False)
+  done := !io.cmd.valid
+  waitRsp := True
     remainder := remainderShifted.resized
     numerator := (numerator ## !remainderMinusDenominator.msb).asUInt.resized
     when(!remainderMinusDenominator.msb){
@@ -47,5 +51,11 @@ def test_private_revision_recipe(tmp_path, monkeypatch):
     before = original(repo,'show',cases['divider']['gold']+':src/main/scala/Unit.scala')
     after = original(repo,'show',cases['divider']['gate']+':src/main/scala/Unit.scala')
     assert 'when(!remainderMinusDenominator.msb)' in before
-    assert 'Mux(remainderMinusDenominator.msb' in after
+    assert 'val stateCode = Reg(Bits(3 bits))' in after
+    assert 'doneNext := !io.cmd.valid' in after
+    assert 'waitRspNext := True' in after
+    assert "'sbt-equiv'" in (tmp_path/'private/generator/build.py').read_text()
+    sqrt = tmp_path/'private/sqrt'
+    assert original(sqrt,'show',cases['sqrt']['gold']+':src/main/scala/Unit.scala') == original(sqrt,'show',cases['sqrt']['gate']+':src/main/scala/Unit.scala')
+    assert 'oneFilePerComponent=true' in (sqrt/'src/main/scala/RealExport.scala').read_text()
     assert json.loads((tmp_path/'private/cases.json').read_text()) == cases

@@ -9,19 +9,18 @@ export RVW_HOME="$PWD"
 rvw/.venv/bin/python examples/formal/equiv-real/prepare.py \
   --spinal /path/to/SpinalHDL --vex /path/to/VexRiscv --out /path/to/private-cases
 rvw/.venv/bin/python examples/formal/equiv-real/run.py \
-  --cases /path/to/private-cases/cases.json --out /path/to/proofs
+  --cases /path/to/private-cases/cases.json --out /path/to/proofs --timeout 240
 ```
 
 The first case copies the real `spinal.lib.math.UnsignedDivider` source from the
-selected SpinalHDL commit. It replaces two assignments to the remainder register
-with one explicit mux. Both copies use four-bit operands and synchronous reset.
-This is an arithmetic control refactor. Pipeline retiming, state recoding and
-clock gating remain separate work.
+selected SpinalHDL commit. It replaces the two control registers with a
+three-state one-hot register. Both copies use four-bit operands and synchronous
+reset. The decoded next-state logic keeps the original assignment priority.
 
-The second case copies VexRiscv's `FpuSqrt` from core revisions `7445c66b` and
-`baf7dc82f855eddaf5b0a20a6802c526f127e38a`. The module source is unchanged between
-these core revisions. This is a revision-flow control, not evidence for a changed
-square-root implementation. Both copies use a four-bit mantissa.
+The second case copies VexRiscv's `FpuSqrt` from core revision `7445c66b`.
+It compares single-file and one-file-per-component export configurations.
+Both use the same module source and a four-bit mantissa. This checks equivalent
+export settings. It does not check two different arithmetic implementations.
 
 Each case has its own source repository and project file. A separate committed
 generator invokes sbt in the archived revision directory. The public
@@ -29,8 +28,8 @@ generator invokes sbt in the archived revision directory. The public
 the module and invokes eqy. Export logs, source snapshots and RTL remain in the
 proof directory. `summary.json` records the command and verdict for each case.
 
-The scripts use `vex-equiv` and `sbt` locks. Builds and proofs use `nice -n 10`.
-Each case has a 180-second total budget, including lock acquisition and both
+The scripts use `vex-equiv` and `sbt-equiv` locks. Builds and proofs use `nice -n 10`.
+Each case has a 240-second total budget, including lock acquisition and both
 exports. At most one proof runs at a time. A lock timeout is inconclusive.
 Twelve startup clocks are unchecked. Inputs then remain free. Invalid response
 payloads are still compared. Independent uninitialized datapath registers can
@@ -45,7 +44,18 @@ It runs offline. It copies the source, not an existing compiled classpath.
 
 ## Recorded run, 2026-11-13
 
-Both cases returned `inconclusive` after 180 seconds. They exhausted the export
-budget in the shared `sbt` queue before compilation. Neither case reached eqy.
-See `results.json`. The recipe unit test passed. Real native equivalence remains
-unproved. Re-run with the same source pins when the build queue is available.
+The initial shared-lock attempts returned `inconclusive` before compilation.
+The private-lock retry proved the recoded four-bit divider equivalent.
+It took 138.503 seconds, including both source exports. All five output
+partitions passed. Reset is synchronous. Twelve startup clocks are unchecked.
+This result covers free inputs after startup, including flush and backpressure.
+
+The first square-root configuration attempt reached export but used its
+240-second budget after a lock wait. It remains inconclusive.
+The ledger retains each attempt. No timeout counts as a proof.
+
+The isolated square-root retry also exhausted 240 seconds. EQY proved the
+input-ready partition. It did not finish the raw result payload partitions.
+The aggregate verdict remains inconclusive. Raw invalid payloads are compared.
+No valid-payload constraint, initialization assumption or core change was added.
+See `private-lock-results.json` for the new attempts and native proof reports.

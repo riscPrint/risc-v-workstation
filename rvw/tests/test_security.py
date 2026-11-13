@@ -227,7 +227,6 @@ def test_native_bad_adapter_never_earns_clean_verdict(tmp_path,monkeypatch,case)
     'module dut(input clk,d,output reg q); initial q=0; always @(posedge clk) q<=d; endmodule',
     'module dut(output y); wire x; assign y=x; endmodule',
     'module dut(inout x, output y); assign y=x; endmodule',
-    'module dut(input d,output y); assign y=d & 1\'bx; endmodule',
 ])
 def test_native_ift_refuses_unmodeled_state_and_channels(source,tmp_path,native_env,ift_plugin):
     rtl=tmp_path/'source.v';rtl.write_text(source)
@@ -256,6 +255,38 @@ initial begin
  #1; if (y !== 1 || yt !== 0) $fatal(1, "public value changed");
  value=1; taint=1;
  #1; if (y !== 0 || yt !== 1) $fatal(1, "secret value or taint changed");
+ $finish;
+end
+endmodule
+''')
+    executable = tmp_path / 'sim'
+    native(['iverilog', '-g2012', '-s', 'tb', '-o', executable, output, tb], env=native_env)
+    native(['vvp', executable], env=native_env)
+
+
+def test_native_ift_unknown_constant_is_tainted(tmp_path, native_env, ift_plugin):
+    rtl = tmp_path / 'source.v'
+    rtl.write_text("module dut(input d,output y); assign y=d & 1'bx; endmodule")
+    net = tmp_path / 'design.json'
+    native(['yosys', '-Q', '-T', '-p',
+            f'read_verilog {rtl}; hierarchy -top dut; proc; flatten; techmap; simplemap; write_json {net}'],
+           env=native_env)
+    output = tmp_path / 'ift.v'
+    output.write_text(instrument(json.loads(net.read_text()), 'dut'))
+    # The native plugin still refuses X/Z. The JSON backend models their taint.
+    result = run_group(['yosys', '-Q', '-T', '-m', str(ift_plugin), '-p',
+                        f'read_json {net}; rvw_ift'],
+                       env=native_env, capture=True, timeout=30)
+    assert result.returncode != 0 and not result.timed_out
+    assert 'X/Z cell input is unmodeled' in result.stderr
+    tb = tmp_path / 'tb.v'
+    tb.write_text('''module tb;
+reg d=0; wire y, yt;
+dut__ift unit0(.d(d), .d__t(1'b0), .y(y), .y__t(yt));
+initial begin
+ #1; if (y !== 0 || yt !== 0) $fatal(1, "public zero must mask unknown");
+ d=1;
+ #1; if (yt !== 1) $fatal(1, "unknown must taint output");
  $finish;
 end
 endmodule

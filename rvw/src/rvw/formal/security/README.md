@@ -10,8 +10,9 @@ The IFT transform accepts a flattened Yosys JSON netlist after `techmap; simplem
 It adds `__t` ports and value-sensitive taint transfer logic. It tracks data and
 mux control flow through Boolean gates and rising-edge registers. Clock is public.
 Apply a public reset before observation. No implicit state initialization or
-implicit declassification occurs. Unsupported cells, blackboxes, X/Z constants,
-multiple clocks and undriven bits cause an error. No structural path is a proof.
+implicit declassification occurs. The JSON transform models X/Z constants as
+conservatively tainted bits. The native plugin refuses X/Z constants. Unsupported
+cells, blackboxes, multiple clocks and undriven bits cause an error. No structural path is a proof.
 Reconvergent paths can overtaint because the transform loses correlations.
 
 Two implementations use the same gate transfer rules: the native Yosys
@@ -219,8 +220,8 @@ A `declassifier` can name a scalar public input. Sink taint is permitted while
 this input is high. It is checked again when the input goes low. A release pulse
 does not permit data to stay in the sink after release. The policy owner must
 justify release authorization. This command does not prove that authorization.
-Unsupported cells, memories, blackboxes, X/Z constants and unknown state models
-remain errors. Reconvergent taint can produce a conservative false alarm.
+Unsupported cells, memories, blackboxes and unknown state models remain errors.
+The JSON transform models literal X/Z as tainted bits. Reconvergent taint can produce a conservative false alarm.
 
 Use `kind: constant_time` and list `operations` to declare a Zkt operation subset.
 Name timing control outputs such as done and ready as sinks. The proof checks
