@@ -5,6 +5,7 @@ import json
 import re
 import shutil
 from rvw.common.proc import run_group
+from rvw.regress.run_evidence import run_paths_under
 from .programs import controls, LINK, SPEC
 
 
@@ -196,6 +197,36 @@ def verdict(rows):
     return 'fail' if any(r['status'] == 'fail' for r in rows) else 'pass' if rows and all(r['status'] == 'pass' for r in rows) else 'inconclusive'
 
 
+def reference_blind(comparison, platform):
+    """Why a strict mismatch is missing reference evidence, or None for a real mismatch.
+
+    Spike models neither a project's interrupt pins nor its MMIO devices.
+    A correct core that reads a pending external mip bit, or a device register
+    in a declared MMIO region, differs from it. Only these exact shapes are
+    accepted: a CSR read of mip whose differing bits are all declared
+    irq_inputs, or a load inside a declared mmio region that differs only in
+    the loaded value. Any other difference stays a failure."""
+    try:
+        data = json.loads(Path(platform).read_text())
+        mismatch = comparison.get('mismatch') or {}
+        actual, expected = mismatch['actual'], mismatch['expected']
+        insn = int(actual['insn'], 16)
+        diff = int(actual['rd_wdata'], 16) ^ int(expected['rd_wdata'], 16)
+        fields = set(mismatch.get('differences', {}))
+        mask = sum(1 << b for b in data.get('irq_inputs', []) if type(b) is int and 0 <= b < 64)
+        if (fields == {'rd_wdata'} and insn & 0x7f == 0x73 and (insn >> 12) & 7 in (1, 2, 3, 5, 6, 7)
+                and insn >> 20 == 0x344 and diff and not diff & ~mask):
+            return f'mip bits {diff:#x} come from declared external interrupt inputs'
+        address = int(actual['mem_addr'], 16)
+        regions = [(int(str(r['base']), 0), int(str(r['size']), 0)) for r in data.get('mmio', [])]
+        if (fields <= {'rd_wdata', 'mem_rdata'} and 'mem_rdata' in fields and insn & 0x7f == 0x03
+                and any(base <= address < base + size for base, size in regions)):
+            return f'load at {address:#x} reads a declared MMIO device'
+    except (OSError, ValueError, KeyError, TypeError, AttributeError):
+        return None
+    return None
+
+
 def check(directory, results, platform, timeout=10):
     """Require unique C1 success and complete strict Spike agreement for each bin."""
     import sys
@@ -204,7 +235,7 @@ def check(directory, results, platform, timeout=10):
     manifest = json.loads((directory / 'manifest.json').read_text())
     if manifest['schema'] != 'rvw.privilege-build/1':
         raise ValueError('expected privilege build manifest')
-    runs = [load_run(p) for p in Path(results).rglob('result.json')]
+    runs = [load_run(p) for p in run_paths_under(results)]
     rows = []
     for scenario in manifest['scenarios']:
         elf = directory / scenario['elf']
@@ -349,7 +380,12 @@ def check(directory, results, platform, timeout=10):
                         comparison = {}
                     row.update(comparison=comparison, reason='no complete strict reference match')
                     if not result.timed_out and comparison.get('status') == 'mismatch':
-                        row.update(status='fail', reason='architectural mismatch')
+                        hidden = reference_blind(comparison, platform)
+                        if hidden:
+                            row.update(reason=hidden + ', which the strict reference cannot observe; '
+                                       'no strict match is possible')
+                        else:
+                            row.update(status='fail', reason='architectural mismatch')
                     elif (not result.timed_out and result.returncode == 0 and comparison.get('status') == 'match'
                           and comparison.get('trace_complete') is True and comparison.get('end_status') == 'pass'
                           and comparison.get('instructions', 0) > 0 and comparison.get('synchronized') == 0):
