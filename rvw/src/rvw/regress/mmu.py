@@ -34,6 +34,9 @@ def number(value):
 
 def load(path):
     raw = json.loads(Path(path).read_text())
+    if set(raw) == {'schema', 'pointer_matrix'} and raw['schema'] == 'rvw.mmu/1':
+        from .mmu_pointer import matrix as pointer_matrix
+        raw = dict(schema=raw['schema'], scenarios=pointer_matrix(raw['pointer_matrix']))
     if set(raw) == {'schema', 'guest_matrix'} and raw['schema'] == 'rvw.mmu/1':
         from .mmu_hypervisor import matrix as guest_matrix
         raw = dict(schema=raw['schema'], scenarios=guest_matrix(raw['guest_matrix']))
@@ -59,7 +62,7 @@ def validate(s):
     from .mmu_paging import geometry
     g = geometry(s)
     required = {'id', 'level', 'flags', 'access', 'expect', 'bins'}
-    optional = {'guest_trap', 'guest_switch', 'guest_mode', 'guest_op', 'atomic_ad', 'ipi', 'pte_fault_level', 'walk_deny_level', 'pointer_mask', 'shootdown', 'guest', 'guest_flags', 'guest_fault', 'vmid', 'napot_ppn', 'napot', 'pbmt', 'pbmte', 'mode_switch', 'mode', 'va', 'pa', 'privilege', 'sum', 'mxr', 'ad_expect', 'asid', 'fence', 'remap', 'ad_mode', 'satp_mode', 'mprv', 'offset', 'walk_deny', 'unfenced', 'switch_asid', 'value', 'access_width', 'register_width', 'root_switch', 'nonleaf_global', 'software_rsw', 'store_value'}
+    optional = {'pointer_extension', 'pointer_controller', 'guest_trap', 'guest_switch', 'guest_mode', 'guest_op', 'atomic_ad', 'ipi', 'pte_fault_level', 'walk_deny_level', 'pointer_mask', 'shootdown', 'guest', 'guest_flags', 'guest_fault', 'vmid', 'napot_ppn', 'napot', 'pbmt', 'pbmte', 'mode_switch', 'mode', 'va', 'pa', 'privilege', 'sum', 'mxr', 'ad_expect', 'asid', 'fence', 'remap', 'ad_mode', 'satp_mode', 'mprv', 'offset', 'walk_deny', 'unfenced', 'switch_asid', 'value', 'access_width', 'register_width', 'root_switch', 'nonleaf_global', 'software_rsw', 'store_value'}
     if not isinstance(s, dict) or not required <= s.keys() or s.keys() - required - optional:
         raise ValueError('invalid scenario fields')
     if not re.fullmatch(r'[a-z][a-z0-9-]*', s['id']):
@@ -575,7 +578,7 @@ def reference(directory, spike, timeout):
         from .mmu_extensions import isa as extension_isa
         isa += extension_isa(s)
         if 'pointer_mask' in s:
-            isa += '_smnpm'
+            isa += '_' + s.get('pointer_controller', s.get('pointer_extension', 'smnpm'))
         if s.get('guest'):
             isa = isa.replace('im_', 'imh_')
         command = [executable, '--isa=' + isa, '--priv=msu', '-m128', str(elf)]

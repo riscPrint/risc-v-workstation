@@ -83,3 +83,8 @@ geometries, HLV/HLVX/HSV, VS/G faults, VS A/D, virtual-instruction traps,
 HS fault CSRs and same-VMID root reuse. The root-reuse cases allocate a second
 payload 2 MiB away. This is a bounded reference campaign. Independent nested
 DUT captures, full HFENCE scopes and guest fetch matrices remain open.
+
+`pointer-privileges.json` adds 54 cases for Ssnpm, Smmpm, explicit Sspm/Supm
+controllers and tagged fetch faults. Select only the project's extensions.
+Sspm/Supm describe execution-environment capabilities. They need explicit
+controller choices in this backend. Guest and debug interactions remain open.
