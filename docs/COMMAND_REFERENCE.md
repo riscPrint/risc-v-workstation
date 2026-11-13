@@ -55,7 +55,7 @@ usage: rvw agent-bench serve [-h] --pack PACK --out OUT --task TASK [--project
 
 ```text
 usage: rvw arch [-h] [--project PROJECT]
-    {compiler-export,compiler-check,gem5-export,ooo-fit,ooo-profile,ooo-diff,ooo-sampled,ooo-sensitivity,traffic,ooo-search,ooo-calibrate,ooo-predict,ooo-score,warmup-bias,sample,sched-generate,sched-measure,sched-study,search,predict,score-prediction,memory-extract,pareto,memory-report,sweep,build,run,calibrate,compare,fit,inspect,measure,linux}
+    {compiler-export,compiler-check,custom-tradeoff,gem5-export,ooo-fit,ooo-profile,ooo-diff,ooo-sampled,ooo-sensitivity,system-energy,traffic,ooo-search,ooo-calibrate,ooo-predict,ooo-score,warmup-bias,sample,sched-generate,sched-measure,sched-study,search,predict,score-prediction,memory-extract,pareto,memory-report,sweep,build,run,calibrate,compare,fit,inspect,measure,linux}
     ...
 ```
 
@@ -70,6 +70,13 @@ usage: rvw arch compiler-export [-h] --out OUT [--json] [--project PROJECT]
 
 ```text
 usage: rvw arch compiler-check [-h] [--json] [--project PROJECT] directory
+```
+
+### `rvw arch custom-tradeoff`
+
+```text
+usage: rvw arch custom-tradeoff [-h] --out OUT [--json] [--project PROJECT]
+    plan
 ```
 
 ### `rvw arch gem5-export`
@@ -110,6 +117,12 @@ usage: rvw arch ooo-sampled [-h] --out OUT [--warmup WARMUP] [--max-cycles
 ```text
 usage: rvw arch ooo-sensitivity [-h] --out OUT [--json] [--project PROJECT]
     plan
+```
+
+### `rvw arch system-energy`
+
+```text
+usage: rvw arch system-energy [-h] --out OUT [--json] [--project PROJECT] plan
 ```
 
 ### `rvw arch traffic`
@@ -341,8 +354,8 @@ usage: rvw checks [-h] [--project PROJECT] {generate} ...
 ### `rvw checks generate`
 
 ```text
-usage: rvw checks generate [-h] --all [--manifest MANIFEST] [--out OUT]
-    [--project PROJECT]
+usage: rvw checks generate [-h] --all [--json] [--manifest MANIFEST] [--out
+    OUT] [--project PROJECT]
 ```
 
 ### `rvw cosim`
@@ -2041,7 +2054,8 @@ usage: rvw regress list [-h] [--core CORE] [--suite SUITE] [--json] [--project
 ### `rvw sec`
 
 ```text
-usage: rvw sec [-h] [--project PROJECT] {ift} ...
+usage: rvw sec [-h] [--project PROJECT]
+    {ift,contract,gadgets,isolation,latency} ...
 ```
 
 ### `rvw sec ift`
@@ -2050,6 +2064,32 @@ usage: rvw sec [-h] [--project PROJECT] {ift} ...
 usage: rvw sec ift [-h] --rtl RTL --top TOP --policy POLICY --stimulus
     STIMULUS --out OUT [--mode {precise,conservative}] [--db DB] [--project
     PROJECT]
+```
+
+### `rvw sec contract`
+
+```text
+usage: rvw sec contract [-h] --manifest MANIFEST --out OUT [--project PROJECT]
+```
+
+### `rvw sec gadgets`
+
+```text
+usage: rvw sec gadgets [-h] --out OUT [--seed SEED] [--threshold THRESHOLD]
+    [--declares-speculation] [--project PROJECT]
+```
+
+### `rvw sec isolation`
+
+```text
+usage: rvw sec isolation [-h] --manifest MANIFEST --out OUT [--project
+    PROJECT]
+```
+
+### `rvw sec latency`
+
+```text
+usage: rvw sec latency [-h] --manifest MANIFEST --out OUT [--project PROJECT]
 ```
 
 ### `rvw sim`
@@ -2158,7 +2198,8 @@ usage: rvw cocotb [-h] --out OUT [--seed SEED] [--timeout TIMEOUT] [--json]
 
 ```text
 usage: rvw soc [-h] [--project PROJECT]
-    {compose,peripheral,pair,generate,import-ipxact,capture-check,check} ...
+    {compose,feedback,handoff,peripheral,pair,generate,import-ipxact,capture-check,check}
+    ...
 ```
 
 ### `rvw soc compose`
@@ -2166,6 +2207,20 @@ usage: rvw soc [-h] [--project PROJECT]
 ```text
 usage: rvw soc compose [-h] --out OUT [--elf ELF] [--json] [--project PROJECT]
     spec
+```
+
+### `rvw soc feedback`
+
+```text
+usage: rvw soc feedback [-h] --db DB --source SOURCE --out OUT [--json]
+    [--project PROJECT]
+```
+
+### `rvw soc handoff`
+
+```text
+usage: rvw soc handoff [-h] --db DB --out OUT [--settings SETTINGS] [--json]
+    [--project PROJECT]
 ```
 
 ### `rvw soc peripheral`
@@ -2213,7 +2268,22 @@ usage: rvw soc check [-h] --bindings BINDINGS --db DB [--transactions
 
 ```text
 usage: rvw uvm [-h] [--project PROJECT]
-    {new,features,build,run,list,regress,coverage-merge} ...
+    {gate-config,qualification,new,features,build,run,list,regress,coverage-merge}
+    ...
+```
+
+### `rvw uvm gate-config`
+
+```text
+usage: rvw uvm gate-config [-h] --build BUILD --source-repo SOURCE_REPO --out
+    OUT [--seeds SEEDS [SEEDS ...]] [--project PROJECT]
+```
+
+### `rvw uvm qualification`
+
+```text
+usage: rvw uvm qualification [-h] --cpu-results CPU_RESULTS --probes PROBES
+    --out OUT [--project PROJECT]
 ```
 
 ### `rvw uvm new`
@@ -2522,6 +2592,14 @@ Arguments: `description` (required), `out` (required).
 
 Starts a background job: yes.
 
+### `arch_custom_tradeoff`
+
+Join extension timing, software cost and saved RTL/PPA evidence.
+
+Arguments: `plan` (required), `out` (required).
+
+Starts a background job: yes.
+
 ### `arch_fit`
 
 Select saved model candidates on training events and score the winner on held-out workloads.
@@ -2679,6 +2757,14 @@ Starts a background job: yes.
 Run a bounded serial gem5 sweep. Retain model-only identities and SQLite results.
 
 Arguments: `spec` (required), `out` (required), `project`, `bench`.
+
+Starts a background job: yes.
+
+### `arch_system_energy`
+
+Abstract system energy from workload counts and declared power states.
+
+Arguments: `plan` (required), `out` (required).
 
 Starts a background job: yes.
 
@@ -4042,11 +4128,43 @@ Arguments: `project`, `features`.
 
 Starts a background job: no.
 
+### `sec_contract`
+
+Run bounded paired RTL leakage tests and reduce a witness.
+
+Arguments: `manifest` (required), `out` (required).
+
+Starts a background job: yes.
+
+### `sec_gadgets`
+
+Generate v1, v2, v4 and return-predictor gadget templates.
+
+Arguments: `out` (required), `seed`, `threshold`, `declares_speculation`.
+
+Starts a background job: no.
+
 ### `sec_ift`
 
 Run bounded digital information flow tracking in Verilator.
 
 Arguments: `rtl` (required), `top` (required), `policy` (required), `stimulus` (required), `out` (required), `mode`, `db`.
+
+Starts a background job: yes.
+
+### `sec_isolation`
+
+Run declared PMP/ePMP or privilege-boundary paired leakage tests.
+
+Arguments: `manifest` (required), `out` (required).
+
+Starts a background job: yes.
+
+### `sec_latency`
+
+Measure operand-paired declared instruction or crypto-unit latency.
+
+Arguments: `manifest` (required), `out` (required).
 
 Starts a background job: yes.
 
@@ -4106,6 +4224,22 @@ Arguments: `source` (required), `out` (required), `elf`.
 
 Starts a background job: no.
 
+### `soc_feedback`
+
+Link external reports to RTL and Scala. Imported claims only.
+
+Arguments: `db_path` (required), `source` (required), `out` (required).
+
+Starts a background job: no.
+
+### `soc_handoff`
+
+Export captured implementation inputs. This is not signoff evidence.
+
+Arguments: `db_path` (required), `out` (required), `settings`.
+
+Starts a background job: no.
+
 ### `soc_pair`
 
 Pair observed bus request tags with independent C2 retirements. Matching samples remain inconclusive.
@@ -4146,6 +4280,14 @@ Arguments: `path` (required).
 
 Starts a background job: no.
 
+### `uvm_gate_config`
+
+Bind a pure SV UVM build to a C4 build suite.
+
+Arguments: `build_dir` (required), `source_repo` (required), `out` (required), `seeds`.
+
+Starts a background job: no.
+
 ### `uvm_list`
 
 List tests declared by a project UVM bench.
@@ -4159,6 +4301,14 @@ Starts a background job: no.
 Generate a database-selected project profile or an automatic APB reset bench.
 
 Arguments: `db` (required), `soc` (required), `out` (required), `rtl`, `language`, `profile`.
+
+Starts a background job: no.
+
+### `uvm_qualification`
+
+Render measured SV CPU and feature-probe qualification.
+
+Arguments: `cpu_results` (required), `probes` (required), `out` (required).
 
 Starts a background job: no.
 

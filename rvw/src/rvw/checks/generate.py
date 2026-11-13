@@ -1,5 +1,6 @@
 """Run available generators and keep missing bindings explicit."""
 import json
+import sqlite3
 from pathlib import Path
 
 from rvw.common.project import load_project
@@ -14,8 +15,10 @@ def generate(project, out, manifest=None):
     root=selected.parent
     settings=Path(manifest) if manifest else root/'checks.generate.json'
     spec=json.loads(settings.read_text())
-    if spec.get('schema')!='rvw.check-generation/1':
+    if not isinstance(spec,dict) or spec.get('schema')!='rvw.check-generation/1':
         raise ValueError('expected rvw.check-generation/1')
+    if set(spec)-{'schema','streams','buses','csrs','queues','power'}:
+        raise ValueError('unknown check generation kind')
     out=Path(out)
     if not out.is_absolute(): out=root/out
     out.mkdir(parents=True,exist_ok=False)
@@ -27,8 +30,13 @@ def generate(project, out, manifest=None):
             row['reason']='no project data supplied'
             continue
         try:
-            source=(settings.parent/spec[kind]).resolve()
             target=out/kind
+            from .bindings import generate as generate_bound
+            bound=generate_bound(kind,spec[kind],settings.parent,target)
+            if bound is not None:
+                row.update(bound,output=str(target))
+                continue
+            source=(settings.parent/spec[kind]).resolve()
             if kind=='buses':
                 from rvw.formal.bus_bindings import generate as run
                 result=run(source,target)
@@ -59,8 +67,11 @@ def generate(project, out, manifest=None):
                 (target/'properties.sv').write_text(text)
                 row.update(status='unbound',reason='stream properties emitted; include them in the project module')
             row['output']=str(target)
-        except (ValueError,KeyError,TypeError,OSError,QueryError) as exc:
+        except (ValueError,KeyError,TypeError,OSError,QueryError,sqlite3.Error) as exc:
             row.update(status='unsupported',reason=str(exc))
+    for row in rows:
+        if row['status']!='generated' and 'reason' not in row:
+            row['reason']='no recognized bindable instances' if not row.get('instances') else 'see per-instance binding reasons'
     result=dict(schema='rvw.check-generation-summary/1',
                 status='generated' if any(r['status']=='generated' for r in rows) else 'no_checks',
                 complete=all(r['status']=='generated' and all(i['status']=='generated' for i in r.get('instances',[])) for r in rows),

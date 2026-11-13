@@ -48,7 +48,7 @@ Principles (from `ROADMAP.md`):
 - [Co-simulation transports and capture inspection](contracts/cosim.md)
 - [Coverage](contracts/coverage.md)
 - [Component simulations](contracts/csim.md)
-- [CSR, shared banks and register maps](contracts/csr.md)
+- [CSR, registers and generated checks](contracts/csr.md)
 - [Debug module and sessions](contracts/debug.md)
 - [Equivalence, datapath and control bindings](contracts/equiv.md)
 - [Cross-tool evidence](contracts/evidence.md)

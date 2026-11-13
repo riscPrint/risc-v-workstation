@@ -4,7 +4,8 @@ Run `rvw checks generate --all --project PATH --out out/checks`.
 MCP: `checks_generate`, with `project`, `out` and optional `manifest`.
 The default manifest is `checks.generate.json` beside `rvw.toml`.
 It has schema `rvw.check-generation/1`. Optional keys `streams`, `buses`,
-`csrs`, `queues`, and `power` name files relative to the manifest.
+`csrs`, `queues`, and `power` name inputs relative to the manifest. Use
+`--json` for JSON errors as well as successful summaries.
 
 - `streams`: a property-library JSON document with a `properties` list.
 - `buses`: a captured SpinalDB database.
@@ -19,6 +20,36 @@ CSR sources without a project wrapper, power modules without instance binds,
 and stream snippets without a containing module remain `unbound`.
 Exit 3 means no bound checks. Exit 0 means some checks were generated. Neither
 exit establishes a proof. Existing output directories are refused.
+
+## Bound Stream/Flow and UPF inputs
+
+The `streams` entry can be an object with `database`, `report` and optional
+`contracts` file paths. The report uses `rvw.checks/1`. Contracts map channel
+instance paths to reviewed properties. A Stream requires `stable=true`.
+A Flow requires explicit `max_value` or per-field `max_values` bounds.
+The generator resolves instance-local ports, widths and clock/reset metadata.
+It emits procedural monitors and instance binds. Missing contracts, unresolved
+controls and unsupported channels retain their reasons. Use a SystemVerilog
+frontend with bind support. No property is inferred from a signal-name suffix.
+
+The `power` entry can be an object with UPF `source` and `bindings` paths.
+It emits the existing literal isolation, retention, supply-table and power-switch
+monitors with project-declared instance bindings. Unmonitored domains stay
+listed. Plain stream property files and power-intent JSON files still emit
+sources as `unbound` when no instance binding is supplied.
+
+For example:
+
+```json
+{
+  "schema": "rvw.check-generation/1",
+  "streams": {"database": "design.db", "report": "checks.json", "contracts": "streams.json"},
+  "buses": "design.db",
+  "csrs": "csrs.json",
+  "queues": "rules.json",
+  "power": {"source": "power.upf", "bindings": "power-bindings.json"}
+}
+```
 
 ## Project microarchitecture rules
 
@@ -46,6 +77,7 @@ emission separately from instance binding. Do not infer protocol or reset semant
 
 ## Limits
 
-This command does not compile a design or run a solver. Declared ports have not
-been checked against RTL widths. Stream and power automatic binding remain open.
-The bus generators report channel safety separately from transaction scoreboards.
+This command does not compile a design or run a solver. Stream ports and widths
+come from the captured database. Microarchitecture ports remain project
+declarations. The bus generators report channel safety separately from
+transaction scoreboards. Physical power and analog behavior are not modeled.
