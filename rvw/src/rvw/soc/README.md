@@ -268,3 +268,19 @@ still required for a mapped DUT integration claim.
 software exports. MCP: `soc_compose`. See [SpinalSoc](../../../../SpinalSoc/README.md)
 for the explicit APB3 wrapper profile and its limits. This command generates
 source. It does not report a run or proof result.
+
+## Implementation handoff
+
+`rvw soc handoff --db design.db --out NEW_DIR [--settings FILE]` copies every
+captured input after it verifies the database hash binding. MCP: `soc_handoff`.
+The bundle contains `files.f`, `constraints.sdc`, clock/reset and frequency
+lists, memory dimensions and ports, component hierarchy and blackbox generics.
+SDC comes from the existing `rvw lint` SDC backend. Settings can contain its
+`sdc` and `intent` dictionaries. SDC findings remain in `handoff.json`.
+
+RTL must have captured input bindings. Missing or stale files are errors.
+Blackboxes remain unresolved entries. Ordinary Scala constructor parameters
+are not in the database; the bundle states that gap. The bundle preserves
+database metadata and file hashes. It is an implementation input package,
+not physical implementation, timing signoff or tape-out evidence. Keep
+bundles outside version control.
