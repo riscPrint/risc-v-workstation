@@ -30,3 +30,12 @@ It retains inconclusive settings. `max_observed_error_percent` covers only
 successful settings and is null when none succeed. The whole study is
 inconclusive if any setting fails. An observed maximum is not a statistical
 confidence interval. The full reference uses reset execution.
+
+## Fixed-interval warm-up
+
+`rvw.sample-warmup/1` holds a fixed `start` and `length`, a full-prefix
+reference and one row per warm-up length. Each row records capture order,
+CPI, IPC, signed CPI bias, absolute bias and target comparison. Failed rows
+are excluded explicitly. `smallest_observed_within_target` is an observation,
+not a universal recommendation. Detailed execution is the fallback when the
+core has no qualified functional cache/predictor injection port.

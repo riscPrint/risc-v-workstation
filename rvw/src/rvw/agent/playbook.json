@@ -1216,7 +1216,8 @@
         "workloads_run",
         "workloads_verify",
         "sample_run",
-        "sample_validate"
+        "sample_validate",
+        "sample_warmup"
       ]
     },
     {
