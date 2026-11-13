@@ -13,7 +13,7 @@ import naxriscv.utilities.Plugin
 object NaxTop {
   val configs = Seq("rv32imasu")
 
-  def plugins(config: String) = {
+  def plugins(config: String, probeTap: Boolean = true) = {
     require(configs.contains(config), s"unknown NaxRiscv config $config")
     val l = Config.plugins(
       withRdTime = false,
@@ -29,10 +29,11 @@ object NaxTop {
       sqSize = 16,
       ioRange = a => a(31 downto 28) === 0x1)
     l += new TapPlugin
+    if (probeTap) l += new ProbeTapPlugin
     l
   }
 
-  def apply(config: String): NaxRiscv = new NaxRiscv(plugins(config))
+  def apply(config: String, probeTap: Boolean = true): NaxRiscv = new NaxRiscv(plugins(config, probeTap))
 
   def spinalConfig: SpinalConfig = {
     val c = SpinalConfig(inlineRom = true)

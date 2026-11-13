@@ -1,0 +1,114 @@
+package rvwnax
+
+import spinal.core._
+import spinal.lib._
+import spinalprobes.Probe
+import naxriscv.Global
+import naxriscv.fetch.FetchCachePlugin
+import naxriscv.frontend.{DispatchPlugin, RfAllocationPlugin}
+import naxriscv.lsu.DataCachePlugin
+import naxriscv.lsu2.Lsu2Plugin
+import naxriscv.misc.CommitPlugin
+import naxriscv.prediction.{BranchContextPlugin, Prediction}
+import naxriscv.utilities.Plugin
+
+/** Workstation probes on existing NaxRiscv signals. It reads core signals only (the commit,
+  * reschedule and ROB pointers, the register allocator, the issue queue, the load/store queue
+  * trackers, the refill buses and the branch learn port) and adds nothing unless the elaboration
+  * runs under `Probe.enabled(true)` (C1 `--probes`).
+  *
+  * Top-down counters partition the commit slots of each cycle, with the same predicates as the
+  * workstation OoO model (`rvw/src/rvw/ooo/attribution.py`): retired slots are `retiring`; the
+  * other slots are `bad_speculation` while a recovery is in flight (from an execute-time or
+  * commit-time reschedule until the next ROB allocation), else `backend_bound` when the ROB holds
+  * work, else `frontend_bound`. */
+class ProbeTapPlugin extends Plugin {
+  val setup = create early new Area {
+    val bcp = getService[BranchContextPlugin]
+    bcp.retain()
+  }
+
+  val logic = create late new Area {
+    val bcp = getService[BranchContextPlugin]
+    // The learn values must be requested while this plugin holds the branch-context lock. Release
+    // it before waiting on any other plugin, so the branch context builds with the pipeline.
+    val learnKeys = if (Probe.isEnabled) Some((bcp.learnRead(bcp.keys.BRANCH_FINAL), bcp.learnRead(Prediction.IS_BRANCH))) else None
+    bcp.release()
+    if (Probe.isEnabled) {
+      val commit = getService[CommitPlugin].logic.get
+      val wb = commit.whitebox
+      val width = Global.COMMIT_COUNT.get
+      val mask = wb.commit.mask
+      val retired = CountOne(mask)
+
+      // Recovery: an execute-time reschedule (a mispredicted branch, a trap) waits for commit;
+      // the commit-time reschedule flushes; the front end refills until the next ROB allocation.
+      val early = commit.reschedule.reschedulePort.valid
+      val flush = wb.reschedule.valid
+      val alloc = wb.robToPc.valid
+      val pending = RegInit(False)
+      val refill = RegInit(False)
+      when(early) { pending := True }
+      when(alloc) { refill := False }
+      when(flush) { pending := False; refill := True }
+      val recovering = pending || refill || early || flush
+      val robWork = !commit.ptr.empty
+      val lost = U(width, log2Up(width + 1) bits) - retired
+      Probe.counter("topdown_slots", U(width, log2Up(width + 1) bits))
+      Probe.counter("topdown_retiring", retired)
+      Probe.counter("topdown_bad_speculation", recovering ? lost | U(0))
+      Probe.counter("topdown_backend_bound", (!recovering && robWork) ? lost | U(0))
+      Probe.counter("topdown_frontend_bound", (!recovering && !robWork) ? lost | U(0))
+
+      Probe.counter("cycles", True)
+      Probe.counter("retired", retired)
+      Probe.counter("rob_alloc_lines", alloc)
+      Probe.counter("rob_occupancy", (commit.ptr.alloc - commit.ptr.commit).resize(8 bits))
+      Probe.counter("reschedule_execute", early)
+      Probe.counter("reschedule_commit", flush)
+      Probe.counter("reschedule_commit_trap", flush && wb.reschedule.trap)
+
+      // Integer physical register free list: allocations at dispatch, returns at commit or flush.
+      val rf = getServicesOf[RfAllocationPlugin].head.logic.get.allocator.io
+      Probe.counter("freelist_alloc", rf.pop.fire ? CountOne(rf.pop.mask) | U(0))
+      Probe.counter("freelist_free", CountOne(rf.push.map(_.valid).asBits()))
+
+      val iq = getService[DispatchPlugin].logic.get.queue.io
+      Probe.counter("iq_occupancy", CountOne(iq.usage))
+      Probe.counter("iq_full_cycles", iq.usage.andR)
+
+      val lsu = getService[Lsu2Plugin]
+      val lq = lsu.logic.get.lq.tracker
+      val sq = lsu.logic.get.sq.tracker
+      Probe.counter("lq_occupancy", U(lsu.lqSize, 8 bits) - lq.free.resize(8 bits))
+      Probe.counter("sq_occupancy", U(lsu.sqSize, 8 bits) - sq.free.resize(8 bits))
+      Probe.counter("lq_full_cycles", lq.free === 0)
+      Probe.counter("sq_full_cycles", sq.free === 0)
+
+      val ibus = getService[FetchCachePlugin].mem.get
+      val dmem = getService[DataCachePlugin].mem.get
+      Probe.counter("icache_refills", ibus.cmd.fire)
+      Probe.counter("dcache_refills", dmem.read.cmd.fire)
+      Probe.counter("dcache_writebacks", dmem.write.cmd.fire && dmem.write.cmd.last)
+
+    }
+  }
+
+  /** Conditional branches at the learn port: one event per committed branch, in commit order.
+    * The prediction is the dispatch-time context (BRANCH_EARLY) of the same branch. */
+  val branches = create late new Area {
+    val bcp = getService[BranchContextPlugin]
+    logic.get.learnKeys.foreach { case (ctx, isBranch) =>
+      val free = bcp.free.get
+      val predicted = bcp.logic.get.mem.earlyBranch.readAsync(free.learn.bid)
+      val learn = bcp.learnValid && isBranch
+      Probe.branch("learn", learn, ctx.pcOnLastSlice, ctx.taken, ctx.pcTarget,
+        predictedTaken = Some(predicted.taken), predictedTarget = Some(predicted.pc),
+        semantics = "first-prediction", covers = Seq("cond"))
+      Probe.counter("branches", bcp.learnValid)
+      Probe.counter("cond_branches", learn)
+      Probe.counter("cond_mispredicts", learn && predicted.taken =/= ctx.taken)
+      Probe.counter("cond_taken", learn && ctx.taken)
+    }
+  }
+}

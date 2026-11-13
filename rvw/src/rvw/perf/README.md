@@ -93,6 +93,17 @@ Both return jobs so large traces can be cancelled without blocking the server. F
 `job_status(wait_s=60)` for the same JSON as the CLI, or use `job_log`/`job_cancel`.
 The shared calculation preserves settings checks, counter warnings and inferred-state limits.
 
+## Top-down attribution
+
+`rvw perf topdown EVENTS --c2 RVFI --result RESULT` reports a commit-slot partition into
+retiring, bad speculation, back-end bound and front-end bound from five counter probes of a C1
+`--probes` run (`topdown_slots` and one per class). The classes must cover every slot, and
+`retiring` must equal the C2 retirements and C1 `instret`. The probe predicates belong to the
+core project; the NaxRiscv example binds those of the OoO model's partition, so the RTL and
+model reports compare like for like. Format: [`rvw.topdown/1`](../../../../docs/contracts/perf.md#commit-slot-top-down-report-rvwtopdown1).
+This is not the hardware top-down method: wrong-path slots before a flush count where the
+project's predicates put them.
+
 ## Limit ownership
 
 Additional probe events: [#49](https://github.com/riscPrint/risc-v-workstation/issues/49).

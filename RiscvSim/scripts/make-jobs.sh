@@ -23,6 +23,25 @@ for wrapper in "$build_dir"/*__spinalWrapper.cpp; do
     s/VerilatedCov::write\(/Verilated::threadContextp()->coveragep()->forcePerInstance(true);\n      VerilatedCov::write(/g;
   }' "$wrapper"
 done
+# Older SpinalHDL wrappers (for example NaxRiscv's pinned revision) access public signals by
+# their raw names. Verilator 5 encodes a "_" that follows "_" in C++ member names ("a__b" becomes
+# "a___05Fb"). Use the encoded name only where the generated headers lack the raw one and have
+# the encoded one; newer wrappers already match the headers and stay unchanged.
+for wrapper in "$build_dir"/*__spinalWrapper.cpp; do
+  [ -f "$wrapper" ] || continue
+  perl -e '
+    my ($wrapper, $dir) = @ARGV; my %ids;
+    for my $h (glob("$dir/*.h")) {
+      open(my $f, "<", $h) or next; local $/; my $t = <$f>; close $f;
+      $ids{$_} = 1 for ($t =~ /\b([A-Za-z_][A-Za-z0-9_]*)\b/g);
+    }
+    open(my $f, "<", $wrapper) or exit 0; local $/; my $t = <$f>; close $f;
+    my $n = ($t =~ s{(\btop(?:->[A-Za-z_][A-Za-z0-9_]*)*->)([A-Za-z_][A-Za-z0-9_]*__[A-Za-z0-9_]*)}{
+      my ($p, $m) = ($1, $2); (my $e = $m) =~ s/(?<=_)_/__05F/g;
+      (!$ids{$m} && $ids{$e}) ? "$p$e" : "$p$m" }ge);
+    if ($n) { open($f, ">", $wrapper) or die; print $f $t; close $f; }
+  ' "$wrapper" "$build_dir"
+done
 args=()
 for a in "$@"; do
   case "$a" in -j*) ;; *) args+=("$a") ;; esac

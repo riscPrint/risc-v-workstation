@@ -159,9 +159,67 @@ time), `DataMemBus` (line reads in request order, line write-backs) and
 or after zero to three seeded wait cycles. `tohost` is detected from committed
 stores, because the data cache is write-back.
 
+## Out-of-order probes
+
+`rvw/src/main/scala/rvwnax/ProbeTapPlugin.scala` binds SpinalProbes to existing
+NaxRiscv signals. It adds hardware only under C1 `--probes`.
+`rvwnax.ProbeSafety` elaborates the core with and without the plugin, probes
+off, and compares the Verilog SHA-256: identical (`e89079a7...`).
+
+| Probe | Signals |
+|-------|---------|
+| `topdown_*` counters | commit mask, `CommitPlugin` execute-time and commit-time reschedules, ROB allocation (`robToPc.valid`) and `ptr.empty`; the OoO model's partition predicates |
+| `rob_alloc_lines`, `rob_occupancy`, `reschedule_execute`, `reschedule_commit`, `reschedule_commit_trap` | `CommitPlugin` pointers and reschedule ports (`reschedule_commit_trap` counts the `trap` bit, which non-trap flushes such as `satp` writes also set) |
+| `freelist_alloc`, `freelist_free` | integer `RfAllocationPlugin` allocator pop mask and push ports |
+| `iq_occupancy`, `iq_full_cycles` | `DispatchPlugin` issue queue `usage` bits |
+| `lq_occupancy`, `sq_occupancy`, `lq_full_cycles`, `sq_full_cycles` | `Lsu2Plugin` load/store queue free trackers |
+| `icache_refills`, `dcache_refills`, `dcache_writebacks` | the refill buses at the core boundary |
+| `branch learn` (`cond`, `first-prediction`), `branches`, `cond_*` | `BranchContextPlugin` learn port (committed branches in commit order); prediction = the branch's dispatch-time `BRANCH_EARLY` context |
+
+```sh
+rvw/build-bench.sh            # riscv-tests benchmarks, RV32IM, with Arch/bench
+rvw/run.sh run --elf rvw/out/bench/median.riscv --out rvw/out/probe/median --probes --rvfi-trace --mem-latency 0 --json
+rvw perf topdown rvw/out/probe/median/probe-events.jsonl --c2 rvw/out/probe/median/rvfi.jsonl --result rvw/out/probe/median/result.json
+rvw probes convert rvw/out/probe/median/probe-events.jsonl --to bp-events --c2 rvw/out/probe/median/rvfi.jsonl --out bp.jsonl
+rvw csim compare-rtl rvw/probes/gshare.json --trace rvw/out/probe/median/rvfi.jsonl --events bp.jsonl
+rvw probes convert rvw/out/probe/median/probe-events.jsonl --to counts --c1 rvw/out/probe/median/result.json --c2 rvw/out/probe/median/rvfi.jsonl --out counts.json
+```
+
+Measured on 2026-11-13 (`--mem-latency 0`). Every run passed, and Spike matched
+every complete trace. Top-down columns are percent of commit slots (2 per
+cycle); `retiring` equals the C2 retirement count in every run. The branch
+columns compare the RTL direction prediction with `rvw/probes/gshare.json`
+(a 16384-counter gshare; see its approximations); events align one to one with
+the C2 conditional branches.
+
+| Program | Cycles | Retired | IPC | Retiring | Bad spec. | Back end | Front end | Cond. branches | RTL MPKI | gshare MPKI | Agreement |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| median | 18,061 | 10,653 | 0.590 | 29.5 | 20.1 | 49.5 | 0.9 | 3,562 | 96.5 | 59.0 | 83.2 % |
+| qsort | 293,449 | 226,061 | 0.770 | 38.5 | 15.0 | 46.5 | 0.1 | 60,980 | 62.0 | 59.2 | 85.1 % |
+| towers | 8,880 | 7,273 | 0.819 | 41.0 | 9.7 | 47.0 | 2.4 | 331 | 23.0 | 14.6 | 80.4 % |
+| vvadd | 5,220 | 6,490 | 1.243 | 62.2 | 6.3 | 28.2 | 3.4 | 1,064 | 7.6 | 7.9 | 99.4 % |
+| multiply | 38,207 | 54,296 | 1.421 | 71.1 | 2.8 | 25.7 | 0.5 | 6,764 | 5.1 | 4.7 | 99.5 % |
+| rsort | 210,339 | 364,958 | 1.735 | 86.8 | 1.8 | 11.4 | 0.1 | 17,457 | 0.6 | 0.4 | 99.5 % |
+| spmv | 986,710 | 1,557,480 | 1.578 | 78.9 | 2.8 | 18.3 | 0.0 | 144,180 | 6.5 | 5.8 | 97.9 % |
+| memcpy | 25,375 | 31,185 | 1.229 | 61.4 | 1.5 | 36.3 | 0.7 | 7,014 | 1.4 | 1.0 | 99.7 % |
+| dhrystone | 144,337 | 206,224 | 1.429 | 71.4 | 1.4 | 26.9 | 0.2 | 28,312 | 3.0 | 2.8 | 99.8 % |
+
+Other counters: mean ROB occupancy 11 (median) to 32 (memcpy) of 64; mean
+issue-queue occupancy 2.3 to 13.3; the RTL `cond_mispredicts` count stays
+within 3 to 15 of the commit-time non-trap flush count; `branches` equals the
+model's `branches` count (checked on median; the calibration checks all programs). `freelist_free` minus
+`freelist_alloc` ends at 31 or 32 on every program (the reset fill of the free
+list, less registers still allocated in flight).
+
+Limits: the top-down predicates are the model's simple commit-slot partition,
+not the hardware top-down method. No Kanata pipeline view (`--to kanata`) is
+bound: a flush retires many ROB IDs at once, which the stage/flush probe kinds
+do not express. No TLB probe: the benchmarks run in M-mode without
+translation. The `gshare` study is unqualified.
+
 ## Limits
 
-- One configuration. No RVC, FPU, interrupts schedules, devices, Konata or
+- One configuration. No RVC, FPU, interrupt schedules, devices, Konata or
   riscv-formal monitor (`--irq-schedule`, `--konata`, `--rvfi-check` and
   `--soc-map` are refused).
 - Generated checks need SpinalChecks on the source axis; not available yet.

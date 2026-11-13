@@ -118,3 +118,24 @@ It does not establish bin compatibility or verification closure.
 Dashboard filters select exact core, suite, config and gate values, plus a run-ID
 substring. Counts and metrics use selected C3 suites. Missing evidence stays
 visible when suite/config membership is unknown. Active filters are in the HTML.
+
+## Commit-slot top-down report (`rvw.topdown/1`)
+
+`rvw perf topdown EVENTS [--c2 RVFI] [--result RESULT]` (MCP `perf_topdown`) reads the end
+record of an `rvw.probe-events/1` stream. The project binds five counter probes:
+`topdown_slots` (commit width each cycle) and `topdown_retiring`, `topdown_bad_speculation`,
+`topdown_backend_bound`, `topdown_frontend_bound`. The project owns their per-cycle predicates;
+the recommended ones are those of the OoO model's `topdown` partition (`rvw/src/rvw/ooo/README.md`).
+
+```json
+{"schema": "rvw.topdown/1", "unit": "commit_slots", "total_slots": 36122, "cycles": 18061, "width": 2.0,
+ "slots": {"retiring": 10653, "bad_speculation": 7278, "backend_bound": 17869, "frontend_bound": 322},
+ "fractions": {"retiring": 0.295, "...": 0.0}, "status": "checked",
+ "checks": {"c2_retirements": 10653, "c1_instret": 10653}, "identity": {}, "source": "...", "method": "..."}
+```
+
+The four classes must sum to `total_slots`, or the command fails (exit 2). With `--c2`,
+`retiring` must equal the C2 retirement count (records without `trap` and without `event`), and
+`status` is `checked`; without it `status` is `unchecked`. With `--result`, `retiring` must also
+equal C1 `instret`. A run without an end record fails. The report is a project-bound slot
+partition, not hardware top-down counters.
