@@ -330,3 +330,23 @@ independent UART VIP checked 28 transmitted frames. The same bench passed
 through the elaborated Spinal wrapper. It measured 361 clock cycles between
 two queued 5N1.5 frames at a 48-clock bit period, including the engine's
 one-clock inter-frame gap. No hardware or complete compliance result is claimed.
+
+## SPI flash boot
+
+The [flash example](examples/flash/README.md) composes the real RV32IM core,
+a boot ROM, empty application RAM, SPI and a finisher. The ROM reads a payload
+through real SPI pins, checks its byte sum, copies it into RAM and jumps to it.
+The host supplies no application RAM preload. A read-only NOR model supports
+normal/fast reads and explicit project identity. Program/erase are unsupported.
+
+| Image at seed 31 | CPU cycles | Retired | Flash bytes | Result |
+|---|---:|---:|---:|---|
+| Unchanged 16-byte payload | 5,150 | 573 | 16 | finisher 1; pass |
+| One corrupted payload bit | 5,130 | 569 | 16 | finisher 3; rejected |
+
+These 2026-11-13 runs observed RAM word zero as zero before execution. The
+successful run observed the expected first payload word after boot. The
+independent SPI monitor checked 20 wire words in each run. This is a composed
+CPU development simulation. C1 gate acceptance, XIP and hardware are unrun.
+The legacy APB bridge now handles a peripheral without PSLVERROR while still
+rejecting partial writes before target select. Its native smoke passed.

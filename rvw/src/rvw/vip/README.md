@@ -80,3 +80,10 @@ Plain HDL projects can pass `--port-map ports.json` to `vip buses` and `vip
 bench`. The `rvw.hdl-ports/1` declaration lists the top, clock, reset polarity,
 and a `ready_valid` channel with valid, ready and payload port names. The HDL
 database validates the ports and widths. See `docs/contracts/vip.md`.
+
+`rvw.vip.spi_flash.ReadOnlyNor` is a mode-0, eight-bit read-only NOR image
+model. It implements 24-bit normal/fast reads, status and an explicit supplied
+JEDEC identity. Unsupported program/erase commands and partial words raise
+protocol errors. Its pin-level `step(Pins)` method works with the existing SPI
+agent. The composed flash-boot example uses it with a real CPU. See
+`SpinalSoc/examples/flash/README.md` for the measured scope and limits.

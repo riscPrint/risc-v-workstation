@@ -466,3 +466,17 @@ request outputs are available. Register aliases and autonomous status retain
 unknown reset values in generic map consumers. The native directed bench
 checks their behavior with the UART agent. The exact register, FIFO and
 interrupt semantics are in SpinalSoc/examples/uart16550/README.md.
+
+## SPI flash boot example
+
+The flash example preloads only its boot-ROM ELF. Application RAM is generated
+with an empty image. Its payload is supplied only through the SPI pin model.
+The example checks the initial RAM observation, payload image identity,
+finisher code, positive retired count, exact flash byte count and independent
+SPI word count. `boot-checks.json` retains those observations for both passing
+and deliberately corrupted-image runs. These are component simulation records,
+not C1 acceptance or complete boot qualification results.
+
+The legacy APB bridge accepts targets which omit `PSLVERROR`. Their response
+error is zero. The bridge still rejects partial writes before asserting the
+target select. The native errorless-target smoke checks both behaviors.
