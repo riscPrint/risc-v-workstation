@@ -116,3 +116,6 @@ The binding checks the ABI, required callbacks, initialization and operation
 status. It refuses accesses after close. It has no checkpoint binding.
 Include the shared library, configuration and transitive Python modules in
 C1 input capture before using it in a cacheable regression.
+
+The builder accepts standard shared-library and macOS Python framework layouts.
+It uses the selected interpreter's sysconfig paths. A missing library is refused.
