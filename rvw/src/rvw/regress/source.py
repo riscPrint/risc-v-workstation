@@ -46,6 +46,7 @@ def _hash_file(h, p: Path) -> None:
         return
     try:
         with open(p, "rb") as f:
+            h.update(f"mode:{os.fstat(f.fileno()).st_mode & 0o111}\0".encode())
             for chunk in iter(lambda: f.read(1 << 20), b""):
                 h.update(chunk)
     except OSError as e:
