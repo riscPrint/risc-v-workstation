@@ -2,11 +2,15 @@
   "schema": "rvw.boom-stream-source-review/1",
   "issue": 5,
   "historical_fired_checks": 24,
-  "source_dispositions": 23,
+  "source_dispositions": 24,
   "generic_cancellation_explained": 0,
   "source_bound_cancellations": 5,
   "native_validation": "NOT RUN",
   "scope": "Source review only. Chisel Queue flush and branch-mask mutation are not Spinal Stream helper calls.",
+  "historical_named_dispositions": 23,
+  "later_aliases": [
+    "stream.valid_hold:tile.frontend.fb.io_deq"
+  ],
   "unmapped_historical_checks": 1,
   "checks": [
     {
@@ -248,6 +252,18 @@
       "cancel_sample": "previous",
       "binding_validation": "NOT RUN",
       "remaining": "Create an exact cancellation observation from the source guard. Verify its name and sample phase before changing channel settings."
+    },
+    {
+      "id": "stream.payload_stable:arbiter.ups_0_a",
+      "explicit_binding": false,
+      "classification": "reviewed_offer_or_payload_change",
+      "reason": "Spinal 1.15.0 Arbiter.scala:35-50 creates internal ups from io.ups through Bus.withSourceOffset. Bus.scala:456-465 forwards the handshake and payload, then replaces the source field; port zero has offset zero. The internal A stage can replace an unaccepted offer from the MSHR arbiter (mshrs.scala:719). Core issue #7 names this exact historical ID. This source disposition adds no waiver; accepted TileLink burst checks remain active.",
+      "generic_rule_explains": false,
+      "mechanism": "tilelink_pre_acceptance_offer",
+      "cancel_condition": null,
+      "cancel_sample": null,
+      "binding_validation": "NOT RUN",
+      "remaining": "Keep the exact offer semantics. A registered-flush condition alone does not describe every allowed offer change."
     },
     {
       "id": "stream.payload_stable:io_mem_a",

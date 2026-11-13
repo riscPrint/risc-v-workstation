@@ -16,7 +16,8 @@ def test_source_report_is_current_and_does_not_claim_native_results():
     assert report['native_validation'] == 'NOT RUN'
     assert report['generic_cancellation_explained'] == 0
     assert len({r['id'] for r in report['checks']}) == report['source_dispositions']
-    assert report['source_dispositions'] + report['unmapped_historical_checks'] == 24
+    assert report['historical_named_dispositions'] + report['unmapped_historical_checks'] == 24
+    assert report['source_dispositions'] == report['historical_named_dispositions'] + len(report['later_aliases'])
 
 
 def test_live_payload_and_per_cycle_offers_do_not_become_cancel_bindings():
@@ -31,3 +32,17 @@ def test_live_payload_and_per_cycle_offers_do_not_become_cancel_bindings():
     for row in report['checks']:
         if row['explicit_binding']:
             assert row['cancel_condition'] == 'io_flush' and row['cancel_sample'] == 'previous'
+
+
+def test_internal_source_offset_stage_has_a_separate_source_disposition():
+    root = ROOT/'SpinalChecks/boom'
+    report = runpy.run_path(str(root/'stream-dispositions.py'))['dispositions']()
+    rows = {r['id']: r for r in report['checks']}
+    ident = 'stream.payload_stable:arbiter.ups_0_a'
+    assert ident in rows and 'stream.payload_stable:arbiter.io_ups_0_a' in rows
+    assert rows[ident]['mechanism'] == 'tilelink_pre_acceptance_offer'
+    assert rows[ident]['cancel_condition'] is None
+    assert 'Bus.scala:456-465' in rows[ident]['reason']
+    assert ident not in (root/'streams.txt').read_text()
+    assert ident not in (root/'waivers.txt').read_text()
+    assert report['unmapped_historical_checks'] > 0  # The later alias cannot close the original inventory.

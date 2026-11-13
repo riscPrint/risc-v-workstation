@@ -53,7 +53,10 @@ def dispositions():
             'historical_fired_checks': 24, 'source_dispositions': len(rows),
             'generic_cancellation_explained': 0, 'source_bound_cancellations': sum(r['explicit_binding'] for r in rows), 'native_validation': 'NOT RUN',
             'scope': 'Source review only. Chisel Queue flush and branch-mask mutation are not Spinal Stream helper calls.',
-            'unmapped_historical_checks': 24 - len(rows), 'checks': rows}
+            # FetchBuffer was a later finding, not an original historical ID.
+            'historical_named_dispositions': len(rows) - 1,
+            'later_aliases': ['stream.valid_hold:tile.frontend.fb.io_deq'],
+            'unmapped_historical_checks': 24 - (len(rows) - 1), 'checks': rows}
 
 
 if __name__ == '__main__':
