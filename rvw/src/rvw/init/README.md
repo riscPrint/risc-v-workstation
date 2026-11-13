@@ -240,3 +240,9 @@ elaboration as simulation. Set `RVW_SBT_LOCK` for a private build lock.
 The paired case uses two secret register values. The flow policy marks the
 smoke program's `scratch` word as secret and watches the bus address.
 A result applies only to the supplied program, observations and policy.
+
+Mapped Spinal RV32I/IM cores with one req/rsp bus and RVFI also get a formal ISA
+binding. Set `RISCV_FORMAL` before init or install its source checkout at
+`~/.cache/rvw/riscv-formal`. `rvw formal isa` exports fresh RTL through
+`riscv_formal.build`, then runs the selected finite instruction checks.
+See the integration guide for the memory assumptions and remaining proof gaps.

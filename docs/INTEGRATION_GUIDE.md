@@ -1825,3 +1825,23 @@ marks `scratch` as secret. Change the policy for the intended threat model.
 CSR policies resolve storage through the existing netlist resolver. Missing
 or ambiguous storage needs an explicit `csr_signals` entry. A small native
 result does not establish complete security.
+
+## Formal ISA for a mapped core
+
+Mapped Spinal RV32I/IM init with one req/rsp bus and RVFI also writes a formal
+wrapper and `[riscv_formal]`. Set `RISCV_FORMAL` to the installed riscv-formal
+checkout before init. Without it, the generated root is
+`~/.cache/rvw/riscv-formal`. Put the pinned checkout there or set the generated
+`riscv_formal.root` path. It must contain `checks` and `insns`.
+
+```sh
+rvw formal isa --out rvw/out/isa-first --timeout 8 --json
+```
+
+The command exports fresh RTL before checking add, load, store and retirement
+cover. The default bound is 24 cycles. A timeout is inconclusive. Inspect each
+instruction's activation result. Add checks to `riscv_formal.checks` for more
+instructions. The generated memory has stable symbolic bytes and ordered
+writes. It returns read responses one cycle after acceptance. Review this
+choice against the core. Machine-state and observer conformance rows remain
+unsupported until their separate bindings exist.

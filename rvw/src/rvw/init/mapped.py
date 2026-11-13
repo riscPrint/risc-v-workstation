@@ -463,6 +463,10 @@ exec nice -n 10 "${{RVW_PYTHON:-$RVW_HOME/rvw/.venv/bin/python}}" -m rvw query b
     from . import native_bindings
     files.update(native_bindings.files(core_map))
     files.update(native_bindings.security(core_map))
+    from .formal_scaffold import formal
+    formal_files, formal_config = formal(core_map)
+    files.update(formal_files)
+    files["rvw.toml"] += formal_config
     conflicts = write_files(root, files, force=force, dry_run=dry_run)
     return dict(schema='rvw.init/1', status='planned' if dry_run else 'created', exit_code=0, root=str(root),
                 isa=isa, xlen=xlen, mapped=True, files=files, overwritten=conflicts if force else [],
