@@ -74,3 +74,26 @@ def test_uncertified_assumptions_cannot_earn_portfolio_pass(tmp_path, monkeypatc
     r = p.race(plan(tmp_path), tmp_path, tmp_path / 'out', cross_check=True)
     assert r['status'] == 'inconclusive' and r['proof_kind'] == 'none'
     assert r['environment_check'] == 'activation_not_checked'
+
+
+def test_ebmc_receives_original_aiger_bytes(tmp_path, monkeypatch):
+    import json
+    source = tmp_path / 'input.aag'
+    source.write_bytes(b'aag 1 1 0 1 0\n2\n0\n')
+    m = {'top': 'top', 'sources': [{'path': source.name, 'format': 'aiger',
+          'sha256': hashlib.sha256(source.read_bytes()).hexdigest()}], 'engines': ['ebmc']}
+    monkeypatch.setattr(p.shutil, 'which', lambda _: __file__)
+    def run(cmd, **kwargs):
+        cwd = Path(kwargs['cwd'])
+        if cmd[0] == 'yosys':
+            (cwd / 'design.json').write_text('{"modules":{"top":{"cells":{"a":{"type":"$assert"}}}}}')
+        else:
+            assert Path(cmd[1]).read_bytes() == source.read_bytes()
+            assert cmd[1].endswith('.aig')
+            assert '--top' not in cmd
+            (cwd / 'ebmc-result.json').write_text(json.dumps({'properties': [{'status': 'PROVED'}]}))
+        return SimpleNamespace(stdout='', stderr='', returncode=0, timed_out=False)
+    monkeypatch.setattr(p, 'run_group', run)
+    r = p.race(m, tmp_path, tmp_path / 'out')
+    assert r['status'] == 'pass'
+    assert r['rows'][0]['input_format'] == 'aiger_native'

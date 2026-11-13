@@ -1810,3 +1810,48 @@ The generator writes `channels.sv.bindings.json` with `rvw.channel-bindings/1`,
 the resolved bindings, captured database identity and database staleness warnings.
 This records the supplied database, not physical timing or current RTL parity.
 `formal_properties` accepts the same `db` option through MCP.
+## EBMC native qualification
+
+EBMC 6.2 was built from `2f4f2fc76f450557de3eef5f3e3d075869999e85`
+with CBMC `f17df18eaf4a84e7ab7b4e8f60bac1685ad05045` outside the repository.
+The Darwin deployment-target patch described above makes its version report
+`dirty`. No verification algorithm was changed. Native positive/fault counter
+checks proved the safe case and found the fault. Native AIGER input proved
+`a19-p15`; induction on `itc99-b13-p10` was inconclusive at depth 20.
+Raw results and executable hashes are in
+`/tmp/rvw-deep-ebmc-{counters,hwmcc}/result.json`.
+
+The adapter now passes original AIGER bytes to EBMC's native reader. The top
+module field applies to Verilog only. The Yosys preparation translation remains
+separate. This avoids assigning Yosys global-clock syntax to EBMC semantics.
+
+Final two-case pinned HWMCC measurement on this host, 2026-11-13. Each job
+had a 12 s timeout and depth 20. Wall times include preparation. Solved means
+an unbounded proof or a concrete counterexample. Bounded passes are separate.
+
+| Mode | Engine | Solved / 2 | Bounded passes | Total wall time (s) |
+|---|---|---:|---:|---:|
+| prove | `smtbmc:yices` | 1 | 0 | 2.660 |
+| prove | `smtbmc:z3` | 1 | 0 | 2.079 |
+| prove | `smtbmc:bitwuzla` | 1 | 0 | 2.387 |
+| prove | `smtbmc:cvc5` | 1 | 0 | 2.503 |
+| prove | `aiger:suprove` | 0 | 0 | 0.010 |
+| prove | `abc:pdr` | 2 | 0 | 1.567 |
+| prove | `aiger:avy` | 0 | 0 | 2.302 |
+| prove | `aiger:rIC3` | 2 | 0 | 1.977 |
+| prove | `ebmc` | 1 | 0 | 0.390 |
+| bmc | `smtbmc:yices` | 0 | 2 | 2.237 |
+| bmc | `smtbmc:z3` | 0 | 2 | 2.359 |
+| bmc | `smtbmc:bitwuzla` | 0 | 2 | 1.789 |
+| bmc | `smtbmc:cvc5` | 0 | 2 | 1.773 |
+| bmc | `btor:btormc` | 0 | 2 | 1.507 |
+| bmc | `abc:bmc3` | 0 | 0 | 1.725 |
+| bmc | `btor:pono` | 0 | 2 | 1.792 |
+| bmc | `aiger:rIC3` | 0 | 2 | 1.808 |
+| bmc | `ebmc` | 0 | 2 | 0.208 |
+
+Raw rows, errors, missing dependencies, hashes and commands:
+`/tmp/rvw-deep-final-{prove,bmc}/result.json`. Avy crashed. `suprove` was
+absent. ABC BMC3 returned errors on these AIGER imports. Pono and BTORMC
+returned bounded passes. This small subset is not a capacity qualification.
+No small-open-core property campaign or licensed comparison ran.

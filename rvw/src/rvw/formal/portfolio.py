@@ -158,8 +158,6 @@ def race(plan, root, out, *, timeout=30, cross_check=False):
         row = {'engine': name, **inventory[name], 'wall_s': None}
         if row['status'] == 'not_installed':
             return row
-        if backend == 'ebmc' and any(s.get('format') == 'aiger' for s in plan['sources']):
-            return {**row, 'status': 'unsupported_input', 'reason': 'AIGER import uses Yosys global-clock semantics'}
         if mode not in modes:
             return {**row, 'status': 'unsupported_mode'}
         directory = out / name.replace(':', '_')
@@ -183,7 +181,14 @@ def race(plan, root, out, *, timeout=30, cross_check=False):
                     command.extend(['--rIC3', str(shim)])
                     row['compatibility_sha256'] = sha256(shim.read_bytes()).hexdigest()
         else:
-            command = ['ebmc', *map(str, sources), '--top', plan['top'], '--bound', str(depth), '--json-result', 'ebmc-result.json']
+            if any(s.get('format') == 'aiger' for s in plan['sources']):
+                native_sources = [str((out / 'input0.aig').resolve())]
+                top_options = []  # Native AIGER has its own main transition system.
+                row['input_format'] = 'aiger_native'
+            else:
+                native_sources = list(map(str, sources))
+                top_options = ['--top', plan['top']]
+            command = ['ebmc', *native_sources, *top_options, '--bound', str(depth), '--json-result', 'ebmc-result.json']
             if mode == 'prove':
                 command.append('--k-induction')
         def on_start(pid):
