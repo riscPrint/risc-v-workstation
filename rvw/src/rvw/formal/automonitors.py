@@ -30,13 +30,13 @@ def generate(prop, ports, signal, expr, clock, reset):
 
 def observation(kind, result):
     if result['status'] == 'fail':
-        if kind in ('fsm_state', 'fsm_transition', 'dead_code', 'toggle'):
+        if kind in ('fsm_state', 'fsm_transition', 'dead_code', 'toggle', 'counter_wrap'):
             return 'reached'
         return 'not_constant' if kind == 'stuck_at' else 'violated'
     if result['status'] != 'pass':
         return 'inconclusive'
     unbounded = result['proof_kind'] == 'unbounded'
-    if kind in ('fsm_state', 'fsm_transition', 'dead_code', 'toggle'):
+    if kind in ('fsm_state', 'fsm_transition', 'dead_code', 'toggle', 'counter_wrap'):
         return 'unreachable_conditional' if unbounded else 'not_observed_bounded'
     if kind == 'stuck_at':
         return 'constant_conditional' if unbounded else 'holds_bounded'

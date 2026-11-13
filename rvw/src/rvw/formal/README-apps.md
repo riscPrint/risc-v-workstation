@@ -309,10 +309,10 @@ candidates. Complete enum encodings receive FSM state and transition observation
 Retained internal enum signals are exposed by exact RTL name with Yosys. The tool
 checks each exposed width before it builds a wrapper. No hierarchical name is guessed.
 
-FIFO, arbiter and CAM class candidates retain type and memory evidence. Their
-semantic endpoint contracts remain unsupported when the database does not supply
-them. Counter wrap requirements are not inferred. These roles are reported with
-an explicit unsupported reason. This is not complete automatic app binding.
+FIFO, arbiter and CAM class candidates retain type and memory evidence. The
+automatic component contracts below bind supported typed interfaces. Unbound roles
+retain an explicit unsupported reason. Counter wrap requirements are not inferred;
+wrap events are observations. Automatic binding does not cover every design.
 The report counts generated, proven, bounded, failed and unsupported checks.
 A failed reachability assertion can mean that a requested observation was reached.
 Read each row's `observation` before treating it as a design failure.
@@ -388,3 +388,26 @@ with no path to progress fails. Terminal states are reported separately.
 This checks progress possibility. A state can pass even if it can wait forever,
 provided a path to progress exists. Use `app-live` for universal fair eventual
 response. The graph result does not certify an RTL-to-graph translation.
+
+## Automatic component contracts
+
+Autocheck binds a FIFO when the selected component has FIFO type evidence, one
+input Stream, one output Stream and one memory with known depth and payload width.
+The generated `fifo_stream` app checks accepted-transfer ordering and capacity.
+It supports an empty bypass transfer and the standard `StreamFifo` flush input.
+It does not infer contracts for composite payloads or multiple memories.
+
+An arbiter with several input Streams and one output Stream gets an
+`arbiter_transfer` app. It checks one accepted input per accepted output and
+matching payload data. It does not assume a grant fairness policy. Structurally
+self-incrementing or decrementing registers get `counter_wrap` observations.
+Internal counter and memory-address endpoints are exposed by exact RTL name.
+CAM candidates get memory-address bounds when these endpoints are available.
+CAM key matching and duplicate-entry policies remain unsupported.
+
+A second real library run selected component `fifo`, module `StreamFifo`, and
+`--kind fifo_stream --mode prove --engine abc:pdr --depth 8 --timeout 30`.
+Counts: **1 generated, 1 proven, 0 bounded passes, 0 failed, 7 unsupported discovery
+records**. The queue reference was bound automatically from typed channels and
+memory structure. Native two-input arbiter proof and double-accept mutant checks
+also passed. The earlier wrapper counts above remain the recorded baseline.

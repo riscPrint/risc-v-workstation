@@ -136,6 +136,10 @@ def generate(plan, prop):
         from .security.entropy import generate as entropy_monitor
         extra, assertion = entropy_monitor(prop, ports, signal, clock, reset)
         body.extend(extra)
+    elif kind in ('fifo_stream', 'arbiter_transfer', 'counter_wrap'):
+        from .role_monitors import generate as role_monitor
+        extra, assertion = role_monitor(prop, ports, signal, clock, reset)
+        body.extend(extra)
     elif kind == 'stream_stability':
         valid, ready, data = (signal(prop[k]) for k in ('valid', 'ready', 'signal'))
         if ports[valid]['width'] != 1 or ports[ready]['width'] != 1:
@@ -220,7 +224,7 @@ def run(args):
         'pass' if all(r['status'] == 'pass' for r in rows) else 'inconclusive')
     if all(r['status'] == 'waived' for r in rows):
         status = 'no_checks'
-    if status != 'no_checks' and any(p['kind'] in ('fsm_state', 'fsm_transition', 'dead_code', 'toggle') for p in properties):
+    if status != 'no_checks' and any(p['kind'] in ('fsm_state', 'fsm_transition', 'dead_code', 'toggle', 'counter_wrap') for p in properties):
         status = 'inconclusive'  # Reachability targets use assertion failures as observations.
     report = {'schema': 'rvw.formal-app-results/1', 'status': status, 'properties': rows,
               'limits': 'Reviewed port map. Progress is a bounded response contract, '

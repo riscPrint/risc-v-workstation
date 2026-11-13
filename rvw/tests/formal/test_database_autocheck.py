@@ -93,3 +93,23 @@ def test_typed_output_stream_contract(gcd_db, tmp_path):
     assert contracts[0]['kind'] == 'stream_stability'
     plan = {'top':'Top','clock':'clk','reset':'reset','ports':dict(ports,clk={'direction':'input','width':1},reset={'direction':'input','width':1})}
     assert 'rvwa_stalled' in generate(plan,contracts[0])
+
+
+def test_pruned_instance_ports_remain_in_declared_interface(gcd_db,tmp_path):
+    path=tmp_path/'pruned.db';shutil.copyfile(gcd_db,path)
+    db=sqlite3.connect(path);db.execute("UPDATE signals SET pruned=1 WHERE name='io_result'");db.commit();db.close()
+    plan,_=populate({'schema':'rvw.autocheck/1','top':'GCD'},path,Capture(tmp_path/'capture'))
+    assert plan['ports']['io_result']=={'direction':'output','width':32}
+
+
+def test_cam_role_gets_structural_memory_bounds(gcd_db,tmp_path):
+    path=tmp_path/'cam.db';shutil.copyfile(gcd_db,path)
+    db=sqlite3.connect(path)
+    db.execute("UPDATE components SET class_name='Cam' WHERE id=1")
+    db.execute("INSERT INTO memories(id,signal_id,component_id,name,path,width,depth) VALUES(900,1,1,'entries','entries',32,3)")
+    db.execute("INSERT INTO mem_ports(id,memory_id,component_id,kind,address,enable) VALUES(900,900,1,'read','io_a','io_loadValues')")
+    db.commit();db.close()
+    _,evidence=populate({'schema':'rvw.autocheck/1','top':'GCD'},path,Capture(tmp_path/'capture'))
+    role=next(r for r in evidence['roles'] if r['role']=='cam')
+    assert role['checks']==['array_port_900']
+    assert 'unsupported' not in role
