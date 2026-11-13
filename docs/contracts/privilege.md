@@ -17,6 +17,20 @@ check PMM readback, exact trap cause/tval/PC and successful data values.
 The guest-pointer campaign below covers VS/VU HLV/HSV controls and HLVX
 exemption. Debug interactions and nonstandard environment controls remain unsupported. The backend refuses inconsistent controller declarations.
 
+## Split timer accesses and independent timer observations
+
+`kind = "sstc-rv32"` selects RV32 low/high timer CSRs and ILP32. Timer-event
+scenarios include `timer_contract`: source, ordered phases, ELF labels,
+compare/delta values and optional reference-time precondition/latency bound.
+Wide compare/delta values are hex strings. The `privilege_timer` C1 artifact
+is a JSON sample list: integer tick/phase_start, phase name, independent
+reference_time (integer or hex string), and Boolean pending. The checker binds
+the artifact hash. It requires every phase witness, checks modulo-64-bit
+virtual time and enforces a declared latency bound when present. Missing or
+late-only evidence remains inconclusive. No architectural counter-read
+synchronization is introduced, and sampled consistency is not a whole-core
+or physical timing proof.
+
 ## Privilege campaign artifacts
 
 IMSIC project data may select `file` as M, S or VS, `guest_index` for a VS

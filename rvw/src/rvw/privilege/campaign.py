@@ -25,7 +25,7 @@ def load(path):
         raise ValueError('modes must be distinct M, S or U entries')
     if raw.get('priv', 'msu') != 'msu' and not (raw.get('kind') in ('disabled','disabled-matrix') and raw.get('priv') == 'mu'):
         raise ValueError('control campaign requires supervisor support (msu)')
-    if raw.get('kind', 'controls') not in ('aplic-msi', 'epmp-matrix', 'disabled-matrix', 'reri', 'dvfs', 'controls', 'wfi', 'disabled', 'scheduled-wfi', 'plic', 'reset', 'nmi', 'pma', 'pmp', 'epmp', 'imsic', 'aplic', 'aclint', 'smnip', 'sstc', 'stateen', 'envcfg', 'landing', 'shadow'):
+    if raw.get('kind', 'controls') not in ('sstc-rv32', 'aplic-msi', 'epmp-matrix', 'disabled-matrix', 'reri', 'dvfs', 'controls', 'wfi', 'disabled', 'scheduled-wfi', 'plic', 'reset', 'nmi', 'pma', 'pmp', 'epmp', 'imsic', 'aplic', 'aclint', 'smnip', 'sstc', 'stateen', 'envcfg', 'landing', 'shadow'):
         raise ValueError('kind must be controls, wfi or disabled')
     if raw.get('kind') == 'wfi':
         from .wake import programs
@@ -37,7 +37,7 @@ def load(path):
 def scenarios(config):
     from importlib import import_module
     kind = config.get('kind', 'controls')
-    module = {'aplic-msi':'aplic_gateway', 'epmp-matrix':'epmp_matrix', 'disabled-matrix':'disabled_matrix', 'controls':'programs', 'wfi':'wake', 'scheduled-wfi':'scheduled',
+    module = {'sstc-rv32':'timer32', 'aplic-msi':'aplic_gateway', 'epmp-matrix':'epmp_matrix', 'disabled-matrix':'disabled_matrix', 'controls':'programs', 'wfi':'wake', 'scheduled-wfi':'scheduled',
               'reset':'lifecycle', 'nmi':'lifecycle', 'imsic':'aia', 'aplic':'aia',
               'aclint':'fast_interrupts', 'smnip':'fast_interrupts',
               'sstc':'extensions', 'stateen':'extensions', 'envcfg':'extensions', 'landing':'extensions'}.get(kind, kind)
@@ -58,7 +58,7 @@ def build(description, out, gcc='riscv64-unknown-elf-gcc'):
         name = row['id']
         source, elf = out / (name + '.S'), out / (name + '.elf')
         source.write_text(row.pop('assembly'))
-        command = [gcc, '-march=' + config.get('compiler_isa', config.get('isa', 'rv64im_zicsr_zifencei')), '-mabi=lp64',
+        command = [gcc, '-march=' + config.get('compiler_isa', config.get('isa', 'rv64im_zicsr_zifencei')), '-mabi=' + ('ilp32' if config.get('isa','rv64').startswith('rv32') else 'lp64'),
                    '-nostdlib', '-nostartfiles', '-static', '-Wl,--no-relax', '-T', str(out / 'link.ld'),
                    *row.get('link_options', []), '-o', str(elf), str(source)]
         result = run_group(command, capture=True, timeout=30)
@@ -79,9 +79,9 @@ def build(description, out, gcc='riscv64-unknown-elf-gcc'):
     (out / 'manifest.json').write_text(json.dumps(manifest, indent=2) + '\n')
     (out / 'functional-groups.json').write_text(json.dumps({'replace_defaults': True, 'groups': [
         {'name': 'privilege_csr_mode', 'fields': ['csr', 'mode'], 'when': {'class': 'csr'},
-         'domains': [['0x180', '0x300', '0x341', '0x342', '0x346', '0x347', '0x350', '0x351', '0x355', '0x35c', '0x150', '0x151', '0x15c', '0x250', '0x251', '0x25c', '0x600'], ['M', 'S', 'U']]},
+         'domains': [['0x180', '0x300', '0x341', '0x342', '0x346', '0x347', '0x350', '0x351', '0x355', '0x35c', '0x150', '0x151', '0x15c', '0x250', '0x251', '0x25c', '0x600', '0x011', '0x14d', '0x15d', '0x24d', '0x25d', '0x30a', '0x31a', '0x60a', '0x61a', '0x605', '0x615', '0x606', '0x306', '0x344', '0x644'], ['M', 'S', 'U']]},
         {'name': 'privilege_trap', 'fields': ['cause', 'mode'],
-         'when': {'event': 'trap', 'interrupt': False}, 'domains': [[2, 8, 9, 11], ['M']]},
+         'when': {'event': 'trap', 'interrupt': False}, 'domains': [[1, 2, 5, 7, 8, 9, 10, 11, 15, 18, 22], ['M']]},
         {'name': 'privilege_irq', 'fields': ['cause', 'mode'],
          'when': {'event': 'trap', 'interrupt': True}, 'domains': [[3, 7, 11], ['M']]},
     ]}, indent=2) + '\n')
@@ -188,6 +188,18 @@ def check(directory, results, platform, timeout=10):
                 row.update(status='fail', reason='C1 self-check failed')
                 rows.append(row)
                 continue
+            if scenario.get('timer_contract'):
+                from .timer_observe import check as timer_check
+                artifact = run.artifacts.get('privilege_timer')
+                observed = timer_check(scenario['timer_contract'],
+                                       json.loads((run.path / artifact).read_text()) if artifact else [])
+                row['timer'] = observed
+                if artifact:
+                    row['timer_sha256'] = digest(run.path / artifact)
+                if observed['status'] != 'pass':
+                    row.update(status=observed['status'],reason=observed.get('reason','incomplete timer observations'))
+                    rows.append(row)
+                    continue
             if scenario.get('dvfs_contract'):
                 from .dvfs import observe
                 artifact = run.artifacts.get('privilege_dvfs')
