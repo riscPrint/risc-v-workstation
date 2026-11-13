@@ -1004,16 +1004,16 @@ binding fails elaboration. See the three VexRiscv project bindings in
 These native results were recorded on 2026-11-13. Bound means that the check
 was compiled into the simulation. Fired counts check IDs, then total events.
 Unbound means a generated check had no native binding. The three retained
-formal captures contain 99 check IDs. All 99 passed depth-4 BMC with two initial
-reset samples. No activation measurement or unbounded proof was obtained.
+formal captures contain 99 check IDs. All 99 had passing depth-4 BMC engine observations with two initial
+reset samples. None has measured activation, so passing-evidence counts are zero. No activation measurement or unbounded proof was obtained.
 The later 33-check native capture has no formal run.
 
-| Design and programs | Generated | Bound | Proven | Bounded | Fired IDs / events | Unbound and reason |
+| Design and programs | Generated | Bound | Proven with activation | Bounded with activation | Fired IDs / events | Unbound and reason |
 |---|---:|---:|---:|---:|---:|---|
-| VexRiscv, 49 aligned ISA programs | 57 | 57 | 0 | 57 | 0 / 0 | 0; all native bindings present |
-| VexiiRiscv, scratch and absent-CSR programs | 25 | 25 | 0 | 25 | 0 / 0 | 0; all native bindings present |
+| VexRiscv, 49 aligned ISA programs | 57 | 57 | 0 | 0 | 0 / 0 | 0; all native bindings present |
+| VexiiRiscv, scratch and absent-CSR programs | 25 | 25 | 0 | 0 | 0 / 0 | 0; all native bindings present |
 | VexiiRiscv, nine catalog CSR programs | 33 | 33 | NOT RUN | NOT RUN | 0 / 0 | 0; accepted CSR interface, including RAM |
-| Composed SoC, RV32 stub hello | 17 | 17 | 0 | 17 | 0 / 0 | 0; all native bindings present |
+| Composed SoC, RV32 stub hello | 17 | 17 | 0 | 0 | 0 / 0 | 0; all native bindings present |
 
 The [nine-CSR Vexii record](../examples/vexiiriscv/csr-bank-native-results.json) has nine RTL passes,
 eight Spike passes and one retained `marchid` configuration mismatch. The new
@@ -1170,3 +1170,24 @@ to a cache. A project must supply accepted channel and local-operation events.
 Its three Scala tests cover a legal dirty probe/writeback flow, reservation
 loss, data/ownership/ack faults and negotiated-capability refusal. They are
 model tests, not an RTL cache qualification.
+
+### Generated check activation
+
+New inventories name `trigger_signal` for stream hold/stability, memory and
+vector index checks, enum checks and declared rules with an explicit trigger.
+`DeclaredChecks.rule(..., trigger = event)(failure)` binds a declared trigger.
+A rule without that argument remains unmeasured. CSR rules declare their
+known-state or accepted-access trigger.
+
+Monitor reports include one activation row per inserted check. Counts are
+sampled in the check clock domain and saturate at 4294967295.
+Zero means `no_activation`. A missing trigger means `unmeasured`.
+Neither is passing check evidence. Zero firings remain a separate observation.
+
+The connected-formal preparer emits a separate cover job for each trigger.
+It attaches that job with `activation_sby` at the assertion BMC depth.
+The existing `rvw formal regress` runner records reached, bounded cover misses,
+timeouts and errors. `rvw checks report` and MCP `checks_report` expose these
+observations. Proof and bounded counts require a reached formal trigger.
+The historical table above has unmeasured activation. Its 99 bounded engine
+observations cannot be counted as activated passing evidence.

@@ -374,3 +374,18 @@ check enable changes at source-low samples, no output edge or pending work
 while disabled, and the declared wake bound. The generation report lists gate
 names. A domain with such a monitor is removed from unmonitored_domains. This
 does not mean that all power behavior of that domain has been checked.
+
+## Generated check activation
+
+The optional inventory field `trigger_signal` names a one-bit obligation trigger.
+A missing trigger is unmeasured. It is not a failed cover.
+The optional `activations` array in `rvw.checks-run/1` lists each inserted ID.
+Each row has `count` and `status`. A null count means unmeasured.
+A zero count means `no_activation`. A positive count means `activated`.
+Counts saturate at 4294967295.
+Qualification reports retain these rows and totals by kind.
+Old reports stay readable and have unmeasured activation.
+Proof and bounded counts require an attached formal activation result with
+status `reached`. BMC activation must use the same depth as the assertion job.
+A cover miss means only that the trigger was not reached within that bound.
+Simulation activation does not establish formal activation.

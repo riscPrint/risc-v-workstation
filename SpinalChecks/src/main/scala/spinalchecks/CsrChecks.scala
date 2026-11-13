@@ -51,12 +51,12 @@ object CsrChecks {
     when(write && !accessDenied && legal) { known := True }
     if (readData != null) {
       require(readData.getWidth == w)
-      DeclaredChecks.rule("csr.read", name, "granted read data before side effects")(
+      DeclaredChecks.rule("csr.read", name, "granted read data before side effects", trigger = known && read && !accessDenied)(
         known && read && !accessDenied && readData =/= expected)
     }
-    DeclaredChecks.rule("csr.state", name, "v1 independent reset, WARL/WLRL, read-only, read-clear, W1C, hardware priority")(
+    DeclaredChecks.rule("csr.state", name, "v1 independent reset, WARL/WLRL, read-only, read-clear, W1C, hardware priority", trigger = known)(
       known && observed =/= expected)
-    DeclaredChecks.rule("csr.access", name, "v1 declared minimum privilege")(
+    DeclaredChecks.rule("csr.access", name, "v1 declared minimum privilege", trigger = read || write)(
       (read || write) && (denied =/= accessDenied))
   }
 }

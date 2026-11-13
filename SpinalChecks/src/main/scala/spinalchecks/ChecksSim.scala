@@ -29,7 +29,7 @@ object ChecksSim {
 
   /** `rvw.checks-run/1`: the run's firing checks, plus caller metadata (test name, status, seed...).
     * Pure: `fs` comes from [[firings]], read inside the simulation. */
-  def runReport(r: ChecksResult, fs: Seq[Firing], meta: Seq[(String, Json.V)]): String = {
+  def runReport(r: ChecksResult, fs: Seq[Firing], meta: Seq[(String, Json.V)], activations: Seq[Json.V] = Nil): String = {
     import Json._
     requireMonitors(r)
     val checkedMeta = meta.map {
@@ -42,6 +42,7 @@ object ChecksSim {
       "checks_report" -> r.reportFile,
       "inserted" -> r.inserted.size,
       "fired" -> fs.size) ++ checkedMeta ++ Seq[(String, V)](
+      "activations" -> arr(activations),
       "firings" -> arr(fs.sortBy(_.firstCycle).map(f => obj(
         "id" -> f.check.id, "kind" -> f.check.kind, "count" -> f.count, "count_saturated" -> (f.count == 0xffff),
         "first_cycle" -> f.firstCycle, "fail_signal" -> Option(f.check.failName).map(n => SpinalChecks.qualify(SpinalChecks.instancePath(f.check.component), n)),
@@ -51,7 +52,16 @@ object ChecksSim {
 
   /** Reads the firings and writes the report; call inside the simulation. */
   def writeRunReport(top: Component, file: String, meta: Seq[(String, Json.V)] = Nil): Unit =
-    writeFile(file, runReport(SpinalChecks.result(top), firings(top), meta))
+    {
+      import Json._
+      val r = SpinalChecks.result(top)
+      val activations = r.inserted.map { c =>
+        val hits = Option(c.activationCount).map(_.toLong)
+        obj("id" -> c.id, "count" -> hits,
+          "status" -> Str(hits.map(n => if (n > 0) "activated" else "no_activation").getOrElse("unmeasured"))): V
+      }
+      writeFile(file, runReport(r, firings(top), meta, activations))
+    }
 
   def writeFile(file: String, text: String): Unit = {
     val p = Paths.get(file).toAbsolutePath

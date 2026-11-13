@@ -352,10 +352,26 @@ class PhaseInsertChecks(cfg: ChecksConfig, result: ChecksResult) extends PhaseNe
         if (cd != null && (cd.hasResetSignal || cd.hasSoftResetSignal)) !cd.isResetActive else True
 
       /** Turns a failure condition into hardware according to the mode. */
-      def emit(rec: CheckRecord, cond: Bool, message: String = "failed"): Unit = {
+      def emit(rec: CheckRecord, cond: Bool, message: String = "failed", trigger: Bool = null): Unit = {
         val base = uniqueName(s"chk_${Kind.tag(rec.kind)}_${sanitize(rec.objName)}")
         val fail = Bool().setName(base)
         fail := cond
+        if (trigger != null) {
+          val reached = Bool().setName(base + "_trigger")
+          reached := trigger
+          reached.simPublic().addTag(Verilator.public)
+          rec.trigger = reached
+          if (result.formal) {
+            val cd = ClockDomain.current
+            cd.copy(config = cd.config.copy(resetKind = SYNC)).on { cover(reached) }
+          }
+          if (cfg.mode != Mode.Assert) {
+            val hits = Reg(UInt(32 bits)).init(0).setName(base + "_activations")
+            when(reached && hits =/= hits.maxValue) { hits := hits + 1 }
+            hits.simPublic().addTag(Verilator.public)
+            rec.activationCount = hits
+          }
+        }
         rec.fail = fail
         rec.clockDomain = ClockDomain.current
         val loc = rec.location.map(l => new spinal.idslplugin.Location(l.file.stripSuffix(".scala"), l.line, 1)).getOrElse(implicitly[spinal.idslplugin.Location])
@@ -511,7 +527,7 @@ class PhaseInsertChecks(cfg: ChecksConfig, result: ChecksResult) extends PhaseNe
       }
       for (d <- c.getTags().collect { case d: DeclaredRule => d }) {
         val rec = newRecord(d.kind, d.name, false, None, d.detail)
-        if (rec.inserted) todo += { () => d.cd.on { emit(rec, active(d.cd) && d.fail) } }
+        if (rec.inserted) todo += { () => d.cd.on { emit(rec, active(d.cd) && d.fail, trigger = Option(d.trigger).map(active(d.cd) && _).orNull) } }
       }
       for (((bit, st), i) <- f.bits.zipWithIndex) {
         val rec = newRecord("bits.index", s"select_$i", false, SourceLoc.of(st), "use-gated dynamic bit select")
@@ -582,11 +598,11 @@ class PhaseInsertChecks(cfg: ChecksConfig, result: ChecksResult) extends PhaseNe
               val stall = (v && !r)
               val stallPrev = RegNext(stall).init(False).setName(uniqueName(s"chk_${sanitize(name)}_stall_prev"))
               val act = active(ClockDomain.current)
-              if (hold.inserted) emit(hold, act && stallPrev && !cancel && !v)
+              if (hold.inserted) emit(hold, act && stallPrev && !cancel && !v, trigger = act && stallPrev && !cancel)
               if (stable != null && stable.inserted) {
                 val now = Cat(payload.map(_.asBits))
                 val prev = RegNext(now).setName(uniqueName(s"chk_${sanitize(name)}_payload_prev"))
-                emit(stable, act && stallPrev && !cancel && v && now =/= prev)
+                emit(stable, act && stallPrev && !cancel && v && now =/= prev, trigger = act && stallPrev && !cancel && v)
               }
             }
           }
@@ -736,7 +752,7 @@ class PhaseInsertChecks(cfg: ChecksConfig, result: ChecksResult) extends PhaseNe
                 case x => val w = Bool().setName(uniqueName(s"chk_${sanitize(obj)}_en")); w.assignFrom(x); setEn(w); w
               }
               rec.signals("address") = Seq(a)
-              def body(): Unit = emit(rec, active(ClockDomain.current) && armed(addr) && e && a >= U(m.wordCount))
+              def body(): Unit = emit(rec, active(ClockDomain.current) && armed(addr) && e && a >= U(m.wordCount), trigger = active(ClockDomain.current) && armed(addr) && e)
               if (cd != null) cd.on(body()) else body()
             }
           }
@@ -765,7 +781,7 @@ class PhaseInsertChecks(cfg: ChecksConfig, result: ChecksResult) extends PhaseNe
           }
           rec.signals("index") = Seq(idx)
           val cd = sel match { case b: BaseType if b.isReg => b.clockDomain; case _ => ClockDomain.current }
-          cd.on { emit(rec, active(cd) && armed(sel) && uses.map(x => selectedUse(x._2, x._1)).reduce(_ || _) && idx >= U(n)) }
+          cd.on { emit(rec, active(cd) && armed(sel) && uses.map(x => selectedUse(x._2, x._1)).reduce(_ || _) && idx >= U(n), trigger = active(cd) && armed(sel) && uses.map(x => selectedUse(x._2, x._1)).reduce(_ || _)) }
         }
       }
 
@@ -788,7 +804,7 @@ class PhaseInsertChecks(cfg: ChecksConfig, result: ChecksResult) extends PhaseNe
             e.clockDomain.on {
               val bits = e.asBits
               val legal = elements.map(el => bits === B(enc.getValue(el), width bits)).reduce(_ || _)
-              emit(rec, active(e.clockDomain) && armed(e) && !legal)
+              emit(rec, active(e.clockDomain) && armed(e) && !legal, trigger = active(e.clockDomain) && armed(e))
             }
           }
         }

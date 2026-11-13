@@ -173,3 +173,8 @@ The metadata and stale-entry policy is shared with `rvw lint` settings version
 2. Legacy native waiver files and lint settings version 1 keep their existing
 format. They do not gain an invented owner or expiry. Migrate lint settings
 by selecting `rvw.lint-settings/2` and adding owner and expires to every waiver.
+
+Activation rows in `checks report` separate simulation counts from formal
+cover results. Zero counts mean `no_activation`. Missing counters stay
+`unmeasured`. Formal bounded and proven totals require a reached cover attached
+to the assertion result. Simulation activation cannot substitute for that cover.
