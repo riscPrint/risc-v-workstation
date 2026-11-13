@@ -214,20 +214,32 @@ compiler. Use the same flag with `--check` to check its ABI. No download is
 needed. The library is `.tools/ooo/libooo.so` on Linux and macOS. The suffix
 is fixed for discovery; macOS builds a native dynamic library.
 
-The engine selects the library for integer ALU, multiply and divide streams
-with at most two source registers. It preserves fetch, rename, ROB, issue,
-commit, fixed execution latencies and physical-register pressure. Other
-streams and configurations use Python. Front-end, translation, execution port
-objects, class port limits, branches and memory are not accelerated yet.
-Reports name the selected `backend`. Missing libraries use Python. An invalid
-selected library is an error. Set `RVW_OOO_NATIVE=0` to force Python, or set it
-to an explicit library path. Python callers can select `backend="python"` or
-`backend="native"`. The latter requires a supported stream and installed
-library. C2 parsing and input conversion still use Python.
+The engine selects ABI 2 for integer ALU, multiply, divide, ordered load/store,
+branch and jump streams with at most two integer sources. It preserves fetch,
+rename, ROB, issue, commit, fixed latencies, class issue limits, physical-register
+pressure, queue occupancy, static sequential branch prediction, recovery and
+optional correct-path branch overlap. Memory uses fixed latency and ordered
+issue. Component caches and predictors still use their shared library through
+the Python engine. Front-end objects, translation, execution-port objects,
+rename policies, FP and memory disambiguation also use Python.
 
-The parity test checks 100 seeded synthetic integer schedules against Python,
-including queue limits, dependencies, and physical-register capacity. This is
-schedule parity with the reference model. It does not establish RTL accuracy.
+Reports name the selected `backend`. Missing libraries use Python. An invalid
+selected library is an error. Rebuild older ABI 1 installations. Set
+`RVW_OOO_NATIVE=0` to force Python, or set it to an explicit library path.
+Python callers can select `backend="python"` or `backend="native"`. The latter
+requires a supported stream and installed library. C2 parsing and conversion
+still use Python.
+
+Parity tests check 100 seeded integer and 150 seeded mixed schedules, including
+queue limits, dependencies, physical-register capacity, branch recovery and
+speculation. This is parity with the reference. RTL accuracy is unmeasured.
+
+Run `nice -n 10 rvw/.venv/bin/python Arch/ooo/benchmark.py` from the repository
+root for warmed alternating trials. The saved `Arch/ooo/benchmark-results.json`
+records host, individual times, rates and speedups. Public `simulate` times
+include Python validation and input packing. Kernel times exclude those costs.
+Neither measure includes C2 parsing or file I/O. These synthetic streams do not
+establish application throughput or component-backed throughput.
 
 ## Design-space search
 
