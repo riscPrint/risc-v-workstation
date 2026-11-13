@@ -173,3 +173,43 @@ The interop campaign passes all seven supported operations. Watchpoints are
 unsupported in this execute-only profile. Sixteen single-step halts match
 Spike for all 32 GPRs, DPC, misa and mscratch. Physical JTAG and other core
 configurations are outside these results.
+
+## VEXII-FP-FS-001
+
+Confirmed RTL functional defect at core
+`9b63f47fe559dbba7874af9196746412fa1294c1`, with SpinalHDL
+`de72faf6062206a89b445e5cc07e32ed982712c8`. Both extra FP configurations
+fail. No upstream core source was changed.
+
+| Minimal operation | Expected | Observed on RV32IMAFC and RV64IMAFDC |
+|---|---|---|
+| Load signalling NaN `0x7f800001` into f1; clear fcsr; set FS Clean; execute `feq.s t1,f1,f1` | t1=0, NV=1, FS=Dirty | t1=0, NV=1, FS remains Clean |
+
+The FP register file does not change. The accrued exception flag does change.
+The first strict Spike difference is the FEQ retirement's mstatus snapshot.
+There is no synchronization or CSR mask. The self-check also reads mstatus
+and fails with tohost=3. This is not the earlier FP capture timing defect.
+The adapter records the real flag update and the unchanged real FS state.
+
+The [F extension compare rule](https://docs.riscv.org/reference/isa/v20260120/unpriv/f-st-ext.html)
+requires NV for a signalling NaN in FEQ.S. The
+[machine FS rule](https://docs.riscv.org/reference/isa/v20260120/priv/machine.html)
+includes fcsr, frm and fflags in the FP context. A change to that context
+requires Dirty. An implementation can over-report Dirty; it cannot retain
+Clean after this change.
+
+The generated `fp-state` family contains the complete minimal program as
+`fp-context-flags`. It checks FS before it reads fflags. Regenerate both
+widths outside the repository:
+
+```sh
+rvw privilege build examples/vexiiriscv/rvw/fpu/fs32.json --out "$RVW_FPU_RUN_ROOT/fs32"
+rvw privilege build examples/vexiiriscv/rvw/fpu/fs64.json --out "$RVW_FPU_RUN_ROOT/fs64"
+```
+
+Copy the generated ELFs to the matching `directed32` or `directed64`
+directory. Run the `fp-directed` suite with `--filter '^fp-context-flags'`.
+The suite reports a C1 failure. To inspect the first reference difference,
+use `rvw cosim check --strict` on that ELF and its C2 trace. The regression
+cosim command preserves the C1 failure and does not label it a match.
+The core fix and its retest remain open. No platform setting hides this defect.
