@@ -1855,3 +1855,41 @@ Raw rows, errors, missing dependencies, hashes and commands:
 absent. ABC BMC3 returned errors on these AIGER imports. Pono and BTORMC
 returned bounded passes. This small subset is not a capacity qualification.
 No small-open-core property campaign or licensed comparison ran.
+
+Connection tables (#107)
+------------------------
+
+`rvw formal connectivity connections.csv --db design.db --out report` reads
+project-owned CSV, JSON or TOML declarations. JSON uses a `connection` array.
+TOML uses `[[connection]]` rows. CSV uses a header row:
+
+```csv
+id,kind,source,destination,condition,delay,inversion
+payload,required,io_source,io_destination,io_enable,1,false
+```
+
+`condition` aliases `enable`. It names one active-high Boolean signal.
+`delay` aliases `latency` in clock cycles. `inversion` selects a bitwise inverse
+of the source before delay. The default kind is `required`. The default delay
+is zero. `mode` is a second Boolean condition. Both conditions are sampled with
+the source. Delayed valid state clears on synchronous active-high reset.
+
+The structural pre-check resolves endpoints in the captured database. The
+reverse check walks each declared destination back to declared source and
+condition boundaries. It lists other top input influences. Clock, reset and
+initialization edges are excluded from this data influence inventory. Missing
+endpoints, opaque logic and truncated cones remain incomplete. The reverse
+check covers only declared destinations. It does not prove transfer semantics.
+
+Add `--run` for bounded checks. Add `--proof-mode prove --engine smtbmc:yices`
+for an unbounded safety proof and a separate bounded activation witness.
+The campaign binds captured RTL hashes to the database. Required transfers can
+report `contradicted` from a counterexample. Only an unbounded pass with an
+activation witness reports a row as `proven`. Forbidden influence uses two DUT
+copies with independent initial state. Its failures remain incomplete because
+state differences need review. Proofs retain source RTL assumptions. Internal
+endpoints and inout ports remain unsupported by the RTL binding backend.
+The overall report remains incomplete and exits 1. It lists `unproven` and
+`contradicted` row IDs. It never grants design acceptance.
+
+MCP tool `formal_connectivity` runs the same command and returns its report.

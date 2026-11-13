@@ -79,6 +79,21 @@ def _csr(job, **args):
         raise ToolError('CSR generation failed', {'exit_code': code, 'log_tail': job.tail(20)})
     return json.loads((Path(args['out']) / 'result.json').read_text())
 
+def _connectivity(job, **args):
+    manifest = args.pop('manifest')
+    run = args.pop('run', False)
+    argv = _argv('connectivity', args) + [manifest]
+    if run:
+        argv.append('--run')
+    code = job.run(argv)
+    path = Path(args['out']) / 'result.json'
+    if code != 1 or not path.is_file():
+        raise ToolError('connectivity result unavailable', {'exit_code': code, 'log_tail': job.tail(30)})
+    data = json.loads(path.read_text())
+    if data.get('schema') != 'rvw.connectivity/1' or data.get('status') != 'incomplete':
+        raise ToolError('invalid connectivity report')
+    return data
+
 
 def _device_events(job, **args):
     code = job.run([sys.executable, "-m", "rvw", "formal", "device-events", "--model", args['model'], "--trace", args['trace'], "--out", args['out']])
@@ -174,6 +189,13 @@ def mcp_tools():
                  _regress, long=True),
         ToolSpec("formal_sva_lower", "Lower finite clocked SVA to native Yosys assertions. Unsupported constructs give named errors.",
                  schema({"source": S, "out": S}, ["source", "out"]), _lower, long=True),
+
+        ToolSpec("formal_connectivity", "Resolve project connection tables, report undeclared drivers and optionally prove top-port contracts. Overall design acceptance remains incomplete.",
+                 schema({"manifest": S, "db": S, "out": S, "run": B,
+                         "proof_mode": {**S, "enum": ["bmc", "prove"]},
+                         "clock": S, "reset": S, "depth": I, "max_nodes": I,
+                         "engine": S, "timeout": {"type": "number", "exclusiveMinimum": 0}},
+                        ["manifest", "db", "out"]), _connectivity, long=True),
         ToolSpec("formal_cex", "Replay a captured failing BMC witness with edited inputs through Yosys sim. Not a proof.",
                  schema({"result": S, "out": S, "trace_index": I,
                          "edit": {"type": "array", "items": S},

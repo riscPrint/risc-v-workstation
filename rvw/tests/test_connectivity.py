@@ -158,7 +158,8 @@ def test_harness_samples_conditions_and_clears_valid(db):
     ('required', 1, False, True, False),
     ('required', 0, False, False, True),
 ])
-def test_native_contract(gcd_db, tmp_path, kind, latency, wrong, inactive, stale):
+@pytest.mark.parametrize('proof_mode', ['bmc', 'prove'])
+def test_native_contract(gcd_db, tmp_path, kind, latency, wrong, inactive, stale, proof_mode):
     import hashlib
     if any(not shutil.which(t) for t in ('yosys', 'sby', 'yices-smt2')):
         pytest.skip('native Yosys, SBY and Yices required')
@@ -194,7 +195,7 @@ def test_native_contract(gcd_db, tmp_path, kind, latency, wrong, inactive, stale
                     f'latency={latency}\nmode="mode"\nenable="io_loadValues"\n')
     out = tmp_path/'out'
     assert main(['formal', 'connectivity', str(plan), '--db', str(path), '--out', str(out),
-                 '--run', '--depth', '6', '--timeout', '30']) == 1
+                 '--run', '--proof-mode', proof_mode, '--depth', '6', '--timeout', '10']) == 1
     report = json.loads((out/'result.json').read_text())
     entry = report['connections'][0]
     if stale:
@@ -202,7 +203,7 @@ def test_native_contract(gcd_db, tmp_path, kind, latency, wrong, inactive, stale
         assert 'content binding' in entry['reason']
         return
     assert 'campaign' in entry, entry
-    assert entry['campaign']['status'] == ('incomplete' if wrong or inactive else 'bounded_pass'), entry
+    assert entry['campaign']['status'] == ('incomplete' if inactive or wrong and kind == 'forbidden' else 'contradicted' if wrong else 'proven' if proof_mode == 'prove' else 'bounded_pass'), entry
     assert entry['campaign']['observations']['activation']['status'] == ('pass' if inactive else 'fail')
     assert entry['campaign']['observations']['transfer']['status'] == ('fail' if wrong else 'pass')
     assert report['status'] == 'incomplete'

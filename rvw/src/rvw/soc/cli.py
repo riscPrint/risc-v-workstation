@@ -3,6 +3,7 @@ import json
 import sqlite3
 from xml.etree.ElementTree import ParseError
 
+from rvw.query.db import QueryError
 from .model import generate
 
 
@@ -31,6 +32,7 @@ def register(sub):
     chk.add_argument('--bindings', required=True)
     chk.add_argument('--db', required=True)
     chk.add_argument('--transactions')
+    chk.add_argument('--connections', help='project connection table for structural bridge checks')
     chk.add_argument('--json', action='store_true')
     chk.set_defaults(func=run)
 
@@ -50,9 +52,9 @@ def run(args):
             code = 1 if result['status'] == 'mismatch' else 3
         else:
             from .check import check
-            result = check(args.map, args.bindings, args.db, args.transactions)
+            result = check(args.map, args.bindings, args.db, args.transactions, args.connections)
             code = 1 if result['status'] == 'mismatch' else 3
-    except (ParseError, StopIteration, ValueError, OSError, KeyError, TypeError, IndexError, sqlite3.Error) as exc:
+    except (QueryError, ParseError, StopIteration, ValueError, OSError, KeyError, TypeError, IndexError, sqlite3.Error) as exc:
         result, code = {'status': 'error', 'error': str(exc)}, 2
     print(json.dumps(result) if args.json else str(result))
     return code

@@ -5,14 +5,13 @@ A dependency path is a structural candidate, not a value-transfer proof.
 from collections import deque
 import json
 from pathlib import Path
-import tomllib
 
 from rvw.query.db import DesignDB, QueryError, SCHEMA
 
 
 def resolve(db, rule, *, max_nodes=200000):
     """Keep missing endpoints, truncated cones and opaque logic incomplete."""
-    unknown = set(rule) - {'id', 'kind', 'source', 'destination', 'latency', 'mode', 'enable'}
+    unknown = set(rule) - {'id', 'kind', 'source', 'destination', 'latency', 'mode', 'enable', 'inversion'}
     if unknown:
         raise ValueError(f'unknown connection fields: {sorted(unknown)}')
     if type(max_nodes) is not int or max_nodes < 1:
@@ -21,6 +20,10 @@ def resolve(db, rule, *, max_nodes=200000):
         raise ValueError('connection kind must be required or forbidden')
     if type(rule.get('latency', 0)) is not int or rule.get('latency', 0) < 0:
         raise ValueError('latency must be a nonnegative integer')
+    if type(rule.get('inversion', False)) is not bool:
+        raise ValueError('inversion must be Boolean')
+    if rule['kind'] == 'forbidden' and rule.get('inversion', False):
+        raise ValueError('inversion applies only to required transfers')
     for key in ('id', 'source', 'destination'):
         if not isinstance(rule.get(key), str) or not rule[key]:
             raise ValueError(f'connection needs {key}')
@@ -99,21 +102,15 @@ def run(args):
     out.mkdir(parents=True, exist_ok=False)
     capture = Capture(out / 'inputs')
     manifest = capture.file(Path(args.manifest).absolute())
-    plan = tomllib.loads(manifest.copy.read_text())
-    if set(plan) != {'connection'}:
-        raise ValueError('manifest supports only connection declarations')
-    rows = plan.get('connection')
-    if not isinstance(rows, list) or not rows or not all(isinstance(row, dict) for row in rows):
-        raise ValueError('manifest needs [[connection]] rows')
-    ids = [row.get('id') for row in rows]
-    if any(not isinstance(i, str) or not i for i in ids) or len(set(ids)) != len(ids):
-        raise ValueError('connection IDs must be nonempty and unique')
+    from rvw.soc.connectivity import load
+    rows = load(manifest.copy, format_path=args.manifest)
     db = DesignDB(args.db, capture=capture)
     try:
         result = {'schema': 'rvw.connectivity/1', 'status': 'incomplete',
                   'scope': 'captured SpinalDB graph with optional bounded top-port contracts; no design acceptance verdict',
                   'database_sha256': db.input.sha256, 'database_schema': db.schema,
                   'connections': [resolve(db, row, max_nodes=args.max_nodes) for row in rows],
+                  'reverse_check': reverse_check(db, rows, max_nodes=args.max_nodes),
                   'input_capture': capture.record()}
         if args.run:
             for i, (row, entry) in enumerate(zip(rows, result['connections'])):
@@ -124,26 +121,31 @@ def run(args):
                 try:
                     entry['campaign'] = campaign(db, row, directory, capture, args)
                     entry['semantic_status'] = entry['campaign']['status']
-                    entry['reason'] = 'bounded campaign observation; general internal RTL binding remains incomplete'
+                    entry['status'] = ('contradicted' if entry['semantic_status'] == 'contradicted' else
+                                       'proven' if entry['semantic_status'] == 'proven' else 'incomplete')
+                    entry['reason'] = 'captured top-port contract; see campaign scope and reverse check'
                 except (ValueError, QueryError) as exc:
                     entry['reason'] = str(exc)
+        result['unproven'] = [r['id'] for r in result['connections'] if r['status'] == 'incomplete']
+        result['contradicted'] = [r['id'] for r in result['connections'] if r['status'] == 'contradicted']
         result['input_capture'] = capture.record()
     finally:
         db.close()
     (out / 'result.json').write_text(json.dumps(result, indent=2) + '\n')
     print(json.dumps(result, indent=2) if args.json else
-          '\n'.join(f"{r['id']}: {r['structural_status']} (incomplete)" for r in result['connections']))
+          '\n'.join(f"{r['id']}: {r['structural_status']} ({r['semantic_status']})" for r in result['connections']))
     return 1
 
 
 def register(sub):
     parser = sub.add_parser('connectivity', help='resolve SpinalDB connections and run bounded top-port contracts')
-    parser.add_argument('manifest', help='TOML with [[connection]] declarations')
+    parser.add_argument('manifest', help='project TOML, JSON or CSV connection declarations')
     parser.add_argument('--db', required=True)
     parser.add_argument('--out', required=True)
     parser.add_argument('--max-nodes', type=int, default=200000)
     parser.add_argument('--json', action='store_true')
     parser.add_argument('--run', action='store_true', help='also run bounded top-port contracts')
+    parser.add_argument('--proof-mode', choices=['bmc', 'prove'], default='bmc')
     parser.add_argument('--clock', default='clk')
     parser.add_argument('--reset', default='reset')
     parser.add_argument('--depth', type=int, default=10)
@@ -212,7 +214,10 @@ def harness(db, declaration, *, clock='clk', reset='reset', activation=False):
             conns.append(f'.{name}({wire})')
         lines.append(f'{top} dut_{side}(' + ', '.join(conns) + ');')
     guard = ' && '.join(aliases[bound[k].name] for k in ('mode', 'enable') if k in bound) or "1'b1"
-    expected, valid = aliases[source.name], f'({guard})'
+    expected = aliases[source.name]
+    if declaration.get('inversion', False):
+        expected = f'~{expected}'
+    valid = f'({guard})'
     for i in range(declaration.get('latency', 0)):
         lines += [f'reg [{source.width-1}:0] expected_{i};', f'reg valid_{i};',
                   f'always @(posedge clk) begin expected_{i} <= {expected}; '
@@ -248,7 +253,8 @@ def campaign(db, declaration, out, capture, args):
         source = directory / 'connection.sv'
         source.write_text(harness(db, declaration, clock=args.clock, reset=args.reset,
                                   activation=name == 'activation'))
-        command = [sys.executable, '-m', 'rvw', 'formal', 'bmc', '--verilog', *files, str(source),
+        mode = getattr(args, 'proof_mode', 'bmc') if name == 'transfer' else 'bmc'
+        command = [sys.executable, '-m', 'rvw', 'formal', mode, '--verilog', *files, str(source),
                    '--top', 'rvw_connection_top', '--clock', 'clk', '--reset', 'reset',
                    '--depth', str(args.depth), '--engine', args.engine, '--timeout', str(args.timeout),
                    '--reset-cycles', '1', '--first-failure', '--out', str(directory/'bmc')]
@@ -264,8 +270,65 @@ def campaign(db, declaration, out, capture, args):
         observations[name] = {'status': status, 'result': str(result_path),
                               'returncode': process.returncode}
     transfer, activation = (observations[k]['status'] for k in ('transfer', 'activation'))
-    return {'status': 'bounded_pass' if transfer == 'pass' and activation == 'fail' else 'incomplete',
+    status = 'incomplete'
+    if activation == 'fail':
+        if transfer == 'pass':
+            status = 'proven' if getattr(args, 'proof_mode', 'bmc') == 'prove' else 'bounded_pass'
+        elif transfer == 'fail' and declaration['kind'] == 'required':
+            status = 'contradicted'
+    return {'status': status,
             'depth': args.depth, 'observations': observations,
             'semantics': 'mode and enable sampled with source; fixed cycle latency; synchronous active-high reset',
             'initial_state': 'independent DUT copies for forbidden influence; counterexamples need state triage',
-            'scope': 'two-state bounded top-port contract under captured DUT assumptions; no design acceptance verdict'}
+            'proof_kind': 'unbounded' if getattr(args, 'proof_mode', 'bmc') == 'prove' else 'bounded',
+            'scope': 'two-state top-port contract under captured DUT assumptions; no design acceptance verdict'}
+
+
+def reverse_check(db, declarations, *, max_nodes=200000):
+    """Find undeclared data/control input influence for declared destinations.
+
+    Stop at declared source boundaries. Clock/reset edges are separate from data
+    influence. Report missing, opaque and truncated cones without clearing them.
+    """
+    destinations = {}
+    issues = []
+    try:
+        if db.schema != SCHEMA:
+            raise QueryError('connectivity requires the current SpinalDB schema')
+        db.require_inout_edges()
+        for row in declarations:
+            dst = db.resolve_one(row['destination'])
+            allowed = destinations.setdefault(dst.id, set())
+            if row['kind'] == 'required':
+                for key in ('source', 'mode', 'enable'):
+                    if key in row:
+                        allowed.add(db.resolve_one(row[key]).id)
+    except QueryError as exc:
+        return dict(status='incomplete', issues=[dict(reason=str(exc))], scope='declared destinations')
+    for destination, allowed in destinations.items():
+        queue = deque([destination])
+        seen = set()
+        while queue:
+            sid = queue.popleft()
+            if sid in seen or sid in allowed:
+                continue
+            if len(seen) >= max_nodes:
+                issues.append(dict(destination=db.signal_by_id(destination).path, reason='cone limit reached'))
+                break
+            seen.add(sid)
+            sig = db.signal_by_id(sid)
+            component = db.component(sig.component_id)
+            reason = None
+            if component['blackbox']:
+                reason = 'opaque driver'
+            elif sig.direction == 'in' and component['parent_id'] is None:
+                reason = 'undeclared input influence'
+            if reason:
+                issues.append(dict(destination=db.signal_by_id(destination).path, driver=sig.path, reason=reason))
+            for src, kind in db.q('SELECT src, kind FROM edges WHERE dst=?', (sid,)):
+                if kind == 'blackbox':
+                    issues.append(dict(destination=db.signal_by_id(destination).path, driver=sig.path, reason='opaque edge'))
+                if kind not in ('clock', 'reset', 'init'):
+                    queue.append(src)
+    return dict(status='incomplete' if issues else 'declared_boundaries_only', issues=issues,
+                scope='declared destinations; data, select, condition and inout edges; no semantic proof')

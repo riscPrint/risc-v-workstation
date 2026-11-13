@@ -7,7 +7,7 @@ from rvw.cosim.platform import number
 from .model import ident, keys, load
 
 
-def check(source, bindings, database, transactions=None):
+def check(source, bindings, database, transactions=None, connections=None):
     soc = load(source)
     spec = json.loads(Path(bindings).read_text())
     keys(spec, {'schema', 'signals', 'decoders', 'bridges'}, {'schema', 'signals', 'decoders', 'bridges'})
@@ -91,5 +91,23 @@ def check(source, bindings, database, transactions=None):
         gaps.append('signal widths')
     # Even nonempty samples and exact structural keys do not cover full behavior.
     mismatch = any(c['status'] == 'mismatch' for c in checks)
-    return dict(schema='rvw.soc-check/1', status='mismatch' if mismatch else 'inconclusive',
-                checks=checks, gaps=gaps, transactions=count)
+    result = dict(schema='rvw.soc-check/1', status='mismatch' if mismatch else 'inconclusive',
+                  checks=checks, gaps=gaps, transactions=count)
+    if connections:
+        from rvw.query.db import DesignDB
+        from rvw.formal.connectivity import resolve, reverse_check
+        from .connectivity import load as load_connections
+        import hashlib
+        rows = load_connections(connections)
+        design = DesignDB(database)
+        try:
+            result['connectivity'] = dict(
+                schema='rvw.connectivity/1', status='incomplete',
+                manifest_sha256=hashlib.sha256(Path(connections).read_bytes()).hexdigest(),
+                database_sha256=design.input.sha256,
+                connections=[resolve(design, row) for row in rows],
+                reverse_check=reverse_check(design, rows))
+        finally:
+            design.close()
+        gaps.append('connection value-transfer proofs; use rvw formal connectivity --run')
+    return result

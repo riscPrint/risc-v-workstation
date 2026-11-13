@@ -914,8 +914,9 @@ usage: rvw formal riscv [-h] --out OUT [--timeout TIMEOUT] [--json] [--project
 
 ```text
 usage: rvw formal connectivity [-h] --db DB --out OUT [--max-nodes MAX_NODES]
-    [--json] [--run] [--clock CLOCK] [--reset RESET] [--depth DEPTH] [--engine
-    ENGINE] [--timeout TIMEOUT] [--project PROJECT] manifest
+    [--json] [--run] [--proof-mode {bmc,prove}] [--clock CLOCK] [--reset
+    RESET] [--depth DEPTH] [--engine ENGINE] [--timeout TIMEOUT] [--project
+    PROJECT] manifest
 ```
 
 ### `rvw formal datapath`
@@ -1666,7 +1667,7 @@ usage: rvw soc capture-check [-h] --capture CAPTURE --result RESULT [--json]
 
 ```text
 usage: rvw soc check [-h] --bindings BINDINGS --db DB [--transactions
-    TRANSACTIONS] [--json] [--project PROJECT] map
+    TRANSACTIONS] [--connections CONNECTIONS] [--json] [--project PROJECT] map
 ```
 
 ### `rvw verification-plan`
@@ -2348,6 +2349,14 @@ Starts a background job: yes.
 Replay a captured failing BMC witness with edited inputs through Yosys sim. Not a proof.
 
 Arguments: `result` (required), `out` (required), `trace_index`, `edit`, `hgldd`, `pdg`, `criterion`, `at_time`, `open`, `minimize`, `max_checks`, `emit_testbench`, `db`, `signal`, `timeout`.
+
+Starts a background job: yes.
+
+### `formal_connectivity`
+
+Resolve project connection tables, report undeclared drivers and optionally prove top-port contracts. Overall design acceptance remains incomplete.
+
+Arguments: `manifest` (required), `db` (required), `out` (required), `run`, `proof_mode`, `clock`, `reset`, `depth`, `max_nodes`, `engine`, `timeout`.
 
 Starts a background job: yes.
 
