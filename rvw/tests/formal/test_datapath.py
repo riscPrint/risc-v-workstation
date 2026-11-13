@@ -60,7 +60,7 @@ def test_riscv_m_reference_corner_cases(tmp_path):
     subprocess.run(['clang','-shared','-fPIC','-I',str(root),str(source),'-o',str(library)],check=True)
     f=ctypes.CDLL(str(library)).check
     f.argtypes=[ctypes.c_uint,ctypes.c_uint,ctypes.c_uint64,ctypes.c_uint64];f.restype=ctypes.c_uint64
-    for width in (32,64):
+    for width in (8,16,32,64):
         mask=(1<<width)-1
         def signed(x): return x-(1<<width) if x>>(width-1) else x
         values=(0,1,2,mask,mask-1,1<<(width-1),(1<<(width-1))-1)
@@ -71,3 +71,18 @@ def test_riscv_m_reference_corner_cases(tmp_path):
                 expected=[a*b,(sa*sb)>>width,(sa*b)>>width,(a*b)>>width,
                           q,a//b if b else mask,sa-q*sb if b else sa,a%b if b else a]
                 for op,e in enumerate(expected): assert f(op,width,a,b)==e&mask
+
+
+@pytest.mark.skipif(not TOOLS, reason='needs native Yosys and CBMC')
+@pytest.mark.parametrize('unit,expression,mutant', [('mul','a*b',False),('divu','(b==0)?8\'hff:a/b',False),('mulhu','a*b',True)])
+def test_width_reduced_riscv_m_models(tmp_path, unit, expression, mutant):
+    # 32-bit multiplier equivalence is beyond CBMC; 8/16-bit models prove a
+    # width-parameterised unit at reduced width.
+    models=Path(__file__).resolve().parents[3]/'SpinalChecks/c2rtl/models'
+    rtl=tmp_path/'dut.v'
+    rtl.write_text(f'module dut(input [7:0] a,b, output [7:0] y); assign y={expression}; endmodule')
+    out=tmp_path/'out'
+    main(['formal','datapath','--rtl',str(rtl),'--model',str(models/f'{unit}8.c'),'--reference-tree',str(models),
+          '--reference-include','.','--width','8','--out',str(out),'--timeout','60'])
+    result=json.loads((out/'result.json').read_text())
+    assert result['status']==('counterexample' if mutant else 'proved'),result

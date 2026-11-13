@@ -147,7 +147,12 @@ The MCP tool is `formal_datapath`.
 
 The `models/` directory contains independent RISC-V MUL, MULH, MULHSU, MULHU,
 DIV, DIVU, REM and REMU specifications for XLEN 32 and 64. They include division
-by zero and signed overflow behavior. Unsigned arithmetic avoids C signed
+by zero and signed overflow behavior. The same operations also exist at widths
+8 and 16 (`mul8.c` ... `remu16.c`) for width-reduced proofs. CBMC does not
+finish a 32-bit gate-level multiplier or divider equivalence in minutes. Write
+the unit with a width parameter, prove the 8- or 16-bit instance, and keep
+32-bit simulation and co-simulation evidence. A reduced-width proof covers the
+generator at that width only. It is not a proof of the 32-bit instance. Unsigned arithmetic avoids C signed
 integer overflow. They use CBMC's 128-bit integer support for high products.
 
 SoftFloat wrappers cover F/D add, multiply, fused multiply-add, divide and
