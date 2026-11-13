@@ -297,7 +297,11 @@ can still leave an obligation. Fair `ready` cannot repair a design that drops it
 The native smoke test proves a retained request under fair `ready`. A mutant
 that never acknowledges fails. All state must use one rising-edge clock.
 Unsupported state and black boxes cause an error. Fairness feasibility is not
-proved. This command checks universal fair response. It does not establish the
+proved. A pass is a proof only when every fairness expression names only
+top-level inputs (not clock or reset) and the design has no assumptions
+(`fairness_check: free_inputs` or `no_fairness`). Otherwise a safety pass is
+`inconclusive` (exit 3), because fairness on an output such as `!busy` can
+exclude the hung loop itself. This command checks universal fair response. It does not establish the
 CTL claim that every reachable state has some path to progress.
 
 ## Typed roles and internal FSMs

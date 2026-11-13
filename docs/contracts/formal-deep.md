@@ -178,8 +178,12 @@ fairness and mixed ordinary-output/bad-state models before native execution.
 request, response and state-justice fairness expressions. `rvw.liveness-app-result/1`
 retains the full state width, native safety result and captured inputs. Only an
 unbounded safety pass receives `proof_kind=liveness_to_safety`. A bounded pass
-is a bounded lasso search. Justice feasibility and existential CTL deadlock
-freedom are not established. Existing safety assertions are removed from this
+is a bounded lasso search. `fairness_check` is `no_fairness`, `free_inputs`
+(every fairness expression names only top-level inputs other than clock and
+reset, and the design has no assumptions) or `not_checked`. A safety pass with
+`not_checked` fairness is `inconclusive` (exit 3): fairness on outputs or state
+can exclude the hung loop itself. Existential CTL deadlock freedom is not
+established. Existing safety assertions are removed from this
 separate job. Original assumptions remain.
 
 ## Typed uninterpreted arithmetic reports
