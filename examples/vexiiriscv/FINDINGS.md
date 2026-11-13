@@ -40,3 +40,15 @@ The collected formal, security and debug records do not establish another
 VexiiRiscv core defect. Export limits, bounded passes and missing bindings
 remain evidence limits. Reset stimulus was a harness gap in #1128, not a
 core finding. Device and C2 capture bugs fixed in #1147 are tool defects.
+
+## VEXII-ACT4-SM-CSR-001
+
+The `rv32imasu` profile traps on `csrw mhpmevent3, zero` with cause 2.
+The shared catalog defines CSR `0x323` under Sm. The profile declares
+Sm 1.12. The upstream counter plugin supplies unused event selectors as
+zero-valued CSRs, but this profile does not enable it.
+This is one declared-profile compatibility finding, affecting 270 ACT4
+cases before their bodies. A stable-checkout rerun has 270 C1 failures
+and 270 strict Spike first differences. No full trace matches are earned.
+No bootstrap access was removed. No core source was changed.
+See [the decision and trace hashes](rvw/act4-supervisor/README.md#bootstrap-decision).

@@ -239,5 +239,6 @@
     "ACT4 signature generation uses model-only CLINT and simple_interrupt_generator regions.",
     "This is a source-reviewed test profile, not architectural certification."
   ],
-  "include_priv_tests": true
+  "include_priv_tests": true,
+  "csr_model": "csr-contract.json"
 }

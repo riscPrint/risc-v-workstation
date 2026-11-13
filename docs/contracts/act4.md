@@ -49,3 +49,14 @@ comparison is not a complete trace match. An absent per-test reference
 check means NOT RUN. It does not mean match. Finding counts measure
 cases, not distinct defects. A bootstrap failure does not qualify the
 unreached test body. Coverage from failed prefixes must retain that limit.
+
+## Project CSR compatibility
+
+An optional `csr_model` path binds a shared `rvw.csr-selection/1` model to
+the profile. Its `binding.platform` must equal the profile's `platform`.
+XLEN must match. The plan reports `csr_contract`. Addresses and simple
+extension requirements come from `rvw.csr.catalog`, not a private table.
+An explicitly absent CSR defined by a declared extension reports
+`missing-required`. Omitted CSRs remain unknown. Complex catalog predicates
+remain unresolved. The manifest hashes the model as `csr_model_sha256`.
+This report does not remove accesses, skip tests or grant compatibility.
