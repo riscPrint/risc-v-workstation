@@ -1,0 +1,55 @@
+{
+  "schema": "rvw.security-pair/1",
+  "kind": "constant_time",
+  "top": "ShaLeaky",
+  "rtl": "zkt.v",
+  "clock": "clk",
+  "reset": "reset",
+  "ports": {
+    "clk": {
+      "direction": "input",
+      "width": 1
+    },
+    "reset": {
+      "direction": "input",
+      "width": 1
+    },
+    "start": {
+      "direction": "input",
+      "width": 1
+    },
+    "operand": {
+      "direction": "input",
+      "width": 32
+    },
+    "result": {
+      "direction": "output",
+      "width": 32
+    },
+    "busy": {
+      "direction": "output",
+      "width": 1
+    },
+    "done": {
+      "direction": "output",
+      "width": 1
+    }
+  },
+  "secrets": [
+    "operand"
+  ],
+  "architectural": [],
+  "observations": [
+    "busy",
+    "done"
+  ],
+  "operations": [
+    "sha256sig0"
+  ],
+  "adversary": "chooses the operand and observes unit busy/completion at every clock",
+  "unmodeled_channels": [
+    "analog power",
+    "physical timing",
+    "instruction decode outside this unit"
+  ]
+}

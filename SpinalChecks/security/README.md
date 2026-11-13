@@ -30,3 +30,12 @@ The native tests enumerate the full value/taint truth tables for all supported
 Boolean gates. They also test sequential control flow, masked flow and public
 reset on both implementations. See `rvw/tests/test_security.py`.
 See [the hardware threat model](../../rvw/src/rvw/formal/security/README.md).
+
+## Two-copy observation fixtures
+
+The [pair examples](examples/pair/README.md) contain safe and leaking variants
+of two seeded fixed-program fetch/resolve models. A squashed load changes the
+cache observation only in the leaking variant. They also contain a declared
+SHA-256 unit with fixed or operand-dependent completion timing. Native pair
+proofs compare the declared channels. These fixtures do not qualify a core or
+an instruction decoder.
