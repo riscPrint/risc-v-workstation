@@ -2285,3 +2285,87 @@ Raw logs, queue data and native output belong outside the repository.
 
 For a single plan, use `GET /events?workflow_id=ID`. The server refuses
 another owner's plan. Each event retains its persistent sequence ID.
+## Estimate IPC of a long workload
+
+Use [the sampled RTL flow](../rvw/src/rvw/sample/README.md).
+Start with a short program that can run fully on RTL. Use the same core build,
+configuration and memory timing for the full and sampled runs.
+
+Create a study outside the checkout:
+
+```json
+{
+  "schema": "rvw.sample-study/1",
+  "elf": "/path/to/workload.elf",
+  "platform": "/path/to/platform.json",
+  "shim": "/path/to/librvw_spike.so",
+  "mapping": "/path/to/bootstrap-profile.json",
+  "instructions": 2000000,
+  "adapter": ["/path/to/python", "/path/to/sample_adapter.py"],
+  "timeout": 120
+}
+```
+
+The platform must describe the program's RAM and ISA. Initialize registers
+that the full reset trace can read or save. The supplied workload startup
+clears all GPRs before calling C. The mapping must declare
+all mutable architectural state. The first bootstrap adapter supports RV32IM
+M-mode physical RAM with interrupts disabled. Its file is
+`examples/vexriscv/rvw/sample_adapter.py`. It selects the uncached VexRiscv
+configuration. Reserve zero-filled RAM at `0x800f0000..0x800f1000` for its
+bootstrap. The bootstrap restores the reset instruction before continuation.
+A reset-boundary point uses reset execution instead.
+Set `RVW_HOME` to this checkout. Set `VEXRISCV` to a private core copy.
+Use a matching Spike shim built from this checkout. The adapter uses private
+`vex-simpoint` and `sbt-simpoint` locks. It runs points in serial order.
+
+Run calibration, warm-up and sampling:
+
+```sh
+nice -n 15 rvw sample short.json --validate --intervals 10000 50000 --clusters 1 4 8 --warmup 1000 --out "$RUN_ROOT/calibration" --json
+nice -n 15 rvw sample short.json --warmup-sweep --start 50000 --length 10000 --warmup-lengths 0 100 1000 10000 --target-percent 1 --out "$RUN_ROOT/warmup" --json
+nice -n 15 rvw sample long.json --interval 10000 --max-k 4 --warmup 1000 --validation-report "$RUN_ROOT/calibration/validation.json" --out "$RUN_ROOT/long" --json
+```
+
+`RUN_ROOT` must be outside the checkout. Set it to an absolute path.
+Run the calibration again if the chosen warm-up length changes.
+The 1,000-instruction warm-up in these examples is an input, not a measured
+recommendation. Increase the study timeout for full RTL calibration only when
+longer runs are permitted. The 120-second value above is a smoke-test limit.
+Repeat an unchanged sample command to resume. Use a new directory when inputs
+change. Keep only the logs and reports needed to explain the result.
+
+`report.json` includes the selected point, weight, capture instruction,
+actual warm-up length, measured cycle span, IPC and equality status per point.
+Weighted IPC is the reciprocal of instruction-weighted CPI. A point with a
+failed Spike comparison is excluded. Any lost weight makes the workload
+estimate inconclusive. A conditional estimate covers surviving weight only.
+
+| Validation case | Full RTL IPC | Sampled IPC | Relative IPC error |
+|---|---:|---:|---:|
+| Short native smoke, 16-instruction profile, interval 8, cluster limit 2 | Not measured | Inconclusive | Not measured |
+| Million-instruction ground truth across workload classes | NOT RUN | NOT RUN | NOT RUN |
+| Cached-core warm-up study | NOT RUN | NOT RUN | NOT RUN |
+| Long workload | Not practical as full RTL ground truth | NOT RUN | Unqualified |
+
+The two bounded smoke attempts reached their build time limits before RTL
+execution. Spike profiling, checkpoint capture and bootstrap image generation
+ran. No sampled RTL IPC or native sampling error was measured.
+The brief allowed only short native smoke runs. Longer campaigns remain open.
+
+The validation report supplies an observed error for its calibration prefix.
+It does not supply a statistical confidence interval or guarantee an error
+bound for another workload. Profile more than one workload class before a
+long run. A cluster limit is a maximum, not an exact number of points.
+Timing uses N-1 retirement gaps for an N-instruction measured interval.
+The profiling budget stops at successful `tohost` completion when present.
+Otherwise it estimates only the requested instruction prefix. The report
+marks that scope explicitly. Require `program_complete: true` before calling
+it a whole-program estimate. Retirement-span timing excludes latency before
+the first measured retirement, so it does not measure that part of cold-start cost.
+
+Functional cache/predictor warming is not implemented by this bootstrap
+adapter. Use detailed RTL warm-up. Cached VexRiscv and VexiiRiscv need qualified
+bootstrap adapters and native bias measurements. The current capture path
+rejects FP, virtual memory, devices, interrupts and trap state. It does not
+replace the separate live native checkpoint/restore flow.

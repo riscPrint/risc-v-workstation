@@ -178,3 +178,8 @@ Keep these two rules:
 2. Read large data files on first use. Cache immutable catalogs after that read. Do not read JSON catalogs or schemas at module import time.
 
 Repeat start-up measurements with `rvw/.venv/bin/python scripts/profile-startup.py > "$RUN_ROOT/startup.jsonl"`. Use `python -X importtime -m rvw mcp --list` for import elapsed-time attribution. Use `rvw/.venv/bin/python scripts/profile-startup.py --cpu-profile "$RUN_ROOT/startup.prof" mcp --list` for CPU attribution. Profile tests and fixtures with `rvw/.venv/bin/python scripts/profile-fast.py "$RUN_ROOT/fast.json"`. Add `--collect-only` to measure collection. Profile call overhead with `rvw/.venv/bin/python scripts/profile-mcp-calls.py`. Its `--control` flag restores the previous empty-argument and signature work. Keep reports outside the repository.
+To estimate IPC of a long workload, first compare short full RTL runs with
+sampled runs. Then measure a fixed interval at several warm-up lengths.
+Attach the resulting validation report to the long run. See the
+[integration recipe and evidence limits](../docs/INTEGRATION_GUIDE.md#estimate-ipc-of-a-long-workload).
+The current native sampling error and cached warm-up bias remain unmeasured.

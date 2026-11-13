@@ -64,8 +64,8 @@ Compilation does not establish RTL or sampled timing accuracy.
 
 | Functional smoke build | Spike instructions to successful `tohost` | RTL timing |
 |---|---:|---|
-| Heapsort, `SIZE=128 ROUNDS=1` | 20,038 | NOT RUN |
-| Compression, `SIZE=128 ROUNDS=1` | 3,958 | NOT RUN |
+| Heapsort, `SIZE=128 ROUNDS=1` | 20,069 | NOT RUN |
+| Compression, `SIZE=128 ROUNDS=1` | 3,989 | NOT RUN |
 
 Regenerate these small functional profiles with studies whose ELF files come
 from this build and whose instruction budgets are 1,000,000:
@@ -101,3 +101,6 @@ architectural mapping and adapter files. The result states the observed error
 for the calibration workload. It does not claim a guaranteed error bound for
 the long program. Revalidate after a core build or configuration change.
 No long-workload estimate was measured in this implementation run.
+
+The supplied workload startup clears all GPRs before C can save them.
+The functional counts include those initialization instructions.
