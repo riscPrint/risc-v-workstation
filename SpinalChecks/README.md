@@ -850,3 +850,36 @@ or complete GPIO/SoC coverage.
 first. A masked software write then replaces only selected bits. This preserves
 unselected carry bits for RV32 counter-half writes. Omitting the mask keeps the
 existing full-width write behavior.
+
+### Checked state-encoding tables
+
+Use `rvw formal equiv --state-encoding FILE` or the `state_encoding` input of
+MCP `formal_equiv` to compare different finite register encodings:
+
+```json
+{
+  "schema": "rvw.equiv-encoding/1",
+  "mappings": [
+    {"gold": "state", "gate": "phase", "values": [[0, 1], [1, 2], [2, 4]]}
+  ]
+}
+```
+
+This example maps a two-bit binary FSM to three one-hot states. Names identify
+flattened registers from the state inventory. Each side's values must be unique
+and fit its register. Each register can occur in one mapping. A mapped register
+must not also occur in `--pair`.
+
+The tool adds observation ports to the captured flattened models. It checks
+that both registers stay in their declared value sets after reset and settle.
+It also checks that their decoded state numbers agree at each observation.
+These are proof obligations. They are not assumptions or internal cutpoints.
+All original output obligations remain. State relations use the same-cycle
+state; output latency maps do not delay them. Other state still follows the
+selected `--unmatched-state` policy. ABC dsec cannot use this extension.
+
+A complete closed proof can report `equivalent` and `encoding_verdict: proved`.
+A failed combined query reports `inconclusive` and keeps its traces. An invalid
+mapping can fail even when original outputs agree. Rerun without the table and
+with `--unmatched-state prove` to classify an original output difference. The
+mapping is finite and explicit. This is not automatic state recoding inference.

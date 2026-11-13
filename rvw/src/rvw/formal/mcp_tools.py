@@ -281,7 +281,7 @@ def mcp_tools():
                          "gold_rev":S,"gate_rev":S,"config":S,"top":S,"out":S,"clock":S,"reset":S,
                          "reset_active":{**S,"enum":["high","low"]},"reset_cycles":I,"settle":I,
                          "latency":I,"dsec":B,"pair":{"type":"array","items":S},
-                         "unmatched_state":{**S,"enum":["refuse","prove"]},"blackbox_contract":S,
+                         "unmatched_state":{**S,"enum":["refuse","prove"]},"blackbox_contract":S,"state_encoding":S,
                          "latency_map":{"type":"array","items":S},"output_map":{"type":"array","items":S},
                          "sampled_events":B,"stable_at_edge":{"type":"array","items":S},
                          "timeout":{"type":"number","exclusiveMinimum":0}},["top","out"]), _runner("equiv"), long=True),

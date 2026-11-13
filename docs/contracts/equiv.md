@@ -186,3 +186,29 @@ earn either status. The gate rules can retain unknowns after reconvergence, so
 some defined circuits can remain inconclusive. Register initial values retain
 the existing arbitrary two-state contract. This is not four-state event
 simulation or an initial-state reachability result.
+
+## Checked finite state encodings
+
+`rvw formal equiv --state-encoding FILE` captures `rvw.equiv-encoding/1` as
+`state-encoding.json`. `mappings` has 1..64 rows. Each row has `gold`, `gate`
+flattened register names and 1..256 `values` pairs of unsigned integers. Both
+columns must be unique and fit the inventoried register widths. Register names
+are unique on each side and cannot also occur in a manual `pair`.
+
+The captured flattened modules gain observation-only ports. The proof compares
+the ordinal decoded from each table. It also compares each side's valid-value
+predicate against constant true on the other side. All observations start at
+the same declared reset/settle boundary as the output check. Original output
+latency maps do not delay the state relation. No state relation is assumed.
+Original outputs and all three observations per mapping remain closed proof
+obligations without internal crossbits.
+
+`encoding_contract` records the captured path, hash and rule. `state_mapping`
+adds `method: encoding`, `gold_width`, `gate_width` and the value pairs. Such
+rows cover the audited register inventory. `encoding_verdict` is `proved` only
+when the complete query earns `equivalent`; otherwise it is `not_proved`.
+A failed combined query is `inconclusive`, because a mapping failure alone does
+not establish a difference in original outputs. Traces remain available for
+inspection. The caller can rerun without the table to classify that difference.
+The extension excludes advisory dsec. Blackbox and sampled-event results keep
+their existing conditional status rules.
