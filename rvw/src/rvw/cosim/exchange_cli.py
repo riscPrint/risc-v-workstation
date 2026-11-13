@@ -37,4 +37,6 @@ def mcp_tools():
                     source_format={'type': 'string', 'enum': ['c2', 'rvvi', 'spike']},
                     target_format={'type': 'string', 'enum': ['c2', 'rvvi', 'spike', 'observations']}),
                ['source', 'out', 'source_format', 'target_format']),
-        handler('rvw.cosim.exchange_cli'), long=True)]
+        handler('rvw.cosim.exchange_cli'), long=True,
+        side_effects='long-running; writes converted trace under out', native_tools=(),
+        )]

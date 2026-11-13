@@ -107,4 +107,6 @@ def mcp_tools():
     from rvw.mcp.spec import ToolSpec, schema
     return [ToolSpec('cosim_doctor', 'Inspect validated C2 capture and configured comparison scope. No reference runs or match claims.',
         schema({**{key: {'type': 'string'} for key in ('trace', 'core', 'platform', 'project')},
-                'strict': {'type': 'boolean', 'default': False}}, ['trace']), execute_json, isolate=True, annotations={'readOnlyHint': True})]
+                'strict': {'type': 'boolean', 'default': False}}, ['trace']), execute_json, isolate=True, annotations={'readOnlyHint': True},
+        side_effects='read-only', native_tools=(),
+        )]

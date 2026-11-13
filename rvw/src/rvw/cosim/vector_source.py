@@ -64,4 +64,6 @@ def mcp_tools():
     return [ToolSpec('cosim_vector_source', 'Fetch pinned riscv-vector-tests and environment sources outside the workstation. '
                      'No build or vector correctness claim.',
         schema(dict(out={'type': 'string'}, timeout={'type': 'number', 'exclusiveMinimum': 0, 'default': 120}), ['out']),
-        handler('rvw.cosim.vector_source'), long=True)]
+        handler('rvw.cosim.vector_source'), long=True,
+        side_effects='long-running; launches git; downloads pinned sources under requested source output directory', native_tools=(),
+        )]

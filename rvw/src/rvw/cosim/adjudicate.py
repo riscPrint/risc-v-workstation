@@ -80,4 +80,6 @@ def mcp_tools():
     properties = {key: {'type': 'string'} for key in ('elf', 'trace', 'core', 'platform', 'project', 'sail_config', 'qemu_log')}
     properties.update(timeout={'type': 'number', 'exclusiveMinimum': 0, 'default': 120}, strict={'type': 'boolean', 'default': False})
     return [ToolSpec('cosim_adjudicate', 'Check a DUT trace against Spike and Sail. Preserve both reports and identify which reference the DUT matches at a disagreement. No majority vote.',
-                     schema(properties, ['elf', 'trace']), handler('rvw.cosim.adjudicate'), long=True)]
+                     schema(properties, ['elf', 'trace']), handler('rvw.cosim.adjudicate'), long=True,
+        side_effects='long-running; launches Spike and Sail; reads trace, ELF and optional QEMU log', native_tools=('Spike', 'Sail'),
+        )]
