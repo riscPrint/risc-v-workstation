@@ -84,3 +84,14 @@ platform = "rvw/platform.json"
 [query]
 build = ["./rvw/build-db.sh"]
 db = "rvw/out/nax.db"
+
+[suites.act4]
+description = "ACT4 instruction groups; no standard Sm qualification"
+dir = "rvw/out/act4/work/rvw-act4/elfs"
+act4_manifest = "rvw/out/act4/manifest.json"
+glob = "**/*.elf"
+strip_suffix = ".elf"
+configs = ["rv32imasu"]
+max_cycles = 2000000
+timeout_s = 120
+mem_latency = 0

@@ -12,5 +12,6 @@
   "mmio": [],
   "irq_inputs": [],
   "privilege_modes": "M",
-  "aligned_mem": true
+  "aligned_mem": true,
+  "memory_read_convention": "full_word"
 }

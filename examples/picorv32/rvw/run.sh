@@ -24,7 +24,7 @@ export RVW_LOCK_PYTHON="$RVW_PYTHON"
 if [ "${1:-}" = --core-locked ]; then
   shift
 else
-  exec "$repo/scripts/with-lock.sh" picorv32 "$BASH" "$here/run.sh" \
+  exec "$repo/scripts/with-lock.sh" "${RVW_CORE_LOCK:-picorv32}" "$BASH" "$here/run.sh" \
     --riscvsim-supervised "$launch_owner" --core-locked "$@"
 fi
 trap 'exit 143' TERM
@@ -43,7 +43,7 @@ if [ "${1:-}" = identity ] && [[ "$native_identity" = *'"cache_enabled":false'* 
   exit 2
 fi
 "$RVW_PYTHON" "$sim/scripts/source-identity.py" "$RVW_CORE_SOURCE" "$repo" > "$launch_owner/source.json"
-output="$(cd "$here" && "$repo/scripts/with-lock.sh" sbt nice -n 10 \
+output="$(cd "$here" && "$repo/scripts/with-lock.sh" "${RVW_SBT_LOCK:-sbt}" nice -n 10 \
   sbt -J-Xmx3g -batch 'root/compile' 'export root/Runtime/fullClasspath' 2>&1)" || {
   echo "$output" >&2; exit 2;
 }

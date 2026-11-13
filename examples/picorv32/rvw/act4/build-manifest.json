@@ -1,0 +1,324 @@
+{
+  "schema": "rvw.act4-build/1",
+  "status": "built",
+  "revision": "56d40ab301dba23dd3104c17bd969afbaaea1931",
+  "profile_sha256": "ae4bf1b9eb63dbf9d94178a0e464ea5584dcc78a2acf48cfb8e37d730495a786",
+  "command": [
+    "make",
+    "-C",
+    "~/fun/saviour/ref/act4",
+    "CONFIG_FILES=$CHECKOUT/rvw/out/act4-triage/pico-build3/config/test_config.yaml",
+    "WORKDIR=$CHECKOUT/rvw/out/act4-triage/pico-build3/work",
+    "JOBS=2",
+    "FAST=True",
+    "EXCLUDE_EXTENSIONS=",
+    "EXTENSIONS=I,M,Zmmul"
+  ],
+  "reference": "sail_riscv_sim",
+  "compiler": "riscv64-unknown-elf-gcc",
+  "tools": {
+    "compiler": {
+      "executable": "riscv64-unknown-elf-gcc",
+      "sha256": "6c0e92e65ba405484890891a760ebd431e41186a912b4718fea2a8ea57416234",
+      "version": [
+        "riscv64-unknown-elf-gcc (g1b306039a) 15.1.0"
+      ]
+    },
+    "reference": {
+      "executable": "sail_riscv_sim",
+      "sha256": "8c2ffbcfa7004d55a42fa8759b66927d1305b973a801e4425cc2f98fbac779e8",
+      "version": [
+        "0.15"
+      ]
+    }
+  },
+  "signatures": {
+    "work/rvw-act4/build/rv32i/I/I-add-00.sig": "cc6084a412cf71a406245e756675b84528fc82122cf8b83f22d81256b5f85f14",
+    "work/rvw-act4/build/rv32i/I/I-addi-00.sig": "8d31eec37a266b927c4d6ba9cdd0aaca49647dc44a16b8cf1442c9b12763b3fb",
+    "work/rvw-act4/build/rv32i/I/I-and-00.sig": "a4299c659ed6eecc2c01c42b2427109a0fa1b2cc466d30a9a5794e1f4f1a3241",
+    "work/rvw-act4/build/rv32i/I/I-andi-00.sig": "2adb4fcf53899a1f01d1bc0fe28f29b57b2ad3004604706861f989f4439ee062",
+    "work/rvw-act4/build/rv32i/I/I-auipc-00.sig": "df1ba0abd8f213be846e990fc9dd3f4a0bf57581734f90ef2dd1fc36e4878f88",
+    "work/rvw-act4/build/rv32i/I/I-beq-00.sig": "42494147266a3efb96f98cdf66f665136228d607949266889f438d282d3d6bd7",
+    "work/rvw-act4/build/rv32i/I/I-bge-00.sig": "f8ecc1242222f421adf5a2f974efccb5d5e9a9e84484835e9cf2455d04621d1e",
+    "work/rvw-act4/build/rv32i/I/I-bgeu-00.sig": "9a0a497ae9a1b9b5c74f87166c6ebc2428d6a48131cccb4e7809ff64e4258987",
+    "work/rvw-act4/build/rv32i/I/I-blt-00.sig": "8c27a19c12b33b78683fffdab748416295760d325426870afc2bdfd160d97acf",
+    "work/rvw-act4/build/rv32i/I/I-bltu-00.sig": "e70698edb3a8613066aae4e1477bc496963c0a0069415d3fe5e542aca6b80e69",
+    "work/rvw-act4/build/rv32i/I/I-bne-00.sig": "38f369d9926ab6181292f70e491ed615835b86bb4672d3b699b17e802a71d4ee",
+    "work/rvw-act4/build/rv32i/I/I-fence-00.sig": "14c2a95343122d663aecf13abfc448128dff9c82fc28114c8404f01745e95d49",
+    "work/rvw-act4/build/rv32i/I/I-jal-00.sig": "877b95331b27613075374018b42b4a3935a89f152421ce85aa30d9043bff1343",
+    "work/rvw-act4/build/rv32i/I/I-jalr-00.sig": "4882985d21914a976ba75c80482b26529aa3f4c0bab591d103a4d40627afa46e",
+    "work/rvw-act4/build/rv32i/I/I-lb-00.sig": "3251f42634596a4527b9af3460ec025c9f4ece9ce09df3da30c4c1195becb46b",
+    "work/rvw-act4/build/rv32i/I/I-lbu-00.sig": "e58db67d22f24181a7cbdec88d8f717d667f33b08ee4b7ab6b1e52b0f56673ee",
+    "work/rvw-act4/build/rv32i/I/I-lh-00.sig": "646c52b25314eb8f24c7914b803390408d48ef8168ab93481ef337baf8b0f01a",
+    "work/rvw-act4/build/rv32i/I/I-lhu-00.sig": "d5a77040c56d2757571c800a7c7857daa6669c00b3bc2464b208609b8eb55e32",
+    "work/rvw-act4/build/rv32i/I/I-lui-00.sig": "1b3482db7309d9788e54ca3f4388c1a4da105eb9d85c4fc82a4897456cef208c",
+    "work/rvw-act4/build/rv32i/I/I-lw-00.sig": "b2f1bbfe797940b9bff11eb9c8789aef8feef3f8faf3fdaeac74642ddb4a071f",
+    "work/rvw-act4/build/rv32i/I/I-nop-00.sig": "919484fdec5f5718ec6ff1b3c0d49acf0b16ec04ba007cb93cdc88d403ad9118",
+    "work/rvw-act4/build/rv32i/I/I-or-00.sig": "b0454767384d686cd5830907a159af21e3bacf5bad65217346c6144fced3cba1",
+    "work/rvw-act4/build/rv32i/I/I-ori-00.sig": "b84a7fc99a473a3d3d190d4249061313b583034652be92fb1480be406b345a1a",
+    "work/rvw-act4/build/rv32i/I/I-sb-00.sig": "d39c6713c08e931bf61abbc04671fb9e8a403edce6761b4c9cdce2b5ee543576",
+    "work/rvw-act4/build/rv32i/I/I-sh-00.sig": "bced6b4168acfe2de7a0b484474315def9f12acd47d7fb5984d2b8d4a7986b4b",
+    "work/rvw-act4/build/rv32i/I/I-sll-00.sig": "852756191811050cc5a74d492b8cf8d8e61dbef716024b82bd442374711da185",
+    "work/rvw-act4/build/rv32i/I/I-slli-00.sig": "422d1b11190106f9f6deda4590742996513a8d0922e3ef30173621c2052d2e79",
+    "work/rvw-act4/build/rv32i/I/I-slt-00.sig": "afc53086d92c24d246c35ec598122ef9cdeceb12e0870f885a703ee18d41a74d",
+    "work/rvw-act4/build/rv32i/I/I-slti-00.sig": "5981638607e37dea83dcac4d4402a9dfcb1327a1352680ad4e378942a56f524c",
+    "work/rvw-act4/build/rv32i/I/I-sltiu-00.sig": "67ad9a4b80cdc88fcc3258b3a60f192276d36428b98354719261019ce2ae2763",
+    "work/rvw-act4/build/rv32i/I/I-sltu-00.sig": "2d15d6ba90b0671e678f45a112992dc442917ec79109bd99da8b35c189bbcfcb",
+    "work/rvw-act4/build/rv32i/I/I-sra-00.sig": "3c1839f86d79685098c2736347d702d563e4c9ad833402b5599d2b72c00c39be",
+    "work/rvw-act4/build/rv32i/I/I-srai-00.sig": "96723c789f67b741a385b2dcea64af5e0aa3bfbb541b8e27d46cd6764a870d2e",
+    "work/rvw-act4/build/rv32i/I/I-srl-00.sig": "6228e495d8c0a4f387454e453a86b2e160b5bc666a8b9daa232dd60180b5b439",
+    "work/rvw-act4/build/rv32i/I/I-srli-00.sig": "977976ccab64fac1d4f6a1e2e4d33a54e99315da347ca619b97ef26b5bbaf549",
+    "work/rvw-act4/build/rv32i/I/I-sub-00.sig": "985064104be491600cf982836b01ecce5fa756f2e06f7a2afdaa3e31e841901b",
+    "work/rvw-act4/build/rv32i/I/I-sw-00.sig": "9a3cd8063e5f4f660199afe5d6d9a502ff32455b21b87afd09860d313c3a4b40",
+    "work/rvw-act4/build/rv32i/I/I-xor-00.sig": "1bd82b8414eef0b79f3ae22c988b06c6eb37c0a3375b68e1fd5588d1d0ffa0a1",
+    "work/rvw-act4/build/rv32i/I/I-xori-00.sig": "68fe991a1c3b31b629808ceadb6f521b4c567f31e6cc3ae322cea69a65c1e84f",
+    "work/rvw-act4/build/rv32i/M/M-div-00.sig": "5e09b0e93676aacb6848975ad7959fd983e1f20a3b14a8a233c667d33fa5dafb",
+    "work/rvw-act4/build/rv32i/M/M-divu-00.sig": "3545c0d02f83c70b20ac8cecef87049a9379a1de240d121d08e99490384764b0",
+    "work/rvw-act4/build/rv32i/M/M-mul-00.sig": "c1b3efb93bd5bcf4f644150618dc76c2eebfcce2f9166ad129c09d42c86c2e40",
+    "work/rvw-act4/build/rv32i/M/M-mulh-00.sig": "c8cacb691ab432936814b9cfc064ab7e0ca25f4a7a31f62a496222ee7344d69a",
+    "work/rvw-act4/build/rv32i/M/M-mulhsu-00.sig": "84d6e0f5695ce3de9729cf26c2741bafd483400a66b99fce7e47174a12ccbc82",
+    "work/rvw-act4/build/rv32i/M/M-mulhu-00.sig": "80746d81ecb554e386303817b74d496962046473529ba61ee78e31953529601e",
+    "work/rvw-act4/build/rv32i/M/M-rem-00.sig": "50732961280ce45d9fc71c07082d4a78b01b283cd11845d1bd614a28d6fbcfc0",
+    "work/rvw-act4/build/rv32i/M/M-remu-00.sig": "9f858e380a9269c4d65c1b5790b9e6577343db337c6300f2d8f54e1d4d54f143",
+    "work/rvw-act4/build/rv32i/Zmmul/Zmmul-mul-00.sig": "c1b3efb93bd5bcf4f644150618dc76c2eebfcce2f9166ad129c09d42c86c2e40",
+    "work/rvw-act4/build/rv32i/Zmmul/Zmmul-mulh-00.sig": "c8cacb691ab432936814b9cfc064ab7e0ca25f4a7a31f62a496222ee7344d69a",
+    "work/rvw-act4/build/rv32i/Zmmul/Zmmul-mulhsu-00.sig": "84d6e0f5695ce3de9729cf26c2741bafd483400a66b99fce7e47174a12ccbc82",
+    "work/rvw-act4/build/rv32i/Zmmul/Zmmul-mulhu-00.sig": "80746d81ecb554e386303817b74d496962046473529ba61ee78e31953529601e"
+  },
+  "selection": {
+    "schema": "rvw.act4-plan/1",
+    "isa": "rv32im",
+    "csr_contract": null,
+    "privilege_modes": "M",
+    "extensions": [
+      "i",
+      "m",
+      "zmmul"
+    ],
+    "limitations": [
+      "Instruction groups only. The reduced bootstrap does not qualify the standard Sm bootstrap.",
+      "Sail uses model-only CLINT and interrupt-generator regions. These are not DUT devices."
+    ],
+    "test_selection": "extensions",
+    "include_priv_tests": false,
+    "evidence": "selection only; no DUT execution"
+  },
+  "files": {
+    "rvmodel_macros.h": "35b9d4a45d579a4d467370d4f51ce16af05ec42ee63701e6b01866f8bb5d80e1",
+    "sail.json": "ca80f371edbd5a06a4b0962c9ae55a9fdc5e2d2f5616dcfd22263398120cddba",
+    "link.ld": "36b102764748905da4dd091dc18c42d868a914fa473c752d0bd1094d707afc3e",
+    "udb.yaml": "1fdfad4618b81d8bf8759c2dd96e55db1b84eb6b679718ea3bd495a1ddfad022"
+  },
+  "csr_model_sha256": null,
+  "tests": [
+    {
+      "path": "rv32i/I/I-add-00.elf",
+      "sha256": "9935ab102dfd27df29d44c8c9846e98151d33e02dd2f289641f730639a7fcb20"
+    },
+    {
+      "path": "rv32i/I/I-addi-00.elf",
+      "sha256": "3d9f061addd580770504fabcf35f42e94e51c35a27ac87ad90720ecafd1c42dd"
+    },
+    {
+      "path": "rv32i/I/I-and-00.elf",
+      "sha256": "5b90dd4a04be492e18a991ee832882462feea87357df3ed7cebb8b2ec821adba"
+    },
+    {
+      "path": "rv32i/I/I-andi-00.elf",
+      "sha256": "a821f2b1cd9bfb8f4981f32de42d677de4612d0b9b312dcdabd4659f3942913d"
+    },
+    {
+      "path": "rv32i/I/I-auipc-00.elf",
+      "sha256": "dad8e78b8dfdbc3a615a58965c5660513a65506ff78f8422d0c4f4b9bb1b7bb6"
+    },
+    {
+      "path": "rv32i/I/I-beq-00.elf",
+      "sha256": "52dc4d91949ead2aa5310093cc06344daf87585e281040bb082f9e4fa509d3a6"
+    },
+    {
+      "path": "rv32i/I/I-bge-00.elf",
+      "sha256": "765e3aaae05b0409650529638f2fc3e537e075aeba59c7a09543852e30b09a99"
+    },
+    {
+      "path": "rv32i/I/I-bgeu-00.elf",
+      "sha256": "01ae7f2f27306f4e825150f101a187266f9a80618d386ecdf963106b3d5aa2ee"
+    },
+    {
+      "path": "rv32i/I/I-blt-00.elf",
+      "sha256": "676840bf81e70714c88319cd69cd00df7aa71fa21111edabac00b90f335bc25f"
+    },
+    {
+      "path": "rv32i/I/I-bltu-00.elf",
+      "sha256": "81ea8ed10a26b6d6d04745b246d2540a32356b365b0a96f3510fd074e6ee4efc"
+    },
+    {
+      "path": "rv32i/I/I-bne-00.elf",
+      "sha256": "e85a087bafcd5d7584c50adb6b5ac36ba52abe170d80108eecc34c821bb02727"
+    },
+    {
+      "path": "rv32i/I/I-fence-00.elf",
+      "sha256": "6d131d4f93b80464e3b8890787648072e66cb3c77bdbe158050c0ce76bbbe6d9"
+    },
+    {
+      "path": "rv32i/I/I-jal-00.elf",
+      "sha256": "f83e21bfa8d947dd01ef32ce572f8ec3013a0c185a37729ea000a86943ed17a6"
+    },
+    {
+      "path": "rv32i/I/I-jalr-00.elf",
+      "sha256": "0a46771c5969679269d8c915111e902b11681bc89cf75be46db549485e84aa16"
+    },
+    {
+      "path": "rv32i/I/I-lb-00.elf",
+      "sha256": "b78b7666a66bc1482819dc2c7c71f22fcbddbf28e6d1bed2f55523eb11e8320f"
+    },
+    {
+      "path": "rv32i/I/I-lbu-00.elf",
+      "sha256": "e06f267ab855851bc97756b8a1bd234e89b077acf6d0092965381fba924dd719"
+    },
+    {
+      "path": "rv32i/I/I-lh-00.elf",
+      "sha256": "ce02fb169a3493e07703848cefad33bfbeb2b000c0895c3289ede14941c78aa0"
+    },
+    {
+      "path": "rv32i/I/I-lhu-00.elf",
+      "sha256": "74223bb2e4fed987a8a62eb9922193c384166ecced3c973f5297ee22ca2d63a4"
+    },
+    {
+      "path": "rv32i/I/I-lui-00.elf",
+      "sha256": "1344716f524d5515ad3adeb5220f56d06cc52bd3141164ddcf874d6aa726d6d3"
+    },
+    {
+      "path": "rv32i/I/I-lw-00.elf",
+      "sha256": "98a28d0809dc45b4b9dfc22e9354ade9af3171d284b22aab1255533ed48a7ab8"
+    },
+    {
+      "path": "rv32i/I/I-nop-00.elf",
+      "sha256": "0820d296c95a658e37ae7ea2efae1865b2949d22def5418b248d193a041ead6e"
+    },
+    {
+      "path": "rv32i/I/I-or-00.elf",
+      "sha256": "b2a7991f253be46f99bd1cfb208bcd43769edf105203cd79b094dbfb50475bb0"
+    },
+    {
+      "path": "rv32i/I/I-ori-00.elf",
+      "sha256": "fe2ead168327b4cd3b59954178bb08385f20eda6176865652642398c33aa7e2f"
+    },
+    {
+      "path": "rv32i/I/I-sb-00.elf",
+      "sha256": "230bb8e034dacab7f519e4eb250e7e063555df0ffa3d581445a047b2a374b871"
+    },
+    {
+      "path": "rv32i/I/I-sh-00.elf",
+      "sha256": "f169afbc593bceac684cce358d35b37377b4b3f3be64e2437e79acfcf1a47d7c"
+    },
+    {
+      "path": "rv32i/I/I-sll-00.elf",
+      "sha256": "a7faf4469abf2ebb955d5140f23accbfb0be5527e0502165b2e0c2c465f90047"
+    },
+    {
+      "path": "rv32i/I/I-slli-00.elf",
+      "sha256": "c166660d4503e176f026371c1946e022459b0faf9a0528d7f95dd5f603ab833e"
+    },
+    {
+      "path": "rv32i/I/I-slt-00.elf",
+      "sha256": "320912ea1cacd27f86c3000b231388d67820b18eaf72a4fb169c777664d04d39"
+    },
+    {
+      "path": "rv32i/I/I-slti-00.elf",
+      "sha256": "168fed3aa7ee9929ff9d8ea778dd056220eb9183414fc4015491863b4d1bf374"
+    },
+    {
+      "path": "rv32i/I/I-sltiu-00.elf",
+      "sha256": "44d6262a60db85f3b4a368022bf5fb58b747c99d6b0b95ca36cd2c9cabcee82d"
+    },
+    {
+      "path": "rv32i/I/I-sltu-00.elf",
+      "sha256": "886a0cec69f17b951d74bd1dc04e42ea92f1eb030de4f4bd278bde8bc3417a96"
+    },
+    {
+      "path": "rv32i/I/I-sra-00.elf",
+      "sha256": "a9cf647dac47e9cddd9c58135d1def431e187caebf961e5ba607479a05f2e201"
+    },
+    {
+      "path": "rv32i/I/I-srai-00.elf",
+      "sha256": "6f67968cf3d33cccee3869e30311e5c64f23ae57ce108ec5d92556b932080fb5"
+    },
+    {
+      "path": "rv32i/I/I-srl-00.elf",
+      "sha256": "60963f1ffec0e8bb0a0830a3841909c461519a9e075ffd6e43602279698205ce"
+    },
+    {
+      "path": "rv32i/I/I-srli-00.elf",
+      "sha256": "317cbf0b00035a8999f5eb38b05ed56e6da63adb590232eddc3ff117a728dde6"
+    },
+    {
+      "path": "rv32i/I/I-sub-00.elf",
+      "sha256": "3d1fd906392f9cf6d3c8013f080f92f339fc68a706484ef98f67f7015c044c65"
+    },
+    {
+      "path": "rv32i/I/I-sw-00.elf",
+      "sha256": "443f9fed7ed7ae073f791cb44366c3ad110cf74859e2449c168586bc68f5ca74"
+    },
+    {
+      "path": "rv32i/I/I-xor-00.elf",
+      "sha256": "efa11c6521e421c0b4dcffb3b57db723f5cf7a7e88e8e92d75a0d1e296a243f6"
+    },
+    {
+      "path": "rv32i/I/I-xori-00.elf",
+      "sha256": "52e9424a62f705f3167bdee8b18d1d376cbfffb1af90d51b9284f7bc539af675"
+    },
+    {
+      "path": "rv32i/M/M-div-00.elf",
+      "sha256": "4c9e8e42b7290bc774bd5fac96a5869d77f4f8a7a7f19c72ced26110bc3c23e0"
+    },
+    {
+      "path": "rv32i/M/M-divu-00.elf",
+      "sha256": "0574f293743225afdf0e68168d60a8ff630be97aee950203bc766c1c9d37d054"
+    },
+    {
+      "path": "rv32i/M/M-mul-00.elf",
+      "sha256": "79883f4f6f52008f75f72a7864469d6abac6126cb5059a622f6c320eb324a599"
+    },
+    {
+      "path": "rv32i/M/M-mulh-00.elf",
+      "sha256": "94c43c7d7f809ea9c3cd6c50f033c8158eb81b1e9b6feeb9e39ebb6441c1119d"
+    },
+    {
+      "path": "rv32i/M/M-mulhsu-00.elf",
+      "sha256": "d968fb4b60e63d629615a7edbe850b2d56c225078926b10aaef7c82e2f3fd2f5"
+    },
+    {
+      "path": "rv32i/M/M-mulhu-00.elf",
+      "sha256": "7af891d895f24fc8eb72383b7b9db2107e6a3ee11095a499bda2a29458e0624d"
+    },
+    {
+      "path": "rv32i/M/M-rem-00.elf",
+      "sha256": "65506db236a88313f12db46c9d8ccf25ea5a6d6051bcd7f02d5fbfafaf9eda51"
+    },
+    {
+      "path": "rv32i/M/M-remu-00.elf",
+      "sha256": "b42bfe2b16a42cece8ceb31d378a22aa1aecfc36923378e87966dda88145683f"
+    },
+    {
+      "path": "rv32i/Zmmul/Zmmul-mul-00.elf",
+      "sha256": "03df866fce63d41a13940193b6433f1079afdb34242438ac288ad3dd5b1cb83f"
+    },
+    {
+      "path": "rv32i/Zmmul/Zmmul-mulh-00.elf",
+      "sha256": "264cf4382ed057ca488b3b8e81fe4c121c533fd8a196b7fd46bb93d7ea024fe9"
+    },
+    {
+      "path": "rv32i/Zmmul/Zmmul-mulhsu-00.elf",
+      "sha256": "3d18c98e5101cf8e7d0c23ff1cc79767ca01f63b735d94037e4e11bc32e98506"
+    },
+    {
+      "path": "rv32i/Zmmul/Zmmul-mulhu-00.elf",
+      "sha256": "64d2f4031da27fe31f97a48fc77b78b9ec5659042dfab0dfe506cfb4c049a5e4"
+    }
+  ],
+  "counts": {
+    "I": 39,
+    "M": 8,
+    "Zmmul": 4
+  }
+}
