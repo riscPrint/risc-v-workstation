@@ -75,7 +75,7 @@ def parse_project(raw, path, environment):
         "query": {"build", "db"},
         "lint": {"settings"},
         "arch": {"description", "sources", "benchmarks"},
-        "formal": {"verilog", "top", "checks", "clock", "reset", "export_dependencies"},
+        "formal": {"regress", "verilog", "top", "checks", "clock", "reset", "export_dependencies"},
         "riscv_formal": {"root", "verilog", "wrapper", "isa", "nret", "checks", "depth", "solver", "defines", "ports", "check_options", "instruction_models"},
 
     }

@@ -45,6 +45,17 @@ class InputSnapshot:
         self._copies: dict[Path, Path] = {}
         self._pending: set[Path] = set()
         self.sources = [self._copy(Path(f), 'source') for f in args.verilog]
+        if self.frontend == 'temporal':
+            from .temporal import lower
+            self.temporal_properties = []
+            for record in self.files:
+                if 'frontend' not in record:
+                    continue
+                path = out / record['frontend']
+                lowered, properties = lower(path.read_text())
+                path.write_text(lowered)
+                record['frontend_sha256'] = digest(path)
+                self.temporal_properties.extend(properties)
         if self.frontend == 'slang':
             from .sva import validate_sources
             if getattr(args, 'event_model', False):
@@ -150,6 +161,8 @@ class InputSnapshot:
                 problems.append(str(exc))
                 result['status'] = 'unknown'
                 result['cause'] = exc.cause
+        if self.frontend == 'temporal':
+            result['temporal_properties'] = self.temporal_properties
         result['input_capture'] = self.capture.record()
         if self.project_capture is not None:
             result['project_capture'] = self.project_capture
