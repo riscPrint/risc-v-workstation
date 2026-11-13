@@ -122,3 +122,10 @@ def test_lint_effects_and_native_requirements(name, registry):
     tool = registry.tools[name]
     assert tool.side_effects
     assert tool.native_tools is not None
+
+
+@pytest.mark.parametrize('name', ['memory_concurrent_smoke', 'memory_directory', 'memory_tilelink_bind', 'memory_axiomatic', 'memory_generate', 'memory_images', 'memory_check', 'memory_concurrent_build', 'memory_concurrent_run'])
+def test_memory_effects_and_native_requirements(name, registry):
+    tool = registry.tools[name]
+    assert tool.side_effects
+    assert tool.native_tools is not None

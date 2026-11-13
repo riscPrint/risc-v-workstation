@@ -28,4 +28,6 @@ def mcp_tools():
                              'gcc': {'type': 'string', 'default': 'riscv64-unknown-elf-gcc'},
                              'base': {'type': 'string', 'default': '0x80000000'},
                              'shared_base': {'type': 'string', 'default': '0x81000000'},
-                             'timeout': {'type': 'number', 'default': 30}}, required=['out']), build)]
+                             'timeout': {'type': 'number', 'default': 30}}, required=['out']), build,
+        side_effects='long-running; launches compiler; writes per-hart ELFs under out', native_tools=('RISC-V GCC',),
+        )]
