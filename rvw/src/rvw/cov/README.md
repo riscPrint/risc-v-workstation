@@ -1128,3 +1128,5 @@ families, including their RV32/RV64 files. FP and vector data values cannot use
 integer RVFI values. Their semantic bank/form declarations and complete
 version-bound legal/illegal/unavailable catalogs remain project-owned work.
 This extension does not establish complete ISA compliance coverage.
+
+See [coverage counter exchange](EXCHANGE.md) for UCIS XML import/export and native DAT/LCOV exports.

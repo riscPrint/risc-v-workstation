@@ -190,6 +190,23 @@ through an absolute `RVW_HOME`. Keep core adapter sources in the core repository
 Use offline sbt after toolchain dependencies are installed. Source-directory settings
 in reusable builds must resolve from `baseDirectory.value`, not the caller's cwd.
 
+### Coverage counter interchange
+
+`rvw cov exchange` and `cov_exchange` implement the declared UCIS 1.0 counter
+profile `rvw-counter-profile/1`. Every original counter is a singleton ordinal
+coverpoint bin. `rvw.counter` preserves its native kind, original bin tuple,
+source link and exclusion metadata. `rvw.context` binds sources and plan/native
+context. Native UCIS metric tags and arbitrary vendor profiles are unsupported.
+Import returns `rvw.coverage-exchange/1`: context, rows with id/kind/count/metadata,
+status `reported`, and `proof_exclusions_verified=false`. Unknown XML structures
+are errors. Compatible merges require identical context and bin semantics.
+The optional input `rvw.assertion-counters/1` has a design hash and property
+id/source/count dictionaries. Counters alone grant no proof or non-vacuity.
+Native DAT exports retain exact point keys. LCOV uses `verilator_coverage`.
+Each export includes a `.rvw.json` metadata sidecar. Reports use
+`rvw.coverage-export/1`, with destination/metadata paths and hashes. Counter
+transport never authorizes a proof exclusion or C4 accept.
+
 ### Encoded coverage field domains
 
 Pinned ISA plans enumerate encoded register fields and aliases, vector register
