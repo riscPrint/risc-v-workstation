@@ -25,7 +25,7 @@ def load(path):
         raise ValueError('modes must be distinct M, S or U entries')
     if raw.get('priv', 'msu') != 'msu' and not (raw.get('kind') in ('disabled','disabled-matrix') and raw.get('priv') == 'mu'):
         raise ValueError('control campaign requires supervisor support (msu)')
-    if raw.get('kind', 'controls') not in ('nmi-matrix', 'nmi-return', 'reri-transactions', 'plic-delivery', 'pma-access', 'reset-inflight', 'stateen-hierarchy', 'envcfg-zero', 'landing-recovery', 'sstc-rv32', 'aplic-msi', 'epmp-matrix', 'disabled-matrix', 'reri', 'dvfs', 'controls', 'wfi', 'disabled', 'scheduled-wfi', 'plic', 'reset', 'nmi', 'pma', 'pmp', 'epmp', 'imsic', 'aplic', 'aclint', 'smnip', 'sstc', 'stateen', 'envcfg', 'landing', 'shadow'):
+    if raw.get('kind', 'controls') not in ('fast-preemption', 'fast-vector', 'nmi-matrix', 'nmi-return', 'reri-transactions', 'plic-delivery', 'pma-access', 'reset-inflight', 'stateen-hierarchy', 'envcfg-zero', 'landing-recovery', 'sstc-rv32', 'aplic-msi', 'epmp-matrix', 'disabled-matrix', 'reri', 'dvfs', 'controls', 'wfi', 'disabled', 'scheduled-wfi', 'plic', 'reset', 'nmi', 'pma', 'pmp', 'epmp', 'imsic', 'aplic', 'aclint', 'smnip', 'sstc', 'stateen', 'envcfg', 'landing', 'shadow'):
         raise ValueError('kind must be controls, wfi or disabled')
     if raw.get('kind') == 'wfi':
         from .wake import programs
@@ -37,7 +37,7 @@ def load(path):
 def scenarios(config):
     from importlib import import_module
     kind = config.get('kind', 'controls')
-    module = {'nmi-matrix':'rnmi', 'nmi-return':'rnmi', 'reri-transactions':'reri_transactions', 'plic-delivery':'plic_delivery', 'pma-access':'pma_access', 'reset-inflight':'reset_phase', 'stateen-hierarchy':'state_hierarchy', 'envcfg-zero':'env_behavior', 'landing-recovery':'cfi_recovery', 'sstc-rv32':'timer32', 'aplic-msi':'aplic_gateway', 'epmp-matrix':'epmp_matrix', 'disabled-matrix':'disabled_matrix', 'controls':'programs', 'wfi':'wake', 'scheduled-wfi':'scheduled',
+    module = {'fast-preemption':'fast_preemption', 'fast-vector':'fast_vector', 'nmi-matrix':'rnmi', 'nmi-return':'rnmi', 'reri-transactions':'reri_transactions', 'plic-delivery':'plic_delivery', 'pma-access':'pma_access', 'reset-inflight':'reset_phase', 'stateen-hierarchy':'state_hierarchy', 'envcfg-zero':'env_behavior', 'landing-recovery':'cfi_recovery', 'sstc-rv32':'timer32', 'aplic-msi':'aplic_gateway', 'epmp-matrix':'epmp_matrix', 'disabled-matrix':'disabled_matrix', 'controls':'programs', 'wfi':'wake', 'scheduled-wfi':'scheduled',
               'reset':'lifecycle', 'nmi':'lifecycle', 'imsic':'aia', 'aplic':'aia',
               'aclint':'fast_interrupts', 'smnip':'fast_interrupts',
               'sstc':'extensions', 'stateen':'extensions', 'envcfg':'extensions', 'landing':'extensions'}.get(kind, kind)
@@ -77,13 +77,17 @@ def build(description, out, gcc='riscv64-unknown-elf-gcc'):
     manifest = dict(schema='rvw.privilege-build/1', spec=SPEC, config=config,
                     description_sha256=digest(description), scenarios=rows)
     (out / 'manifest.json').write_text(json.dumps(manifest, indent=2) + '\n')
+    irq_causes=[3,7,11];irq_modes=['M']
+    if config.get('kind')=='plic-delivery':irq_causes.append(9);irq_modes.append('S')
+    if config.get('kind') in ('fast-preemption','fast-vector'):
+        irq_causes.extend([1,2,(1<<63)-3,(1<<63)-7])
     (out / 'functional-groups.json').write_text(json.dumps({'replace_defaults': True, 'groups': [
         {'name': 'privilege_csr_mode', 'fields': ['csr', 'mode'], 'when': {'class': 'csr'},
-         'domains': [['0x180', '0x300', '0x341', '0x342', '0x346', '0x347', '0x350', '0x351', '0x355', '0x35c', '0x150', '0x151', '0x15c', '0x250', '0x251', '0x25c', '0x600', '0x011', '0x14d', '0x15d', '0x24d', '0x25d', '0x30a', '0x31a', '0x60a', '0x61a', '0x605', '0x615', '0x606', '0x306', '0x344', '0x644'], ['M', 'S', 'U']]},
+         'domains': [['0x180', '0x300', '0x341', '0x342', '0x307', '0x346', '0x347', '0x348', '0x350', '0x351', '0x352', '0x353', '0x355', '0x35c', '0x150', '0x151', '0x15c', '0x250', '0x251', '0x25c', '0x600', '0x011', '0x14d', '0x15d', '0x24d', '0x25d', '0x30a', '0x31a', '0x60a', '0x61a', '0x605', '0x615', '0x606', '0x306', '0x344', '0x644'], ['M', 'S', 'U']]},
         {'name': 'privilege_trap', 'fields': ['cause', 'mode'],
          'when': {'event': 'trap', 'interrupt': False}, 'domains': [[1, 2, 5, 7, 8, 9, 10, 11, 15, 18, 22], ['M']]},
         {'name': 'privilege_irq', 'fields': ['cause', 'mode'],
-         'when': {'event': 'trap', 'interrupt': True}, 'domains': [[3, 7, 11], ['M']]},
+         'when': {'event': 'trap', 'interrupt': True}, 'domains': [irq_causes,irq_modes]},
     ]}, indent=2) + '\n')
     # This fragment is merged into the project's regression config by the owner.
     suites = []
@@ -107,11 +111,11 @@ def reference(directory, spike='spike', timeout=2):
         from importlib import import_module
         modules={'imsic':'aia','aplic':'aia','aplic-msi':'aplic_gateway',
                  'aclint':'fast_interrupts','smnip':'fast_interrupts',
-                 'rnmi':'rnmi','reri':'reri','reri-transactions':'reri_transactions','dvfs':'dvfs','plic-delivery':'plic_delivery'}
+                 'fast-preemption':'fast_preemption','fast-vector':'fast_vector','rnmi':'rnmi','reri':'reri','reri-transactions':'reri_transactions','dvfs':'dvfs','plic-delivery':'plic_delivery'}
         models=[import_module('rvw.privilege.controllers')];rows=[]
         backend=manifest['config']['reference_backend']
         native=backend!='python'
-        native_modules={'spike-python-plic':('plic-delivery','spike_plic'),'spike-python-reri':('nmi-matrix', 'nmi-return', 'reri-transactions','spike_reri')}
+        native_modules={'spike-python-plic':('plic-delivery','spike_plic'),'spike-python-reri':('fast-preemption', 'fast-vector', 'nmi-matrix', 'nmi-return', 'reri-transactions','spike_reri')}
         if native and manifest['config'].get('kind')!=native_modules[backend][0]:
             raise ValueError('native device backend differs from the selected campaign kind')
         if native and not manifest['config'].get('reference_shim'):

@@ -113,7 +113,7 @@ class Aplic:
 class NestedPriority:
     """v0.20 Smnip threshold grouping and trap/return state."""
     def __init__(self, priority_bits=8, group_bits=8):
-        if not 1 <= group_bits <= priority_bits <= 8:
+        if not 0 <= group_bits <= priority_bits <= 8 or priority_bits<1:
             raise ValueError('invalid implemented priority/group bits')
         self.priority_bits=priority_bits;self.group_bits=group_bits
         self.threshold=1 << priority_bits;self.previous=None

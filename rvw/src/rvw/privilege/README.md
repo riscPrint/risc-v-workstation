@@ -559,3 +559,37 @@ external RNMI entry or these project exception vectors. Entry reference results
 come from the small Python state model and remain model-based. Compilation,
 model checks and native MNRET success do not establish DUT RNMI entry, reset
 interaction or machine-error recovery.
+
+## Fast-interrupt preemption and jump tables
+
+`kind = "fast-preemption"` uses the existing fast-interrupt v0.20 pin. The
+project declares at least two hart-local sources, eight priority bits and its
+implemented `group_bits`. The example selects 0, 4 and 8 grouping bits. Twelve
+programs test higher, lower, equal and same-group priorities. They configure
+Smidctrl source, enable and priority CSRs, then request actual edge events.
+The outer handler saves mistatus and mepc. The inner handler checks the current
+threshold and saved previous threshold. Software restores the outer frame before
+MRET. A deferred source must enter only after the outer handler returns. Zero
+grouping bits disable nested preemption but permit delivery at threshold 256.
+
+`kind = "fast-vector"` adds the Smijt interrupt jump table. Project data selects
+`ijt_base`, `common_address`, `handler_address` and `table_shifts`. The example
+crosses MSIP, MTIP and an external minor identity with two table strides and
+VEN/address-bit values 0, 1 and 3. It checks signed negative major offsets,
+positive minor offsets, common-dispatch fallback and IALIGN address masking.
+The C profile uses a two-byte-aligned handler to distinguish the masks. The
+program checks mode-3/mijt readback, exact interrupt PC, cause and saved threshold.
+
+Input kinds `aclic-baseline`, `aclic-edge` and `fast-source` are project driver
+contracts. The baseline deasserts the listed sources. Edge events pulse the
+selected source. fast-source asserts/deasserts the selected major/minor input.
+The first interrupt is gated at the named wait symbol. Adapters must drive
+actual inputs. An ack without input activity cannot make these self-checks pass.
+The fixed registers and encodings follow v0.20 Smidctrl/Smnip/Smijt. They do not
+implement the old CLIC layout. Unknown version pins are rejected.
+
+All 48 programs compile and have model-based expected outcomes. Installed Spike
+has no model for these v0.20 extensions. The Python models supply grouping,
+threshold-save/restore and jump-table expectations. They do not establish actual
+nested entry, table memory permissions or DUT delivery. Supervisor variants,
+interrupt table faults and interrupted trap entry remain open.

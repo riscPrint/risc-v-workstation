@@ -226,3 +226,19 @@ Optional ordinary_msip enables pending ordinary-interrupt cases. Entry events
 are gated at rnmi_wait through the existing mailbox driver. Python expected
 frames remain model-based. The native return profile tests MNRET only and does
 not substitute a software CSR setup for hardware RNMI entry.
+
+## Fast-interrupt runtime profiles
+
+Kinds `fast-preemption` and `fast-vector` use the pinned
+riscv-fast-interrupt-v0.20 model. fast_interrupts declares sources,
+priority_bits, group_bits and, for vectoring, ijt_base, common_address,
+handler_address and table_shifts. This RV64 profile requires two sources and
+eight priority bits. group_bits may be zero. Miconfig remains at the v0.20
+mireg4 CSR number. The profile rejects incompatible register selection.
+
+Mailbox payloads add aclic-baseline, aclic-edge and fast-source. They represent
+actual source state, not a replacement software write of trap CSRs. Reference
+plans record grouping decisions or hex jump-table addresses/targets. Reports
+remain evidence=model-based. Compilation and reference-plan agreement do not
+earn architectural DUT groups. Normal C1 stimulus binding and strict evidence
+checks remain required.
