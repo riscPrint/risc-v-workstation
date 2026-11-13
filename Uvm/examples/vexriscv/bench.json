@@ -1,0 +1,10 @@
+{
+  "schema": "rvw.cocotb/1",
+  "name": "vex-live-cpu",
+  "backend": "verilator",
+  "top": "VexTop",
+  "sources": ["VexTop.v"],
+  "test_module": "live_test",
+  "python_paths": [".", "../../pyuvm"],
+  "requires": ["timer"]
+}

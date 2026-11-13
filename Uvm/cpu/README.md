@@ -107,3 +107,11 @@ and halt retirements. Random pin stimulus does not establish architectural
 interrupt or debug behavior. The separate control fixture checks propagated
 levels, acknowledgement and halt/resume state for six directed transfers,
 16 random transfers and one final resume.
+
+## VexRiscv project binding
+
+The [VexRiscv example](../examples/vexriscv/README.md) connects the shared
+Python CPU environment to real VexTop instruction, data and RVFI pins.
+It uses seeded bus delays and independent Spike step comparison.
+Program completion requires a checked `tohost` pass store. Its separate
+corruption mode changes next PC and must fail. Use the `vex` lock for runs.
