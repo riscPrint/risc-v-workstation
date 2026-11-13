@@ -462,15 +462,17 @@ revision above, SpinalHDL 1.15.0 and Verilator 5.049:
 
 | Measured pair | Baseline execution | DPI checked execution |
 |---|---:|---:|
-| 1 | 6.522 s | 25.777 s |
-| 2 | 5.154 s | 35.186 s |
+| 1 | 1.826 s | 10.178 s |
+| 2 | 3.178 s | 27.198 s |
 
-Each run retired 6,006 instructions in 24,026 cycles. Both checked measured
-runs matched Spike completely. Total checked execution time divided by total
-baseline execution time was 5.22. This is measured adapter overhead
-for this loop. Other workers were active. It is not a stable host benchmark,
+Each run retired 6,006 instructions in 24,026 cycles. All four measured traces
+matched Spike completely. Total checked execution time divided by total
+baseline execution time was 7.47. These measurements were refreshed after
+the post-edge CSR sampling change. The first baseline and checked runs were
+excluded as cache warmups. Each trial starts a fresh native process and includes
+its own execution-time JIT work. This is adapter overhead for this loop on a
+shared host with other active workers. It is not a stable host benchmark,
 a universal slowdown factor or a measurement of hardware speed.
-These timings precede the later post-edge CSR sampling change.
 
 ## Native interrupt synchronization
 
@@ -604,3 +606,27 @@ eight replaceable instruction slots to one and six removable IRQ events to
 one. Both have a passing empty control and a fresh failing confirmation.
 C1 and complete C2 files are validated for every reported trial. These are
 deliberate failing fixtures. They do not identify a new core defect.
+## Native RVVI round trip
+
+The native round-trip test exports real VexRiscv C2 to RVVI-TEXT 0.5 and imports
+it again. The `rvw.c2` STATE extension preserves fields that this RVVI subset
+does not express directly. The test requires equality of all decoded C2
+records, including source metadata, IRQ/trap events and CSR values. It does
+not require identical JSON whitespace or claim an independent check from a
+format conversion.
+
+On 2026-11-13, both native controls passed: the default one-CSR capture and the
+full 17-CSR capture. Each had nine retirements and an actual ECALL trap. The
+restored default trace matched Spike with the same instruction count as the
+original. The restored full-CSR trace retained the same real reference-model
+differences as the original. Neither conversion turned those differences into
+a match. The importer also rejects contradictions in RVVI timing, hart, order,
+mode, parameters and IRQ NET data against the saved C2 state.
+
+```sh
+nice -n 10 rvw/.venv/bin/python -m pytest examples/vexriscv/rvw/tests/test_rvvi_native.py -q
+```
+
+The current generic harness has no DMI endpoint. This VexRiscv configuration
+has no debug unit. Debug-halt comparison with the reference Debug Module path
+was NOT RUN. A format round trip does not establish debug support.

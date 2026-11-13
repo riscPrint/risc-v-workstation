@@ -60,8 +60,25 @@ def import_stream(text, kind):
         lines = text.splitlines()
         if not lines or lines[0].strip() != 'VERSION 0 5':
             raise ValueError('expected RVVI-TEXT VERSION 0 5')
+        cycle, hart, parameters, orders = 0, 0, {}, {}
         for line in lines[1:]:
             tokens = shlex.split(line)
+            if 'PARAMS' in tokens:
+                pos = tokens.index('PARAMS')
+                count = int(tokens[pos+1])
+                pairs = tokens[pos+2:pos+2+2*count]
+                if count < 0 or len(pairs) != 2*count:
+                    raise ValueError('invalid RVVI parameter count')
+                parameters.update(zip(pairs[::2], pairs[1::2]))
+            if 'CYCLE' in tokens:
+                delta = int(tokens[tokens.index('CYCLE')+1])
+                if delta < 0:
+                    raise ValueError('negative RVVI cycle delta')
+                cycle += delta
+            if 'HART' in tokens:
+                hart = int(tokens[tokens.index('HART')+1])
+            if 'ORDER' in tokens:
+                orders[hart] = int(tokens[tokens.index('ORDER')+1])
             if 'STATE' not in tokens:
                 if 'RET' in tokens or 'TRAP' in tokens:
                     key = 'RET' if 'RET' in tokens else 'TRAP'
@@ -72,9 +89,22 @@ def import_stream(text, kind):
             if tokens[at+1] != 'rvw.c2' or at+3 != len(tokens):
                 raise ValueError('unsupported RVVI state extension')
             obj = json.loads(tokens[at+2])
+            if 'cycle' in obj and (obj['cycle'] != cycle or obj.get('hart', 0) != hart):
+                raise ValueError('RVVI cycle/hart conflicts with C2 state')
+            if obj.get('event') == 'irq' and 'NET' in tokens:
+                pos = tokens.index('NET')
+                if tokens[pos+1] != 'rvw.irq_levels' or int(tokens[pos+2], 0) != int(obj['levels'], 16):
+                    raise ValueError('RVVI net conflicts with C2 state')
+            if 'order' in obj and not ('RET' in tokens or 'TRAP' in tokens):
+                raise ValueError('RVVI retirement missing for C2 state')
             if 'RET' in tokens or 'TRAP' in tokens:
                 key = 'RET' if 'RET' in tokens else 'TRAP'
                 pos = tokens.index(key)
+                if obj['order'] != orders.get(hart, 0):
+                    raise ValueError('RVVI order conflicts with C2 state')
+                orders[hart] = obj['order'] + 1
+                if 'MODE' in tokens and int(tokens[tokens.index('MODE')+1], 0) != obj['mode']:
+                    raise ValueError('RVVI mode conflicts with C2 state')
                 if (int(tokens[pos+1], 0), int(tokens[pos+2], 0), key == 'TRAP') != (int(obj['pc'], 16), int(obj['insn'], 16), obj['trap']):
                     raise ValueError('RVVI fields conflict with C2 state')
                 if 'X' in tokens:
@@ -113,6 +143,12 @@ def import_stream(text, kind):
             rows = [r for r in restored[1:] if 'event' not in r]
             if len(rows) != len(observations) or any(any(o[k] != r[k] for k in ('mode', 'pc', 'insn')) or o.get('rd', 0) != r['rd'] or (r['rd'] and o['rd_wdata'] != r['rd_wdata']) for o, r in zip(observations, rows)):
                 raise ValueError('Spike fields conflict with C2 state')
+        if kind == 'rvvi':
+            if observations:
+                raise ValueError('mixed RVVI state and sparse retirements')
+            expected = {'XLEN': restored[0]['xlen'], 'NHART': len(restored[0].get('harts', [0]))}
+            if any(name in parameters and int(parameters[name], 0) != value for name, value in expected.items()):
+                raise ValueError('RVVI parameters conflict with C2 state')
         return restored, []
     if not observations:
         raise ValueError('no observations')

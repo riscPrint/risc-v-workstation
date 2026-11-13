@@ -213,3 +213,12 @@ is recorded in `recent_quirks`. Sail's raw CSR state is not overwritten from
 DUT data. A later `mtval` read is refused until an independent full CSR write
 or another trap restores common state. An unsupported observation cannot earn
 a complete match. There is no arbitrary trap-value mask.
+
+## RVVI state consistency
+
+RVVI-TEXT 0.5 export retains full C2 records in the `rvw.c2` STATE extension.
+Import checks the declared cycle accumulator, hart, order, mode, XLEN, hart
+count and IRQ NET values against that state, in addition to PC, instruction
+and integer write values. Conflicts are errors. Mixed sparse retirement lines
+and complete C2 state are rejected. Sparse input remains observations only.
+A format conversion is not an independent architectural check.
