@@ -74,7 +74,9 @@ against the annotation. aq/rl and fence domains come from the instruction.
 and an annotation callback. Adapters without these observations get `inconclusive`.
 
 The supported profile has aligned scalar accesses with no mixed-size overlap,
-no memory faults, no external writers, and no device memory. Unsupported
+one reset epoch per hart, no memory faults or trap events, no external
+writers or maintenance events, and no device memory. LR/SC pairing cannot
+cross a hart reset. Unsupported
 instructions and profiles are inconclusive. A candidate limit also gives
 inconclusive. `allowed` supplies a candidate witness under the declared
 dependencies. `forbidden` means every candidate was rejected for this finite
