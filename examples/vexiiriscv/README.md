@@ -132,3 +132,56 @@ VEXIIRISCV=/path/to/VexiiRiscv nice -n 10 rvw/.venv/bin/python -m pytest \
 
 `test_vexii_project.py` needs no Scala build. `test_adapter.py` builds and runs
 the core.
+
+## Native DPI co-simulation
+
+The example can expose the same generic `riscvsim.LockstepDpi` mailbox and C++
+client as VexRiscv. Set `RVW_COSIM_DPI=1` and use `rvw cosim live --lockstep`
+with this example's `rvw/run.sh`. Set `RVW_VEX_LOCK=vex-cosim` with a private
+`VEXIIRISCV` copy. Keep `RISCVSIM_WORK` inside that private worktree.
+The default lock remains `vex`.
+
+The probe supplies a retirement's next PC through the next observed commit.
+This creates one retirement of lookahead. The adapter preserves that actual
+PC. It does not replace it with a reference value. It buffers C2 events until
+the unresolved retirement allows them to be published in cycle order. It
+samples the core and probe before sending C2 through the native mailbox.
+The final pending store and end record are sent before native simulation closes.
+
+This flow reuses the generic DPI client, C2 validator, Spike checker and C5
+report. Core signal bindings and the probe backend stay in this example.
+The negative control uses `RVW_COSIM_FAULT_ORDER=1` to flip an observed GPR
+writeback bit. The comparator reports the first difference at order 1. Because
+of the stated lookahead, another instruction can already have retired in RTL.
+This is not a claim that RTL stops before that additional retirement.
+
+Run the native controls with the pinned private source environment:
+
+```sh
+nice -n 10 rvw/.venv/bin/python -m pytest examples/vexiiriscv/rvw/tests/test_lockstep_native.py examples/vexiiriscv/rvw/tests/test_lockstep_interrupts.py -q
+```
+
+The interrupt controls start with `mtval=7`. They require the actual captured
+trap value to be zero, not a value fabricated by the adapter. They cover MSIP
+and MTIP input schedules, handler execution and `MRET`. This configuration has
+no per-retirement CSR snapshot or debug-module binding. Those capabilities
+are not implied by a GPR/memory/trap match.
+
+Native validation on 2026-11-13 used the three pinned source revisions in the
+Setup table, with a private core copy and the `vex-cosim` lock. All 49 aligned
+ISA programs passed. Spike matched all 49 complete C2 traces: 17,637 compared
+instructions, with no synchronization and no applied masks. The DPI clean/fault
+control passed. The two Scala backend tests passed. These results cover this
+RV32IM configuration and the supplied programs. They do not qualify other cores
+or configurations.
+
+The ISA comparison helper accepts a selected core and platform:
+
+```sh
+rvw/.venv/bin/python examples/vexriscv/rvw/check-isa.py --core vexiiriscv --platform examples/vexiiriscv/rvw/platform.json jobs.jsonl summary.json
+```
+
+Both native interrupt controls also passed after adding an actual `mtval` CSR
+read in each handler. The initial value was 7. Each handler read zero, executed
+`MRET`, and completed with a Spike match. Both traces recorded input
+assertion at cycle 200 and deassertion at cycle 220.

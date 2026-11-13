@@ -20,7 +20,9 @@ object VexiiAdapter extends CoreAdapter {
   def xlen = 32
   def isa(config: String) = "rv32im_zicsr_zifencei"
   def sourceDir = new File(sys.env("VEXIIRISCV")).getCanonicalFile
-  override def replayEnv = Seq("VEXIIRISCV" -> sourceDir.getPath)
+  override def replayEnv = Seq("VEXIIRISCV" -> sourceDir.getPath) ++
+    Seq("RVW_COSIM_DPI", "RVW_COSIM_FAULT_ORDER", "RVW_VEX_LOCK").flatMap(
+      name => sys.env.get(name).map(name -> _))
   val ramBase = 0x80000000L
   val ramSize = 0x1000000L
 
@@ -62,13 +64,22 @@ object VexiiAdapter extends CoreAdapter {
     def read(addr: Long, n: Int): BigInt = (0 until n).foldLeft(BigInt(0)) { (v, i) =>
       v | (BigInt(memory.getOrElse(addr + i, 0)) << (8 * i))
     }
-    val writer = if (job.rvfiTrace) Some(new RvfiTraceWriter(new File(job.out, "rvfi.jsonl"), ctx.rvfiHeader)) else None
+    var writer = Option.empty[RvfiTraceWriter]
+    val events = mutable.ArrayBuffer.empty[(Long, () => Unit)]
+    var finish = Option.empty[(Status, Option[Long], Option[String])]
+    var traceEnded = false
     val konataLog = if (job.konata) Some(new konata.Backend(new File(job.out, "konata.log"))) else None
     val bench = ctx.elf.symbol("bench_stats").map(new MemWords(_, 2, busBytes))
     var backend: C2Backend = null
     val (status, code, message, cycles) = try {
       val result = SimSession.run(model, job, ctx) { (dut, ctl) =>
         val cd = dut.clockDomain
+        val dpi = if (sys.env.get("RVW_COSIM_DPI").contains("1"))
+          Some(dut.host[LockstepTapPlugin].logic.transport) else None
+        dpi.foreach(_.initialize())
+        writer = if (job.rvfiTrace) Some(new RvfiTraceWriter(new File(job.out, "rvfi.jsonl"),
+          ctx.rvfiHeader, observe = dpi.filter(_ => sys.env.contains("RVW_COSIM_PORT"))
+            .map(m => (line: String) => m.observe(line)))) else None
         val priv = dut.host[PrivilegedPlugin].logic.harts(0)
         val tap = dut.host[TrapTapPlugin].logic
         val ibus = dut.host[FetchCachelessPlugin].logic.bus
@@ -99,7 +110,7 @@ object VexiiAdapter extends CoreAdapter {
           priv.int.m.software #= levels.testBit(3)
           priv.int.m.timer #= levels.testBit(7)
           priv.int.m.external #= levels.testBit(11)
-          if (levels != irqLevels) { writer.foreach(_.irq(cycle, levels)); irqLevels = levels }
+          if (levels != irqLevels) { events += ((cycle, () => writer.foreach(_.irq(cycle, levels)))); irqLevels = levels }
           if (tap.fire.toBoolean) traps.enqueue((tap.epc.toBigInt, tap.tval.toBigInt))
 
           if (ibus.cmd.valid.toBoolean && ibus.cmd.ready.toBoolean) {
@@ -128,13 +139,19 @@ object VexiiAdapter extends CoreAdapter {
         }
         backend = new C2Backend(xlen, () => ctl.cycle, () => (tap.privilege.toInt & 3),
           () => if (traps.nonEmpty) traps.dequeue() else throw new IllegalStateException("trap reported without trap-entry values"),
-          r => writer.foreach(_.write(r)),
-          (c, cause, tval, intr) => writer.foreach(_.trap(c, cause, tval, intr)),
+          r => {
+            val sampled = if (sys.env.get("RVW_COSIM_FAULT_ORDER").contains(r.order.toString)) {
+              require(r.rd != 0, "fault target must write a GPR")
+              r.copy(rdWdata = r.rdWdata ^ 1)
+            } else r
+            events += ((r.cycle, () => writer.foreach(_.write(sampled))))
+          },
+          (c, cause, tval, intr) => events += ((c, () => writer.foreach(_.trap(c, cause, tval, intr)))),
           (addr, sizeLog2, data) => {
             bench.foreach(_.onStore(addr, sizeLog2, data))
             tohost.onStore(addr, sizeLog2, data) match {
-              case Some(ToHost.Pass) => ctl.finish(Status.Pass)
-              case Some(f: ToHost.Fail) => ctl.finish(Status.Fail, Some(f.code), Some(s"tohost = ${Hex(f.raw)}"))
+              case Some(ToHost.Pass) => finish = Some((Status.Pass, None, None))
+              case Some(f: ToHost.Fail) => finish = Some((Status.Fail, Some(f.code), Some(s"tohost = ${Hex(f.raw)}")))
               case None =>
             }
           })
@@ -142,6 +159,21 @@ object VexiiAdapter extends CoreAdapter {
         probe.checkLiveness = false
         probe.trace = job.konata
         probe.add(backend)
+        fork {
+          while (true) {
+            cd.waitSampling()
+            sleep(1) // The upstream probe and bus callbacks finish before transport runs.
+            if (finish.nonEmpty) backend.drain()
+            val watermark = backend.pendingCycle.getOrElse(Long.MaxValue)
+            val ready = events.filter(_._1 <= watermark).sortBy(_._1).toVector
+            events.filterInPlace(_._1 > watermark)
+            ready.foreach(_._2())
+            finish.foreach { case (s, c, m) =>
+              writer.foreach(_.end(ctl.cycle, s.name)); traceEnded = true
+              ctl.finish(s, c, m)
+            }
+          }
+        }
         cd.waitSamplingWhere(false)
       }
       result
@@ -149,7 +181,11 @@ object VexiiAdapter extends CoreAdapter {
       if (backend != null) backend.drain()
       konataLog.foreach(_.close())
     }
-    writer.foreach { w => w.end(cycles, status.name); w.close() }
+    if (!traceEnded && !sys.env.get("RVW_COSIM_DPI").contains("1")) {
+      events.sortBy(_._1).foreach(_._2())
+      writer.foreach(_.end(cycles, status.name))
+    }
+    writer.foreach(_.close())
     val retired = if (backend == null) 0L else backend.retired
     val metrics = ujson.Obj()
     bench.filter(_.complete).foreach { b =>

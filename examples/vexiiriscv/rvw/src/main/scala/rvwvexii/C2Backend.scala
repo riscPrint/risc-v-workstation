@@ -22,6 +22,7 @@ class C2Backend(xlen: Int, cycle: () => Long, mode: () => Int, nextTrap: () => (
   private var order = BigInt(0)
   private var handler = false
   private var pending: Option[RvfiRecord] = None
+  def pendingCycle: Option[Long] = pending.map(_.cycle)
 
   private var rdData: Option[BigInt] = None
   private val loads = mutable.LongMap.empty[(Long, Long, BigInt)]
@@ -74,7 +75,7 @@ class C2Backend(xlen: Int, cycle: () => Long, mode: () => Int, nextTrap: () => (
     val (epc, tval) = nextTrap()
     emit(epc)
     val cause = if (interrupt) (BigInt(1) << (xlen - 1)) | code else BigInt(code)
-    trapSink(cycle(), cause, if (interrupt) BigInt(0) else tval & mask, interrupt)
+    trapSink(cycle(), cause, tval & mask, interrupt)
     traps += 1
     handler = true
     rdData = None; load = None; store = None

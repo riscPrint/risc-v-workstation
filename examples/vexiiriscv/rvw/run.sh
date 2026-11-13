@@ -18,7 +18,7 @@ export RVW_LOCK_PYTHON="$RVW_PYTHON"
 if [ "${1:-}" = --vexii-locked ]; then
   shift
 else
-  exec "$repo/scripts/with-lock.sh" vex "$BASH" "$here/run.sh" \
+  exec "$repo/scripts/with-lock.sh" "${RVW_VEX_LOCK:-vex}" "$BASH" "$here/run.sh" \
     --riscvsim-supervised "$launch_owner" --vexii-locked "$@"
 fi
 trap 'exit 143' TERM

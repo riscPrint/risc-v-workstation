@@ -8,12 +8,12 @@ import sys
 from rvw.common.proc import run_group
 
 
-def compare(manifest, output):
-    platform = Path(__file__).with_name('platform.json')
+def compare(manifest, output, *, core="vexriscv", platform=None):
+    platform = Path(platform) if platform else Path(__file__).with_name('platform.json')
     rows = []
     for line in Path(manifest).read_text().splitlines():
         job = json.loads(line)
-        command = [sys.executable, '-m', 'rvw', 'cosim', 'check', '--core', 'vexriscv',
+        command = [sys.executable, '-m', 'rvw', 'cosim', 'check', '--core', core,
                    '--platform', str(platform), '--elf', job['elf'],
                    '--trace', str(Path(job['out']) / 'rvfi.jsonl'), '--json']
         result = run_group(command, capture=True, text=True, timeout=60)
@@ -32,5 +32,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('manifest', type=Path)
     parser.add_argument('output', type=Path)
+    parser.add_argument("--core", default="vexriscv")
+    parser.add_argument("--platform", type=Path)
     args = parser.parse_args()
-    sys.exit(compare(args.manifest, args.output))
+    sys.exit(compare(args.manifest, args.output, core=args.core, platform=args.platform))
