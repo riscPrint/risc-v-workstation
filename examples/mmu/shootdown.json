@@ -1,0 +1,41 @@
+{
+  "schema": "rvw.mmu/1",
+  "scenarios": [
+    {
+      "id": "sv39-shootdown",
+      "mode": "sv39",
+      "level": 0,
+      "flags": "VRWAD",
+      "shootdown": true,
+      "access": "load",
+      "expect": "success",
+      "bins": [
+        "sv39.shootdown"
+      ]
+    },
+    {
+      "id": "sv48-shootdown",
+      "mode": "sv48",
+      "level": 0,
+      "flags": "VRWAD",
+      "shootdown": true,
+      "access": "load",
+      "expect": "success",
+      "bins": [
+        "sv48.shootdown"
+      ]
+    },
+    {
+      "id": "sv57-shootdown",
+      "mode": "sv57",
+      "level": 0,
+      "flags": "VRWAD",
+      "shootdown": true,
+      "access": "load",
+      "expect": "success",
+      "bins": [
+        "sv57.shootdown"
+      ]
+    }
+  ]
+}

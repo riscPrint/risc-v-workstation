@@ -833,3 +833,14 @@ random_settings = "random.toml"
 ```
 
 With this setting, omit `--settings` on the CLI or `settings` in MCP.
+
+### Project-selected paging matrices
+
+The MMU description also accepts `{"schema":"rvw.mmu/1","matrix":{"modes":
+["sv39","sv48","sv57","sv32"]}}`. Select only modes implemented by the
+project. Explicit scenarios accept `mode`; omission retains Sv39 behavior.
+The matrix expands to explicit scenarios with mode-specific functional bins.
+See [the generic example](../../../../examples/mmu/README.md) for C1 suites,
+layout limits and coverage scope. Sv32 uses RV32IM, ILP32, 32-bit PTEs and the
+RV32 satp layout. Sv48 and Sv57 use four and five table levels. An explicit
+non-canonical VA is permitted only with a declared page-fault expectation.

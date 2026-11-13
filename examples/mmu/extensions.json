@@ -1,0 +1,425 @@
+{
+  "schema": "rvw.mmu/1",
+  "scenarios": [
+    {
+      "id": "napot-page-0",
+      "mode": "sv39",
+      "level": 0,
+      "flags": "VRWAD",
+      "access": "load",
+      "expect": "success",
+      "napot": true,
+      "va": 1073741824,
+      "pa": 2149580800,
+      "value": 42,
+      "bins": [
+        "svnapot.contiguous",
+        "svnapot.page-0"
+      ]
+    },
+    {
+      "id": "napot-page-1",
+      "mode": "sv39",
+      "level": 0,
+      "flags": "VRWAD",
+      "access": "load",
+      "expect": "success",
+      "napot": true,
+      "va": 1073745920,
+      "pa": 2149584896,
+      "value": 43,
+      "bins": [
+        "svnapot.contiguous",
+        "svnapot.page-1"
+      ]
+    },
+    {
+      "id": "napot-page-2",
+      "mode": "sv39",
+      "level": 0,
+      "flags": "VRWAD",
+      "access": "load",
+      "expect": "success",
+      "napot": true,
+      "va": 1073750016,
+      "pa": 2149588992,
+      "value": 0,
+      "bins": [
+        "svnapot.contiguous",
+        "svnapot.page-2"
+      ]
+    },
+    {
+      "id": "napot-page-3",
+      "mode": "sv39",
+      "level": 0,
+      "flags": "VRWAD",
+      "access": "load",
+      "expect": "success",
+      "napot": true,
+      "va": 1073754112,
+      "pa": 2149593088,
+      "value": 0,
+      "bins": [
+        "svnapot.contiguous",
+        "svnapot.page-3"
+      ]
+    },
+    {
+      "id": "napot-page-4",
+      "mode": "sv39",
+      "level": 0,
+      "flags": "VRWAD",
+      "access": "load",
+      "expect": "success",
+      "napot": true,
+      "va": 1073758208,
+      "pa": 2149597184,
+      "value": 0,
+      "bins": [
+        "svnapot.contiguous",
+        "svnapot.page-4"
+      ]
+    },
+    {
+      "id": "napot-page-5",
+      "mode": "sv39",
+      "level": 0,
+      "flags": "VRWAD",
+      "access": "load",
+      "expect": "success",
+      "napot": true,
+      "va": 1073762304,
+      "pa": 2149601280,
+      "value": 0,
+      "bins": [
+        "svnapot.contiguous",
+        "svnapot.page-5"
+      ]
+    },
+    {
+      "id": "napot-page-6",
+      "mode": "sv39",
+      "level": 0,
+      "flags": "VRWAD",
+      "access": "load",
+      "expect": "success",
+      "napot": true,
+      "va": 1073766400,
+      "pa": 2149605376,
+      "value": 0,
+      "bins": [
+        "svnapot.contiguous",
+        "svnapot.page-6"
+      ]
+    },
+    {
+      "id": "napot-page-7",
+      "mode": "sv39",
+      "level": 0,
+      "flags": "VRWAD",
+      "access": "load",
+      "expect": "success",
+      "napot": true,
+      "va": 1073770496,
+      "pa": 2149609472,
+      "value": 0,
+      "bins": [
+        "svnapot.contiguous",
+        "svnapot.page-7"
+      ]
+    },
+    {
+      "id": "napot-page-8",
+      "mode": "sv39",
+      "level": 0,
+      "flags": "VRWAD",
+      "access": "load",
+      "expect": "success",
+      "napot": true,
+      "va": 1073774592,
+      "pa": 2149613568,
+      "value": 0,
+      "bins": [
+        "svnapot.contiguous",
+        "svnapot.page-8"
+      ]
+    },
+    {
+      "id": "napot-page-9",
+      "mode": "sv39",
+      "level": 0,
+      "flags": "VRWAD",
+      "access": "load",
+      "expect": "success",
+      "napot": true,
+      "va": 1073778688,
+      "pa": 2149617664,
+      "value": 0,
+      "bins": [
+        "svnapot.contiguous",
+        "svnapot.page-9"
+      ]
+    },
+    {
+      "id": "napot-page-10",
+      "mode": "sv39",
+      "level": 0,
+      "flags": "VRWAD",
+      "access": "load",
+      "expect": "success",
+      "napot": true,
+      "va": 1073782784,
+      "pa": 2149621760,
+      "value": 0,
+      "bins": [
+        "svnapot.contiguous",
+        "svnapot.page-10"
+      ]
+    },
+    {
+      "id": "napot-page-11",
+      "mode": "sv39",
+      "level": 0,
+      "flags": "VRWAD",
+      "access": "load",
+      "expect": "success",
+      "napot": true,
+      "va": 1073786880,
+      "pa": 2149625856,
+      "value": 0,
+      "bins": [
+        "svnapot.contiguous",
+        "svnapot.page-11"
+      ]
+    },
+    {
+      "id": "napot-page-12",
+      "mode": "sv39",
+      "level": 0,
+      "flags": "VRWAD",
+      "access": "load",
+      "expect": "success",
+      "napot": true,
+      "va": 1073790976,
+      "pa": 2149629952,
+      "value": 0,
+      "bins": [
+        "svnapot.contiguous",
+        "svnapot.page-12"
+      ]
+    },
+    {
+      "id": "napot-page-13",
+      "mode": "sv39",
+      "level": 0,
+      "flags": "VRWAD",
+      "access": "load",
+      "expect": "success",
+      "napot": true,
+      "va": 1073795072,
+      "pa": 2149634048,
+      "value": 0,
+      "bins": [
+        "svnapot.contiguous",
+        "svnapot.page-13"
+      ]
+    },
+    {
+      "id": "napot-page-14",
+      "mode": "sv39",
+      "level": 0,
+      "flags": "VRWAD",
+      "access": "load",
+      "expect": "success",
+      "napot": true,
+      "va": 1073799168,
+      "pa": 2149638144,
+      "value": 0,
+      "bins": [
+        "svnapot.contiguous",
+        "svnapot.page-14"
+      ]
+    },
+    {
+      "id": "napot-page-15",
+      "mode": "sv39",
+      "level": 0,
+      "flags": "VRWAD",
+      "access": "load",
+      "expect": "success",
+      "napot": true,
+      "va": 1073803264,
+      "pa": 2149642240,
+      "value": 0,
+      "bins": [
+        "svnapot.contiguous",
+        "svnapot.page-15"
+      ]
+    },
+    {
+      "id": "napot-invalid-0",
+      "mode": "sv39",
+      "level": 0,
+      "flags": "VRWAD",
+      "access": "load",
+      "expect": "page-fault",
+      "napot": true,
+      "napot_ppn": 0,
+      "bins": [
+        "svnapot.invalid"
+      ]
+    },
+    {
+      "id": "napot-invalid-1",
+      "mode": "sv39",
+      "level": 0,
+      "flags": "VRWAD",
+      "access": "load",
+      "expect": "page-fault",
+      "napot": true,
+      "napot_ppn": 1,
+      "bins": [
+        "svnapot.invalid"
+      ]
+    },
+    {
+      "id": "napot-invalid-2",
+      "mode": "sv39",
+      "level": 0,
+      "flags": "VRWAD",
+      "access": "load",
+      "expect": "page-fault",
+      "napot": true,
+      "napot_ppn": 2,
+      "bins": [
+        "svnapot.invalid"
+      ]
+    },
+    {
+      "id": "napot-invalid-4",
+      "mode": "sv39",
+      "level": 0,
+      "flags": "VRWAD",
+      "access": "load",
+      "expect": "page-fault",
+      "napot": true,
+      "napot_ppn": 4,
+      "bins": [
+        "svnapot.invalid"
+      ]
+    },
+    {
+      "id": "pbmt-0-0",
+      "mode": "sv39",
+      "level": 0,
+      "flags": "VRWAD",
+      "access": "load",
+      "expect": "success",
+      "pbmt": 0,
+      "pbmte": false,
+      "bins": [
+        "svpbmt.encoding-0",
+        "svpbmt.enable-0"
+      ]
+    },
+    {
+      "id": "pbmt-0-1",
+      "mode": "sv39",
+      "level": 0,
+      "flags": "VRWAD",
+      "access": "load",
+      "expect": "success",
+      "pbmt": 0,
+      "pbmte": true,
+      "bins": [
+        "svpbmt.encoding-0",
+        "svpbmt.enable-1"
+      ]
+    },
+    {
+      "id": "pbmt-1-0",
+      "mode": "sv39",
+      "level": 0,
+      "flags": "VRWAD",
+      "access": "load",
+      "expect": "page-fault",
+      "pbmt": 1,
+      "pbmte": false,
+      "bins": [
+        "svpbmt.encoding-1",
+        "svpbmt.enable-0"
+      ]
+    },
+    {
+      "id": "pbmt-1-1",
+      "mode": "sv39",
+      "level": 0,
+      "flags": "VRWAD",
+      "access": "load",
+      "expect": "success",
+      "pbmt": 1,
+      "pbmte": true,
+      "bins": [
+        "svpbmt.encoding-1",
+        "svpbmt.enable-1"
+      ]
+    },
+    {
+      "id": "pbmt-2-0",
+      "mode": "sv39",
+      "level": 0,
+      "flags": "VRWAD",
+      "access": "load",
+      "expect": "page-fault",
+      "pbmt": 2,
+      "pbmte": false,
+      "bins": [
+        "svpbmt.encoding-2",
+        "svpbmt.enable-0"
+      ]
+    },
+    {
+      "id": "pbmt-2-1",
+      "mode": "sv39",
+      "level": 0,
+      "flags": "VRWAD",
+      "access": "load",
+      "expect": "success",
+      "pbmt": 2,
+      "pbmte": true,
+      "bins": [
+        "svpbmt.encoding-2",
+        "svpbmt.enable-1"
+      ]
+    },
+    {
+      "id": "pbmt-3-0",
+      "mode": "sv39",
+      "level": 0,
+      "flags": "VRWAD",
+      "access": "load",
+      "expect": "page-fault",
+      "pbmt": 3,
+      "pbmte": false,
+      "bins": [
+        "svpbmt.encoding-3",
+        "svpbmt.enable-0"
+      ]
+    },
+    {
+      "id": "pbmt-3-1",
+      "mode": "sv39",
+      "level": 0,
+      "flags": "VRWAD",
+      "access": "load",
+      "expect": "page-fault",
+      "pbmt": 3,
+      "pbmte": true,
+      "bins": [
+        "svpbmt.encoding-3",
+        "svpbmt.enable-1"
+      ]
+    }
+  ]
+}

@@ -2839,3 +2839,34 @@ Each C1 run retains the runner's source/native identity and ELF replay records.
 
 The project schema accepts `[stimulus] random_settings = "random.toml"`.
 This path resolves from `rvw.toml`. An explicit `--settings` overrides it.
+
+### Project-selected MMU matrices
+
+`rvw.mmu/1` descriptions may contain `schema` and `matrix` instead of `schema`
+and `scenarios`. `matrix` contains a nonempty unique `modes` list. Supported
+modes are `sv32`, `sv39`, `sv48` and `sv57`. Expansion produces the same explicit
+scenario records used by `rvw.mmu-build/1`. Scenarios may set `mode`; its default
+is `sv39`. Levels range from zero to the selected mode's walk depth minus one.
+Sv32 uses 32-bit PTEs, RV32 programs and nine ASID bits. Other modes use 64-bit
+PTEs and sixteen ASID bits. Explicit non-canonical addresses require a
+page-fault expectation. Existing schemas and default Sv39 behavior are retained.
+Coverage groups are the scenario `bins`. Reference groups describe Spike only.
+C1 coverage still requires the existing bound strict-check evidence.
+
+Explicit MMU scenarios can select `napot` (RV64 boolean) and `napot_ppn`
+(four low PPN bits, default 8). NAPOT cases use 16 equal level-zero PTEs.
+`pbmt` selects a two-bit RV64 leaf encoding. `pbmte` selects menvcfg.PBMTE
+(default true when pbmt is present). These scenarios check architectural
+access or fault effects, not cacheability, ordering or device side effects.
+`mode_switch` selects a translated/Bare/translated load check at the fixed
+RAM payload. These options are opt-in and do not change old descriptions.
+
+A scenario with `guest = true` selects an RV64 HLV.D test with Sv39 VS-stage
+and Sv39x4 G-stage tables. `guest_flags` declares the G-stage payload leaf
+permissions. `guest_fault` requires a load guest-page fault with checked
+mtval2. `vmid` selects a 14-bit VMID. These cases require the H extension.
+A scenario with `shootdown = true` selects a two-hart mailbox protocol for a
+level-zero RV64 mapping. The Spike reference uses `-p2`. The C1 project must
+select an adapter configuration with two harts. Request, acknowledgement and
+completion use RAM mailboxes and explicit memory fences. No IPI is implied.
+Neither option supports the independent immutable-walk checker yet.

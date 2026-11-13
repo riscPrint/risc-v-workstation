@@ -1,4 +1,4 @@
-"""Declarative, self-checking RV64 Sv39 data-access programs."""
+"""Declarative, self-checking virtual-memory programs."""
 from __future__ import annotations
 
 import hashlib
@@ -34,6 +34,9 @@ def number(value):
 
 def load(path):
     raw = json.loads(Path(path).read_text())
+    if set(raw) == {'schema', 'matrix'} and raw['schema'] == 'rvw.mmu/1':
+        from .mmu_paging import matrix
+        raw = dict(schema=raw['schema'], scenarios=matrix(raw['matrix']))
     if set(raw) != {'schema', 'scenarios'} or raw['schema'] != 'rvw.mmu/1':
         raise ValueError('expected rvw.mmu/1 with scenarios')
     if not isinstance(raw['scenarios'], list) or not raw['scenarios']:
@@ -50,22 +53,28 @@ def load(path):
 def validate(s):
     if isinstance(s, dict) and 'control' in s:
         return control_validate(s)
+    from .mmu_paging import geometry
+    g = geometry(s)
     required = {'id', 'level', 'flags', 'access', 'expect', 'bins'}
-    optional = {'va', 'pa', 'privilege', 'sum', 'mxr', 'ad_expect', 'asid', 'fence', 'remap', 'ad_mode', 'satp_mode', 'mprv', 'offset', 'walk_deny', 'unfenced', 'switch_asid', 'value', 'access_width', 'register_width', 'root_switch', 'nonleaf_global', 'software_rsw', 'store_value'}
+    optional = {'shootdown', 'guest', 'guest_flags', 'guest_fault', 'vmid', 'napot_ppn', 'napot', 'pbmt', 'pbmte', 'mode_switch', 'mode', 'va', 'pa', 'privilege', 'sum', 'mxr', 'ad_expect', 'asid', 'fence', 'remap', 'ad_mode', 'satp_mode', 'mprv', 'offset', 'walk_deny', 'unfenced', 'switch_asid', 'value', 'access_width', 'register_width', 'root_switch', 'nonleaf_global', 'software_rsw', 'store_value'}
     if not isinstance(s, dict) or not required <= s.keys() or s.keys() - required - optional:
         raise ValueError('invalid scenario fields')
     if not re.fullmatch(r'[a-z][a-z0-9-]*', s['id']):
         raise ValueError('invalid scenario id')
-    if type(s['level']) is not int or s['level'] not in (0, 1, 2):
-        raise ValueError('level must be 0, 1 or 2')
+    if type(s['level']) is not int or s['level'] not in range(g.levels):
+        raise ValueError('level is outside the selected paging mode')
+    from .mmu_extensions import validate as validate_extensions
+    validate_extensions(s, g)
+    if 'mode_switch' in s and (type(s['mode_switch']) is not bool or s['access'] != 'load' or s.get('remap') or s['expect'] != 'success' or number(s.get('pa', DATA)) != DATA or s.get('value', 42) != 42 or s.get('offset', 0)):
+        raise ValueError('mode_switch requires a successful data access without remap')
     if not isinstance(s['flags'], str) or set(s['flags']) - FLAGS.keys():
         raise ValueError('invalid PTE flags')
     if s['access'] not in ('load', 'store', 'fetch') or s['expect'] not in ('success', 'page-fault', 'access-fault', 'misaligned'):
         raise ValueError('unsupported access or expectation')
     if s['access'] == 'fetch' and (s['expect'] not in ('success', 'page-fault', 'access-fault') or any(k in s for k in ('remap', 'unfenced', 'switch_asid', 'offset', 'access_width', 'register_width', 'mprv', 'satp_mode', 'ad_expect')) or number(s.get('pa', DATA)) != DATA):
         raise ValueError('fetch requires a fixed payload at DATA and no data-only options')
-    width = s.get('access_width', 8)
-    if type(width) is not int or width not in (1, 2, 4, 8):
+    width = s.get('access_width', g.width)
+    if type(width) is not int or width not in (1, 2, 4, 8) or width > g.width:
         raise ValueError('access_width must be 1, 2, 4 or 8 bytes')
     if 'register_width' in s:
         bits = s['register_width']
@@ -73,8 +82,8 @@ def validate(s):
             raise ValueError('register width must be 8, 16, 32 or 64 bits')
         if width * 8 > bits:
             raise ValueError('access exceeds declared register width')
-    if width != 8 and s.get('remap'):
-        raise ValueError('remap requires an 8-byte access')
+    if width != g.width and s.get('remap'):
+        raise ValueError('remap requires a native-width access')
     if s.get('privilege', 'S') not in ('S', 'U'):
         raise ValueError('privilege must be S or U')
     for key in ('sum', 'mxr', 'mprv', 'walk_deny', 'unfenced', 'switch_asid', 'root_switch', 'nonleaf_global'):
@@ -93,7 +102,7 @@ def validate(s):
             raise ValueError('remap requires a successful level-0 load from DATA')
         if ('G' in s['flags'] or s.get('nonleaf_global')) and s.get('fence', 'all') not in ('all', 'va'):
             raise ValueError('global remap requires an all-ASID fence')
-    if s.get('nonleaf_global') and s['level'] == 2:
+    if s.get('nonleaf_global') and s['level'] == g.levels - 1:
         raise ValueError('nonleaf_global requires a non-leaf PTE')
     if s.get('root_switch') and (not s.get('remap') or s.get('unfenced') or s.get('switch_asid')):
         raise ValueError('root_switch requires remap and excludes unfenced/switch_asid')
@@ -108,18 +117,24 @@ def validate(s):
     if any(s.get(k) for k in ('unfenced', 'switch_asid')) and not s.get('remap'):
         raise ValueError('unfenced and switch_asid require remap')
     va = number(s.get('va', 0x40000000))
-    if va >> 39 != ((1 << 25) - 1 if va & (1 << 38) else 0):
-        raise ValueError('va must be canonical Sv39')
+    if not g.canonical(va) and (s.get('mode') is None or s['expect'] != 'page-fault' or s.get('satp_mode') == 'bare' or not s.get('mprv', True)):
+        raise ValueError('va must be canonical or explicitly test a page fault')
     if not isinstance(s['bins'], list) or not s['bins'] or any(not isinstance(b, str) or not b for b in s['bins']):
         raise ValueError('bins must be nonempty strings')
     if 'software_rsw' in s and (type(s['software_rsw']) is not int or not 0 <= s['software_rsw'] <= 3 or 'ad_expect' not in s or s.get('remap') or s['access'] == 'fetch'):
         raise ValueError('software_rsw requires 0..3 and ad_expect, without remap/fetch')
     if 'ad_expect' in s and (type(s['ad_expect']) is not int or s['ad_expect'] & ~192):
         raise ValueError('ad_expect must contain only A/D bits')
-    if type(s.get('asid', 0)) is not int or not 0 <= s.get('asid', 0) < 65536:
+    if type(s.get('asid', 0)) is not int or not 0 <= s.get('asid', 0) < (512 if g.xlen == 32 else 65536):
         raise ValueError('asid must fit 16 bits')
     if s.get('ad_mode', 'hardware') not in ('hardware', 'svade'):
         raise ValueError('ad_mode must be hardware or svade')
+    if 'shootdown' in s:
+        from .mmu_shootdown import validate as validate_shootdown
+        validate_shootdown(s)
+    if 'guest' in s:
+        from .mmu_guest import validate as validate_guest
+        validate_guest(s)
     if s.get('fence', 'all') not in ('all', 'va', 'asid', 'va-asid'):
         raise ValueError('unsupported fence scope')
 
@@ -128,27 +143,20 @@ def assembly(s):
     if 'control' in s:
         return control_assembly(s)
     validate(s)
+    if s.get('shootdown'):
+        from .mmu_shootdown import assembly as shootdown_assembly
+        return shootdown_assembly(s)
+    if s.get('guest'):
+        from .mmu_guest import assembly as guest_assembly
+        return guest_assembly(s)
     va = number(s.get('va', 0x40000000))
     pa = number(s.get('pa', DATA))
-    load_op = {1: 'lb', 2: 'lh', 4: 'lw', 8: 'ld'}[s.get('access_width', 8)]
-    store_op = {1: 'sb', 2: 'sh', 4: 'sw', 8: 'sd'}[s.get('access_width', 8)]
+    load_op = {1: 'lb', 2: 'lh', 4: 'lw', 8: 'ld'}[s.get('access_width', 4 if s.get('mode') == 'sv32' else 8)]
+    store_op = {1: 'sb', 2: 'sh', 4: 'sw', 8: 'sd'}[s.get('access_width', 4 if s.get('mode') == 'sv32' else 8)]
     level = s['level']
-    indexes = [(va >> (12 + 9 * i)) & 511 for i in range(3)]
-    tables = [[0] * 512 for _ in range(3 - level)]
-    for depth, table in enumerate(tables):
-        i = 2 - depth
-        table[indexes[i]] = (((ROOT + 4096 * (depth + 1)) >> 12) << 10) | 1 if i > level else ((pa >> 12) << 10) | sum(FLAGS[f] for f in set(s['flags']))
-    if s.get('nonleaf_global'):
-        for depth, table in enumerate(tables[:-1]):
-            table[indexes[2 - depth]] |= FLAGS['G']
-    if s.get('root_switch'):
-        alternate = [list(table) for table in tables]
-        for depth, table in enumerate(alternate):
-            level_index = 2 - depth
-            table[indexes[level_index]] = ((((ROOT + 4096 * (depth + 4)) >> 12) << 10) | 1 | (FLAGS['G'] if s.get('nonleaf_global') else 0)
-                if depth < 2 else (((DATA + 4096) >> 12) << 10) | sum(FLAGS[f] for f in set(s['flags'])))
-        tables += alternate
-    leaf = ROOT + 4096 * (2 - level) + indexes[level] * 8
+    from .mmu_paging import geometry, page_tables
+    g = geometry(s)
+    tables, leaf = page_tables(s, ROOT, pa, sum(FLAGS[f] for f in set(s['flags'])))
     va += s.get('offset', 0)
     fault = s['expect'] != 'success'
     cause = {'page-fault': (13, 15), 'access-fault': (5, 7), 'misaligned': (4, 6), 'success': (0, 0)}[s['expect']][s['access'] == 'store']
@@ -171,8 +179,8 @@ _start:
  csrw pmpaddr0, t0
  li t0, 15
  csrw pmpcfg0, t0
- {('li t0, ' + str(ROOT >> 2) + chr(10) + ' csrw pmpaddr0, t0' + chr(10) + ' li t0, ' + str((ROOT + 12288) >> 2) + chr(10) + ' csrw pmpaddr1, t0' + chr(10) + ' li t0, -1' + chr(10) + ' csrw pmpaddr2, t0' + chr(10) + ' li t0, 0x0f080f' + chr(10) + ' csrw pmpcfg0, t0') if s.get('walk_deny') else ''}
- li t0, {0 if s.get('satp_mode') == 'bare' else (8 << 60) | (asid << 44) | (ROOT >> 12)}
+ {('li t0, ' + str(ROOT >> 2) + chr(10) + ' csrw pmpaddr0, t0' + chr(10) + ' li t0, ' + str((ROOT + len(tables) * 4096) >> 2) + chr(10) + ' csrw pmpaddr1, t0' + chr(10) + ' li t0, -1' + chr(10) + ' csrw pmpaddr2, t0' + chr(10) + ' li t0, 0x0f080f' + chr(10) + ' csrw pmpcfg0, t0') if s.get('walk_deny') else ''}
+ li t0, {0 if s.get('satp_mode') == 'bare' else g.satp(ROOT, asid)}
  csrw satp, t0
  {('li t0, ' + str(leaf) + chr(10) + ' ld t1, 0(t0)' + chr(10) + ' li t2, ' + str(s.get('software_rsw', 0) << 8) + chr(10) + ' or t1, t1, t2' + chr(10) + ' sd t1, 0(t0)') if 'software_rsw' in s else ''}
  {('li t0, 0x2000000000000000' + chr(10) + ' csrs menvcfg, t0') if s.get('ad_mode') == 'hardware' else ''}
@@ -214,8 +222,8 @@ check_data:
         replacement = (((DATA + 4096) >> 12) << 10) | sum(FLAGS[f] for f in set(s['flags']))
         if s.get('root_switch'):
             # Same ASID, different root. Fence each transition, including reuse.
-            for root, value in ((ROOT + 12288, 43), (ROOT, 42), (ROOT + 12288, 43)):
-                code += f''' li t0, {(8 << 60) | (asid << 44) | (root >> 12)}
+            for root, value in ((ROOT + (g.levels - level) * 4096, 43), (ROOT, 42), (ROOT + (g.levels - level) * 4096, 43)):
+                code += f''' li t0, {g.satp(root, asid)}
  csrw satp, t0
  {fence}
  li t0, {status}
@@ -244,8 +252,8 @@ check_data:
 stale_allowed:
 '''
         if s.get('switch_asid'):
-            for other in ((asid + 1) % 65536, asid):
-                code += f''' li t0, {(8 << 60) | (other << 44) | (ROOT >> 12)}
+            for other in ((asid + 1) % (512 if g.xlen == 32 else 65536), asid):
+                code += f''' li t0, {g.satp(ROOT, other)}
  csrw satp, t0
  {fence}
  li t0, {status}
@@ -263,6 +271,29 @@ stale_allowed:
  li t0, 0x20000
  csrc mstatus, t0
  li t1, 43
+ bne a0, t1, fail
+'''
+    if s.get('mode_switch'):
+        code += f''' csrw satp, zero
+ sfence.vma x0, x0
+ li t3, {DATA}
+ li t0, {status}
+ csrs mstatus, t0
+ ld a0, 0(t3)
+ li t0, 0x20000
+ csrc mstatus, t0
+ li t1, 42
+ bne a0, t1, fail
+ li t0, {g.satp(ROOT, asid)}
+ csrw satp, t0
+ sfence.vma x0, x0
+ li t3, {va}
+ li t0, {status}
+ csrs mstatus, t0
+ ld a0, 0(t3)
+ li t0, 0x20000
+ csrc mstatus, t0
+ li t1, 42
  bne a0, t1, fail
 '''
     code += 'check_ad:\n'
@@ -286,7 +317,7 @@ fromhost: .dword 0
 .section .tables,"aw"
 '''
     for table in tables:
-        code += '\n'.join(f' .dword {v}' for v in table) + '\n'
+        code += '\n'.join(f' {".word" if g.xlen == 32 else ".dword"} {v}' for v in table) + '\n'
     code += '.section .data\n .dword 42\n .zero 4088\n .dword 43\n'
     if s['access'] == 'fetch':
         # MRET changes real fetch privilege. MPRV cannot test instruction access.
@@ -306,6 +337,14 @@ trap:
  bne t0, t1, fail
 ''' + (f' csrr t0, mtval\n li t1, {va}\n bne t0, t1, fail\n' if fault else '') + code[end:]
         code = code.replace('.section .data\n .dword 42\n .zero 4088\n .dword 43\n', '.section .data\n .word 0x00000073\n .word 0x0000006f\n')
+    from .mmu_extensions import setup
+    code = code.replace(' sfence.vma x0, x0', ' ' + setup(s) + 'sfence.vma x0, x0', 1)
+    if 'mode' in s and s.get('satp_mode') != 'bare':
+        code = code.replace(' csrw satp, t0', ' csrw satp, t0\n csrr t1, satp\n bne t0, t1, fail', 1)
+    if g.xlen == 32:
+        code = re.sub(r'\bld\b', 'lw', code)
+        code = re.sub(r'\bsd\b', 'sw', code)
+        code = code.replace('li t0, 0x2000000000000000\n csrs menvcfg, t0', 'li t0, 0x20000000\n csrs menvcfgh, t0')
     return code
 
 
@@ -474,7 +513,9 @@ def build(description, out, gcc, pma=None):
         source = out / (s['id'] + '.S')
         elf = out / (s['id'] + '.elf')
         source.write_text(assembly(s))
-        command = [gcc, '-march=rv64im_zicsr_zifencei', '-mabi=lp64', '-nostdlib', '-nostartfiles',
+        from .mmu_paging import geometry
+        g = geometry(s)
+        command = [gcc, f'-march=rv{g.xlen}im' + ('h' if s.get('guest') else '') + '_zicsr_zifencei', '-mabi=' + ('ilp32' if g.xlen == 32 else 'lp64'), '-nostdlib', '-nostartfiles',
                    '-static', '-Wl,--no-relax', '-T', str(out / 'link.ld'), '-o', str(elf), str(source)]
         result = run_group(command, capture=True, timeout=60)
         if result.returncode:
@@ -500,8 +541,15 @@ def reference(directory, spike, timeout):
         elf = directory / s['elf']
         if digest(elf) != s['elf_sha256']:
             raise ValueError('ELF differs from build manifest')
-        isa = 'rv64im_zicsr_zifencei' + ('_svade' if s.get('ad_mode') == 'svade' else '_svadu' if s.get('ad_mode') == 'hardware' else '')
+        from .mmu_paging import geometry
+        isa = f'rv{geometry(s).xlen}im_zicsr_zifencei' + ('_svade' if s.get('ad_mode') == 'svade' else '_svadu' if s.get('ad_mode') == 'hardware' else '')
+        from .mmu_extensions import isa as extension_isa
+        isa += extension_isa(s)
+        if s.get('guest'):
+            isa = isa.replace('im_', 'imh_')
         command = [executable, '--isa=' + isa, '--priv=msu', '-m128', str(elf)]
+        if s.get('shootdown'):
+            command.insert(1, '-p2')
         r = run_group(command, capture=True, timeout=timeout)
         status = ('inconclusive' if r.timed_out else 'pass' if r.returncode == 0 else
                   'fail' if re.search(r'\*\*\* FAILED \*\*\* \(tohost = [0-9a-fx]+\)', r.stderr or '') else 'inconclusive')
