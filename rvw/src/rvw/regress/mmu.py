@@ -267,7 +267,8 @@ check_trap:
 check_data:
 '''
     if s['access'] == 'store':
-        code += f' li t0, {pa + s.get("offset", 0)}\n {load_op} a0, 0(t0)\n'
+        physical = pa | (va & ((1 << (12 + g.vpn_bits * level)) - 1))
+        code += f' li t0, {physical}\n {load_op} a0, 0(t0)\n'
     expected = s.get('value', 42)
     if s['access'] == 'store':
         bits = 8 * s.get('access_width', g.width)
