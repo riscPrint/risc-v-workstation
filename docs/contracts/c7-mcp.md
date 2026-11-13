@@ -62,3 +62,10 @@ ToolSpec adds optional side_effects (read-only or writes-files), native_tools
 Unknown declarations remain null and produce audit findings. Long-running is
 declared separately with long=True. The static audit checks schemas and Python
 signatures without executing handlers. Existing argument names remain valid.
+
+## Tool profiles
+
+Profiles filter the loaded tools without renaming them. The all profile is the
+default. Core, job, search and describe tools remain available. Workflow filters
+use the agent playbook. Search returns purpose and profile; describe returns the
+input schema and declarations. Remote discovery cannot widen client allowlists.

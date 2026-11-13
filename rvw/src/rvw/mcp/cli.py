@@ -9,6 +9,8 @@ def register(subparsers) -> None:
     p = subparsers.add_parser("mcp", help="MCP server (stdio) exposing the rvw tools to agents", description=__doc__)
     p.add_argument("action", nargs="?", choices=("audit",), help="audit interface declarations")
     p.add_argument("--list", action="store_true", help="print the tools and exit (needs no MCP SDK)")
+    p.add_argument("--profile", choices=("core", "verification", "formal", "arch", "debug", "soc", "all"), default="all")
+    p.add_argument("--workflow", help="workflow id from rvw agent guide")
     p.add_argument("--only", help="comma-separated rvw packages whose tools to serve (default: all)")
     p.add_argument("--json", action="store_true", help="with --list: machine-readable")
     p.add_argument("--transport", choices=("stdio", "sse"), default="stdio")
@@ -35,7 +37,7 @@ def run(args) -> int:
     except (ValueError, OSError) as exc:
         print(f"rvw mcp: {exc}", file=sys.stderr)
         return 2
-    registry, problems = Registry.discover(only, project=str(selected.path) if selected else None)
+    registry, problems = Registry.discover(only, project=str(selected.path) if selected else None, profile=args.profile, workflow=args.workflow)
     for msg in problems:
         print(f"rvw mcp: skipped {msg}", file=sys.stderr)
     if getattr(args, "action", None) == "audit":

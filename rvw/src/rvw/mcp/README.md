@@ -150,3 +150,14 @@ declared effects and native dependencies. It does not call handlers. Unknown
 metadata stays unknown. The fast baseline test permits recorded debt but rejects
 new findings. Use `project`, `out`, `run_dir`, `elf`, `trace`, `db`,
 `config`, `seed` and `json` for these concepts in new interfaces.
+
+## Load a profile
+
+Use `rvw mcp --profile core|verification|formal|arch|debug|soc|all`.
+The default is `all`. Each profile includes core tools and job tools.
+Use `--workflow test-fails` to select the exact playbook tools and core tools.
+The profile and workflow filters intersect when both are set.
+`rvw_tools_search(keyword)` searches the available catalog.
+`rvw_tools_describe(name)` returns arguments, effects and profile.
+Search can describe tools outside the loaded profile. Restart with that profile
+to call them. Remote catalogs contain only tools from the client's allowlist.
