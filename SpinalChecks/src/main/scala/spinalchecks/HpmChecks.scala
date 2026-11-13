@@ -10,11 +10,15 @@ object HpmChecks {
     * A software write wins over an increment. Wraparound is modular at the declared width.
     */
   def bind(name: String, model: HpmModel, observed: UInt, eventCount: UInt, inhibit: Bool,
-           permitted: Bool, write: Bool, data: UInt): Unit = {
+           permitted: Bool, write: Bool, data: UInt, writeMask: UInt = null): Unit = {
     require(observed.getWidth == model.width && data.getWidth == model.width)
     val expected = Reg(UInt(model.width bits)).init(model.reset)
-    when(!inhibit && permitted) { expected := (expected + eventCount.resized).resized }
-    when(write) { expected := data }
+    val mask = if (writeMask == null) U((BigInt(1) << model.width) - 1, model.width bits) else writeMask
+    require(mask.getWidth == model.width)
+    val incremented = UInt(model.width bits)
+    incremented := expected
+    when(!inhibit && permitted) { incremented := (expected + eventCount.resized).resized }
+    expected := Mux(write, (incremented & ~mask) | (data & mask), incremented)
     DeclaredChecks.rule("hpm.count", name, "v1 independent events: " + model.eventMeaning)(observed =/= expected)
   }
   /** Requests include denied attempts. Counter-enable bits are independent project observations.

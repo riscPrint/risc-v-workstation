@@ -834,3 +834,19 @@ See `rvw formal security` for bounded Spike contracts and sampled ADD timing.
 abstraction. It generates a permission relation for RTL and simulation monitors.
 The two-hart fixture binding checks permission safety only. Channel refinement,
 RTL data invariants and general fair liveness remain open.
+
+### Native GPIO binding example
+
+`spinalchecks.demo.CheckedGpio` instantiates SpinalHDL 1.15.0 `Apb3Gpio`.
+The independent device checker observes accepted APB accesses and actual read
+responses for the direction word at byte address 8. The register resets to zero
+and has an eight-bit write mask. Other GPIO words are outside this model.
+`GpioDeviceSpec` runs reset reads, masked writes and readback on the real library
+IP in Verilator. A separate seeded observation fault must fire the data check.
+This is native RTL evidence for one register. It is not physical device evidence
+or complete GPIO/SoC coverage.
+
+`HpmChecks.bind` accepts an optional full-width `writeMask`. Increment happens
+first. A masked software write then replaces only selected bits. This preserves
+unselected carry bits for RV32 counter-half writes. Omitting the mask keeps the
+existing full-width write behavior.

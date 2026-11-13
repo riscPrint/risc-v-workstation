@@ -3833,6 +3833,15 @@ proof, physical-power, scan-coverage or ATPG evidence. UPF import is unsupported
 
 ### Project CSR generation
 
+#### Native event and device binding examples
+
+The optional VexRiscv HPM binding observes real CSR storage and independent
+clock/last-stage events. It declares masked RV32 counter-half writes. Generic
+`HpmChecks.bind` applies increments before selected write-mask bits. Unselected
+bits retain the increment result. The GPIO example selects actual library IP
+APB direction accesses. Neither example grants full architectural, peripheral
+or physical-device qualification.
+
 #### Literal power-switch gating
 
 `rvw.upf-subset/1` can include `switches` from single-control

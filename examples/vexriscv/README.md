@@ -225,6 +225,27 @@ upstream checkout. Run `rvw formal rvfi-generate formal/binding.json --out OUT`
 from this directory. The generated wrapper has unconstrained bus inputs.
 Review its environment before a formal campaign. The existing
 `formal/rvw.toml` and `formal/wrapper.sv.in` retain their separate bus assumptions.
+## Counter event bindings
+
+`HpmChecksPlugin` is an optional project plugin. It reconstructs the actual
+64-bit `mcycle` and `minstret` storage from the CSR plugin read mappings.
+Its independent reference counts core clock samples and last-stage `isFiring`
+events. It does not derive events from observed counter deltas. RV32 low/high
+software writes use masks. Unselected bits retain concurrent increment/carry.
+The binding requires the existing writable machine counter interfaces and no
+debug stopcount. It does not change the normal adapter configuration.
+
+Set `RVW_HOME` and `VEXRISCV`. From `examples/vexriscv/rvw`, run:
+
+```sh
+"$RVW_HOME/scripts/with-lock.sh" vex "$RVW_HOME/scripts/with-lock.sh" sbt nice -n 10 sbt -batch \
+  "runMain rvwvex.HpmChecksMain /tmp/vex-hpm-rtl"
+```
+
+The output contains assertions and an inserted-check report. Elaboration is
+not a simulation campaign or architectural retirement proof. Programmable HPM
+events, privilege filtering, interrupts and overflow campaigns remain open.
+
 ## Live checkpoint probe
 
 Run the project-owned probe with `RVW_HOME`, `VEXRISCV` and the native tool
