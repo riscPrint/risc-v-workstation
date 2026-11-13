@@ -40,7 +40,8 @@ export SPINAL_MAKE_CMD="$sim/scripts/make-jobs.sh"
 # The pinned SpinalHDL sim wrapper constructs the model before it sets its handle, and Verilator 5
 # reads sc_time_stamp() during construction (a null dereference; fixed in later SpinalHDL).
 # VL_TIME_CONTEXT makes Verilator use its context time instead. Wave and C1 times come from SpinalSim.
-export SPINAL_VERILATOR_FLAGS="${SPINAL_VERILATOR_FLAGS:-} -CFLAGS -DVL_TIME_CONTEXT"
+# Verilator 5.052 calls each wide data word EData. The pinned wrapper still uses WData.
+export SPINAL_VERILATOR_FLAGS="${SPINAL_VERILATOR_FLAGS:-} -CFLAGS -DWData=EData -CFLAGS -DVL_TIME_CONTEXT"
 native_identity="$("$RVW_PYTHON" "$sim/scripts/native-identity.py")"
 if [ "${1:-}" = identity ] && [[ "$native_identity" = *'"cache_enabled":false'* ]]; then
   echo 'Native inputs unavailable; refusing identity for result reuse.' >&2

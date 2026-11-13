@@ -17,7 +17,18 @@ object Round22Fixtures {
       public class UserPhase implements spinal.core.internals.Phase {
         public boolean hasNetlistImpact() { return true; }
         public void impl(spinal.core.internals.PhaseContext pc) {
-          pc.config().genLineComments_$eq(Helper.value());
+          pc.topLevel().rework(() -> {
+            scala.collection.Iterator<spinal.core.BaseType> ports = pc.topLevel().getAllIo().iterator();
+            while (ports.hasNext()) {
+              spinal.core.BaseType y = ports.next();
+              if (y.isOutput()) {
+                y.removeAssignments(true, true, true);
+                y.assignFromBits((spinal.core.Bits) spinal.core.B$.MODULE$.apply(
+                  y.getBitsWidth() + "'b" + (Helper.value() ? "1" : "0")));
+              }
+            }
+            return scala.runtime.BoxedUnit.UNIT;
+          });
         }
       }
       class Helper { static boolean value() { return SETTING; } }
