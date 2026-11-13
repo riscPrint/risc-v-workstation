@@ -1684,9 +1684,9 @@ usage: rvw formal initial-split [-h] --manifest MANIFEST --out OUT [--timeout
 ### `rvw formal isa`
 
 ```text
-usage: rvw formal isa [-h] --out OUT [--abstraction ABSTRACTION] [--machine
-    MACHINE] [--timeout TIMEOUT] [--unbounded] [--engines ENGINES] [--json]
-    [--project PROJECT]
+usage: rvw formal isa [-h] --out OUT [--trace TRACE] [--abstraction
+    ABSTRACTION] [--machine MACHINE] [--timeout TIMEOUT] [--unbounded]
+    [--engines ENGINES] [--json] [--project PROJECT]
 ```
 
 ### `rvw formal lazy-ram`
@@ -4289,7 +4289,7 @@ Starts a background job: yes.
 
 Run the ISA kit. Return per-check bounds, failures and unsupported gaps.
 
-Arguments: `project`, `out` (required), `machine`, `abstraction`, `timeout`, `unbounded`, `engines`.
+Arguments: `trace`, `project`, `out` (required), `machine`, `abstraction`, `timeout`, `unbounded`, `engines`.
 
 Starts a background job: yes.
 
@@ -5503,9 +5503,9 @@ Starts a background job: no.
 
 ### `soc_new`
 
-Create an editable APB3 SoC scaffold with an idle wrapper.
+Create an editable APB3 SoC scaffold with a mapped wrapper when the selected project has a core-map.
 
-Arguments: `name` (required), `out` (required).
+Arguments: `name` (required), `out` (required), `project`.
 
 Starts a background job: no.
 
