@@ -25,6 +25,8 @@ def register(sub):
     p.add_argument('--unwind', type=int, default=130, help='C loop bound; unwinding assertions are enabled')
     p.add_argument('--case', choices=['all', 'finite', 'normal', 'nan', 'infinity', 'zero', 'subnormal'], default='all')
     p.add_argument('--case-width', type=int, choices=[16,32,64], help='source FP format width for case splitting; defaults to word width')
+    p.add_argument('--operand-prefix-bits', type=int, help='split integer operand b by this many high bits')
+    p.add_argument('--operand-prefix', type=int, help='selected b prefix, in 0..2**bits-1; proves only this partition')
     p.add_argument('--rounding', type=int, choices=range(5), default=0)
     p.add_argument('--reference-tree', help='external C dependency tree, such as pinned SoftFloat')
     p.add_argument('--reference-source', action='append', default=[], help='C source relative to reference-tree')
@@ -75,6 +77,9 @@ def run(args):
             raise ValueError(name+' timed out')
         return r
     try:
+        from .operand_partition import partition, constrain
+        operand_case = partition(args.width, getattr(args, 'operand_prefix_bits', None), getattr(args, 'operand_prefix', None))
+        result['operand_partition'] = operand_case
         if not math.isfinite(args.timeout) or args.timeout <= 0 or not 0 <= args.latency <= 256 or args.unwind < 1:
             raise ValueError('positive finite timeout and unwind; latency in 0..256 required')
         if selected_case_width is not None and (selected_case_width not in (16,32,64) or case_width > args.width):
@@ -132,6 +137,7 @@ def run(args):
         code += '_Static_assert(_Generic(&reference, uint64_t (*)(uint64_t,uint64_t,uint64_t,uint8_t,uint8_t *): 1, default: 0), "reference signature");\n'
         code += 'int main(void) {\nuint64_t a=nondet_u64(), b=nondet_u64(), c=nondet_u64();\n'
         code += f'a &= {mask}ULL; b &= {mask}ULL; c &= {mask}ULL;\n'
+        code += constrain(operand_case)
         code += f'__CPROVER_assume({case_expression(args.case, case_width)});\n'
         code += f'uint8_t flags=0; uint64_t expected=reference(a,b,c,{args.rounding},&flags);\n'
         code += f'__CPROVER_assert(expected <= {mask}ULL, "reference width");\n'
@@ -201,6 +207,8 @@ def run(args):
             result['reason'] = 'incomplete proof or C safety/unwind failure; see properties and cbmc.log'
     except (ValueError, KeyError, OSError, TypeError) as exc:
         result['reason'] = str(exc)
+    if result.get('operand_partition'):
+        result['scope'] += '; only the recorded operand b partition'
     result['wall_s'] = round(time.monotonic()-started, 3)
     (out/'result.json').write_text(json.dumps(result, indent=2)+'\n')
     print(json.dumps(result) if args.json else f'datapath: {result["status"]} ({out})')
