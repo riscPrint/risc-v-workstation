@@ -15,17 +15,19 @@ def run(args):
     try:
         result=execute_json(plan=args.plan,previous=args.previous,out=args.out)
         serialized=json.dumps(result,indent=2,allow_nan=False)
-        code=0
+        # Exit code carries the rolled-up verdict: 0 pass, 1 fail, 3 any other.
+        code={'pass':0,'fail':1}.get(result.get('verdict'),3)
     except (OSError,ValueError,KeyError,TypeError) as exc:
         result,code={'schema':'rvw.plan-error/1','status':'error','message':str(exc)},2
         serialized=json.dumps(result,indent=2)
     if args.json: print(serialized)
-    elif code: print(result['message'])
+    elif code==2: print(result['message'])
     else:
         for feature in result['features']:
             print(f"{feature['id']}: {feature['status']}; {feature['hole_count']} holes")
         if result['unassigned_requirements']:
             print('Unassigned requirements: '+', '.join(result['unassigned_requirements']))
+        print('Verdict: '+result['verdict'])
     return code
 
 

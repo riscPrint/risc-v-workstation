@@ -35,6 +35,8 @@ holes and unassigned requirements cap the verdict at `inconclusive` unless a
 conclusive failure is already known. C1 and C3 checks retain their typed
 inconclusive rules. Formal summaries must agree with each selected child.
 Coverage counts without a producer verdict do not create verification pass.
+`rvw plan status` exits 0 when the overall verdict is `pass`, 1 when it is
+`fail` and 3 for any other verdict. Input errors exit 2.
 `reported_closed` remains a planning count. It does not grant verification or acceptance.
 The evidence index keeps `recorded_status` and reports integrity separately.
 Its query verdict remains `not_inferred`.

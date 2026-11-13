@@ -81,8 +81,8 @@ def test_bounded_formal_cannot_close_unbounded_obligation(tmp_path):
 def test_cli_mcp_api_parity(tmp_path):
     path=setup(tmp_path)
     ran=subprocess.run([sys.executable,'-m','rvw','plan','status',str(path),'--json'],capture_output=True,text=True)
-    assert ran.returncode==0,ran.stderr
     cli=json.loads(ran.stdout);api=execute_json(plan=path)
+    assert ran.returncode=={'pass':0,'fail':1}.get(cli['verdict'],3),ran.stderr
     assert cli['summary']==api['summary'] and cli['features']==api['features']
 
 
@@ -120,3 +120,15 @@ def test_suite_selection_keeps_missing_and_inconclusive_tests_open(tmp_path):
     assert VPlan(path).status()['features'][0]['status']=='open'
     suite['tests']=[];write(tmp_path/'suite.json',suite)
     assert VPlan(path).status()['features'][0]['status']=='open'
+
+
+def test_cli_exit_code_carries_rolled_up_verdict(tmp_path):
+    plan=write(tmp_path/'p.json',{'schema':'rvw.vplan/1','requirements':{'R':'x'},
+        'features':[{'id':'f','requirements':['R'],'tests':[{'path':'c1.json'}]}]})
+    for status,verdict,code in (('fail','fail',1),('pass','pass',0)):
+        write(tmp_path/'c1.json',{'schema':'rvw.run/1','status':status})
+        ran=subprocess.run([sys.executable,'-m','rvw','plan','status',str(plan),'--json'],capture_output=True,text=True)
+        assert json.loads(ran.stdout)['verdict']==verdict and ran.returncode==code,ran.stdout
+    write(tmp_path/'c1.json',{'schema':'rvw.run/1','status':'error'})
+    ran=subprocess.run([sys.executable,'-m','rvw','plan','status',str(plan)],capture_output=True,text=True)
+    assert ran.returncode==3 and 'Verdict: ' in ran.stdout

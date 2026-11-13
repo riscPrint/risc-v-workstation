@@ -4,6 +4,8 @@
 `plan_status` is the MCP job. The Python API is `VPlan(path).status()`.
 Use `--out status.json` to save a snapshot. Use `--previous status.json` to
 compare against an earlier snapshot from the same plan.
+The CLI exits 0 when the overall `verdict` is `pass`, 1 for `fail`, 3 for
+any other verdict and 2 for an input error.
 
 ```json
 {
