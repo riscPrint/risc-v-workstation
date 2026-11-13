@@ -62,3 +62,15 @@ def test_no_checks_cannot_prove(tmp_path, monkeypatch):
     monkeypatch.setattr(p, 'run_group', run)
     r = p.race(plan(tmp_path), tmp_path, tmp_path / 'out')
     assert r['status'] == 'inconclusive' and r['reason'] == 'no_checks'
+
+
+def test_uncertified_assumptions_cannot_earn_portfolio_pass(tmp_path, monkeypatch):
+    monkeypatch.setattr(p.shutil, 'which', lambda _: __file__)
+    def run(cmd, **kwargs):
+        if cmd[0] == 'yosys':
+            (Path(kwargs['cwd']) / 'design.json').write_text('{"modules":{"top":{"cells":{"a":{"type":"$assert"},"e":{"type":"$assume"}}}}}')
+        return SimpleNamespace(stdout='DONE (PASS, rc=0)', stderr='', returncode=0, timed_out=False)
+    monkeypatch.setattr(p, 'run_group', run)
+    r = p.race(plan(tmp_path), tmp_path, tmp_path / 'out', cross_check=True)
+    assert r['status'] == 'inconclusive' and r['proof_kind'] == 'none'
+    assert r['environment_check'] == 'activation_not_checked'

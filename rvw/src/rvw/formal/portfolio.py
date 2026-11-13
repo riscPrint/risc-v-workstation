@@ -76,7 +76,7 @@ def race(plan, root, out, *, timeout=30, cross_check=False):
         raise ValueError('invalid top module')
     out = Path(out)
     out.mkdir(parents=True, exist_ok=False)
-    sources, hashes = [], []
+    sources, hashes, transforms = [], [], []
     for i, source in enumerate(plan['sources']):
         data = (Path(root) / source['path']).read_bytes()
         digest = sha256(data).hexdigest()
@@ -84,12 +84,20 @@ def race(plan, root, out, *, timeout=30, cross_check=False):
             raise ValueError('source hash mismatch')
         if b'`include' in data or b'$readmem' in data:
             raise ValueError('portfolio requires self-contained RTL including memory initial data')
-        if source.get('format', 'verilog') != 'verilog':
-            raise ValueError('export AIGER safety properties and constraints to self-contained RTL first')
+        if source.get('format') == 'aiger':
+            from . import aiger_input
+            (out / f'input{i}.aig').write_bytes(data)
+            data = aiger_input.to_verilog(data, plan['top']).encode()
+            transforms.append({'source_sha256': digest, 'verilog_sha256': sha256(data).hexdigest(),
+                               'importer_sha256': sha256(Path(aiger_input.__file__).read_bytes()).hexdigest()})
+        elif source.get('format', 'verilog') != 'verilog':
+            raise ValueError('source format must be verilog or aiger')
         path = out / f'input{i}.sv'
         path.write_bytes(data)
         sources.append(path.resolve())
         hashes.append(digest)
+    if any(s.get('format') == 'aiger' for s in plan['sources']) and len(sources) != 1:
+        raise ValueError('AIGER input needs exactly one source')
     if not sources:
         raise ValueError('no RTL sources')
     (out / 'manifest.json').write_text(json.dumps(plan, indent=2) + '\n')
@@ -140,6 +148,8 @@ def race(plan, root, out, *, timeout=30, cross_check=False):
         row = {'engine': name, **inventory[name], 'wall_s': None}
         if row['status'] == 'not_installed':
             return row
+        if backend == 'ebmc' and any(s.get('format') == 'aiger' for s in plan['sources']):
+            return {**row, 'status': 'unsupported_input', 'reason': 'AIGER import uses Yosys global-clock semantics'}
         if mode not in modes:
             return {**row, 'status': 'unsupported_mode'}
         directory = out / name.replace(':', '_')
@@ -197,10 +207,12 @@ def race(plan, root, out, *, timeout=30, cross_check=False):
             stop_others()
     decisive = [r for r in rows if r['status'] in ('pass', 'fail')]
     disagreement = len({r['status'] for r in decisive}) > 1
-    report = {'schema': 'rvw.formal-portfolio/1', 'status': 'inconclusive' if disagreement or not winner else winner['status'],
+    uncertified_environment = bool(assumptions) and winner and winner['status'] == 'pass'
+    report = {'schema': 'rvw.formal-portfolio/1', 'status': 'inconclusive' if disagreement or not winner or uncertified_environment else winner['status'],
+              'environment_check': 'activation_not_checked' if assumptions else 'no_source_assumptions',
               'winner': winner, 'cross_check': 'disagree' if disagreement else 'agree' if len(decisive) > 1 else 'inconclusive',
-              'proof_kind': 'unbounded' if winner and winner['status'] == 'pass' and not disagreement else 'none',
-              'rows': rows, 'assumptions': assumptions, 'source_sha256': hashes, 'mode': mode, 'depth': depth,
+              'proof_kind': 'unbounded' if winner and winner['status'] == 'pass' and not disagreement and not uncertified_environment else 'none',
+              'rows': rows, 'assumptions': assumptions, 'source_transforms': transforms, 'source_sha256': hashes, 'mode': mode, 'depth': depth,
               'limits': 'Source assertions and assumptions define the problem. No reset, clock, or vacuity guards are added. '
                         'Proofs are conditional on source assumptions. Cancelled or absent answers cannot be cross-checked.'}
     (out / 'result.json').write_text(json.dumps(report, indent=2) + '\n')

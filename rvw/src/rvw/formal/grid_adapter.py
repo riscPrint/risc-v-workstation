@@ -12,9 +12,9 @@ from .deep_grid import grid
 
 
 def identity():
-    from . import deep_model, deep_grid
+    from . import deep_model, deep_grid, rtl_grid, portfolio, aiger_input
     from rvw.farm import executor, worker
-    files = [Path(p.__file__) for p in (deep_model, deep_grid, executor, worker)] + [Path(__file__)]
+    files = [Path(p.__file__) for p in (deep_model, deep_grid, rtl_grid, portfolio, aiger_input, executor, worker)] + [Path(__file__)]
     return {'schema': 'rvw.formal-grid-adapter/1',
             'files': {p.name: sha256(p.read_bytes()).hexdigest() for p in files}}
 
@@ -26,7 +26,11 @@ def run_many(manifest, jobs):
     def solve(row):
         raw = Path(row['elf']).read_bytes()
         payload = json.loads(raw)
-        report = grid(payload['model'], row['out'], **payload['settings'])
+        solve_grid = grid
+        if payload['model'].get('input_kind') == 'rtl':
+            from .rtl_grid import local
+            solve_grid = local
+        report = solve_grid(payload['model'], row['out'], **payload['settings'])
         report['request_sha256'] = sha256(raw).hexdigest()
         (Path(row['out']) / 'result.json').write_text(json.dumps(report, indent=2) + '\n')
     with ThreadPoolExecutor(max_workers=jobs) as pool:

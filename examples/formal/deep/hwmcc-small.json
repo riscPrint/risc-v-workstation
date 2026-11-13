@@ -1,0 +1,39 @@
+{
+  "suite": "Two small preprocessed HWMCC problems from the pinned CAV 2025 artifact. Not a representative capacity sample.",
+  "source_revision": "7df3ce27c569615bdd205dbd6b473ab2c33953a7",
+  "engines": [
+    "abc:pdr",
+    "smtbmc:yices",
+    "aiger:avy"
+  ],
+  "cases": [
+    {
+      "id": "a19-p15",
+      "top": "problem",
+      "mode": "prove",
+      "depth": 20,
+      "sources": [
+        {
+          "path": "a19-p15.aig",
+          "format": "aiger",
+          "sha256": "fd6a51a9238ef917a94c75e6e07ab16148eaa67b8ec60aeda2f7d289a90ed52a",
+          "url": "https://raw.githubusercontent.com/TechnionFV/CAV_2025_artifact/7df3ce27c569615bdd205dbd6b473ab2c33953a7/benchmarks_aig/aig_inputs/hwmcc24_fold_fraigy_orchestrate/benchmarks_aiger/aiger/2024/hku/x-epic/a19-p15.aig"
+        }
+      ]
+    },
+    {
+      "id": "itc99-b13-p10",
+      "top": "problem",
+      "mode": "prove",
+      "depth": 20,
+      "sources": [
+        {
+          "path": "itc99-b13-p10.aig",
+          "format": "aiger",
+          "sha256": "b1d548eb5f94dfa9d0d20b512f22e72c09de3afbeae98d81fb5814fa231c6fcc",
+          "url": "https://raw.githubusercontent.com/TechnionFV/CAV_2025_artifact/7df3ce27c569615bdd205dbd6b473ab2c33953a7/benchmarks_aig/aig_inputs/hwmcc20_fold_fraigy_orchestrate/aig/2019/goel/opensource/vcegar_QF_BV_itc99_b13_p10/vcegar_QF_BV_itc99_b13_p10.aig"
+        }
+      ]
+    }
+  ]
+}

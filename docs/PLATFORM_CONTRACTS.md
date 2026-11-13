@@ -3500,3 +3500,22 @@ adapter source identities. The existing farm worker transports JSON model bytes
 and formal result artifacts. It adds no C1 simulation claims. Transfer, identity
 or coverage failure leaves that shard inconclusive. Real SSH execution requires
 compatible installed adapters and trusted hosts.
+
+`rvw.formal-rtl-refine/1` records frozen source hashes, automatically selected
+state/RAM cuts and each refinement round. Abstract counterexamples remain
+inconclusive. Only a cut-free failure reports `fail`. An unbounded proof of an
+overapproximation can report `pass`. Budget expiry and engine errors remain
+inconclusive. This flow preserves the existing guarded proof runner.
+
+Raw engine portfolios with source assumptions remain inconclusive until a
+separate activation check exists. Engine rows retain the observed conditional
+answer. AIGER imports record original input bytes and the translated Verilog
+and importer SHA-256 identities. Justice/fairness inputs are unsupported.
+Relational strengthening uses `rvw.formal-strengthen/1` with independently
+certified relational candidates in addition to unsigned bounds.
+
+`rvw.formal-rtl-grid/1` reports one result per independently exported RTL
+property case. It uses pinned source bundles and the same farm artifact adapter
+as explicit-model grids. `pass` requires every case to earn a portfolio proof.
+A concrete case failure reports `fail`. Missing remote properties are
+inconclusive. The full exported property set must be supplied by the caller.

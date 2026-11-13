@@ -1502,6 +1502,8 @@ The source must include its assertions, clock semantics, initialization and
 assumptions. Literal includes and external memory data are not supported here.
 Yosys must find an elaborated assertion. No clock, reset or vacuity guard is
 added by this raw engine experiment. Source assumptions remain restrictions.
+A portfolio proof with source assumptions stays inconclusive because activation
+is not checked here. Use the guarded proof and contract flows for those jobs.
 The first conclusive answer wins. Other process groups stop. Use `--cross-check`
 to keep engines running until they answer or reach `--timeout`. Conflicting
 answers make the final result inconclusive. A missing or cancelled answer does
@@ -1550,6 +1552,56 @@ SSH endpoint, resource reservations and cancellation. Its payload is JSON in the
 farm's byte transport field. It does not create a simulation C1 result.
 Tests exercise that endpoint locally. Real SSH distribution was not tested.
 
-Raw HWMCC AIGER input is not supported. Export its safety properties and
-constraints to self-contained RTL before making a source manifest. No HWMCC
-subset was run in this increment.
+Set a source `format` to `aiger` for a binary or ASCII AIGER safety model.
+The importer preserves latch initialization, unconstrained initial latches,
+bad-state predicates and invariant constraints. It rejects justice, fairness,
+and mixed ordinary outputs/bad predicates. Legacy outputs are bad predicates.
+The original bytes and translated RTL remain in the run directory. EBMC is
+excluded from this input mode because the translation uses Yosys global-clock
+semantics.
+
+The pinned manifest `examples/formal/deep/hwmcc-small.json` selects two small,
+preprocessed competition problems from the CAV 2025 artifact at a fixed commit.
+Download their bytes outside the repository:
+
+```sh
+rvw/.venv/bin/python scripts/fetch-formal-bench.py examples/formal/deep/hwmcc-small.json --out /tmp/rvw-hwmcc
+rvw formal engine-bench --manifest /tmp/rvw-hwmcc/manifest.json --out /tmp/rvw-hwmcc-results
+```
+
+This subset is a smoke sample. It does not measure full-block proof capacity.
+The native smoke retained Avy and SMTBMC errors instead of treating them as
+agreement. No result is promoted to commercial parity.
+
+## Automatic RTL refinement and relational helpers
+
+`rvw formal rtl-refine --manifest examples/formal/deep/race.json --out OUT`
+selects internal state and RAM read-output nets as unconstrained cuts. It uses
+the existing guarded proof runner. SMTBMC/Yices is the default engine. Each
+abstract counterexample restores one driver and starts a fresh proof. Only a
+cut-free counterexample reports failure. A proof of the overapproximation can
+report unbounded success. Budgets and tool errors leave the result inconclusive.
+An ABC witness-replay error on an abstract model also remains inconclusive.
+The source manifest uses the same pinned RTL entries as engine-race. Optional
+fields are `engine`, `clock`, `reset` and `depth`. This is driver restoration,
+not a synthesized RAM collision contract or arithmetic counter summary.
+
+`rvw formal relation-strengthen --manifest CONTRACT.json --out OUT` uses the
+existing strengthening manifest. It adds pairwise equality, order, constant
+offset and mutual-exclusion candidates to observed unsigned bounds. Every
+candidate needs a separate fresh unbounded proof. Rejected candidates cannot
+strengthen the target. Certified candidates remain assertions in the final
+joint induction job. Offset candidates use Verilog bit-vector arithmetic.
+Trace observations alone never prove a helper.
+
+`rvw formal rtl-grid --manifest examples/formal/deep/seeded.json --out OUT --workers 2`
+splits exported RTL safety problems across local workers. Add `--hosts` with
+farm host records to add remote shards. Each case has its own top module,
+properties, source hashes and engines. The controller bundles the source bytes
+once. Farm workers verify bundle and adapter identities before running each
+case. The source assumptions and activation limits of engine-race still apply.
+Use `engine_timeout` in the manifest to limit each engine. A missing remote
+answer leaves its assigned properties inconclusive.
+
+If cut-free SMT induction is inconclusive, RTL refinement tries ABC PDR with
+the remaining budget. This is a fresh proof, not reuse of a failed induction.

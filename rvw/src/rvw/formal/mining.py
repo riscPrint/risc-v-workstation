@@ -24,7 +24,7 @@ def candidates(signals, samples):
     return result
 
 
-def run(args):
+def run(args, candidate_builder=None):
     from .cli import _flow
     from .snapshot import InputSnapshot
     if not math.isfinite(args.budget) or args.budget <= 0:
@@ -35,7 +35,7 @@ def run(args):
     if len(plan['components']) != 1 or plan['components'][0]['assumes']:
         raise ValueError('strengthening needs one component without generated assumptions')
     node = plan['components'][0]
-    mined = candidates({s: plan['signals'][s] for s in node['outputs']}, plan['samples'])
+    mined = (candidate_builder or candidates)({s: plan['signals'][s] for s in node['outputs']}, plan['samples'])
     if set(mined) & set(plan['predicates']):
         raise ValueError('mined predicate name collides with a declared predicate')
     out = Path(args.out).resolve()
@@ -75,7 +75,7 @@ def run(args):
     result = {'schema': 'rvw.formal-strengthen/1', 'status': target['status'],
               'candidates': mined, 'certified': proven, 'obligations': rows,
               'plan_sha256': hashlib.sha256(raw).hexdigest(), 'input_capture': snap.capture.record(),
-              'semantics': 'Unsigned observed bounds are candidates only. Certified bounds remain assertions, never assumptions.'}
+              'semantics': 'Observed bounds and relations are candidates only. Certified bounds remain assertions, never assumptions.'}
     (out / 'result.json').write_text(json.dumps(result, indent=2) + '\n')
     if args.json:
         print(json.dumps(result))
