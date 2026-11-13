@@ -16,6 +16,9 @@ def mcp_tools():
     common = {'project': {'type': 'string'}, 'bench': {'type': 'string'}}
     runs = {**common, 'out': {'type': 'string'}, 'timeout': {'type': 'number', 'exclusiveMinimum': 0}}
     return [
+        ToolSpec("arch_traffic", "Model declared multi-agent memory traffic and abstract power-state costs.",
+                 schema({k: {"type": "string"} for k in ("plan", "out", "project")}, ["plan", "out"]),
+                 handler("rvw.arch.cli", "traffic"), long=True),
         ToolSpec("arch_ooo_search", "Run bounded own-model sweeps or Bayesian cycle search with project cost estimates.",
                  schema({k: {"type": "string"} for k in ("plan", "out", "project")}, ["plan", "out"]),
                  handler("rvw.arch.cli", "ooo-search"), long=True),

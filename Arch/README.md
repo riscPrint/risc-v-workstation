@@ -688,3 +688,48 @@ or counters cause an error. The report does not select a qualified W.
 Tests use synthetic saved observations. Cached-core and learned-predictor
 qualification, uncached-core startup measurements and native restore remain
 NOT RUN. Trace association and ROI counters remain producer declarations.
+
+## Declared SoC traffic and abstract power states
+
+`rvw arch traffic PLAN --out NEW_REPORT --json` models requests from multiple
+traffic agents through project-owned resource routes. The cancellable MCP
+job is `arch_traffic`. This model does not run gem5 or RTL. Declare traffic
+after cache filtering. Component cache policies remain separate.
+
+```json
+{
+  "schema": "rvw.traffic-plan/1",
+  "resources": {
+    "fabric": {"bytes_per_cycle": 32, "latency": 2, "capacity": 16},
+    "memory": {"bytes_per_cycle": 16, "latency": 80, "capacity": 32}
+  },
+  "agents": {
+    "cpu": {"route": ["fabric", "memory"],
+            "requests": [{"cycle": 0, "bytes": 64}, {"cycle": 4, "bytes": 64}]},
+    "dma": {"route": ["fabric", "memory"],
+            "requests": [{"cycle": 1, "bytes": 128}]}
+  }
+}
+```
+
+Each resource serializes transfers at `ceil(bytes / bytes_per_cycle)` cycles.
+The fixed latency can overlap later transfers. Capacity counts waiting and
+in-flight requests. A full resource delays admission until a request leaves.
+Requests are not dropped. Simultaneous arrivals use the declared request ID
+order. Routes are store-and-forward. An upstream resource releases a request
+before downstream admission. This is not an end-to-end credit protocol.
+
+The report gives per-agent transaction latency and per-resource bytes,
+transactions, transfer utilization, queue wait, full-admission attempts, peak
+occupancy and bandwidth. Time runs from cycle zero to the last completion.
+These are model observations. Coherence, caches, address mapping, arbitration
+priorities and actual interconnect protocols are not inferred.
+
+A resource can add a `power` object with `active_w`, `idle_w`, `sleep_w`,
+`sleep_after`, `wake_cycles`, `wake_j`, and a nonempty `source`. The plan must
+also give `clock_hz`. Cycle delays are integers. The resource sleeps after
+the declared idle threshold. A later request pays the wake delay and energy.
+Activity is the union of service intervals, so overlapping requests do not
+double-count active power. Wake energy is the separate declared `wake_j` cost.
+Missing power data stays null. These are abstract system-energy estimates.
+No cell-level power, PPA signoff or RTL calibration is established.

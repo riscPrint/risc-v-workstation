@@ -5,6 +5,9 @@ from . import core
 
 
 def execute_json(action, **kw):
+    if action == "traffic":
+        from .traffic import traffic
+        return traffic(**kw)
     if action == "ooo-search":
         from rvw.ooo.search import search
         return search(**kw)
@@ -71,7 +74,8 @@ def _run(args):
 def register(subparsers):
     parser = subparsers.add_parser('arch', help='native gem5 models and RTL calibration')
     sub = parser.add_subparsers(dest='arch_action', required=True)
-    for action, fields in (('ooo-search', ('plan',)),
+    for action, fields in (('traffic', ('plan',)),
+                           ('ooo-search', ('plan',)),
                            ('ooo-calibrate', ('plan',)),
                            ('ooo-predict', ('calibration', 'config', 'trace')),
                            ('ooo-score', ('prediction', 'c1'))):

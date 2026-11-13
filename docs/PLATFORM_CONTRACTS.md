@@ -3296,6 +3296,17 @@ per-size cycles and per-class signed slope errors. Missing evidence exits 2.
 The report is local timing evidence, not a C4 verdict or complete C8 capture.
 Stock llvm-mca cannot load generated TableGen. The built-in baseline does not
 validate a generated model. See `Arch/SCHED_MODELS.md` for limits.
+### Declared SoC traffic model
+
+`rvw.traffic-plan/1` defines resources, agents and request routes. Each request
+has an integer arrival cycle and byte size. Resources define bandwidth,
+latency and finite capacity. Optional project power-state parameters need a
+source and a plan clock frequency. `rvw.traffic-report/1` records model-only
+per-request completion/latency, per-agent aggregates, resource pressure and
+optional abstract energy. Missing energy stays null. Accuracy is inconclusive.
+The output must be new. No cache behavior, coherence or RTL correlation is
+inferred. See `Arch/README.md` for queue and power semantics.
+
 ### Own-core memory-dependence replay
 
 `memory_policy=speculate` enables a bounded load/store PC-pair predictor.
