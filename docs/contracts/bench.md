@@ -11,3 +11,10 @@ repetition and compares exact cycles and instructions with repetition.
 Top-down fields use `rvw.topdown/1`. No formal benchmark score is implied.
 Resume requires matching campaign inputs and ELF hashes. Reports are local
 run output. They are not release or gate evidence.
+
+Bounded variants set `bounded` in the settings. Their target records
+`sort_size`, `spmv_rows`, `dhrystone_runs` and `runtime`. Expected results
+remain tied to the selected pinned inputs. The build report records these
+options and hashes the builder assets. Dhrystone's checked variant carries
+`checker: printed-final-values`. The original unchecked variant cannot pass.
+C1 `run-many` uses one worker with a separate `wall_timeout` per program.
