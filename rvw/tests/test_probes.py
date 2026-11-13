@@ -188,4 +188,4 @@ def test_cli(tmp_path, capsys):
 def test_mcp_tools_registered():
     from rvw.probes.mcp_tools import mcp_tools
     names = {t.name for t in mcp_tools()}
-    assert names == {"probes_list", "probes_summary", "probes_convert"}
+    assert names == {"probes_list", "probes_summary", "probes_convert", "probes_check"}

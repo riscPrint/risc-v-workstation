@@ -46,3 +46,17 @@ no writer exists yet (per-slot CSR state, fault sites).
   cosim result.
 - Prediction records in Kanata, C2 `mmu_walks` grouping and C2/2 `csr_snapshot` are not
   written yet.
+
+## Check required bindings
+
+`rvw probes check --events probe-events.jsonl` names missing stage, retire,
+flush and stall kinds. Use `--require kind/name` repeatedly for exact bindings,
+for example `--require flush/fetch --require flush/decode --require stall`.
+The command returns 3 for missing probes. MCP `probes_check` returns the same
+report. `present` means declared presence only; it does not establish correct
+wiring, runtime activation or complete pipeline accounting.
+
+The init stub includes both younger-slot flushes for a simple three-stage
+pipeline. Its instruction IDs must follow actual pipeline slots. Stall probes
+use measured cause signals. A core with no wait mechanism can tie those inputs
+false. Do not infer a memory stall from an arbitrary cycle without retirement.

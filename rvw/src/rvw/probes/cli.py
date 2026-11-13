@@ -10,6 +10,13 @@ from .convert import CONVERTERS
 def register(subparsers):
     parser = subparsers.add_parser("probes", help="simulation probes: list, consumer gaps, convert events")
     sub = parser.add_subparsers(dest="probes_command", required=True)
+    check = sub.add_parser("check", help="name missing required probe kinds or kind/name bindings")
+    src = check.add_mutually_exclusive_group(required=True)
+    src.add_argument("--db", type=Path)
+    src.add_argument("--events", type=Path)
+    check.add_argument("--require", action="append")
+    check.add_argument("--json", action="store_true")
+    check.set_defaults(func=_check)
     ls = sub.add_parser("list", help="list probes from a design database or an event stream, with the consumers they enable")
     src = ls.add_mutually_exclusive_group(required=True)
     src.add_argument("--db", type=Path, help="design database built with probes enabled")
@@ -75,3 +82,13 @@ def _convert(args):
     rep = {"status": "written", "out": str(args.out), **rep}
     print(json.dumps(rep, indent=1) if args.json else f"wrote {args.out}: {json.dumps(rep)}")
     return 0
+
+
+def _check(args):
+    from .check import check
+    try:
+        result = check(db=args.db, events=args.events, require=args.require)
+    except (ValueError, OSError) as exc:
+        return _fail(exc)
+    print(json.dumps(result, indent=2))
+    return 3 if result['missing_probes'] else 0

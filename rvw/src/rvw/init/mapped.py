@@ -466,15 +466,27 @@ exec nice -n 10 "${{RVW_PYTHON:-$RVW_HOME/rvw/.venv/bin/python}}" -m rvw query b
                       'Run rvw doctor --conformance --json.'])
 
 
-PROBE_TEMPLATE = """// Copy into the core build, which must depend on SpinalProbes/spinalprobes.
-// Call at the real retirement point during elaboration. Probes are off by default.
+PROBE_TEMPLATE = """// Project-owned binding stub. Call in the core's elaboration with actual pipeline signals.
+// Use Probe.enabled(key.probes) around the simulation elaboration. Off by default.
 import spinal.core._
 import spinalprobes.Probe
 
 object CoreProbes {
-  def apply(retire: Bool, instructionId: UInt): Unit = {
-    Probe.retire("commit", retire, instructionId)
-    // Add branch, stage and stall probes only from actual core signals.
+  def apply(fetchValid: Bool, fetchId: UInt, fetchPc: UInt,
+            decodeValid: Bool, decodeId: UInt, decodePc: UInt,
+            executeValid: Bool, executeId: UInt, executePc: UInt,
+            retireValid: Bool, redirect: Bool,
+            fetchStall: Bool, dataStall: Bool): Unit = {
+    Probe.stage("F", fetchValid, fetchId, Some(fetchPc))
+    Probe.stage("D", decodeValid, decodeId, Some(decodePc))
+    Probe.stage("X", executeValid, executeId, Some(executePc))
+    Probe.retire("commit", retireValid, executeId)
+    // A redirect kills each younger slot, including the current fetch slot.
+    Probe.flush("fetch", redirect && fetchValid, fetchId)
+    Probe.flush("decode", redirect && decodeValid, decodeId)
+    // Bind measured causes only. Tie a cause false if the core cannot stall there.
+    Probe.stall("pipeline", "fetch_wait", fetchStall)
+    Probe.stall("pipeline", "data_wait", dataStall)
   }
 }
 """
