@@ -42,7 +42,8 @@ def build(source: str, out: str, reader: str = 'auto') -> dict:
         raise vcd.WaveError('index output must end in .rvwi')
     if reader not in ('auto', 'vcd', 'wellen'):
         raise vcd.WaveError(f'unknown index reader: {reader}')
-    if reader == 'auto':
+    auto = reader == 'auto'
+    if auto:
         reader = 'wellen' if str(source).endswith('.fst') and wellen_available() else 'vcd'
     if reader == 'wellen' and not wellen_available():
         raise vcd.WaveError('the wellen reader needs pywellen: uv pip install "rvw[waves]"')
@@ -62,9 +63,16 @@ def build(source: str, out: str, reader: str = 'auto') -> dict:
             with open(saved, 'rb') as f:
                 for chunk in iter(lambda: f.read(1 << 20), b''):
                     digest.update(chunk)
+            hdr = None
             if reader == 'wellen':
-                hdr, count = _fill_wellen(db, saved)
-            else:
+                try:
+                    hdr, count = _fill_wellen(db, saved)
+                except WellenNames:
+                    if not auto:
+                        raise
+                    reader = 'vcd'
+                    db.execute('DELETE FROM events')
+            if hdr is None:
                 with vcd.open_text(saved) as f:
                     hdr = vcd.read_header(f)
                     count = 0
@@ -131,17 +139,32 @@ WELLEN_BATCH = 256
 _CHANGE_SEQ = 1 << 40
 
 
+class WellenNames(vcd.WaveError):
+    """wellen cannot keep these names apart (escaped identifiers); use the VCD reader."""
+
+
 def wellen_header(w):
-    """(vars, {code: (index in all_vars, width, kind)}, timescale text) of a pywellen Waveform."""
+    """(vars, {code: (index in all_vars, width, kind)}, timescale text) of a pywellen Waveform.
+
+    wellen splits Verilator array elements into a scope and a `[i]` variable; rejoin them as
+    the VCD reader names them (`top.a.a[0]`). Escaped identifiers (`\\a[0]` from Icarus) lose
+    their index in wellen, so they raise WellenNames and the caller uses the VCD reader.
+    """
     import re
     allv = w.all_vars()
     vars, refs = [], {}
     for n, v in enumerate(allv):
+        name = v.full_name
+        if '\\' in name:
+            raise WellenNames(f'wellen cannot keep escaped name {name!r} apart; use the VCD reader')
+        if v.name.startswith('['):
+            scope = name[:-len(v.name)].rstrip('.')
+            name = f'{scope}.{scope.rsplit(".", 1)[-1]}{v.name}'
         ref = int(re.search(r'\d+', str(v.signal_ref)).group())
         kind = 'real' if v.is_real else 'string' if v.is_string else str(v.var_type).lower()
         width = v.bitwidth or (64 if kind == 'real' else 1)
         code = _code(ref)
-        vars.append(vcd.Var(code, v.full_name, width, kind, ''))
+        vars.append(vcd.Var(code, name, width, kind, ''))
         refs.setdefault(code, (n, width, kind))
     scale = w.timescale
     return vars, refs, f'{scale.factor}{str(scale.unit).split(".")[-1]}'

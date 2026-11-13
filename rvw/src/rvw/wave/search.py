@@ -60,9 +60,17 @@ def open_wave(path: str) -> Iterator[Source]:
                     merged.close()
         return
     if str(path).endswith('.fst') and _native_fst():
+        from .index import WellenNames
         with wave_input(path) as saved:
-            yield _wellen_source(saved)
-        return
+            try:
+                src = _wellen_source(saved)
+            except WellenNames:
+                src = None          # escaped names: fall back to the converter path below
+            except Exception:       # pywellen cannot read it: the converter reports the error
+                src = None
+            if src is not None:
+                yield src
+                return
     with wave_input(path) as saved, vcd.open_text(saved) as f:
         hdr = vcd.read_header(f)
         used = []
