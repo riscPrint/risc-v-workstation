@@ -39,7 +39,7 @@ def test_native_vexii_csr_read_binding(tmp_path,programs,fault):
     root,model,elfs=programs
     out=tmp_path/'native'
     args=' '.join(json.dumps(str(p)) for p in (model,out,fault,*elfs))
-    r=run_group([str(root/'scripts/with-lock.sh'),'vex-csr',str(root/'scripts/with-lock.sh'),'sbt',
+    r=run_group([str(root/'scripts/with-lock.sh'),os.environ.get('RVW_VEX_CHECKS_LOCK','vex-csr'),str(root/'scripts/with-lock.sh'),os.environ.get('RVW_SBT_LOCK','sbt'),
         'nice','-n','10','sbt','-batch','++2.13.14!','runMain rvwvexii.CsrChecksRuntime '+args],
         cwd=root/'examples/vexiiriscv/rvw',env=dict(os.environ,RVW_HOME=str(root)),capture=True,timeout=240)
     (tmp_path/'native.log').write_text(r.stdout+r.stderr)

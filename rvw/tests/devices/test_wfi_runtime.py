@@ -1,4 +1,4 @@
-"""Opt-in bounded WFI wake runs. IRQ schedules are fixed before simulation."""
+"""Bounded WFI wake runs. IRQ schedules are fixed before simulation."""
 import json
 import os
 from pathlib import Path
@@ -7,6 +7,7 @@ import sys
 import pytest
 from rvw.common.proc import run_group
 from rvw.cosim.elf import Elf
+from native_sdks import require_core
 
 ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(ROOT / 'rvw/tests/interrupts'))
@@ -15,8 +16,7 @@ from window_check import check_interrupts
 
 @pytest.mark.parametrize('core,xlen', [('vexriscv', 32), ('boom', 64)])
 def test_wfi_timer_wakeup(tmp_path, core, xlen):
-    if not os.environ.get('RVW_WFI_RUNTIME'):
-        pytest.skip('set RVW_WFI_RUNTIME=1 for bounded core WFI runs')
+    require_core(core)
     source = ROOT / 'RiscvSim/tests/programs/wfi-timer.S'
     elf = tmp_path / 'wfi-timer'
     subprocess.run([os.environ.get('RISCV_GCC', 'riscv64-unknown-elf-gcc'),

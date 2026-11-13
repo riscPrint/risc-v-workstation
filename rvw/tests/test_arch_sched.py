@@ -7,6 +7,7 @@ import subprocess
 import pytest
 
 from rvw.arch import sched
+from native_sdks import llvm_tablegen
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -113,9 +114,8 @@ def test_nonpositive_slope():
 
 @pytest.mark.parametrize("same_name", [False, True])
 def test_native_tablegen(tmp_path, same_name):
-    tool = shutil.which('llvm-tblgen')
-    include = Path('/opt/homebrew/opt/llvm/include')
-    if not tool or not include.exists(): pytest.skip('native LLVM headers and tblgen absent')
+    tool, include = llvm_tablegen()
+    if not tool: pytest.skip('native LLVM headers and tblgen absent')
     d = desc()
     if same_name: d['classes'][0]['name'] = 'ALU'
     td, _ = sched.render(d)

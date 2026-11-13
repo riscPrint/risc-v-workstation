@@ -12,9 +12,10 @@ against Spike, builds a database and queries the PC.
 With JDK 21, sbt, Verilator, RISC-V GCC and the current Spike shim installed:
 
 ```sh
-RVW_TEST_TINY_SPINAL=1 nice -n 10 rvw/.venv/bin/python -m pytest rvw/tests/test_init_spinal_native.py -q
+nice -n 10 rvw/.venv/bin/python -m pytest rvw/tests/test_init_spinal_native.py -q
 ```
 
-The test takes the `vex-vexii` core lock and the shared sbt lock. A command has
-a 120-second timeout. Wait for shared native jobs to finish before starting it.
-The normal fast set skips this opt-in native test.
+The test takes the `vex-vexii` core lock. It uses a private sbt lock for the
+worktree. Set `RVW_SBT_LOCK` to select another private lock. A command has a
+300-second timeout. The test skips only when a required tool is absent.
+The fast set does not select this native test.

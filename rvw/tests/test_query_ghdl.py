@@ -186,9 +186,42 @@ def test_ghdl_refusals(tmp_path):
     assert out.read_bytes() == b'previous database'
 
 
-@pytest.mark.skipif(not (YOSYS and GHDL and os.environ.get('RVW_GHDL_PLUGIN')),
-                    reason='NEORV32 has memories; set RVW_GHDL_PLUGIN to a plugin built by scripts/build-ghdl-plugin.py')
-def test_neorv32_cpu(tmp_path):
+@pytest.fixture(scope='module')
+def memory_plugin(tmp_path_factory):
+    """Probe the installed plugin's Yosys memory ABI before the real designs."""
+    root = tmp_path_factory.mktemp('ghdl-memory-probe')
+    source = root / 'memory.vhd'
+    source.write_text("""library ieee;
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
+entity memory_probe is
+  port(clk, we: in std_logic; addr: in unsigned(3 downto 0);
+       d: in std_logic_vector(7 downto 0); q: out std_logic_vector(7 downto 0));
+end;
+architecture rtl of memory_probe is
+  type ram_t is array (0 to 15) of std_logic_vector(7 downto 0);
+  signal ram: ram_t;
+begin
+  process(clk) begin
+    if rising_edge(clk) then
+      if we = '1' then ram(to_integer(addr)) <= d; end if;
+      q <= ram(to_integer(addr));
+    end if;
+  end process;
+end;
+""")
+    try:
+        build_hdl([source], 'memory_probe', root / 'probe.db', yosys=YOSYS, frontend='ghdl')
+    except ValueError as error:
+        detail = str(error)
+        if 'internal cell' in detail and '$memwr_v2' in detail:
+            pytest.skip('installed GHDL plugin has an incompatible Yosys memory ABI; '
+                        'rebuild with python3 scripts/build-ghdl-plugin.py and set RVW_GHDL_PLUGIN')
+        raise
+
+
+@needs_ghdl
+def test_neorv32_cpu(tmp_path, memory_plugin):
     root = Path(os.environ.get('RVW_HDL_REF', Path(__file__).parents[3] / 'ref')) / 'neorv32'
     listing = root / 'rtl/file_list_core.f'
     if not listing.exists():
@@ -211,9 +244,8 @@ def test_neorv32_cpu(tmp_path):
         db.close()
 
 
-@pytest.mark.skipif(not (YOSYS and GHDL and os.environ.get('RVW_GHDL_PLUGIN')),
-                    reason='UART memories need the rebuilt GHDL plugin (RVW_GHDL_PLUGIN)')
-def test_neorv32_uart(tmp_path):
+@needs_ghdl
+def test_neorv32_uart(tmp_path, memory_plugin):
     """A second real VHDL design, with FIFO memories and top generics."""
     from rvw.common.proc import run_group
     from rvw.query.hdl_ghdl import ghdl_prefix, plugin_path

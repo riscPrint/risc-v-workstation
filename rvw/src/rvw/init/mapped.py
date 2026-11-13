@@ -393,7 +393,7 @@ here="$(cd "$(dirname "$0")" && pwd)"
 export SPINALDB_PROCESS_RUNNER="$RVW_HOME/SpinalDB/scripts/hdl-deps.py"
 export SPINALDB_PYTHON="${{RVW_PYTHON:-$RVW_HOME/rvw/.venv/bin/python}}"
 exec "$RVW_HOME/scripts/with-lock.sh" {name} \\
-  "$RVW_HOME/scripts/with-lock.sh" sbt nice -n 10 \\
+  "$RVW_HOME/scripts/with-lock.sh" "${{RVW_SBT_LOCK:-sbt-{name}}}" nice -n 10 \\
   "$RVW_HOME/SpinalDB/build-db.sh" class {top} "$2" --sbt-dir "$here" --source-root "$here/../src"
 '''
     else:

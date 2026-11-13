@@ -45,7 +45,7 @@ def test_vex_native_checks(tmp_path,programs,fault):
     args=' '.join(json.dumps(str(p)) for p in (model,out))+ ' '+fault+' '+ ' '.join(json.dumps(str(p)) for p in elfs)
     env=dict(os.environ,RVW_HOME=str(root))
     r=run_group([str(root/'scripts/with-lock.sh'),os.environ.get('RVW_VEX_CHECKS_LOCK','vex-generated-checks'),
-                 str(root/'scripts/with-lock.sh'),'sbt','nice','-n','10','sbt','-batch',
+                 str(root/'scripts/with-lock.sh'),os.environ.get('RVW_SBT_LOCK','sbt'),'nice','-n','10','sbt','-batch',
                  'runMain rvwvex.CsrChecksRuntime '+args],cwd=root/'examples/vexriscv/rvw',env=env,capture=True,timeout=110)
     (tmp_path/'native.log').write_text(r.stdout+r.stderr)
     assert r.returncode==0 and not r.timed_out,r.stdout+r.stderr
@@ -75,8 +75,8 @@ def test_vex_isa_all_generated_checks_record_findings(tmp_path, programs):
     if not elfs: pytest.skip('build aligned ISA ELFs with examples/vexriscv/rvw/build-tests.sh')
     out=tmp_path/'isa'
     args=' '.join(json.dumps(str(p)) for p in (model,out,'none',*elfs))
-    r=run_group([str(root/'scripts/with-lock.sh'),'vex-csr',str(root/'scripts/with-lock.sh'),
-        'sbt','nice','-n','10','sbt','-batch','runMain rvwvex.CsrChecksRuntime '+args],
+    r=run_group([str(root/'scripts/with-lock.sh'),os.environ.get('RVW_VEX_CHECKS_LOCK','vex-csr'),str(root/'scripts/with-lock.sh'),
+        os.environ.get('RVW_SBT_LOCK','sbt'),'nice','-n','10','sbt','-batch','runMain rvwvex.CsrChecksRuntime '+args],
         cwd=root/'examples/vexriscv/rvw',env=dict(os.environ,RVW_HOME=str(root),RVW_CHECKS_ISA='1'),
         capture=True,timeout=240)
     (tmp_path/'native.log').write_text(r.stdout+r.stderr)

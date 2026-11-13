@@ -4,12 +4,13 @@ from pathlib import Path
 import shutil
 import pytest
 from rvw.common.proc import run_group
+from native_sdks import systemc_home
 
 
 def test_verilator_systemc_and_tlm_memory(tmp_path):
     verilator=shutil.which('verilator');pkg=shutil.which('pkg-config')
     if not verilator:pytest.skip('native Verilator required')
-    home=os.environ.get('SYSTEMC_HOME')
+    home=systemc_home()
     if not home:
         if not pkg:pytest.skip('SYSTEMC_HOME or pkg-config required')
         found=run_group([pkg,'--exists','systemc'],timeout=10,capture=True)

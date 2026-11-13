@@ -1,4 +1,4 @@
-"""Opt-in real core runs. No Spike-generated trace is a DUT fixture."""
+"""Real core runs. No Spike-generated trace is a DUT fixture."""
 import hashlib
 import json
 import os
@@ -8,13 +8,14 @@ import pytest
 from rvw.common.proc import run_group
 from rvw.cosim.elf import Elf
 from window_check import check_interrupts
+from native_sdks import require_core
 
 ROOT = Path(__file__).resolve().parents[3]
-pytestmark = pytest.mark.skipif(not os.environ.get('RVW_INTERRUPT_RUNTIME'), reason='set RVW_INTERRUPT_RUNTIME=1 for BOOM interrupt regression')
 
 
 @pytest.mark.parametrize('core', ['boom', 'vexriscv'])
 def test_core_interrupts(tmp_path, core):
+    require_core(core)
     subprocess.run(['bash', str(ROOT / 'RiscvSim/tests/programs/build.sh')], check=True)
     programs = ROOT / 'RiscvSim/tests/programs/build'
     adapter = ROOT / 'RiscvSim/boom/run.sh'
