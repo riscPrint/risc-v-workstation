@@ -1,0 +1,5 @@
+{
+ "schema":"rvw.cocotb/1", "name":"pyuvm-base-parity", "backend":"verilator",
+ "top":"parity", "sources":["parity.sv"], "test_module":"parity_test",
+ "python_paths":["."], "requires":["two_state","timer"]
+}
