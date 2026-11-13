@@ -89,7 +89,7 @@ handler:
 def reference(scenario):
     p=scenario['reference_model']
     if p['kind']=='smnip':
-        m=NestedPriority();m.threshold=p['threshold'];m.trap();saved=m.stack[-1]
+        m=NestedPriority();m.threshold=p['threshold'];m.trap();saved=m.previous
         m.threshold=0;m.ret();actual=[saved,m.threshold];expected=[p['threshold']]*2
     else:
         m=Aclint()

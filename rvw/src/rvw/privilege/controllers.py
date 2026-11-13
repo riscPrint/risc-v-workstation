@@ -66,7 +66,9 @@ class Aplic:
         if not 1 <= source <= self.sources or mode not in (0,1,4,5,6,7):
             raise ValueError('invalid APLIC source or mode')
         self.mode[source] = mode
-        if mode == 0: self.pending.discard(source)
+        if mode == 0:
+            self.pending.discard(source);self.enabled.discard(source)
+            self.targets.pop(source,None);self.priority.pop(source,None)
 
     def set_level(self, source, level):
         if source in self.children:
@@ -79,7 +81,7 @@ class Aplic:
     def eligible(self):
         pending = self.pending | {s for s in range(1,self.sources+1)
             if self.mode.get(s) in (6,7) and self.level.get(s,False) == (self.mode[s] == 6)}
-        return [s for s in pending & self.enabled if self.mode.get(s,0) != 0
+        return [s for s in pending & self.enabled if self.mode.get(s,0) != 0 and s not in self.children
             and (self.threshold == 0 or self.priority.get(s,1) < self.threshold)]
 
     def top(self):
@@ -103,7 +105,7 @@ class Aplic:
         for source in sorted(self.pending & self.enabled):
             if self.mode.get(source) in (6,7):
                 raise ValueError('level-to-MSI gateway is not modeled')
-            if self.mode.get(source,0) and source in self.targets:
+            if self.mode.get(source,0) and source in self.targets and source not in self.children:
                 messages.append(self.targets[source]);self.pending.discard(source)
         return messages
 
@@ -114,19 +116,24 @@ class NestedPriority:
         if not 1 <= group_bits <= priority_bits <= 8:
             raise ValueError('invalid implemented priority/group bits')
         self.priority_bits=priority_bits;self.group_bits=group_bits
-        self.threshold=1 << priority_bits;self.stack=[]
+        self.threshold=1 << priority_bits;self.previous=None
 
     def eligible(self, priority):
         mask = ~((1 << (self.priority_bits-self.group_bits))-1)
         return (priority & mask) < (self.threshold & mask)
 
     def trap(self, priority=None):
-        self.stack.append(self.threshold)
+        self.previous=self.threshold
         if priority is not None:self.threshold=priority
 
     def ret(self):
-        if not self.stack:raise ValueError('return without a saved threshold')
-        self.threshold=self.stack.pop()
+        if self.previous is None:raise ValueError('return without a saved threshold')
+        self.threshold=self.previous
+
+    def restore_previous(self, value):
+        if type(value) is not int or not 0 <= value < (1 << (self.priority_bits+1)):
+            raise ValueError('invalid saved threshold')
+        self.previous=value
 
 
 class Aclint:
