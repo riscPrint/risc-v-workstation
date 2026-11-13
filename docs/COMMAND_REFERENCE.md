@@ -92,7 +92,7 @@ usage: rvw agent-bench trial [-h] --pack PACK --task TASK --out OUT
 
 ```text
 usage: rvw arch [-h] [--project PROJECT] [--json]
-    {compiler-export,compiler-check,custom-tradeoff,gem5-export,ooo-designer,ooo-fit,ooo-profile,ooo-diff,ooo-sampled,ooo-sensitivity,ooo-wrong-path,system-energy,traffic,ooo-search,ooo-calibrate,ooo-predict,ooo-score,warmup-bias,sample,sched-generate,sched-measure,sched-study,search,predict,score-prediction,memory-extract,pareto,memory-report,sweep,build,run,calibrate,compare,fit,inspect,measure,linux}
+    {compiler-export,compiler-check,custom-tradeoff,gem5-export,ooo-designer,ooo-fit,ooo-profile,ooo-diff,ooo-sampled,ooo-sensitivity,ooo-what-if,ooo-wrong-path,system-energy,traffic,ooo-search,ooo-calibrate,ooo-predict,ooo-score,warmup-bias,sample,sched-generate,sched-measure,sched-study,search,predict,score-prediction,memory-extract,pareto,memory-report,sweep,build,run,calibrate,compare,fit,inspect,measure,linux}
     ...
 ```
 
@@ -160,6 +160,13 @@ usage: rvw arch ooo-sampled [-h] --out OUT [--warmup WARMUP] [--max-cycles
 ```text
 usage: rvw arch ooo-sensitivity [-h] --out OUT [--json] [--project PROJECT]
     plan
+```
+
+### `rvw arch ooo-what-if`
+
+```text
+usage: rvw arch ooo-what-if [-h] --set PARAMETER=JSON --out OUT [--max-cycles
+    MAX_CYCLES] [--json] [--project PROJECT] config trace
 ```
 
 ### `rvw arch ooo-wrong-path`
@@ -928,8 +935,8 @@ usage: rvw farm plan [-h] --manifest MANIFEST --adapter ADAPTER --root ROOT
 ### `rvw farm live`
 
 ```text
-usage: rvw farm live [-h] --root ROOT --owner OWNER [--project PROJECT]
-    [--json]
+usage: rvw farm live [-h] --root ROOT --owner OWNER [--out OUT] [--project
+    PROJECT] [--json]
 ```
 
 ### `rvw farm workflow`
@@ -951,7 +958,7 @@ usage: rvw farm select [-h] --db DB --changed CHANGED --catalogue CATALOGUE
 
 ```text
 usage: rvw farm triage [-h] --root ROOT [--baseline BASELINE] [--known KNOWN]
-    [--bundles BUNDLES] [--project PROJECT] [--json]
+    [--bundles BUNDLES] [--core-env CORE_ENV] [--project PROJECT] [--json]
 ```
 
 ### `rvw farm budget`
@@ -1248,7 +1255,7 @@ usage: rvw formal sva-lower [-h] --out OUT [--project PROJECT] [--json] source
 ```text
 usage: rvw formal template [-h] [--entries ENTRIES] [--width WIDTH] --out OUT
     [--project PROJECT] [--json]
-    {rob,freelist,rename,issue,lsq,credit,hpm,initialized_read,axi_lite,allocation_pool,freelist_conservation,cam_match,counter_bounds,fifo_order,fifo_flush,pipeline,mutex,arbiter,age_matrix,store_forward,store_forward_age,axis,apb,ahb_lite}
+    {rob,freelist,rename,issue,lsq,credit,hpm,initialized_read,axi_lite,allocation_pool,freelist_conservation,cam_match,counter_bounds,fifo_order,fifo_flush,pipeline,mutex,arbiter,age_matrix,store_forward,store_forward_age,axis,apb,ahb_lite,req_rsp}
 ```
 
 ### `rvw formal contracts`
@@ -3279,6 +3286,14 @@ Arguments: `plan` (required), `out` (required).
 
 Starts a background job: yes.
 
+### `arch_ooo_what_if`
+
+Change one scalar project parameter and report same-trace model deltas.
+
+Arguments: `config` (required), `trace` (required), `parameter` (required), `out` (required), `value` (required), `max_cycles`.
+
+Starts a background job: yes.
+
 ### `arch_ooo_wrong_path`
 
 Fetch real Spike wrong paths and compare bounded cache-side timing with committed-path modeling.
@@ -3735,6 +3750,14 @@ Arguments: `port` (required), `out` (required), `host`, `irlen`, `busy_probe`.
 
 Starts a background job: yes.
 
+### `doctor_smoke`
+
+Build and run an explicit ELF through the selected project adapter. Write C1 smoke evidence. Optional Spike checks need a reviewed platform. This is a native job.
+
+Arguments: `elf` (required), `project`, `options`, `platform`, `conformance`.
+
+Starts a background job: yes.
+
 ### `evidence_index`
 
 Index C1/C3/C4/C5, formal, coverage and lint report references without rewriting originals.
@@ -3795,7 +3818,7 @@ Starts a background job: yes.
 
 Read owner-scoped runs, trends, test history and failure clusters.
 
-Arguments: `root` (required), `owner` (required).
+Arguments: `root` (required), `owner` (required), `out`.
 
 Starts a background job: yes.
 
@@ -3851,7 +3874,7 @@ Starts a background job: yes.
 
 Cluster recorded failures, compare regressions and bundle one representative. Never waive failures.
 
-Arguments: `root` (required), `baseline`, `known`, `bundles`.
+Arguments: `root` (required), `baseline`, `known`, `bundles`, `core_env`.
 
 Starts a background job: yes.
 
@@ -4478,6 +4501,14 @@ X-propagation: can an uninitialized register or memory make a checked signal (ou
 Arguments: `project`, `verilog`, `top`, `out` (required), `clock`, `reset`, `reset_active`, `checks`, `depth`, `engine`, `timeout`, `tie`, `reset_cycles`, `settle`, `outputs`, `payload`, `signal`, `filter`, `x_inputs`, `combinational`, `replay`.
 
 Starts a background job: yes.
+
+### `init_scaffold`
+
+Plan or write rvw project files in an existing Spinal/sbt core repository. Refuse existing output files. Generation is not a build or a core qualification.
+
+Arguments: `out` (required), `isa` (required), `name`, `sbt_project`, `wire_build`, `dry_run`.
+
+Starts a background job: no.
 
 ### `job_cancel`
 
