@@ -258,3 +258,21 @@ def test_toggle_qualified_data(tmp_path):
     r = analyze(b.done())
     ob = next(o for o in r['cdc']['obligations'] if o['signal'] == 'data')
     assert ob['kind'] == 'toggle_stable' and ob['qualifier'] == 'req'
+
+
+@pytest.mark.fast
+@pytest.mark.parametrize('width', [1, 8])
+def test_toggle_payload_tag_is_not_a_synchronizer_stage(tmp_path, width):
+    b = two_clocks(tmp_path)
+    b.component('bridge', 'spinal.lib.FlowCCUnsafeByToggle')
+    b.reg('bridge.data', 1, width=width, comp='bridge')
+    b.reg('bridge.req', 1, comp='bridge'); b.edge('bridge.req', 'bridge.req')
+    b.reg('s0', 2); b.reg('s1', 2)
+    b.chain('bridge.req', 's0', 's1')
+    b.reg('capture', 2, width=width, tags='crossClockDomain')
+    b.edge('bridge.data', 'capture'); b.edge('s1', 'capture', 'cond')
+    r = analyze(b.done())
+    row = next(c for c in r['crossings'] if c['source'] == 'bridge.data')
+    assert row['kind'] == 'qualified_data'
+    assert not [f for f in r['findings'] if f['rule'] == 'cdc.comb_before_sync']
+    assert any(o['signal'] == 'bridge.data' for o in r['cdc']['obligations'])
