@@ -31,8 +31,9 @@ Ten-bit addresses, high-speed mode and bus recovery are outside this profile.
 
 Run `rvw/.venv/bin/python -m pytest rvw/tests/test_vip_i2c.py -q`.
 Lint the four SV files with the pinned UVM package and Verilator.
-UVM runtime builds and cocotb RTL runs were not run for this change.
-Issue #205 remains open for reactive roles and runtime qualification.
+The measured SV campaign below supplies runtime fixture evidence.
+General protocol and cocotb RTL qualification remain open.
+Issue #205 remains open for reactive roles and broader runtime qualification.
 
 ## Bounded Python RTL evidence
 

@@ -19,8 +19,8 @@ a RAM. `+buggy` corrupts read data. Multiport memories, ECC and collision
 semantics are outside this profile.
 
 Run `rvw/.venv/bin/python -m pytest rvw/tests/test_vip_sram.py -q`.
-Lint the four SV files with pinned UVM. UVM runtime builds and SRAM cocotb
-RTL qualification were not run for this change.
+Lint the four SV files with pinned UVM. The measured SV campaign below supplies runtime fixture evidence.
+General protocol and cocotb RTL qualification remain open.
 
 ## Measured SV campaign
 

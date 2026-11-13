@@ -21,8 +21,8 @@ pulse capture and metastability are outside this line-level profile.
 Projects must reset scheduled expectations with their DUT reset.
 
 Run `rvw/.venv/bin/python -m pytest rvw/tests/test_vip_interrupt.py -q`.
-Lint all four SV files with pinned UVM. UVM runtime builds and interrupt
-cocotb RTL qualification were not run for this change.
+Lint all four SV files with pinned UVM. The initial test set had no runtime campaign. See the measured SV fixture
+results below. General cocotb RTL qualification remains open.
 
 ## Measured SV campaign
 

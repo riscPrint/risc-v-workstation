@@ -23,8 +23,8 @@ and metastability are outside this profile. A project must state its
 own clock-domain and reset-domain crossing requirements.
 
 Run `rvw/.venv/bin/python -m pytest rvw/tests/test_vip_clock_reset.py -q`.
-Lint all four SV files with pinned UVM. UVM runtime builds and clock/reset
-cocotb RTL qualification were not run for this change.
+Lint all four SV files with pinned UVM. The measured SV campaign below supplies runtime fixture evidence.
+General protocol and cocotb RTL qualification remain open.
 
 ## Measured SV campaign
 

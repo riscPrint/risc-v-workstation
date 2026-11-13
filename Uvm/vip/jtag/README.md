@@ -21,8 +21,8 @@ for a real TAP. RISC-V Debug and DMI conformance remain in `rvw.debug`.
 This agent does not replace those campaigns or qualify boundary cells.
 
 Run `rvw/.venv/bin/python -m pytest rvw/tests/test_vip_jtag.py -q`.
-Lint all four SV files with pinned UVM. UVM runtime builds and JTAG
-cocotb RTL qualification were not run for this change.
+Lint all four SV files with pinned UVM. The initial test set had no runtime campaign. See the measured SV fixture
+results below. General cocotb RTL qualification remains open.
 
 ## Measured SV campaign
 

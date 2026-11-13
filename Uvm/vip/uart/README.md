@@ -57,7 +57,8 @@ They do not qualify a hardware UART FIFO or interrupt path.
 Mid-frame reset aborts the monitor state. Projects must reset scoreboards
 and cancel in-flight cocotb sends with the DUT.
 
-UVM runtime builds and cocotb RTL runs were not run. Native serial timing,
+The initial test set had no runtime campaign. The measured SV and Python
+RTL results below supersede that initial limit. Native serial timing,
 FIFO boundaries and IRQ behavior remain open under issue #202 until a
 project binds and runs the register/FIFO observations against its DUT.
 

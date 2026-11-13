@@ -29,7 +29,8 @@ direction. It does not model tri-state resolution.
 
 Run `rvw/.venv/bin/python -m pytest rvw/tests/test_vip_gpio.py -q`.
 Lint all four SV files against the pinned UVM library.
-UVM runtime builds and cocotb RTL simulation were not run for this change.
+The initial test set had no runtime campaign. The measured SV and Python
+RTL results below give the current fixture evidence.
 
 ## Bounded Python RTL evidence
 
