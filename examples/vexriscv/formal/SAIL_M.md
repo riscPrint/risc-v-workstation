@@ -13,6 +13,10 @@ It reused the pinned compiler classpath built for the private VexiiRiscv example
 The standard example sbt build uses the released SpinalHDL 1.15.0. That is a
 different emitter profile and has no result substituted in this table.
 
+Three controller transition checks now use this same export. Exception and
+interrupt entry passed through cycle 25. Machine return failed at step 15.
+See [the controller record](MACHINE_M.md). Full machine signoff remains incomplete.
+
 ```sh
 rvw/.venv/bin/python examples/vexriscv/formal/build_m.py \
   --source "$VEXRISCV" --classpath "$CLASSPATH_FILE" --plugin "$IDSL_PLUGIN" --out BUILD
