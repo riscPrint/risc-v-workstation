@@ -200,3 +200,8 @@ SC schedules. It discards only repeated states with equal per-hart positions,
 last-write identities and LR sources. A successful certificate can include
 `scheduling_branches`. Exhausting this sufficient search does not reject an
 execution. The checker then uses the bounded axiomatic search.
+
+The SMP `serialized-retirement` adapter may accept several requests from one
+hart before their retirements. Another hart cannot issue during that interval.
+The adapter counts outstanding requests and checks each memory retirement's
+ownership. C2 per-hart retirement order still drives Spike's hart selection.

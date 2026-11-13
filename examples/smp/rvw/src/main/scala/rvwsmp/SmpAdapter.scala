@@ -48,7 +48,7 @@ object SmpAdapter extends CoreAdapter {
     val hsmMode = job.config == "hsm2"
     val serialized = job.config == "serial2"
     val commonBoot = serialized || hsmMode
-    var memoryOwner = Option.empty[Int]
+    val memoryGate = new SerialMemoryGate
     val images = ctx.hartImages.get
     val lifecycle = if(hsmMode) Some(new HartLifecycleObserver(ids.toSet, Set(0), 20000,
       "bounded service in the captured seed; no reset or power gating")) else None
@@ -121,8 +121,7 @@ object SmpAdapter extends CoreAdapter {
           }, r => {
             val failedSc = (r.insn & 0x7f) == 0x2f && (r.insn >> 27) == 3
             if(serialized && (r.memRmask != 0 || r.memWmask != 0 || failedSc)) {
-              require(memoryOwner.contains(h), "retired memory operation without bus ownership")
-              memoryOwner = None
+              memoryGate.retire(h)
             }
             lifecycle.foreach { observer =>
               if(hsmSymbols.get("hsm_start_request").contains(r.pc)) {
@@ -169,8 +168,7 @@ object SmpAdapter extends CoreAdapter {
           }
           if(enabled.testBit(h) && db.cmd.valid.toBoolean && db.cmd.ready.toBoolean) {
             if(serialized) {
-              require(memoryOwner.isEmpty, "overlapping serialized memory service")
-              memoryOwner = Some(h)
+              memoryGate.issue(h)
             }
             val c = db.cmd; val n = db.p.dataWidth/8; val a = c.address.toLong
             val aligned = a & ~(n-1L); val lane = (a-aligned).toInt
@@ -265,8 +263,8 @@ object SmpAdapter extends CoreAdapter {
             top.ports.fetch(h).cmd.ready #= (nextEnables.testBit(h) && !done.contains(h) && selected(readyPercent))
             top.ports.lsu(h).cmd.ready #= (!serialized && nextEnables.testBit(h) && !done.contains(h) && selected(readyPercent))
           }
-          if(serialized && memoryOwner.isEmpty) {
-            val candidates = ids.filter(h => nextEnables.testBit(h) && !done.contains(h) && selected(readyPercent))
+          if(serialized) {
+            val candidates = ids.filter(h => memoryGate.canIssue(h) && nextEnables.testBit(h) && !done.contains(h) && selected(readyPercent))
             if(candidates.nonEmpty) top.ports.lsu(candidates(random.nextInt(candidates.size))).cmd.ready #= true
           }
           if(done.size == ids.size) ctl.finish(if(done.values.forall(_ == Status.Pass)) Status.Pass else Status.Fail)
