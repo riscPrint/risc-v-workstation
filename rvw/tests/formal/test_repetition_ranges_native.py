@@ -31,8 +31,8 @@ def accepts(prefix,loop,minimum,maximum,operator):
     # Language oracle: each request needs one permitted number of occurrences
     # and a completion at its legal endpoint. This does not use monitor states.
     trace=prefix+loop*(maximum+4)
-    for start,(req,_,_) in enumerate(prefix+loop):
-        if not req:
+    for start,row in enumerate(prefix+loop):
+        if not row[0]:
             continue
         occurrences=[i for i in range(start,len(trace)) if trace[i][1]]
         accepted=False
@@ -41,37 +41,49 @@ def accepts(prefix,loop,minimum,maximum,operator):
                 continue
             event=occurrences[count-1]
             if operator=='->':
-                accepted |= event+1<len(trace) and trace[event+1][2]
+                accepted |= (event+1<len(trace) and trace[event+1][2]
+                             and all(len(row)<4 or row[3] for row in trace[start:event+2]))
             else:
                 next_event=occurrences[count] if len(occurrences)>count else len(trace)-1
-                accepted |= any(trace[i][2] for i in range(event+1,next_event+1))
+                accepted |= any(trace[i][2] and all(len(row)<4 or row[3] for row in trace[start:i+1])
+                                for i in range(event+1,next_event+1))
         if not accepted:
             return False
     return True
 
 
-def test_emitted_automata_against_lasso_language_oracle(tmp_path):
+@pytest.mark.parametrize('guarded',[False,True])
+def test_emitted_automata_against_lasso_language_oracle(tmp_path,guarded):
     if not all(shutil.which(tool) for tool in ('iverilog','vvp')):
         pytest.skip('Icarus required')
     variants=[('->',1,2),('=',1,2),('->',2,3),('=',2,3)]
-    properties='\n'.join(f'assert property (@(posedge clk) req |-> strong(b[{op}{lo}:{hi}] ##1 c));'
-                         for op,lo,hi in variants)
-    rtl,rows,_=lower_live('module m(input clk,req,b,c);'+properties+' endmodule','m')
+    sequences=[f'b[{op}{lo}:{hi}] ##1 c' for op,lo,hi in variants]
+    if guarded:
+        sequences=[f'g throughout ({sequence})' for sequence in sequences]
+    properties='\n'.join('assert property (@(posedge clk) req |-> strong('+sequence+'));'
+                         for sequence in sequences)
+    rtl,rows,_=lower_live('module m(input clk,req,b,c,g);'+properties+' endmodule','m')
     rng=random.Random(7321)
     traces=[([],[(True,True,True)]),([],[(True,False,True)]),([],[(True,True,False)]),
             ([(True,True,False)],[(False,False,True)]),
             ([],[(True,True,False),(False,True,False),(False,False,False),(False,False,True)])]
-    traces += [([tuple(bool(rng.getrandbits(1)) for _ in range(3)) for _ in range(rng.randrange(3))],
-                [tuple(bool(rng.getrandbits(1)) for _ in range(3)) for _ in range(rng.randrange(1,4))])
+    if guarded:
+        traces=[([(*row,True) for row in prefix],[(*row,True) for row in loop]) for prefix,loop in traces]
+        traces += [([(True,True,False,True)],[(False,False,True,False)]),
+                   ([(True,True,False,True),(False,False,True,True)],[(False,False,True,False)])]
+    traces += [([tuple(bool(rng.getrandbits(1)) for _ in range(4 if guarded else 3)) for _ in range(rng.randrange(3))],
+                [tuple(bool(rng.getrandbits(1)) for _ in range(4 if guarded else 3)) for _ in range(rng.randrange(1,4))])
                for _ in range(64)]
     registers=re.findall(r'\breg\s*(?:\[[^\]]+\]\s*)?(rvw_live_\w+)\s*=',rtl)
-    bench=['module tb; reg clk=0,req=0,b=0,c=0; m dut(clk,req,b,c); initial begin']
+    bench=['module tb; reg clk=0,req=0,b=0,c=0,g=1; m dut(clk,req,b,c,g); initial begin']
     refs=', '.join('dut.'+row['wire'] for row in rows)
     for index,(prefix,loop) in enumerate(traces):
         bench += [f'dut.{name}=0;' for name in registers]
         bench.append(f'$display("CASE {index}");')
-        for req,b,c in prefix+loop*16:
-            bench.append(f'req={int(req)}; b={int(b)}; c={int(c)}; #1; clk=1; #1; '
+        for row in prefix+loop*16:
+            req,b,c=row[:3]
+            guard=row[3] if guarded else True
+            bench.append(f'req={int(req)}; b={int(b)}; c={int(c)}; g={int(guard)}; #1; clk=1; #1; '
                          f'$display("%b%b%b%b",{refs}); clk=0; #1;')
     bench += ['$finish; end endmodule']
     (tmp_path/'m.sv').write_text(rtl+'\n'+'\n'.join(bench))

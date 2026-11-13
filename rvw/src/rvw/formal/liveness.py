@@ -44,6 +44,8 @@ def lower_live(source, top):
             start = module.start() + label.start()
         prefix = f'rvw_live_{index}'
         emitted, details = emit(expr, clock[1], prefix)
+        if re.search(r'\bthroughout\b', expr):
+            details['throughout'] = True
         edits.append((start, end + semi.end(), emitted))
         rows.append(dict(id=name, wire=prefix, clock=clock[1],
                          kind='live' if match[1] == 'assert' else 'fair', **details))

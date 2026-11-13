@@ -35,3 +35,4 @@
 | `liveness $stable` | positive and negative native case | single-clock liveness; sampled history |
 | `liveness $changed` | positive and negative native case | single-clock liveness; sampled history |
 | `goto/nonconsecutive count ranges` | positive and negative native case | infinite trace, single clock; literal ranges |
+| `unbounded throughout` | positive and negative native case | infinite trace, single clock; Boolean guard |
