@@ -202,10 +202,23 @@ instruction-valued `mtval` on ECALL. The adapter uses the same choices.
 
 `rvw formal csr --model examples/vexriscv/csr.json --out out/vex-csr`
 selects M-only scratch access data from the pinned standard catalog. Run this
-from the workstation root. The model declares `mscratch` reset zero and absent
-`sscratch`. It generates the existing independent monitor and assembly tests.
-An RTL wrapper must still bind completed accesses and actual scratch storage.
-This file is not evidence of a VexRiscv CSR run or a real-core binding.
+from the workstation root. The model declares unknown `mscratch` reset storage and absent
+`sscratch`. The safe program first writes zero to establish a known value. It generates the existing independent monitor and assembly tests.
+The optional project plugin `CsrChecksPlugin` binds actual `CsrRead` storage,
+accepted `onRead`/`onWrite` callbacks, and CSR read/write data. It checks
+`mscratch` after the first accepted full write. The normal adapter does not
+install it. Generate `model.json` with the command above, then run:
+
+```sh
+cd examples/vexriscv/rvw
+"$RVW_HOME/scripts/with-lock.sh" vex "$RVW_HOME/scripts/with-lock.sh" sbt nice -n 10 sbt -batch \
+  "runMain rvwvex.CsrChecksMain /tmp/vex-csr-rtl /absolute/generated/model.json"
+```
+
+Set `RVW_HOME` and `VEXRISCV` first. The generated RTL contains CSR assertions.
+The report lists inserted checks. Generation does not prove the core. The
+binding checks accepted M-mode scratch accesses only. Denied instructions,
+aliases, other catalog CSRs and privilege transitions still need bindings.
 
 To generate a minimal RVFI wrapper from port data, set `RISCV_FORMAL` to the
 upstream checkout. Run `rvw formal rvfi-generate formal/binding.json --out OUT`

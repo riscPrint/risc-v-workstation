@@ -6,7 +6,8 @@ val vex = file(sys.env.getOrElse("VEXRISCV", "..")).getCanonicalFile
 
 // Compile external core sources here; consume the generic simulator as a library.
 lazy val root = (project in file("."))
-  .dependsOn(ProjectRef(workstation / "RiscvSim", "riscvsim"))
+  .dependsOn(ProjectRef(workstation / "RiscvSim", "riscvsim"),
+    ProjectRef(workstation / "SpinalChecks", "spinalchecks"))
   .settings(
     name := "rvw-vexriscv",
     Compile / unmanagedSourceDirectories ++= Seq(
