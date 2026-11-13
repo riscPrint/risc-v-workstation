@@ -4189,3 +4189,8 @@ checks every top output and reports outputs with no required source declaration.
 A proved value contract cannot replace a missing required structural dependency.
 Such a row retains its semantic observation but remains incomplete. Native
 campaign observations retain and check the child result's proof kind.
+
+Forbidden connectivity activation requires distinct legal source values in the
+two DUT copies, sampled with mode/enable and delayed by the declared latency.
+A source fixed by assumptions cannot satisfy this witness. Its safety proof
+alone remains incomplete. `activation_requirement` states this obligation.

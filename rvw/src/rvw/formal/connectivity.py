@@ -228,6 +228,8 @@ def harness(db, declaration, *, clock='clk', reset='reset', activation=False, po
     if declaration.get('inversion', False):
         expected = f'~{expected}'
     valid = f'({guard})'
+    if forbidden and activation:
+        valid = f'({valid} && ({observed(source)} != alternate_source))'
     for i in range(declaration.get('latency', 0)):
         lines += [f'reg [{source.width-1}:0] expected_{i};', f'reg valid_{i};',
                   f'always @(posedge clk) begin expected_{i} <= {expected}; '
@@ -293,6 +295,7 @@ def campaign(db, declaration, out, capture, args):
             'depth': args.depth, 'observations': observations, 'binding': binding,
             'semantics': 'mode and enable sampled with source; fixed cycle latency; synchronous active-high reset',
             'initial_state': 'independent DUT copies for forbidden influence; counterexamples need state triage',
+            'activation_requirement': 'sampled condition with distinct source values' if declaration['kind'] == 'forbidden' else 'sampled condition',
             'proof_kind': 'unbounded' if getattr(args, 'proof_mode', 'bmc') == 'prove' else 'bounded',
             'scope': 'two-state observed RTL contract under captured DUT assumptions; no design acceptance verdict'}
 

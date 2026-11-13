@@ -884,8 +884,10 @@ source-influence bug. The mode/enable sample selects the comparison after the
 declared latency; it does not constrain source differences at earlier cycles.
 
 Each campaign retains separate transfer and activation jobs. Activation must
-produce a counterexample to `assert(!delayed_enable)` after reset. A transfer
-pass without this activation witness remains incomplete. Both jobs must retain
+produce a counterexample after reset. Required transfers witness delayed
+enable. Forbidden influence must also witness distinct source values sampled
+with that enable. The source difference is delayed with the condition. A
+transfer pass without this activation witness remains incomplete. Both jobs must retain
 exactly one assertion. The BMC runner also checks bounded reachability before
 it reports a pass. Each RTL file must match its database content hash. The
 runner retains copied inputs, native tool identities, logs and counterexamples.
@@ -1916,3 +1918,13 @@ The reverse inventory includes all top outputs, including those with no
 required source declaration. Source assumptions and the single-clock/reset
 restrictions of the native formal flow still apply. No design acceptance is
 inferred from these observations.
+
+Forbidden-source activation requires legal variation
+--------------------------------------------------
+
+A DUT assumption can force the source input to one value in both copies.
+A noninterference proof in that environment cannot witness source variation.
+The activation job now samples source inequality with mode and enable, then
+delays the combined predicate by the declared latency. A proved safety relation
+without this witness remains incomplete. This check does not remove source
+assumptions or convert them into unrestricted influence evidence.
