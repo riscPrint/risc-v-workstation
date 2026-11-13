@@ -63,3 +63,51 @@ def test_correct_predictions_do_not_add_a_fetch_guard():
     occupancy = simulate(ops, replace(c, wrong_path_occupancy=True), backend='python')
     assert occupancy['cycles'] <= original['cycles']
     assert occupancy['events'].get('wrong_path_renamed', 0) == 0
+
+
+class SlowStores:
+    def __init__(self):
+        self.requests = []
+    def access(self, address, size, write, cycle):
+        self.requests.append((address, write, cycle))
+        return 12 if write else 0
+
+
+def test_drain_retains_store_slots_and_backpressures_rename():
+    ops = [Instruction('store', address=128+4*i, size=4) for i in range(8)]
+    memory = SlowStores()
+    c = config(store_policy='buffered', memory_policy='disambiguate', store_drain_width=1)
+    finite = simulate(ops, c, memory=memory, backend='python')
+    unlimited = simulate(ops, replace(c, store_drain_width=0), memory=SlowStores(), backend='python')
+    assert finite['cycles'] > unlimited['cycles']
+    assert finite['events']['store_full'] > 0
+    assert finite['events']['store_drain_blocked'] > 0
+    assert finite['max_occupancy']['store_entries'] <= c.store_entries
+    assert all(write for _,write,_ in memory.requests)
+
+
+def test_load_forwards_from_committed_undrained_store():
+    ops = [Instruction('store', address=128, size=4)] + [Instruction('alu') for _ in range(8)] + [Instruction('load', address=128, size=4)]
+    memory = SlowStores()
+    c = config(store_policy='buffered', memory_policy='disambiguate', store_drain_width=1)
+    result = simulate(ops, c, memory=memory, backend='python')
+    assert result['events']['forwarded_loads'] == 1
+    assert not any(not write for _,write,_ in memory.requests)
+
+
+def test_drain_requires_buffered_policy():
+    with pytest.raises(ValueError, match='buffered'):
+        config(store_drain_width=1)
+
+
+def test_partial_overlap_waits_for_undrained_store():
+    ops = [Instruction('store', address=128, size=2)] + [Instruction('alu') for _ in range(8)] + [Instruction('load', address=128, size=4)]
+    memory = SlowStores()
+    c = config(store_policy='buffered', memory_policy='disambiguate', store_drain_width=1)
+    result = simulate(ops, c, memory=memory, backend='python')
+    assert result['events']['partial_forward_blocked'] > 0
+    assert result['events']['stores_drained'] == 1
+    writes = [cycle for _,write,cycle in memory.requests if write]
+    reads = [cycle for _,write,cycle in memory.requests if not write]
+    assert len(writes) == len(reads) == 1
+    assert reads[0] >= writes[0] + 12
