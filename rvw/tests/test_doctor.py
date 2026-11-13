@@ -124,3 +124,22 @@ def test_install_all_preserves_native_installer_scope(tmp_path, monkeypatch):
     assert result['installation']['exit_code'] == 0
     assert '--with-cosim' in calls[0] and '--with-gem5' in calls[0]
     assert '--with-ide' not in calls[0] and '--with-waves' not in calls[0]
+
+
+def test_info_waits_for_the_project_startup_time(tmp_path, monkeypatch):
+    cfg = SimpleNamespace(adapter=['fixture'], path=tmp_path / 'rvw.toml', name='fixture', configs=['default'],
+                          default_config='default', startup_s=300.0, build_timeout_s=10, suites={},
+                          input_complete=False, identity=False, identity_capture=False, source_repo=tmp_path)
+    monkeypatch.setattr(check, 'load_project', lambda p: SimpleNamespace(path=cfg.path, root=tmp_path))
+    monkeypatch.setattr(check, 'load_config', lambda **kw: cfg)
+    seen = {}
+    def run(cmd, **kwargs):
+        if 'info' in cmd:
+            seen['timeout'] = kwargs['timeout']
+            return SimpleNamespace(returncode=-9, stdout='', stderr='', timed_out=True)
+        return SimpleNamespace(returncode=1, stdout='', stderr='')
+    monkeypatch.setattr(check, 'run_group', run)
+    report = check.diagnose(project=tmp_path)
+    info = next(c for c in report['checks'] if c['name'] == 'adapter.info')
+    assert seen['timeout'] == 300.0
+    assert info['status'] == 'error' and 'core.startup_s' in info['detail']

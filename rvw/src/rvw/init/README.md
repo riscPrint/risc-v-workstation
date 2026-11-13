@@ -23,7 +23,17 @@ Files:
 - `rvw.toml`: exact `rvw --version` pin, one `default` config and a smoke suite.
 - `rvw/run.sh`: executable C1 info stub. Build and run return 2.
 - `rvw/src/main/scala/rvwcore/CoreAdapter.scala`: typed RiscvSim adapter skeleton.
+- `rvw/src/main/scala/rvwcore/Elaboration.scala`: the shared top and SpinalConfig
+  entry, and the `Database` main with `--db-top`. It is a separate file, so a
+  rewritten adapter keeps the database entry.
 - `rvw/.gitignore`: ignores `out/` and local sbt output.
+- `rvw/debug.toml` and `[debug] config`: the core description that `rvw bundle`,
+  `reduce` and `bisect` read (name, `RVW_CORE_SOURCE`, clock `period` 10; set the
+  period your adapter passes to `forkStimulus`).
+- With `--wire-build`, a root `.gitignore` for the core's sbt outputs (`/target/`,
+  `/project/target/`, `/project/project/`) when the core has none. An existing
+  `.gitignore` stays intact; `next` names the missing entries. Untracked build
+  outputs make the core tree dirty, and a dirty tree cannot earn a gate verdict.
 - `rvw/README.md`: the core's setup playbook and remaining actions.
 
 `--dry-run` returns every planned file with its full text. It writes nothing.

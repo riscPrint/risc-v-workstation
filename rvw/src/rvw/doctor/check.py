@@ -147,7 +147,11 @@ def diagnose(project=None, features='sim,riscv-gcc', install=None, yes=False, dr
     if cfg:
         info = {}
         try:
-            done = run_group([*cfg.adapter, 'info', '--json'], cwd=cfg.path.parent, timeout=30, capture=True)
+            # A mapped launcher compiles before it answers info; allow the project's startup time.
+            limit = max(30.0, float(getattr(cfg, 'startup_s', 30.0)))
+            done = run_group([*cfg.adapter, 'info', '--json'], cwd=cfg.path.parent, timeout=limit, capture=True)
+            if getattr(done, 'timed_out', False):
+                raise ValueError(f'adapter info did not answer within {limit:.0f} s (core.startup_s)')
             info = json.loads(done.stdout or '{}')
             valid = (done.returncode == 0 and isinstance(info, dict) and info.get('schema') == 'rvw.adapter/1'
                      and info.get('core') == cfg.name and info.get('configs') == cfg.configs

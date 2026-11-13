@@ -38,6 +38,10 @@ native build locks. Without this flag build/run conformance stays inconclusive.
 The default smoke check does not test optional artifacts or replay completeness.
 Use the explicit options below for bounded C2 and artifact checks.
 
+The `adapter.info` check waits up to `core.startup_s` (at least 30 s) for
+`info --json`: a mapped launcher compiles before it answers. A timeout is an error
+that names `core.startup_s`.
+
 ## C1 option conformance
 
 `--conformance` (with `--smoke-elf`) runs more C1 checks around the same ELF.
