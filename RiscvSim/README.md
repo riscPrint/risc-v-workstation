@@ -868,3 +868,25 @@ logical request ID to detect missing attempts or cycle-based livelock. No
 unbounded eventuality or aq/rl ordering follows from these byte checks. Bind
 accepted actions and independent operands in the project adapter before using
 this observer for RTL. The unit tests supply model events only.
+
+### Project cache observer events
+
+`CacheEventObserver` maps project event names to cache and consumed-fetch
+checks. Pass the event-name map at construction. Each event has `cycle`,
+`hart` and a project `event` name. Addresses are nonnegative byte offsets in
+the independent `MemoryImage`. Use `physical_address` for the offset and
+optional `virtual_address` to record aliases. Byte strings use hex byte order.
+
+Cache event kinds are fill, denied, read, store, evict and invalidate. Store
+also needs a hex byte `mask`. Update the independent oracle from stimulus
+before the accepted store. Evict can carry writeback bytes and a replacement
+flag. Publish and sync use the existing instruction visibility checker. Sync
+needs both `data_visible` and `fence_i_complete`. The project must observe its
+publication protocol before it sets those fields.
+
+Fetch request, reply, consume and discard events use a stable `id`. A request
+also names its `publication`. Only consumed bytes count as instruction checks.
+Finish requires explicit event coverage and no outstanding fetch requests.
+Map accepted project events in the adapter. The tests cover event mapping,
+physical aliases, pending cross-hart publication and injected stale bytes.
+They do not establish RTL cache error injection or replacement coverage.
