@@ -131,6 +131,9 @@ def register(sub: argparse._SubParsersAction) -> None:
     q.add_argument("--map", help="A_PREFIX=B_PREFIX: rename A signal prefixes to find B signals")
     q.add_argument("--on-clock", action="store_true", help="sample both at A's rising clock edges (--clock)")
     q.add_argument("--all", action="store_true", help="scan the whole window; report each signal's first divergence")
+    q.add_argument("--align", help="compare the k-th clock edge where this expression holds in A and B "
+                                   "(e.g. a commit valid) instead of equal times")
+    q.add_argument("--align-b", help="the event expression in B, when B names it differently")
     q.add_argument("--limit", type=int, default=50, help="signals to list (default 50)")
     q.set_defaults(func=_diff)
 
@@ -343,17 +346,29 @@ def _diff(a):
         if "=" not in a.map:
             raise WaveError("--map takes A_PREFIX=B_PREFIX")
         mapping = tuple(a.map.split("=", 1))
-    r = diff(a.wave, a.other, a.signals, _t(a, a.t0) or 0, _t(a, a.t1), a.offset,
-             a.clock if a.on_clock else None, mapping, a.limit, not a.all)
+    if a.align:
+        from .wdiff import aligned_diff
+        r = aligned_diff(a.wave, a.other, a.align, a.signals, a.clock, mapping, a.align_b,
+                         _t(a, a.t0) or 0, _t(a, a.t1), a.limit, not a.all)
+    else:
+        r = diff(a.wave, a.other, a.signals, _t(a, a.t0) or 0, _t(a, a.t1), a.offset,
+                 a.clock if a.on_clock else None, mapping, a.limit, not a.all)
     if a.json:
         jsonout.write(r)
     else:
-        print(f"# {r['status']}: {r['signals_compared']} signals, {r['points_compared']} points ({r['mode']})")
-        if r['first_divergence'] is not None:
-            print(f"first divergence at {r['first_divergence']}:")
+        points = r.get('points_compared', r.get('events_compared'))
+        print(f"# {r['status']}: {r['signals_compared']} signals, {points} points ({r['mode']})")
+        first = r['first_divergence']
+        if isinstance(first, dict):
+            print(f"first divergence at event {first['event']}"
+                  + (f" (A {first['a_time']}, B {first['b_time']})" if 'a_time' in first else f": {first['cause']}"))
+            for d in first.get('signals', []):
+                print(f"  {d['signal']}: A={d['a']} B={d['b']}")
+        elif first is not None:
+            print(f"first divergence at {first}:")
             for d in r['divergent']:
                 print(f"  {d['signal']}: A={d['a']} B={d['b']}")
-        if r['only_in_a_count']:
+        if r.get('only_in_a_count'):
             print(f"# {r['only_in_a_count']} signals only in A")
     return 0 if r['status'] == 'match' else 1
 

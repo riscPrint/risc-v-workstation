@@ -128,11 +128,14 @@ def _txn(wave, valid=None, ready=None, payload=None, stream=None, db=None, t0=No
 
 
 def _diff(wave, other, signals=None, t0=None, t1=None, offset=0, map=None, on_clock=False, all=False,
-          limit=50, period=None, clock=ops.CLOCK_RX):
-    from .wdiff import diff
+          limit=50, period=None, clock=ops.CLOCK_RX, align=None, align_b=None):
+    from .wdiff import aligned_diff, diff
     from .vcd import WaveError
     if map and "=" not in map:
         raise WaveError("map takes A_PREFIX=B_PREFIX")
+    if align:
+        return aligned_diff(wave, other, align, signals, clock, tuple(map.split("=", 1)) if map else None, align_b,
+                            time_at(wave, t0, period, clock) or 0, time_at(wave, t1, period, clock), limit, not all)
     return diff(wave, other, signals, time_at(wave, t0, period, clock) or 0, time_at(wave, t1, period, clock),
                 offset, clock if on_clock else None, tuple(map.split("=", 1)) if map else None, limit, not all)
 
@@ -180,7 +183,9 @@ def mcp_tools():
         ToolSpec("wave_diff", "Compare two waves (signals paired by name, optional prefix map and time offset) and "
                  "report the first divergence time and the differing signals; status match/diverged/no_points.",
                  schema({**WAVE, **TIME, **WINDOW, "other": S, "signals": S, "offset": {"type": "integer", "default": 0},
-                         "map": S, "on_clock": B, "all": B, "limit": {"type": "integer", "minimum": 1, "default": 50}},
+                         "map": S, "on_clock": B, "all": B, "limit": {"type": "integer", "minimum": 1, "default": 50},
+                         "align": {**S, "description": "event expression: compare the k-th clock edge where it holds in A and B"},
+                         "align_b": {**S, "description": "event expression in B when it differs"}},
                         ["wave", "other"]), _indexed(_diff), annotations=RO),
         ToolSpec("wave_index", "Build an identity-bound .rvwi index of a VCD/FST wave for fast window, sample and search queries.",
                  schema({"wave": WAVE["wave"], "out": S,
