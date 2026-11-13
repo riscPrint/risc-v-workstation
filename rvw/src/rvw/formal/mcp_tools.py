@@ -109,6 +109,13 @@ def _upf(job, **args):
     return json.loads((Path(args['out'])/'result.json').read_text())
 
 
+def _power(job, **args):
+    code = job.run(_argv('power', args))
+    if code:
+        raise ToolError('power generation failed', {'exit_code': code, 'log_tail': job.tail(20)})
+    return json.loads((Path(args['out']) / 'result.json').read_text())
+
+
 def _template(job, **args):
     from .invariants import NAMES
     if args['kind'] not in NAMES:
@@ -212,6 +219,8 @@ def mcp_tools():
                  schema({"manifest": S, "out": S}, ["manifest", "out"]), _custom_isa, long=True),
         ToolSpec("formal_profiles", "Track pinned RVA23/RVB23 named requirements, configuration declarations and hash-bound proof evidence. No full profile acceptance verdict.",
                  schema({"manifest": S, "baseline": S, "out": S}, ["manifest", "out"]), _profiles, long=True),
+        ToolSpec("formal_power", "Generate sampled low-power checks and declared DFT inventory. No proof or ATPG run.",
+                 schema({"intent": S, "out": S, "db": S}, ["intent", "out"]), _power, long=True),
         ToolSpec("formal_template", "Generate a project-bound safety monitor. No verification run.",
                  schema({"kind": S, "out": S, "entries": I, "width": I}, ["kind", "out"]),
                  _template, long=True),

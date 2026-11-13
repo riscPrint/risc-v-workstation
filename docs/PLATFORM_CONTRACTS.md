@@ -3633,6 +3633,16 @@ bindings, optional SpinalDB locations, and the input capture. `status=pass` mean
 only that this SMT query is UNSAT. `minimal=true` means deletion minimality was
 checked with SAT on each single-constraint removal. Unknown removal results set
 `minimal=false`. This report is not a coverage exclusion or an RTL proof result.
+### Sampled power intent generation
+
+`rvw.power-intent/1` declares project domains, initial supply states, legal
+transitions, selected checks, data widths, wake bounds and DFT access constraints.
+It requires `always_on_sampled` observation semantics. See
+`SpinalChecks/power/README.md` for each module's transaction and reset contract.
+`rvw.power-generation/1` reports `generated`, state encodings and DFT binding
+inventory. A resolved path confirms presence only. Neither format supplies C7
+proof, physical-power, scan-coverage or ATPG evidence. UPF import is unsupported.
+
 ### Project CSR generation
 
 `rvw.csr/1` describes CSR addresses, project reset values, privilege, presence,

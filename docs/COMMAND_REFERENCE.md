@@ -713,7 +713,7 @@ usage: rvw farm dashboard [-h] --root ROOT --out OUT [--core CORE] [--suite
 
 ```text
 usage: rvw formal [-h] [--project PROJECT]
-    {device-events,upf,csr,bug-hunt,model-live,rtl-grid,rtl-refine,relation-strengthen,doctor,engines,engine-race,engine-bench,model-grid,security,regress,properties,simulate,liveness,sva-lower,template,contracts,strengthen,testplan,proof-core,apps,autocheck,bench,cex,sby-history,sby-regress,prove,depth-search,rvfi-generate,sail-zicond,custom-isa,profiles,riscv,connectivity,datapath,equiv,bmc,from-sim,swarm,xprop,x-context,x-sweep}
+    {device-events,upf,power,csr,bug-hunt,model-live,rtl-grid,rtl-refine,relation-strengthen,doctor,engines,engine-race,engine-bench,model-grid,security,regress,properties,simulate,liveness,sva-lower,template,contracts,strengthen,testplan,proof-core,apps,autocheck,bench,cex,sby-history,sby-regress,prove,depth-search,rvfi-generate,sail-zicond,custom-isa,profiles,riscv,connectivity,datapath,equiv,bmc,from-sim,swarm,xprop,x-context,x-sweep}
     ...
 ```
 
@@ -729,6 +729,13 @@ usage: rvw formal device-events [-h] --model MODEL --trace TRACE --out OUT
 ```text
 usage: rvw formal upf [-h] --source SOURCE --bindings BINDINGS --out OUT
     [--project PROJECT]
+```
+
+### `rvw formal power`
+
+```text
+usage: rvw formal power [-h] --intent INTENT [--db DB] --out OUT [--project
+    PROJECT]
 ```
 
 ### `rvw formal csr`
@@ -2634,6 +2641,14 @@ Starts a background job: yes.
 Check fair recurrent progress on an explicit finite graph. No RTL translation claim.
 
 Arguments: `out` (required), `manifest` (required).
+
+Starts a background job: yes.
+
+### `formal_power`
+
+Generate sampled low-power checks and declared DFT inventory. No proof or ATPG run.
+
+Arguments: `intent` (required), `out` (required), `db`.
 
 Starts a background job: yes.
 

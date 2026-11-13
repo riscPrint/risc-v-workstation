@@ -1,0 +1,58 @@
+{
+  "schema": "rvw.power-intent/1",
+  "event_model": "always_on_sampled",
+  "domains": [
+    {
+      "name": "core",
+      "width": 8,
+      "wake_bound": 4,
+      "checks": [
+        "clock_gate",
+        "isolation",
+        "retention",
+        "test_isolation"
+      ],
+      "initial": "on",
+      "states": {
+        "on": {
+          "power_good": true,
+          "isolated": false
+        },
+        "isolated": {
+          "power_good": true,
+          "isolated": true
+        },
+        "off": {
+          "power_good": false,
+          "isolated": true
+        }
+      },
+      "transitions": [
+        [
+          "on",
+          "isolated"
+        ],
+        [
+          "isolated",
+          "off"
+        ],
+        [
+          "off",
+          "isolated"
+        ],
+        [
+          "isolated",
+          "on"
+        ]
+      ]
+    }
+  ],
+  "dft": [
+    {
+      "signal": "core.scan",
+      "role": "scan_mode",
+      "controllability": "test strap only",
+      "observability": "not measured"
+    }
+  ]
+}
