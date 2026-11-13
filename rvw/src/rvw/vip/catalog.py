@@ -15,7 +15,9 @@ TYPES = {
     'spinal.lib.com.uart.Uart': 'uart',
     'spinal.lib.com.spi.SpiMaster': 'spi',
 }
-MODULES = ('apb','ahb','axis','axi','tilelink','uart','spi','i2c','gpio')
+MODULES = ('apb','ahb','axis','axi','tilelink','uart','spi','i2c','gpio',
+           'wishbone','sram','interrupt','clock_reset','jtag','coherent','stress',
+           'dram','pcie','ethernet','rnm')
 
 
 def agents():
@@ -51,13 +53,24 @@ def skeleton(db, out, bus=None, clock='clk', reset='reset_n'):
                     mapping[key]=path
         if not mapping: raise QueryError('no captured signals for bus '+prefix)
         # Prefix-free adapters and prefix adapters share one explicit view.
+        if proto=='uart':
+            mapping={ {'txd':'tx','rxd':'rx'}.get(k,k):v for k,v in mapping.items()}
         bound={'clk':clock,'reset_n':reset}
-        bound.update({(k if proto in ('apb','ahb') else 'bus_'+k):v for k,v in mapping.items()})
+        bound.update({(k if proto in ('apb','ahb','uart') else 'bus_'+k):v for k,v in mapping.items()})
         module=importlib.import_module('rvw.vip.'+proto)
         if proto in ('apb','ahb'):
             missing=set(module.Pins.__dataclass_fields__)-set(bound)
             if missing: raise QueryError('missing required agent pins: '+', '.join(sorted(missing)))
-        args='view' if proto in ('apb','ahb') else "view, 'bus'"
+        if proto=='uart': required={'tx','rx'}
+        elif proto=='spi': required={'bus_'+k for k in ('cs_n','sclk','mosi','miso')}
+        elif proto=='axi':
+            adapter=module.CocotbAgent(None,'bus',lite=selected['spinal_type'].endswith('.AxiLite4'))
+            required={'bus_'+ch+suffix for ch in ('aw','w','b','ar','r') for suffix in ('valid','ready')}
+            required|={'bus_'+ch+pin for ch in ('aw','w','b','ar','r') for _,pin in adapter.fields(ch)}
+        else: required=set()
+        missing=required-set(bound)
+        if missing: raise QueryError('missing required agent pins: '+', '.join(sorted(missing)))
+        args='view' if proto in ('apb','ahb','uart') else "view, 'bus'"
         if selected['spinal_type'].endswith('.AxiLite4'): args+=', lite=True'
         text='''"""Generated bench skeleton. Add reset, stimulus and expected results before use."""
 from types import SimpleNamespace

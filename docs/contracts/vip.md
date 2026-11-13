@@ -62,3 +62,13 @@ receives commands with integer cycle, operation, bank, row, column and
 Missing models or response evidence are errors. The reduced independent
 checker covers ACT/PRE/RD/WR/REF and declared cycle timing. Mock callbacks
 qualify only the contract. No native-model, JEDEC or board signoff follows.
+
+### VIP bench skeleton contract
+
+`rvw vip list` and MCP `vip_list` return an agent inventory. `vip_buses`
+reads exact Spinal bundle classes from C6. `vip_bench` writes one new Python
+cocotb skeleton and returns `status: skeleton`, the selected bus and explicit
+pin bindings. It never reports verification success. The skeleton stops
+until project stimulus and expectations are supplied. Clock and active-low
+reset paths are caller selections. Output files are never overwritten.
+Unsupported types and ambiguous bus selections are errors.

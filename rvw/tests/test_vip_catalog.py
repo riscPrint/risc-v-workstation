@@ -25,7 +25,7 @@ def typed_db(gcd_db,tmp_path):
 
 
 def test_inventory_cli_and_mcp(capsys):
-    assert len(agents()['agents'])==9
+    assert len(agents()['agents'])==20
     assert main(['vip','list'])==0
     assert json.loads(capsys.readouterr().out)==agents()
     assert {t.name for t in mcp_tools()}=={'vip_list','vip_buses','vip_bench'}
@@ -49,3 +49,14 @@ def test_missing_type_and_pin(typed_db,tmp_path):
     with sqlite3.connect(typed_db) as db: db.execute("DELETE FROM signals WHERE name='paddr'")
     with pytest.raises(QueryError,match='missing required'): skeleton(typed_db,tmp_path/'no.py')
     assert not (tmp_path/'no.py').exists()
+
+
+def test_uart_uses_named_serial_handles(typed_db,tmp_path):
+    with sqlite3.connect(typed_db) as db:
+        db.execute("UPDATE bundles SET class_name='spinal.lib.com.uart.Uart' WHERE id=999")
+        db.execute("UPDATE signals SET name='txd',path='io_bus_txd',spinal_path='io.bus.txd' WHERE name='paddr'")
+        db.execute("UPDATE signals SET name='rxd',path='io_bus_rxd',spinal_path='io.bus.rxd' WHERE name='prdata'")
+    target=tmp_path/'uart_bench.py';report=skeleton(typed_db,target)
+    assert report['bindings']['tx']=='io_bus_txd'
+    assert report['bindings']['rx']=='io_bus_rxd'
+    assert 'CocotbAgent(view)' in target.read_text()
