@@ -244,6 +244,31 @@ build has null version/revision. These labels are package provenance, not binary
 attestation. The captured library and shim hashes identify the executed bytes.
 C1 from an RTL-only run does not imply that Spike ran.
 
+### Native checkpoint envelope (`rvw.native-checkpoint/1`)
+
+This adapter API format is distinct from from-reset replay descriptors and
+portable architectural checkpoints. No bundled adapter currently provides the
+required live native port.
+
+The JSON envelope contains `payload` and `sha256`. The digest covers UTF-8 JSON
+of the payload with sorted keys, compact separators and no non-finite numbers.
+The payload contains `schema`, `identity`, `state` and `native`. `native` is
+nonempty strict base64. `identity` contains exactly four lowercase SHA-256
+fields: `rtl`, `native_build`, `harness`, `stimulus`. All must equal the expected
+restoring instance identities.
+
+`state` contains exactly `scheduler`, `clock`, `memory`, `pending`, `rng`,
+`devices`, `interrupts`, `monitors`, `rvfi`, `stimulus` and `counters`. Each adapter defines
+and validates its component representations. All components must be present
+and non-null. Empty inventories must be explicit. The native build and harness
+identities bind these representations to their implementation.
+
+Save and restore require a stopped quiescent instance and an empty external
+effects inventory. Validate bytes, identity and adapter state before mutation.
+Discard an instance after a failed restore. A restored snapshot is not an
+equivalence verdict. Qualification needs a fresh-process native restore and
+complete C2 suffix and terminal-counter comparison with uninterrupted execution.
+
 ## C2. RVFI trace (`rvfi.jsonl`)
 
 First line is a header, then one object per retired instruction in `order`:

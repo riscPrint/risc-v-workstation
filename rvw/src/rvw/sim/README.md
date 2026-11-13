@@ -263,3 +263,28 @@ Persistent regression workers use separate process groups. See
 [the regression guide](../regress/README.md) for defaults and failure recovery.
 Each worker has a serial server and reuses its compiled model. This does not
 provide live snapshots or prove reset equivalence for an adapter.
+
+## Native snapshot envelope API
+
+`rvw.sim.checkpoint` provides `save`, `load` and `restore` for adapter authors.
+The adapter must provide a `SnapshotPort` and stop simulation advancement at a
+quiescent boundary. The port saves native model bytes and eleven explicit harness
+components: scheduler, clock, memory, pending transactions, RNG, devices,
+interrupts, monitors, RVFI state, stimulus position and counters. Empty inventories use empty
+containers. A missing component is an error.
+
+The `rvw.native-checkpoint/1` envelope binds these bytes to SHA-256 identities
+for RTL, native build, harness and stimulus. Load validates the whole envelope
+before calling the adapter. The adapter then checks its own state format before
+it installs state. Discard the model after any restore exception. Save requires
+a new file. External effects, such as host sockets, are unsupported.
+
+This is an adapter API. The SpinalHDL 1.15.0 native interface has no model
+save/restore methods. No bundled adapter implements this port yet. The envelope
+tests use a fixture port. They do not establish native checkpoint equivalence.
+From-reset replay descriptors remain a separate format and operation.
+
+A native smoke test uses a direct Verilator `--savable` accumulator. It saves
+the model, clock time, PRNG, memory word and monitor counter at cycle 8. A fresh
+process restores these values. Its remaining 12 samples must equal the
+uninterrupted suffix. This does not qualify the Spinal bridge or a RISC-V core.
