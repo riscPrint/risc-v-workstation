@@ -3385,3 +3385,19 @@ Generation does not execute them. The
 literal operations. The linked composed VexRiscv example ran both native
 consumers and compared the same 12 observed MMIO values per consumer.
 >>>>>>> e1d1c652 (feat(formal): execute literal scenarios on the vexriscv soc)
+
+### Nested eventual milestones
+
+The liveness frontend accepts `req |-> s_eventually (a && s_eventually b)`.
+It also accepts further nested milestones, up to eight Boolean terms. A later
+milestone can hold at the same sample as the prior milestone. Every request
+must complete the ordered chain. New requests cannot discharge older requests
+before their own milestones occur. A separate obligation set prevents new
+requests from blocking acceptance after older requests complete.
+
+The emitted acceptance signal must hold infinitely often. No finite deadline
+replaces eventual completion. The native corpus compares periodic traces with
+an independent existential oracle. It also runs positive and negative
+liveness-to-safety jobs. This is a subset of nested composition. Nested until,
+unbounded sequence concatenation, disjunction of temporal operands, formal
+reset cancellation and multi-clock proof remain unsupported.

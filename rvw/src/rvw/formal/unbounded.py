@@ -77,6 +77,10 @@ def emit(text, clock, prefix):
     request = monitor.delay(f'(({request}) != 0)', offset, 'start')[-1] if offset else request
     event = re.fullmatch(r's_eventually\s+(.+)', rhs, re.S)
     if event:
+        from .nested_eventually import milestones, emit as emit_nested
+        terms = milestones(rhs)
+        if len(terms) > 1:
+            return emit_nested(monitor, request, terms)
         pending = monitor.pending(request, monitor.expression(event[1]))
         return monitor.finish(f'!{pending}'), {}
 
