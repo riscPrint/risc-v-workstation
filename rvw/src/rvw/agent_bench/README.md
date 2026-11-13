@@ -121,3 +121,39 @@ MCP tool: `agent_bench_trial`. The scripted client uses the same external MCP
 path as other clients. `careless`, `disconnect` and `timeout` arguments exercise
 negative paths. No LLM trial is implied by a scripted result. This command uses
 the fixture track. It cannot earn native repair acceptance or replace review.
+
+## Native repair loop
+
+```sh
+rvw agent-bench repair-prepare --pack examples/agent-bench/native.json --task xor \
+  --source /path/to/pinned/core --out /tmp/repair-task
+# The agent works in /tmp/repair-task/workspace.
+rvw agent-bench repair-check --challenge /tmp/repair-task/challenge.json \
+  --out /tmp/repair-check
+```
+
+Preparation copies the core and project files into a disposable workspace.
+The public `TASK.md` names the symptom and failing program. The example includes
+its adapter, ISA ELFs and private `vex-agent` lock. The original checkout stays
+unchanged. Preparation runs the seeded failure and passing controls before the
+agent starts. A missing reproduction is inconclusive. For a reproduced failure,
+it runs `rvw bundle` without reruns and `rvw cosim check`. It retains both tool
+outputs, errors and exit codes. A missing reference tool cannot earn a match.
+
+The agent follows `rvw agent guide --workflow test-fails --json`. The checker
+copies only candidate core source changes into a fresh seeded workspace. It
+uses the evaluator's programs and adapter. Edits to project files or tests do
+not change the checks. Each check keeps a candidate patch, its digest, source
+file list, ignored edits and C1/C2 evidence. Results are `repair_verified`,
+`repair_rejected` or `inconclusive`. A verified repair requires the reproduced
+failure, repaired fail-to-pass programs and unchanged passing controls with
+matching ELF/seed/config identities and different RTL hashes.
+
+MCP tools: `agent_bench_repair_prepare`, `agent_bench_repair_check`.
+This is a bounded benchmark repair check. C4 acceptance is not claimed. A human
+must review the retained patch and results. Dynamic C6 statement joins and
+cause ranking remain open in #27. The root cause stays unknown until such
+observations exist. Fixture tests of this loop are not native repair evidence.
+
+The checker also requires the same recorded harness revision in both runs.
+A harness change between failure and repair leaves the check inconclusive.

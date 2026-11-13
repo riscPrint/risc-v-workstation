@@ -261,5 +261,32 @@
         ]
       }
     }
+  ],
+  "project_copy": [
+    {
+      "source": "../vexriscv/.gitignore",
+      "dest": ".gitignore"
+    },
+    {
+      "source": "../vexriscv/rvw.toml",
+      "dest": "rvw.toml"
+    },
+    {
+      "source": "../vexriscv/rvw",
+      "dest": "rvw"
+    }
+  ],
+  "project_mutations": [
+    {
+      "file": "rvw.toml",
+      "find": "lock = \"vex\"",
+      "replace": "lock = \"vex-agent\""
+    }
+  ],
+  "program_copy": [
+    {
+      "source": "../vexriscv/rvw/out/isa",
+      "dest": "rvw/out/isa"
+    }
   ]
 }

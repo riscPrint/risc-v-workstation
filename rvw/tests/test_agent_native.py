@@ -34,7 +34,7 @@ def test_occurrence_mutation_round_trip(tmp_path):
 
 
 def evidence(status, rtl='a' * 64):
-    return {'status': status, 'identity': {'rtl_sha256': rtl, 'elf_sha256': 'e' * 64, 'seed': 1, 'config': 'default'}}
+    return {'status': status, 'identity': {'rtl_sha256': rtl, 'elf_sha256': 'e' * 64, 'seed': 1, 'config': 'default', 'source': {'tools_rev': 'c' * 40}}}
 
 
 def test_qualification_requires_failure_repair_controls_and_changed_rtl():
@@ -50,6 +50,9 @@ def test_qualification_requires_failure_repair_controls_and_changed_rtl():
     assert native.qualification(task, seeded, {n: evidence('pass') for n in seeded}) == 'inconclusive'
     wrong = copy.deepcopy(repaired)
     wrong['broken']['identity']['elf_sha256'] = 'f' * 64
+    assert native.qualification(task, seeded, wrong) == 'inconclusive'
+    wrong = copy.deepcopy(repaired)
+    wrong['broken']['identity']['source']['tools_rev'] = 'd' * 40
     assert native.qualification(task, seeded, wrong) == 'inconclusive'
 
 
@@ -108,3 +111,27 @@ def test_batch_requires_matching_trace_identity_and_complete_end(tmp_path, monke
     assert native.run_tests(pack, tmp_path, tmp_path, tmp_path / 'good', ['broken'], 1)['broken']['status'] == 'pass'
     variant['elf_sha256'] = 'f' * 64
     assert native.run_tests(pack, tmp_path, tmp_path, tmp_path / 'bad', ['broken'], 1)['broken']['status'] == 'inconclusive'
+
+
+def test_incomplete_seeded_batch_does_not_start_a_repair_batch(tmp_path, monkeypatch):
+    source = tmp_path / 'source'
+    (source / 'src').mkdir(parents=True)
+    (source / 'src/a').write_text('correct')
+    native.git(source, 'init', '-q')
+    native.git(source, 'add', '-A')
+    native.git(source, 'commit', '-qm', 'input')
+    task = {'id': 'a', 'private': {'mutation': {'file': 'src/a', 'find': 'correct', 'replace': 'wrong'},
+                                  'fail_to_pass': ['broken'], 'pass_to_pass': ['control']}}
+    pack = {'schema': native.SCHEMA, 'source': {'revision': native.git(source, 'rev-parse', 'HEAD'), 'copy': ['src']},
+            'tasks': [task]}
+    pack_path = tmp_path / 'pack.json'
+    pack_path.write_text(json.dumps(pack))
+    calls = []
+    def run(*args):
+        calls.append(args)
+        return {name: {'status': 'inconclusive'} for name in ('broken', 'control')}
+    monkeypatch.setattr(native, 'run_tests', run)
+    report = native.qualify(pack_path, source, tmp_path / 'qualification')
+    assert len(calls) == 1
+    assert report['tasks'][0]['status'] == 'inconclusive'
+    assert report['tasks'][0]['repaired'] == {}
