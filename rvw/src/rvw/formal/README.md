@@ -2122,3 +2122,27 @@ discharge those comparisons. Generated instruction models contain no basis
 restriction. The RV32 lowering expands the pinned rotate helpers and carryless
 loops. It replaces inequality with negated equality, fixes zero widths, and
 replaces temporary-concatenation slices with equivalent sized casts for Yosys.
+### Sampled generated-clock equivalence
+
+`formal equiv --sampled-events --unmatched-state prove` can compare generated
+clocks and simple level-sensitive clock-gating latches. Both complete wrappers
+are lowered with Yosys `clk2fflogic` before eqy partitions are built. State stays
+inside closed output cones. No state-equality cutpoints are added.
+
+Repeat `--stable-at-edge INPUT` to require that a data input has the same value
+on the samples immediately before and at a root-clock rising edge. For example,
+use `--stable-at-edge en --stable-at-edge a` for a clock-gating enable and data
+input. Each assumption appears in the captured wrapper and `event_model` record.
+These constraints do not fix input values or impose a clock frequency.
+
+The model observes one global input sample per formal step. It does not model
+multiple transitions between samples, analog glitches, setup/hold margins or
+physical clock-tree behavior. Reset and settle count root-clock edges. Stalls
+are allowed. Yosys `clk2fflogic` defines the sampled cell update semantics.
+
+A completed sampled-event run reports `conditional` with `contract_verdict`.
+It always exits 1. It cannot grant unconditional hardware equivalence.
+A conditional counterexample can use the existing `formal cex` simulation path. The
+`formal_equiv` MCP tool exposes both options. Advisory dsec is refused in this
+mode. Asynchronous state controls remain refused. Default equivalence and other
+formal commands keep their existing latch and generated-clock rejection.

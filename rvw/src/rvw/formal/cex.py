@@ -104,7 +104,8 @@ def _run(args):
     capture = Capture(out / 'inputs')
     saved = capture.file(source).copy
     original = json.loads(saved.read_text())
-    equivalence = original.get('schema') == 'rvw.formal.equiv/1' and original.get('status') == 'not_equivalent'
+    equivalence = original.get('schema') == 'rvw.formal.equiv/1' and (original.get('status') == 'not_equivalent' or
+        (original.get('status') == 'conditional' and original.get('contract_verdict') == 'not_equivalent'))
     if not equivalence and (original.get('schema') != 'rvw.formal/1' or original.get('flow') != 'bmc' or original.get('status') != 'fail'):
         raise ValueError('replay requires a failing BMC or a not_equivalent result')
     traces = original.get('traces', [])

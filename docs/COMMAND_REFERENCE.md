@@ -1245,12 +1245,13 @@ usage: rvw formal datapath [-h] [--binding BINDING] --rtl RTL --model MODEL
 ### `rvw formal equiv`
 
 ```text
-usage: rvw formal equiv [-h] [--blackbox-contract BLACKBOX_CONTRACT] [--gold
-    GOLD [GOLD ...]] [--gate GATE [GATE ...]] [--gold-rev GOLD_REV]
-    [--gate-rev GATE_REV] [--config CONFIG] --top TOP [--clock CLOCK] [--reset
-    RESET] [--reset-active {high,low}] [--reset-cycles RESET_CYCLES] [--settle
-    SETTLE] [--dsec] [--pair GOLD=GATE] [--latency LATENCY] [--unmatched-state
-    {refuse,prove}] [--timeout TIMEOUT] --out OUT [--json] [--project PROJECT]
+usage: rvw formal equiv [-h] [--sampled-events] [--stable-at-edge INPUT]
+    [--blackbox-contract BLACKBOX_CONTRACT] [--gold GOLD [GOLD ...]] [--gate
+    GATE [GATE ...]] [--gold-rev GOLD_REV] [--gate-rev GATE_REV] [--config
+    CONFIG] --top TOP [--clock CLOCK] [--reset RESET] [--reset-active
+    {high,low}] [--reset-cycles RESET_CYCLES] [--settle SETTLE] [--dsec]
+    [--pair GOLD=GATE] [--latency LATENCY] [--unmatched-state {refuse,prove}]
+    [--timeout TIMEOUT] --out OUT [--json] [--project PROJECT]
 ```
 
 ### `rvw formal bmc`
@@ -2055,7 +2056,14 @@ usage: rvw soc check [-h] --bindings BINDINGS --db DB [--transactions
 
 ```text
 usage: rvw uvm [-h] [--project PROJECT]
-    {features,build,run,list,regress,coverage-merge} ...
+    {new,features,build,run,list,regress,coverage-merge} ...
+```
+
+### `rvw uvm new`
+
+```text
+usage: rvw uvm new [-h] --db DB --soc SOC --out OUT [--rtl RTL [RTL ...]]
+    [--project PROJECT]
 ```
 
 ### `rvw uvm features`
@@ -3055,7 +3063,7 @@ Starts a background job: yes.
 
 Prove closed RTL output cones. Blackbox models produce conditional evidence only.
 
-Arguments: `project`, `gold`, `gate`, `gold_rev`, `gate_rev`, `config`, `top` (required), `out` (required), `clock`, `reset`, `reset_active`, `reset_cycles`, `settle`, `latency`, `dsec`, `pair`, `unmatched_state`, `blackbox_contract`, `timeout`.
+Arguments: `project`, `gold`, `gate`, `gold_rev`, `gate_rev`, `config`, `top` (required), `out` (required), `clock`, `reset`, `reset_active`, `reset_cycles`, `settle`, `latency`, `dsec`, `pair`, `unmatched_state`, `blackbox_contract`, `sampled_events`, `stable_at_edge`, `timeout`.
 
 Starts a background job: yes.
 
@@ -3824,6 +3832,14 @@ Starts a background job: no.
 List tests declared by a project UVM bench.
 
 Arguments: `manifest` (required).
+
+Starts a background job: no.
+
+### `uvm_new`
+
+Generate an APB pyuvm register-reset bench from SpinalDB and a SoC map.
+
+Arguments: `db` (required), `soc` (required), `out` (required), `rtl`.
 
 Starts a background job: no.
 
