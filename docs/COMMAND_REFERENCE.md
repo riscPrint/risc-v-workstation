@@ -408,8 +408,14 @@ usage: rvw farm dashboard [-h] --root ROOT --out OUT [--core CORE] [--suite
 
 ```text
 usage: rvw formal [-h] [--project PROJECT]
-    {security,template,contracts,strengthen,proof-core,apps,bench,cex,sby-history,sby-regress,prove,depth-search,riscv,connectivity,equiv,bmc,from-sim,swarm,xprop,x-context,x-sweep}
+    {csr,security,template,contracts,strengthen,proof-core,apps,bench,cex,sby-history,sby-regress,prove,depth-search,riscv,connectivity,equiv,bmc,from-sim,swarm,xprop,x-context,x-sweep}
     ...
+```
+
+### `rvw formal csr`
+
+```text
+usage: rvw formal csr [-h] --model MODEL --out OUT [--project PROJECT]
 ```
 
 ### `rvw formal security`
@@ -1139,7 +1145,7 @@ usage: rvw workloads verify [-h] [--json] --build BUILD --out OUT [--oracle
 
 ## MCP tools
 
-The default server exposes 75 built-in tools, including the four job tools.
+The default server exposes 76 built-in tools, including the four job tools.
 `--only` filters packages. `RVW_MCP_PLUGINS` can add tools.
 `rvw mcp --list --json` returns full input schemas.
 CLI commands without an MCP entry are CLI-only.
@@ -1423,6 +1429,14 @@ Starts a background job: yes.
 Replay a captured failing BMC witness with edited inputs through Yosys sim. Not a proof.
 
 Arguments: `result` (required), `out` (required), `trace_index`, `edit`, `hgldd`, `pdg`, `criterion`, `at_time`, `open`, `timeout`.
+
+Starts a background job: yes.
+
+### `formal_csr`
+
+Generate CSR monitors, directed assembly and coverage. Does not run verification.
+
+Arguments: `model` (required), `out` (required).
 
 Starts a background job: yes.
 

@@ -70,12 +70,21 @@ def _runner(command):
     return run
 
 
+def _csr(job, **args):
+    code = job.run(_argv('csr', args))
+    if code:
+        raise ToolError('CSR generation failed', {'exit_code': code, 'log_tail': job.tail(20)})
+    return json.loads((Path(args['out']) / 'result.json').read_text())
+
+
 def mcp_tools():
     return [
         ToolSpec("formal_proof_core", "Extract a deletion-minimal solver core for one named SMT query. Not an RTL proof.",
                  schema({"smt2": S, "mapping": S, "db": S, "solver": S,
                          "timeout": {"type": "number", "exclusiveMinimum": 0}, "out": S},
                         ["smt2", "mapping", "out"]), _runner("proof-core"), long=True),
+        ToolSpec("formal_csr", "Generate CSR monitors, directed assembly and coverage. Does not run verification.",
+                 schema({"model": S, "out": S}, ["model", "out"]), _csr, long=True),
         ToolSpec("formal_cex", "Replay a captured failing BMC witness with edited inputs through Yosys sim. Not a proof.",
                  schema({"result": S, "out": S, "trace_index": I,
                          "edit": {"type": "array", "items": S},

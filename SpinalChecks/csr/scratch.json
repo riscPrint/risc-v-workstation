@@ -1,0 +1,13 @@
+{
+  "schema": "rvw.csr/1",
+  "xlen": 64,
+  "source": "RISC-V privileged architecture, machine and supervisor scratch registers",
+  "csrs": [
+    {"name": "mscratch", "address": "0x340", "privilege": "M", "reset": 0,
+     "assembly_safe": true,
+     "fields": [{"lsb": 0, "width": 64, "access": {"U": "RO", "S": "RO", "M": "RW"}}]},
+    {"name": "sscratch", "address": "0x140", "privilege": "S", "reset": 0,
+     "assembly_safe": true,
+     "fields": [{"lsb": 0, "width": 64, "access": {"U": "RO", "S": "RW", "M": "RW"}}]}
+  ]
+}

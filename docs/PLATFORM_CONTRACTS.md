@@ -2808,3 +2808,11 @@ bindings, optional SpinalDB locations, and the input capture. `status=pass` mean
 only that this SMT query is UNSAT. `minimal=true` means deletion minimality was
 checked with SAT on each single-constraint removal. Unknown removal results set
 `minimal=false`. This report is not a coverage exclusion or an RTL proof result.
+### Project CSR generation
+
+`rvw.csr/1` describes CSR addresses, project reset values, privilege, presence,
+field ranges, per-privilege access, legal values, legalization tables and bounded
+side effects. See `SpinalChecks/csr/README.md` for the exact transaction binding.
+`rvw formal csr` and `formal_csr` emit `rvw.csr-generation/1` with status
+`generated`. This status records artifact generation only. It is not C7 proof
+or C1 execution evidence. `coverage.json` uses existing functional group data.
