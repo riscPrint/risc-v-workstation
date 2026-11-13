@@ -1490,7 +1490,7 @@ Run `python3 scripts/formal-support-table.py` to regenerate the table.
 
 Named properties can declare packed `logic`/`reg` variables or 32-bit
 `int`/`integer` variables. Signed and unsigned declarations retain their type.
-A Boolean antecedent can capture one or more independent design expressions:
+A Boolean antecedent can capture one or more design expressions:
 
 ```systemverilog
 property response;
@@ -1505,9 +1505,16 @@ cannot overwrite an earlier attempt. The consequent can use the existing finite
 sequence operators. Capture-to-use distance is limited to 64 clock ticks.
 The lowering report includes optional `local_variables` width/signedness data.
 
+Assignments run in capture-list order. A later assignment can read a local
+that an earlier assignment set. Each assignment applies the local's declared
+width and sign before a later assignment reads it. Reassigning a local does not
+change a value already used by another local. For example,
+`(req,v=data,w=v+4,v=v+1)` retains the earlier `v` value in `w`.
+A dependent assignment can select bits from an earlier local value.
+
 This subset requires one Boolean capture antecedent and one implication.
-Reassignment, captures that depend on another local, initialized declarations,
-flow-sensitive antecedents, local slices, sampled uses of locals and additional
+Reads before assignment, initialized declarations, flow-sensitive antecedents,
+local slices in the consequent, sampled uses of locals and additional
 local types remain refused. Local clocks and local reset conditions are refused.
 The same lowered captures run in formal and native simulation. This is not full
 local-variable flow or SystemVerilog scheduling qualification.

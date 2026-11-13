@@ -54,8 +54,16 @@ def capture(antecedent, variables, clock, prefix, sequence_names):
         if not match or match[1] not in variables:
             raise Unsupported('local_assignment', assignment)
         name, expression = match.groups()
-        if name in bound or local.search(expression):
-            raise Unsupported('local_reassignment')
+        for call in PATTERN.finditer(expression):
+            argument, _ = _group(expression, call.end()-1)
+            if local.search(argument):
+                raise Unsupported('local_sampled_use')
+        def previous(match):
+            variable = match[0]
+            if variable not in bound:
+                raise Unsupported('local_before_assignment', variable)
+            return bound[variable]
+        expression = local.sub(previous, expression)
         lowered, history = emit(expression, clock, f'{prefix}_expression{index}')
         lines.extend(history)
         wire = f'{prefix}_value{index}'

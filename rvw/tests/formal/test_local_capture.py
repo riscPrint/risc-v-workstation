@@ -6,7 +6,7 @@ import pytest
 from rvw.formal.temporal import Unsupported, lower
 
 
-SUPPORT_FEATURES = ['local variables']
+SUPPORT_FEATURES = ['local variables', 'local assignment flow']
 
 
 def property_source(declaration, expression):
@@ -23,8 +23,8 @@ def test_typed_metadata():
     ('logic v;', 'req |=> v', 'local_capture_antecedent'),
     ('logic v;', '(req,v=data) |=> $past(v)', 'local_sampled_use'),
     ('logic [7:0] v;', '(req,v=data) |=> v[0]', 'local_select'),
-    ('int v;', '(req,v=data,v=v+1) |=> out==v', 'local_reassignment'),
-    ('int v,w;', '(req,v=data,w=v) |=> out==w', 'local_reassignment'),
+    ('int v,w;', '(req,v=w,w=data) |=> out==w', 'local_before_assignment'),
+    ('int v;', '(req,v=data,v=$past(v)) |=> out==v', 'local_sampled_use'),
     ('bit v;', '(req,v=data) |=> out==v', 'local_declaration'),
     ('logic v;', 'disable iff(v) (req,v=data) |=> out==v', 'local_disable'),
 ])
@@ -86,3 +86,27 @@ def test_native_adjacent_endmodule(tmp_path):
     result = subprocess.run(['nice','-n','10','yosys','-Q','-p','read_verilog -sv -formal m.sv; prep -top m'],
                             cwd=tmp_path,capture_output=True,text=True,timeout=20)
     assert result.returncode == 0, result.stdout + result.stderr
+
+
+@pytest.mark.parametrize('mutant', [False,True])
+def test_native_ordered_assignments_and_overlapping_attempts(tmp_path, mutant):
+    if not shutil.which('sby') or not shutil.which('yices-smt2'):
+        pytest.skip('SBY and Yices required')
+    source = """module m(input clk);
+reg [7:0] data=250, plus_one=0, plus_four=0;
+always @(posedge clk) begin data<=data+1; plus_one<=data+1; plus_four<=data+4; end
+wire req=1;
+"""
+    source += property_source('logic [7:0] v,w;',
+        '(req,v=data,w=v+4,v=v+1) |=> (plus_one==v && plus_four==w'+(' +1)' if mutant else ')'))
+    _native(tmp_path,source+'endmodule',mutant)
+
+
+@pytest.mark.parametrize('mutant', [False,True])
+def test_native_ordered_assignment_truncation_and_sign(tmp_path, mutant):
+    if not shutil.which('sby') or not shutil.which('yices-smt2'):
+        pytest.skip('SBY and Yices required')
+    source='module m(input clk); wire req=1; '
+    source+=property_source('logic signed [3:0] v; int w;',
+        '(req,v=7,v=v+1,w=v) |=> w=='+('7' if mutant else '-8'))
+    _native(tmp_path,source+'endmodule',mutant)
