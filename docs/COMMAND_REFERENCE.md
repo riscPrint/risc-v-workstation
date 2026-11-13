@@ -2570,8 +2570,8 @@ usage: rvw sec gadgets [-h] --out OUT [--seed SEED] [--threshold THRESHOLD]
 
 ```text
 usage: rvw sec ift-core [-h] --binding BINDING --policy POLICY (--elf ELF |
-    --asm ASM) --out OUT [--mode {precise,conservative}] [--soc SOC]
-    [--project PROJECT] [--json]
+    --asm ASM) --out OUT [--timeout TIMEOUT] [--mode {precise,conservative}]
+    [--soc SOC] [--project PROJECT] [--json]
 ```
 
 ### `rvw sec isolation`
@@ -5345,7 +5345,7 @@ Starts a background job: yes.
 
 Track secret memory words and registers through a whole core in Verilator.
 
-Arguments: `binding` (required), `policy` (required), `out` (required), `elf`, `asm`, `mode`, `soc`.
+Arguments: `binding` (required), `policy` (required), `out` (required), `timeout`, `elf`, `asm`, `mode`, `soc`.
 
 Starts a background job: yes.
 
