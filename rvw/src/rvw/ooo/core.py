@@ -29,6 +29,7 @@ class Config:
     physical_float_registers: int = 0
     branch_penalty: int = 0
     branch_speculation: bool = False
+    branch_prediction: str = "sequential"
     issue_order: str = "out_of_order"
     memory_policy: str = "ordered"
     dependence_entries: int = 1024
@@ -92,6 +93,10 @@ class Config:
             raise ValueError("physical_float_registers must be zero (unbounded) or at least 33")
         if self.issue_order not in ("in_order", "out_of_order"):
             raise ValueError("issue_order must be in_order or out_of_order")
+        if self.branch_prediction not in ("sequential", "static_btfn"):
+            raise ValueError("unsupported branch_prediction")
+        if self.branch_prediction != "sequential" and any(k in self.components for k in ("branch", "btb", "ras", "indirect")):
+            raise ValueError("select static prediction or component prediction")
         if type(self.branch_speculation) is not bool:
             raise ValueError("branch_speculation must be boolean")
         if type(self.branch_penalty) is not int or self.branch_penalty < 0:
@@ -210,8 +215,8 @@ def _simulate(instructions, config, max_cycles=1_000_000, predictor=None, memory
     blocked_until = 0
     unresolved_branch = None
     # Predictors implement predict(pc, fallthrough) and update(pc, actual_next).
-    from .structures import StaticPredictor
-    predictor = predictor or StaticPredictor()
+    from .structures import StaticPredictor, BackwardPredictor
+    predictor = predictor or (BackwardPredictor() if config.branch_prediction == "static_btfn" else StaticPredictor())
 
     from .control import SERIAL
     from .rename import elimination, fuses
@@ -542,7 +547,7 @@ def run(config_path, trace_path, max_cycles=1_000_000, effective_config=None):
     import rvw.common.riscv as decoder
     import rvw.cosim.trace as parser
     engine = b"".join(Path(p).read_bytes() for p in (__file__, str(Path(__file__).with_name("structures.py")), decoder.__file__, parser.__file__))
-    engine += b"".join(Path(__file__).with_name(name + ".py").read_bytes() for name in ("frontend", "execution", "translation", "attribution", "native", "rename", "dependence", "custom", "project", "components", "control", "floating", "component_events", "regions", "memory_rename"))
+    engine += b"".join(Path(__file__).with_name(name + ".py").read_bytes() for name in ("frontend", "execution", "translation", "attribution", "native", "rename", "dependence", "custom", "project", "components", "control", "floating", "component_events", "regions", "memory_rename", "structures"))
     engine += Path(__file__).with_name("native.c").read_bytes()
     engine += Path(__file__).with_name("native_c2.c").read_bytes()
     if result["backend"] == "native":

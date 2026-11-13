@@ -49,6 +49,7 @@
       "ftq_entries": 2,
       "block_bytes": 4,
       "predictor_latency": 1
-    }
+    },
+    "branch_prediction": "static_btfn"
   }
 }

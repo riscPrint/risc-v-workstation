@@ -72,3 +72,27 @@ VexRiscv branch counts agree on all six programs. No VexiiRiscv event
 comparison was run. The fitted VexRiscv divide error remains outside 10%.
 These results are approximate model measurements, not a fidelity verdict.
 See [the compact input hashes and values](results.json).
+
+## Static predictor correction
+
+The current VexRiscv description uses decoded STATIC targets. The cacheless
+VexiiRiscv description stays sequential. Its cached config adds BTB, GShare
+and RAS and needs a separate description. No dynamic predictor fit is claimed.
+
+The saved native runs above were reused. RTL was not rerun. Training alone
+selects fetch latency 7 and branch penalty 7 from fetch latencies 3, 5, 7, 9
+and penalties 1, 3, 5, 7. The old table remains a historical sequential model.
+
+| Program | Split | Model misses | RTL misses | Base IPC error | Fitted IPC error |
+|---|---|---:|---:|---:|---:|
+| chain | training | 1 | 1 | +99.56% | +2.62% |
+| multiply | training | 1 | 1 | +99.56% | +2.62% |
+| memory | training | 1 | 1 | +99.56% | +2.62% |
+| independent | heldout | 1 | 1 | +99.56% | +2.62% |
+| divide | heldout | 1 | 1 | +31.70% | +31.35% |
+| branch | heldout | 101 | 101 | +64.71% | -2.46% |
+
+The six miss counts now agree. This does not establish agreement on larger
+programs. The held-out divide error is +31.35%. Static prediction removes a
+compensating error in the old fit. Pipeline and divide timing still need work.
+See [the corrected values and input hashes](results-static.json).

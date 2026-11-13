@@ -16,3 +16,7 @@ for six real RTL programs, training-only fitting and held-out IPC errors.
 This example has no SpinalProbes binding. Its calibration is IPC-only.
 The C2 trace comes from the upstream VexiiRiscv probe. That commit trace does
 not supply the missing SpinalProbes counters.
+
+The `rv32im` own-model description selects sequential prediction. The cached
+`rv32im_cached` RTL config adds BTB, GShare and RAS. This cacheless description
+does not describe the cached config. Use separate parameters for that config.

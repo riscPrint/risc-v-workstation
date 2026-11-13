@@ -46,3 +46,25 @@ def check_configuration(config, path):
     return dict(sha256=sha256(data).hexdigest(), source_revision=revision,
                 config=snapshot["config"], extraction_keys=sources,
                 limits=["exported snapshot only; elaboration not verified"])
+
+
+class BackwardPredictor:
+    """Decode direct targets; predict backward conditional branches taken."""
+    last_delay = 0
+
+    def predict_instruction(self, op):
+        from rvw.csim.traces import cond_target
+        i = op.encoding
+        if op.kind == 'branch':
+            target = cond_target(op.pc, i)
+            return target if target < op.pc else op.pc + op.length
+        if op.mnemonic == 'jal':
+            imm = ((i >> 31) << 20) | (((i >> 12) & 255) << 12) | (((i >> 20) & 1) << 11) | (((i >> 21) & 1023) << 1)
+            return op.pc + imm - ((imm & (1 << 20)) << 1)
+        if op.mnemonic in ('c.j', 'c.jal'):
+            imm = (((i >> 12) & 1) << 11) | (((i >> 11) & 1) << 4) | (((i >> 9) & 3) << 8) | (((i >> 8) & 1) << 10) | (((i >> 7) & 1) << 6) | (((i >> 6) & 1) << 7) | (((i >> 3) & 7) << 1) | (((i >> 2) & 1) << 5)
+            return op.pc + imm - ((imm & (1 << 11)) << 1)
+        return op.pc + op.length
+
+    def update_instruction(self, op):
+        pass
