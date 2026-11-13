@@ -231,7 +231,8 @@ def test_wave_tools_run_in_a_worker_process(tmp_path, monkeypatch):
     assert json.loads(json.dumps(got, default=list)) == json.loads(json.dumps(
         wave_tools._changes(str(wave), "cnt"), default=list))
     assert calls == [("rvw.mcp.execution", "run_discovered",
-                      {"tool_name": "wave_changes", "arguments": {"wave": str(wave), "regex": "cnt"}})]
+                      {"tool_name": "wave_changes", "arguments": {"wave": str(wave), "regex": "cnt"},
+                           "provider": "rvw.wave.mcp_tools"})]
     r.jobs.shutdown(grace=0.1)
 
 

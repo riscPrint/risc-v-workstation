@@ -7,7 +7,7 @@ from rvw.ooo import native
 from rvw.ooo.core import Config, _instructions, simulate, run
 from test_ooo import trace
 
-pytestmark = pytest.mark.fast
+pytestmark = pytest.mark.slow
 
 
 @pytest.fixture

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import fnmatch
+from functools import cache
 import importlib
 import inspect
 import json
@@ -19,6 +20,26 @@ from .spec import ToolError, ToolSpec, schema
 MAX_TEXT = 400_000  # characters of JSON returned per call; larger results are cut with a note
 SYNC_S = 20.0       # an isolated short tool answers inline if it ends within this many seconds
 ISOLATE = "wave_*"  # tools isolated by default (RVW_MCP_ISOLATE); they parse big files in Python
+
+
+@cache
+def _validation():
+    from jsonschema import ValidationError
+    from jsonschema.validators import validator_for
+    return ValidationError, validator_for
+
+
+def _check_json(arguments):
+    # An empty plain dict has no keys or numbers to reject.
+    if type(arguments) is not dict or arguments:
+        json.dumps(arguments, allow_nan=False)
+
+
+def _provided(provider, tools):
+    tools = list(tools)
+    for tool in tools:
+        tool._rvw_provider = provider
+    return tools
 
 
 def discover(only: set[str] | None = None) -> tuple[list[ToolSpec], list[str]]:
@@ -41,14 +62,14 @@ def discover(only: set[str] | None = None) -> tuple[list[ToolSpec], list[str]]:
             problems.append(f"{name}: {type(e).__name__}: {e}")
             continue
         try:
-            tools.extend(m.mcp_tools())
+            tools.extend(_provided(name, m.mcp_tools()))
         except Exception as e:
             problems.append(f"{name}.mcp_tools(): {type(e).__name__}: {e}")
         tools.extend(_command_tools(f"rvw.{mod.name}", problems))
     # Tool providers outside the rvw package: RVW_MCP_PLUGINS=module[,module...], each with mcp_tools().
     for name in filter(None, (x.strip() for x in os.environ.get("RVW_MCP_PLUGINS", "").split(","))):
         try:
-            tools.extend(importlib.import_module(name).mcp_tools())
+            tools.extend(_provided(name, importlib.import_module(name).mcp_tools()))
         except Exception as e:
             problems.append(f"plugin {name}: {type(e).__name__}: {e}")
     return tools, problems
@@ -66,7 +87,7 @@ def _command_tools(package: str, problems: list[str]) -> list[ToolSpec]:
     for module in modules:
         if hasattr(module, "mcp_tools"):
             try:
-                tools.extend(module.mcp_tools())
+                tools.extend(_provided(module.__name__, module.mcp_tools()))
             except Exception as e:
                 problems.append(f"{module.__name__}.mcp_tools(): {type(e).__name__}: {e}")
     return tools
@@ -220,8 +241,7 @@ class Registry:
 
     def call(self, name: str, arguments: dict | None, *, dry_run: bool = False) -> Any:
         """Runs a tool. Long tools return a job record at once. Raises ToolError for bad calls."""
-        from jsonschema import ValidationError
-        from jsonschema.validators import validator_for
+        ValidationError, validator_for = _validation()
         spec = self.tools.get(name)
         if spec is None:
             raise ToolError(f"unknown tool {name!r}")
@@ -233,7 +253,7 @@ class Registry:
             check["required"] = []
             check.pop("allOf", None)  # Alias alternatives impose required names only on execution.
             try:
-                json.dumps(args, allow_nan=False)
+                _check_json(args)
                 validator_for(check)(check).validate(args)
             except (ValidationError, TypeError, ValueError) as exc:
                 raise ToolError(f"bad arguments for {name}: {exc}") from None
@@ -243,7 +263,7 @@ class Registry:
         try:
             # Reject non-JSON numbers too: NaN can evade numeric bounds. Never coerce values
             # (in particular, the string "false" must not enable a boolean option).
-            json.dumps(args, allow_nan=False)
+            _check_json(args)
             self._validators[name].validate(args)
         except (ValidationError, TypeError, ValueError) as exc:
             if isinstance(exc, ValidationError):
@@ -272,6 +292,9 @@ class Registry:
         """(module, function) when `spec` runs in a worker process, else None."""
         if not (spec.isolate or any(fnmatch.fnmatchcase(spec.name, p) for p in self._isolate)):
             return None
+        source = self.source_tools.get(spec.name)
+        if source is not None and getattr(source, "_rvw_provider", None):
+            return "rvw.mcp.execution", "run_discovered"
         module, qual = getattr(spec.handler, "__module__", None), getattr(spec.handler, "__qualname__", "")
         if not module or not qual.isidentifier():
             return self._discovered_target(spec)  # resolve packaged closures by tool name
@@ -291,7 +314,8 @@ class Registry:
         """Run in a worker process as a job. Answer inline if it ends within `sync_s`; otherwise
         hand back the job id, so a slow call can be followed and cancelled (job_cancel)."""
         inspect.signature(spec.handler, follow_wrapped=False).bind(**args)  # bad arguments fail here, as in-process
-        payload = ({"tool_name": spec.name, "arguments": args}
+        provider = getattr(self.source_tools.get(spec.name), "_rvw_provider", None)
+        payload = ({"tool_name": spec.name, "arguments": args, "provider": provider}
                    if (module, function) == ("rvw.mcp.execution", "run_discovered") else args)
         job = self.jobs.submit(spec.name, args,
                                lambda job: worker.run_function(job, module, function, payload), quick=True)

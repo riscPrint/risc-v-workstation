@@ -3,7 +3,7 @@
 
 Run with rvw/.venv/bin/python scripts/profile-startup.py. Import profiles:
 python -X importtime -m rvw mcp --list. CPU profile:
-python -c 'import cProfile,time; cProfile.runctx(...)' with timer=time.process_time.
+python scripts/profile-startup.py --cpu-profile "$RUN_ROOT/startup.prof" mcp --list.
 """
 import contextlib
 import io
@@ -32,21 +32,32 @@ def child(args):
 
 def server_child(profile):
     start = time.process_time()
-    import rvw.mcp.server as server
-    original = server.build_server
+    from contextlib import asynccontextmanager
+    import anyio
+    import mcp.server.stdio as stdio
+    original = stdio.stdio_server
 
-    class Metered(dict):
-        def values(self):
-            # The SDK calls this when it handles the first tools/list request.
-            print('METRIC ' + json.dumps(metric(start)), file=sys.stderr, flush=True)
-            return super().values()
+    class Metered:
+        def __init__(self):
+            self.stream = anyio.wrap_file(sys.stdout)
+            self.list_sent = False
 
-    def build(registry):
-        result = original(registry)
-        registry.tools = Metered(registry.tools)
-        return result
+        async def write(self, data):
+            await self.stream.write(data)
+            self.list_sent = json.loads(data).get('id') == 2
 
-    server.build_server = build
+        async def flush(self):
+            await self.stream.flush()
+            if self.list_sent:
+                print('METRIC ' + json.dumps(metric(start)), file=sys.stderr, flush=True)
+                self.list_sent = False
+
+    @asynccontextmanager
+    async def measured_stdio(*args, **kwargs):
+        async with original(*args, stdout=Metered(), **kwargs) as streams:
+            yield streams
+
+    stdio.stdio_server = measured_stdio
     from rvw.cli import main
     main(['mcp', '--profile', profile])
 
@@ -68,6 +79,7 @@ def server_measure(profile):
                 return value
         raise RuntimeError('MCP server closed before response')
 
+    captured = []
     try:
         send(dict(id=1, method='initialize', params=dict(protocolVersion='2025-03-26',
                   capabilities={}, clientInfo=dict(name='profile-startup', version='1'))))
@@ -75,9 +87,15 @@ def server_measure(profile):
         send(dict(method='notifications/initialized'))
         send(dict(id=2, method='tools/list', params={}))
         result = receive(2)
+        # The response can reach the parent before the child resumes after flush.
+        while line := process.stderr.readline():
+            captured.append(line)
+            if line.startswith('METRIC '):
+                break
     finally:
         process.terminate()
         _, stderr = process.communicate(timeout=20)
+    stderr = ''.join(captured) + stderr
     metrics = [json.loads(line.removeprefix('METRIC ')) for line in stderr.splitlines()
                if line.startswith('METRIC ')]
     if not metrics:
@@ -90,6 +108,13 @@ if __name__ == '__main__':
         child(sys.argv[2:])
     elif sys.argv[1:2] == ['--server-child']:
         server_child(sys.argv[2])
+    elif sys.argv[1:2] == ['--cpu-profile']:
+        import cProfile
+        profiler = cProfile.Profile(timer=time.process_time)
+        try:
+            profiler.runcall(child, sys.argv[3:] or ['mcp', '--list'])
+        finally:
+            profiler.dump_stats(sys.argv[2])
     else:
         for repeat in range(3):
             for args in (['--help'], ['query', '--help'], ['probes', '--help'],

@@ -6,7 +6,7 @@ from dataclasses import replace
 from rvw.ooo.core import Config, Instruction, simulate
 from rvw.ooo import native
 
-pytestmark = pytest.mark.fast
+pytestmark = pytest.mark.slow
 
 
 @pytest.fixture(scope='module')

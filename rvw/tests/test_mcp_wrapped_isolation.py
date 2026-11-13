@@ -27,7 +27,8 @@ def test_wrapped_wave_returns_a_background_job(monkeypatch):
         status = registry.call("job_status", {"job_id": started["job_id"], "wait_s": 5})
         assert status["status"] == "done" and status["result"] == {"signals": 1}
         assert calls == [("rvw.mcp.execution", "run_discovered",
-                          {"tool_name": "wave_info", "arguments": {"wave": "fixture.vcd", "indexed": True}})]
+                          {"tool_name": "wave_info", "arguments": {"wave": "fixture.vcd", "indexed": True},
+                           "provider": "rvw.wave.mcp_tools"})]
     finally:
         release.set()
         registry.jobs.shutdown()

@@ -31,13 +31,16 @@ def scan_bytes(raw):
     # Preserve ASCII strings in binary and non-UTF-8 files. Also inspect UTF-16/32
     # text. This does not unpack archives or decode arbitrary secret encodings.
     texts = [raw.decode('latin-1')]
-    for encoding in ('utf-8-sig', 'utf-16', 'utf-32'):
+    # Every finding contains ASCII punctuation. Its UTF-16/32 encoding needs
+    # zero octets. Without one, those decodings cannot add a finding.
+    encodings = ('utf-8-sig', 'utf-16', 'utf-32') if b'\0' in raw else ('utf-8-sig',)
+    for encoding in encodings:
         try:
             texts.append(raw.decode(encoding))
         except UnicodeError:
             pass
     found = set()
-    for text in texts:
+    for text in dict.fromkeys(texts):
         for number, line in enumerate(text.splitlines(), 1):
             if PERSONAL_PATH.search(line):
                 found.add((number, 'personal_path'))
@@ -270,3 +273,17 @@ def test_release_docs_use_public_setup_and_provenance():
 
 if __name__ == "__main__":
     print(json.dumps(metadata_report(REPO), indent=2))
+
+
+@pytest.mark.parametrize('encoding', ['ascii', 'utf-8-sig', 'utf-16', 'utf-32'])
+def test_scan_keeps_findings_across_text_encodings(encoding):
+    # Split sensitive-looking strings so the repository scan does not flag this fixture.
+    text = 'neutral\n' + '/' + 'Users' + '/tester/file\n' + 'gh' + 'p_' + 'a' * 40
+    findings = scan_bytes(text.encode(encoding))
+    assert (2, 'personal_path') in findings
+    assert (3, 'credential') in findings
+
+
+def test_scan_non_utf8_binary_keeps_ascii_findings():
+    raw = b'\xff\xfe\xff\n' + b'/' + b'home' + b'/tester/file'
+    assert (2, 'personal_path') in scan_bytes(raw)

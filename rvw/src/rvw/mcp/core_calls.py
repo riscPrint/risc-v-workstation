@@ -235,6 +235,12 @@ DECLARATIONS = [{'spec': {'name': 'cosim_check',
 
 
 def tools(only=None):
-    return [ToolSpec(**row['spec'], handler=tool_handler(
-                row['provider'], row['spec']['name'], row['wants_job']))
-            for row in DECLARATIONS if not only or row['provider'].split('.')[1] in only]
+    result = []
+    for row in DECLARATIONS:
+        if only and row['provider'].split('.')[1] not in only:
+            continue
+        tool = ToolSpec(**row['spec'], handler=tool_handler(
+            row['provider'], row['spec']['name'], row['wants_job']))
+        tool._rvw_provider = row['provider']
+        result.append(tool)
+    return result

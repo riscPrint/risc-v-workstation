@@ -21,6 +21,8 @@ def test_command_reference_does_not_depend_on_terminal_width(monkeypatch):
     generator = runpy.run_path(str(root / 'scripts/command-reference.py'))
     monkeypatch.setenv('COLUMNS', '40')
     narrow = generator['render']()
+    assert '### `rvw query drivers`' in narrow
+    assert '### `rvw formal bmc`' in narrow
     monkeypatch.setenv('COLUMNS', '200')
     assert generator['render']() == narrow
 
