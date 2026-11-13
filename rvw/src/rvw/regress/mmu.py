@@ -68,7 +68,7 @@ def validate(s):
     from .mmu_paging import geometry
     g = geometry(s)
     required = {'id', 'level', 'flags', 'access', 'expect', 'bins'}
-    optional = {'pointer_extension', 'pointer_controller', 'guest_trap', 'guest_switch', 'guest_mode', 'guest_op', 'atomic_ad', 'ipi', 'pte_fault_level', 'walk_deny_level', 'pointer_mask', 'shootdown', 'guest', 'guest_flags', 'guest_fault', 'vmid', 'napot_ppn', 'napot', 'pbmt', 'pbmte', 'mode_switch', 'mode', 'va', 'pa', 'privilege', 'sum', 'mxr', 'ad_expect', 'asid', 'fence', 'remap', 'ad_mode', 'satp_mode', 'mprv', 'offset', 'walk_deny', 'unfenced', 'switch_asid', 'value', 'access_width', 'register_width', 'root_switch', 'nonleaf_global', 'software_rsw', 'store_value'}
+    optional = {'napot_remap', 'pointer_extension', 'pointer_controller', 'guest_trap', 'guest_switch', 'guest_mode', 'guest_op', 'atomic_ad', 'ipi', 'pte_fault_level', 'walk_deny_level', 'pointer_mask', 'shootdown', 'guest', 'guest_flags', 'guest_fault', 'vmid', 'napot_ppn', 'napot', 'pbmt', 'pbmte', 'mode_switch', 'mode', 'va', 'pa', 'privilege', 'sum', 'mxr', 'ad_expect', 'asid', 'fence', 'remap', 'ad_mode', 'satp_mode', 'mprv', 'offset', 'walk_deny', 'unfenced', 'switch_asid', 'value', 'access_width', 'register_width', 'root_switch', 'nonleaf_global', 'software_rsw', 'store_value'}
     if not isinstance(s, dict) or not required <= s.keys() or s.keys() - required - optional:
         raise ValueError('invalid scenario fields')
     if not re.fullmatch(r'[a-z][a-z0-9-]*', s['id']):
@@ -151,6 +151,9 @@ def validate(s):
         raise ValueError('ad_mode must be hardware or svade')
     if 'ipi' in s and not s.get('shootdown'):
         raise ValueError('ipi requires shootdown')
+    if 'napot_remap' in s:
+        from .mmu_napot_range import validate as validate_napot_range
+        validate_napot_range(s)
     if 'atomic_ad' in s:
         from .mmu_atomic import validate as validate_atomic
         validate_atomic(s)
@@ -174,6 +177,9 @@ def assembly(s):
     if 'control' in s:
         return control_assembly(s)
     validate(s)
+    if s.get('napot_remap'):
+        from .mmu_napot_range import assembly as napot_range_assembly
+        return napot_range_assembly(s)
     if s.get('atomic_ad'):
         from .mmu_atomic import assembly as atomic_assembly
         return atomic_assembly(s)

@@ -12,7 +12,7 @@ from rvw.regress.mmu_walk import walk, check, fault_matrix, validate_capture
 
 def access(s):
     g = MODES[s['mode']]
-    tables, _ = page_tables(s, mmu.ROOT, mmu.DATA, 0xc7)
+    tables, _ = page_tables(s, mmu.ROOT, mmu.DATA, sum(mmu.FLAGS[f] for f in set(s['flags'])))
     memory = {mmu.ROOT + d * 4096 + i * g.width: p for d, table in enumerate(tables) for i, p in enumerate(table)}
     denied = [a for a in memory if a // 4096 == (mmu.ROOT // 4096 + g.levels - 1 - s['walk_deny_level'])] if 'walk_deny_level' in s else []
     return dict(mode=s['mode'], root=mmu.ROOT, va=0x40000000, access=s['access'], memory=memory, denied=denied)
@@ -21,7 +21,7 @@ def access(s):
 @pytest.mark.parametrize('s', fault_matrix(list(MODES)), ids=lambda s: s['id'])
 def test_fault_levels(s):
     mmu.validate(s)
-    assert 'access_site:' in mmu.assembly(s)
+    assert ('csrw mepc, t3' if s['access'] == 'fetch' else 'access_site:') in mmu.assembly(s)
     expected = walk(**access(s))
     assert expected['status'] == s['expect']
     fault_level = s.get('pte_fault_level', s.get('walk_deny_level'))

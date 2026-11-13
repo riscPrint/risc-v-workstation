@@ -88,10 +88,10 @@ def fault_matrix(modes):
     rows = []
     for mode in modes:
         for level in range(MODES[mode].levels):
-            for access in ('load', 'store'):
+            for access in ('load', 'store', 'fetch'):
                 for field, expect in [('pte_fault_level', 'page-fault'), ('walk_deny_level', 'access-fault')]:
                     rows.append(dict(id=f'{mode}-{field.replace("_", "-")}-{level}-{access}', mode=mode,
-                                     level=0, flags='VRWAD', access=access, expect=expect,
+                                     level=0, flags='VRWXAD', access=access, expect=expect,
                                      bins=[f'{mode}.{field}', f'{mode}.{field}.{level}.{access}'], **{field: level}))
     return rows
 
