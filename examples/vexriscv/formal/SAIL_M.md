@@ -76,3 +76,22 @@ The four multiply assertion jobs also timed out with a 120-second limit at
 cycle 20. All four instruction activation covers reached. The outcomes remain
 inconclusive. Evidence directory: `vex-sail-m-short-v2`. The RTL and model hashes
 match the initial campaign. No failed result was changed to a pass.
+
+## Bitwuzla multiply retry
+
+MUL and MULHU were retried with `smtbmc bitwuzla` at depth 20. Each assertion
+job timed out at 150 seconds. Both target covers reached. General retirement
+covers also passed. These outcomes remain inconclusive. The RTL and model
+hashes match the initial campaign. Private evidence: `vex-sail-m-smt-v1`.
+
+The campaign helper now accepts `--engine`. Repeat this retry with:
+
+```sh
+rvw/.venv/bin/python examples/vexriscv/formal/run_sail_m.py \
+  --rtl BUILD/rtl/VexRiscv.v --riscv-formal "$RISCV_FORMAL" --models MODELS \
+  --out RESULTS --checks mul,mulhu --mul-depth 20 --jobs 2 \
+  --timeout 150 --engine 'smtbmc bitwuzla'
+```
+
+This keeps the actual M arithmetic and the original environment. It changes
+the assertion engine. The default remains `abc bmc3`.

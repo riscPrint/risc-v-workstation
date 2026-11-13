@@ -22,6 +22,7 @@ def main():
     p.add_argument('--jobs',type=int,choices=(1,2,3),default=3)
     p.add_argument('--checks',default=','.join(NAMES))
     p.add_argument('--mul-depth',type=int,default=20)
+    p.add_argument('--engine',choices=('abc bmc3','smtbmc bitwuzla'),default='abc bmc3')
     args=p.parse_args()
     selected_names=tuple(args.checks.split(','))
     if not selected_names or set(selected_names)-set(NAMES) or len(set(selected_names))!=len(selected_names):
@@ -50,7 +51,7 @@ def main():
                 raise ValueError('RVFI interface width/direction mismatch')
             continue
         ports['inputs' if direction=='input' else 'outputs'][name]=width
-    options={'insn_'+name+'_ch0':dict(cycles=[args.mul_depth if name.startswith('mul') else 60],engine='abc bmc3') for name in selected_names}
+    options={'insn_'+name+'_ch0':dict(cycles=[args.mul_depth if name.startswith('mul') else 60],engine=args.engine) for name in selected_names}
     options['cover']=dict(cycles=[1,20],engine='smtbmc bitwuzla')
     constants={name:0 for name in ports['inputs'] if name in ('timerInterrupt','externalInterrupt','softwareInterrupt','iBus_rsp_payload_error','dBus_rsp_error')}
     plan=dict(schema='rvw.rvfi-binding/1',name='vex-rv32im-sail',top='VexRiscv',clock='clk',reset='reset',
