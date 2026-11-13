@@ -88,3 +88,7 @@ JSON in an editor. Use **Jump to Source via Design Database** on a row with an
 explicit `signal` field. It uses that signal without another text entry. The
 database choice and captured source hash checks still apply. A generic `path`
 field is not treated as a signal.
+
+## Scala lines and verification plan
+
+Decorate Scala Lines reads a merged `rvw.coverage/1` file. Each mapped line shows a marker with hit/total point counts and coverage types, including toggle points. Excluded points do not count. Paths resolve beside the saved file. Source identity is not checked. Clear Line Decorations removes markers. Open Functional Coverage Holes reads saved functional groups. Open Verification Plan Status reads saved `rvw plan status --json` output. The holes tree retains reported status and missing evidence. No coverage run starts.
