@@ -1,5 +1,7 @@
 # PR source ledger
 
+Implementation review uses a separate collection at 2026-11-13T14:16:50.600662+00:00: 772 midnight merges, including 229 since 08:00 UTC. Its 209 additions to the earlier 563-record ledger are all included in the newer 775-record collection below. Keep the newer census and source records. The afternoon review sections add scope corrections for MCP, CSR, verdicts and native evidence. No native artifact was rerun for this document audit. Document checks and the fast unit set are reported in this PR.
+
 Hourly refresh collected at 2026-11-13T14:22:26.916089+00:00: 212 additional merged PRs; 775 merged PRs in total; 213 current open issues; 7 currently closed issues closed since midnight. The 218-issue midnight census and separate new issues #722 and #723 are unchanged. Earlier collection text below is historical. The latest refresh notes take precedence for current state. No project tests, builds, simulations or proofs ran.
 
 Snapshot collected at 2026-11-13T07:16:42.340567+00:00. PR merge window starts at 2026-11-13T00:00:00Z. This is a reading audit. No tests, builds, simulations or proofs ran for this report. Local personal paths in quoted source text are omitted. Raw JSON retains the source. PR bodies report the evidence. Their artifacts were not independently rerun.
@@ -15574,7 +15576,7 @@ Other package declarations remain open.
 
 Title: docs(integration): record the verilog second pass
 
-Audit evidence label: no code.
+Audit evidence label: ran on real core RTL.
 
 ## Summary
 
@@ -15651,7 +15653,7 @@ Refs: #34. Remaining: PLIC-driven RV32 interrupt suites (`plic-delivery` stays R
 
 Title: feat(probes): add cached vexriscv and vexiiriscv example configs
 
-Audit evidence label: unit tests only.
+Audit evidence label: ran on real core RTL.
 
 ## Summary
 
@@ -15697,7 +15699,7 @@ Roadmap notes: the example cores now have cached configs (VexRiscv I$/D$ and an 
 
 Title: fix(privilege): read regress outputs once and refuse unearned fails
 
-Audit evidence label: ran on real core RTL.
+Audit evidence label: unit tests only.
 
 ## Summary
 Two defects found when the third dry-run pass ran the generated RV32 interrupt suites on the independent core and checked them with `rvw privilege check`.
@@ -15723,7 +15725,7 @@ Refs: #34. A strict match for external-input programs needs a reference with a p
 
 Title: feat(sim): add a spinalhdl source axis and build naxriscv on it
 
-Audit evidence label: ran on real core RTL.
+Audit evidence label: unit tests only.
 
 ## Summary
 - Add a second SpinalHDL version axis to the Spinal libraries (`scripts/sbt/SpinalAxis.scala`, one `project/spinal-axis.sbt` line per library). `RVW_SPINAL_SOURCE` selects a SpinalHDL source checkout instead of the 1.15.0 release jars. Both axes cross-build for Scala 2.13.14 and 2.12.18. Each source checkout compiles into `target/spinal-source-<rev>/`, so the axes never share class files. The release axis is the default and is unchanged apart from `scala-collection-compat`.
@@ -15891,7 +15893,7 @@ Roadmap notes: generated MMU, privilege (controls, PMP, scheduled WFI) and singl
 
 Title: fix(cosim): compare split ram accesses under uniform pmp and u-mode
 
-Audit evidence label: ran on real core RTL.
+Audit evidence label: reference model only (Spike/Sail/Python).
 
 ## Summary
 The third dry-run pass added U-mode and four PMP entries to the independent RV32 core. The riscv-tests `p` environment then runs the tests in U-mode under its all-memory NAPOT entry, and the `scalar_split_ram` comparison (from #954) refused `rv32ui-p-ma_data` again: it required M-mode and zero PMP regions.
@@ -16076,7 +16078,7 @@ Refs: #34. There is no unload; a client that ignores `list_changed` must list to
 
 Title: fix(sim): exclude runtime transport from native cache identity
 
-Audit evidence label: unit tests only.
+Audit evidence label: reference model only (Spike/Sail/Python).
 
 ## Summary
 Exclude runtime cosim ports, trace flushing and macOS XPC service labels from native cache identity. Keep DPI elaboration, generated RTL, tools, compiler options and unknown environment settings in the identity. Advance the namespace to v29.
@@ -16151,7 +16153,7 @@ Roadmap notes: A literal serial scenario now compiles to RV32 software and a CPU
 
 Title: perf(memory): prune axiomatic search and add sparse witnesses
 
-Audit evidence label: reference model only (Spike/Sail/Python).
+Audit evidence label: unit tests only.
 
 ## Summary
 Finish the recovered axiomatic search. Index read-from sources by location and observed value. Preserve per-hart store order, reject candidate prefix cycles, and try a sparse SC certificate first. Independent enabled SC operations use one stable schedule. Equal-value stores keep separate identities.
@@ -16174,7 +16176,7 @@ Fast set: 1942 passed, 1 skipped, 8294 deselected. One unrelated failure: `test_
 
 Title: feat(cov): measure paired native integer closure campaigns
 
-Audit evidence label: ran on real core RTL.
+Audit evidence label: unit tests only.
 
 ## Summary
 
@@ -16334,7 +16336,7 @@ Roadmap notes: add Sscofpmf CSR visibility and local-interrupt delivery to privi
 
 Title: test(formal): prove a real recoded divider revision
 
-Audit evidence label: ran on seeded RTL fixture.
+Audit evidence label: ran on real core RTL.
 
 ## Summary
 Use private sbt-equiv builds for real Spinal source revision comparisons. Recode the copied divider control as one hot. Compare two export configurations of the same VexRiscv FpuSqrt source. Record one equivalent divider proof and two inconclusive square-root attempts.
@@ -16363,7 +16365,7 @@ Roadmap notes: Real small Spinal control-state recoding now has native revision-
 
 Title: fix(formal): stop simulation on state monitor failures
 
-Audit evidence label: ran on seeded RTL fixture.
+Audit evidence label: ran on real core RTL.
 
 ## Summary
 Stop simulation with a failing exit code for x0 and register-frame assertion failures. Stop the PicoRV32 comparison on missing, extra or unknown valid events. Keep Yosys assertions through its built-in YOSYS define, including riscv-formal readers that do not define FORMAL.
@@ -16663,7 +16665,7 @@ Roadmap notes: seeded privilege programs support both XLENs and verify saved/res
 
 Title: feat(formal): check real hardfloat and divider unit contracts
 
-Audit evidence label: ran on seeded RTL fixture.
+Audit evidence label: ran on real core RTL.
 
 ## Summary
 Finish the saved real HardFloat and VexRiscv divider unit runners. Compare binary16/binary32 result bits and flags with pinned SoftFloat references. Support the declared public asynchronous reset in the Boolean transaction translator. Keep variable-latency completion as a proof obligation.
@@ -16992,7 +16994,7 @@ Roadmap notes: the campaign can select ABC or Bitwuzla. The new native SMT retry
 
 Title: feat(cov): join native source metrics and functional goals
 
-Audit evidence label: ran on real core RTL.
+Audit evidence label: unit tests only.
 
 ## Summary
 
@@ -17684,7 +17686,7 @@ Roadmap notes: The integration guide now gives a measured core property workflow
 
 Title: feat(arch): describe naxriscv for the ooo model and correlate with rtl
 
-Audit evidence label: ran on real core RTL.
+Audit evidence label: unit tests only.
 
 ## Summary
 - `examples/naxriscv/rvw/arch/ooo.json`: the NaxRiscv `rv32imasu` configuration for the trace-driven OoO model (`rvw ooo`): two-wide fetch/rename/commit, 64-entry ROB, 32 issue entries, 16+16 LSQ, 64 physical registers, disambiguation, and shared components for its GShare (16384 counters), 512-entry BTB and 16 KiB I$/D$.
@@ -17852,7 +17854,7 @@ Roadmap notes: bisect MCP effects and optional dependencies are explicit beside 
 
 Title: feat(formal): check real vexiiriscv divider transactions
 
-Audit evidence label: ran on seeded RTL fixture.
+Audit evidence label: ran on real core RTL.
 
 ## Summary
 Add a real-source runner for the optional VexiiRiscv DivRadix2 implementation with shift skipping. Export the committed 32-bit component in a private build. Compare stable unsigned transactions with the M models at first completion. Treat the latency bound as an obligation.
@@ -18053,7 +18055,7 @@ Roadmap notes: bundle MCP effects and optional dependencies are explicit beside 
 
 Title: docs(formal): attribute pc-chain and mepc evidence
 
-Audit evidence label: ran on real core RTL.
+Audit evidence label: no code.
 
 ## Summary
 Record PC-chain witness attribution and a from-reset MEPC reproduction. The saved local witness uses SRET and replays with X, so it does not confirm the earlier numeric MRET witness. A separate directed MRET program shows VexRiscv reading odd MEPC back unchanged while Spike clears bit 0. Keep the property and failure unchanged.
@@ -18074,7 +18076,7 @@ Roadmap notes: PC-chain evidence now separates an inconclusive saved replay from
 
 Title: feat(arch): compare one parameter with a what-if report
 
-Audit evidence label: reference model only (Spike/Sail/Python).
+Audit evidence label: unit tests only.
 
 ## Summary
 Add `rvw arch ooo-what-if` and the cancellable MCP tool `arch_ooo_what_if`. Change one existing numeric, Boolean or string field, validate both descriptions and run the same C2 path. Write JSON and Markdown deltas plus both configurations in a new directory. Preserve the source configuration and record its hash and old value.
@@ -18290,7 +18292,7 @@ Roadmap notes: Chisel and VHDL now have bounded whole-core installed-interface e
 
 Title: feat(formal): split csr contracts into catalog-resolved jobs
 
-Audit evidence label: unit tests only.
+Audit evidence label: ran on real core RTL.
 
 ## Summary
 Add catalog-resolved CSR inventory and per-CSR jobs. The VexRiscv helper discovers 21 implemented address-decode terms. Add explicit Yosys cone cuts, scoped result rows and per-CSR output in `rvw formal isa`.
@@ -18450,7 +18452,7 @@ Roadmap notes: NaxRiscv is present with six verified generation bindings. Full O
 
 Title: perf(arch): reuse validated windows across workload models
 
-Audit evidence label: reference model only (Spike/Sail/Python).
+Audit evidence label: unit tests only.
 
 ## Summary
 Reuse complete C2 validation and decoded windows across workload models with identical custom instruction definitions. Keep fresh timing and component state for each model. Check raw trace identity before reuse and check every project description against the C2 selection. Distinct custom definitions get separate validation.
@@ -18477,7 +18479,7 @@ Roadmap notes: multi-model workload evaluation avoids repeated complete structur
 
 Title: feat(formal): check default vexii divider and multiplier helpers
 
-Audit evidence label: ran on seeded RTL fixture.
+Audit evidence label: ran on real core RTL.
 
 ## Summary
 Extend the real divider runner to select the default VexiiRiscv DivRadix implementation. Add a runner for the actual MulSpliter and AdderAggregator arithmetic with the default MulPlugin settings. Keep pipeline control outside the proof scope.
@@ -18527,7 +18529,7 @@ Roadmap notes: Summaries distinguish test counts, skips, absent tools, setup fai
 
 Title: fix(checks): generate declared request response monitors
 
-Audit evidence label: ran on seeded RTL fixture.
+Audit evidence label: ran on real core RTL.
 
 ## Summary
 
@@ -18588,7 +18590,7 @@ Record project-owned probe event/sequence goals, native UCB feedback on both exa
 
 Title: feat(formal): extend vex m unit and sail uf routes
 
-Audit evidence label: ran on seeded RTL fixture.
+Audit evidence label: reference model only (Spike/Sail/Python).
 
 ## Summary
 
@@ -18695,7 +18697,7 @@ Roadmap notes: Generic HDL lint counts loads through alias bit nodes. Whole-core
 
 Title: test(formal): prove small real module export configurations
 
-Audit evidence label: ran on seeded RTL fixture.
+Audit evidence label: ran on real core RTL.
 
 ## Summary
 Make the real revision recipe's FpuSqrt width selectable. Preserve the four-bit default. Record a successful two-bit single-file versus per-component export comparison through the public revision command.
@@ -19008,7 +19010,7 @@ Roadmap notes: cached core probes now feed data-cache comparison and replacement
 
 Title: fix(ooo): model buffered stores and extend calibration budget
 
-Audit evidence label: ran on real core RTL.
+Audit evidence label: unit tests only.
 
 ## Summary
 Add an optional buffered-store timing policy. Preserve the ordered default. Describe NaxRiscv with speculative loads and a shared execution port. Extend the calibration plan cycle budget so spmv completes.
@@ -19361,7 +19363,7 @@ Roadmap notes: nine NaxRiscv rules now bind. Record fixed-seed ISA and planted c
 
 Title: feat(vexii): finish rv32 pmp rtl suite verification
 
-Audit evidence label: ran on real core RTL.
+Audit evidence label: reference model only (Spike/Sail/Python).
 
 ## Summary
 
@@ -19452,7 +19454,7 @@ After rebase, the targeted component and guide/workflow tests passed: 24 passed.
 
 Title: feat(cov): minimise measured suites and enforce smoke budgets
 
-Audit evidence label: ran on real core RTL.
+Audit evidence label: unit tests only.
 
 ## Summary
 
@@ -19789,7 +19791,7 @@ Roadmap notes: integer operand partitions are available through CLI and MCP. Par
 
 Title: fix(checks): bind explicitly declared emitted module names
 
-Audit evidence label: ran on seeded RTL fixture.
+Audit evidence label: ran on real core RTL.
 
 ## Summary
 
@@ -19944,7 +19946,7 @@ Roadmap notes: the generic C2 harness and contract now have one declared externa
 
 Title: docs(integration): record full chisel and vhdl second pass
 
-Audit evidence label: ran on real core RTL.
+Audit evidence label: no code.
 
 ## Summary
 
@@ -20361,7 +20363,7 @@ Record a project-bound generic instruction port with native positive and deliber
 
 Title: test(formal): prove real multiplier split configurations
 
-Audit evidence label: ran on seeded RTL fixture.
+Audit evidence label: ran on real core RTL.
 
 ## Summary
 
@@ -20455,7 +20457,7 @@ Roadmap notes: ACT4 all-applicable supervisor selection and native execution are
 
 Title: docs(probes): explain vexii retirement event boundaries
 
-Audit evidence label: ran on real core RTL.
+Audit evidence label: no code.
 
 ## Summary
 Explain the VexiiRiscv retirement-count difference from source and native events. The typed counter uses trapAt commit ports. C1/C2 use the upstream completion-based scheduler. The upstream loop can emit completed instructions before their commit-port event and can drain more than one instruction in the final callback.
@@ -20533,7 +20535,7 @@ Roadmap notes: generic dependency capture and consumer-specific probe diagnostic
 
 Title: feat(cov): merge native act4 and isa functional observations
 
-Audit evidence label: ran on real core RTL.
+Audit evidence label: unit tests only.
 
 ## Summary
 
@@ -20655,7 +20657,7 @@ Roadmap notes: The bundled BOOM example can use the generic project-owned ACT4 p
 
 Title: feat(formal): prove real fifo memory and internal partitions
 
-Audit evidence label: ran on seeded RTL fixture.
+Audit evidence label: unit tests only.
 
 ## Summary
 
@@ -20863,3 +20865,7 @@ Refs: #187
 This is blocking, loosely timed memory in one SystemC kernel. Effects occur at call time. Annotated completion time does not reorder effects. Arbitration, fairness, host-thread synchronization, DMI, nonblocking transport, interrupts and checkpoint binding remain open. This does not qualify whole-core or device timing.
 
 Roadmap notes: Record native SystemC multi-initiator memory and explicit kernel-order semantics. Keep complete virtual-platform, nonblocking and cycle-accurate bridges open.
+
+## Implementation evidence review
+
+The separate reviewed-labels map in the implementation collection covers 209 source records. Their labels above describe new executed slices; saved native measurements and later report analysis remain distinct. Compilation or static export does not count as a new RTL run. The later three records and all prior source bodies are retained from the newer collection. Full source Testing and Issues sections remain the evidence boundary.

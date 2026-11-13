@@ -1,5 +1,7 @@
 # TODO replacement proposal
 
+Implementation review uses a separate collection at 2026-11-13T14:16:50.600662+00:00: 772 midnight merges, including 229 since 08:00 UTC. Its 209 additions to the earlier 563-record ledger are all included in the newer 775-record collection below. Keep the newer census and source records. The afternoon review sections add scope corrections for MCP, CSR, verdicts and native evidence. No native artifact was rerun for this document audit. Document checks and the fast unit set are reported in this PR.
+
 Hourly refresh collected at 2026-11-13T14:22:26.916089+00:00: 212 additional merged PRs; 775 merged PRs in total; 213 current open issues; 7 currently closed issues closed since midnight. The 218-issue midnight census and separate new issues #722 and #723 are unchanged. Earlier collection text below is historical. The latest refresh notes take precedence for current state. No project tests, builds, simulations or proofs ran.
 
 Snapshot collected at 2026-11-13T07:16:42.340567+00:00. PR merge window starts at 2026-11-13T00:00:00Z. This is a reading audit. No tests, builds, simulations or proofs ran for this report. PR bodies report the evidence. Their artifacts were not independently rerun.
@@ -387,3 +389,42 @@ Keep the existing 218-issue milestone layout and the two Unmapped issues. The cu
 | [#206](https://github.com/riscPrint/risc-v-workstation/issues/206) | M2 | owner decision; compare full acceptance scope with reported evidence |
 | [#349](https://github.com/riscPrint/risc-v-workstation/issues/349) | M3 | owner decision; compare full acceptance scope with reported evidence |
 | [#379](https://github.com/riscPrint/risc-v-workstation/issues/379) | M2 | owner decision; compare full acceptance scope with reported evidence |
+
+## Afternoon proposed remaining work
+
+The issue census and PR #381 milestone groups above are unchanged. The following is additional literal proposed task text. It replaces stale next actions for the same slice. It does not mark an issue complete.
+
+```markdown
+### MCP and shared data
+
+- Add installer inventory IDs for llvm-mca, MCY and kubectl. Then clear the three explicit native dependency gaps.
+- Keep every new MCP tool in a profile and an agent workflow. Regenerate the guide when the tool set changes. Keep core below 40 tools.
+- Run the new-core workflow on a supported native target. Keep schema checks separate from native execution.
+- Extend native CSR qualification for aliases, WARL, lower modes and autonomous updates. Keep all consumers on the shared data API. Keep checker logic independent.
+
+### Evidence and qualification
+
+- Keep producer verdicts in the evidence index. Keep the weakest input verdict in every plan roll-up.
+- Retain incomplete fault injections, unsupported features, missing tools and conflicting child verdicts as blockers.
+- Review the previously closed issues against their full acceptance text. Do not use implementation presence or issue state as acceptance.
+
+### Core and verification campaigns
+
+- Resolve the standard ACT4 CSR bootstrap compatibility gap before crediting privileged bodies. Retain all 270 failed prefixes.
+- Review the six VexRiscv MEPC failures, nineteen denied page-walk cases and three interrupt mtval cases with their minimal reproductions.
+- Resolve five original generated-check activation gaps and the new delayed-response/backpressure findings. Keep conditional unreachable triggers separate from asynchronous hardware proof.
+- Qualify formal observer equivalence and activation. Retain the 37-instruction portfolio timeouts and the PicoRV32 trap-frame failure.
+- Confirm the optional DivRadix2 arithmetic counterexample in a core configuration before making a core-level claim. Keep default-divider restricted proofs separate.
+- Extend ordered device-input replay to other devices and reset events. Preserve the twelve strict PLIC matches and their negative controls.
+
+### Integration and performance
+
+- Complete Linux boot and C2 capture. Keep OpenSBI success separate from the timed-out Linux attempt.
+- Implement and qualify the missing BOOM and Vexii live checkpoint/device bindings. Test second-machine replay.
+- Extend cached SMP beyond one-line handoff checks. Qualify RTL PLIC races, stress, starvation and asynchronous reset. Keep cacheless and cached scopes separate.
+- Resolve held-out timing-model errors and retirement/probe tail boundaries. Add independent event families before claiming accuracy.
+- Qualify committed native farm C4 gates and cost. Keep dirty harness histories separate. Validate Kubernetes and CI runtime tiers.
+- Run native editor and debug interaction checks. Keep saved-data exports separate from live GUI acceptance.
+```
+
+Sources: [FINDINGS.md](FINDINGS.md), [RISKS.md](RISKS.md), [NEW_TOOLS.md](NEW_TOOLS.md) and the complete [PR_EVIDENCE.md](PR_EVIDENCE.md). No issue was closed or commented on. Root TODO.md was not edited.
