@@ -118,6 +118,11 @@ class Clocks:
                 if c not in known:
                     raise ValueError(f'intent.clocks names an unknown clock: {c}')
         self.groups = groups
+        # Spinal `setSynchronousWith` puts ClockSyncTag(a, b) on both clock signals.
+        self.spinal_sync = set()
+        for s in design.signals.values():
+            for a, b in re.findall(r'ClockSyncTag\(a=signal ([\w.$]+),b=signal ([\w.$]+)\)', s.get('tags') or ''):
+                self.spinal_sync.add(frozenset((a, b)))
 
     def _blackbox_output(self, n):
         s = self.d.signals[n]
@@ -151,6 +156,8 @@ class Clocks:
         for g in self.groups:
             if x['clock'] in g['clocks'] and y['clock'] in g['clocks']:
                 return 'declared_' + g['relationship']
+        if frozenset((x['clock'], y['clock'])) in self.spinal_sync:
+            return 'declared_synchronous'
         if x['master'] and x['master'] == y['master']:
             return 'related'
         if x['master'] and y['master']:

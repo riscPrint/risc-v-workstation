@@ -136,7 +136,10 @@ enables), `generated` (a blackbox output, for example a PLL) or `unknown`.
 `master` is the primary input behind a divided or gated clock. Two clock
 records are `same` (equal key and edge), `related` (same master),
 `asynchronous` (different masters), `declared_synchronous` or
-`declared_asynchronous` (from `intent.clocks`) or `unknown`. Each
+`declared_asynchronous` (from `intent.clocks`, or Spinal `setSynchronousWith`,
+read from `ClockSyncTag` signal tags) or `unknown`. SpinalChecks `CdcChecks`
+emits Gray and pulse-width checks from the same Spinal clock-domain data inside
+the design. Each
 `intent.clocks` row has `clocks` (two or more clock paths), `relationship` and
 `reason`. Unknown clock paths are input errors.
 

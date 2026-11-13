@@ -230,3 +230,15 @@ def test_emit_checks_and_checked_rtl(tmp_path, capsys):
         script = (f'read_verilog -formal -sv {out}/checked/Top.v {out}/checked/rvw_cdc_checkers.sv; '
                   'hierarchy -top Top; proc; flatten; select -assert-any t:$check t:$assert')
         assert subprocess.run(['yosys', '-q', '-p', script], capture_output=True).returncode == 0
+
+
+def test_spinal_synchronous_tag(tmp_path):
+    b = two_clocks(tmp_path)
+    tag = 'tag spinal.core.ClockSyncTag:spinal.core.ClockSyncTag(a=signal clkA,b=signal clkB)'
+    b.c.execute('UPDATE signals SET tags=? WHERE path IN (\'clkA\',\'clkB\')', (tag,))
+    b.reg('src', 1)
+    b.reg('dst', 2)
+    b.edge('src', 'dst')
+    r = analyze(b.done())
+    assert r['crossings'][0]['relationship'] == 'declared_synchronous'
+    assert rules(r) == ['cdc.related_clock_crossing']
