@@ -625,3 +625,26 @@ select the winner. Only the winner receives the final held-out calibration.
 Candidate configs, scores, the best config, and calibration evidence are saved.
 A finite grid cannot establish unique parameter identification or model fidelity.
 The report remains inconclusive about accuracy.
+
+## Shared SimPoint runs
+
+Choose points with `rvw csim simpoint TRACE --interval 100000 --json > points.json`.
+Then run `rvw arch ooo-sampled CONFIG TRACE points.json --out NEW_REPORT.json
+--warmup 10000 --full --json`. The cancellable MCP tool is `arch_ooo_sampled`.
+The input must be the same complete C2 trace. The command checks the normalized
+ComponentSims trace hash and instruction count before using its point weights.
+It calls the existing converter and does not copy the clustering algorithm.
+
+Each sample starts cold before its bounded warmup. Measurement begins at warmup
+retirement and ends at the last sample retirement. A boundary cycle that also
+retires measured instructions counts once. Warmup fills queues and component
+state, but includes no checkpoint restore. The final sample drains without
+future instructions. Both boundaries can bias timing. Reports keep warmup and
+measured instruction counts and cycles for each point. Weighted CPI gives the
+sampled IPC and estimated full cycles. This is not the arithmetic mean of IPC.
+
+`--full` also runs the complete model and reports signed sampled cycle error.
+Without it, sampling error remains unmeasured. No error bound or RTL accuracy
+is inferred. Tests join the actual ComponentSims SimPoint format and check a
+full-trace point against a complete model run. Large-workload sampling accuracy remains unmeasured. System power-state models
+under #201 and custom-extension trade-offs under #196 are separate tasks.
