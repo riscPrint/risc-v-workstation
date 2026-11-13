@@ -1,0 +1,12 @@
+{
+  "schema": "rvw.check-generation/1",
+  "csrs": "csr.json",
+  "streams": {
+    "database": "rvw/out/vex.db",
+    "report": "rvw/out/checks.json",
+    "contracts": "checks.streams.json"
+  },
+  "buses": {
+    "database": "rvw/out/vex.db"
+  }
+}

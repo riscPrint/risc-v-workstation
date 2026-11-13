@@ -18,6 +18,13 @@ def run(job,**args):
     return json.loads((out/'result.json').read_text())
 
 
+def report_run(job,**args):
+    from .qualification import summarize
+    return summarize(args['inventory'],args.get('runs',[]),args.get('formal'))
+
+
 def mcp_tools():
     return [ToolSpec('checks_generate','Emit project checks and explicit missing-binding reasons. No proof run.',
-            schema({k:{'type':'string'} for k in ('project','out','manifest')},['project','out']),run,long=True)]
+            schema({k:{'type':'string'} for k in ('project','out','manifest')},['project','out']),run,long=True),
+        ToolSpec('checks_report','Count generated, bound, proven, bounded, fired and unbound checks. Missing evidence stays null.',
+            schema(dict(inventory={'type':'string'},runs={'type':'array','items':{'type':'string'}},formal={'type':'string'}),['inventory']),report_run)]

@@ -763,3 +763,46 @@ It runs two tasks with timer-driven delays on this M-mode RTL configuration.
 The project checkpoint harness now saves UART, CLINT and PLIC state with RTL,
 RAM, pending bus responses and the C2 prefix. Restore runs in a fresh process.
 This is a real RTOS workload. It does not establish Linux or OpenSBI support.
+## Connected generated check campaign
+
+Build ISA ELFs with `rvw/build-tests.sh`. Use a private `VEXRISCV` checkout.
+Run `rvw/.venv/bin/python examples/vexriscv/rvw/qualify-checks.py --out NEW_DIR`
+from the workstation root with the native environment active. The runner uses
+locks `vex-csr` and `sbt`, nice priority 10 and a 240-second timeout.
+It excludes the misaligned-data test, as the existing aligned ISA suite does.
+
+The optional `RVW_CHECKS_ISA=1` runtime installs all available SpinalChecks
+rules plus the existing scratch and HPM bindings. It compiles assertions with
+Verilator `--assert`. It writes `c1_N.json` and `run_N.json` per completed ELF.
+C1 `details.checks` records generated, bound, fired and unbound counts per kind.
+Any firing or program failure prevents a clean runtime result. The separate
+summary keeps NOT RUN formal counts null and retains incomplete campaigns.
+A failing assertion can stop the simulator before a C1 report is written.
+The campaign then records incomplete execution. This is not a passing run.
+
+`checks.generate.json` also selects database stream and bus generators.
+Pass `--checks` to the database builder to write `checks.json` beside `vex.db`. Stream contracts
+and clock declarations require review before their bindings can be complete.
+VexiiRiscv and the stub SoC have generation manifests with their own expected
+database paths. Missing captures remain explicit. No connected three-design
+qualification result is claimed from these manifests alone.
+
+On 2026-11-13 the native checked campaign completed all 49 aligned ISA programs.
+It inserted 57 checks. Eleven internal fetch `stream.valid_hold` checks fired
+8,768 times. All 49 C1 results stayed `fail`. No check was waived or disabled.
+The other 46 checks had zero firings. Source inspection identifies cancellable
+fetch offers as the likely contract mismatch. This classification is inferred
+from `Fetcher.scala` flush/halt logic and `IBusSimplePlugin.scala` response
+discard logic. Cancellation was not independently traced. These findings stay
+open until a cancellation-aware binding establishes the correct obligations.
+The native regression verifies that the findings retain failure status.
+
+The external instruction and data command ports have explicit stable contracts.
+Their generated bindings passed Verilator elaboration. Run `rvw/checks-formal.py`
+with `--rtl`, `--generated` and `--out` to prepare separate assertions. Run the
+resulting `regress.toml` with `rvw formal regress MANIFEST --out NEW_DIR --jobs 3`.
+Eight native SBY properties passed through depth 6 with two reset clocks. They
+cover four packed command checks. No unbounded proof or activation evidence was
+obtained. Other design inputs remain arbitrary. The native run used a private
+Scala compile with cached dependency jars to avoid the shared sbt queue.
+See [the recorded summary](checks-qualification.json) for counts and limits.

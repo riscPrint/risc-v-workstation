@@ -17,14 +17,18 @@ object CsrChecksRuntime {
     val out = new File(args(1)).getCanonicalFile
     require(Set("none", "csr", "hpm", "hpm_read")(args(2)))
     val fault = args(2)
+    val allChecks = sys.env.get("RVW_CHECKS_ISA").contains("1")
+    require(!allChecks || fault == "none", "ISA qualification requires clean observations")
     val core = VexTop.configuration()
     core.plugins += new CsrChecksPlugin(model, observationFault = fault == "csr")
     core.plugins += new HpmChecksPlugin(observationFault = fault == "hpm", readObservationFault = fault == "hpm_read")
     val (config, result) = SpinalChecks.install(VexTop.spinalConfig.copy(targetDirectory = new File(out, "rtl").getPath),
-      ChecksConfig(mode = Mode.Monitor, enable = Seq("csr.*", "hpm.*"), reportPath = new File(out, "checks.json").getPath))
-    val compiled = SimConfig.withConfig(config).workspacePath(out.getPath).workspaceName("native").withVerilator.compile(new VexRiscv(core))
+      ChecksConfig(mode = if (allChecks) Mode.Both else Mode.Monitor,
+        enable = if (allChecks) Seq("*") else Seq("csr.*", "hpm.*"), reportPath = new File(out, "checks.json").getPath))
+    val compiled = SimConfig.withConfig(config).workspacePath(out.getPath).workspaceName("native").withVerilator.addSimulatorFlag("--assert").compile(new VexRiscv(core))
     require(result.inserted.count(_.kind.startsWith("csr.")) == 3 && result.inserted.count(_.kind == "hpm.count") == 2 &&
       result.inserted.count(_.kind == "hpm.read") == 4)
+    var campaignFailed = false
     var scratchInstructions = 0L
     var counterInstructions = 0L
     var counterReads = 0L
@@ -54,7 +58,7 @@ object CsrChecksRuntime {
         var done = Option.empty[Int]
         var cycle = 0
         var retired = 0L
-        while (cycle < 20000 && done.forall(cycle < _ + 20)) {
+        while (cycle < (if (allChecks) 200000 else 20000) && done.forall(cycle < _ + 20)) {
           cd.waitFallingEdge()
           ibus.cmd.ready #= instruction.isEmpty
           ibus.rsp.valid #= instruction.nonEmpty
@@ -93,9 +97,31 @@ object CsrChecksRuntime {
         ChecksSim.writeRunReport(dut, new File(out, s"run_$index.json").getPath, Seq(
           "status" -> Json.Str(if (done.nonEmpty && host.value == 1) "pass" else "fail"),
           "elf" -> Json.Str(elf.file.getCanonicalPath), "elf_sha256" -> Json.Str(elf.sha256),
+          "program_status" -> Json.Str(if (done.isEmpty) "timeout" else if (host.value == 1) "pass" else "fail"),
           "observation_fault" -> Json.Str(fault), "cycles" -> Json.Num(BigDecimal(cycle)), "retired" -> Json.Num(BigDecimal(retired))))
-        require(done.nonEmpty && host.value == 1, s"program failed or timed out: tohost=${host.value}")
-        if (fault == "none") require(fs.isEmpty, fs.map(_.check.id).mkString(", "))
+        if (allChecks) {
+          import Json._
+          val kinds = result.records.toSeq.map(_.kind).distinct.sorted.map { kind =>
+            val records = result.records.filter(_.kind == kind)
+            kind -> obj("generated" -> records.size, "bound" -> records.count(_.inserted),
+              "fired" -> fs.count(_.check.kind == kind),
+              "firing_count" -> fs.filter(_.check.kind == kind).map(_.count.toLong).sum,
+              "unbound" -> records.count(r => !r.inserted))
+          }
+          val status = if (done.isEmpty) "timeout" else if (host.value != 1 || fs.nonEmpty) "fail" else "pass"
+          campaignFailed ||= status != "pass"
+          ChecksSim.writeFile(new File(out, s"c1_$index.json").getPath, Json.write(obj(
+            "schema" -> "rvw.run/1", "core" -> "vexriscv", "config" -> "rv32im-generated-checks",
+            "status" -> status, "elf" -> elf.file.getCanonicalPath, "elf_sha256" -> elf.sha256,
+            "cycles" -> cycle, "instret" -> retired, "max_cycles" -> 200000,
+            "artifacts" -> obj("checks" -> s"run_$index.json", "inventory" -> "checks.json"),
+            "details" -> obj("checks" -> obj(kinds: _*), "assertions_compiled" -> true,
+              "program_status" -> (if (done.isEmpty) "timeout" else if (host.value == 1) "pass" else "fail")),
+            "inconclusive" -> "Bounded example run. Input closure and whole-core qualification are not certified."
+          )) + "\n")
+        }
+        require(allChecks || (done.nonEmpty && host.value == 1), s"program failed or timed out: tohost=${host.value}")
+        if (fault == "none" && !allChecks) require(fs.isEmpty, fs.map(_.check.id).mkString(", "))
         if (fault == "hpm") require(fs.exists(_.check.kind == "hpm.count"), "HPM observation fault was not detected")
         if (fault == "hpm_read" && counterReads > readsBefore)
           require(fs.exists(_.check.kind == "hpm.read"), "HPM read observation fault was not detected")
@@ -104,7 +130,8 @@ object CsrChecksRuntime {
           require(fs.exists(_.check.kind == "csr.state"), "CSR observation fault was not detected")
       }
     }
-    require(scratchInstructions >= 3 && counterInstructions >= 4 && counterReads >= 8, "programs did not exercise scratch and counter CSRs")
+    require(allChecks || (scratchInstructions >= 3 && counterInstructions >= 4 && counterReads >= 8), "programs did not exercise scratch and counter CSRs")
+    require(!campaignFailed, "ISA campaign has failed programs or generated checks; see C1 reports")
     println(s"CSR_CHECKS_RUNTIME_OK fault=$fault scratch_instructions=$scratchInstructions counter_instructions=$counterInstructions counter_reads=$counterReads")
   }
 }

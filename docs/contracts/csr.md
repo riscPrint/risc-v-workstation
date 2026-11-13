@@ -232,3 +232,16 @@ The optional `cdc` entry of `rvw.check-generation/1` has a `report` path.
 It selects structural lint CDC obligations with supported checker kinds and
 signal bindings. The summary retains unsupported and unbound obligations.
 Emission supplies no simulation or proof result.
+
+## Connected check qualification summary
+
+`rvw.check-qualification/1` records per-kind generated, bound, proven, bounded,
+fired and unbound counts. `firing_count` sums runtime monitor observations.
+Runtime checks reference the same inventory path and matching ELF hash as C1.
+The C1 artifacts are `inventory` and `checks`. Missing execution evidence has
+null counts. Distinct fired check IDs count once across programs. Unbound
+entries retain their status and reason. Formal regress `requirements` hold
+explicit bound check IDs. All properties associated with one check must succeed. All-proven groups
+count as proven. Mixed proven and bounded-pass groups count as bounded.
+The summary remains inconclusive without a runtime finding. It certifies
+neither activation nor the closure of inputs.

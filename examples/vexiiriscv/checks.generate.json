@@ -1,0 +1,10 @@
+{
+  "schema": "rvw.check-generation/1",
+  "streams": {
+    "database": "rvw/out/vexii.db",
+    "report": "rvw/out/checks.json"
+  },
+  "buses": {
+    "database": "rvw/out/vexii.db"
+  }
+}

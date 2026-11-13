@@ -12,10 +12,14 @@ object Database {
       Paths.get(adapter.getPath, "src/main/scala")))
     // `--probes` elaborates with the workstation probes, so `rvw probes list --db` can see them.
     val probes = args.contains("--probes")
-    val (options, rtl, arguments) = Main.parse(args.toSeq.filterNot(_ == "--probes"), base)
+    val checks = args.contains("--checks")
+    val (options, rtl, arguments) = Main.parse(args.toSeq.filterNot(a => a == "--probes" || a == "--checks"), base)
     require(arguments.length == 2 && arguments.head == "rv32im", "usage: rvwvex.Database rv32im OUT [SpinalDB options]")
     val out = new File(arguments(1)).getCanonicalFile
-    spinalprobes.Probe.enabled(probes)(SpinalDB.generate(VexTop.spinalConfig.copy(targetDirectory = rtl.getOrElse(new File(out.getParentFile, "rtl").getPath)), out,
+    val config = VexTop.spinalConfig.copy(targetDirectory = rtl.getOrElse(new File(out.getParentFile, "rtl").getPath))
+    val checked = if (checks) spinalchecks.SpinalChecks.install(config,
+      spinalchecks.ChecksConfig(reportPath = new File(out.getParentFile, "checks.json").getPath))._1 else config
+    spinalprobes.Probe.enabled(probes)(SpinalDB.generate(checked, out,
       options.copy(meta = options.meta ++ Seq("core" -> "vexriscv", "config" -> "rv32im")))(new VexTop))
   }
 }
