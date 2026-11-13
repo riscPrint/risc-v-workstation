@@ -87,8 +87,8 @@ def _run(args):
     except (OSError, ValueError) as exc:
         print(json.dumps({'status': 'inconclusive', 'reason': str(exc)}))
         return 3
-    print(json.dumps({k: summary[k] for k in ('counts', 'diagnostic_coverage', 'diagnostic_coverage_95', 'injected')}))
-    return 1 if summary['counts']['silent_corruption'] else (3 if summary['unresolved'] else 0)
+    print(json.dumps({k: summary[k] for k in ('status', 'summary', 'counts', 'diagnostic_coverage', 'diagnostic_coverage_95', 'injected', 'unresolved')}))
+    return _campaign_exit(summary)
 
 
 def _report(args):
@@ -99,4 +99,8 @@ def _report(args):
         print(json.dumps({'status': 'error', 'reason': str(exc)}))
         return 2
     print(json.dumps(summary, indent=2))
-    return 0
+    return _campaign_exit(summary)
+
+
+def _campaign_exit(summary):
+    return {'complete': 0, 'fail': 1, 'inconclusive': 3}[summary['status']]

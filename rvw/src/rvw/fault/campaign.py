@@ -257,15 +257,24 @@ def report(plan_data, outcomes):
     injected = sum(counts[c] for c in ('detected', 'silent_corruption', 'safe', 'timeout'))
     dangerous = counts['detected'] + counts['silent_corruption'] + counts['timeout']
     coverage = counts['detected'] / dangerous if dangerous else None
+    unresolved = [o['id'] for o in outcomes
+                  if o['classification'] in ('timeout', 'inconclusive', 'not_injected')]
+    status = ('fail' if counts['silent_corruption'] else
+              'inconclusive' if unresolved or not outcomes else 'complete')
+    summaries = {
+        'fail': 'Campaign observed silent corruption; inspect counts and outcomes.',
+        'inconclusive': 'Campaign evidence is incomplete; inspect unresolved faults.',
+        'complete': 'All planned faults have conclusive classifications; inspect counts.',
+    }
     return {
-        'schema': REPORT_SCHEMA, 'counts': counts, 'planned': len(outcomes), 'injected': injected,
+        'schema': REPORT_SCHEMA, 'status': status, 'summary': summaries[status], 'counts': counts, 'planned': len(outcomes), 'injected': injected,
         'population_total': plan_data['population_total'], 'sampling': plan_data['sampling'],
         'sampled_fraction': round(len(outcomes) / plan_data['population_total'], 8) if plan_data['population_total'] else None,
         'diagnostic_coverage': None if coverage is None else round(coverage, 4),
         'diagnostic_coverage_95': wilson(counts['detected'], dangerous),
         'safe_fraction': round(counts['safe'] / injected, 4) if injected else None,
         'missing_outcomes': missing,
-        'unresolved': [o['id'] for o in outcomes if o['classification'] in ('timeout', 'inconclusive', 'not_injected')],
+        'unresolved': unresolved,
         'per_site': per_site,
         'definitions': 'diagnostic coverage = detected / (detected + silent_corruption + timeout); '
                        'safe and not_injected faults are outside that denominator',
