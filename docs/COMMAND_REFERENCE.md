@@ -681,7 +681,7 @@ usage: rvw doctor [-h] [--features FEATURES] [--smoke-elf SMOKE_ELF]
 
 ```text
 usage: rvw farm [-h] [--project PROJECT]
-    {run,cancel,notifications,classify,recover,batch,queue,serve,dashboard}
+    {run,cancel,notifications,classify,recover,budget,batch,queue,serve,dashboard}
     ...
 ```
 
@@ -715,6 +715,13 @@ usage: rvw farm classify [-h] [--project PROJECT] reports [reports ...]
 
 ```text
 usage: rvw farm recover [-h] --out OUT [--project PROJECT]
+```
+
+### `rvw farm budget`
+
+```text
+usage: rvw farm budget [-h] --root ROOT --scope SCOPE [--limits LIMITS]
+    [--rate-per-core-hour RATE_PER_CORE_HOUR] [--project PROJECT]
 ```
 
 ### `rvw farm batch`
@@ -2651,6 +2658,14 @@ Render, submit, inspect, cancel or collect explicit local/Kubernetes shards.
 Arguments: `plan` (required), `action`, `executor`, `root`, `ids`.
 
 Starts a background job: yes.
+
+### `farm_budget`
+
+Set cumulative queue budgets or report costs. CPU charge is declared cores times wall time.
+
+Arguments: `root` (required), `scope` (required), `limits`, `rate_per_core_hour`.
+
+Starts a background job: no.
 
 ### `farm_cancel`
 

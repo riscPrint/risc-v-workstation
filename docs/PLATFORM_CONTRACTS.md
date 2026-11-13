@@ -1,5 +1,16 @@
 # Platform contracts
 
+### Queue cumulative budgets
+
+`rvw.queue-cost/1` records cumulative run, agent or project usage and configured
+limits. Core-hours equal declared cores times attempt wall seconds divided by
+3600. Attempts include retries, cancellation and cleanup. Active attempts reserve
+their bounded maximum charge during admission. A worker timeout enforces the
+smallest remaining scope limit; cleanup can exceed that limit and stays charged.
+Execution states do not replace C4 verdicts. Monetary cost requires an explicit
+rate; absent rates stay null.
+
+
 The file formats and commands the phase 1 and 2 tools share. Every tool reads and writes these, so
 they can be built in parallel and swapped out later. Change a contract only by editing this file
 in the same commit as the code that needs it.

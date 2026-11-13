@@ -25,6 +25,12 @@ def register(sub):
     recovery = commands.add_parser("recover")
     recovery.add_argument("--out", required=True)
     recovery.set_defaults(func=recover_command)
+    costs = commands.add_parser("budget")
+    costs.add_argument("--root", required=True)
+    costs.add_argument("--scope", required=True)
+    costs.add_argument("--limits", help="JSON core_hours, wall_seconds and jobs limits")
+    costs.add_argument("--rate-per-core-hour", type=float)
+    costs.set_defaults(func=budget_command)
     batch = commands.add_parser("batch")
     batch.add_argument("--plan", required=True)
     batch.add_argument("--action", choices=("render", "submit", "status", "cancel", "collect"), default="render")
@@ -100,3 +106,8 @@ def serve_command(args):
 def batch_command(args):
     from .batch import batch
     print(json.dumps(batch(json.loads(Path(args.plan).read_text()), args.action, args.executor, args.root, json.loads(args.ids))))
+
+
+def budget_command(args):
+    from .costs import budget
+    print(json.dumps(budget(args.root, args.scope, json.loads(args.limits) if args.limits else None, args.rate_per_core_hour)))
