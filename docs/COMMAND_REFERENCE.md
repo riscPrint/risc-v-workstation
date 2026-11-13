@@ -449,7 +449,7 @@ usage: rvw farm dashboard [-h] --root ROOT --out OUT [--core CORE] [--suite
 
 ```text
 usage: rvw formal [-h] [--project PROJECT]
-    {csr,security,regress,properties,sva-lower,template,contracts,strengthen,proof-core,apps,autocheck,bench,cex,sby-history,sby-regress,prove,depth-search,riscv,connectivity,equiv,bmc,from-sim,swarm,xprop,x-context,x-sweep}
+    {csr,security,regress,properties,sva-lower,template,contracts,strengthen,proof-core,apps,autocheck,bench,cex,sby-history,sby-regress,prove,depth-search,riscv,connectivity,datapath,equiv,bmc,from-sim,swarm,xprop,x-context,x-sweep}
     ...
 ```
 
@@ -611,6 +611,17 @@ usage: rvw formal riscv [-h] --out OUT [--timeout TIMEOUT] [--json] [--project
 usage: rvw formal connectivity [-h] --db DB --out OUT [--max-nodes MAX_NODES]
     [--json] [--run] [--clock CLOCK] [--reset RESET] [--depth DEPTH] [--engine
     ENGINE] [--timeout TIMEOUT] [--project PROJECT] manifest
+```
+
+### `rvw formal datapath`
+
+```text
+usage: rvw formal datapath [-h] --rtl RTL --model MODEL --width {8,16,32,64}
+    [--latency LATENCY] [--unwind UNWIND] [--case
+    {all,finite,nan,infinity,zero,subnormal}] [--rounding {0,1,2,3,4}]
+    [--reference-tree REFERENCE_TREE] [--reference-source REFERENCE_SOURCE]
+    [--reference-include REFERENCE_INCLUDE] [--timeout TIMEOUT] --out OUT
+    [--json] [--project PROJECT]
 ```
 
 ### `rvw formal equiv`
@@ -1379,7 +1390,7 @@ usage: rvw workloads verify [-h] [--json] --build BUILD --out OUT [--oracle
 
 ## MCP tools
 
-The default server exposes 105 built-in tools, including the four job tools.
+The default server exposes 106 built-in tools, including the four job tools.
 `--only` filters packages. `RVW_MCP_PLUGINS` can add tools.
 `rvw mcp --list --json` returns full input schemas.
 CLI commands without an MCP entry are CLI-only.
@@ -1711,6 +1722,14 @@ Starts a background job: yes.
 Generate CSR monitors, directed assembly and coverage. Does not run verification.
 
 Arguments: `model` (required), `out` (required).
+
+Starts a background job: yes.
+
+### `formal_datapath`
+
+Bit-blast mapped RTL and a C reference with CBMC. Fixed-latency transaction checks; no streaming proof.
+
+Arguments: `rtl` (required), `model` (required), `width` (required), `out` (required), `latency`, `unwind`, `case`, `rounding`, `reference_tree`, `reference_source`, `reference_include`, `timeout`.
 
 Starts a background job: yes.
 

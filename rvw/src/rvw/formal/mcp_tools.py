@@ -57,7 +57,7 @@ def _runner(command):
         def error(why):
             return ToolError(f"rvw formal {command}: {why} (exit {code})",
                              {"exit_code": code, "log_tail": job.tail(30)})
-        if code not in (0, 1):
+        if code not in ((0, 1, 3) if command == "datapath" else (0, 1)):
             raise error("failed")
         if not result.is_file():
             raise error("wrote no result")
@@ -67,7 +67,7 @@ def _runner(command):
             raise error(f"unreadable result.json: {e}")
         if not isinstance(data, dict):
             raise error("result.json is not an object")
-        if (code == 0) != (data.get("status") == "pass"):
+        if (code == 0) != (data.get("status") == ("proved" if command == "datapath" else "pass")):
             raise error(f"exit code and status {data.get('status')!r} disagree")
         return data
     return run
@@ -113,6 +113,15 @@ def mcp_tools():
 
         ToolSpec("formal_properties", "Generate SVA for common intents and typed Stream/Flow channels. Does not run a proof.",
                  schema({"spec": S, "channels": S, "out": S}, ["spec", "out"]), _properties, long=True),
+        ToolSpec("formal_datapath", "Bit-blast mapped RTL and a C reference with CBMC. Fixed-latency transaction checks; no streaming proof.",
+                 schema({"rtl": S, "model": S, "width": {"type": "integer", "enum": [8,16,32,64]},
+                         "out": S, "latency": I, "unwind": I,
+                         "case": {**S, "enum": ["all", "finite", "nan", "infinity", "zero", "subnormal"]},
+                         "rounding": {"type": "integer", "enum": [0,1,2,3,4]},
+                         "reference_tree": S, "reference_source": {"type": "array", "items": S},
+                         "reference_include": {"type": "array", "items": S},
+                         "timeout": {"type": "number", "exclusiveMinimum": 0}}, ["rtl", "model", "width", "out"]),
+                 _runner("datapath"), long=True),
         ToolSpec("formal_proof_core", "Extract a deletion-minimal solver core for one named SMT query. Not an RTL proof.",
                  schema({"smt2": S, "mapping": S, "db": S, "solver": S,
                          "timeout": {"type": "number", "exclusiveMinimum": 0}, "out": S},
