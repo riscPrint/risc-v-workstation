@@ -90,6 +90,7 @@ object Report {
               "reset_active" -> cd.config.resetActiveLevel.toString,
               "clock_enable" -> signal(cd.clockEnable)): V
         }.getOrElse(Null),
+        "trigger_signal" -> Option(c.trigger).map(b => vname(path, b)),
         "fail_signal" -> Option(c.failName).map(n => SpinalChecks.qualify(path, n)),
         "signals" -> obj(c.signals.toSeq.map { case (role, bts) => role -> (arr(bts.filter(alive).map(b => vname(path, b): V)): V) }: _*)
       ): V

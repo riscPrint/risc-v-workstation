@@ -23,6 +23,8 @@ def summarize(inventory, runs=(), formal=None, dispositions=None):
         if r['id'] not in bound:
             row['unbound'] += 1
             row['reasons'].append(dict(id=r['id'], status=r['status'], reason=r.get('reason')))
+    activation_counts = {}
+    activation_measured = set()
     run_rows = []
     for filename in runs:
         path = Path(filename).resolve()
@@ -35,6 +37,19 @@ def summarize(inventory, runs=(), formal=None, dispositions=None):
         observation = json.loads((path.parent / artifacts['checks']).read_text())
         if observation.get('schema') != 'rvw.checks-run/1' or observation.get('inserted') != len(bound):
             raise ValueError('runtime monitor inventory mismatch')
+        acts = observation.get('activations', [])
+        seen = set()
+        for a in acts:
+            key, count = a['id'], a.get('count')
+            if key not in bound or key in seen:
+                raise ValueError('unknown or duplicate activation id')
+            seen.add(key)
+            if count is None:
+                continue
+            if type(count) is not int or count < 0:
+                raise ValueError('invalid activation count')
+            activation_measured.add(key)
+            activation_counts[key] = activation_counts.get(key, 0) + count
         fs = observation['firings']
         ids = [f['id'] for f in fs]
         if len(set(ids)) != len(ids) or observation['fired'] != len(fs):
@@ -57,12 +72,21 @@ def summarize(inventory, runs=(), formal=None, dispositions=None):
                 row['fired'] += 1
                 fired.add(f['id'])
         run_rows.append(dict(path=str(path), status=run['status'], elf_sha256=run['elf_sha256']))
+    formal_activated = set()
+    formal_inactive = set()
     if formal is not None:
         result = json.loads(Path(formal).read_text())
         if result.get('schema') != 'rvw.formal-regress/1':
             raise ValueError('expected rvw.formal-regress/1')
         proven, bounded, associated = set(), set(), {}
         for prop in result['properties']:
+            a = prop.get('activation')
+            if isinstance(a, dict) and a.get('status') == 'reached':
+                if prop.get('depth') is not None and a.get('depth') != prop['depth']:
+                    raise ValueError('formal activation depth differs from BMC depth')
+                formal_activated.update(prop.get('requirements', []))
+            elif isinstance(a, dict) and a.get('status') == 'not_reached_within_bound':
+                formal_inactive.update(prop.get('requirements', []))
             # All properties associated with a check must succeed. One passing
             # payload field cannot establish a complete packed-payload check.
             for check_id in prop.get('requirements', []):
@@ -70,6 +94,8 @@ def summarize(inventory, runs=(), formal=None, dispositions=None):
                     raise ValueError('formal requirement is absent from bound inventory')
                 associated.setdefault(check_id, []).append(prop)
         for check_id, props in associated.items():
+            if check_id not in formal_activated:
+                continue
             if all(p.get('status') == 'pass' and p.get('formal_status') == 'proven' for p in props):
                 proven.add(check_id)
             elif all(p.get('status') == 'pass' and p.get('formal_status') in
@@ -78,12 +104,24 @@ def summarize(inventory, runs=(), formal=None, dispositions=None):
         for kind, row in counts.items():
             row['proven'] = sum(by_id[i]['kind'] == kind for i in proven)
             row['bounded'] = sum(by_id[i]['kind'] == kind for i in bounded)
-    result = dict(schema='rvw.check-qualification/1', status='findings' if fired else 'inconclusive',
+    activation = []
+    for key in sorted(bound):
+        count = activation_counts.get(key) if key in activation_measured else None
+        activation.append(dict(id=key, simulation_count=count,
+            simulation_status='unmeasured' if count is None else ('activated' if count else 'no_activation'),
+            formal_status='activated' if key in formal_activated else ('no_activation' if key in formal_inactive else 'unmeasured')))
+    for kind, row in counts.items():
+        selected = [a for a in activation if by_id[a['id']]['kind'] == kind]
+        row['activated_simulation'] = sum(a['simulation_status'] == 'activated' for a in selected)
+        row['no_activation_simulation'] = sum(a['simulation_status'] == 'no_activation' for a in selected)
+        row['activation_unmeasured'] = sum(a['simulation_status'] == 'unmeasured' for a in selected)
+        row['activated_formal'] = sum(a['id'] in formal_activated for a in selected)
+    result = dict(activation=activation, schema='rvw.check-qualification/1', status='findings' if fired else 'inconclusive',
         inventory=str(inventory), counts=counts, runs=run_rows,
         formal=str(formal) if formal else None,
         limitations=['Null means NOT RUN. Zero means no matching observation in supplied evidence.',
             'Simulation covers exercised behavior only. Formal requirements are project associations.',
-            'This summary does not certify input closure, activation or whole-core correctness.'])
+            'Proof counts require separate formal activation. Missing triggers remain unmeasured. Whole-core correctness is not certified.'])
 
     if dispositions is not None:
         from .dispositions import apply

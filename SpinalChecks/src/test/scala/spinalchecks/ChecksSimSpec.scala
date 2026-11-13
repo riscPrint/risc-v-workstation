@@ -47,6 +47,10 @@ class ChecksSimSpec extends AnyFunSuite {
         intercept[IllegalArgumentException](ChecksSim.writeRunReport(dut, report))
         assert(!Files.exists(Paths.get(report)))
       } else {
+        assert(result.inserted.forall(_.activationCount != null))
+        assert(result.inserted.find(_.kind == Kind.StreamValidHold).get.activationCount.toLong > 0)
+        if (!broken) assert(result.inserted.forall(_.activationCount.toLong > 0))
+        else assert(result.inserted.find(_.kind == Kind.StreamPayloadStable).get.activationCount.toLong == 0)
         val fs = ChecksSim.firings(dut)
         assert(fs.map(_.check.id).toSet == (if (broken) Set("stream.valid_hold:beat") else Set.empty[String]))
         if (broken) assert(fs.head.count >= drops)

@@ -28,6 +28,11 @@ def prepare(rtl, inventory, out, ids, depth=4):
         if domain['edge'] != 'RISING' or domain.get('clock_enable'):
             raise ValueError('requires an ungated rising clock')
         top, fail, clock, reset = names
+        trigger = check.get('trigger_signal')
+        if trigger:
+            trigger = trigger.split('.')[-1]
+            if not ident.fullmatch(trigger):
+                raise ValueError('invalid trigger signal')
         owner = check.get('module', top)
         if not ident.fullmatch(owner):
             raise ValueError('invalid owner module')
@@ -68,12 +73,25 @@ rvw_selected_check rvw_selected_check_instance(.clk({clock}), .reset_active({act
             shutil.copyfile(source, directory/source.name)
         files = sorted(p.name for p in directory.glob('*.v'))
         (directory/'job.sby').write_text(f'[options]\nmode bmc\ndepth {depth}\n\n[engines]\nsmtbmc yices\n\n[script]\n'
-            + 'read_verilog -formal -sv ' + ' '.join(files) + '\nchformal -assert -remove\n'
+            + 'read_verilog -formal -sv ' + ' '.join(files) + '\nchformal -assert -remove\nchformal -cover -remove\n'
             + f'read_verilog -formal -sv monitor.sv\nprep -top {top}\nasync2sync\ndffunmap\n\n[files]\n'
             + '\n'.join(files + sorted(p.name for p in extras)) + '\nmonitor.sv\n')
         manifest += ['', '[[property]]', f'id = "check_{index}"', f'sby = "{index}/job.sby"',
             f'top = "{top}"', 'requirements = [' + json.dumps(check['id']) + ']',
             'assumptions = ["reset for two initial samples; other inputs arbitrary"]']
+        if trigger:
+            (directory/'activation.sv').write_text(
+                'module rvw_selected_check(input clk, reset_active, fail);\n'
+                'always @(posedge clk) if (!reset_active) cover(fail);\nendmodule\n')
+            job = (directory/'job.sby').read_text()
+            cover_job = job.replace('mode bmc', 'mode cover').replace('monitor.sv', 'activation.sv')
+            for source in list(directory.glob('*.v')):
+                text = source.read_text()
+                (directory/('activation_' + source.name)).write_text(text.replace('.fail(' + fail + ')', '.fail(' + trigger + ')'))
+                cover_job = cover_job.replace(source.name, 'activation_' + source.name)
+            cover_job = cover_job.replace('chformal -assert -remove', 'chformal -assert -remove\nchformal -cover -remove')
+            (directory/'activation.sby').write_text(cover_job)
+            manifest.append(f'activation_sby = "{index}/activation.sby"')
     (out/'regress.toml').write_text('\n'.join(manifest)+'\n')
 
 

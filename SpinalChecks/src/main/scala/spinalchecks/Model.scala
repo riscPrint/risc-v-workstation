@@ -191,6 +191,8 @@ class CheckRecord(val id: String, val kind: String, val component: Component, va
                   val objName: String, val env: Boolean, val location: Option[SourceLoc], val detail: String) {
   var status: String = "inserted"
   var reason: String = null
+  var trigger: Bool = null
+  var activationCount: UInt = null
   var fail: Bool = null
   var clockDomain: ClockDomain = null
   var fired: Bool = null

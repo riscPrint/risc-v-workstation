@@ -51,3 +51,16 @@ def test_nested_check_keeps_root_and_rejects_shared_owner_module(tmp_path):
     (rtl/'Unit.v').write_text(text.replace('Child child(', 'Child other(.clk(clk), .reset(reset));\nChild child('))
     with pytest.raises(ValueError, match='one instance'):
         helper.prepare(rtl, inventory, tmp_path/'shared', ['stream.valid_hold:child.x'])
+
+def test_trigger_gets_independent_cover_at_same_depth(tmp_path):
+    rtl=tmp_path/'rtl'; rtl.mkdir()
+    (rtl/'Unit.v').write_text('module Unit(input clk,reset);\nwire bad=0, trigger=1;\nendmodule\n')
+    inventory=tmp_path/'checks.json'
+    inventory.write_text(json.dumps(dict(schema='rvw.checks/1',formal=True,toplevel='Unit',checks=[
+        dict(id='enum.legal:x',status='inserted',path='',fail_signal='bad',trigger_signal='trigger',
+             clock_domain=dict(clock='clk',reset='reset',edge='RISING',reset_active='HIGH'))])))
+    helper.prepare(rtl,inventory,tmp_path/'out',['enum.legal:x'])
+    assert 'activation_sby = "0/activation.sby"' in (tmp_path/'out/regress.toml').read_text()
+    assert 'mode cover' in (tmp_path/'out/0/activation.sby').read_text()
+    assert '.fail(trigger)' in (tmp_path/'out/0/activation_Unit.v').read_text()
+    assert '.fail(bad)' in (tmp_path/'out/0/Unit.v').read_text()
