@@ -133,7 +133,8 @@ Kinds: `branch` (pc, taken, target, optional predicted_taken, predicted_target; 
 `event`), `tlb` (optional va, pa, asid, entry, size, global, pte_address, pte; meta `event`
 fill/hit/miss/invalidate), `walk` (address, optional data, level, fault; meta `event`
 request/response), `stage` (id, optional pc; meta `stage`, `lane`; occupancy), `retire` (id),
-`flush` (id), `stall` (no fields; meta `scope`, `cause`, `evidence`; level), `csr` (address,
+`flush` (id), `bus` (address, optional write, data, mask, size; meta `bus`; one accepted
+request at a core port, before any cache), `stall` (no fields; meta `scope`, `cause`, `evidence`; level), `csr` (address,
 value), `interrupt` (cause, pc, optional tval), `trace` (itype, iaddr, iretire, ilastsize,
 priv, optional cause, tval), `counter` (inc, summed each cycle and written only in the end
 record; optional meta `hpm`), `fault` (a register site, never sampled) and `custom`.
@@ -148,6 +149,13 @@ Kanata 0004 with `#rvw 1 stall` records, cache observer JSONL (`event` is `CACHE
 events in order). `rvw probes list` writes `rvw.probes-report/1`: `probes`, one `consumers`
 row per tool with `status` `enabled`, `missing`, `unknown` or `no_converter`, and the
 `enabled`/`missing` lists. Probe events are producer claims; no converter adds an event.
+`--to bus` writes `rvw.probe-bus-check/1`: the data bus probe's writes against retired C2
+stores one to one (bytes and values, in order), and each retired C2 load covered by a later
+bus read in order; `unretired_reads` counts reads no load used. `--to csr-writes` writes
+`rvw.probe-csr-writes/1`: each retired C2 instruction that writes a CSR matches the next
+`csr` event by address, and by value when C2 operands give it (`csrrw*` always, `csrrs*`/
+`csrrc*` when `rd` is not x0); a trapped CSR write may consume one event. Both have `status`
+`consistent`, `mismatch` or `inconclusive` and a `mismatches` list.
 `rvw uvm run` writes C1 with `details.mode: uvm-bench`, null cycle and retirement
 counts, and no ELF claim. A pass requires exit zero, no UVM error/fatal, and one
 `RVW_UVM_DONE TEST checks=N` line with the selected test and positive N.

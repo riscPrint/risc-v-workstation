@@ -1,6 +1,7 @@
 package rvwvex
 
 import spinal.core._
+import spinal.lib._
 import spinalprobes.Probe
 import vexriscv.{Stageable, VexRiscv}
 import vexriscv.Riscv.IMM
@@ -79,6 +80,20 @@ class ProbePlugin extends Plugin[VexRiscv] {
     Probe.counter("decode_stall_cycles", decode.arbitration.isValid && decode.arbitration.isStuck)
     Probe.counter("fetch_empty_cycles", !decode.arbitration.isValid)
     Probe.counter("flushes", stagesWithNames.map { case (s, _) => s.arbitration.isValid && s.arbitration.removeIt }.reduce(_ || _))
+
+    // Accepted bus requests at the core ports. The data bus has no cache in this config.
+    val ibus = pipeline.config.get(classOf[IBusSimplePlugin]).iBus
+    Probe.bus("ibus", ibus.cmd.fire, ibus.cmd.pc)
+    val dcmd = dbus.dBus.cmd
+    Probe.bus("dbus", dcmd.fire, dcmd.address, write = Some(dcmd.wr), data = Some(dcmd.data),
+      mask = Some(dcmd.mask), size = Some(dcmd.size))
+
+    // CSR writes: the plugin's own write strobe (any address), the instruction's CSR field and
+    // the data it writes. Unimplemented bits are dropped by the CSR storage, not here.
+    val csrWriting = Bool()
+    csrWriting := False
+    csr.csrMapping.onAnyWrite { csrWriting := True }
+    Probe.csrWrite("csr", csrWriting, execute.input(INSTRUCTION)(31 downto 20), csr.csrMapping.writeDataSignal)
 
     // Interrupt-taken: the registered trap strobe and actual mcause/mepc storage.
     def readCsr(address: Int): Bits = csr.csrMapping.mapping(address).collect {

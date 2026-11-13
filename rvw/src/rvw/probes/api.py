@@ -80,6 +80,10 @@ def run_convert(events, to, out, c2=None, c1=None, probe=None, roi=None) -> dict
         return cv.hpm(s, out)
     if to == "etrace-ingress":
         return cv.etrace_ingress(s, out, probe=probe)
+    if to in ("bus", "csr-writes"):
+        from . import checks
+        run = checks.bus if to == "bus" else checks.csr_writes
+        return run(s, need(c2, "--c2"), out, probe=probe)
     return cv.interrupts(s, need(c2, "--c2"), out)
 
 

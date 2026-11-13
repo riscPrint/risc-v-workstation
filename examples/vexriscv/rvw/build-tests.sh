@@ -18,7 +18,7 @@ nice -n 10 make -j2 -f "$source_dir/isa/Makefile" src_dir="$source_dir/isa" \
   XLEN=32 RISCV_PREFIX="$prefix" "${targets[@]}"
 
 mkdir -p "$here/out/programs"
-for name in smoke trap branches irqs; do
+for name in smoke trap branches irqs memcsr; do
   "${prefix}gcc" -march=rv32im_zicsr_zifencei -mabi=ilp32 -nostdlib -nostartfiles \
     -T "$here/programs/link.ld" -Wl,--build-id=none "$here/programs/$name.S" -o "$here/out/programs/$name"
 done

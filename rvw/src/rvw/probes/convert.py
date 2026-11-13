@@ -329,4 +329,5 @@ def summary(stream: Stream) -> dict:
             "counters": stream.counters}
 
 
-CONVERTERS = {"bp-events", "kanata", "cache", "mmu", "counts", "hpm", "etrace-ingress", "interrupts"}
+CONVERTERS = {"bp-events", "kanata", "cache", "mmu", "counts", "hpm", "etrace-ingress", "interrupts", "bus",
+              "csr-writes"}
