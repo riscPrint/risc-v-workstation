@@ -41,7 +41,6 @@ def render():
                  '## CLI commands', '']
 
         def visit(parser):
-            parser.format_help()  # Load lazy providers before reading their command tree.
             if hasattr(parser, "load"):
                 parser.load()
             # argparse otherwise wraps usage at the caller's terminal width.
