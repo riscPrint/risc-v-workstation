@@ -420,6 +420,24 @@ python_cmd=python3
 if ! probe Python 3.11 python3 --version >/dev/null 2>&1 && command -v python3.11 >/dev/null 2>&1; then
   python_cmd=python3.11
 fi
+# cocotb 2.1 supports Python through 3.14. Select only installed interpreters.
+for extra_tool in ${extra_tools[@]+"${extra_tools[@]}"}; do
+  case "$extra_tool" in cocotb|pyuvm)
+    python_supported='import sys; sys.exit(not ((3, 11) <= sys.version_info[:2] < (3, 15)))'
+    if ! "$python_cmd" -c "$python_supported" >/dev/null 2>&1; then
+      compatible_python=''
+      for candidate in python3.11 python3.12 python3.13 python3.14; do
+        if command -v "$candidate" >/dev/null 2>&1 && "$candidate" -c "$python_supported" >/dev/null 2>&1; then
+          compatible_python="$candidate"; break
+        fi
+      done
+      [ -n "$compatible_python" ] || fail 'cocotb and pyuvm need Python 3.11 through 3.14; put a compatible versioned interpreter on PATH'
+      python_cmd="$compatible_python"
+      printf 'Select %s for cocotb and pyuvm\n' "$python_cmd"
+    fi
+    break ;;
+  esac
+done
 [ "$sail" = 0 ] || [ "$bundle" = 1 ] || [ "$check" = 1 ] || fail '--with-sail needs --from-bundle'
 if [ "$bundle" = 1 ] && [ "$check" = 0 ]; then
   [ -n "$bundle_run" ] || [ -n "$bundle_dir" ] || fail '--from-bundle needs --bundle-run or --bundle-dir'
