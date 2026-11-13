@@ -153,7 +153,13 @@ def _page_write(walk, match, effect, xlen):
 def parse(lines, xlen=64):
     for effect in _parse(lines, xlen):
         accesses = effect.pop("accesses", {"r": [], "w": []})
-        if accesses["r"] or accesses["w"]:
+        fault = (effect.get("trap") and not effect.get("intr")
+                 and effect.get("cause") in (4, 5, 6, 7, 13, 15)
+                 and decode(effect["insn"], xlen).cls in ("load", "store", "atomic"))
+        if fault:
+            from .fault import observed_fault
+            effect["fault_access"] = observed_fault(effect, accesses, xlen)
+        elif accesses["r"] or accesses["w"]:
             vaddr = memory_address(effect, xlen)
             direction = memory_direction(effect["insn"], xlen)
             for field in ("r", "w"):
@@ -437,6 +443,11 @@ class Sail:
         if not effect["intr"]:
             self.last_mode = effect["mode_after"]
         return self.platform.normalize_effect(effect)
+
+    def fault_access(self, effect):
+        if "fault_access" not in effect:
+            raise ValueError("Sail cannot observe this fault access")
+        return effect["fault_access"]
 
     def terminated(self):
         """Sail's HTIF status ("pass" or "fail") if Sail's run ended right after the last step,

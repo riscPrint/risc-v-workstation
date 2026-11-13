@@ -36,3 +36,30 @@ def reference_fault(effect, xlen):
     mask = (1 << width) - 1
     return dict(addr=addr, rmask=mask if read else 0, wmask=mask if write else 0,
                 completed_rmask=0, completed_wmask=0, rdata=None, wdata=None)
+
+
+def observed_fault(effect, accesses, xlen):
+    """Map independent Sail memory log fragments to an attempted scalar access.
+
+    Log addresses are physical. Only a single virtual page is supported here.
+    No unlogged byte is assigned data. Page-crossing effects need translation
+    observations and remain unsupported.
+    """
+    attempt = reference_fault(dict(effect, mem_rmask=0, mem_wmask=0), xlen)
+    width = max(attempt['rmask'].bit_length(), attempt['wmask'].bit_length())
+    if attempt['addr'] % 4096 + width > 4096:
+        raise ValueError('Sail split-page fault effects need translation observations')
+    for direction in ('r', 'w'):
+        completed, data = 0, 0
+        for address, size, value in accesses[direction]:
+            offset = address % 4096 - attempt['addr'] % 4096
+            if size <= 0 or offset < 0 or offset + size > width:
+                raise ValueError('Sail fault fragment is outside attempted access')
+            mask = ((1 << size) - 1) << offset
+            if mask & ~attempt[f'{direction}mask'] or mask & completed:
+                raise ValueError('Sail fault fragment has wrong direction or overlapping bytes')
+            completed |= mask
+            data |= value << (8 * offset)
+        attempt[f'completed_{direction}mask'] = completed
+        attempt[f'{direction}data'] = data if completed else None
+    return attempt

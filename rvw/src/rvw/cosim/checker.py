@@ -288,11 +288,13 @@ def check(trace_path, model, platform, history=10, sync=SYNC_KINDS):
             if "fault_access" in actual:
                 from .fault import reference_fault
                 access = actual["fault_access"]
-                if access["completed_rmask"] or access["completed_wmask"]:
-                    raise ValueError("partial fault effects are unsupported by this reference interface")
-                if getattr(model, "name", "spike") != "spike":
-                    raise ValueError("reference cannot check fault-access records")
-                reference_access = reference_fault(expected, platform.xlen)
+                reference_access = model.fault_access(expected) if hasattr(model, "fault_access") else None
+                if reference_access is None:
+                    if access["completed_rmask"] or access["completed_wmask"]:
+                        raise ValueError("partial fault effects are unsupported by this reference interface")
+                    if getattr(model, "name", "spike") != "spike":
+                        raise ValueError("reference cannot check fault-access records")
+                    reference_access = reference_fault(expected, platform.xlen)
                 expected["fault_access"] = reference_access
                 fault_access_steps += 1
                 for key, value in access.items():
