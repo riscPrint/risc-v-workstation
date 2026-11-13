@@ -292,3 +292,29 @@ instructions. This is execution fusion only. It does not reproduce a core's
 macro-op decode or exception rules. Traps remain unsupported. Other pairs,
 memory renaming and speculative dependence replay remain open. Rename
 policies currently use the Python engine.
+
+## Memory-dependence prediction and replay
+
+`memory_policy: speculate` permits a load to pass stores whose inputs are not
+ready. A finite FIFO table records violating load-PC/store-PC pairs. The
+`dependence_entries` capacity defaults to 1024 pairs. A learned pair waits for
+the store address. Resolved stores use the same forwarding rules as
+`disambiguate`.
+
+When a store issues, it checks younger issued loads for overlapping bytes.
+A violation trains the table and replays every younger ROB entry. Dependent
+consumers execute again. The ROB keeps its architectural order. The recovery
+interval is `replay_penalty`, default five cycles. Existing execution-port
+reservations and component service requests remain consumed. They represent
+work already started. The model has no wrong-path instruction bytes, cache
+request cancellation, speculative store data, or store-set union algorithm.
+This is dependence prediction and replay, not memory renaming.
+
+Counters are `speculative_loads`, `memory_order_violations` (overlapping
+issued loads), `memory_order_replays` (store-triggered recoveries), and
+`replayed_instructions`. `issued` includes repeated execution. Recovery
+slots enter the approximate `bad_speculation` category. TLB walks start
+before memory execution. A component request starts only after translation
+completes. Component callbacks therefore receive nondecreasing cycle times.
+Translation counters count attempts, including replays. Synthetic alias and
+non-alias tests check these policies. RTL correlation remains unmeasured.
