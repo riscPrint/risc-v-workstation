@@ -63,6 +63,14 @@ max_cycles = 300000
 timeout_s = 120
 mem_latency = 0
 
+[suites.fp-directed]
+dir = "${RVW_FPU_RUN_ROOT}/directed64"
+glob = "*.elf"
+configs = ["rv64imafdc"]
+max_cycles = 300000
+timeout_s = 120
+mem_latency = 0
+
 [suites.fp-act4]
 dir = "${RVW_FPU_RUN_ROOT}/act464/work/rvw-act4/elfs"
 act4_manifest = "${RVW_FPU_RUN_ROOT}/act464/manifest.json"
