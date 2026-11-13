@@ -236,7 +236,7 @@ def mcp_tools():
                          "observe": {"type": "array", "items": S}, "check_x": B,
                          "timeout": {"type": "number", "exclusiveMinimum": 0}},
                         ["verilog", "top", "events", "out"]), _runner("simulate"), long=True),
-        ToolSpec("formal_liveness", "Lower SVA eventual response to native live jobs or finite-state liveness-to-safety. Engine passes remain inconclusive.",
+        ToolSpec("formal_liveness", "Lower supported unbounded SVA to native live jobs or finite-state liveness-to-safety. Engine passes remain inconclusive.",
                  schema({"source": S, "top": S, "out": S, "run": B,
                          "backend": {**S, "enum": ["suprove", "l2s"]}, "reset": S, "engine": S,
                          "mode": {**S, "enum": ["prove", "bmc"]}, "depth": I,

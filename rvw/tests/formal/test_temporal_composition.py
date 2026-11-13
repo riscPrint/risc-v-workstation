@@ -79,6 +79,15 @@ def test_support_table():
     features = ast.literal_eval(next(node.value for node in module.body if isinstance(node, ast.Assign)
         and any(isinstance(t, ast.Name) and t.id == 'SUPPORT_FEATURES' for t in node.targets)))
     rows += [f'| `{feature}` | positive and negative native case | finite, single clock |' for feature in features]
+    module = ast.parse(Path('rvw/tests/formal/test_unbounded_semantics.py').read_text())
+    features = ast.literal_eval(next(node.value for node in module.body if isinstance(node, ast.Assign)
+        and any(isinstance(t, ast.Name) and t.id == 'SUPPORT_FEATURES' for t in node.targets)))
+    native = ast.parse(Path('rvw/tests/formal/test_unbounded_native.py').read_text())
+    pairs = ast.literal_eval(next(node.value for node in native.body if isinstance(node, ast.Assign)
+        and any(isinstance(t, ast.Name) and t.id == 'CASES' for t in node.targets)))
+    assert features == [row[0] for row in pairs]
+    rows += [f'| `{feature}` | positive and negative native case | infinite trace, single clock; `formal liveness` |'
+             for feature in features]
     expected = '\n'.join(rows) + '\n'
     assert Path('rvw/src/rvw/formal/TEMPORAL_SUPPORT.md').read_text() == expected
 

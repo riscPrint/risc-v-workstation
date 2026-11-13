@@ -142,7 +142,7 @@ def register(sub) -> None:
     simulation.set_defaults(func=event_sim.run)
 
     from . import liveness
-    live = s.add_parser("liveness", help="lower eventual response SVA to native live or liveness-to-safety jobs")
+    live = s.add_parser("liveness", help="lower unbounded SVA to native live or liveness-to-safety jobs")
     live.add_argument("source")
     live.add_argument("--top", required=True)
     live.add_argument("--out", required=True)

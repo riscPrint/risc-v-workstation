@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Regenerate the finite temporal support table from its semantic test corpus."""
+"""Regenerate temporal support from its semantic test corpora."""
 import ast
 from pathlib import Path
 
@@ -18,4 +18,11 @@ cases += [(feature,) for feature in local_features]
 rows = ['| Construct | Corpus | Scope |', '|---|---|---|']
 rows += [f'| `{feature}` | positive and negative native case | finite, single clock |'
          for feature, *_ in cases]
+unbounded = ast.parse((root / 'rvw/tests/formal/test_unbounded_semantics.py').read_text())
+features = ast.literal_eval(next(node.value for node in unbounded.body
+                                if isinstance(node, ast.Assign)
+                                and any(isinstance(t, ast.Name) and t.id == 'SUPPORT_FEATURES'
+                                        for t in node.targets)))
+rows += [f'| `{feature}` | positive and negative native case | infinite trace, single clock; `formal liveness` |'
+         for feature in features]
 (root / 'rvw/src/rvw/formal/TEMPORAL_SUPPORT.md').write_text('\n'.join(rows) + '\n')
