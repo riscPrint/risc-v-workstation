@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Build a local MkDocs site from tracked Markdown without changing the sources."""
 import argparse
+import os
 from pathlib import Path
 import shutil
 import re
@@ -12,16 +13,39 @@ ROOT=Path(__file__).resolve().parents[1]
 
 
 def readmes():
-    paths=set(ROOT.glob('*/README.md')) | set((ROOT/'rvw/src/rvw').glob('*/README.md'))
+    paths = set()
+    for directory, dirs, files in os.walk(ROOT):
+        dirs[:] = [d for d in dirs if not d.startswith('.') and d not in ('target', 'node_modules', 'simWorkspace', 'out')]
+        if 'README.md' in files:
+            paths.add(Path(directory) / 'README.md')
     return sorted(p.relative_to(ROOT).as_posix() for p in paths
                   if not any(part.startswith('.') for part in p.relative_to(ROOT).parts))
 
 
+def tracked_readmes(names):
+    return [name for name in readmes() if name in names]
+
+
+def navigation(nav, names):
+    """Keep curated order and add all remaining tracked Markdown pages."""
+    def targets(items):
+        for item in items:
+            if isinstance(item, str):
+                yield item
+            elif isinstance(item, dict):
+                yield from targets(item.values())
+            elif isinstance(item, (list, tuple)):
+                yield from targets(item)
+    known = set(targets(nav))
+    extra = sorted(name for name in names if name.endswith('.md') and name not in known)
+    return [*nav, {'More documentation': [{name: name} for name in extra]}]
+
+
 def main():
     p=argparse.ArgumentParser(description=__doc__);p.add_argument('--out',type=Path,required=True);p.add_argument('--check',action='store_true');a=p.parse_args()
-    pages=readmes()
     # Every tool gets its own source README page. Copy all Markdown for local links.
     names=subprocess.check_output(['git','ls-files','-z'],cwd=ROOT).decode().split('\0')
+    pages = tracked_readmes(names)
     revision=subprocess.check_output(['git','rev-parse','HEAD'],cwd=ROOT,text=True).strip()
     with tempfile.TemporaryDirectory(prefix='rvw-docs-') as temporary:
         stage=(Path(temporary)/'source').resolve();stage.mkdir()
@@ -52,6 +76,6 @@ def main():
         from mkdocs.config import load_config
         from mkdocs.commands.build import build
         config=load_config(str(ROOT/'mkdocs.yml'),docs_dir=str(stage),site_dir=str(a.out.resolve()))
-        config.nav.append({'Tools':[{str(Path(name).parent):name} for name in pages]})
+        config.nav = navigation(config.nav or [], [p.relative_to(stage).as_posix() for p in stage.rglob('*.md')])
         build(config)
 if __name__=='__main__':main()

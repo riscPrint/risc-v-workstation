@@ -30,3 +30,25 @@ def test_hidden_metadata_readme_is_not_a_tool_page(tmp_path, monkeypatch):
         (directory / 'README.md').write_text('# Example\n')
     monkeypatch.setattr(docs, 'ROOT', tmp_path)
     assert docs.readmes() == ['Cosim/README.md']
+
+
+def test_nested_examples_and_new_documents_are_discovered(tmp_path, monkeypatch):
+    page = tmp_path / 'examples/new-core/README.md'
+    page.parent.mkdir(parents=True)
+    page.write_text('# New core\n')
+    monkeypatch.setattr(docs, 'ROOT', tmp_path)
+    assert docs.readmes() == ['examples/new-core/README.md']
+    nav = docs.navigation([{'Home': 'README.md'}], ['README.md', 'docs/new.md', 'examples/new-core/README.md'])
+    assert nav[0] == {'Home': 'README.md'}
+    assert nav[1]['More documentation'] == [
+        {'docs/new.md': 'docs/new.md'},
+        {'examples/new-core/README.md': 'examples/new-core/README.md'}]
+
+
+def test_untracked_readme_does_not_break_tracked_staging(tmp_path, monkeypatch):
+    for name in ('Tool', 'local-scratch'):
+        directory = tmp_path / name
+        directory.mkdir()
+        (directory / 'README.md').write_text('# Local\n')
+    monkeypatch.setattr(docs, 'ROOT', tmp_path)
+    assert docs.tracked_readmes(['Tool/README.md']) == ['Tool/README.md']
