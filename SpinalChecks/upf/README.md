@@ -17,7 +17,7 @@ inside quoted or braced words remain part of the word. These lexical rules
 follow the [Tcl command syntax](https://www.tcl-lang.org/man/tcl8.6/TclCmd/Tcl.htm).
 It rejects substitutions, nested braced lists, other backslash escapes, unknown
 commands, unknown options and unsupported strategies. Supply networks,
-level shifting, clock gating and general Tcl are refused.
+level shifting, clock-gating Tcl commands and general Tcl are refused.
 This is an explicit subset, not general IEEE 1801 compatibility.
 
 `rvw.upf-bindings/1` supplies the top module and each declared domain's monitor
@@ -77,7 +77,7 @@ that many consecutive samples of the requested supply state. It permits
 transients before that bound. The control path and sense come from UPF.
 The observation clock must remain active. This checks a project settling
 contract. It does not model analog power ramps or physical gating cells.
-Clock-gating import remains unsupported.
+Clock-gating Tcl commands remain unsupported. See the companion bindings below.
 
 ## Literal command examples
 
@@ -92,3 +92,20 @@ Each command still passes the UPF command and option checks. A trailing
 `source`, `puts`, variable substitution or command substitution is not executed.
 Unrepresented syntax is an error. This change adds lexical forms only. It adds
 no clock-gate import, dynamic Tcl evaluation, new UPF strategy, or physical check.
+
+## Explicit clock-gate companion bindings
+
+The optional `clock_gates` binding map adds sampled gate checks beside declared
+UPF domains. This imports project gate observations. It does not add a UPF Tcl
+command. Each gate declares `domain`, `wake_cycles`, `clk`, `reset`, `enable`,
+`source_low`, `clock_edge`, `work_pending` and `wakeup`. Paths must be literal.
+Use an always-on observation clock and a positive wake bound up to 1024 samples.
+The existing clock-gate monitor checks source-low enable changes, no edges or
+pending work while disabled, and bounded wakeup. These are declared sampled
+contracts. They do not establish glitch freedom between samples.
+
+Use `clock-gates.upf` with `clock-gates-bindings.json` as a fixture example.
+The report lists imported gate names. Six binding/generation tests passed.
+Four native Icarus cases passed: a legal wake sequence and three detected
+faults for enable phase, edges while off and late wake. No core or physical
+gate binding was tested. Clock-gating Tcl commands remain unsupported.

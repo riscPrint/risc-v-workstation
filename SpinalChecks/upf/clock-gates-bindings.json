@@ -1,0 +1,19 @@
+{
+  "schema": "rvw.upf-bindings/1",
+  "top": "top",
+  "event_model": "always_on_sampled",
+  "domains": {"CORE": {}},
+  "clock_gates": {
+    "core_clock": {
+      "domain": "CORE",
+      "wake_cycles": 3,
+      "clk": "aon_clk",
+      "reset": "reset",
+      "enable": "core_enable",
+      "source_low": "core_source_low",
+      "clock_edge": "core_edge_seen",
+      "work_pending": "core_work_pending",
+      "wakeup": "core_wakeup"
+    }
+  }
+}

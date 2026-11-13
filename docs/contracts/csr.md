@@ -337,3 +337,40 @@ Trap events invalidate the mepc and mtval reference values until a software
 write. This does not establish trap-update correctness or denied-access checks.
 The trap-free project harness leaves the general CSR generator's trap-control
 restriction unchanged. Reference configuration differences remain failures.
+
+## Event controls and dynamic IMSIC expectations
+
+`HpmEventChecks` uses project-declared additive event bits and independent
+accepted control writes. Its reference control selects events and applies the
+five Sscofpmf mode filters. OF, reserved bits and unsupported-mode legalization
+are outside this binding. A control write changes the reference after the edge.
+
+`rvw.formal.csr_aia_indirect.ImsicIndirectModel` models a bounded IMSIC indirect
+window. M, S and VS selectors are distinct. The VS selector routes to the
+supplied guest file. File contents stay separate. Reads return `Expectation`
+with value, known mask and width. Comparison returns mismatch on any known-bit
+difference. It returns match only when every bit is known. Otherwise it returns
+inconclusive. Unspecified initial storage never becomes an invented zero.
+Software writes establish known state. Accepted MSI delivery establishes its
+pending bit. Transactions are ordered by API calls; bus-to-file delays and
+hardware/software races need a separate timing binding.
+
+Supported selections are eidelivery, eithreshold, and implemented EIP/EIE
+words at RV32 or RV64 widths. The project policy retains the low required
+selector bits. Legal control values must be supplied. Unsupported selections,
+RV64 odd windows and absent guest files raise UnsupportedSelection. That is a
+model gap, not an expected architectural exception. This API does not check
+privilege traps, major interrupt priorities, top-interrupt arbitration or
+external interrupt signaling.
+
+## Clock gates beside literal UPF
+
+`rvw.upf-bindings/1` can include a clock_gates map. Each literal gate name maps
+to a declared domain, wake_cycles in 1..1024, and literal clk, reset, enable,
+source_low, clock_edge, work_pending and wakeup observations. These are explicit
+companion bindings. They are not UPF Tcl declarations or inferred gate cells.
+The observation clock must remain active. Existing sampled clock-gate monitors
+check enable changes at source-low samples, no output edge or pending work
+while disabled, and the declared wake bound. The generation report lists gate
+names. A domain with such a monitor is removed from unmonitored_domains. This
+does not mean that all power behavior of that domain has been checked.

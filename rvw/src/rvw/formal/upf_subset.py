@@ -102,7 +102,7 @@ def generate(source, bindings, out):
     raw=Path(source).read_bytes()
     obj=parse(raw.decode())
     binding=json.loads(Path(bindings).read_text())
-    if set(binding)-{'schema','top','event_model','domains','retention','psts','switches'} or binding['schema']!='rvw.upf-bindings/1' or binding['event_model']!='always_on_sampled':
+    if set(binding)-{'schema','top','event_model','domains','retention','psts','switches','clock_gates'} or binding['schema']!='rvw.upf-bindings/1' or binding['event_model']!='always_on_sampled':
         raise ValueError('require rvw.upf-bindings/1 and always_on_sampled event model')
     if not IDENT.fullmatch(binding['top']): raise ValueError('invalid bind top')
     if set(binding['domains'])!=set(obj['domains']): raise ValueError('bind every declared power domain')
@@ -173,17 +173,21 @@ def generate(source, bindings, out):
     from .upf_switches import generate as generate_switches
     switch_sources,switch_binds=generate_switches(obj['switches'],binding.get('switches',{}),binding['top'])
     monitors.extend(switch_sources);binds.extend(switch_binds)
-    report=dict(schema='rvw.upf-generation/1',status='generated' if binds else 'no_checks',
+    from .upf_clock_gates import generate as generate_gates
+    gates=binding.get('clock_gates',{})
+    gate_sources,gate_binds=generate_gates(gates,obj['domains'],binding['top'])
+    monitors.extend(gate_sources);binds.extend(gate_binds)
+    report=dict(clock_gates=sorted(gates),schema='rvw.upf-generation/1',status='generated' if binds else 'no_checks',
                 source_sha256=hashlib.sha256(raw).hexdigest(),
                 bindings_sha256=hashlib.sha256(Path(bindings).read_bytes()).hexdigest(),intent=obj,
                 event_model='always_on_sampled',
-                unmonitored_domains=sorted(set(obj['domains'])-{s['-domain'] for s in [*obj['isolation'].values(),*obj['retention'].values(),*obj['switches'].values()]}),
+                unmonitored_domains=sorted(set(obj['domains'])-{g['domain'] for g in gates.values()}-{s['-domain'] for s in [*obj['isolation'].values(),*obj['retention'].values(),*obj['switches'].values()]}),
                 limits=['Literal domains, isolation, retention, supply tables and single-control switches are supported.',
                         'Bindings declare observed outputs and supply availability; completeness is not established.',
                         'Retention supplies are named, not modeled; save/restore are sampled levels while power is on.',
                         'Supply tables check sampled declared state codes; no voltage or transition semantics are inferred.',
                         'Power-switch checking uses declared sampled settle bounds; no physical power behavior is inferred.',
-                        'Clock gating import, edge controls and Tcl evaluation are unsupported.',
+                        'Clock gates use explicit companion bindings, not UPF Tcl commands. Edge controls and Tcl evaluation are unsupported.',
                         'No compilation, simulation, proof or physical power analysis was run.'])
     out=Path(out);out.mkdir(parents=True,exist_ok=False)
     (out/'monitors.sv').write_text('\n'.join(monitors)); (out/'binds.sv').write_text('\n'.join(binds)+'\n')
