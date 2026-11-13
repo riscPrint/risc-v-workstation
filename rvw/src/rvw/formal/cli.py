@@ -233,6 +233,16 @@ def register(sub) -> None:
     benchmark.add_argument("--json", action="store_true")
     benchmark.set_defaults(func=bench.run)
 
+    from . import recheck
+    pinned = s.add_parser("recheck", help="bounded solver what-if with pinned signals in a captured model")
+    pinned.add_argument("--result", required=True)
+    pinned.add_argument("--pin", action="append", required=True, help="FLATTENED_SIGNAL=INTEGER; additional all-sample assumption")
+    pinned.add_argument("--depth", type=int)
+    pinned.add_argument("--engine", default="smtbmc:z3")
+    pinned.add_argument("--timeout", type=float, default=60)
+    pinned.add_argument("--out", required=True)
+    pinned.add_argument("--json", action="store_true")
+    pinned.set_defaults(func=recheck.run)
     c = s.add_parser("cex", help="what-if replay of a captured BMC counterexample (not a proof)")
     c.add_argument("--result", required=True, help="formal result.json or directory")
     c.add_argument("--trace-index", type=int, default=0)

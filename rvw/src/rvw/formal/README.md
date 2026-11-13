@@ -2223,3 +2223,21 @@ from the captured miter, such as `__pi_a`. It does not map a witness into a
 project simulator or claim a whole-core reproduction. Source files are retained
 for inspection. Missing models or a nonfailed partition are refused.
 
+
+### Pinned solver rechecks
+
+`rvw formal recheck --result FAILED_RUN --pin bad=0 --out RECHECK`
+runs a bounded solver check over the captured RTLIL model. Repeat `--pin` for
+more signals. A pin uses an exact net name in the captured top module and an
+integer value. Pins can refer to inputs or internal nets exposed by that model.
+Each pin adds an equality assumption at every formal sample. The original
+drivers, state, assertions and assumptions remain in the captured model.
+
+The command first checks that the pinned model can reach the full requested
+depth. An inconsistent pin is `inconclusive`. A passing recheck is bounded and
+conditional on the original restrictions plus all pins. It does not establish
+that a source change fixes the design or authorize a coverage exclusion.
+`--depth` defaults to the original BMC depth. The minimum depth is two samples.
+The output retains both SBY jobs, their logs, the pinned model and captured
+inputs. The `formal_recheck` MCP tool has the same inputs. Native tests check a
+removed failure, a retained failure and an assumption conflict with Yosys/SBY/Z3.

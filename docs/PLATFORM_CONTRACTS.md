@@ -4708,3 +4708,14 @@ hold inputs, caches and results. Collection validates schemas and declared C1
 identity claims. Missing cells are explicit and inconclusive. Job process success
 and collection completeness do not establish C4 acceptance. Kubernetes retries
 are disabled; retry policy belongs to the controller.
+### Pinned formal rechecks
+
+`rvw.formal-recheck/1` records a bounded solver check over a captured BMC model.
+`pins` lists each exact top-module net, width and integer value. Pins add
+all-sample equality assumptions. Original drivers and formal cells remain.
+`jobs.cover` must report PASS and exit zero for a new full-depth feasibility
+cover. Otherwise the aggregate status is `inconclusive`. A legal BMC PASS with
+exit zero reports `pass`; a legal BMC FAIL reports `fail`. All other outcomes
+are `inconclusive`. `proof_kind` is always `bounded`. The input capture binds the
+original result, captured model and tool identities. This schema does not
+replace `rvw.formal/1` and does not authorize coverage exclusions.
