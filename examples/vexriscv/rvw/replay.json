@@ -1,0 +1,32 @@
+{
+  "schema": "rvw.replay-adapter/1",
+  "command": [
+    "{tools}/examples/vexriscv/rvw/run.sh"
+  ],
+  "source_env": "VEXRISCV",
+  "lock_env": "RVW_VEX_LOCK",
+  "source_inputs": {
+    "core": [
+      "src/main/scala"
+    ],
+    "tools": [
+      "RiscvSim",
+      "SpinalTrace",
+      "SpinalWaves",
+      "SpinalDB",
+      "SpinalChecks",
+      "SpinalProbes",
+      "examples/vexriscv/rvw",
+      "rvw/src",
+      "scripts"
+    ]
+  },
+  "host_environment": [
+    "JAVA_HOME",
+    "PATH",
+    "SDKROOT",
+    "DEVELOPER_DIR",
+    "RVW_PYTHON",
+    "RVW_LOCK_PYTHON"
+  ]
+}

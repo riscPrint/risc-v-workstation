@@ -40,6 +40,7 @@ keep the issue list in `TODO.md` in step with them.
 | `rvw/src/rvw/memory/` | Multi-image inputs and independent serialized memory checks. See its `README.md`. |
 | `rvw/src/rvw/privilege/` | Project-owned privilege, protection and interrupt program generation, campaigns, reference models and C1 evidence checks. See its `README.md`. |
 | `rvw/` | The `rvw` command and `rvw mcp` server. One subpackage per tool under `rvw/src/rvw/<tool>/`; each registers its subcommand (`cli.py`) and its MCP tools (`mcp_tools.py`). A tool can also split commands into `<tool>/commands/<name>.py` modules, each with `register(subparsers)` and `mcp_tools()` (`rvw.common.subcommands`); `rvw formal` does. Shared code in `rvw/src/rvw/common/` (process groups, the lock, the RISC-V decoder) and `rvw/src/rvw/results/` (C1/C3/C4 formats). |
+| `rvw/src/rvw/runs/` | C1 run inputs, adapter execution and single-file offline replay. See its `README.md`. |
 | `RiscvSim/` | Runs ELFs on a Spinal RISC-V core in Verilator through the run contract (C1): result JSON, RVFI trace (C2), waves, Konata, coverage, replay. Generic library in `RiscvSim/src/`; BOOM's adapter in `RiscvSim/boom/` (`run.sh`). |
 | `examples/smp/` | Pinned cacheless VexiiRiscv SMP adapter with two to eight RTL harts and C2/2 capture. See its `README.md`. |
 | `examples/vexriscv/` | External RV32IM VexRiscv adapter, regression config, Spike platform and SpinalDB entry. See its `README.md`. |

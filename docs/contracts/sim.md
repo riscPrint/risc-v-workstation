@@ -361,3 +361,34 @@ launch or copy another core tree. Structured boot payloads, hart images and
 fault-file inputs currently refuse this live path. Normal process reruns keep
 the existing source-capture path. Live C5 replay scripts still require the
 original project setup; they are not standalone portable archives.
+
+## Single-file offline replay archive
+
+`rvw replay-pack` writes `rvw.portable-replay/1` in one ZIP file. The manifest
+binds every member by SHA-256 and mode. It contains the ELF, seeded options,
+inline interrupt schedule, optional captured simulation map, expected C2,
+checkpoint, adapter/core Git bundles, tracked patches and declared untracked
+source inputs. `rvw.replay-adapter/1` project data supplies the adapter command,
+source environment selector, source-input roots and optional host-tool bindings.
+Absolute host-tool paths are recorded for diagnosis and rebound from the target
+environment. Other nonportable environment values refuse packaging.
+
+`rvw replay` checks member names and hashes before checking out source or
+running the adapter. It creates fresh source snapshots and an isolated Python
+environment that imports the archived rvw package. It requires matching C1
+ELF/seed/limits/memory timing, terminal behavior, failure signature, generated
+RTL and complete architectural C2 events. The result is `reproduced` only when
+all checks agree. A different result is `mismatch`, not acceptance.
+
+`rvw.portable-trace-checkpoint/1` is explicitly `mode: from-reset`. It stores
+a cycle and canonical prefix/suffix event hashes. Replay executes from reset
+and verifies both hashes. It is not a live model image. The live bridge
+snapshot contract remains separate. No native state portability is implied.
+Target build tools and cached dependencies remain prerequisites. Native
+execution on another machine needs its own evidence. Local source relocation
+is not cross-machine qualification.
+
+Portable replay compares semantic C2 header fields as well as events. Only
+`elf` and `source` header fields are excluded for path/provenance relocation.
+A changed ISA, XLEN, capability, CSR layout, seed or RTL declaration fails the
+header check. The validated C1 ELF identity remains a separate required check.
