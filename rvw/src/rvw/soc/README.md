@@ -298,3 +298,17 @@ names with the existing design query reader. It preserves unmatched or
 ambiguous names with diagnostics. Matched rows retain RTL paths and Scala
 file/line links. Output is `imported_claims`. It does not validate the report's
 analysis or promote an external signoff claim to a workstation result.
+
+## Memory BIST requirements
+
+`rvw soc mbist --db design.db --source mbist.json --out NEW_JSON` exports
+memory BIST intent. MCP: `soc_mbist`. Input `rvw.soc-mbist/1` has a `memories`
+list. Each entry has `path`, `width`, `depth`, `test_enable`, binary
+`functional_value`, a `repair` list of signal names and `isolation_connections`.
+
+Dimensions must match the database. Test enable must resolve to one bit.
+Repair signals must resolve. Output includes memory ports, their clock/reset
+domains, undeclared memories and functional-mode isolation obligations.
+Isolation is `not_run`. The command returns inconclusive (3). It performs no
+BIST insertion and makes no manufacturing-test readiness claim. Supply the
+connection declarations to `rvw formal connectivity` for separate proofs.

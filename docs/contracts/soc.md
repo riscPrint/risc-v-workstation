@@ -274,3 +274,11 @@ report paths and typed findings to an exact database hash. Output schema
 `rvw.soc-feedback-links/1` retains report hashes, matched RTL/Scala links,
 unmatched diagnostics and `status=imported_claims`. It never reports a
 workstation timing, area, CDC or DFT pass from external claims.
+
+## Memory BIST requirements
+
+`rvw.soc-mbist/1` binds declared dimensions, one-bit test enable, functional
+control value, repair signals and isolation declarations to database memories.
+`rvw.soc-mbist-handoff/1` exports dimensions, ports, clock/reset records and
+unrun isolation obligations. Status remains inconclusive. Dimension and
+endpoint consistency do not establish functional isolation or BIST coverage.
