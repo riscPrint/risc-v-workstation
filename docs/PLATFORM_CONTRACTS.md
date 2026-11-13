@@ -95,3 +95,5 @@ revision, source hashes and license notices. The AIA supplement fills the
 `requires_environment_model` prevents simple CSR selection from discarding
 interrupt-controller side effects. Field availability does not establish
 behavioral or privilege coverage.
+
+- [Installation and release diagnostics](contracts/install.md)
