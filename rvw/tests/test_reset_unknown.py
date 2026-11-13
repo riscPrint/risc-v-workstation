@@ -38,3 +38,19 @@ def test_unused_netname_slice_needs_no_driver():
 def test_live_undriven_output_is_still_refused():
     with pytest.raises(ValueError, match='undriven bits'):
         instrument(netlist(999), 'dut')
+
+
+def test_shadow_prefix_matches_live_bit_instrumentation():
+    from rvw.sec.ift import shadow
+    design = {'modules': {'dut': {'ports': {
+        'clk': {'direction':'input','bits':[3]},
+        'reset': {'direction':'input','bits':[4]},
+        'n999': {'direction':'input','bits':[2]},
+        'result': {'direction':'output','bits':[2]}},
+        'netnames': {'clk':{'bits':[3]}, 'reset':{'bits':[4]},
+                     'n999':{'bits':[2]}, 'result':{'bits':[2]}, 'unused':{'bits':[999]}},
+        'cells': {}}}}
+    text, prefix = shadow(design,'dut',dict(clock='clk',reset='reset',sources=['n999'],sinks=['result']))
+    assert prefix == ''
+    assert "assign t2 = 1'b1;" in text
+    assert '_t2' not in text

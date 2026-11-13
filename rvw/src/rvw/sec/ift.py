@@ -42,7 +42,7 @@ def shadow(design, top, policy, mode='precise'):
         raise ValueError('source or sink contains unused bits removed by synthesis')
     text = instrument(design, top)
     # The reference transform selects this prefix to avoid port collisions.
-    bits = {b for n in nets.values() for b in n['bits'] if isinstance(b, int)}
+    bits = {b for b in live if isinstance(b, int)}
     prefix = ''
     names = {n for p in ports for n in (p, p+'__t')}
     while any(f'{prefix}{k}{b}' in names for k in ('n','t') for b in bits):
