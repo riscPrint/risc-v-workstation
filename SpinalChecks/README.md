@@ -1010,12 +1010,13 @@ measurement or unbounded proof was obtained. All other checks remain unproven.
 | Design and programs | Generated | Bound | Proven | Bounded | Fired IDs / events | Unbound and reason |
 |---|---:|---:|---:|---:|---:|---|
 | VexRiscv, 49 aligned ISA programs | 57 | 57 | 0 | 1 | 0 / 0 | 0; all native bindings present |
-| VexiiRiscv, scratch and absent-CSR programs | 25 | 25 | 0 | 1 | 1 / 2 | 0; all native bindings present |
+| VexiiRiscv, scratch and absent-CSR programs | 25 | 25 | 0 | 1 | 0 / 0 | 0; all native bindings present |
 | Composed SoC, RV32 stub hello | 17 | 17 | 0 | 1 | 0 / 0 | 0; all native bindings present |
 
-VexRiscv has 49 C1 passes. VexiiRiscv has one C1 pass and one C1 failure.
-`stream.valid_hold:PcPlugin_logic_harts_0_output` fired twice in the absent-CSR
-program. Its disposition remains open. The composed SoC has one C1 pass and
+VexRiscv has 49 C1 passes. VexiiRiscv has two C1 passes after the exact
+PC hold cancellation binding. The two original PC valid-hold firings are tool
+false positives: the registered hold withdraws the offer. Both wave windows and
+the original finding remain in [the evidence](../examples/vexiiriscv/checks-evidence/pc-hold-wave.json). The composed SoC has one C1 pass and
 its UART output is `hello\n`. These captures use different cores and programs.
 They do not transfer ISA support or check coverage between designs.
 

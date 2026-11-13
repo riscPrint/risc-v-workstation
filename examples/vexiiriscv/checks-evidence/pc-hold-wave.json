@@ -1,0 +1,96 @@
+{
+  "schema": "rvw.check-wave-triage/1",
+  "core_revision": "9b63f47fe559dbba7874af9196746412fa1294c1",
+  "wave_sha256": "61bb4a5e9c5666bd8d26217dc7f356d72fa8d283b08bae96a5c73297d2929534",
+  "checks": [
+    {
+      "id": "stream.valid_hold:PcPlugin_logic_harts_0_output",
+      "count": 2,
+      "classification": "tool_false_positive",
+      "source": "PcPlugin.scala:88-97",
+      "reason": "The PC offer is withdrawn when the registered hold condition rises. Valid equals !holdReg. The current holdReg is the cancellation condition.",
+      "samples": [
+        {
+          "time_ps": 759,
+          "signals": {
+            "TOP.VexiiRiscv.PcPlugin_logic_harts_0_holdComb": "0",
+            "TOP.VexiiRiscv.PcPlugin_logic_harts_0_holdReg": "0",
+            "TOP.VexiiRiscv.PcPlugin_logic_harts_0_output_valid": "1",
+            "TOP.VexiiRiscv.PcPlugin_logic_harts_0_output_ready": "0",
+            "TOP.VexiiRiscv.chk_hold_PcPlugin_logic_harts_0_output": "0"
+          }
+        },
+        {
+          "time_ps": 769,
+          "signals": {
+            "TOP.VexiiRiscv.PcPlugin_logic_harts_0_holdComb": "1",
+            "TOP.VexiiRiscv.PcPlugin_logic_harts_0_holdReg": "0",
+            "TOP.VexiiRiscv.PcPlugin_logic_harts_0_output_valid": "1",
+            "TOP.VexiiRiscv.PcPlugin_logic_harts_0_output_ready": "0",
+            "TOP.VexiiRiscv.chk_hold_PcPlugin_logic_harts_0_output": "0"
+          }
+        },
+        {
+          "time_ps": 779,
+          "signals": {
+            "TOP.VexiiRiscv.PcPlugin_logic_harts_0_holdComb": "1",
+            "TOP.VexiiRiscv.PcPlugin_logic_harts_0_holdReg": "1",
+            "TOP.VexiiRiscv.PcPlugin_logic_harts_0_output_valid": "0",
+            "TOP.VexiiRiscv.PcPlugin_logic_harts_0_output_ready": "0",
+            "TOP.VexiiRiscv.chk_hold_PcPlugin_logic_harts_0_output": "1"
+          }
+        },
+        {
+          "time_ps": 789,
+          "signals": {
+            "TOP.VexiiRiscv.PcPlugin_logic_harts_0_holdComb": "1",
+            "TOP.VexiiRiscv.PcPlugin_logic_harts_0_holdReg": "1",
+            "TOP.VexiiRiscv.PcPlugin_logic_harts_0_output_valid": "0",
+            "TOP.VexiiRiscv.PcPlugin_logic_harts_0_output_ready": "0",
+            "TOP.VexiiRiscv.chk_hold_PcPlugin_logic_harts_0_output": "0"
+          }
+        },
+        {
+          "time_ps": 1259,
+          "signals": {
+            "TOP.VexiiRiscv.PcPlugin_logic_harts_0_holdComb": "0",
+            "TOP.VexiiRiscv.PcPlugin_logic_harts_0_holdReg": "0",
+            "TOP.VexiiRiscv.PcPlugin_logic_harts_0_output_valid": "1",
+            "TOP.VexiiRiscv.PcPlugin_logic_harts_0_output_ready": "1",
+            "TOP.VexiiRiscv.chk_hold_PcPlugin_logic_harts_0_output": "0"
+          }
+        },
+        {
+          "time_ps": 1269,
+          "signals": {
+            "TOP.VexiiRiscv.PcPlugin_logic_harts_0_holdComb": "1",
+            "TOP.VexiiRiscv.PcPlugin_logic_harts_0_holdReg": "0",
+            "TOP.VexiiRiscv.PcPlugin_logic_harts_0_output_valid": "1",
+            "TOP.VexiiRiscv.PcPlugin_logic_harts_0_output_ready": "0",
+            "TOP.VexiiRiscv.chk_hold_PcPlugin_logic_harts_0_output": "0"
+          }
+        },
+        {
+          "time_ps": 1279,
+          "signals": {
+            "TOP.VexiiRiscv.PcPlugin_logic_harts_0_holdComb": "1",
+            "TOP.VexiiRiscv.PcPlugin_logic_harts_0_holdReg": "1",
+            "TOP.VexiiRiscv.PcPlugin_logic_harts_0_output_valid": "0",
+            "TOP.VexiiRiscv.PcPlugin_logic_harts_0_output_ready": "0",
+            "TOP.VexiiRiscv.chk_hold_PcPlugin_logic_harts_0_output": "1"
+          }
+        },
+        {
+          "time_ps": 1289,
+          "signals": {
+            "TOP.VexiiRiscv.PcPlugin_logic_harts_0_holdComb": "1",
+            "TOP.VexiiRiscv.PcPlugin_logic_harts_0_holdReg": "1",
+            "TOP.VexiiRiscv.PcPlugin_logic_harts_0_output_valid": "0",
+            "TOP.VexiiRiscv.PcPlugin_logic_harts_0_output_ready": "0",
+            "TOP.VexiiRiscv.chk_hold_PcPlugin_logic_harts_0_output": "0"
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,7 +1,7 @@
 {
   "schema": "rvw.check-qualification/1",
-  "status": "findings",
-  "inventory": "rvw/out/qualification-all/checks.json",
+  "status": "inconclusive",
+  "inventory": "$CHECKOUT/examples/vexiiriscv/rvw/out/csr-native/resume-after/checks.json",
   "counts": {
     "csr.read": {
       "generated": 1,
@@ -18,8 +18,8 @@
       "bound": 12,
       "proven": 0,
       "bounded": 1,
-      "fired": 1,
-      "firing_count": 2,
+      "fired": 0,
+      "firing_count": 0,
       "unbound": 0,
       "reasons": []
     },
@@ -56,17 +56,17 @@
   },
   "runs": [
     {
-      "path": "rvw/out/qualification-all/c1_0.json",
+      "path": "$CHECKOUT/examples/vexiiriscv/rvw/out/csr-native/resume-after/c1_0.json",
       "status": "pass",
       "elf_sha256": "c4013d78a32d2e21ce35345deeba06de5e1fa6e463bc4b58762c4996bf5d4836"
     },
     {
-      "path": "rvw/out/qualification-all/c1_1.json",
-      "status": "fail",
+      "path": "$CHECKOUT/examples/vexiiriscv/rvw/out/csr-native/resume-after/c1_1.json",
+      "status": "pass",
       "elf_sha256": "1958dee8facd73cc0a3b7711394aec5f887ea42af02f06d4d449b0f9b5c21e33"
     }
   ],
-  "formal": "rvw/out/qualification-proof/result.json",
+  "formal": "examples/vexiiriscv/rvw/out/qualification-proof/result.json",
   "limitations": [
     "Null means NOT RUN. Zero means no matching observation in supplied evidence.",
     "Simulation covers exercised behavior only. Formal requirements are project associations.",
@@ -78,16 +78,12 @@
   "formal_depth": 4,
   "formal_activation": "not_measured",
   "c1_status": {
-    "pass": 1,
-    "fail": 1
-  },
-  "artifacts_sha256": {
-    "inventory": "5fc14e9a6f748246981f1b37d4bc2c3570ec50c8a92e55eda1a8f8c6c5568b10",
-    "formal": "2fa63b81d7d0dd95d8e8a3445420fd2966d4392bfc5548d40fd35a7f24f44321"
+    "pass": 2,
+    "fail": 0
   },
   "limits": [
-    "One selected check has a bounded pass at depth 4 with two initial reset samples. No activation evidence or unbounded proof.",
-    "Bounded simulation covers only the recorded programs. Source changes during this item are uncommitted in the capture. No release acceptance.",
-    "PcPlugin_logic_harts_0_output valid-hold fired twice on the absent-CSR program. Classification is open; no waiver or cancel binding was added."
+    "Two short generated CSR programs only. No whole-core qualification.",
+    "Formal evidence is the prior fetch-command selection from #921. No new PC-stream proof.",
+    "Exact source-reviewed hold cancellation; no waiver. Other obligations stay active."
   ]
 }
