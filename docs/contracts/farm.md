@@ -92,3 +92,16 @@ DUT pass or C4 acceptance. Long farm MCP calls use owned worker processes.
 Failure clusters can include commit ranges when both sides record full commit
 IDs. Short or unknown IDs do not create ranges. Range links do not replace the
 C3 input/seed identity checks used by regression comparisons.
+
+## Native persistent shard collection
+
+The local shard runner writes `rvw.native-shard/1` to `collection.json`.
+It records expected and collected cells, errors, adapter return code, wall
+seconds and tests per second. Wall time includes adapter startup and collection.
+Only validated persistent-server C1 cells enter the adjacent C3 file. Missing
+cells keep collection inconclusive. Each queue retry uses its own attempt
+directory. Collection completeness is not a DUT pass or a C4 verdict.
+
+Queue cancellation sends SIGTERM first. It allows 25 seconds for a wrapper to
+stop nested native groups before SIGKILL. Checked recovery uses the same grace
+period. A recovered cancellation stays cancelled and must not launch a retry.

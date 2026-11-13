@@ -411,3 +411,23 @@ The schema SHA-256 was
 `d3b0cdc2fda15c753206d25ab459dc7c12df64e2fd652b6809687471ea751c37`.
 This check included result/cache PVC mounts and resource requests. Cluster
 admission, PVC binding and pod execution have NOT RUN.
+
+## Native persistent local shards
+
+`examples/regression-scale/submit.py` submits an explicit C1 manifest as one to
+three serial shards. Each queue attempt invokes `rvw.farm.native_shard`, which
+uses the adapter's `run-many --persistent --jobs 1` interface. The adapter must
+support that interface. All adapter paths and ELF paths must be absolute.
+Start queue workers separately. Each worker inherits the core environment.
+Use private core and sbt locks for a private build.
+
+Each retry gets fresh C1 directories under `{attempt_dir}`. The runner checks
+ELF hashes and requested options. It refuses process-mode results. It writes
+validated C3 `results.json` and `collection.json` beside the C1 cells. Complete
+collection can contain DUT failures. Missing, changed or incomplete C1 evidence
+keeps collection inconclusive. This runner does not publish C4 gate acceptance.
+
+Queue cancellation and checked recovery allow 25 seconds for cooperative
+SIGTERM cleanup before SIGKILL. The native shard wrapper installs a TERM
+handler so its adapter group can unwind. Keep cancellation controls separate
+from a DUT verdict. A dead controller with a pending cancel does not retry.

@@ -107,17 +107,23 @@ class Queue:
                 # Match the captured session leader start time before signalling.
                 current = process_stamp(job['pgid'])
                 if current and current == job.get('process_stamp'):
-                    for sig in (signal.SIGTERM, signal.SIGKILL):
-                        try:
-                            os.killpg(job['pgid'], sig)
-                        except ProcessLookupError:
-                            break
+                    try:
+                        os.killpg(job['pgid'], signal.SIGTERM)
+                        deadline = time.monotonic() + 25
+                        while group_live(job['pgid']) and time.monotonic() < deadline:
+                            time.sleep(.1)
+                        if group_live(job['pgid']):
+                            os.killpg(job['pgid'], signal.SIGKILL)
+                    except ProcessLookupError:
+                        pass
                     time.sleep(.05)
                     cleaned = not group_live(job['pgid'])
                 elif group_live(job['pgid']):
                     cleaned = False
             job['attempts'][-1].update(status='infrastructure_error', end=time.time())
             state = ('queued' if len(job['attempts']) <= job['retries'] else 'inconclusive') if cleaned else 'cleanup_required'
+            if cleaned and job['state'] == 'cancel_requested':
+                state = 'cancelled'
             recovered.append(self.update(job['id'], state=state, pgid=None if cleaned else job.get('pgid'), attempts=job['attempts']))
         return recovered
 
@@ -131,12 +137,17 @@ class Queue:
         attempt_dir.mkdir(exist_ok=False)
         stopped = threading.Event()
         def monitor():
+            cancel_started = None
             while not stopped.wait(.1):
                 current = next(j for j in self.jobs() if j['id'] == job['id'])
                 self.update(job['id'], heartbeat=time.time())
                 if current['state'] == 'cancel_requested' and current.get('pgid'):
                     try:
-                        os.killpg(current['pgid'], signal.SIGKILL)
+                        if cancel_started is None:
+                            cancel_started = time.monotonic()
+                            os.killpg(current['pgid'], signal.SIGTERM)
+                        elif time.monotonic() - cancel_started > 25:
+                            os.killpg(current['pgid'], signal.SIGKILL)
                     except ProcessLookupError:
                         pass
                     # run_group performs final group cleanup, including SIGKILL.
