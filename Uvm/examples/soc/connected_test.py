@@ -7,6 +7,7 @@ import cocotb
 from cocotb.triggers import Timer
 import pyuvm
 from rvw.uvm.soc import SocEnvironment
+from rvw.uvm.scenarios import SocScenarios
 from rvw.vip import apb, axi, uart
 
 HERE = Path(__file__).resolve().parent
@@ -101,10 +102,18 @@ class ConnectedSoc(pyuvm.uvm_test):
                 protocols={'control':'apb','serial':'axi-lite'},
                 frontdoors={'control':Frontdoor(master.apb),'serial':Frontdoor(master.axil)})
             master.services=services
-            for _ in range(5): await master.tick()
-            master.put(reset=0)
-            await master.tick()
-            for reg in ('control.data','serial.data'): await services.registers.read(reg,check=True)
+            class ProjectBoot:
+                async def reset(self):
+                    master.put(reset=1)
+                    for _ in range(5): await master.tick()
+                    master.put(reset=0)
+                    await master.tick()
+                async def boot(self):
+                    for reg in ('control.data','serial.data'):
+                        await services.registers.read(reg,check=True)
+                    return dict(checks=2)
+            boot_report=await SocScenarios(ProjectBoot()).boot()
+            assert boot_report['checks']==2
             rng=random.Random(int(os.environ.get('RVW_SOC_SEED','1')))
             for _ in range(4):
                 await services.registers.write('control.data',rng.getrandbits(32))

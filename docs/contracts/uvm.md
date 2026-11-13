@@ -89,3 +89,13 @@ CPU or ISA qualification from a component fixture.
 Missing or failed rows remain `not established`. Engine probe runtime gaps
 and ignored-feature warnings remain explicit. A successful CPU fixture build
 does not qualify the VexRiscv SV environment or full SystemVerilog coverage.
+
+## SoC virtual scenario backends
+
+Python/pyuvm and SV UVM sequences call project backends for boot, bounded
+interrupt storms, bus-error injection and reset during active traffic.
+Backend reports must contain positive actual check counts. IRQ causes,
+observed error responses and reset aborts must agree with the requested
+scenario. Python cleanup clears IRQs and injection and stops traffic on
+failure or cancellation. Projects own callback watchdogs, live bindings and
+reset of expected models. Callback tests do not qualify CPU architecture.
