@@ -1,0 +1,16 @@
+{
+  "schema": "rvw.csr-selection/1",
+  "xlen": 32,
+  "binding": {
+    "platform": "../platform32.json",
+    "config": "rv32imasu",
+    "core_revision": "9f70315deb3390b283995c5b8f1bd38215ecf52b"
+  },
+  "csrs": [
+    {
+      "name": "mhpmevent3",
+      "reset": 0,
+      "present": false
+    }
+  ]
+}

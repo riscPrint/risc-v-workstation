@@ -55,3 +55,36 @@ The separate instruction profile uses a reduced boot. Its 58 passing
 instruction tests do not establish privileged compatibility. These results
 come from native RTL simulation. They are not physical hardware results
 or architectural certification.
+
+## Bootstrap decision
+
+The first instruction is `csrw mhpmevent3, zero`, encoded as `0x32301073`.
+The trap cause is 2. CSR address `0x323` resolves to `mhpmevent3` through
+the shared catalog. The catalog defines it under Sm, not Zihpm. Disabling
+HPM event counting does not remove this CSR from the declared Sm contract.
+The project's `csr-contract.json` binds this absence to `rv32imasu` and
+`platform32.json`. The plan reports one `missing-required` finding. This
+model covers only the first blocked CSR. It is not a full CSR inventory.
+
+At the pinned source, `PerformanceCounterPlugin.scala` supplies dummy
+zero-valued counter and event-selector accesses. `Param.scala` adds this
+plugin only when `extension.withPerformanceCounters` is true. The selected
+`VexiiTop.param` enables A, S and U but does not enable performance counters.
+The measured illegal access agrees with this configuration.
+
+Decision: retain one declared-profile CSR compatibility finding, affecting
+270 test cases. Do not label these as 270 independent core defects. Do not
+remove bootstrap writes or lower the Sm version to earn a pass. A profile
+that enables the upstream counter plugin would be a different RTL target
+and needs its own measurements. No core source is changed here.
+
+The privileged specification permits unused counters and event selectors
+to read as zero. That option does not permit an illegal-instruction trap
+on these standard accesses. See [machine counters](https://docs.riscv.org/reference/isa/priv/machine.html).
+The existing 270-case campaign and 37 representative Spike differences
+remain the suite evidence. A fresh full campaign reports 270 C1 failures and 270 strict Spike mismatches.
+All first traps remain `0x32301073`. Zero complete matches were earned.
+See `bootstrap-review.json` for each ELF hash, C2 hash and first difference.
+The run used one persistent worker with fresh simulation instances.
+The comparison uses zero masks and zero synchronization.
+It ran after the worktree refresh on a stable source checkout.

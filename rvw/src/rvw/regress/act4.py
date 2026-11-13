@@ -51,7 +51,9 @@ def description(path):
 
 def selection(profile):
     data, platform, selected = description(profile)
-    return dict(schema='rvw.act4-plan/1', isa=platform.isa,
+    from .act4_csr import csr_contract
+    contract = csr_contract(profile, data, platform)
+    return dict(schema='rvw.act4-plan/1', isa=platform.isa, csr_contract=contract,
                 privilege_modes=platform.privilege_modes, extensions=selected,
                 limitations=data.get('limits', []),
                 test_selection='all-applicable' if data.get('all_applicable') else 'extensions',
@@ -62,6 +64,7 @@ def selection(profile):
 def build(profile, checkout, out, timeout=900, compiler='riscv64-unknown-elf-gcc',
           reference='sail_riscv_sim'):
     data, platform, selected = description(profile)
+    plan = selection(profile)
     checkout, out = Path(checkout).resolve(), Path(out).resolve()
     rev = run_group(['git', '-C', str(checkout), 'rev-parse', 'HEAD'], timeout=30, capture=True)
     if rev.returncode or rev.stdout.strip() != data['revision']:
@@ -105,8 +108,9 @@ def build(profile, checkout, out, timeout=900, compiler='riscv64-unknown-elf-gcc
     signatures = {p.relative_to(out).as_posix(): digest(p) for p in sorted((out / 'work').rglob('*.sig'))}
     manifest = dict(schema='rvw.act4-build/1', status='built' if result.returncode == 0 and records else 'error',
                     revision=data['revision'], profile_sha256=digest(profile), command=cmd,
-                    reference=reference, compiler=compiler, tools=tools, signatures=signatures, selection=selection(profile),
+                    reference=reference, compiler=compiler, tools=tools, signatures=signatures, selection=plan,
                     files={n: digest(config / n) for n in ('rvmodel_macros.h', 'sail.json', 'link.ld', 'udb.yaml')},
+                    csr_model_sha256=digest(source / data['csr_model']) if 'csr_model' in data else None,
                     tests=records, counts=dict(Counter(Path(r['path']).parent.name for r in records)))
     (out / 'manifest.json').write_text(json.dumps(manifest, indent=2)+'\n')
     return manifest
