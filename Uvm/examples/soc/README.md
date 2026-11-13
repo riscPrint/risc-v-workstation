@@ -35,3 +35,40 @@ The unit tests check composition, frontdoor routing, byte-stream monitoring,
 wrong read data, wrong address, bus errors and empty CPU evidence.
 They do not run a connected RTL SoC. The callback and active wire drivers
 remain project work. No SoC execution or C4 acceptance is claimed.
+
+## Connected Spinal RTL example
+
+`spinal/src/main/scala/SeededSoc.scala` builds a small SoC with an APB3 RW
+register, an AXI4-Lite RW register and an 8N1 UART transmitter. A write to
+the low byte of the AXI register starts UART transmission when it is idle.
+The test waits for each frame before the next write. It does not test a FIFO.
+The test master drives actual RTL bus pins. No CPU is present.
+
+Generate RTL under the shared sbt lock. Run from this checkout:
+
+```sh
+cd Uvm/examples/soc/spinal
+../../../../scripts/with-lock.sh sbt nice -n 10 sbt -batch \
+ 'runMain SeededSocMain ../rtl'
+cd ../../../..
+RVW_UVM_SOC_NATIVE=1 scripts/with-lock.sh soc-uvm nice -n 10 \
+ rvw/.venv/bin/python -m pytest rvw/tests/test_uvm_soc_native.py -q
+```
+
+`connected_test.py` composes the existing APB, AXI-Lite and UART monitors
+with independent map-initialized register state and active RAL frontdoors.
+The test separates AXI write-address and write-data handshakes. It performs
+reset reads, four seeded writes and checked reads on each bus, and four
+independently predicted UART frames. Each handshake has a watchdog.
+`RVW_SOC_SEED` selects the data seed. `soc-checks.json` records actual counts.
+
+Use `cpu_required=False` only for an explicit bus-master profile.
+`finish(0)` then requires bus and UART evidence and reports zero CPU checks.
+The default CPU profile still requires nonempty CPU comparisons. A nonzero
+retirement request is refused in the bus-master profile.
+
+Native Verilator 5.049 results on 2026-11-13: seeds 1 and 7 each checked
+9 APB transfers, 9 AXI-Lite transfers and 4 UART frames. The native test
+returned 2 passed, 0 skipped. The composition unit tests returned 4 passed.
+This qualifies the stated bus-master example. CPU boot, bus error handling,
+reset during traffic and C4 acceptance remain outside this run.

@@ -32,7 +32,7 @@ class SocEnvironment:
     independently supplied expected stream. CPU uses independent Spike steps.
     Projects must sample each monitor at the protocol's specified edge.
     """
-    def __init__(self, map_path, *, reference, protocols, frontdoors, uart_config=None):
+    def __init__(self, map_path, *, reference, protocols, frontdoors, uart_config=None, cpu_required=True):
         self.map = load(map_path)
         regions = [r for r in self.map['regions'] if r['kind'] == 'mmio']
         names = {r['name'] for r in regions}
@@ -48,7 +48,8 @@ class SocEnvironment:
                 self.expected[address] = reg['reset']
                 self.register_info[address] = region['name']
         self.registers = RegisterModel(map_path, RoutedFrontdoor(regions, frontdoors))
-        self.cpu = CpuScoreboard(reference)
+        self.cpu_required = cpu_required
+        self.cpu = CpuScoreboard(reference) if cpu_required else None
         self.serial = uart.Scoreboard()
         self.uart = uart.Monitor(self.serial.observe, uart_config or uart.Config())
         self.buses = {}
@@ -86,7 +87,10 @@ class SocEnvironment:
         self.transfer(region, address.address, write, beat.data, beat.strobe if write else 15)
 
     def finish(self, retirements):
-        self.cpu.finish(retirements)
+        if self.cpu_required:
+            self.cpu.finish(retirements)
+        elif retirements != 0:
+            raise ValueError('bus-master profile has no CPU retirements')
         self.serial.finish()
         if self.uart.state != 'idle':
             raise AssertionError('SOC_PENDING_UART')
@@ -97,5 +101,5 @@ class SocEnvironment:
                 raise AssertionError('SOC_PENDING_APB')
             if not self.bus_checks[name]:
                 raise AssertionError('SOC_NO_BUS_CHECKS:'+name)
-        return dict(cpu_checks=self.cpu.checks, bus_checks=dict(self.bus_checks),
+        return dict(cpu_checks=self.cpu.checks if self.cpu else 0, bus_checks=dict(self.bus_checks),
                     uart_frames=self.serial.count)

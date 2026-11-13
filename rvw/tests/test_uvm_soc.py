@@ -62,3 +62,14 @@ def test_partial_trailing_uart_frame_cannot_pass():
     env.uart.sample(0)
     with pytest.raises(AssertionError,match='SOC_PENDING_UART'):
         env.finish(1)
+
+
+def test_bus_master_profile_has_no_cpu_claim():
+    env = SocEnvironment(MAP, reference=None, cpu_required=False,
+        protocols={'control':'apb','serial':'axi-lite'},
+        frontdoors={'control':Frontdoor(), 'serial':Frontdoor()})
+    assert env.cpu is None
+    with pytest.raises(ValueError, match='no CPU retirements'):
+        env.finish(1)
+    with pytest.raises(AssertionError):
+        env.finish(0)  # Empty bus/UART activity must still fail.

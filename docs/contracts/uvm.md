@@ -56,3 +56,10 @@ The standalone C3 report marks `mode=offline-c1-replay` and records the
 profile, captured reference inputs, source hashes, commands and logs. It
 does not modify C1 or establish C4 acceptance. Unsupported profiles and
 incomplete observations are errors. Source identity remains incomplete.
+
+## SoC bus-master profile
+
+`SocEnvironment` keeps CPU evidence required by default. A project can select
+`cpu_required=False` for a bus-master bench. That profile accepts only
+`finish(0)` and emits `cpu_checks=0`. Bus and UART checks remain required.
+It must not be presented as CPU execution evidence.
