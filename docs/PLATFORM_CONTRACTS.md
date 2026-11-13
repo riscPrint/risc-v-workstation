@@ -1,5 +1,13 @@
 # Platform contracts
 
+### Farm impact selection
+
+`rvw.impact-selection/1` binds test observations to a design database hash.
+It retains mandatory tests and unknown effects, reports deadline overruns and
+uncovered signal paths, and ranks optional tests by marginal impact per second.
+Existing coverage-selection fallback is preserved. Selection is advisory and
+cannot earn gate acceptance. Recorded wall times are estimates, not guarantees.
+
 ### Farm failure clusters
 
 `rvw.failure-clusters/1` retains original per-test evidence and source identities.

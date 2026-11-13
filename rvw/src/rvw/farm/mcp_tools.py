@@ -32,7 +32,10 @@ def mcp_tools():
     from .service import manage
     from .costs import budget
     from .triage import triage
-    return [ToolSpec("farm_triage", "Cluster recorded failures, compare regressions and bundle one representative. Never waive failures.",
+    from .selection import select
+    return [ToolSpec("farm_select", "Advisory source-impact selection within a time budget. Unknown impacts keep tests mandatory.",
+                 schema({"db": string, "changed": array, "catalogue": {"type": "object"}, "seconds": {"type": "number", "exclusiveMinimum": 0}},
+                        ["db", "changed", "catalogue"]), select, long=True), ToolSpec("farm_triage", "Cluster recorded failures, compare regressions and bundle one representative. Never waive failures.",
                  schema({"root": string, "baseline": string, "known": string, "bundles": string}, ["root"]), triage, long=True), ToolSpec("farm_budget", "Set cumulative queue budgets or report costs. CPU charge is declared cores times wall time.",
                  schema({"root": string, "scope": string, "limits": {"type": "object"},
                          "rate_per_core_hour": {"type": "number", "minimum": 0}}, ["root", "scope"]), budget), ToolSpec("farm_batch", "Render, submit, inspect, cancel or collect explicit local/Kubernetes shards.",
