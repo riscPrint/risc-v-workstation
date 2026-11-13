@@ -24,7 +24,7 @@ DEFAULTS = dict(
 )
 TRIGGER_DEFAULTS = dict(count=0, types=[6], matches=[0, 1, 2, 3, 4, 5, 8, 9, 12, 13], actions=[0, 1],
                         timing=[0, 1], chain=True, unsupported_type=15, tcontrol=True, maskmax=31,
-                        version=1, store_data_timing='after', load_data_timing='after')
+                        version=1, store_data_timing='after', load_data_timing='after', sizes=[0])
 SBA_DEFAULTS = dict(sizes=[8, 16, 32, 64], asize=64, latency=0, misaligned_error=3, size_error=4)
 TRANSPORTS = {'model', 'jtag-model', 'remote_bitbang', 'dmi_process'}
 

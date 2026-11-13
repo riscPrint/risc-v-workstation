@@ -416,8 +416,15 @@ class DebugModule:
                         self._set_arg(0, width, hart.read_csr(regno, debugger=True))
                 except Trap:
                     return self._set_err(self.p['csr_missing_cmderr'])
+            elif FPR <= regno < FPR + 32:
+                if 'fpr' not in self.p['abstract']:
+                    return self._set_err(ERR_UNSUPPORTED)
+                if write:
+                    hart.f[regno - FPR] = self._arg(0, width)
+                else:
+                    self._set_arg(0, width, hart.f[regno - FPR])
             else:
-                return self._set_err(ERR_UNSUPPORTED)   # FPRs and custom registers are not modeled
+                return self._set_err(ERR_UNSUPPORTED)   # custom registers are not modeled
         if postinc:
             self.command = (command & ~0xffff) | ((regno + 1) & 0xffff)
         if postexec:

@@ -305,6 +305,19 @@ def csr_roundtrip(ctx):
     ctx.observe('dpc', value)
 
 
+@check('abs.fpr_roundtrip')
+def fpr_roundtrip(ctx):
+    """Access Register reads back every FPR written (raw 64-bit bits)."""
+    ctx.require('fpr' in ctx.p['abstract'] and ctx.xlen == 64, 'profile declares no abstract FPR access')
+    if 'csr' in ctx.p['abstract']:
+        ctx.set_csr(MSTATUS, ctx.csr(MSTATUS) | (1 << 13))   # mstatus.FS = Initial
+    for n in range(32):
+        value = (0x3ff0000000000000 | (n * 0x10101)) & ((1 << 64) - 1)
+        ctx.set_reg(0x1020 + n, value)
+        expect(ctx.reg(0x1020 + n) == value, f'f{n} readback differs')
+    ctx.observe('f31', 0x3ff0000000000000 | (31 * 0x10101))
+
+
 @check('abs.unsupported_regno')
 def unsupported_regno(ctx):
     """An unimplemented register number gives cmderr 2 (not supported)."""
@@ -704,13 +717,15 @@ def raise_unsupported(ctx, reason):
 
 
 def mc(ctx, kind, *, execute=0, load=0, store=0, match=0, action=1, chain=0, m=1, s=0, u=0, select=0,
-       timing=0, dmode=1):
+       timing=0, dmode=1, size=0):
     xl = ctx.xlen
     value = (kind << (xl - 4)) | (dmode << (xl - 5)) | (action << 12) | (chain << 11) | (match << 7) \
         | (m << 6) | (s << 4) | (u << 3) | (execute << 2) | (store << 1) | load
     value |= (select << (21 if kind == 6 else 19))
     if kind == 2:
-        value |= timing << 18
+        value |= (timing << 18) | ((size & 3) << 16)
+    else:
+        value |= (size & 7) << 16
     return value
 
 
@@ -917,6 +932,20 @@ def trig_store_data(ctx):
 def trig_load_data(ctx):
     """A load-data trigger (select=1) fires after the matching load returns data."""
     _data_trigger(ctx, False)
+
+
+@check('trig.size_match')
+def trig_size_match(ctx):
+    """A store trigger with size=16-bit ignores a 32-bit store to the same address and fires on a 16-bit store."""
+    kind = _addr_type(ctx)
+    ctx.require(2 in ctx.p['triggers']['sizes'], 'profile declares no 16-bit size matching')
+    data = ctx.scratch + DATA
+    ctx.mem_write(data, 0)
+    value = set_trigger(ctx, 0, mc(ctx, kind, store=1, size=2), data)
+    expect((value >> 16) & (7 if kind == 6 else 3) == 2, 'declared size 2 not kept in tdata1')
+    cause, dpc = ctx.run([Asm.sw(S1, A0), Asm.sh(S1, A0), Asm.EBREAK], regs={A0: data, S1: 0x1234})
+    clear_triggers(ctx)
+    expect((cause, dpc) == (2, ctx.scratch + 4), f'cause {cause} at 0x{dpc:x}, expected 2 at the 16-bit store')
 
 
 @check('trig.privilege')

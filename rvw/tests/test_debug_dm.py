@@ -15,8 +15,8 @@ from rvw.results.schema import validate_results
 
 FULL = {
     'harts': 2, 'hart_array': True, 'haltgroups': True, 'scratch': 0x80010000,
-    'abstract': ['gpr', 'csr', 'memory', 'quick'], 'datacount': 4, 'progbufsize': 4, 'abstract_latency': 4,
-    'hartreset': True, 'unavailable': [], 'triggers': {'count': 4, 'types': [2, 3, 4, 5, 6]},
+    'abstract': ['gpr', 'csr', 'fpr', 'memory', 'quick'], 'datacount': 4, 'progbufsize': 4, 'abstract_latency': 4,
+    'hartreset': True, 'unavailable': [], 'triggers': {'count': 4, 'types': [2, 3, 4, 5, 6], 'sizes': [0, 1, 2, 3, 5]},
     'sba': {'latency': 4},
     'memory': [{'base': 0x80000000, 'size': 0x20000}, {'base': 0x10000000, 'size': 0x1000, 'kind': 'error'},
                {'base': 0x11000000, 'size': 0x1000, 'kind': 'readonly'},

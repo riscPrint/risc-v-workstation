@@ -22,7 +22,7 @@ reason; a skipped check is listed with its reason and is not a test.
 | `abstract`, `aarsizes`, `csr_missing_cmderr` | command kinds (`gpr`, `csr`, `fpr`, `memory`, `quick`); sizes; cmderr for a missing CSR (2) |
 | `hartreset`, `resethaltreq`, `reset_vector` | reset options and the reset PC |
 | `modes`, `scratch`, `memory` | privilege modes; RAM the campaign may overwrite (code at +0, handler at +0x400, data at +0x800, U code at +0xc00); memory regions with `kind` ram/readonly/error/off and `sberror` |
-| `[triggers]` | `count`, `types` (2 mcontrol, 3 icount, 4 itrigger, 5 etrigger, 6 mcontrol6, 15), `matches`, `actions`, `timing`, `chain`, `unsupported_type`, `tcontrol`, `store_data_timing`, `load_data_timing` |
+| `[triggers]` | `count`, `types` (2 mcontrol, 3 icount, 4 itrigger, 5 etrigger, 6 mcontrol6, 15), `matches`, `actions`, `timing`, `chain`, `unsupported_type`, `tcontrol`, `store_data_timing`, `load_data_timing`, `sizes` (access-size match values; default `[0]`, any size) |
 | `sba` | `sizes`, `asize`, `misaligned_error` (3), `size_error` (4) |
 | `[transport]` | `kind` = `model`, `jtag-model`, `remote_bitbang` (`host`, `port`, `irlen`) or `dmi_process` (`command`) |
 | model only | `abstract_latency`, `sba.latency`, `ticks_per_access`, `ips`, `elf` |
@@ -63,9 +63,9 @@ or no checks.
 | Group | Rules |
 |---|---|
 | `dm` (#127) | dmactive reset, version, HARTSELLEN, hart enumeration and nonexistent harts, halt, resume, resumereq with haltreq, unavailable harts, ndmreset and havereset, reset-halt (cause 5 at the reset vector), hartreset, haltsum0, independent multi-hart halt, hart-array mask, halt groups (cause 6), and an independent observer: memory written by a running hart stops changing while halted |
-| `abs`, `pb` (#153) | GPR/CSR round trip, x0, 32-bit reads, unsupported regno/size/cmdtype, sticky cmderr and W1C, cmderr 4 on a running hart, postincrement with autoexec, resume at dpc, busy collision (cmderr 1), Access Memory sizes and postincrement, cross-checks between Access Memory and the program buffer, Quick Access, program-buffer execution, exceptions (cmderr 3; mepc, mcause, dpc and dcsr.cause unchanged), ebreak end, autoexecprogbuf, fence.i on rewritten code |
+| `abs`, `pb` (#153) | GPR/CSR/FPR round trip, x0, 32-bit reads, unsupported regno/size/cmdtype, sticky cmderr and W1C, cmderr 4 on a running hart, postincrement with autoexec, resume at dpc, busy collision (cmderr 1), Access Memory sizes and postincrement, cross-checks between Access Memory and the program buffer, Quick Access, program-buffer execution, exceptions (cmderr 3; mepc, mcause, dpc and dcsr.cause unchanged), ebreak end, autoexecprogbuf, fence.i on rewritten code |
 | `dbg` | dcsr debugver/prv/cause, ebreak in M/S/U with ebreakm/s/u on and off (Debug Mode entry or breakpoint exception, MPP), dcsr.prv switch, step (cause 4), step over a trap, step over ebreak, stepie, dret and dpc illegal outside Debug Mode |
-| `trig` (#144) | enumeration and tinfo, WARL type/action/vs-vu, dmode protection from M-mode, execute matches for every declared match type, hit, load/store address (before), load/store data at the declared timing, privilege filters, chains, mcontrol timing=1, icount, etrigger, itrigger, action 0 in M (tcontrol.mte) and in U, mte gating, no firing in Debug Mode |
+| `trig` (#144) | enumeration and tinfo, WARL type/action/vs-vu, dmode protection from M-mode, execute matches for every declared match type, hit, load/store address (before), load/store data at the declared timing, access-size matching, privilege filters, chains, mcontrol timing=1, icount, etrigger, itrigger, action 0 in M (tcontrol.mte) and in U, mte gating, no firing in Debug Mode |
 | `sba` (#156) | capabilities, every size with an independent read-back path, autoincrement, readonaddr/readondata, alignment, unsupported size, error, read-only and powered-off regions with declared sberror, errors block new accesses, sbbusyerror, accesses while the hart runs (SBA sees hart stores; the hart sees an SBA store) |
 
 A check writes code into `scratch`, sets dpc, resumes and waits for a halt. Use a
@@ -328,8 +328,8 @@ Open items:
 
 - #127: the independent observer uses memory effects only; a C2-trace observer is not added.
 - #133: no RTL DMI adapter exists yet; physical transports are out of scope.
-- #144: virtualization (vs/vu with H), textra/tdata3, size matching and NMI itrigger are not tested.
-- #153: abstract FPR access and relaxedpriv are not tested.
+- #144: virtualization (vs/vu with H), textra/tdata3, execute size matching and NMI itrigger are not tested. Spike keeps only size 0.
+- #153: relaxedpriv is not tested. The model keeps FPRs as raw bits only.
 - #156: concurrent-traffic ordering beyond visibility is not tested.
 - #168: context changes (no C2 context field) and options beyond the baseline encoder are not tested.
 - #172: recovery at trap syncs and DUT overflow markers other than qual_status 2 are not used.
