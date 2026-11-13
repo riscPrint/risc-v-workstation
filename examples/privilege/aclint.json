@@ -1,0 +1,11 @@
+{
+  "schema": "rvw.privilege/1",
+  "kind": "aclint",
+  "reference_backend": "python",
+  "aclint": {
+    "mswi": 33554432,
+    "sswi": 49283072
+  },
+  "spec_version": "ACLINT-v1.0-rc4",
+  "spec_revision": "4e570bfd3201f2c09e5afd290b5091526b0f099a"
+}
