@@ -157,6 +157,13 @@ def _liveness(job, **args):
     return json.loads((Path(args['out']) / 'result.json').read_text())
 
 
+def _sail_zicond(job, **args):
+    code = job.run(_argv('sail-zicond', args))
+    if code:
+        raise ToolError('Sail generation failed', {'exit_code': code, 'log_tail': job.tail(20)})
+    return json.loads((Path(args['out']) / 'manifest.json').read_text())
+
+
 def mcp_tools():
     from .deep_cli import mcp_tools as deep_tools
     return [*deep_tools(),
@@ -175,6 +182,8 @@ def mcp_tools():
                  schema({"model": S, "trace": S, "out": S}, ["model", "trace", "out"]), _device_events, long=True),
         ToolSpec("formal_upf", "Import literal UPF domain/isolation declarations and generate sampled checks. No verification run.",
                  schema({"source": S, "bindings": S, "out": S}, ["source", "bindings", "out"]), _upf, long=True),
+        ToolSpec("formal_sail_zicond", "Compile pinned Sail RV32 CZERO rules into instruction checks. This is a result slice with an explicit RVFI shell, not a full-machine proof.",
+                 schema({"model": S, "compiler": S, "out": S}, ["model", "out"]), _sail_zicond, long=True),
         ToolSpec("formal_template", "Generate a project-bound safety monitor. No verification run.",
                  schema({"kind": S, "out": S, "entries": I, "width": I}, ["kind", "out"]),
                  _template, long=True),

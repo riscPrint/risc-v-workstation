@@ -4312,3 +4312,14 @@ The riscv-formal runner accepts NRET 1..16 and checks channel-index bounds.
 Its cover task includes one retirement cover per channel. Every channel must
 reach retirement before bounded passing checks become conclusive observations.
 These observations retain the existing C3/C4 limits and cannot accept a core.
+### Sail Zicond result slice
+
+`rvw.sail-zicond/1` records the pinned Sail source path, SHA-256 and commit,
+compiler identity and library hashes, implementation options, source line
+traceability and generated model hashes. Scope is RV32 enabled Zicond result
+selection with a separately generated R-type RVFI shell. Disabled-extension
+traps, CSR MISA, RV64 and full-machine state are excluded.
+The riscv-formal runner can add project instruction models to its private base
+ISA instruction list when each added model has an explicitly requested check.
+C3 `source.formal_inputs.instruction_set_additions` records these names. This
+adds checks; it does not redefine the base ISA or establish extension compliance.

@@ -279,6 +279,13 @@ def register(sub) -> None:
     binding.add_argument("--json", action="store_true")
     from .rvfi_binding import main as binding_main
     binding.set_defaults(func=binding_main)
+    sail = s.add_parser("sail-zicond", help="compile pinned Sail RV32 Zicond result rules and RVFI checks")
+    sail.add_argument("--model", required=True)
+    sail.add_argument("--compiler", default="sail")
+    sail.add_argument("--out", required=True)
+    sail.add_argument("--json", action="store_true")
+    from .sail_zicond import main as sail_main
+    sail.set_defaults(func=sail_main)
     r = s.add_parser("riscv", help="bounded riscv-formal checks from project RVFI settings")
     r.add_argument("--out", required=True)
     r.add_argument("--timeout", type=float, default=60, help="seconds per check")

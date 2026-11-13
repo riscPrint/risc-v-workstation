@@ -668,7 +668,7 @@ usage: rvw farm dashboard [-h] --root ROOT --out OUT [--core CORE] [--suite
 
 ```text
 usage: rvw formal [-h] [--project PROJECT]
-    {device-events,upf,csr,bug-hunt,model-live,rtl-grid,rtl-refine,relation-strengthen,doctor,engines,engine-race,engine-bench,model-grid,security,regress,properties,simulate,liveness,sva-lower,template,contracts,strengthen,testplan,proof-core,apps,autocheck,bench,cex,sby-history,sby-regress,prove,depth-search,rvfi-generate,riscv,connectivity,datapath,equiv,bmc,from-sim,swarm,xprop,x-context,x-sweep}
+    {device-events,upf,csr,bug-hunt,model-live,rtl-grid,rtl-refine,relation-strengthen,doctor,engines,engine-race,engine-bench,model-grid,security,regress,properties,simulate,liveness,sva-lower,template,contracts,strengthen,testplan,proof-core,apps,autocheck,bench,cex,sby-history,sby-regress,prove,depth-search,rvfi-generate,sail-zicond,riscv,connectivity,datapath,equiv,bmc,from-sim,swarm,xprop,x-context,x-sweep}
     ...
 ```
 
@@ -938,6 +938,13 @@ usage: rvw formal depth-search [-h] [--verilog VERILOG [VERILOG ...]] [--top
 ```text
 usage: rvw formal rvfi-generate [-h] --out OUT [--json] [--project PROJECT]
     manifest
+```
+
+### `rvw formal sail-zicond`
+
+```text
+usage: rvw formal sail-zicond [-h] --model MODEL [--compiler COMPILER] --out
+    OUT [--json] [--project PROJECT]
 ```
 
 ### `rvw formal riscv`
@@ -2579,6 +2586,14 @@ Starts a background job: yes.
 Generate an RVFI wrapper and project configuration from a core-owned port binding. No proof is run.
 
 Arguments: `manifest` (required), `out` (required).
+
+Starts a background job: yes.
+
+### `formal_sail_zicond`
+
+Compile pinned Sail RV32 CZERO rules into instruction checks. This is a result slice with an explicit RVFI shell, not a full-machine proof.
+
+Arguments: `model` (required), `compiler`, `out` (required).
 
 Starts a background job: yes.
 
