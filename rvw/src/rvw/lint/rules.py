@@ -266,6 +266,8 @@ def analyze(db, config=None):
 
     fsm = fsm_states(d, by_target)
     for row in fsm:
+        if row['status'] == 'inconclusive':
+            unresolved.append(dict(rule='lint.fsm_unreachable', endpoint=row['register'], reason=row['reason']))
         if row['status'] == 'checked':
             for state in row['unreachable']:
                 emit('lint.fsm_unreachable', d.by_path[row['register']],
@@ -291,9 +293,13 @@ def fsm_states(d, by_target):
             for a in by_target.get(n, []):
                 key = a['key'] or ''
                 lits = ENUM_LIT.findall(key)
+                # Readable source retains exact literals when a long typed key is hashed.
+                enum_name = s['type'].split('@', 1)[0]
+                if not lits and a['source'] in {enum_name + '.' + state for state in states}:
+                    lits = [a['source'].rsplit('.', 1)[-1]]
                 names.update(lits)
                 reads = {r[0] for r in d.c.execute('SELECT signal_id FROM assign_reads WHERE assignment_id=?', (a['id'],))}
-                if not lits and not reads <= group:
+                if not lits and (not reads or not reads <= group):
                     closed = False
         if s['reset_value']:
             names.update(re.findall(r'[A-Za-z_]\w*', s['reset_value']))

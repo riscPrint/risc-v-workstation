@@ -125,3 +125,14 @@ def test_extracted_toggle_payload():
     assert any(c['kind'] == 'qualified_data' for c in result['crossings'])
     assert not any(f['rule'] == 'cdc.comb_before_sync' for f in result['findings'])
     assert result['cdc']['obligations']
+
+
+def test_extracted_hashed_enum_is_inconclusive():
+    root = os.environ.get('RVW_LINT_ENUM')
+    if not root:
+        pytest.skip('set RVW_LINT_ENUM to the LintEnumFixture output')
+    from rvw.lint.rules import analyze as lint_rules
+    result = run_on(Path(root) / 'design.db', lint_rules)
+    assert result['fsm'][0]['status'] == 'inconclusive'
+    assert result['status'] == 'inconclusive'
+    assert not any(f['rule'] == 'lint.fsm_unreachable' for f in result['findings'])
