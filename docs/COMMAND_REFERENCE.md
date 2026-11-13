@@ -613,8 +613,15 @@ usage: rvw farm dashboard [-h] --root ROOT --out OUT [--core CORE] [--suite
 
 ```text
 usage: rvw formal [-h] [--project PROJECT]
-    {csr,bug-hunt,model-live,rtl-grid,rtl-refine,relation-strengthen,doctor,engines,engine-race,engine-bench,model-grid,security,regress,properties,simulate,liveness,sva-lower,template,contracts,strengthen,testplan,proof-core,apps,autocheck,bench,cex,sby-history,sby-regress,prove,depth-search,riscv,connectivity,datapath,equiv,bmc,from-sim,swarm,xprop,x-context,x-sweep}
+    {device-events,csr,bug-hunt,model-live,rtl-grid,rtl-refine,relation-strengthen,doctor,engines,engine-race,engine-bench,model-grid,security,regress,properties,simulate,liveness,sva-lower,template,contracts,strengthen,testplan,proof-core,apps,autocheck,bench,cex,sby-history,sby-regress,prove,depth-search,riscv,connectivity,datapath,equiv,bmc,from-sim,swarm,xprop,x-context,x-sweep}
     ...
+```
+
+### `rvw formal device-events`
+
+```text
+usage: rvw formal device-events [-h] --model MODEL --trace TRACE --out OUT
+    [--project PROJECT]
 ```
 
 ### `rvw formal csr`
@@ -2266,6 +2273,14 @@ Starts a background job: yes.
 Bit-blast mapped RTL and a C reference with CBMC. Fixed or bounded-latency transactions; no streaming proof.
 
 Arguments: `rtl` (required), `model` (required), `binding`, `max_latency`, `width` (required), `out` (required), `latency`, `unwind`, `case`, `rounding`, `reference_tree`, `reference_source`, `reference_include`, `timeout`.
+
+Starts a background job: yes.
+
+### `formal_device_events`
+
+Check concurrent device requests against independent reset state. Matching samples remain inconclusive.
+
+Arguments: `model` (required), `trace` (required), `out` (required).
 
 Starts a background job: yes.
 

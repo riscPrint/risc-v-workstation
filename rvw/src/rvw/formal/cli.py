@@ -75,6 +75,13 @@ def register(sub) -> None:
                        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     s = p.add_subparsers(dest="formal_command", required=True)
 
+    from rvw.soc import device_events
+    events = s.add_parser("device-events", help="check concurrent accepted device requests and independent register events")
+    events.add_argument("--model", required=True)
+    events.add_argument("--trace", required=True)
+    events.add_argument("--out", required=True)
+    events.set_defaults(func=device_events.run)
+
     from . import csr
     c = s.add_parser("csr", help="generate project CSR checks, assembly and coverage")
     c.add_argument("--model", required=True)
