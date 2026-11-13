@@ -6,7 +6,7 @@
   "clock": "clk",
   "reset": "reset",
   "reset_cycles": 4,
-  "ties": {"io_boot": "0x80000000", "io_interrupts": 0},
+  "ties": {"io_boot": "0x80000000", "io_interrupts": 0, "io_accessDevice": 0},
   "ram": {"base": "0x80000000", "size": "0x10000"},
   "max_cycles": 10000,
   "march": "rv32im_zicsr",

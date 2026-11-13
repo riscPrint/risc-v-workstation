@@ -1,7 +1,7 @@
 # Machine interrupt checks
 
-The core samples MSIP, MTIP and MEIP at a completed ROB head. It takes the
-interrupt before that head commits. It restores the committed rename map,
+The core samples MSIP, MTIP and MEIP at a valid ROB head. It takes the
+interrupt before that head commits. An accepted device load must retire first. It restores the committed rename map,
 flushes the ROB and multiply/divide unit, and redirects to `mtvec`.
 No store or destination register commits on the interrupt edge.
 `mepc` is the discarded head PC. `mcause` has the interrupt bit and source
@@ -30,11 +30,11 @@ use the corresponding schedule. Raw C1/C2 and check reports stay in `rvw/out`.
 
 C2 records pin changes and trap events. The first handler
 instruction has `intr=true`. No interrupt is represented as a retired instruction.
-CLINT and PLIC plugin routing is not mapped in this increment. Device families
-are not declared as supported. The PLIC external-interrupt declaration is not emitted for scheduled pins.
-Live lockstep comparison remains to be run.
+The PLIC external-interrupt declaration is not emitted for scheduled pins.
+See [device checks](devices.md) for the later CLINT/PLIC routing and strict
+PLIC socket-lockstep results.
 
-## Measured increment
+## Initial interrupt increment
 
 Seed 17, default eight-entry core, nine self-checking RV32IM programs:
 
@@ -48,5 +48,5 @@ Each masked case also matches with one explicit IRQ synchronization.
 The masked cases expose the existing pin-read reference limit. Spike has no
 scheduled input during these CSR reads. This is separate from interrupt trap
 injection, which the six strict traces exercise. The default generated SV binds
-also ran with Verilator assertions enabled. None fired. These results do not
-cover CLINT/PLIC plugins, live lockstep, vectored delivery, or every ROB state.
+also ran with Verilator assertions enabled. None fired. This initial snapshot predates the device, live-lockstep and vectored-delivery
+checks in devices.md. Every ROB state has not been covered.

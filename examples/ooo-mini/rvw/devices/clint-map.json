@@ -1,0 +1,1 @@
+{"devices":[{"base":"0x02000000","size":"0x10000","irq_map":[[0,3],[1,7]],"config":"clint.json"}]}

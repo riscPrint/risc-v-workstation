@@ -39,6 +39,9 @@ class Core(val entries: Int = 8, val physicalCount: Int = 48, val issueEntries: 
     val interruptCause = out Bits(32 bits)
     val fetch = out UInt(32 bits)
     val instruction = in Bits(32 bits)
+    val accessDevice = in Bool()
+    val accessAddress = out UInt(32 bits)
+    val loadBytes = out UInt(3 bits)
     val load = out Bool()
     val loadAddress = out UInt(32 bits)
     val loadData = in Bits(32 bits) // four little-endian bytes at loadAddress
@@ -72,6 +75,7 @@ class Core(val entries: Int = 8, val physicalCount: Int = 48, val issueEntries: 
   val ready = Vec((0 until physicalCount).map(i => Reg(Bool()).init(i < 32)))
   val values = Vec.fill(physicalCount)(Reg(Bits(32 bits)).init(0))
   val valid, done, issued = Vec.fill(entries)(Reg(Bool()).init(False))
+  val deviceLoads = Vec.fill(entries)(Reg(Bool()).init(False))
   def tags() = Vec.fill(entries)(Reg(UInt(tagWidth bits)).init(0))
   val src1, src2, dest, old = tags()
   val insn = Vec.fill(entries)(Reg(Bits(32 bits)).init(0))
@@ -117,8 +121,8 @@ class Core(val entries: Int = 8, val physicalCount: Int = 48, val issueEntries: 
   interruptCode := 7
   when(pendingInterrupts(3)) { interruptCode := 3 }
   when(pendingInterrupts(11)) { interruptCode := 11 }
-  // Select a boundary before the completed head. No instruction retires on this edge.
-  val interrupt = started && count =/= 0 && done(head) && (privilege =/= 3 || mstatus(3)) && pendingInterrupts.orR
+  // Select an architectural boundary before the head. An accepted device load must retire first.
+  val interrupt = started && count =/= 0 && valid(head) && !(deviceLoads(head) && issued(head)) && (privilege =/= 3 || mstatus(3)) && pendingInterrupts.orR
   io.interruptTaken := interrupt
   io.interruptCause := B(0x80000000L,32 bits) | interruptCode.asBits.resize(32)
   val interruptTarget = (mtvec.asUInt & U(0xfffffffcL,32 bits)) +
@@ -141,7 +145,7 @@ class Core(val entries: Int = 8, val physicalCount: Int = 48, val issueEntries: 
   when(push) {
     ids(tail) := nextId; nextId := nextId + 1
     predictedDirections(tail) := predictTaken
-    valid(tail) := True; done(tail) := False; issued(tail) := False
+    valid(tail) := True; done(tail) := False; issued(tail) := False; deviceLoads(tail) := False
     insn(tail) := instruction; pcs(tail) := pc; predicted(tail) := prediction
     nextPc(tail) := pc + 4
     rs1s(tail) := Mux(read1, instruction(19 downto 15).asUInt, U(0,5 bits))
@@ -177,7 +181,8 @@ class Core(val entries: Int = 8, val physicalCount: Int = 48, val issueEntries: 
   }
   val selectAge = OHToUInt(OHMasking.first(candidates))
   val selected = (head + selectAge).resize(slotWidth)
-  val issue = candidates.orR && !redirect
+  val mmioBlocked = isLoad(selected) && io.accessDevice && selected =/= head
+  val issue = candidates.orR && !redirect && !mmioBlocked
   val a = values(src1(selected)); val b = values(src2(selected))
   val inst = insn(selected); val op = inst(6 downto 0); val funct = inst(14 downto 12)
   val immI = inst(31 downto 20).asSInt.resize(32).asBits
@@ -212,7 +217,8 @@ class Core(val entries: Int = 8, val physicalCount: Int = 48, val issueEntries: 
   val memoryMachine = privilege === 3 && (!mstatus(17) || mstatus(12 downto 11) === B(3,2 bits))
   val readAllowed = Pmp.allowed(pmpConfig,pmpAddress,effective,accessBytes,memoryMachine,0)
   val writeAllowed = Pmp.allowed(pmpConfig,pmpAddress,effective,accessBytes,memoryMachine,1)
-  io.load := issue && isLoad(selected) && readAllowed && !fetchFault(selected)
+  io.accessAddress := Mux(candidates.orR && isLoad(selected) && readAllowed && !redirect,effective,U(0,32 bits))
+  io.loadBytes := accessBytes
   io.loadAddress := Mux(io.load,effective,U(0,32 bits))
   val ageValid = valid.asBits.setName("ageValid")
   val ageOlder = Bits(entries*entries bits).setName("ageOlder")
@@ -362,6 +368,7 @@ class Core(val entries: Int = 8, val physicalCount: Int = 48, val issueEntries: 
     exception := True; cause := 2; tval := inst
   }
   when(fetchFault(selected)) { exception := True; cause := 1; tval := pcs(selected).asBits }
+  io.load := issue && isLoad(selected) && readAllowed && !exception
   val multiply = op === B(0x33,7 bits) && inst(31 downto 25) === B(1,7 bits)
   mulDiv.io.start := issue && multiply
   mulDiv.io.flush := redirect
@@ -369,7 +376,7 @@ class Core(val entries: Int = 8, val physicalCount: Int = 48, val issueEntries: 
   mulDiv.io.b := b
   mulDiv.io.funct := funct.asUInt
   when(issue) {
-    issued(selected) := True; operand1(selected) := a; operand2(selected) := b
+    issued(selected) := True; deviceLoads(selected) := io.load && io.accessDevice; operand1(selected) := a; operand2(selected) := b
     takenDirections(selected) := Mux(op === B(0x63,7 bits),branchTaken,isBranch(selected))
     nextPc(selected) := target; faults(selected) := exception; causes(selected) := cause; tvals(selected) := tval
     address(selected) := effective
@@ -490,6 +497,7 @@ class Core(val entries: Int = 8, val physicalCount: Int = 48, val issueEntries: 
   val commitBytes = Mux(masks(head)(3),U(4,3 bits),Mux(masks(head)(1),U(2,3 bits),U(1,3 bits)))
   val commitStoreAllowed = Pmp.allowed(pmpConfig,pmpAddress,address(head),commitBytes,memoryMachine,1)
   val propertySignals = Seq(
+    "mmio_at_head" -> (!(io.load && io.accessDevice) || selected === head),
     "privilege_supported" -> (privilege === 0 || privilege === 3),
     "store_permission" -> (!io.store || commitStoreAllowed),
     "rob_bound" -> (count <= entries),
@@ -558,6 +566,8 @@ class Core(val entries: Int = 8, val physicalCount: Int = 48, val issueEntries: 
     predictedTaken = Some(predictedDirections(head)),predictedTarget = Some(predicted(head)),id = Some(ids(head)))
   Probe.custom("occupancy",True,"rob" -> count,"iq" -> CountOne((0 until entries).map(i => valid(i) && !issued(i))),
     "lsq" -> CountOne((0 until entries).map(i => valid(i) && (isLoad(i) || isStore(i)))))
+  Probe.stall("lsq","mmio_head",candidates.orR && !redirect && mmioBlocked)
+  Probe.custom("mmio_load",io.load && io.accessDevice,"id" -> ids(selected),"pc" -> pcs(selected),"address" -> effective)
   Probe.stall("rename","rob_full",started && count === entries)
   Probe.stall("rename","physical_full",started && writeRd && !free.orR)
   // Commit-slot accounting. Waiting at a nonempty ROB head is backend-bound.
