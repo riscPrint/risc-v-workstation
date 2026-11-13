@@ -593,3 +593,27 @@ has no model for these v0.20 extensions. The Python models supply grouping,
 threshold-save/restore and jump-table expectations. They do not establish actual
 nested entry, table memory permissions or DUT delivery. Supervisor variants,
 interrupt table faults and interrupted trap entry remain open.
+
+## Independent DVFS clock edges
+
+The DVFS example now declares `dvfs.clock_measure`. It selects reference_hz,
+minimum high/low pulse ticks, period tolerance and settling ticks. Optional
+max_switch_ticks and max_edge_gap_ticks add project timing bounds. Generation
+rejects invalid assumptions. The bounds are project data, not RISC-V requirements.
+
+A C1 `privilege_clock_edges` artifact records reference_hz, complete,
+start_tick, end_tick and an ordered `edges` list of tick/level pairs. Level is
+the post-edge Boolean clock level. Reference ticks come from an independent
+clock. `EdgeRecorder` can build this artifact from one sample per reference tick.
+A missed tick or unknown level marks its capture incomplete. Do not sample it
+from the core clock that can stop or change.
+
+The checker requires complete edge capture when clock_measure is selected.
+It checks pulse bounds across the switch and at least three rising edges in
+each long stable window. It compares periods with reference_hz/frequency_hz
+using exact fractions. Stable windows cover the initial state and every target
+after acknowledgement plus settling. Short windows remain inconclusive. A
+complete long window with missing edges fails. Handshake order and voltage-state
+checks remain required, as does the strict C1 architectural gate. Reports bind
+the edge-capture hash. This checks sampled digital behavior. It cannot detect
+sub-tick pulses or qualify analog voltage, physical timing or PLL behavior.

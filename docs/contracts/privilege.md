@@ -242,3 +242,19 @@ plans record grouping decisions or hex jump-table addresses/targets. Reports
 remain evidence=model-based. Compilation and reference-plan agreement do not
 earn architectural DUT groups. Normal C1 stimulus binding and strict evidence
 checks remain required.
+
+## Independent DVFS clock measurements
+
+Optional dvfs.clock_measure declares reference_hz, min_high_ticks,
+min_low_ticks, period_tolerance_ticks, settle_ticks and optional max_switch_ticks
+and max_edge_gap_ticks. A selected measurement contract requires the C1 artifact
+privilege_clock_edges before the DVFS architectural group can pass.
+
+The artifact has reference_hz, complete, start_tick, end_tick and edges. Each
+edge has integer tick and Boolean level. Sampling uses independent reference
+clock ticks. EdgeRecorder marks missed samples and unknown levels incomplete.
+The observer checks sampled pulse bounds, complete stable-window periods and
+selected timing bounds. It records the capture hash and retains missing or
+short observations as inconclusive. A sampled digital pass is not analog or
+PLL qualification. Existing handshake capture and strict architectural evidence
+remain required.

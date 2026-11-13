@@ -234,6 +234,19 @@ def check(directory, results, platform, timeout=10):
                     row.update(status=observed['status'],reason=observed['reason'])
                     rows.append(row)
                     continue
+            if scenario.get('dvfs_contract',{}).get('clock_measure'):
+                from .clock_edges import observe as observe_edges
+                artifact=run.artifacts.get('privilege_clock_edges')
+                handshake=run.artifacts.get('privilege_dvfs')
+                observed=observe_edges(scenario['dvfs_contract'],
+                    json.loads((run.path/handshake).read_text()) if handshake else [],
+                    json.loads((run.path/artifact).read_text()) if artifact else None)
+                row['clock_edges']=observed
+                if artifact:row['clock_edges_sha256']=digest(run.path/artifact)
+                if observed['status']!='pass':
+                    row.update(status=observed['status'],reason=observed.get('reason'))
+                    rows.append(row)
+                    continue
             if scenario.get('pma_expectation'):
                 from .pma import observe
                 artifact = run.artifacts.get('privilege_bus')
