@@ -9,7 +9,7 @@ pytestmark = pytest.mark.fast
 ROOT = Path(__file__).resolve().parents[2]
 
 
-@pytest.mark.parametrize('kind',['clint','plic','gpio','timer','finisher','uart16550','spi','i2c'])
+@pytest.mark.parametrize('kind',['clint','plic','gpio','timer','finisher','uart16550','spi','i2c','watchdog'])
 def test_maps(tmp_path,kind):
     obj = json.loads((ROOT/'SpinalSoc/examples/soc.json').read_text())
     result = peripheral(kind,kind,0x10000000)
@@ -29,3 +29,12 @@ def test_maps(tmp_path,kind):
 def test_alignment():
     with pytest.raises(ValueError,match='align'):
         peripheral('plic','plic',1)
+
+
+def test_watchdog_side_effect_map():
+    result = peripheral('watchdog','wdt',0x10000000)
+    regs = {r['name']:r for r in result['region']['registers']}
+    assert regs['status']['write_action'] == 'one_to_clear'
+    assert regs['status']['reset'] is None
+    assert regs['service']['access'] == 'w'
+    assert regs['count']['access'] == 'r'

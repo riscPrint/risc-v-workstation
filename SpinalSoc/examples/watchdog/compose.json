@@ -1,0 +1,25 @@
+{
+  "schema": "rvw.soc-compose/1",
+  "map": "soc.json",
+  "core": {
+    "class": "rvwsoc.VerificationCore",
+    "bus": "simple",
+    "exports": [
+      "stimulus"
+    ]
+  },
+  "clock_hz": 50000000,
+  "reset": "async_high",
+  "devices": {
+    "ram": {
+      "type": "ram"
+    },
+    "wdt": {
+      "type": "project",
+      "class": "rvwsoc.Watchdog",
+      "exports": [
+        "resetRequest"
+      ]
+    }
+  }
+}

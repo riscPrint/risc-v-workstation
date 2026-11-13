@@ -495,3 +495,8 @@ It does not establish CDC or RDC qualification.
 `prepare_steps` can hold several argument lists. Each step runs in order
 with the same per-command timeout. A failed step stops verification.
 Database paths can use `{out}` for databases created by these steps.
+
+The `watchdog` peripheral profile supplies a keyed-service countdown device,
+W1C expiry status, an IRQ and an explicit reset-request output. Its composer
+example runs a directed bus-master test through the generated fabric. See
+[SpinalSoc](../../../../SpinalSoc/README.md#watchdog) for register semantics.

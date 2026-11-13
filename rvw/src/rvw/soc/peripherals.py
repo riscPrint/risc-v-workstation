@@ -26,6 +26,12 @@ def peripheral(kind, name, base):
     elif kind == 'timer':
         size, cls = 0x100, 'Timer'
         regs = [register('control',0), register('count',4,reset=None), register('compare',8,reset=0xffffffff)]
+    elif kind == 'watchdog':
+        size, cls = 0x100, 'Watchdog'
+        status = register('status',16,reset=None)
+        status['write_action'] = 'one_to_clear'
+        regs = [register('control',0), register('reload',4,reset=0xffffffff),
+                register('count',8,'r',None), register('service',12,'w',None), status]
     elif kind == 'finisher':
         size, cls = 0x100, 'Finisher'
         regs = [register('tohost',0)]

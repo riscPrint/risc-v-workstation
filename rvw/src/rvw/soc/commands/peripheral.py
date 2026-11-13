@@ -5,7 +5,7 @@ from rvw.soc.peripherals import peripheral
 
 def register(sub):
     p = sub.add_parser('peripheral', help='export a SpinalSoc peripheral register map and binder')
-    p.add_argument('kind', choices=['clint','plic','gpio','timer','finisher','uart16550','spi','i2c'])
+    p.add_argument('kind', choices=['clint','plic','gpio','timer','finisher','uart16550','spi','i2c','watchdog'])
     p.add_argument('--name', required=True)
     p.add_argument('--base', required=True, type=lambda s:int(s,0))
     p.add_argument('--out', required=True)
