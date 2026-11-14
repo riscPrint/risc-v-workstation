@@ -1,286 +1,263 @@
-# Full suite run, 2026-11-13
+# Full suite rerun, 2026-11-13
 
-The run is not green. The known remaining failures are listed below. No BOOM build or BOOM simulation was run.
+The rerun ran on 2026-11-13 and 2026-11-14 UTC. It is not green. The rerun uses main `f94b3a3b18a64f1bfd361115fc978c3848e12798`. The tracked source stayed fixed during the run. Earlier diagnostic runs and targeted repair tests are excluded from these totals. The previous mixed-revision run had 7,813 passes, 47 failures and 168 skips. Its skip table is retained below as historical data. A later main commit is not qualified by this run.
 
-## Scope and evidence
+Python used at most three workers per batch and four across this task. Every batch had a 900-second cap. Heavy native files ran with one worker. Native jobs used `nice -n 10`. sbt used the private `sbt-uvm` lock. `SPINAL_BOOM` selected an empty directory. No BOOM build or simulation ran.
 
-The first collection used main at `c29ad597`. Repairs and later collections used main at `f104f10a` plus the changes from this task. Other workers continued to merge changes during the run. These results span those revisions. They do not qualify a later main revision as a whole.
-
-The suite ran in the private `uvm` worktree. Heavy jobs used nice level 10. Python used at most four workers across this task. Each batch had a 900-second cap. The initial per-test limit was 120 seconds. Later native batches used 600 seconds, or 840 seconds for the native build check. sbt used the private `sbt-uvm` lock. `SPINAL_BOOM` selected an empty directory.
-
-The raw command records, JUnit files and logs are under `$RUN_ROOT`. The worktree-parent `FULLSUITE_LOG.md` records each batch. Counts below use the latest completed execution for each test ID at the `f104f10a` cutoff. A later unconfigured skip does not replace an earlier configured execution. Reruns do not add to the count. Deselected fast tests are not skips.
-
-## First Python inventory
-
-| Directory | Selected tests | Files |
-|---|---:|---:|
-| `rvw/tests` | 5169 | 360 |
-| `rvw/tests/cosim` | 711 | 51 |
-| `rvw/tests/cov` | 651 | 39 |
-| `rvw/tests/devices` | 22 | 5 |
-| `rvw/tests/formal` | 1625 | 146 |
-| `rvw/tests/interrupts` | 4 | 2 |
-| `rvw/tests/ordering` | 141 | 8 |
-| Total | 8323 | 611 |
-
-The first collection selected 8,323 of 10,379 tests. It deselected 2,056 fast tests. The later collection selected 8,028 slow tests from 10,551 tests. Added tests, changed parameter sets and fast promotions explain the difference. The file and test-ID audit found 33 IDs absent from completed results. The delta batch ran all 33. A union-schema probe failed in that batch and then passed after its repair.
-
-## Slow Python results at the cutoff
-
-| Directory | Pass | Fail | Skip | Timeout | Not run |
-|---|---:|---:|---:|---:|---:|
-| `rvw/tests` | 4722 | 1 | 135 | 0 | 0 |
-| `rvw/tests/ci_native` | 4 | 0 | 0 | 0 | 0 |
-| `rvw/tests/cosim` | 703 | 0 | 4 | 0 | 0 |
-| `rvw/tests/cov` | 652 | 0 | 0 | 0 | 0 |
-| `rvw/tests/devices` | 19 | 1 | 2 | 0 | 0 |
-| `rvw/tests/formal` | 1570 | 45 | 25 | 0 | 0 |
-| `rvw/tests/interrupts` | 2 | 0 | 2 | 0 | 0 |
-| `rvw/tests/ordering` | 141 | 0 | 0 | 0 | 0 |
-| Total | 7813 | 47 | 168 | 0 | 0 |
-
-All 8,028 selected IDs have a completed result. The 47 failures are 45 cases against the installed slang plugin, one Spike PLIC oracle case and one UVM conformance case. The remaining skip reasons are listed below. Expected timeout and fault controls that pass their assertions are counted as passing tests.
-
-## Fast order and timing
-
-| Random seed | Pass | Skip | Wall seconds |
-|---|---:|---:|---:|
-| 111 | 2055 | 1 | 459.16 |
-| 222 | 2080 | 1 | 503.46 |
-| 333 | 2522 | 1 | 103.77 |
-| 444 | 2522 | 1 | 88.30 |
-| 555 | 2522 | 1 | 77.17 |
-| 778, delivery main | 2821 | 1 | 94.19 |
-
-The selections grew as main changed and modules gained fast markers. Seeds 333 and 444 used the same final cutoff selection. They each passed 2,522 tests with one expected command-reference skip. No order-dependent failure appeared in these runs.
-
-The final delivery check used main `31a95be8`. Its first attempt had 2,814 passes and one collection error because the environment lacked the newly declared PyYAML dependency. After `uv pip install -e ".[dev,mcp]"`, seed 778 passed all 2,821 selected tests with one expected skip. The staged report also passed all 40 release-hygiene tests.
-
-The task promoted 269 pure unit tests in 36 modules. Each observed call took less than one second. The largest promoted call in the serial validation was 0.46 seconds. The modules use `pytestmark = pytest.mark.fast`; no shared `FAST_MODULES` registry was edited. The doctor promotion added 25 more tests. The JSON argument-probe check added one more fast test.
-
-Promoted modules:
-
-- `test_arch_traffic.py`
-- `test_arch_warmup.py`
-- `test_ci_summary.py`
-- `test_connectivity_tables.py`
-- `test_csr_catalog.py`
-- `test_device_events.py`
-- `test_evidence_index.py`
-- `test_farm_notifications.py`
-- `test_farm_project_resources.py`
-- `test_farm_selection.py`
-- `test_farm_triage.py`
-- `test_lint_depth.py`
-- `test_lint_rdc.py`
-- `test_lint_rules.py`
-- `test_lint_sdc.py`
-- `test_memory_axiomatic_pins.py`
-- `test_memory_contract.py`
-- `test_mmu_cov.py`
-- `test_mmu_iommu.py`
-- `test_mmu_memory_effects.py`
-- `test_perf_events.py`
-- `test_privilege_aia.py`
-- `test_privilege_aplic_gateway.py`
-- `test_privilege_controllers.py`
-- `test_privilege_disabled_matrix.py`
-- `test_privilege_dvfs.py`
-- `test_privilege_epmp.py`
-- `test_privilege_epmp_matrix.py`
-- `test_privilege_events.py`
-- `test_privilege_extensions.py`
-- `test_privilege_plic.py`
-- `test_privilege_pma.py`
-- `test_privilege_pmp.py`
-- `test_privilege_reri.py`
-- `test_privilege_scheduled.py`
-- `test_privilege_timer32.py`
-
-## Scala suites
-
-| Project | Pass | Fail | Cancel or skip | Result |
-|---|---:|---:|---:|---|
-| `SpinalWaves/spinalwaves` | 18 | 0 | 0 | full test suite |
-| `SpinalTrace/spinaltrace` | 26 | 0 | 0 | full test suite |
-| `SpinalDB/spinaldb` | 86 | 0 | 0 | full test suite |
-| `SpinalChecks` | 145 | 0 | 0 | full test suite |
-| `SpinalKonata` | 6 | 0 | 0 | full test suite |
-| `SpinalKonata/inputs` | 7 | 0 | 0 | full test suite |
-| `SpinalProbes` | 5 | 0 | 0 | full test suite |
-| `SpinalBlocks/spinalblocks` | 6 | 0 | 0 | full test suite |
-| `RiscvSim generic` | 180 | 0 | 0 | full test suite |
-| `SpinalSoc` | 0 | 0 | 0 | compiled; no test cases |
-| `SpinalSoc/db` | 0 | 0 | 0 | compiled; no test cases |
-| Total executed tests | 479 | 0 | 0 | |
-
-The generic RiscvSim run included the pinned official litmus plan. The observed fixture matched the herd reference. Its injected-fault comparison returned 1 as required. This fixture is not a core or memory-system qualification. SpinalWaves and SpinalTrace used the built Rust checker and CLI. SpinalDB used that checker too.
-
-## Rust, JavaScript and example suites
+## Results
 
 | Suite | Pass | Fail | Skip | Scope |
-|---|---:|---:|---:|---|
-| SpinalTrace Rust workspace | 29 | 0 | 0 | backend, CLI and GUI library; doc tests also complete |
-| Typed-wave Rust checker | 8 | 0 | 0 | checker integration tests |
-| VS Code unit tests | 36 | 0 | 0 | typecheck and build also pass |
-| SpinalBlocks engine | 16 | 0 | 0 | typecheck and build also pass |
-| NaxRiscv example Python | 4 | 0 | 0 | project tests |
-| VexRiscv example Python | 3 | 0 | 39 | private core or captured RTL inputs absent |
-| VexRiscv formal example Python | 3 | 0 | 0 | generic environment tests |
-| VexiiRiscv example Python | 5 | 0 | 6 | private core inputs absent |
-| SMP example Python | 6 | 0 | 1 | private native timing input absent |
-| ComponentSims | 99 | 0 | 0 | component and reference tests |
-| SpinalChecks coherence | 5 | 0 | 0 | plus four passing subtests |
+|---|---|---|---|---|
+| Slow Python | 7964 | 1 | 203 | 0 setup errors; 0 missing IDs |
+| SpinalTrace Rust | 31 | 0 | 0 | workspace and doc tests |
+| Typed-wave Rust checker | 8 | 0 | 0 | native tests |
+| VS Code JavaScript | 41 | 0 | 0 | typecheck and build also pass |
+| SpinalBlocks JavaScript | 16 | 0 | 0 | typecheck and build also pass |
+| `ComponentSims/tests` | 101 | 0 | 0 | pytest folder |
+| `SpinalChecks/coherence` | 5 | 0 | 0 | pytest folder |
+| `examples/naxriscv/rvw/tests` | 5 | 0 | 0 | pytest folder |
+| `examples/smp/rvw/tests` | 11 | 0 | 1 | pytest folder |
+| `examples/vexiiriscv/rvw/tests` | 10 | 0 | 13 | pytest folder |
+| `examples/vexriscv/formal/tests` | 3 | 0 | 0 | pytest folder |
+| `examples/vexriscv/rvw/tests` | 3 | 0 | 40 | pytest folder |
+| Composed UVM scenarios | 2 | 0 | 0 | fresh RTL; outside Python totals |
 
-The VS Code debug browser script and extension integration script passed. The extension test used a prebuilt BOOM diagram, not a BOOM build. A rebuilt rerun verified screenshot output under the ignored test directory. No tracked screenshot changed. SpinalTrace GUI check/build and the SpinalBlocks web-host build passed; those packages declare no separate JavaScript test suite.
+VS Code UI and debug integration processes both exited 0. The native UVM, protocol and connected-SoC pytest cases are included in slow Python, not added again. The run selected 8168 slow Python test IDs.
 
-The example inventory also found PicoRV32 and the Vex cocotb/scenario folders. They require an external core or captured core RTL, so their native core flows were not run. PicoRV32 has no separate owned pytest folder in this checkout.
+Delivery checks passed: 3,669 fast tests passed with four skips. All 45 release-hygiene cases passed.
 
-Generic UVM native controls passed: one custom-bus positive/negative control test, four semantic-contract control tests, two connected SoC seeds and two composed SoC scenario seeds. The composed RTL was regenerated after its build dependency repair. The earlier pass against old RTL is excluded from this evidence. The native RAL sequence case passed. These Python tests are already included in the slow Python count where applicable. The composed scenario script is separate. Neither SoC fixture executes a CPU.
+The Python audit matches collected test IDs to JUnit results. Each ID contributes once. All 54 batches completed. The largest batch took 112 seconds. No batch reached its 900-second cap. Fast deselections are not skips. Expected fault controls count as passes only when their rejection checks pass. Native crashes and Scala cancellations remain separate from passes.
 
-## Repairs
+| Scala project | Released: pass/fail/cancel/native | Old: pass/fail/cancel/native |
+|---|---|---|
+| SpinalWaves/spinalwaves | 18/0/0/0 | 16/0/1/1 |
+| SpinalTrace/spinaltrace | 27/0/0/0 | 25/1/1/0 |
+| SpinalDB/spinaldb | 89/0/0/0 | 86/0/3/0 |
+| SpinalChecks | 149/0/0/0 | 148/1/0/0 |
+| SpinalProbes | 5/0/0/0 | 5/0/0/0 |
+| RiscvSim | 212/0/0/0 | 207/4/0/1 |
+| SpinalKonata/inputs | 7/0/0/0 | not this axis |
+| SpinalKonata | 6/0/0/0 | not this axis |
+| SpinalBlocks/spinalblocks | 6/0/0/0 | not this axis |
+| SpinalSoc/db | 0/0/0/0 | not this axis |
+| SpinalSoc | 0/0/0/0 | not this axis |
+| Total | 519/0/0/0 | 487/6/5/2 |
 
-- Update restricted MCP benchmark fixtures for the job and metadata tools. Keep the restricted-catalog check.
-- Update doctor result doubles for mapping access. Mark the pure doctor module as fast.
-- Run native Python sbt fixtures under the private worktree lock.
-- Update the command JSON probe for required subcommands, typed arguments and missing-input errors. Send the datapath input error to stderr.
-- Update stale CLI/MCP equality checks for the C7 envelope. Keep payload, verdict and error checks.
-- Compare stable CLI/MCP cosimulation data. Check that every shared captured source has the same byte hash. Each entry point can load a different module set.
-- Keep portable ordering cases on the base ISA profile. Run the Zacas and cache-block cases with their required profiles in their own suites.
-- Test the explicit refusal of multi-hart replay without the serialized-retirement profile.
-- Isolate fake JVM and make settings from ambient options. Make each environment-mutation test start without the variable it changes.
-- Copy the current Spinal axis helper and generic dependencies into the native cache fixture. Keep an exact allowlist of generic project references. Reject core references.
-- Give RiscvSim Scala tests a private runtime cache under their own target directory.
-- Add the shared SpinalChecks dependency required by the composed UVM SoC protocol monitors. Regenerate RTL before rerunning its scenario tests.
-- Check process exit with the existing zombie-aware helper.
-- Put eager configuration construction inside the expected-error context.
-- Compare the regression watchdog's idle interval. Keep the exact pass/timeout counts. Exclude source capture, startup and serial retry from this interval.
-- Give the native connectivity proof 60 seconds instead of 10 seconds. Keep its transfer, activation and semantic checks.
-- Generate the temporal support-table expectation from all existing feature lists.
-- Keep a newline after emitted Scala SVA source comments when the native test adds `endmodule`.
-- Select temporary core paths in the fake example-project tests. Require explicit private core selection before native example tests can build a core.
-- Keep the SoC example platform metadata in step with its canonical platform file.
-- Let the RV32 native check select its external ISA sources with `RISCV_TESTS_SOURCE`.
-- Make the MCP invalid-type probe handle union types.
-- Write VS Code integration screenshots to ignored `.vscode-test/screenshots/spinalblocks/`.
+Native counts are crashes or aborts that prevented a Scala verdict. The Vex example has no Scala test cases. Its test sources compiled. Vexii has 32 passing Scala cases. SpinalSoc root and database have no Scala cases. The UVM SoC and composed-SoC Scala projects compiled and generated fresh RTL. Seven auxiliary builds also compiled with no Scala cases: bus binding, the small OoO check example, ooo-mini, coverage, Tiny Spinal, agent bring-up and the mapped adapter.
 
-No real check was removed. No failure was changed to an expected pass. The failed UVM workaround was reverted.
+The released axis used SpinalHDL 1.15.0 and Scala 2.13.14. The old axis used the clean Nax SpinalHDL source `c362657003fa178350d6955055867e9ab363c44a` and Scala 2.12.18 through `RVW_SPINAL_SOURCE`. Both axes tested all six affected libraries. The old axis used Verilator 5.049 devel, `v5.048-26-g25d4827bd (mod)`, with `-CFLAGS -DVL_TIME_CONTEXT --assert`. The released axis and Python used Verilator 5.052. FST compilation needed the installed LZ4 include and library paths. Those paths were set only for the FST formal batch. They were not passed to core adapters as opaque build inputs.
 
-## Remaining failures and reproductions
+Other tools were JDK 21.0.13, RISC-V GCC 15.1.0, Spike 1.1.1-dev, Yosys 0.64+174 and the installed OSS CAD Suite slang plugin, and Z3 4.13.4. The gem5 test used the installed RISC-V gem5 25.1.0.1 binary. Tool presence does not establish a proof result.
 
-### Accellera UVM conformance
+## Real core flows
 
-`rvw/tests/test_uvm_native.py::test_accellera_subset_and_rvfi_fault` fails with `random data did not change` at time 825. The native wrapper returns 2. Its internal result has 24 error rows and six pass rows across seeds 1, 2 and 3.
+| Flow | Pass | Error | Inconclusive | Scope |
+|---|---|---|---|---|
+| vexriscv | 2 | 0 | 0 | rvw regress smoke |
+| vexiiriscv | 2 | 0 | 0 | rvw regress smoke |
+| naxriscv | 2 | 0 | 0 | rvw regress smoke |
+| smp | 0 | 1 | 1 | rvw regress smoke |
+| soc | 4 | 0 | 0 | rvw regress smoke |
+| SMP direct | 1 | 0 | 0 | 23 retirements; separate from regress |
 
-The archive is the pinned Accellera UVM source at revision `78c06547a2a0a29b3dc9dcafae62b75b2ff61544`. Its SHA-256 is `9ee918499a92518f8f7c202c5f8a38b8a0c83d4eba3bedd7890bfa3ed023d1e4`. The simulator is Verilator 5.049 devel, `v5.048-26-g25d4827bd` with local modifications. The original SystemVerilog sets a data-change flag. The generated C++ appears to omit that update. A trial with an explicitly reset class member failed too. That trial was reverted. The cause remains unresolved. The check remains enabled.
+The SMP regression attempt is the main flow blocker. The adapter declares `input_complete=false` and lacks `cache_paths`, `input_env` and `input_tools`. Regression refuses conclusive execution with `input_not_captured:adapter_dependencies`. The report does not turn on `input_complete` without the missing declarations. A separate direct two-hart seed-17 run passed. It does not repair or qualify the regression path.
 
-Reproduce with the pinned archive and the installed native simulator:
+The three single-core runs used private pinned source checkouts with the adapters from the tested main commit. Their source heads were VexRiscv `a62c145aa042a5de874344e0a7683bd7c8c8c870`, VexiiRiscv `9b63f47fe559dbba7874af9196746412fa1294c1`, and NaxRiscv `9f452d50560d02fb391bc8039f5453c54e0911af`. The Nax launcher now compiles with Verilator 5.052 through the `WData=EData` alias. C1 smoke passes are bounded program results. They are not whole-core or strict Spike qualification. The copied adapters and untracked run output made the core and tools checkouts dirty. The base source heads and captured fingerprints identify those inputs. This prevents a release-accept claim.
+
+The examples' own pytest folders ran without core rebuilds. Their native cases skipped when a private core or capture was required. The separate regress rows above supply native smoke evidence. The composed UVM SoC RTL was regenerated before its two cocotb scenarios ran. That fixture has no CPU.
+
+## Repairs and remaining failures
+
+The slang inventory pins frontend `4a77e391c2a66bf1caec5e076b7e29609123985b` and slang `42710c788ce76cd08ce2080773e0b8286c428a05`. The installed OSS CAD Suite plugin loads but rejects a clocked assertion. Capability probing now skips the affected tests with this exact reason:
+
+> Installed yosys-slang lacks clocked SVA lowering (SVA unsupported); install the pinned source build with scripts/install.sh --with-formal
+
+`rvw doctor --features formal --skip-adapter-info --json` reports the same inconclusive capability and install flag. The replacement plugin was not built. The probe skipped 49 current cases. The previous run had 45 failures in this area. These skips provide no SVA proof evidence.
+
+The UVM random-data failure reproduced with the pinned Accellera archive at revision `78c06547a2a0a29b3dc9dcafae62b75b2ff61544`, SHA-256 `9ee918499a92518f8f7c202c5f8a38b8a0c83d4eba3bedd7890bfa3ed023d1e4`. The observed fault was a Verilator nested-task local accumulator update. The scoreboard now checks each observed item in a function. Seeds 1, 2 and 3 pass. A forced constant-data stream still fails. Seed selection was retained. No protocol-agent check was waived.
+
+The native Spike PLIC disagreement remains a failing test: `devices/test_plic.py::test_spike_claim_ignores_threshold`. Minimal actions are priority[1]=3, context-0 enable=2, threshold=3, source-1 level=1, then claim and pending reads. Both paths mask IRQ. Python `Plic` returns claim=1 and pending=0. Native Spike `plic_t` returns claim=0 and pending=2. Lowering the native threshold to zero returns claim=1. This is a real difference between two reference paths. It is not cleared by [PR #1147](https://github.com/riscPrint/risc-v-workstation/pull/1147): that flow checks Vexii RTL against Spike instructions plus the Python external-PLIC replay. It does not call native Spike `plic_t` for this threshold case. The model and failing oracle assertion remain unchanged.
+
+The old SpinalHDL axis has six failed cases, one native JVM crash and one native abort:
+
+| Case | Observed limit |
+|---|---|
+| `ExamplesTraceSpec`, failing HDL assert | Expected assertion does not fire with HDL time fixed at zero. |
+| `AxiReferenceSpec`, independent DMA memory | The old SDK AXI master produces strobe 16 for a four-bit port. Its middle-burst expression is `BigInt(1) << busConfig.bytePerWord`; the full mask needs the low four bits. |
+| `CoherenceModelFixtureSpec`, ownership fault | The injected-fault negative control does not fire on the old time context. |
+| `RiscvSimSpec`, HDL assert, concurrent failure and overlapped failure | Three assertion-negative controls do not report the expected failure. |
+| Waves `SimGuardSpec`, repeated traced run | The JVM crashes with SIGSEGV in `VerilatedTrace::addModel` during repeated traced simulation. The runner stops the stuck sbt client after the native crash. |
+| `TypedCacheBindSpec` | Native TL-C monitor aborts at HDL time zero: `rvw TL-C data message header changed`. The precise SDK/model interaction remains unresolved. |
+
+The callback/context probe at `RiscvSim/tests/repro/verilator-context-time/` reports 17 through the old callback and 0 with `VL_TIME_CONTEXT`. The old wrapper does not advance context time. Assertions guarded by `noAssertAtTimeZero` can remain disabled. These failures were not changed to skips or expected passes. The five cancellations cover old waveform-path and `Mem.readAsyncWrite` capabilities, plus the `immutable.ArraySeq`, `immutable.VectorMap` and `immutable.LazyList` types absent from Scala 2.12. Six fresh litmus samples are consistent with the pinned herd allowed outcomes on each axis. All six injected-fault samples mismatch on each axis, with checker exit 1. This is bounded fixture evidence, not a core memory-model proof.
+
+Other fixes retain the checks that exposed the faults:
+
+- Detect the installed SystemC and LLVM development files, native Sail DII, Tiny Spinal, Vex runtime tools and gem5. Keep absent source or endpoint inputs separate from tool presence.
+- Isolate the missing-tool installer fixture from an ambient `RVW_GEM5` setting. Keep its package-manager traps and no-write checks.
+- Select an explicit integer ISA for integer Spike/Sail fixtures after scalar-FP generation changed. Preserve Sail full-state refusal. Keep the FP address-only fixture separate, with `no_fp_state` scope and a changed-address negative control.
+- Isolate external-git fixtures and regression-resume tool metadata. The resume test still rejects changed tool fingerprints and platform bytes.
+- Update the native CPU shim ABI guards. Preserve replay and state requirements.
+- Use portable old-Spinal fixture APIs. Make the Round22 user phase change emitted RTL on both axes. Preserve its inequality check.
+- Keep Vexii default RV32/RV64 configurations explicit when FPU configurations are added.
+- Combine same-predicate assignment coverage per bit in latch analysis. Preserve missing-branch and missing-bit controls.
+- Report unbounded cancellation and MCP command exit errors correctly. Keep unchecked fairness inconclusive.
+- Keep unqualified coverage bins separate from qualified hits. Preserve capture-race and qualification controls. Check Sail termination separately from absent FP state.
+- Count all eight DRAM transfers. Check legal stream cancellation with activation evidence. Exercise three supported Vex machine IRQs, reject the unsupported supervisor input, and retain timing and corrupted-event Spike controls.
+- Disable GPU use in the VS Code integration launcher. Both final integration processes exited successfully. Earlier intermittent hangs mean this flag alone is not a complete stability proof.
+
+## Original 168 skips
+
+This table lists every distinct reason from the previous full run. Counts are historical. They are not added to the rerun totals.
+
+| Prior skip reason | Count |
+|---|---:|
+| generated Sail bitmanip models and native tools required | 38 |
+| generated Sail state models and native formal tools required | 36 |
+| set RVW_TEST_SOFTFLOAT to the pinned external source tree | 13 |
+| generated Sail Zicond models and native tools required | 8 |
+| native tools and generated models required | 6 |
+| VEXRISCV must select an external checkout; use a private copy for parallel runs | 5 |
+| native localhost SSH required | 5 |
+| set RVW_ETRACE_REFERENCE; Spike and RISC-V GCC are needed | 4 |
+| pinned Sail model source required | 4 |
+| set RVW_EXTERNAL_BOOM_LAUNCHER for BOOM launcher parity | 4 |
+| optional native rIC3 missing | 3 |
+| set RVW_TEST_SSH_OPTIONS for a native localhost SSH test | 3 |
+| build IRQ and CSR ELFs and set RVW_VEX_EVENTS_DIR | 3 |
+| set RVW_TEST_DII_SAIL to a native Sail with --rvfi-dii | 2 |
+| set RVW_WFI_RUNTIME=1 for bounded core WFI runs | 2 |
+| VEXIIRISCV must select a private pinned core with its SpinalHDL dependencies | 2 |
+| set RVW_INTERRUPT_RUNTIME=1 for BOOM interrupt regression | 2 |
+| native LLVM headers and tblgen absent | 2 |
+| pinned GCC/LLVM source base files required | 2 |
+| native riscv-formal and generated Zicond models required | 2 |
+| set RVW_TEST_NATIVE_ADJUDICATE=1 for native Spike/Sail integration | 1 |
+| set RVW_TEST_BENCHMARK_ELF to a built integer benchmark | 1 |
+| optional native cover-search tools missing | 1 |
+| optional native EBMC and Yosys missing | 1 |
+| opt-in native gem5 FTQ test | 1 |
+| set RVW_ETRACE_REFERENCE to the pinned native reference checkout | 1 |
+| set RVW_TEST_TINY_SPINAL=1 with JDK, sbt, Verilator, GCC and Spike | 1 |
+| verible is not installed | 1 |
+| Verible is not installed | 1 |
+| pinned CIRCT install required | 1 |
+| pinned CIRCT required | 1 |
+| pinned riscv-profiles source required for span verification | 1 |
+| NEORV32 has memories; set RVW_GHDL_PLUGIN to a plugin built by scripts/build-ghdl-plugin.py | 1 |
+| UART memories need the rebuilt GHDL plugin (RVW_GHDL_PLUGIN) | 1 |
+| pinned Sail bitmanip source required | 1 |
+| pinned Sail state sources required | 1 |
+| generated Sail state models and Yosys required | 1 |
+| native Sail compiler, pinned source and riscv-formal required | 1 |
+| pinned Sail source required | 1 |
+| SystemC development library required | 1 |
+| set RVW_UVM_CPU_RUN to a completed scalar C1 run | 1 |
+| set RVW_VEX_LIVE_ELF and RVW_CPU_SHIM; generate VexTop.v first | 1 |
+| Total | 168 |
+
+## Rerun skips
+
+| Distinct rerun skip reason | Count |
+|---|---|
+| Installed yosys-slang lacks clocked SVA lowering (SVA unsupported); install the pinned source build with scripts/install.sh --with-formal | 49 |
+| generated Sail bitmanip models and native tools required | 38 |
+| generated Sail state models and native formal tools required | 36 |
+| set RVW_TEST_SOFTFLOAT to the pinned external source tree | 13 |
+| generated Sail Zicond models and native tools required | 8 |
+| native tools and generated models required | 6 |
+| native localhost SSH required | 5 |
+| set RVW_ETRACE_REFERENCE; Spike and RISC-V GCC are needed | 4 |
+| pinned Sail model source required | 4 |
+| set RVW_EXTERNAL_BOOM_LAUNCHER for BOOM launcher parity | 4 |
+| optional native rIC3 missing | 3 |
+| set RVW_TEST_SSH_OPTIONS for a native localhost SSH test | 3 |
+| build IRQ and CSR ELFs and set RVW_VEX_EVENTS_DIR | 3 |
+| boom source checkout is unavailable; set SPINAL_BOOM | 2 |
+| pinned GCC/LLVM source base files required | 2 |
+| Verible is not installed | 2 |
+| installed GHDL plugin has an incompatible Yosys memory ABI; rebuild with python3 scripts/build-ghdl-plugin.py and set RVW_GHDL_PLUGIN | 2 |
+| native riscv-formal and generated Zicond models required | 2 |
+| set RVW_TEST_BENCHMARK_ELF to a built integer benchmark | 1 |
+| optional native cover-search tools missing | 1 |
+| optional native EBMC and Yosys missing | 1 |
+| set RVW_DEBUG_TEST_PORT to a disposable RTL remote_bitbang endpoint | 1 |
+| set RVW_ETRACE_REFERENCE to the pinned native reference checkout | 1 |
+| verible is not installed | 1 |
+| set RVW_MAPPED_PROBE_PROJECT to a mapped smoke fixture with stage/retire probes | 1 |
+| pinned CIRCT required | 1 |
+| pinned CIRCT install required | 1 |
+| pinned riscv-profiles source required for span verification | 1 |
+| pinned Sail bitmanip source required | 1 |
+| pinned Sail state sources required | 1 |
+| generated Sail state models and Yosys required | 1 |
+| native Sail compiler, pinned source and riscv-formal required | 1 |
+| pinned Sail source required | 1 |
+| set RVW_UVM_CPU_RUN to a completed scalar C1 run | 1 |
+| set RVW_VEX_LIVE_ELF and RVW_CPU_SHIM; generate VexTop.v first | 1 |
+| Total | 203 |
+
+The remaining skips are explicit capability or input gaps. The Sail simulator is installed, but the Sail compiler and generated pinned models are absent. GHDL loads, but its memory-cell ABI is incompatible with the selected Yosys; the skip gives the rebuild command. SSH client and daemon binaries exist, but the native tests lack a working configured localhost endpoint. CPU UVM needs its supported C2/1 state capture; the new Vex capture is C2/2 with CSR state and cannot substitute for that input. Live/event UVM needs its own RTL and ELFs. The disposable RTL remote_bitbang endpoint is not configured. Sail still refuses full FP-state comparison. SoftFloat, E-Trace and compiler/profile cases need pinned external sources. rIC3, EBMC, Verible and the pinned CIRCT install were not found. No missing input was replaced by an invented pass.
+
+## Reproduction and work not run
+
+Use the tested commit and the development/MCP dependencies. Set private core paths and the pinned external input paths. Keep native build trees in the private worktree. Store raw command records, logs and JUnit outside version control under `$RUN_ROOT`.
 
 ```sh
-RVW_UVM_ARCHIVE="$ARCHIVE" RVW_UVM_VERILATOR=verilator \
-  nice -n 10 rvw/.venv/bin/python -m pytest \
-  rvw/tests/test_uvm_native.py::test_accellera_subset_and_rvfi_fault \
-  -p no:cacheprovider -q -ra --timeout=840
+(cd rvw && uv pip install -e '.[dev,mcp]')
+export SPINAL_BOOM="$RUN_ROOT/empty-boom"
+mkdir -p "$SPINAL_BOOM"
+export RVW_HOME="$PWD" RVW_SBT_LOCK=sbt-uvm
+export RVW_VEX_LOCK=vex-uvm RVW_VEX_CHECKS_LOCK=vex-uvm
+export VEXRISCV="$PRIVATE_VEX" VEXIIRISCV="$PRIVATE_VEXII"
+export NAXRISCV="$PRIVATE_NAX" RVW_NAX_SBT_LOCK=sbt-uvm
+export RISCV_TESTS_SOURCE="$INPUT_ROOT/riscv-tests"
+export RVW_TEST_RISCV_TESTS="$RISCV_TESTS_SOURCE/benchmarks"
+export RVW_GEM5="$GEM5_BINARY"
+export RVW_REMOTE_NATIVE_PROJECT="$PRIVATE_VEX/rvw.toml"
+export RVW_UVM_ARCHIVE="$INPUT_ROOT/accellera.tar.gz"
+export RVW_UVM_SOC_NATIVE=1 RVW_UVM_CUSTOM_NATIVE=1 RVW_UVM_CONTRACTS_NATIVE=1
 ```
 
-The separate native RAL sequence test passed. That pass does not clear the conformance failure.
+Use the example READMEs to prepare the private adapter copies and programs. Use the pinned litmus plan and generated lint fixtures. Select the built wave checker, Trace CLI and release SpinalChecks test classpath. Keep the matching Yosys and plugin together. Build the Spike shim with `nice -n 10 bash Cosim/build.sh`.
 
-### Installed slang plugin
-
-Forty-four paired semantic cases and one direct frontend-boundary case fail with the OSS CAD Suite plugin. It loads, but reports `SVA unsupported`. It is not the patched source-built plugin required by these cases. The task did not build a replacement plugin. These are failed configured attempts, not proof passes.
-
-A minimal source is:
-
-```systemverilog
-module top(input clk, a);
-  assert property (@(posedge clk) a);
-endmodule
-```
-
-Run `yosys -m "$SLANG_PLUGIN" -p 'read_slang --top top sva.sv'`. The installed plugin rejects this source. The generic finite temporal and Scala-emitted property suites have separate results above.
-
-### Spike PLIC oracle
-
-`rvw/tests/devices/test_plic.py::test_spike_claim_ignores_threshold` fails against the installed Spike 1.1.1-dev library. With source 1 at priority 3, enabled, and threshold 3, the test expects claim 1 with no IRQ. The installed oracle returns claim 0. The ordinary PLIC oracle and timer cases pass. The PLIC model and the conformance check were not changed to hide this disagreement.
-
-Reproduce with the installed Spike development headers and library:
+Collect slow test IDs with `rvw/.venv/bin/python -m pytest rvw/tests -m 'not fast' --collect-only -q -p no:randomly`. Group at most 15 files. Put native formal, generated-core checks, Tiny Spinal, remote native, interrupt/WFI and UVM files in separate batches with one worker. For each batch, run:
 
 ```sh
-RVW_DEVICE_SPIKE_PREFIX="$SPIKE_PREFIX" nice -n 10 \
-  rvw/.venv/bin/python -m pytest \
-  rvw/tests/devices/test_plic.py::test_spike_claim_ignores_threshold \
-  -p no:cacheprovider -q -ra
+timeout 900 nice -n 10 rvw/.venv/bin/python -m pytest $FILES \
+  -m 'not fast' -n 3 -q -ra -p no:randomly -p no:cacheprovider \
+  --timeout=840 --basetemp="$RUN_ROOT/$BATCH-tmp" \
+  --junitxml="$RUN_ROOT/$BATCH.xml"
 ```
 
-## Skips and work not run
+Use `-n 1` for the separate native files. Scope `CPATH="$LZ4_PREFIX/include"` and `LIBRARY_PATH="$LZ4_PREFIX/lib"` only to `formal/test_formal.py`. Do not export those opaque inputs to the core launchers.
 
-- BOOM builds, BOOM simulations and the BOOM Scala adapter suites were not run. BOOM runtime interrupt, WFI and launcher parity tests skipped.
-- Private VexRiscv, VexiiRiscv, NaxRiscv and SMP core rebuilds were not run. Native example tests without explicit private inputs skipped. Their pure project and generator tests ran.
-- CPU UVM replay, live Vex UVM and event UVM lacked the required completed C1 runs, captured RTL or ELF inputs. They were not run. Generic connected SoC and composed-SoC tests have separate results.
-- Sail generated-model cases lacked the pinned source or generated models. DII and adjudication cases lacked their configured Sail inputs. No Sail compiler campaign was started.
-- SoftFloat, E-Trace reference and profile-span cases lacked their pinned sources. The extracted-lint fixtures were generated and their tests ran.
-- Native localhost SSH tests lacked the configured SSH connection. No SSH daemon or account settings were changed.
-- rIC3, the optional cover-search tools, EBMC, Verible, the pinned CIRCT install, LLVM scheduling headers and tblgen, SystemC development libraries and the rebuilt GHDL memory plugin were absent from the required configured tool sets.
-- The patched source-built slang plugin was not built. The installed plugin was tested and failed as stated above.
-- The command-reference check stayed skipped under the parallel-push rule. This task did not edit that hot file.
+Run Scala with `scripts/with-lock.sh sbt-uvm nice -n 10 sbt -batch test` from each project in the table. Use `show Test/definedTests` and `testOnly` groups of at most seven suites for SpinalChecks and old-axis RiscvSim. Run old `TypedCacheBindSpec` separately. Split old `SimGuardSpec` into its timeout, parsing and repeated-run cases. Stop the stuck sbt client after a confirmed native abort. For the old axis set `RVW_SPINAL_SOURCE="$NAXRISCV/ext/SpinalHDL"`, select the stated Verilator and flags, and add `'++2.12.18!'`. Clear both variables for the released axis.
 
-A skip means that case supplied no runtime evidence. It does not qualify the missing tool, fixture or core.
+Run `cargo test --locked --workspace -j 2` in SpinalTrace and the wave checker. Run `npm ci`, `npm run typecheck`, `npm run build` and `npm test` in VS Code and the block engine. Run `npm run test:integration:spinalblocks` and `npm run test:integration:debug` in VS Code and require process exit. Run the example pytest folders and ComponentSims with the same Python environment.
 
-## Execution corrections
+For each prepared single-core project run `scripts/with-lock.sh sbt-uvm nice -n 10 rvw --project "$PROJECT" regress run --suite smoke --rvfi-trace --source "$CORE_SOURCE" --out "$RUN_ROOT/$CORE" --no-index --no-cache --jobs 1 --json`. Configure the composed project with `SpinalSoc/examples/vex/configure.py` before its smoke. For SMP, generate `programs.py --suite smoke`, add a one-ELF smoke suite with its hart-images option to a copy of its project, and run the same regression command. Keep its incomplete-input declaration intact. Reproduce PLIC with `RVW_DEVICE_SPIKE_PREFIX="$SPIKE_PREFIX" nice -n 10 rvw/.venv/bin/python -m pytest rvw/tests/devices/test_plic.py::test_spike_claim_ignores_threshold -q`.
 
-The first root Python batch 8 was interrupted while a complete Scala job held the private sbt lock. Its replacement batches completed. The interrupted attempt is not counted as a measured 900-second timeout.
+No BOOM adapter build, simulation, full architecture-test campaign, FPGA/hardware run, unconfigured SSH endpoint, missing Sail generated-model campaign, missing UVM CPU/live/event input, or source-built slang replacement ran. The examples' core-rebuild pytest cases are excluded from the pure-folder pass. Native core smoke coverage is limited to the rows above. The old SDK remains unqualified because of the failures and native crashes.
 
-The first generic RiscvSim attempt reached the default shared runtime cache. It was stopped. The merged test setting now sends runtime output to this worktree's target directory. The replacement suite ran there. No shared cache files were removed.
+## Merged repairs
 
-The native Spike shim was rebuilt after rebases changed its captured source hash. The strict stimulus tests used a separate environment with `z3-solver==4.13.4.0`. They passed there. The primary environment's solver was not downgraded.
-
-Disk space was low during the run. Completed scratch trees were removed after their logs, JUnit results and timings were retained. The native UVM failure files and other unresolved failure evidence were kept.
-
-## Slow tests and directory cost
-
-The table lists the 30 largest latest recorded pytest case durations, including setup and teardown. A later unconfigured skip does not replace an actual run. The latest Scala JUnit records were also checked. Their longest case was 13.46 seconds, so none enters this table. These timings came from a shared machine under changing load. They are observations, not a performance benchmark.
-
-| Seconds | Result | Test ID |
-|---:|---|---|
-| 255.94 | fail | `rvw/tests/test_uvm_native.py::test_accellera_subset_and_rvfi_fault` |
-| 120.68 | pass | `rvw/tests/cov/test_capture_mutation.py::test_real_mcy_legacy_unknown_dependencies` |
-| 112.23 | pass | `rvw/tests/cov/test_capture_mutation.py::test_real_mcy_baseline_sed_expression` |
-| 111.53 | pass | `rvw/tests/cov/test_capture_mutation.py::test_real_mcy_declared_external_header[False]` |
-| 111.25 | pass | `rvw/tests/test_debug_dm_native.py::test_spike_debug_profile` |
-| 109.64 | pass | `rvw/tests/test_query_capture.py::test_inline_fingerprint_is_the_emitted_text[True-False]` |
-| 107.75 | pass | `rvw/tests/cov/test_capture_mutation.py::test_real_mcy_declared_external_header[None]` |
-| 103.90 | pass | `rvw/tests/test_query_capture.py::test_scala_hdl_scan_binds_yosys_reads[root-True-False]` |
-| 103.82 | pass | `rvw/tests/cov/test_capture_mutation.py::test_real_mcy_output_template_options_and_redirection` |
-| 93.67 | pass | `rvw/tests/test_uvm_ral_sequences_native.py::test_generated_ral_builtin_sequences` |
-| 77.43 | pass | `rvw/tests/test_riscvsim_scripts.py::test_real_native_flags_invalidate_cache_and_enter_c1_and_replay` |
-| 71.93 | pass | `rvw/tests/cov/test_capture_mutation.py::test_real_mcy_declared_external_header[True]` |
-| 71.06 | pass | `rvw/tests/test_privilege_rv32_interrupts_native.py::test_rv32_mu_pmp_matrix_passes_on_spike` |
-| 70.11 | pass | `rvw/tests/formal/test_bit_crypto_models.py::test_symbolic_xperm_unit[64-8-True]` |
-| 61.42 | pass | `rvw/tests/formal/test_bit_crypto_models.py::test_symbolic_xperm_unit[32-4-True]` |
-| 60.40 | pass | `rvw/tests/test_debug_tools.py::test_reduce_symbol_is_exact_only_when_proven` |
-| 57.96 | pass | `rvw/tests/cov/test_proof.py::test_hold_by_assumption_refuses_and_released_control_still_excludes` |
-| 56.85 | pass | `rvw/tests/test_wave_array_names.py::test_simulator_array_queries_and_cuts[verilator-fst]` |
-| 55.01 | pass | `rvw/tests/test_debug_tools.py::test_bisect_a_reduced_run` |
-| 50.77 | pass | `rvw/tests/test_debug_tools.py::test_bisect_remove_clone_only_deletes_its_own` |
-| 50.34 | pass | `rvw/tests/test_sec_isolation_native.py::test_private_state_boundary[True]` |
-| 49.90 | pass | `rvw/tests/test_sec.py::test_native_pair_runner[True]` |
-| 49.10 | pass | `rvw/tests/test_regress.py::test_gate` |
-| 47.79 | pass | `rvw/tests/test_sec_isolation_native.py::test_private_state_boundary[False]` |
-| 47.65 | pass | `rvw/tests/test_debug_tools.py::test_bisect_skips_wall_clock_timeouts_whatever_other_says` |
-| 46.78 | pass | `rvw/tests/test_debug_tools.py::test_bisect_refuses_a_linked_or_foreign_workdir` |
-| 46.52 | pass | `rvw/tests/test_regress.py::test_fingerprint_covers_dirty_submodule_contents` |
-| 43.61 | pass | `rvw/tests/test_sec.py::test_native_pair_runner[False]` |
-| 43.51 | pass | `rvw/tests/test_sec_fault_native.py::test_critical_register_upset[False]` |
-| 40.96 | pass | `rvw/tests/cov/test_proof.py::test_cone_bits_held_by_assumption_or_tie_refuse` |
-
-The initial directory batches used about 3,247 seconds for the root Python folder, 1,596 seconds for formal, 607 seconds for coverage and 215 seconds for cosim. Devices, ordering and interrupt folders each took less than three seconds in their initial batches. These are summed batch wall times, not CPU time. The root total substitutes the three completed reruns for interrupted batch 8 and excludes its interrupted duration. Later repairs and opt-in runs are separate.
-
-Coverage is costly for its test count. Its MCY capture tests build and snapshot native inputs repeatedly. The formal directory is also costly because many cases run real solver jobs. Native capture, debug reduction and UVM compilation dominate the root folder. SpinalChecks took 498 seconds for 145 Scala tests on its final run. The first complete isolated generic RiscvSim run took 499 seconds; the final warm run took 107 seconds. These native tests remain outside the fast set.
-
-## Merged changes
-
-- [PR #1051](https://github.com/riscPrint/risc-v-workstation/pull/1051), head `146b081923cc1e594bd20d49fba240d8d56fb24c`, merged.
-- [PR #1071](https://github.com/riscPrint/risc-v-workstation/pull/1071), head `9bd018a98f1346f2a4a3820613f617eb3cf72202`, merged.
-- [PR #1160](https://github.com/riscPrint/risc-v-workstation/pull/1160), head `25119d997559fe132d75ac715d1c0dbfcfde5ee8`, merged.
-
-The delivery rebase used later main code. Only the fast set and hygiene checks are rerun for the final report delivery. The complete native suites were not rerun after that rebase. No issue was closed by this task.
+| PR | Head | State |
+|---|---|---|
+| [1176](https://github.com/riscPrint/risc-v-workstation/pull/1176) | `79325397e74f452e6220a8d26ceca94be3773200` | merged |
+| [1183](https://github.com/riscPrint/risc-v-workstation/pull/1183) | `e6a8971202bff297a396e42634d0195b4b5c3ae6` | merged |
+| [1233](https://github.com/riscPrint/risc-v-workstation/pull/1233) | `b7bac7c9dfada7e7fd51c2f63f88b6a82b40d24c` | merged |
+| [1235](https://github.com/riscPrint/risc-v-workstation/pull/1235) | `81c1710a0060b382fb62f3da388d6ec73a830bcf` | merged |
+| [1303](https://github.com/riscPrint/risc-v-workstation/pull/1303) | `5482e86d004d81e956d684babccda12818e16791` | merged |
+| [1304](https://github.com/riscPrint/risc-v-workstation/pull/1304) | `c41da3199e45443e83736331b709013a59d70054` | merged |
+| [1336](https://github.com/riscPrint/risc-v-workstation/pull/1336) | `1ff65ae804096efec5e5847107eeaef469c76bf6` | merged |
+| [1427](https://github.com/riscPrint/risc-v-workstation/pull/1427) | `737d133a33b85d166ccbf566c739849de762b5ce` | merged |
+| [1451](https://github.com/riscPrint/risc-v-workstation/pull/1451) | `c7cd3f07adf893cccab30f523affb554aa544ae2` | merged |
+| [1485](https://github.com/riscPrint/risc-v-workstation/pull/1485) | `b0eb5b755de6bf3f5f3f59fd6c78c5bf2102a79e` | merged |
+| [1489](https://github.com/riscPrint/risc-v-workstation/pull/1489) | `b09bb674393e3d4240d5e107929ee5bf8c103f9c` | merged |
+| [1490](https://github.com/riscPrint/risc-v-workstation/pull/1490) | `103eb4df1f78e80a7a73460b7060850c6ce29e88` | merged |
+| [1491](https://github.com/riscPrint/risc-v-workstation/pull/1491) | `9e0953f7423c1de865e1157b4662b3200545eb9f` | merged |
+| [1492](https://github.com/riscPrint/risc-v-workstation/pull/1492) | `89c4cc4e95ecc330f4fc3f55a7cb950b31bd9c01` | merged |
+| [1493](https://github.com/riscPrint/risc-v-workstation/pull/1493) | `7d3eb26bc08149f1f83ba77dd0d53bfc84f39341` | merged |
+| [1495](https://github.com/riscPrint/risc-v-workstation/pull/1495) | `4bc779665e391361b6966e1235d448cd4b361599` | merged |
+| [1496](https://github.com/riscPrint/risc-v-workstation/pull/1496) | `f8537acda0958532a499c8e552872c31c0caf8d1` | merged |
