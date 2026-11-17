@@ -48,6 +48,8 @@ Release buckets below are separate from the proposed milestones in PR #381.
 
 ## IDE: design entry and navigation
 
+Trace mutation runner recovery has targeted tests (#1506). Native campaigns and example wrappers remain deferred.
+
 - [#77](https://github.com/riscPrint/risc-v-workstation/issues/77) Decide what the IDE needs beyond VS Code and Metals. Evidence: no code. Remains: No referenced implementation or new remaining-scope statement. Original issue scope remains.
 
 ## SIM: simulation
