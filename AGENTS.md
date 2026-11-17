@@ -22,6 +22,9 @@ reusing open-source tools and extending them where they fall short.
 Keep `ROADMAP.md` up to date when work starts or finishes. Track tasks as GitHub issues, and
 keep the issue list in `TODO.md` in step with them.
 
+Read [the owner summary](docs/status/2026-11-13/SUMMARY.md) for the dated evidence cutoff.
+Real core RTL, seeded RTL fixtures, reference models and unit tests have separate limits.
+
 ## Layout
 
 | Path | What |
@@ -77,6 +80,34 @@ keep the issue list in `TODO.md` in step with them.
 | `vscode/` | The RISC-V Workstation VS Code extension; each tool adds a feature under `vscode/features/<tool>/`. |
 | `scripts/with-lock.sh` | Machine-wide lock for heavy jobs: `scripts/with-lock.sh boom <cmd>`. |
 | `docs/` | Shared contracts and setup guides. |
+| `rvw/src/rvw/bundle/` | Failure bundles and replay inputs for C1/C2 adapters. |
+| `rvw/src/rvw/cosim/` | Spike and Sail comparison commands. See `Cosim/README.md`. |
+| `rvw/src/rvw/cov/` | Code and functional coverage, source reports and suite guidance. |
+| `rvw/src/rvw/formal/` | Bounded proofs, generated assertions, equivalence and evidence reports. |
+| `rvw/src/rvw/mcp/` | Tool discovery, profiles, effect metadata and cancellable jobs. |
+| `rvw/src/rvw/perf/` | Kanata reports, topdown and function/configuration comparisons. |
+| `rvw/src/rvw/query/` | Design database queries and supported HDL import commands. |
+| `rvw/src/rvw/regress/` | Suite execution, history, input capture and gate verdicts. |
+| `rvw/src/rvw/sim/` | Backend profiles, device models and simulation service commands. |
+| `rvw/src/rvw/uvm/` | Project benches, CPU scoreboards and RAL generation. See `Uvm/README.md`. |
+| `rvw/src/rvw/wave/` | Indexed VCD/FST queries and saved debug sessions. |
+| `examples/agent-bench/` | Core-owned example and adapter data. See its `README.md` for measured scope and limits. |
+| `examples/boom/` | Core-owned example and adapter data. See its `README.md` for measured scope and limits. |
+| `examples/custom-isa/` | Core-owned example and adapter data. See its `README.md` for measured scope and limits. |
+| `examples/mmu/` | Core-owned example and adapter data. See its `README.md` for measured scope and limits. |
+| `examples/profiles/` | Core-owned example and adapter data. See its `README.md` for measured scope and limits. |
+| `examples/qemu-linux/` | Core-owned example and adapter data. See its `README.md` for measured scope and limits. |
+| `examples/regression-scale/` | Core-owned example and adapter data. See its `README.md` for measured scope and limits. |
+| `examples/security/` | Core-owned example and adapter data. See its `README.md` for measured scope and limits. |
+| `examples/sim-semantics/` | Core-owned example and adapter data. See its `README.md` for measured scope and limits. |
+| `examples/soc-observer/` | Core-owned example and adapter data. See its `README.md` for measured scope and limits. |
+| `examples/wave-tasks/` | Core-owned example and adapter data. See its `README.md` for measured scope and limits. |
+| `rvw/src/rvw/csim/` | Trace-driven ComponentSims command family. See `ComponentSims/README.md`. |
+| `Uvm/vip/` | Native protocol fixtures and bounded agents. See `Uvm/README.md`. |
+| `RiscvSim/examples/systemc/` | Bounded native SystemC/TLM memory examples with an RTL bridge. See its `README.md`. |
+| `examples/` | Core-owned adapter, stimulus and integration examples. |
+| `scripts/` | Install, CI and shared development helpers. |
+| `third_party/` | Pinned external source support. |
 
 Every tool has a `README.md` with build and usage instructions, a "Decisions" section and its known
 limits.
@@ -121,6 +152,13 @@ below select the legacy example explicitly.
 | Formal | `rvw formal bmc|from-sim|xprop` |
 | Performance from a Konata log | `rvw perf LOG` (`rvw perf compare A B`) |
 | All of it for an agent | `rvw mcp` (stdio MCP server; `rvw mcp --list`) |
+| Read the bring-up guide | `rvw agent guide` |
+| Check a selected project | `rvw doctor --json` |
+| Inspect current tool inventory | `rvw mcp --list --json` |
+| Inspect the CLI command map | `rvw mcp command-map --json` |
+| Scaffold a core project | `rvw init --help` (select the HDL and project bindings) |
+| Find probe consumer gaps | `rvw probes --help` |
+| Inspect generated-check bindings | `rvw checks --help` |
 
 Exit codes and JSON formats are in `docs/PLATFORM_CONTRACTS.md`. A gate verdict of `inconclusive`
 (exit 3) means the evidence is not enough to accept or reject; never treat it as accept.
