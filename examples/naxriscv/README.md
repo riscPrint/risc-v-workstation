@@ -1185,3 +1185,21 @@ nice -n 15 rvw regress gate --project "$PROJECT" --tier bench --jobs 1 --base-re
 The gate measures both committed revisions. The table is a dated reference;
 it is not a substitute for the gate's baseline capture. Use `--perf-tolerance`
 to override the project policy explicitly. Keep all generated results out of Git.
+
+
+## RV32 scratch CSR selection
+
+`csr.json` selects only `mscratch` from the pinned CSR catalog for RV32.
+Its reset value is unknown. Generated assembly writes the register before
+it checks a read. U-mode and S-mode access must trap because `mscratch` is
+an M-mode CSR. Field access entries do not grant lower-mode CSR access.
+
+Generate the monitor and assembly with:
+
+```sh
+rvw formal csr --model csr.json --out rvw/out/csr
+```
+
+This selection is input data. Generation does not show that the monitor is
+bound to RTL or that the program passed on the core. It does not cover RV64,
+other CSRs or privileged ISA compliance.

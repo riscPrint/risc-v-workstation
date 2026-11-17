@@ -120,3 +120,19 @@ def test_aia_side_effects_are_not_plain_register_writes():
     s['csrs'][0].update(name='mtopei',fields=[dict(name='IID',access=dict(U='RO',S='RO',M='RO'))])
     with pytest.raises(ValueError,match='environment model'):
         materialize(s)
+
+
+@pytest.mark.parametrize('core', ['naxriscv', 'ooo-mini'])
+def test_out_of_order_example_scratch_selection(tmp_path, core):
+    path = Path(__file__).resolve().parents[2]/f'examples/{core}/csr.json'
+    obj = load(path)
+    assert obj['xlen'] == 32
+    csr, = obj['csrs']
+    assert csr['address'] == 0x340 and csr['reset_known'] is False
+    assert generate(path, tmp_path/'generated')['status'] == 'generated'
+    assembly = (tmp_path/'generated/mscratch.S').read_text()
+    assert assembly.index('csrw 0x340, t0') < assembly.index('csrr s2, 0x340')
+    from rvw.formal.csr import step
+    for mode in (0, 1):
+        trap, _ = step(csr, 0, dict(read=True, write=False, data=0, privilege=mode), 32)
+        assert trap
