@@ -896,6 +896,7 @@ def trig_hit(ctx):
 
 def _address_matches(ctx, access):
     ctx.require(access in ctx.p['triggers']['accesses'], f'profile declares no {access} triggers')
+    expect(bool(ctx.p['triggers']['matches']), 'profile declares no address matches')
     kind = _addr_type(ctx)
     data = ctx.scratch + DATA
     half = ctx.xlen // 2
