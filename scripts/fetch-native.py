@@ -3,6 +3,7 @@
 import argparse
 import hashlib
 import json
+import os
 from pathlib import Path
 import platform
 import re
@@ -11,6 +12,25 @@ import tempfile
 import urllib.request
 
 ROOT = Path(__file__).resolve().parents[1]
+
+
+def payload_identity(root):
+    result = {}
+    for path in sorted(root.rglob('*')):
+        key = path.relative_to(root).as_posix()
+        if key in ('rvw-native-receipt.json', 'rvw-native-payload.json'):
+            continue
+        if path.is_symlink():
+            target = path.resolve(strict=True)
+            if root.resolve() not in target.parents:
+                raise ValueError('native payload link escapes installation')
+            result[key] = {'link': os.readlink(path)}
+        elif path.is_file():
+            result[key] = {'sha256': hashlib.sha256(path.read_bytes()).hexdigest(),
+                           'executable': bool(path.stat().st_mode & 0o111)}
+    if not result:
+        raise ValueError('archive receipt has no installed payload')
+    return result
 
 
 def install(record, prefix, *, dry=False, check=False):
@@ -25,15 +45,17 @@ def install(record, prefix, *, dry=False, check=False):
     if check:
         if not receipt.is_file() or json.loads(receipt.read_text()) != record:
             raise ValueError('missing or mismatched archive receipt')
-        if not any(p.is_file() and p.name != receipt.name for p in target.rglob('*')):
-            raise ValueError('archive receipt has no installed payload')
+        manifest = target / 'rvw-native-payload.json'
+        if not manifest.is_file() or json.loads(manifest.read_text()) != payload_identity(target):
+            raise ValueError('missing or mismatched native payload identity; reinstall in a fresh prefix')
         return target
     if dry:
         return target
     if target.exists():
         raise ValueError('target exists; use --check or a new prefix')
     # Stage and verify bytes before creating an install directory.
-    with tempfile.TemporaryDirectory() as work:
+    prefix.parent.mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory(prefix='.native-', dir=prefix.parent) as work:
         archive = Path(work) / 'native.tar.gz'
         with urllib.request.urlopen(record['url'], timeout=60) as response, archive.open('wb') as out:
             import shutil
@@ -52,7 +74,8 @@ def install(record, prefix, *, dry=False, check=False):
             tar.extractall(stage, filter='data')
         (stage / receipt.name).write_text(json.dumps(record, indent=2) + '\n')
         target.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copytree(stage, target, symlinks=True)
+        (stage / 'rvw-native-payload.json').write_text(json.dumps(payload_identity(stage), sort_keys=True) + '\n')
+        stage.rename(target)
     return target
 
 

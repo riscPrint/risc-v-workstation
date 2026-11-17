@@ -23,7 +23,9 @@ Usage: scripts/install.sh [OPTIONS]
   --with-ooo         Build the optional C integer OoO scheduler.
   --with-gem5        Native RISC-V gem5 v25.1.0.1 (build with two jobs).
   --with-lint        Pinned native Verible syntax and style lint.
-  --with-sail        Pinned Sail model (bundle mode only).
+  --with-sail        Pinned Sail model.
+  --with-act4|--with-riscv-tests|--with-riscv-formal
+                     Acquire pinned verification source inputs.
   --with-typed-waves Build the pinned SpinalWaves checker and typed viewer (Cargo).
   --from-bundle      Use native workflow artifacts for selected tools.
   --bundle-run ID    Download artifacts from this private Actions run (needs gh).
@@ -58,6 +60,7 @@ for arg in "$@"; do
     break
   fi
 done
+managed_sources=()
 extra_tools=()
 arc=0 ric3=0 ebmc=0
 suite_engines=()
@@ -74,6 +77,7 @@ while [ "$#" -gt 0 ]; do
     --bundle-dir) value "$@"; bundle_dir="$2"; shift 2 ;;
     --with-typed-waves) waves=1; shift ;;
     --with-lint) lint=1; shift ;;
+    --with-act4|--with-riscv-tests|--with-riscv-formal) managed_sources+=("${1#--with-}"); shift ;;
     --with-sail) sail=1; shift ;;
     --with-arcilator) arc=1; shift ;;
     --with-sim) sim=1; shift ;;
@@ -450,7 +454,7 @@ for extra_tool in ${extra_tools[@]+"${extra_tools[@]}"}; do
     break ;;
   esac
 done
-[ "$sail" = 0 ] || [ "$bundle" = 1 ] || [ "$check" = 1 ] || fail '--with-sail needs --from-bundle'
+
 if [ "$bundle" = 1 ] && [ "$check" = 0 ]; then
   [ -n "$bundle_run" ] || [ -n "$bundle_dir" ] || fail '--from-bundle needs --bundle-run or --bundle-dir'
 fi
@@ -463,6 +467,13 @@ fi
 export RVW_PYTHON="$rvw_home/rvw/.venv/bin/python"
 if [ "$check" = 1 ]; then
   failed=0
+  for dependency in ${managed_sources[@]+"${managed_sources[@]}"}; do
+    PYTHONPATH="$rvw_home/rvw/src" "$python_cmd" -m rvw doctor --resolve "$dependency" || failed=1
+  done
+  if [ "$sail" = 1 ] && [ "$bundle" = 0 ]; then
+    RVW_SAIL="$(PYTHONPATH="$rvw_home/rvw/src" "$python_cmd" -m rvw doctor --resolve sail)" || failed=1
+    export RVW_SAIL
+  fi
   core_check || failed=1
   optional_check || failed=1
   exit "$failed"
@@ -767,6 +778,23 @@ if [ "$arc" = 1 ]; then
   run "$rvw_home/rvw/.venv/bin/python" -m rvw.sim.arcilator_install
 fi
 
+# Use the CLI resolver for source and archive pins. Never duplicate its inventory.
+for dependency in ${managed_sources[@]+"${managed_sources[@]}"}; do
+  run "$RVW_PYTHON" -m rvw doctor --resolve "$dependency" --acquire
+  if [ "$dry" = 0 ]; then
+    resolved="$("$RVW_PYTHON" -m rvw doctor --resolve "$dependency")"
+    case "$dependency" in
+      act4) export ACT4_SOURCE="$resolved" ;;
+      riscv-tests) export RISCV_TESTS_SRC="$resolved" ;;
+      riscv-formal) export RISCV_FORMAL="$resolved" ;;
+    esac
+  fi
+done
+if [ "$sail" = 1 ] && [ "$bundle" = 0 ]; then
+  run "$RVW_PYTHON" -m rvw doctor --resolve sail --acquire
+  if [ "$dry" = 0 ]; then export RVW_SAIL="$("$RVW_PYTHON" -m rvw doctor --resolve sail)"; fi
+fi
+
 # Quote values for both bash and zsh. Do not change shell startup files by default.
 printf 'Write %s\n' "$rvw_home/env.sh"
 if [ "$dry" = 0 ]; then
@@ -780,6 +808,9 @@ if [ "$dry" = 0 ]; then
       printf 'export JAVA_HOME=%q\nexport PATH="$JAVA_HOME/bin:$PATH"\n' "$JAVA_HOME"
     fi
     if [ -n "${VERILATOR_ROOT:-}" ]; then printf 'export VERILATOR_ROOT=%q\n' "$VERILATOR_ROOT"; fi
+    for variable in ACT4_SOURCE RISCV_TESTS_SRC RISCV_FORMAL; do
+      if [ -n "${!variable:-}" ]; then printf 'export %s=%q\n' "$variable" "${!variable}"; fi
+    done
     if [ -n "${RVW_SAIL:-}" ]; then printf 'export RVW_SAIL=%q\n' "$RVW_SAIL"; fi
     if [ "$formal" = 1 ]; then printf 'export RVW_SLANG=%q\n' "$RVW_SLANG"; fi
     printf 'export PATH="$RVW_HOME/.tools/verible/bin:$RVW_HOME/.tools/verilator/bin:$RVW_HOME/.tools/sail/bin:$PATH"\n'

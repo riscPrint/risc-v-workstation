@@ -2,7 +2,10 @@ from rvw.mcp.spec import ToolSpec, schema
 
 
 def mcp_tools():
-    return [ToolSpec('rvw_doctor', 'Read-only setup checks. No native build/run conformance claim. Installation is CLI-only.',
+    return [ToolSpec('doctor_resolve', 'Resolve a cached verification dependency without downloads.',
+                     schema({'name': {'type': 'string', 'enum': ['act4', 'riscv-tests', 'riscv-formal', 'sail']}}, ['name']),
+                     resolve_dependency, annotations={'readOnlyHint': True}, side_effects='read-only', native_tools=()),
+            ToolSpec('rvw_doctor', 'Read-only setup checks. No native build/run conformance claim. Installation is CLI-only.',
                      schema({'project': {'type': 'string'}, 'features': {'type': 'string', 'default': 'sim,riscv-gcc'}}),
                      diagnose, isolate=True, annotations={'readOnlyHint': True}, side_effects='read-only; launches native tools for version probes and project adapter info', native_tools=tuple(t['name'] for t in load()['tools'])),
             ToolSpec('doctor_smoke', 'Build and run an explicit ELF through the selected project adapter. '
@@ -28,3 +31,8 @@ def load():
     """Load the handler on first use."""
     from rvw.doctor.inventory import load as implementation
     return implementation()
+
+
+def resolve_dependency(name):
+    from rvw.common.dependencies import resolve
+    return resolve(name)

@@ -3,7 +3,6 @@ schema = "rvw.project/1"
 
 [arch]
 description = "${RVW_ARCH_CONFIG:-arch/large.json}"
-sources = "${RISCV_TESTS_SRC:-../../../ref/riscv-tests/benchmarks}"
 benchmarks = "${RVW_ARCH_BENCHMARKS:-out/arch/bench}"
 
 # BOOM core config for `rvw regress`. Everything BOOM-specific lives here; the regress code is generic.
@@ -65,7 +64,7 @@ perf_tolerance = 0.01
 
 [suites.riscv-tests]
 description = "riscv-tests ISA suite, p and v environments"
-dir = "${RISCV_TESTS:-../../../ref/riscv-tests/build/isa}"
+dir = "${RISCV_TESTS:-../out/riscv-tests/isa}"
 include = ['^rv64(ui|um|ua|uf|ud|uc|mi|si|uzba|uzbb|uzbs)-(p|v)-']
 exclude = [
   '\.dump$',
@@ -78,7 +77,7 @@ timeout_s = 300
 
 [suites.act4]
 description = "ACT4 self-checking ELFs with independent Sail signatures"
-dir = "${ACT4_ELFS:-../../../ref/act4/work/boom-rv64gc/elfs}"
+dir = "${ACT4_ELFS:-../out/act4/work/boom-rv64gc/elfs}"
 glob = "**/*.elf"
 strip_suffix = ".elf"
 configs = ["small"]

@@ -20,7 +20,7 @@ def mcp_tools():
     result = []
     for action, properties, required in (
         ('list', select, []),
-        ('build', {**select, **{k: {'type': 'string'} for k in ('source', 'out', 'cc', 'bench')}}, ['source', 'out']),
+        ('build', {**select, **{k: {'type': 'string'} for k in ('source', 'out', 'cc', 'bench')}}, ['out']),
         ('verify', {**{k: {'type': 'string'} for k in ('build_path', 'out', 'oracle')},
                     'timeout': {'type': 'integer', 'minimum': 1}, 'trace': {'type': 'boolean'}}, ['build_path', 'out', 'oracle'])):
         def handler(job, _action=action, **arguments):

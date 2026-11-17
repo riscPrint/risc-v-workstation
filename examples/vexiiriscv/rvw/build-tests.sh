@@ -2,7 +2,7 @@
 # Build rv32ui/rv32um p-environment ELFs outside the reference checkout.
 set -euo pipefail
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-source_dir="$(cd "${RISCV_TESTS_SOURCE:-${RVW_HOME:?Set RVW_HOME}/../ref/riscv-tests}" && pwd)"
+source_dir="${RISCV_TESTS_SOURCE:-$("${RVW:-rvw}" doctor --resolve riscv-tests --acquire)}"
 prefix="${RISCV_PREFIX:-riscv64-unknown-elf-}"
 command -v "${prefix}gcc" >/dev/null || { echo "set RISCV_PREFIX to a RISC-V tool prefix or add the compiler to PATH" >&2; exit 2; }
 mkdir -p "$here/out/isa"

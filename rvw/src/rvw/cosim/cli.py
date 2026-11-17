@@ -71,6 +71,11 @@ def calculate(args):
     """Return the exact result and exit status used by CLI and MCP."""
     model = None
     try:
+        if getattr(args, 'model', None) == 'sail' and getattr(args, 'sail', None) == 'sail_riscv_sim':
+            import shutil
+            if not shutil.which('sail_riscv_sim'):
+                from rvw.common.dependencies import resolve
+                args.sail = resolve('sail', acquire=True)['path']
         with tempfile.TemporaryDirectory(prefix="rvw-cosim-") as directory:
             inputs = Inputs(args, directory)
             args, platform = inputs.args, inputs.platform

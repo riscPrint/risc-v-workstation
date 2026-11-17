@@ -2351,5 +2351,31 @@
       "line": 78,
       "text": "found = shutil.which(name)"
     }
-  ]
+  ],
+  "sources": {
+    "act4": {
+      "url": "https://github.com/riscv-non-isa/riscv-arch-test.git",
+      "revision": "56d40ab301dba23dd3104c17bd969afbaaea1931"
+    },
+    "riscv-tests": {
+      "url": "https://github.com/riscv-software-src/riscv-tests.git",
+      "revision": "d7e86f701b929b5d801f8cda1a4871ab05f452bb"
+    },
+    "riscv-formal": {
+      "url": "https://github.com/YosysHQ/riscv-formal.git",
+      "revision": "c992aa61fdfe0846c5ed90324c596202a1c69b76"
+    },
+    "embench": {
+      "url": "https://github.com/embench/embench-iot",
+      "revision": "0466a18e4f6b47e19598d7c6ba72916d54b68f65"
+    },
+    "coremark": {
+      "url": "https://github.com/eembc/coremark",
+      "revision": "1f483d5b8316753a742cbf5590caf5bd0a4e4777"
+    },
+    "zstd": {
+      "url": "https://github.com/facebook/zstd",
+      "revision": "f8745da6ff1ad1e7bab384bd1f9d742439278e99"
+    }
+  }
 }

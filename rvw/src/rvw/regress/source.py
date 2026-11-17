@@ -557,3 +557,85 @@ def _publish(repo: Path, sha: str, dest: Path) -> None:
     except BaseException:
         shutil.rmtree(tmp, ignore_errors=True)
         raise
+
+
+def pinned_source_record(name: str) -> dict:
+    """Return the workstation pin, independent of a core project's settings."""
+    import json
+    inventory = Path(__file__).parents[1] / "doctor" / "tools.json"
+    records = json.loads(inventory.read_text())["sources"]
+    if name not in records:
+        raise ValueError(f"unknown managed source: {name}")
+    return records[name]
+
+
+def _verify_pinned_source(dest: Path, revision: str) -> Source:
+    # Every object owner must survive removal of the original reference directory.
+    # Check nested modules too: a clean superproject alone does not prove this.
+    repositories = [dest]
+    listing = _git(dest, "submodule", "status", "--recursive")
+    if listing is None:
+        raise RuntimeError(f"cannot inspect submodules in {dest}")
+    for line in listing.splitlines():
+        if not line or line[0] in "-+U":
+            raise RuntimeError(f"missing or mismatched submodule in {dest}: {line}")
+        repositories.append(dest / line.split()[1])
+    for repo in repositories:
+        gitdir = _git(repo, "rev-parse", "--absolute-git-dir")
+        if not gitdir or (Path(gitdir) / "objects/info/alternates").exists():
+            raise RuntimeError(f"managed source has external Git object storage: {repo}")
+        _check_git_features(repo)
+    result = describe(dest)
+    reason = _unusable(result, revision)
+    if reason:
+        raise RuntimeError(f"invalid managed source {dest}: {reason}")
+    return result
+
+
+def ensure_pinned_source(name: str, revision: str | None = None, *, offline: bool = False) -> Source:
+    """Acquire an independent pinned source once; offline calls only verify the cache.
+
+    A completed entry is never replaced. Modified entries fail explicitly because a
+    running build can still own them. No reference checkout is used as an object store.
+    """
+    import re
+    record = pinned_source_record(name)
+    revision = revision or record["revision"]
+    if not re.fullmatch(r"[0-9a-f]{40}", revision):
+        raise ValueError("managed source revision must be a full Git commit hash")
+    dest = src_cache_dir() / ("managed-" + name) / revision
+    if offline:
+        if not dest.exists():
+            raise RuntimeError(f"managed source {name}@{revision} is not cached (offline)")
+        if not _published(dest, revision):
+            raise RuntimeError(f"incomplete managed source: {dest}")
+        return _verify_pinned_source(dest, revision)
+    with _dest_lock(dest):
+        if dest.exists():
+            if not _published(dest, revision):
+                raise RuntimeError(f"incomplete managed source: {dest}")
+            return _verify_pinned_source(dest, revision)
+        if offline:
+            raise RuntimeError(f"managed source {name}@{revision} is not cached (offline)")
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        tmp = Path(tempfile.mkdtemp(prefix=".acquire-", dir=dest.parent))
+        try:
+            commands = [
+                ["init", "--quiet", str(tmp)],
+                ["-C", str(tmp), "remote", "add", "origin", record["url"]],
+                ["-C", str(tmp), "fetch", "--no-tags", "origin", revision],
+                ["-C", str(tmp), "checkout", "--detach", revision],
+                ["-C", str(tmp), "submodule", "update", "--init", "--recursive"],
+            ]
+            for args in commands:
+                result = run_git(None, *args, timeout=CLONE_TIMEOUT_S, run=run_group)
+                if result.returncode or result.timed_out:
+                    raise RuntimeError(f"managed source {name} acquisition failed: "
+                                       + ("timeout" if result.timed_out else result.stderr or "git failed"))
+            _verify_pinned_source(tmp, revision)
+            (tmp / ".git" / DONE_MARK).write_text(revision + "\n")
+            tmp.rename(dest)
+        finally:
+            if tmp.exists():
+                shutil.rmtree(tmp)
+        return _verify_pinned_source(dest, revision)

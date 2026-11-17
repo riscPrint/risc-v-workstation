@@ -6,16 +6,17 @@ from rvw.mcp.spec import ToolSpec, schema
 
 def register(commands):
     p = commands.add_parser('act4-build', help='build pinned ACT4 tests with independent Sail signatures')
-    for name in ('profile', 'checkout', 'out'):
+    for name in ('profile', 'out'):
         p.add_argument('--'+name, type=Path, required=True)
+    p.add_argument('--checkout', type=Path)
     p.add_argument('--timeout', type=int, default=900)
     p.add_argument('--compiler', default='riscv64-unknown-elf-gcc')
-    p.add_argument('--reference', default='sail_riscv_sim')
+    p.add_argument('--reference', default=None)
     p.add_argument('--json', action='store_true')
     def run(a):
         try:
             report = build(a.profile, a.checkout, a.out, a.timeout, a.compiler, a.reference)
-        except (ValueError, OSError, KeyError) as exc:
+        except (ValueError, OSError, KeyError, RuntimeError) as exc:
             import sys
             print(f'rvw regress act4-build: {exc}', file=sys.stderr)
             return 2
@@ -29,11 +30,11 @@ def mcp_tools():
                      schema({'profile': {'type': 'string'}}, ['profile']), selection,
                      annotations={'readOnlyHint': True}, side_effects='read-only', native_tools=()),
             ToolSpec('regress_act4_build', 'Build pinned ACT4 tests. Sail supplies expected signatures; no DUT execution.',
-                     schema({k: {'type': 'string'} for k in ('profile', 'checkout', 'out')}, ['profile', 'checkout', 'out']),
+                     schema({k: {'type': 'string'} for k in ('profile', 'checkout', 'out')}, ['profile', 'out']),
                      build, side_effects='writes build outputs', native_tools=('Sail', 'RISC-V GCC'))]
 
 
-def build(profile, checkout, out, timeout=900, compiler='riscv64-unknown-elf-gcc', reference='sail_riscv_sim'):
+def build(profile, checkout=None, out=None, timeout=900, compiler='riscv64-unknown-elf-gcc', reference=None):
     """Load the handler on first use."""
     from rvw.regress.act4 import build as implementation
     return implementation(profile, checkout, out, timeout, compiler, reference)

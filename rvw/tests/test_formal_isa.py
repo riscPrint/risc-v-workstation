@@ -29,6 +29,7 @@ def test_run_existing_kit(tmp_path, monkeypatch):
         out.mkdir()
         (out/'results.json').write_text(json.dumps(dict(bounded_depth=20, tests=[dict(id='add',status='pass')])) )
     monkeypatch.setattr(bounded, 'run', fake)
+    monkeypatch.setattr(bounded, 'resolve_config', lambda cfg: cfg)
     result = run({'checks':['add']}, tmp_path/'out', 1, 'external')
     assert result['rows'][0]['status'] == 'bounded'
     assert result['status'] == 'inconclusive'

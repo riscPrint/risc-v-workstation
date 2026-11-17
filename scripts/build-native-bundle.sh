@@ -51,9 +51,9 @@ case "$tool" in
     ;;
   sail)
     # Repackage the verified upstream native build. Do not label this a source build.
-    scripts/install-sail.sh
+    sail_binary="$(scripts/install-sail.sh)"
     mkdir -p "$prefix"
-    cp -R .tools/sail-0.15/. "$prefix/"
+    cp -R "$(dirname "$(dirname "$sail_binary")")/." "$prefix/"
     "$prefix/bin/sail_riscv_sim" --version
     ;;
   gem5)

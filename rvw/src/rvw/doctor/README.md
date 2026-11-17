@@ -1,5 +1,9 @@
 # rvw doctor
 
+Pinned verification inputs are managed by the workstation. See
+[managed verification inputs](../../../../docs/MANAGED_VERIFICATION_INPUTS.md).
+
+
 Check the workstation and the selected core project:
 
 ```sh

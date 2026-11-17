@@ -16,7 +16,7 @@ startup_s = 300
 
 [suites.integer-coverage]
 description = "rv64ui-p and rv64um-p code/functional coverage on small"
-dir = "${RISCV_TESTS:-../../../../ref/riscv-tests/build/isa}"
+dir = "${RISCV_TESTS:-../out/riscv-tests/isa}"
 include = ['^rv64u[im]-p-[A-Za-z0-9_]+$']
 max_cycles = 200000
 timeout_s = 120

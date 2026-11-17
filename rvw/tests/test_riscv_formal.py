@@ -227,3 +227,22 @@ def test_identity_binds_settings_and_original_wrapper(cfg, tmp_path):
     assert wrapper['sha256'] == hashlib.sha256(Path(cfg['wrapper']).read_bytes()).hexdigest()
     assert wrapper['sha256'] != first[cfg['wrapper']]  # expanded wrapper is separately hashed
     assert not first['committed_inputs']['all_committed']
+
+
+def test_omitted_root_resolves_before_validation(cfg, tmp_path, monkeypatch):
+    root = cfg.pop('root')
+    calls = []
+    def resolve(name, **kwargs):
+        calls.append((name, kwargs))
+        return dict(path=root, revision='a' * 40)
+    monkeypatch.setattr('rvw.common.dependencies.resolve', resolve)
+    core, identity = prepare(cfg, tmp_path / 'managed-out')
+    assert (core.parent.parent / 'checks/a').read_text() == 'checker'
+    assert calls == [('riscv-formal', dict(acquire=True))]
+    assert 'root' not in cfg
+    assert identity['checker_sha256']
+
+
+def test_explicit_root_does_not_resolve(cfg, tmp_path, monkeypatch):
+    monkeypatch.setattr('rvw.common.dependencies.resolve', lambda *a, **k: pytest.fail('explicit root'))
+    prepare(cfg, tmp_path / 'explicit-out')

@@ -241,3 +241,18 @@ def test_riscv_instruction_model_paths(tmp_path,monkeypatch):
     project.write_text('[core]\nname="formal"\n[riscv_formal.instruction_models]\nadd="${MODELS}/insn_add.v"\n')
     selected=load_project(project)
     assert selected.sections['riscv_formal']['instruction_models']['add']==tmp_path/'generated/insn_add.v'
+
+
+def test_managed_dependency_omissions_parse_without_resolution(tmp_path, monkeypatch):
+    from rvw.common.project import parse_project
+    def forbidden(*args, **kwargs):
+        pytest.fail('project parsing must not resolve dependencies')
+    monkeypatch.setattr('rvw.common.dependencies.resolve', forbidden)
+    monkeypatch.setattr('rvw.regress.source.ensure_pinned_source', forbidden)
+    parsed = parse_project({'core': {'name': 'example'},
+                            'riscv_formal': {'wrapper': 'wrapper.sv'},
+                            'arch': {'description': 'description.json', 'benchmarks': 'out'}},
+                           tmp_path / 'rvw.toml', {})
+    assert 'root' not in parsed.sections['riscv_formal']
+    assert parsed.get('arch', 'sources') is None
+    assert parsed.get('arch', 'benchmarks') == tmp_path / 'out'
