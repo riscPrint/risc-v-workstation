@@ -894,32 +894,56 @@ def trig_hit(ctx):
     expect(hit == 1, 'hit bit not set after the trigger fired')
 
 
-@check('trig.load_address')
-def trig_load_address(ctx):
-    """A load-address trigger fires before the load: dpc is the load and rd is unchanged."""
-    ctx.require('load' in ctx.p['triggers']['accesses'], 'profile declares no load triggers')
+def _address_matches(ctx, access):
+    ctx.require(access in ctx.p['triggers']['accesses'], f'profile declares no {access} triggers')
+    expect(bool(ctx.p['triggers']['matches']), 'profile declares no address matches')
     kind = _addr_type(ctx)
     data = ctx.scratch + DATA
-    ctx.mem_write(data, 0x55)
-    set_trigger(ctx, 0, mc(ctx, kind, load=1), data)
-    cause, dpc = ctx.run([Asm.NOP, Asm.lw(T0, A0), Asm.EBREAK], regs={A0: data, T0: 0x77})
-    clear_triggers(ctx)
-    expect((cause, dpc) == (2, ctx.scratch + 4), f'cause {cause} at 0x{dpc:x}')
-    expect(ctx.gpr(T0) == 0x77, 'the load completed before the trigger')
+    half = ctx.xlen // 2
+    hmask = ((1 << half) - 1) & ~0xf
+    targets = {0: data + 8, 1: (data + 0x10) | 3, 2: data + 0xc, 3: data + 4,
+               4: (hmask << half) | ((data + 0x10) & hmask),
+               5: (hmask << half) | ((data >> half) & hmask)}
+    observations = {}
+    initial = [0x100 + i for i in range(8)]
+    for match in ctx.p['triggers']['matches']:
+        clear_triggers(ctx)
+        for i, value in enumerate(initial):
+            ctx.mem_write(data + 4 * i, value)
+        t2 = targets[match - 8 if match >= 8 else match]
+        value = set_trigger(ctx, 0, mc(ctx, kind, load=int(access == 'load'),
+                            store=int(access == 'store'), match=match), t2)
+        expect((value >> 7) & 15 == match, f'declared {access} match {match} was not kept')
+        words = [(Asm.lw(T0, A0, i * 4) if access == 'load' else Asm.sw(S1, A0, i * 4))
+                 for i in range(8)]
+        cause, dpc = ctx.run(words + [Asm.EBREAK], regs={A0: data, T0: 0x77, S1: 0x55aa})
+        first = _first(ctx, _match_predicate(ctx, match, t2), data, data + 32)
+        index = (first - data) // 4 if first is not None else 8
+        want = (2 if first is not None else 1, ctx.scratch + index * 4)
+        clear_triggers(ctx)
+        expect((cause, dpc) == want,
+               f'{access} match {match}: cause {cause}, dpc 0x{dpc:x}, expected {want}')
+        if access == 'load':
+            expect(ctx.gpr(T0) == (initial[index - 1] if index else 0x77),
+                   f'load match {match}: matching load completed or prefix was lost')
+        else:
+            for i, old in enumerate(initial):
+                expect(ctx.mem_read(data + i * 4) == (0x55aa if i < index else old),
+                       f'store match {match}: wrong memory effect at index {i}')
+        observations[str(match)] = dpc - ctx.scratch
+    ctx.observe(access + '_matches', observations)
+
+
+@check('trig.load_address')
+def trig_load_address(ctx):
+    """Each declared address match fires before the matching load, with its destination unchanged."""
+    _address_matches(ctx, 'load')
 
 
 @check('trig.store_address')
 def trig_store_address(ctx):
-    """A store-address trigger fires before the store: memory is unchanged."""
-    ctx.require('store' in ctx.p['triggers']['accesses'], 'profile declares no store triggers')
-    kind = _addr_type(ctx)
-    data = ctx.scratch + DATA
-    ctx.mem_write(data, 0x55)
-    set_trigger(ctx, 0, mc(ctx, kind, store=1), data)
-    cause, dpc = ctx.run([Asm.NOP, Asm.sw(S1, A0), Asm.EBREAK], regs={A0: data, S1: 0x99})
-    clear_triggers(ctx)
-    expect((cause, dpc) == (2, ctx.scratch + 4), f'cause {cause} at 0x{dpc:x}')
-    expect(ctx.mem_read(data) == 0x55, 'the store completed before the trigger')
+    """Each declared address match fires before the matching store, with its memory unchanged."""
+    _address_matches(ctx, 'store')
 
 
 def _data_trigger(ctx, store):
