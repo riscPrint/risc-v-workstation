@@ -42,7 +42,7 @@ def compare(run, project, platform, timeout):
     elf = Path(run.get('elf'))
     if not elf.is_absolute():
         elf = run.dir / elf
-    return calculate(Namespace(cosim_action='check', trace=trace, elf=elf, core=run.get('core'),
+    return calculate(Namespace(cosim_action='check', trace=trace, elf=elf, core=None if project else run.get('core'),
                               project=project, platform=Path(platform) if platform else None,
                               model='spike', history=10, strict=True, strict_sync=(),
                               timeout=timeout, sail='sail_riscv_sim', sail_config=None))[0]

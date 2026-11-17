@@ -321,3 +321,7 @@ a root cause. Database, binding and wave association remains caller-selected.
 The selected binding must describe the simulation RTL, rather than a different
 formal wrapper. A multi-lane packed RVFI binding needs a lane-specific signal;
 a packed port alone does not identify the failing lane.
+
+When `why-run` receives `--project`, its Spike comparison uses that project.
+The C1 core name does not also select a bundled core. Without `--project`,
+the C1 core name remains the bundled-core selector.
