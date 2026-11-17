@@ -1,12 +1,21 @@
 # Chisel and VHDL whole-core dry run, 2026-11-13
 
+## Historical evidence availability
+
+This document is a historical summary. Cleanup removed the external scratch
+inputs, journals, raw logs and receipts. Their temporary recovery archives are
+being deleted. Paths below identify the original locations, not available files.
+The recorded runs cannot be replayed from this repository alone. Counts and
+verdicts below describe the original runs, not fresh validation.
+
+
 ## Scope
 
 Both cores live in independent Git repositories outside the workstation:
 `wt/.dryrun3/chisel` and `wt/.dryrun3/vhdl`, relative to the saviour workspace.
 Each repository uses a root `rvw.toml`. `RVW_HOME` selects the installed
 `wt/deep` checkout, and its `rvw/.venv/bin` is on PATH. Core sources, native
-outputs and the full command journal stay outside the workstation.
+outputs and the full command journal were stored outside the workstation.
 `wt/.dryrun3/JOURNAL.md` records commands, exit codes, times and log names.
 
 The source pins are:
@@ -127,7 +136,7 @@ The wrapper now allows 600 seconds for a full CLI sequence. An interrupted gate 
 ## Command path
 
 Run each command from its separate core repository. The project adapter and
-source maps are project-owned. See the journal for the exact arguments,
+source maps are project-owned. The journal recorded the exact arguments,
 failed attempts and native output directories.
 
 ```sh
@@ -165,7 +174,7 @@ reference check supplies the project platform explicitly.
 The second pass keeps both scratch repositories and source pins. Commands
 use `nice -n 15`. At most two native simulations run together. No BOOM,
 full Python suite, long formal campaign or hardware run was used.
-The full scratch journal and native artifacts remain outside this repository.
+The full scratch journal and native artifacts were stored outside this repository.
 
 ### Declared request and response checks
 
@@ -351,7 +360,7 @@ committed afterward in `69e3051`. It does not change the RTL or trace adapter.
 The native bind test uses that emitted-name declaration. Full C1 identities
 remain those of the recorded campaign revisions.
 
-The scratch journal has commands, native logs, minimal misaligned-load
+The scratch journal contained commands, native logs, minimal misaligned-load
 reproductions, lint reports, query results, coverage reports and the final
 count audit. No core sources or native outputs are committed to the
 workstation. Full Python suite, long formal runs and hardware tests remain

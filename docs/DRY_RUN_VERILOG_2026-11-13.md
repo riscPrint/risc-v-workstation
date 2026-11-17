@@ -1,11 +1,20 @@
 # Verilog core dry run, 2026-11-13
 
+## Historical evidence availability
+
+This document is a historical summary. Cleanup removed the external scratch
+inputs, journals, raw logs and receipts. Their temporary recovery archives are
+being deleted. Paths below identify the original locations, not available files.
+The recorded runs cannot be replayed from this repository alone. Counts and
+verdicts below describe the original runs, not fresh validation.
+
+
 ## Scope and evidence
 
-The core lives in a separate Git repository at `wt/.dryrun2/core`, relative to
+The core was stored in a separate Git repository at `wt/.dryrun2/core`, relative to
 the saviour workspace. It is outside the workstation. `JOURNAL.md` in its parent
 records commands, exit codes, times and log paths. Full logs and native outputs
-remain there. No core source is added to the workstation.
+were stored there. No core source is added to the workstation.
 
 PicoRV32 and its test copies come from revision
 `ef203c2b0a3fb793280f5114941416c425c5b461`. The source license and test license
@@ -158,7 +167,7 @@ inconclusive marker because the temporary scratch adapter omitted the requested
 `rvfi_trace` C1 field. That run is not conclusive evidence. The scratch adapter
 now records that option and uses saved ELF bytes for symbol lookup.
 
-Native logs in the scratch parent include `identity-good-gate2.log`,
+Native logs in the scratch parent included `identity-good-gate2.log`,
 `identity-bad-gate.log`, `second-pass-cosim.log`, `second-pass-bind-run.log`,
 `second-pass-isa.log`, `second-pass-sva.log`, `second-pass-arch-build.log`, and
 `second-pass-ooo.log`. Final rerun log names are recorded in the journal.

@@ -1,5 +1,14 @@
 # Clean-room acceptance, 2026-11-13
 
+## Historical evidence availability
+
+This document is a historical summary. Cleanup removed the external scratch
+inputs, journals, raw logs and receipts. Their temporary recovery archives are
+being deleted. Paths below identify the original locations, not available files.
+The recorded runs cannot be replayed from this repository alone. Counts and
+verdicts below describe the original runs, not fresh validation.
+
+
 This test used a new six-phase multicycle RV32IM core named Stepper. The core
 has one outstanding memory transaction. It now completes split-word loads and
 stores through two transactions. Its source has 255 Scala lines. It is
@@ -8,7 +17,7 @@ No earlier scratch core was copied.
 
 The initial workstation revision was `ec7126c3`. The final measured revisions,
 counts and timing are recorded below. The full journal, stdio client, command
-logs and JSON receipts remain under `wt/.cleanroom`. Scratch RTL, ELFs, databases,
+logs and JSON receipts were stored under `wt/.cleanroom`. Scratch RTL, ELFs, databases,
 waves and native build output are not part of this change.
 
 ## Result and scope
@@ -28,7 +37,7 @@ The final regression call took 16.713 s. The full reference call took 76.980 s.
 
 Core revision: `384e6775472c89f02472147df4c5690a319659f0`. Tested workstation revision:
 `efa97530abe8c5dddbc397e38a0a4a8694a05920`. That committed snapshot predates the documentation
-branch rebase. Source fingerprints remain in the raw C1/C3 receipts.
+branch rebase. Source fingerprints were recorded in the raw C1/C3 receipts.
 The riscv-tests source pin is `d7e86f701b929b5d801f8cda1a4871ab05f452bb`.
 Core Scala SHA-256: `c6e53e11d9617d70f1905c0148e76c5cfa994f341d58a7d62dd79931be5bd69c`.
 
@@ -56,7 +65,7 @@ repair reruns are informed reruns, not a second independent newcomer trial.
 There were procedure deviations. Query discovery overlapped an ISA retry, so
 this was not a fully serial walk. Early MCP calls did not explicitly inherit
 nice priority. Later calls inherited `nice -n 10`. One gate and one suite were
-invalidated by changes made while they ran. They remain in the journal and are
+invalidated by changes made while they ran. They were recorded in the journal and are
 excluded from acceptance evidence. Native build commands used nice priority 10
 and private `sbt-cosim`. At most two owned simulations or proof jobs ran together.
 No subagent was started. Disk checks stayed above 15 GiB free.
@@ -270,7 +279,7 @@ are still incomplete.
 
 ### Retained evidence and limits
 
-Raw receipts remain under `$RUN_ROOT`, the original clean-room scratch root.
+Raw receipts were stored under `$RUN_ROOT`, the original clean-room scratch root.
 The report cites these small records and logs:
 
 - `second-mcp-init.log`, `second-mcp-plan.log`: real stdio calls.
@@ -301,7 +310,7 @@ once in 8.40 seconds. MCP discovery had no skipped modules. No rebase conflict
 occurred, so union-rebase.sh was not needed.
 
 Owned cocotb and SoC build directories were removed after validation. Small
-logs, JSON, project sources and the cited probe stream remain.
+logs, JSON, project sources and the cited probe stream were retained at that time.
 
 ## Third pass: measured bounds and finite flow preparation
 
@@ -347,7 +356,7 @@ build. Its protocol and decode rows cover Fabric.connect with the selected
 windows. They do not cover the full CPU or peripheral state. Automatic native
 preparation and seven-consumer closure remain open.
 
-Small evidence records remain under `$RUN_ROOT`:
+Small evidence records were stored under `$RUN_ROOT`:
 
 - `core/rvw/out/formal-third-measured/result.json`: measured depth and Yices trial.
 - `core/rvw/out/formal-third-bitwuzla/result.json`: reached activations at depth 22.
@@ -372,7 +381,7 @@ Initial ISA export used the scaffold's private sbt-stepper lock. The later
 SoC classpath build used sbt-cosim. The initial export therefore did not follow
 the task's requested lock name. No shared sbt output was used by that export.
 Owned shadow build caches and intermediate formal checker trees were removed.
-The cited result JSON and command logs remain. Disk fell below 15 GiB after the
+The cited result JSON and command logs were retained at that time. Disk fell below 15 GiB after the
 native runs; no further native build was started at that point.
 The composed consumer inputs are in
 [#1243](https://github.com/riscPrint/risc-v-workstation/pull/1243).
