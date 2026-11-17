@@ -1,23 +1,46 @@
 # Roadmap
 
-The plan for the RISC-V Workstation EDA tools. Tasks are in [TODO.md](TODO.md), under the same
-areas. The project goal (core and EDA platform) is in `GOAL.md` of the parent workspace; this file
-covers the EDA platform only.
+## Purpose and scope
 
-- **Goal:** one integrated platform that replaces the commercial EDA stack for architecture, RTL
-  design and verification, built on open-source tools and extended where they fall short.
-  We extend the open engines themselves (formal, simulation, UVM, debug) until they match or
-  beat the commercial ones: JasperGold and VC Formal (#294), VCS and Xcelium (#295), UVM
-  (#296), Verdi (#297). Changes go upstream where possible.
-  Synthesis, physical implementation and signoff are out of scope for now.
-- **First user:** the BOOM port (`riscPrint/spinal-boom`). Tools start with BOOM and become generic:
-  BOOM-specific parts stay in adapters and config.
-- **Agents first:** every tool has a command line with JSON output, and `rvw mcp` exposes all of
-  them to an AI agent, so an agent can develop a core without a person looking at a GUI.
+Build open tools that match or beat commercial EDA tools for out-of-order RISC-V cores.
+Extend open engines where they fall short. Send changes upstream where possible.
+This plan covers tools only. It does not require BOOM or another core to add a feature.
+Use an existing capable design or a sealed tool-owned target to test a tool.
+Keep core names, signals and configuration in adapters.
 
-**Area status:** none, exploring, in progress, usable (in daily use, gaps known), parity (matches or
-beats the commercial tools). **Generic status:** BOOM-only, partly generic, generic (documented, works
-on other designs), released.
+The toolset is agent-led. Each required operation needs a CLI, MCP access and machine-readable output.
+An agent must get a checked answer without a GUI. GUI work is optional later work.
+PPA, emulation, FPGA and physical power or electromagnetic side channels are out of scope.
+Timing, cache and speculation side-channel verification remains in scope.
+
+The owner froze the source plan on 2026-11-04. This roadmap gives that plan seven milestones.
+A cell is one numbered acceptance test, such as D01.c1. A receipt records checked test evidence.
+A protocol defines a shared rule used by several cells. A milestone groups phases. It does not remove a cell, a comparator or a required child.
+Start phases permit engineering. Acceptance phases permit closure only after required receipts pass.
+No new runtime qualification follows from this document.
+
+Read the current-state table first. Then select a milestone and follow its cell links.
+Use [acceptance.md](docs/roadmap/acceptance.md) for all 357 cells and their exact rules.
+Use [protocols.md](docs/roadmap/protocols.md) for shared rules, phase exits, release tiers, method designs and planning counts.
+Use [commercial-features.md](docs/roadmap/commercial-features.md) for all 405 feature entries and issue ownership.
+Use [organisation.md](docs/roadmap/organisation.md) for owner tasks that do not gate tool acceptance.
+[TODO.md](TODO.md) keeps tasks under the existing areas and marks each issue with its milestone.
+
+A runtime predecessor needs an earlier accepted receipt. A sealed interface supplies a schema only.
+A context link supplies no acceptance evidence. A family link includes all of its children.
+Missing, failed, not-run, unsupported and inconclusive results stay separate.
+Never report an unearned pass, match or accept. A finite census does not establish a population claim.
+The category table fixes one primary measure per category. Secondary measures cannot rescue it.
+All exact correctness, capacity, depth and refusal controls still apply.
+
+### Performance goal query
+The tools answer whether a supplied design approaches an exact Zen 5 or M-series system. No candidate must reach the goal for the tools to pass. For identical completed useful work j, compute the ratio of measured comparator core cycles to candidate RTL cycles for each useful work item at the specified clock scenario. Missing counters mean unavailable cycles; the qualified time-only route remains usable with its explicit evidence class. Counter acquisition and semantic checks are mandatory in D36.c4. Do not infer cycles from GHz and time. Freeze CPU, firmware, OS, affinity, memory, libraries, compiler, flags, full input, outputs and region of interest. Test two compiler versions. Keep portable and equal-budget tuned builds separate. Cross-ISA IPC is diagnostic.
+The query tests adjusted lower 95% R bounds of 0.90 overall and 0.80 per class. Classes are integer/branch, FP/scientific, memory, system/application, vector/SIMD, ML inference and media/crypto. Use the label QUALIFIED-EQUAL-CLASS with equal-class weights as the primary supported headline until D22.c2 qualifies natural deployment weights. Then publish both, with deployment weights frozen before outcomes. No defensible deployment weights means no deployment-weighted headline. Report `goal_shortfall=max(0,1-R)`, missing weight and each class regression.
+For clock scenario f, rerun fixed-ns external delays at 0.5 times, 1 time and 1.5 times and bracket crossings. Report cycles, modeled elapsed time as cycles divided by the assumed clock frequency, measured comparator time and useful throughput separately. Queries test upper latency ratio 1.10 overall and 1.25 per class and lower throughput ratio 0.90 overall and 0.80 per class. Concurrency levels 1, 2, 4 and 8 are separate supported cells. Each conditional-time export says: "Clock is an input assumption; candidate elapsed time is modeled."
+A latency contract covers frontend/redirect, rename, issue, RF/bypass, operations, commit/recovery, caches, translation, forwarding and external memory. Missing or idealized structure latency makes the affected result unconstrained. D36 owns the acceptance tests for this service. Query thresholds here are user hypotheses, not tool acceptance or core outcomes.
+Plan 20 stochastic endpoint families per category and 380 in total before the complete endpoint census. Plan 899 independent agent-task clusters per stratum and 225 then 899 workload families per class. The planning section in protocols.md defines power checks and the required finite-census or substitute labels when a frame is too small.
+
+## Where we are now
 
 Dated audit state on 2026-11-13: the push added native core adapters, persistent simulation,
 probes, component models, generated checks, bounded formal flows, VIP and agent tools.
@@ -66,35 +89,153 @@ These rows describe the audit cutoff. Apply the later slice updates above.
 | EMU | Emulation and FPGA prototyping | Cadence Palladium and Protium, Synopsys ZeBu | Verilator (multithreaded), open FPGA flows | No emulation or FPGA qualification in the collected PRs. | none | Owner decides the scope of #23. Do not infer emulation from faster simulation. |
 | PLAT | One integrated platform | All of the above, as one product | VS Code | MCP effects/profiles/workflows, one CSR API, weakest-input plan summaries, farm native history/budgets and CI report wiring. | in progress | Add installer IDs for llvm-mca, MCY and kubectl. Qualify clean installs, cluster execution and CI runtime tiers. Local committed farm gates accept/accept/reject (#1163). |
 
-## Dated release measurements (2026-11-04)
+### Supported scope
 
-Project mode is implemented: install the workstation once, and keep each core's adapters and
-settings in its own repository with a root `rvw.toml` (`--project`, `RVW_PROJECT` or upward
-discovery). See the [bring-your-own-core guide](docs/BRING_YOUR_OWN_CORE.md).
-The [agent setup](docs/AGENT_SETUP.md) and [architecture](docs/AGENT_ARCH.md)
-playbooks include commands, checks and failure actions. A scratch VexRiscv
-setup validated regression, both gate outcomes, Spike smoke, database queries
-and MCP. RV32 architecture models use Minor or TimingSimple approximations.
-BOOM as an external
-project passed the five-test committed gate (accept, `instret_overflow` still failing), a full Spike
-trace match, and SpinalDB and SpinalChecks elaboration. A second core, VexRiscv
-(`examples/vexriscv/`, RV32IM), passes 49 ISA tests and 2 programs, matches Spike on a smoke trace
-and builds a design database, with no change to generic code. It differs from Spike on absent PMP
-CSR access and on `mtval` for `ecall`. Its separate `rvw.toml` project now passes
-41 aligned RV32UI tests and a four-test committed gate with equal RTL hashes.
-Project-selected Spike smoke and database build/navigation work. Known limits are
-in `examples/vexriscv/README.md`. Open tasks are in `TODO.md`.
+[README.md](README.md) states current supported and experimental features.
+[PLATFORM_CONTRACTS.md](docs/PLATFORM_CONTRACTS.md) defines C1 through C9 and the C8 threat model.
+Tool README files own current limits. The release hygiene scan rejects machine paths and credentials.
+Keep review output and runtime evidence outside repository history, in issues, PRs and receipt stores.
 
-## Supported scope
+## Milestones
 
-The supported and experimental features are listed in the "Status" section of
-`README.md`. C8 defines the review rule and threat model. BOOM run identity uses
-the hash of generated Verilog. Missing evidence cannot earn a gate acceptance.
+Issue state was checked on 2026-11-17. The 213 live issues include 211 with
+frozen-plan milestone owners. Issues #722 and #723 have no assignment in that
+plan. The owner must assign their acceptance scope before they gate a milestone.
+Closed issue assignments remain historical in the detail ledger. Closure does
+not establish acceptance. All 357 acceptance cells remain requirements.
 
-Release cleanup removes machine paths and recorded review output. The release scan
-in `rvw/tests/test_release_hygiene.py` checks tracked files and commit/tag metadata.
-Its limits are in `rvw/README.md`. Current tool limits stay in tool READMEs.
-Review results belong in issues and pull requests, not repository history.
+
+Each of the 211 mapped live issues appears in one list below. The two unassigned issues are listed above.
+The detailed issue map retains the frozen owners.
+Issues can need cells in several milestones. The listed milestone owns the issue's final planned tool outcome. Whole-engine and scale issues close after their full comparisons.
+An issue's earlier engineering work can start sooner when its cells permit it.
+M7 tracks the disposition of deferred issues #23 and #51 and organisation issues #37 and #39. These issues do not gate tool acceptance.
+Assign each mapped issue to the milestone that accepts its main deliverable. Early source-specific ledger cells do not set that milestone.
+Category closure below means its fixed primary capability gate. Final release closure also needs all other cells and the M7 audits.
+
+### M1: Seal sources and methods
+
+Seal the source scope, identities, independent expectations and statistical methods before implementation results can influence them.
+
+Phases: P00 through P02. Dependencies: none.
+
+Main deliverables: Platform and trust: source sealing, verdict identities, import checks, statistical validation and route rules. IDE: frontend semantics. Workloads: eligibility and behavior frames. Agents: safe transport and budgets.
+
+Exit: every cell assigned to these acceptance phases and every required child must pass. Use the exact phase exits in [protocols.md](docs/roadmap/protocols.md). Accept zero mandatory audit corruptions. Qualify complete-gate joint power at least .80.
+
+Acceptance cells: [M1: Seal sources and methods](docs/roadmap/acceptance.md#m1-seal-sources-and-methods).
+
+Issues (9): [#1](https://github.com/riscPrint/risc-v-workstation/issues/1), [#15](https://github.com/riscPrint/risc-v-workstation/issues/15), [#34](https://github.com/riscPrint/risc-v-workstation/issues/34), [#52](https://github.com/riscPrint/risc-v-workstation/issues/52), [#76](https://github.com/riscPrint/risc-v-workstation/issues/76), [#79](https://github.com/riscPrint/risc-v-workstation/issues/79), [#370](https://github.com/riscPrint/risc-v-workstation/issues/370), [#371](https://github.com/riscPrint/risc-v-workstation/issues/371), [#372](https://github.com/riscPrint/risc-v-workstation/issues/372).
+
+### M2: Build checked semantic foundations
+
+Build and check the semantic foundations. Establish trustworthy event accounting, ISA obligations, reference state and proof methods.
+
+Phases: P03 through P05. Dependencies: M1 and all earlier runtime predecessors named by each cell.
+
+Main deliverables: Performance: exact causal accounting and PMU mapping. Verification: ISA and scalar references. Formal: application semantics, prototype certificates and refinement targets. Debug: capture and source maps. Platform: native packages and reproducible builds.
+
+Exit: every cell assigned to these acceptance phases and every required child must pass. Use the exact phase exits in [protocols.md](docs/roadmap/protocols.md). Category 2, [D03.c1](docs/roadmap/acceptance.md#D03c1): Require unattributed cycle fraction at most 2% against independently checked full-run event accounting. Category 5, [D09.c2](docs/roadmap/acceptance.md#D09c2): Require checked conclusive obligations per total core-hour lower ratio at least 1.10 against each Siemens Questa Processor / OneSpin and Axiomise formalISA on the complete pinned architectural-proof frame. Category 17, [D32.c1](docs/roadmap/acceptance.md#D32c1): Require bit-identical reproducible build count at least 2 per supported host against the pinned package matrix and source-to-binary hashes.
+
+Acceptance cells: [M2: Build checked semantic foundations](docs/roadmap/acceptance.md#m2-build-checked-semantic-foundations).
+
+Issues (111): [#5](https://github.com/riscPrint/risc-v-workstation/issues/5), [#8](https://github.com/riscPrint/risc-v-workstation/issues/8), [#10](https://github.com/riscPrint/risc-v-workstation/issues/10), [#11](https://github.com/riscPrint/risc-v-workstation/issues/11), [#17](https://github.com/riscPrint/risc-v-workstation/issues/17), [#29](https://github.com/riscPrint/risc-v-workstation/issues/29), [#33](https://github.com/riscPrint/risc-v-workstation/issues/33), [#40](https://github.com/riscPrint/risc-v-workstation/issues/40), [#42](https://github.com/riscPrint/risc-v-workstation/issues/42), [#43](https://github.com/riscPrint/risc-v-workstation/issues/43), [#48](https://github.com/riscPrint/risc-v-workstation/issues/48), [#49](https://github.com/riscPrint/risc-v-workstation/issues/49), [#54](https://github.com/riscPrint/risc-v-workstation/issues/54), [#55](https://github.com/riscPrint/risc-v-workstation/issues/55), [#64](https://github.com/riscPrint/risc-v-workstation/issues/64), [#65](https://github.com/riscPrint/risc-v-workstation/issues/65), [#66](https://github.com/riscPrint/risc-v-workstation/issues/66), [#75](https://github.com/riscPrint/risc-v-workstation/issues/75), [#77](https://github.com/riscPrint/risc-v-workstation/issues/77), [#80](https://github.com/riscPrint/risc-v-workstation/issues/80), [#82](https://github.com/riscPrint/risc-v-workstation/issues/82), [#83](https://github.com/riscPrint/risc-v-workstation/issues/83), [#84](https://github.com/riscPrint/risc-v-workstation/issues/84), [#85](https://github.com/riscPrint/risc-v-workstation/issues/85), [#87](https://github.com/riscPrint/risc-v-workstation/issues/87), [#90](https://github.com/riscPrint/risc-v-workstation/issues/90), [#91](https://github.com/riscPrint/risc-v-workstation/issues/91), [#93](https://github.com/riscPrint/risc-v-workstation/issues/93), [#95](https://github.com/riscPrint/risc-v-workstation/issues/95), [#96](https://github.com/riscPrint/risc-v-workstation/issues/96), [#97](https://github.com/riscPrint/risc-v-workstation/issues/97), [#98](https://github.com/riscPrint/risc-v-workstation/issues/98), [#99](https://github.com/riscPrint/risc-v-workstation/issues/99), [#100](https://github.com/riscPrint/risc-v-workstation/issues/100), [#102](https://github.com/riscPrint/risc-v-workstation/issues/102), [#104](https://github.com/riscPrint/risc-v-workstation/issues/104), [#109](https://github.com/riscPrint/risc-v-workstation/issues/109), [#111](https://github.com/riscPrint/risc-v-workstation/issues/111), [#112](https://github.com/riscPrint/risc-v-workstation/issues/112), [#114](https://github.com/riscPrint/risc-v-workstation/issues/114), [#122](https://github.com/riscPrint/risc-v-workstation/issues/122), [#123](https://github.com/riscPrint/risc-v-workstation/issues/123), [#127](https://github.com/riscPrint/risc-v-workstation/issues/127), [#128](https://github.com/riscPrint/risc-v-workstation/issues/128), [#129](https://github.com/riscPrint/risc-v-workstation/issues/129), [#131](https://github.com/riscPrint/risc-v-workstation/issues/131), [#133](https://github.com/riscPrint/risc-v-workstation/issues/133), [#134](https://github.com/riscPrint/risc-v-workstation/issues/134), [#136](https://github.com/riscPrint/risc-v-workstation/issues/136), [#137](https://github.com/riscPrint/risc-v-workstation/issues/137), [#138](https://github.com/riscPrint/risc-v-workstation/issues/138), [#139](https://github.com/riscPrint/risc-v-workstation/issues/139), [#140](https://github.com/riscPrint/risc-v-workstation/issues/140), [#141](https://github.com/riscPrint/risc-v-workstation/issues/141), [#143](https://github.com/riscPrint/risc-v-workstation/issues/143), [#144](https://github.com/riscPrint/risc-v-workstation/issues/144), [#146](https://github.com/riscPrint/risc-v-workstation/issues/146), [#147](https://github.com/riscPrint/risc-v-workstation/issues/147), [#148](https://github.com/riscPrint/risc-v-workstation/issues/148), [#149](https://github.com/riscPrint/risc-v-workstation/issues/149), [#151](https://github.com/riscPrint/risc-v-workstation/issues/151), [#152](https://github.com/riscPrint/risc-v-workstation/issues/152), [#153](https://github.com/riscPrint/risc-v-workstation/issues/153), [#154](https://github.com/riscPrint/risc-v-workstation/issues/154), [#155](https://github.com/riscPrint/risc-v-workstation/issues/155), [#156](https://github.com/riscPrint/risc-v-workstation/issues/156), [#157](https://github.com/riscPrint/risc-v-workstation/issues/157), [#158](https://github.com/riscPrint/risc-v-workstation/issues/158), [#159](https://github.com/riscPrint/risc-v-workstation/issues/159), [#161](https://github.com/riscPrint/risc-v-workstation/issues/161), [#162](https://github.com/riscPrint/risc-v-workstation/issues/162), [#163](https://github.com/riscPrint/risc-v-workstation/issues/163), [#164](https://github.com/riscPrint/risc-v-workstation/issues/164), [#165](https://github.com/riscPrint/risc-v-workstation/issues/165), [#166](https://github.com/riscPrint/risc-v-workstation/issues/166), [#168](https://github.com/riscPrint/risc-v-workstation/issues/168), [#169](https://github.com/riscPrint/risc-v-workstation/issues/169), [#170](https://github.com/riscPrint/risc-v-workstation/issues/170), [#171](https://github.com/riscPrint/risc-v-workstation/issues/171), [#172](https://github.com/riscPrint/risc-v-workstation/issues/172), [#174](https://github.com/riscPrint/risc-v-workstation/issues/174), [#175](https://github.com/riscPrint/risc-v-workstation/issues/175), [#176](https://github.com/riscPrint/risc-v-workstation/issues/176), [#177](https://github.com/riscPrint/risc-v-workstation/issues/177), [#179](https://github.com/riscPrint/risc-v-workstation/issues/179), [#181](https://github.com/riscPrint/risc-v-workstation/issues/181), [#186](https://github.com/riscPrint/risc-v-workstation/issues/186), [#188](https://github.com/riscPrint/risc-v-workstation/issues/188), [#189](https://github.com/riscPrint/risc-v-workstation/issues/189), [#190](https://github.com/riscPrint/risc-v-workstation/issues/190), [#192](https://github.com/riscPrint/risc-v-workstation/issues/192), [#193](https://github.com/riscPrint/risc-v-workstation/issues/193), [#194](https://github.com/riscPrint/risc-v-workstation/issues/194), [#195](https://github.com/riscPrint/risc-v-workstation/issues/195), [#196](https://github.com/riscPrint/risc-v-workstation/issues/196), [#197](https://github.com/riscPrint/risc-v-workstation/issues/197), [#199](https://github.com/riscPrint/risc-v-workstation/issues/199), [#201](https://github.com/riscPrint/risc-v-workstation/issues/201), [#202](https://github.com/riscPrint/risc-v-workstation/issues/202), [#204](https://github.com/riscPrint/risc-v-workstation/issues/204), [#205](https://github.com/riscPrint/risc-v-workstation/issues/205), [#207](https://github.com/riscPrint/risc-v-workstation/issues/207), [#209](https://github.com/riscPrint/risc-v-workstation/issues/209), [#212](https://github.com/riscPrint/risc-v-workstation/issues/212), [#215](https://github.com/riscPrint/risc-v-workstation/issues/215), [#216](https://github.com/riscPrint/risc-v-workstation/issues/216), [#361](https://github.com/riscPrint/risc-v-workstation/issues/361), [#363](https://github.com/riscPrint/risc-v-workstation/issues/363), [#375](https://github.com/riscPrint/risc-v-workstation/issues/375), [#376](https://github.com/riscPrint/risc-v-workstation/issues/376), [#377](https://github.com/riscPrint/risc-v-workstation/issues/377).
+
+### M3: Qualify references and transfer
+
+Qualify independent references, adapters, workloads and agent tasks. Prove the required ordering and SMT properties before later consumers use them.
+
+Phases: P06 through P07. Dependencies: M2 and all earlier runtime predecessors named by each cell.
+
+Main deliverables: Architecture: detailed and interval models, exact rare events and method selection. Verification: whole-system anchors, ordering, coherence and SMT. Agents: verified campaigns and recovery. Platform: documentation answers, unseen-core transfer and compact labels. Security: relational comparison.
+
+Exit: every cell assigned to these acceptance phases and every required child must pass. Use the exact phase exits in [protocols.md](docs/roadmap/protocols.md). Category 9, [D17.c15](docs/roadmap/acceptance.md#D17c15): Require checked proof-closure-time upper ratio at most 0.90 against each qualified JasperGold ordering and coherence flow. Category 13, [D25.c3a](docs/roadmap/acceptance.md#D25c3a): Require adjusted median total verified campaign-time upper ratio at most 0.75 against shell-plus-upstream, the strongest qualified coding agent and every required commercial EDA agent per provider. Category 15, [D29.c7](docs/roadmap/acceptance.md#D29c7): Require mandatory task-answer error count exactly zero against independent expected documentation and status answers on every host, language and task class. Category 16, [D30.c3](docs/roadmap/acceptance.md#D30c3): Require sealed unseen-core transfer count at least 2 against the independent adapter obligation inventory, with distinct language and generator ancestries. Category 18, [D33.c2](docs/roadmap/acceptance.md#D33c2): Measure seconds per conclusive checked contract with a paired geometric mean. Require the adjusted candidate-to-comparator upper ratio at most 0.90 against both JasperGold Security Path Verification and Cycuity Radix.
+
+Acceptance cells: [M3: Qualify references and transfer](docs/roadmap/acceptance.md#m3-qualify-references-and-transfer).
+
+Issues (46): [#18](https://github.com/riscPrint/risc-v-workstation/issues/18), [#19](https://github.com/riscPrint/risc-v-workstation/issues/19), [#20](https://github.com/riscPrint/risc-v-workstation/issues/20), [#21](https://github.com/riscPrint/risc-v-workstation/issues/21), [#26](https://github.com/riscPrint/risc-v-workstation/issues/26), [#31](https://github.com/riscPrint/risc-v-workstation/issues/31), [#35](https://github.com/riscPrint/risc-v-workstation/issues/35), [#38](https://github.com/riscPrint/risc-v-workstation/issues/38), [#58](https://github.com/riscPrint/risc-v-workstation/issues/58), [#60](https://github.com/riscPrint/risc-v-workstation/issues/60), [#61](https://github.com/riscPrint/risc-v-workstation/issues/61), [#62](https://github.com/riscPrint/risc-v-workstation/issues/62), [#63](https://github.com/riscPrint/risc-v-workstation/issues/63), [#72](https://github.com/riscPrint/risc-v-workstation/issues/72), [#78](https://github.com/riscPrint/risc-v-workstation/issues/78), [#103](https://github.com/riscPrint/risc-v-workstation/issues/103), [#107](https://github.com/riscPrint/risc-v-workstation/issues/107), [#119](https://github.com/riscPrint/risc-v-workstation/issues/119), [#124](https://github.com/riscPrint/risc-v-workstation/issues/124), [#125](https://github.com/riscPrint/risc-v-workstation/issues/125), [#142](https://github.com/riscPrint/risc-v-workstation/issues/142), [#145](https://github.com/riscPrint/risc-v-workstation/issues/145), [#173](https://github.com/riscPrint/risc-v-workstation/issues/173), [#184](https://github.com/riscPrint/risc-v-workstation/issues/184), [#198](https://github.com/riscPrint/risc-v-workstation/issues/198), [#200](https://github.com/riscPrint/risc-v-workstation/issues/200), [#203](https://github.com/riscPrint/risc-v-workstation/issues/203), [#208](https://github.com/riscPrint/risc-v-workstation/issues/208), [#210](https://github.com/riscPrint/risc-v-workstation/issues/210), [#211](https://github.com/riscPrint/risc-v-workstation/issues/211), [#351](https://github.com/riscPrint/risc-v-workstation/issues/351), [#352](https://github.com/riscPrint/risc-v-workstation/issues/352), [#353](https://github.com/riscPrint/risc-v-workstation/issues/353), [#354](https://github.com/riscPrint/risc-v-workstation/issues/354), [#355](https://github.com/riscPrint/risc-v-workstation/issues/355), [#356](https://github.com/riscPrint/risc-v-workstation/issues/356), [#357](https://github.com/riscPrint/risc-v-workstation/issues/357), [#358](https://github.com/riscPrint/risc-v-workstation/issues/358), [#359](https://github.com/riscPrint/risc-v-workstation/issues/359), [#360](https://github.com/riscPrint/risc-v-workstation/issues/360), [#362](https://github.com/riscPrint/risc-v-workstation/issues/362), [#364](https://github.com/riscPrint/risc-v-workstation/issues/364), [#365](https://github.com/riscPrint/risc-v-workstation/issues/365), [#366](https://github.com/riscPrint/risc-v-workstation/issues/366), [#367](https://github.com/riscPrint/risc-v-workstation/issues/367), [#369](https://github.com/riscPrint/risc-v-workstation/issues/369).
+
+### M4: Integrate engines and durable workflows
+
+Integrate full simulation semantics, UVM, restore, coverage and durable regression workflows. Keep every result bound to its inputs and checked generation.
+
+Phases: P08 through P10. Dependencies: M3 and all earlier runtime predecessors named by each cell.
+
+Main deliverables: IDE: incremental elaboration and generator feedback. Simulation: four-state execution, full UVM and complete restore. Coverage: exact merge and revision exchange. Regression: controller recovery and requirements closure. Formal: deep engine comparison and proof-grid support.
+
+Exit: every cell assigned to these acceptance phases and every required child must pass. Use the exact phase exits in [protocols.md](docs/roadmap/protocols.md). Category 8, [D15.c5](docs/roadmap/acceptance.md#D15c5): Require adjusted checked-result-time upper ratio at most 0.90 against each JasperGold and VC Formal at equal core-hours.
+
+Acceptance cells: [M4: Integrate engines and durable workflows](docs/roadmap/acceptance.md#m4-integrate-engines-and-durable-workflows).
+
+Issues (30): [#14](https://github.com/riscPrint/risc-v-workstation/issues/14), [#16](https://github.com/riscPrint/risc-v-workstation/issues/16), [#22](https://github.com/riscPrint/risc-v-workstation/issues/22), [#28](https://github.com/riscPrint/risc-v-workstation/issues/28), [#32](https://github.com/riscPrint/risc-v-workstation/issues/32), [#41](https://github.com/riscPrint/risc-v-workstation/issues/41), [#45](https://github.com/riscPrint/risc-v-workstation/issues/45), [#46](https://github.com/riscPrint/risc-v-workstation/issues/46), [#57](https://github.com/riscPrint/risc-v-workstation/issues/57), [#71](https://github.com/riscPrint/risc-v-workstation/issues/71), [#132](https://github.com/riscPrint/risc-v-workstation/issues/132), [#160](https://github.com/riscPrint/risc-v-workstation/issues/160), [#167](https://github.com/riscPrint/risc-v-workstation/issues/167), [#178](https://github.com/riscPrint/risc-v-workstation/issues/178), [#180](https://github.com/riscPrint/risc-v-workstation/issues/180), [#182](https://github.com/riscPrint/risc-v-workstation/issues/182), [#187](https://github.com/riscPrint/risc-v-workstation/issues/187), [#191](https://github.com/riscPrint/risc-v-workstation/issues/191), [#213](https://github.com/riscPrint/risc-v-workstation/issues/213), [#214](https://github.com/riscPrint/risc-v-workstation/issues/214), [#217](https://github.com/riscPrint/risc-v-workstation/issues/217), [#296](https://github.com/riscPrint/risc-v-workstation/issues/296), [#335](https://github.com/riscPrint/risc-v-workstation/issues/335), [#344](https://github.com/riscPrint/risc-v-workstation/issues/344), [#345](https://github.com/riscPrint/risc-v-workstation/issues/345), [#346](https://github.com/riscPrint/risc-v-workstation/issues/346), [#347](https://github.com/riscPrint/risc-v-workstation/issues/347), [#348](https://github.com/riscPrint/risc-v-workstation/issues/348), [#350](https://github.com/riscPrint/risc-v-workstation/issues/350), [#378](https://github.com/riscPrint/risc-v-workstation/issues/378).
+
+### M5: Close wide capability and category benefits
+
+Close wide-design capability and the main category benefit comparisons. Check representative workload behavior and the soundness of accepted verdicts.
+
+Phases: P11 through P12. Dependencies: M4 and all earlier runtime predecessors named by each cell.
+
+Main deliverables: Architecture: blind Zen 5 and M-series cycle prediction. IDE and debug: complete-answer throughput. Simulation: wide and manycore capacity, commercial rate comparison. Stimulus: coverage benefit. Workloads: executed representative corpus. Trust: field-escape audits. Design loop: checked retained decisions.
+
+Exit: every cell assigned to these acceptance phases and every required child must pass. Use the exact phase exits in [protocols.md](docs/roadmap/protocols.md). Category 1, [D01.c12](docs/roadmap/acceptance.md#D01c12): Require blind cycle-prediction median absolute error at most 5% per system and class against measured Zen 5 and M-series anchors. Category 3, [D06.c4](docs/roadmap/acceptance.md#D06c4): Require checked complete-answer throughput lower ratio at least 1.10 against each Sigasi, DVT and required native-generator recipe in every language child. Category 4, [D07.c6](docs/roadmap/acceptance.md#D07c6): Require adjusted checked-rate lower ratio at least 1.10 against both VCS and Xcelium in every design and state stratum. Category 7, [D14.c5](docs/roadmap/acceptance.md#D14c5): Require checked new obligations per total core-hour lower ratio at least 1.10 against every strongest qualified industrial stimulus recipe under CC27. Category 10, [D19.c4](docs/roadmap/acceptance.md#D19c4): Require checked complete-answer throughput lower ratio at least 1.10 against each Verdi, Verisium Debug and SimVision in every required root-cause stratum. Category 11, [D20.c2b](docs/roadmap/acceptance.md#D20c2b): Require an adjusted upper bound of at most 5% for unrepresented behavior weight in every workload class against the sealed D20.c4 behavior inventory, using executed and calibrated full anchors. Category 14, [D28.c5](docs/roadmap/acceptance.md#D28c5): Require zero mandatory soundness escapes and a complete natural-frame finite escape rate of at most .01 against two independent retrospective verdict audits. Keep the powered population upper bound of at most .01 separate. Category 19, [D35.c3](docs/roadmap/acceptance.md#D35c3): Require adjusted allocated-core-hour cost per checked retained decision upper ratio at most 0.90 against each required pinned gem5, PMU, native simulation and debug recipe.
+
+Acceptance cells: [M5: Close wide capability and category benefits](docs/roadmap/acceptance.md#m5-close-wide-capability-and-category-benefits).
+
+Issues (7): [#24](https://github.com/riscPrint/risc-v-workstation/issues/24), [#27](https://github.com/riscPrint/risc-v-workstation/issues/27), [#74](https://github.com/riscPrint/risc-v-workstation/issues/74), [#150](https://github.com/riscPrint/risc-v-workstation/issues/150), [#183](https://github.com/riscPrint/risc-v-workstation/issues/183), [#294](https://github.com/riscPrint/risc-v-workstation/issues/294), [#297](https://github.com/riscPrint/risc-v-workstation/issues/297).
+
+### M6: Prove scale and complete the design loop
+
+Complete scale, fast references, regression management and compiler integration. Close the prospective design loop with all costs and transfer limits.
+
+Phases: P13 through P15. Dependencies: M5 and all earlier runtime predecessors named by each cell.
+
+Main deliverables: Simulation: prospective and distributed scale. References: fast independent semantics and complete commercial comparison. Regression: closure-task throughput and farm comparisons. Workloads: fresh intake, response transfer and sampling. Compilers: scheduling and verified native changes. Design loop: final contracts and recommendations.
+
+Exit: every cell assigned to these acceptance phases and every required child must pass. Use the exact phase exits in [protocols.md](docs/roadmap/protocols.md). Category 6, [D11.c6](docs/roadmap/acceptance.md#D11c6): Require adjusted end-to-end checked-rate lower ratio at least 1.10 against both ImperasDV and Siemens Questa Verification IP for RISC-V in every scalar, floating-point, vector, hypervisor and concurrent-state stratum. Category 12, [D24.c9](docs/roadmap/acceptance.md#D24c9): Require an adjusted checked closure-task throughput lower ratio of at least 1.10 against each vManager, IMC and Verdi Planner at each allocation.
+
+Acceptance cells: [M6: Prove scale and complete the design loop](docs/roadmap/acceptance.md#m6-prove-scale-and-complete-the-design-loop).
+
+Issues (4): [#25](https://github.com/riscPrint/risc-v-workstation/issues/25), [#59](https://github.com/riscPrint/risc-v-workstation/issues/59), [#282](https://github.com/riscPrint/risc-v-workstation/issues/282), [#295](https://github.com/riscPrint/risc-v-workstation/issues/295).
+
+### M7: Audit the full release
+
+Audit natural results, whole-feature scope and dependency closure. Release only the category and frame claims that the complete evidence permits.
+
+Phases: P16 through P18. Dependencies: M6 and all earlier runtime predecessors named by each cell.
+
+Main deliverables: Trust: natural-result audit, contract audit, whole-vendor feature audit and final evaluator. Design loop: full dependency audit. Platform: supported release claims with every open gate visible.
+
+Exit: every cell assigned to these acceptance phases and every required child must pass. Use the exact phase exits in [protocols.md](docs/roadmap/protocols.md). D27.c3 must reject every missing or stale mandatory predecessor. No partial tier can claim full workstation closure.
+
+Acceptance cells: [M7: Audit the full release](docs/roadmap/acceptance.md#m7-audit-the-full-release).
+
+Issues (4): [#23](https://github.com/riscPrint/risc-v-workstation/issues/23), [#37](https://github.com/riscPrint/risc-v-workstation/issues/37), [#39](https://github.com/riscPrint/risc-v-workstation/issues/39), [#51](https://github.com/riscPrint/risc-v-workstation/issues/51).
+
+## The 19 categories
+
+Each row fixes the primary measure, comparator and bound. The milestone closes this primary; M7 audits the full category contract.
+
+| Category | Fixed primary measure, comparator and number | Owning cell | Milestone |
+|---|---|---|---|
+| 1. Architecture exploration and performance modeling | Require blind cycle-prediction median absolute error at most 5% per system and class against measured Zen 5 and M-series anchors. | [D01.c12](docs/roadmap/acceptance.md#D01c12) | M5 |
+| 2. Microarchitecture performance analysis | Require unattributed cycle fraction at most 2% against independently checked full-run event accounting. | [D03.c1](docs/roadmap/acceptance.md#D03c1) | M2 |
+| 3. RTL design productivity and HDL/IDE support | Require checked complete-answer throughput lower ratio at least 1.10 against each Sigasi, DVT and required native-generator recipe in every language child. | [D06.c4](docs/roadmap/acceptance.md#D06c4) | M5 |
+| 4. Simulation speed and scale | Require adjusted checked-rate lower ratio at least 1.10 against both VCS and Xcelium in every design and state stratum. | [D07.c6](docs/roadmap/acceptance.md#D07c6) | M5 |
+| 5. ISA compliance and architectural verification | Require checked conclusive obligations per total core-hour lower ratio at least 1.10 against each Siemens Questa Processor / OneSpin and Axiomise formalISA on the complete pinned architectural-proof frame. | [D09.c2](docs/roadmap/acceptance.md#D09c2) | M2 |
+| 6. Co-simulation and reference models | Require adjusted end-to-end checked-rate lower ratio at least 1.10 against both ImperasDV and Siemens Questa Verification IP for RISC-V in every scalar, floating-point, vector, hypervisor and concurrent-state stratum. | [D11.c6](docs/roadmap/acceptance.md#D11c6) | M6 |
+| 7. Stimulus generation and coverage closure | Require checked new obligations per total core-hour lower ratio at least 1.10 against every strongest qualified industrial stimulus recipe under CC27. | [D14.c5](docs/roadmap/acceptance.md#D14c5) | M5 |
+| 8. Formal verification | Require adjusted checked-result-time upper ratio at most 0.90 against each JasperGold and VC Formal at equal core-hours. | [D15.c5](docs/roadmap/acceptance.md#D15c5) | M4 |
+| 9. Microarchitectural verification | Require checked proof-closure-time upper ratio at most 0.90 against each qualified JasperGold ordering and coherence flow. | [D17.c15](docs/roadmap/acceptance.md#D17c15) | M3 |
+| 10. Debug and root cause | Require checked complete-answer throughput lower ratio at least 1.10 against each Verdi, Verisium Debug and SimVision in every required root-cause stratum. | [D19.c4](docs/roadmap/acceptance.md#D19c4) | M5 |
+| 11. Workloads and benchmarks | Require an adjusted upper bound of at most 5% for unrepresented behavior weight in every workload class against the sealed D20.c4 behavior inventory, using executed and calibrated full anchors. | [D20.c2b](docs/roadmap/acceptance.md#D20c2b) | M5 |
+| 12. Regression management, CI and scale | Require an adjusted checked closure-task throughput lower ratio of at least 1.10 against each vManager, IMC and Verdi Planner at each allocation. | [D24.c9](docs/roadmap/acceptance.md#D24c9) | M6 |
+| 13. Agent integration | Require adjusted median total verified campaign-time upper ratio at most 0.75 against shell-plus-upstream, the strongest qualified coding agent and every required commercial EDA agent per provider. | [D25.c3a](docs/roadmap/acceptance.md#D25c3a) | M3 |
+| 14. Correctness and trust of verdicts | Require zero mandatory soundness escapes and a complete natural-frame finite escape rate of at most .01 against two independent retrospective verdict audits. Keep the powered population upper bound of at most .01 separate. | [D28.c5](docs/roadmap/acceptance.md#D28c5) | M5 |
+| 15. Usability, install and docs | Require mandatory task-answer error count exactly zero against independent expected documentation and status answers on every host, language and task class. | [D29.c7](docs/roadmap/acceptance.md#D29c7) | M3 |
+| 16. Generality across cores and HDLs | Require sealed unseen-core transfer count at least 2 against the independent adapter obligation inventory, with distinct language and generator ancestries. | [D30.c3](docs/roadmap/acceptance.md#D30c3) | M3 |
+| 17. Open-source readiness | Require bit-identical reproducible build count at least 2 per supported host against the pinned package matrix and source-to-binary hashes. | [D32.c1](docs/roadmap/acceptance.md#D32c1) | M2 |
+| 18. Security and microarchitectural side-channel verification | Measure seconds per conclusive checked contract with a paired geometric mean. Require the adjusted candidate-to-comparator upper ratio at most 0.90 against both JasperGold Security Path Verification and Cycuity Radix. | [D33.c2](docs/roadmap/acceptance.md#D33c2) | M3 |
+| 19. Performance-analysis and design-loop tooling | Require adjusted allocated-core-hour cost per checked retained decision upper ratio at most 0.90 against each required pinned gem5, PMU, native simulation and debug recipe. | [D35.c3](docs/roadmap/acceptance.md#D35c3) | M5 |
 
 ## Where we are against commercial tools
 
@@ -210,76 +351,53 @@ and BOOM's Konata probe. The gem5 automation moved here (`Arch/`) on 2026-10-24.
 
 ## Integration
 
-- **Shared formats:** C1 (run result), C2 (RVFI trace), C3 (suite results), C4 (verdict), C5
-  (failure bundle), C6 (design database), C7 (MCP tools), C8 (input capture, result generations, threat
-  model), C9 (native architecture models) in `docs/PLATFORM_CONTRACTS.md`.
-- **Design database:** SpinalDB writes the dependency graph, the block JSON and HGLDD from one run;
-  SpinalBlocks can consume database exports; legacy extraction remains for parity checks (#44). SpinalTrace and SpinalWaves have database readers; complete consumer workflow qualification remains #69.
-- **Cross-navigation:** waveform signal ↔ block diagram ↔ Scala source ↔ dependency trace (saved-data joins exist; complete live GUI acceptance remains open).
-- **One host:** the VS Code extension hosts SpinalBlocks; waves (Surfer), Konata and SpinalTrace's
-  GUI are separate apps.
-- **Agent interface:** built-in MCP tools are listed in [the command reference](docs/COMMAND_REFERENCE.md). Generated discovery (`rvw mcp --list --json`) listed 348 tools in the 2026-11-17 review.
-  Profiles, effect declarations and workflow sets have schema tests. Handler execution
-  is separate evidence. The command reference can lag current discovery.
-- **Core projects:** installed workstation and separate core repository; project
-  paths resolve against `rvw.toml`; core-owned adapters use workstation Scala
-  libraries through `RVW_HOME` and offline sbt. Existing bundled BOOM paths stay
-  available for explicit legacy selection.
+Keep C1 run results, C2 retirement traces, C3 suites, C4 verdicts, C5 bundles, C6 design databases,
+C7 MCP, C8 capture and generations, and C9 architecture models in one versioned contract.
+Update [PLATFORM_CONTRACTS.md](docs/PLATFORM_CONTRACTS.md) with any format change.
+SpinalDB supplies dependency, block and source identities. Preserve legacy extraction while semantic parity differs.
+SpinalTrace, SpinalWaves and SpinalBlocks must join the same design generation. A name match alone cannot join evidence.
+
+Keep project paths relative to `rvw.toml`. Use `--project`, `RVW_PROJECT` or upward discovery.
+Keep bundled BOOM examples for explicit legacy selection. Generic libraries must not select a core implicitly.
+The CLI and MCP use deterministic code for deterministic work. See [COMMAND_REFERENCE.md](docs/COMMAND_REFERENCE.md).
+Generated MCP discovery listed 348 tools in the 2026-11-17 review.
+Discovery and schema tests do not qualify handlers. The command reference can lag discovery.
+Existing GUI hosts remain optional consumers. They cannot supply missing machine evidence.
+
+Alpha, Beta, Qualified and Full apply separately to each category and frame.
+The full tier predicates and required receipt sets are in [protocols.md](docs/roadmap/protocols.md).
+A schema interface never supplies a final producer result. A substitute receipt closes only its named route.
+Print the actual scope, comparison, finite or population class, unsupported claims and open gates.
 
 ## Decisions
 
-- This repository keeps its own `AGENTS.md`, `ROADMAP.md` and `TODO.md` for the EDA
-  platform; the parent workspace keeps the core track.
-- One Python command (`rvw`, a subcommand per tool) and one MCP server; shared formats
-  fixed in `docs/PLATFORM_CONTRACTS.md`. Cores plug in through a run adapter (C1) and an RVFI trace (C2).
-- Tools never report an unearned pass, match or accept; missing evidence is
-  `inconclusive`.
-- One machine-wide OS file lock (`scripts/with-lock.sh`, `rvw.common.lock`) for heavy
-  jobs; process trees are stopped as a group on timeout or cancel.
-- Build open replacements for all commercial formal features (FV), not only what BOOM
-  needs today. Extend the open engines (Yosys/SBY, ABC, pono, rIC3, avy, EBMC, Verilator and
-  others) until they match or beat JasperGold, VC Formal, VCS, Xcelium and Verdi; build a full
-  open UVM flow (#294–#297). Measure this with head-to-head benchmarks.
-- Deterministic work is code; agents reach it through MCP.
-- Private native bundle definitions pin source revisions and archives per host.
-  Native qualification and full offline dependency packaging remain open. No Docker requirement.
-- SpinalHDL first; Verilog/SystemVerilog, Chisel/FIRRTL and VHDL have measured
-  adapter subsets. Full language support remains open.
+| Date | Owner decision |
+|---|---|
+| 2026-10-20 | Keep the core and tools in separate repositories. This repo owns the tool roadmap and task list. |
+| 2026-10-21 | Use one Python command and one MCP server. Use shared formats and core-owned adapters. |
+| 2026-11-04 | Freeze the source plan and write it as a readable implementation plan. |
+| 2026-11-04 | Judge tool capabilities only. Keep studies, maintainers, community, legal work, publication and named-person tasks in the organisation appendix. |
+| 2026-11-04 | Use CLI, MCP and machine-readable output first. GUI work is optional. |
+| 2026-11-04 | Defer PPA, emulation, FPGA and physical power or EM side channels. Keep digital timing, cache and speculation verification. |
+| 2026-11-04 | Do not require a sponsor or maintainer withdrawal drill. |
+| Owner direction | Plan full tool ambition. Extend open formal, simulation, SystemVerilog UVM, coverage and debug engines. Resources cannot reduce acceptance scope. |
+
+The owner will supply Kubernetes scale-out capacity and outside compute. Keep desktop use native.
+Pinned cluster execution shares C1 through C9 and needs the same independent checks.
+Keep the SPEC adapter required. A user may supply a licensed SPEC corpus. Use open substitutes for the default flow.
+Commercial access and publication approval are owner tasks. The named technical comparisons remain required for capability claims.
+Keep machine-wide locks and process-group cancellation. Keep native package revisions pinned.
+Missing evidence must return an error, `inconclusive` or `no_checks` as the contract requires.
 
 ## Limit ownership
 
-Open work stays with the tool README owners: [debug integration #24](https://github.com/riscPrint/risc-v-workstation/issues/24),
-[simulation performance #14](https://github.com/riscPrint/risc-v-workstation/issues/14),
-[coverage attribution #42](https://github.com/riscPrint/risc-v-workstation/issues/42),
-[deeper formal #21](https://github.com/riscPrint/risc-v-workstation/issues/21),
-[lint/CDC #22](https://github.com/riscPrint/risc-v-workstation/issues/22),
-[emulation #23](https://github.com/riscPrint/risc-v-workstation/issues/23),
-[regression farm #25](https://github.com/riscPrint/risc-v-workstation/issues/25) and
-[architecture fitting #12](https://github.com/riscPrint/risc-v-workstation/issues/12).
-Other formal gaps remain [sequential equivalence #18](https://github.com/riscPrint/risc-v-workstation/issues/18),
-[datapath checks #19](https://github.com/riscPrint/risc-v-workstation/issues/19),
-[security #20](https://github.com/riscPrint/risc-v-workstation/issues/20),
-[proof coverage #62](https://github.com/riscPrint/risc-v-workstation/issues/62),
-[CSR checks #85](https://github.com/riscPrint/risc-v-workstation/issues/85) and
-[connectivity #107](https://github.com/riscPrint/risc-v-workstation/issues/107).
-The IDE scope remains an owner decision in [#77](https://github.com/riscPrint/risc-v-workstation/issues/77).
+Tool README files own current limits. The issue map assigns every open issue to one milestone.
+The cell owner roles and shared rules define future acceptance work. An issue closure is not a receipt.
+All existing feature-specific limits remain until their required cells pass.
 
-Retained limit: old BOOM measurement counts above describe their dated runs.
-They are not current qualification totals. Parent Track 2 counts are a workspace
-summary outside this repository. Use these component rows and tool scope for this
-2026-11-13 snapshot. No claim of parity, complete capture or complete verification
-follows from a component's usable status.
+## Optional later work
 
-Current limit owners also include ACT4 and bootstrap (see `docs/ACT4.md`), generated-check activation
-(#5, #85), SoC ingress (#134), MMU and interrupt campaigns (#84, #131, #158), UVM/VIP
-(#296), memory/coherence (#90, #128, #363), and native CI/install (#40, #41).
-The [open list](TODO.md) gives current issue scope. No-issue work needs owner scope
-assignment before it can become a closure target.
-
-Source disagreements remain visible: the ComponentSims README says no native RTL
-comparison has run and no adapter writes `rvw.bp-events/1`. The audit records native
-Vex/Vexii/BOOM event comparisons. This update follows the scoped audit receipts.
-It does not claim RTL model fidelity. Early NEW_TOOLS entries call security/fault
-fixture-only, debug/privilege reference-only and GHDL/FIRRTL unit-only. Later audit
-updates and READMEs describe native slices. Use the later scoped records, not the
-early family labels. These source files were not changed here.
+GUI layout, mouse and keyboard interaction, visual cross-probing and interactive studies can follow the agent interface.
+Retain existing viewers as optional tools. Do not make their UI a capability gate.
+PPA, synthesis and physical signoff, emulation, FPGA prototyping, power leakage and EM leakage need a later owner plan.
+Issues #23 and #51 stay open as explicit deferrals. They do not block this tool plan.
