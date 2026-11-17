@@ -347,10 +347,14 @@ def simulate(binding, exe, elf, out, taint_words=None, max_cycles=None):
             words[index] = mask
         (out/'taint.hex').write_text('\n'.join(f'{w:08x}' for w in words)+'\n')
         args.append(f'+taint={out/"taint.hex"}')
+    # Identify the compiled model used for this run, not a mutable source tree.
+    identity = hashlib.sha256(Path(exe).read_bytes()).hexdigest()
     native(args, out, timeout=600)
     result = parse((out/'sim.log').read_text(), mem, binding)
+    result['rtl_identity'] = identity
     result['tohost_address'] = tohost
     result['image'] = bytes(mem)
+    result['rtl_sha256'] = hashlib.sha256(b''.join(p.read_bytes() for p in binding['rtl'])).hexdigest()
     if not taint_words:
         from . import probe_events
         sites = probe_events.discover(binding)
@@ -361,7 +365,7 @@ def simulate(binding, exe, elf, out, taint_words=None, max_cycles=None):
             last = rows[-1]['cycle'] if rows else result['cycles']
             probe_events.write(out/'probe-events.jsonl', sites, [r for r in result['probe_rows'] if r[0] <= last], last,
                                dict(core=binding.get('name', binding['top']), config='sec', elf=str(elf),
-                                    rtl_sha256=hashlib.sha256(b''.join(p.read_bytes() for p in binding['rtl'])).hexdigest()))
+                                    rtl_sha256=result['rtl_sha256']))
     return result
 
 

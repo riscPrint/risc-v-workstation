@@ -51,6 +51,9 @@ def projection(rows, clauses):
 def compare(a,b,plan):
     if a['public'] != b['public'] or a['secret'] == b['secret']:
         raise ValueError('pairs need equal public context and different secrets')
+    if a.get('rtl_identity') != b.get('rtl_identity'):
+        # A rebuilt design between the two runs (for example a changed source tree) is not a pair.
+        raise ValueError('the paired runs used different RTL identities')
     clauses = plan.get('clauses',['pc','memory','branch'])
     if not clauses or plan['contract'] not in CONTRACTS:
         raise ValueError('declare an architectural leakage contract')
@@ -117,7 +120,8 @@ def run(manifest, out):
         if set(r['observations']) != set(plan['observations']):
             raise ValueError('missing or extra microarchitectural observation channels')
         # Observations can contain complete cache/branch/TLB/bus event lists.
-        return dict(reference=reference,observations=r['observations'], public=plan['public'],secret=secret)
+        return dict(reference=reference,observations=r['observations'], public=plan['public'],secret=secret,
+                    rtl_identity=r.get('rtl_identity'))
     count = plan.get('instructions',16)
     if type(count) is not int or not 1<=count<=1000: raise ValueError('instructions must be 1..1000')
     program = plan.get('program',generate(plan.get('seed',1),count))

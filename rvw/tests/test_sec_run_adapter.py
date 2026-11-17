@@ -59,3 +59,44 @@ def test_trace_is_cut_at_the_tohost_store(tmp_path):
     cut = [json.loads(x) for x in (tmp_path/'cut.jsonl').read_text().splitlines()]
     assert [r.get('pc') for r in cut[1:-1]] == ['0x80000000', '0x80000004', '0x80000008']
     assert cut[-1] == end
+
+
+def test_a_pair_with_two_rtl_identities_is_refused():
+    from rvw.sec import pairs
+    side = dict(public={'reset': 'cold'}, reference=[], observations={})
+    plan = dict(contract='constant-time', observations=['cycles'])
+    with pytest.raises(ValueError, match='different RTL identities'):
+        pairs.compare(dict(side, secret=1, rtl_identity='aa'), dict(side, secret=2, rtl_identity='bb'), plan)
+
+
+@pytest.mark.parametrize('identities,expected', [
+    (('model-a', 'model-b'), 'inconclusive'),
+    (('model-a', None), 'inconclusive'),
+    (('model-a', 'model-a'), 'no_leak_observed'),
+    ((None, None), 'no_leak_observed'),
+])
+def test_pair_runner_keeps_adapter_identities(tmp_path, monkeypatch, identities, expected):
+    from pathlib import Path
+    from rvw.sec import pairs
+    remaining = iter(identities)
+    def adapter(argv, cwd, timeout):
+        folder = Path(argv[0])
+        response = dict(complete=True, reset_complete=True, reference_c2='ref.jsonl',
+                        rtl_c2='rtl.jsonl', observations={'cycles': 10})
+        identity = next(remaining)
+        if identity is not None:
+            response['rtl_identity'] = identity
+        (folder/'response.json').write_text(json.dumps(response))
+        return ''
+    monkeypatch.setattr(pairs, 'native', adapter)
+    monkeypatch.setattr(pairs, 'trace', lambda path: [dict(pc=16, insn=0x13)])
+    manifest = tmp_path/'manifest.json'
+    manifest.write_text(json.dumps(dict(contract='constant-time', clauses=['pc'],
+        observations=['cycles'], public={}, secrets=[0, 1], program=['nop'],
+        adapter_command=['{out}'])))
+    result = pairs.run(manifest, tmp_path/'out')
+    assert result['status'] == expected
+    c3 = json.loads((tmp_path/'out/results.json').read_text())
+    assert c3['tests'][0]['status'] == ('error' if expected == 'inconclusive' else 'pass')
+    if expected == 'inconclusive':
+        assert 'different RTL identities' in result['errors'][0]
