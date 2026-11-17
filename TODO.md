@@ -46,7 +46,7 @@ Milestones: `v0.1 public release`, `v0.2 (near term)` and `Later phases`. Ideas 
 
 ## IDE: design entry and navigation
 
-- [#69](https://github.com/riscPrint/risc-v-workstation/issues/69) SpinalTrace and SpinalWaves: read the design database
+- [#69](https://github.com/riscPrint/risc-v-workstation/issues/69) SpinalTrace and SpinalWaves: read the design database. Trace mutation runner recovery has targeted tests. Native campaigns and example wrappers remain deferred.
 - [#70](https://github.com/riscPrint/risc-v-workstation/issues/70) SpinalBlocks and SpinalDB: check on more designs
 - [#77](https://github.com/riscPrint/risc-v-workstation/issues/77) Decide what the IDE needs beyond VS Code and Metals
 

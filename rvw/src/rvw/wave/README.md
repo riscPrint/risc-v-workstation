@@ -325,3 +325,30 @@ a packed port alone does not identify the failing lane.
 When `why-run` receives `--project`, its Spike comparison uses that project.
 The C1 core name does not also select a bundled core. Without `--project`,
 the C1 core name remains the bundled-core selector.
+
+### Internal mutation runner
+
+`mutations.run_cases` runs source edits in a caller-owned private core copy.
+It restores each edited file as bytes on exit. Each fresh build uses a new
+attempt directory. Resume never trusts a saved verdict or `result.json` alone.
+
+Native reuse is off by default. To enable it, set `inputs_complete=True` and
+supply `elf`, `build_inputs`, and `native_tools`. The caller must list all
+external dependencies, including ignored build inputs, JARs, native libraries,
+adapter scripts, project dependencies, and reference tools. Command executables
+must have absolute paths. Source, dependency bytes, tools, commands, environment,
+project, database, binding, and options bind the identity. A missing input disables
+reuse. This declaration is a caller contract, not automatic dependency discovery.
+
+Input copies and raw attempt files are retained. Reuse checks sealed evidence
+and the live files, then repeats C1 validation, comparison, and tracing. Comparison
+and tracing use the caller-selected database and binding. Their association with
+the DUT remains unverified. A hit is an observed candidate chain, not root-cause
+proof. An absent statement in a bounded chain reports `tracing_unresolved`, not
+`miss`. A complete strict match can report `no_mismatch`. Process failures,
+timeouts, incomplete C1, inconclusive comparison, and unresolved tracing remain
+separate outcomes. A complete matching baseline is required before mutations.
+
+The caller must put the required locks and `nice` in native command vectors.
+Example wrappers, native mutation campaigns, and historical result claims remain
+deferred. Fake-command tests do not qualify a core or a native toolchain.
