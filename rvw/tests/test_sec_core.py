@@ -180,3 +180,21 @@ def test_probe_sites_stream_and_channels(tmp_path):
     assert obs['bus_handshakes'] == [[3, 'dbus', 'cmd'], [4, 'dbus', 'rsp']]
     with pytest.raises(ValueError, match='needs probe sites'):
         core_adapter.observe(dict(result, probe_sites=[]), ['tlb_events'])
+
+
+def test_simulation_identity_tracks_executable_not_mutable_sources(tmp_path, monkeypatch):
+    import hashlib
+    b = binding(tmp_path)
+    exe = tmp_path/'simulator'
+    exe.write_bytes(b'compiled model A')
+    monkeypatch.setattr(rtl, 'image', lambda *a: (bytearray(16), 8, 0))
+    monkeypatch.setattr(rtl, 'native', lambda *a, **kw: None)
+    monkeypatch.setattr(rtl, 'parse', lambda *a: dict(cycles=1))
+    out = tmp_path/'run'; out.mkdir(); (out/'sim.log').write_text('')
+    first = rtl.simulate(b, exe, 'case.elf', out, taint_words={1: 1})
+    (tmp_path/'core.v').write_text('changed source after compilation')
+    second = rtl.simulate(b, exe, 'case.elf', out, taint_words={1: 1})
+    assert first['rtl_identity'] == second['rtl_identity'] == hashlib.sha256(exe.read_bytes()).hexdigest()
+    exe.write_bytes(b'compiled model B')
+    third = rtl.simulate(b, exe, 'case.elf', out, taint_words={1: 1})
+    assert third['rtl_identity'] != first['rtl_identity']

@@ -27,7 +27,7 @@
   ],
   "budget": {
     "pairs": 24,
-    "seconds": 3000
+    "seconds": 6000
   },
   "minimize_runs": 8,
   "timeout": 1800,

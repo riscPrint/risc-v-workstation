@@ -129,7 +129,7 @@ def run_case(binding_path, template, request_path, out):
                            request.get('observer_mode'))
     response = dict(complete=status == 'pass', reset_complete=True, reference_c2='reference.jsonl',
                     rtl_c2='rtl/cut.jsonl', observations=observations, rtl_status=status,
-                    cycles=c1.get('cycles'), core=binding.get('name'))
+                    cycles=c1.get('cycles'), core=binding.get('name'), rtl_identity=c1.get('rtl_sha256'))
     (out/'response.json').write_text(json.dumps(response, indent=2)+'\n')
     return response
 

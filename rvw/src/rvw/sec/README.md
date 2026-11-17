@@ -560,3 +560,14 @@ trace ends at the observed passing store. The full raw trace is retained and
 strictly checked first. A fixed public setup length prevents operand magnitude
 from changing the setup instruction count. A reported timing violation is one
 witness under this contract. A pair without a violation is not a security proof.
+
+Paired cases reject differing `rtl_identity` values. The direct core adapter
+hashes the simulator executable. The C1 run adapter forwards its RTL hash.
+Legacy responses that omit both identities can still run, without an identity
+claim. See `docs/contracts/sec.md`.
+
+The VexRiscv and VexiiRiscv `campaign-all.json` examples select the bus and
+branch channels for seed 13. The `-s11` files use seed 11. VexRiscv's
+`campaign-cached` files add cache events. VexiiRiscv's `campaign-su` files add
+TLB events. Run each manifest with its matching exported core binding.
+These files are campaign inputs. They contain no execution results.

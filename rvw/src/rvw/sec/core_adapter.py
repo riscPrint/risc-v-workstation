@@ -155,7 +155,7 @@ def run_case(binding_path, template, request_path, out, work=None):
     keys = (['pc', 'insn'] + (['mode'] if commit.get('mode') else [])) if commit['kind'] == 'commit' else None
     response = dict(complete=status == 'pass', reset_complete=True, reference_c2='reference.jsonl',
                     rtl_c2='rtl.jsonl', observations=observations, rtl_status=status,
-                    cycles=result['cycles'], core=binding.get('name'))
+                    cycles=result['cycles'], core=binding.get('name'), rtl_identity=result['rtl_identity'])
     if keys:
         response['c2_keys'] = keys
     (out/'response.json').write_text(json.dumps(response, indent=2)+'\n')

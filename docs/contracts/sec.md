@@ -205,3 +205,15 @@ the actual passing `tohost` store. This omits post-completion drain instructions
 The independent generated reference uses the same completion boundary. A missing
 or failing store is an error. No DUT register or memory value comes from the
 reference. The response records both raw and scoped trace paths.
+
+## Paired model identity
+
+A case response may supply `rtl_identity`. If either response supplies it,
+the two values must match. A mismatch makes the pair inconclusive before
+contract comparison or reduction. Older adapters can omit the field on both
+sides. This does not establish model identity.
+
+The direct core adapter supplies the SHA-256 of the simulator executable.
+This binds the compiled RTL and testbench used for the run. The C1 run adapter
+forwards `result.json`'s `rtl_sha256` when available. These identities have
+adapter-specific meanings. They do not establish whole-core qualification.

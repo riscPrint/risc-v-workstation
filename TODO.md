@@ -180,7 +180,7 @@ Milestones: `v0.1 public release`, `v0.2 (near term)` and `Later phases`. Ideas 
 
 - [#18](https://github.com/riscPrint/risc-v-workstation/issues/18) Formal: sequential equivalence
 - [#19](https://github.com/riscPrint/risc-v-workstation/issues/19) Formal: datapath checking against a C model
-- [#20](https://github.com/riscPrint/risc-v-workstation/issues/20) Formal: security and information flow
+- [#20](https://github.com/riscPrint/risc-v-workstation/issues/20) Formal: security and information flow. Paired model identity checks added; native campaign qualification remains open.
 - [#21](https://github.com/riscPrint/risc-v-workstation/issues/21) Formal: deeper proofs
 - [#46](https://github.com/riscPrint/risc-v-workstation/issues/46) Formal: multi-clock designs and asynchronous resets
 - [#60](https://github.com/riscPrint/risc-v-workstation/issues/60) Formal: counterexample debugging (FV 8)
