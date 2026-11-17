@@ -74,3 +74,21 @@ def test_exact_decimal_clock_metadata():
     run = SimpleNamespace(get=lambda key: {'wave_time_per_cycle': '10', 'wave_time_of_cycle_1': '187'})
     clock = wave_clock(run, {})
     assert clock.known and clock.time(35) == 527
+
+
+def test_project_comparison_does_not_also_select_a_bundled_core(monkeypatch, tmp_path):
+    seen = []
+    monkeypatch.setattr(failure, 'calculate', lambda args: (seen.append(args) or {'status':'match'}, 0))
+    run = SimpleNamespace(artifact=lambda name: tmp_path/'rvfi.jsonl', dir=tmp_path,
+                          get=lambda name: {'elf':'test.elf','core':'private-core'}[name])
+    assert failure.compare(run, 'private/rvw.toml', None, 120)['status'] == 'match'
+    assert seen[0].project == 'private/rvw.toml' and seen[0].core is None
+
+
+def test_comparison_without_project_keeps_bundled_core(monkeypatch, tmp_path):
+    seen = []
+    monkeypatch.setattr(failure, 'calculate', lambda args: (seen.append(args) or {'status':'match'}, 0))
+    run = SimpleNamespace(artifact=lambda name: tmp_path/'rvfi.jsonl', dir=tmp_path,
+                          get=lambda name: {'elf':'test.elf','core':'boom'}[name])
+    assert failure.compare(run, None, None, 120)['status'] == 'match'
+    assert seen[0].project is None and seen[0].core == 'boom'
