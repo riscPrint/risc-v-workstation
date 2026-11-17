@@ -69,13 +69,13 @@ clean, set `NAXRISCV` to it and run the project from a copy of this folder.
 
 ## Private worker layout
 
-In the `saviour` worker layout, set `SAVIOUR` to the parent project directory.
-The pinned private core is in `wt/.nax/dbg/NaxRiscv`. Warm Scala outputs and
-native models stay under the worker checkout. Reuse them.
+Create the pinned private clone with the setup commands above. Set `RVW_HOME`
+to your workstation checkout. The old `saviour` scratch workers were deleted.
+Build outputs are local to the new checkout.
 
 ```sh
-export RVW_HOME="$SAVIOUR/wt/dbg"
-export NAXRISCV="$SAVIOUR/wt/.nax/dbg/NaxRiscv"
+export RVW_HOME=/path/to/risc-v-workstation
+export NAXRISCV="$HOME/projects/NaxRiscv"
 export RISCVSIM_WORK="$RVW_HOME/examples/naxriscv/rvw/target/work"
 export RVW_NAX_LOCK=nax-dbg
 export RVW_NAX_SBT_LOCK=sbt-dbg
