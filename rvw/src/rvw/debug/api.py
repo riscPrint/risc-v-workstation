@@ -10,7 +10,9 @@ def _profile(path=None, project=None):
     return profiles.load(path) if path else profiles.from_project(project)
 
 
-def suite_run(out, profile=None, groups=None, checks=None, reference=True, log=None, port=None, project=None):
+def suite_run(out, profile=None, groups=None, checks=None, reference=True, log=None, port=None, project=None,
+              *, progress=None):
+    """Write suite results. Forward the optional callback to suite.run()."""
     from . import suite, checks as _registered  # noqa: F401
     prof = _profile(profile, project)
     if port is None and prof.get('transport_declared') is False:
@@ -20,7 +22,7 @@ def suite_run(out, profile=None, groups=None, checks=None, reference=True, log=N
     if port is not None:
         prof['transport'] = {**prof['transport'], 'kind': 'remote_bitbang', 'port': port,
                              'host': prof['transport'].get('host', '127.0.0.1')}
-    entries = suite.run(prof, groups=groups, ids=checks, reference=reference, log=log)
+    entries = suite.run(prof, groups=groups, ids=checks, reference=reference, log=log, progress=progress)
     results = suite.to_c3(entries, prof)
     path = suite.write(results, out)
     status, code = suite.verdict(results)

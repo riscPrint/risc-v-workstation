@@ -206,7 +206,7 @@ Milestones: `v0.1 public release`, `v0.2 (near term)` and `Later phases`. Ideas 
 - [#49](https://github.com/riscPrint/risc-v-workstation/issues/49) Konata: stall causes and predicated-off commits
 - [#120](https://github.com/riscPrint/risc-v-workstation/issues/120) chore(waves): triage vendored typed-viewer limits
 - [#127](https://github.com/riscPrint/risc-v-workstation/issues/127) feat(debug): verify debug module lifecycle
-- [#133](https://github.com/riscPrint/risc-v-workstation/issues/133) feat(debug): add native dmi and jtag simulation drivers
+- [#133](https://github.com/riscPrint/risc-v-workstation/issues/133) feat(debug): add native dmi and jtag simulation drivers. Python suite progress callback added with target-only final results and profile skips; callback tests use fixtures and the reference model.
 - [#144](https://github.com/riscPrint/risc-v-workstation/issues/144) feat(debug): verify trigger modules
 - [#153](https://github.com/riscPrint/risc-v-workstation/issues/153) feat(debug): verify abstract commands and program buffer
 - [#156](https://github.com/riscPrint/risc-v-workstation/issues/156) feat(debug): verify debug system-bus access

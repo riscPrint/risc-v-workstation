@@ -8,6 +8,7 @@ as unsupported. A check that could not exercise its rule is inconclusive.
 """
 from __future__ import annotations
 
+from copy import deepcopy
 from dataclasses import dataclass
 import datetime as _dt
 import json
@@ -449,17 +450,31 @@ def select(groups=None, ids=None):
     return chosen
 
 
-def run(profile, *, driver=None, groups=None, ids=None, reference=True, log=None):
-    """Run the selected checks. Returns the result summary (not yet C3)."""
+def run(profile, *, driver=None, groups=None, ids=None, reference=True, log=None, progress=None):
+    """Run the selected checks. Return entries for to_c3().
+
+    If supplied, call progress(event, check, entry) for each selected target
+    check, including profile skips. Use 'start' with entry=None before the
+    check. Use 'finish' with a copy of the final entry after reference
+    comparison. Reference runs do not emit progress calls.
+
+    Callback exceptions stop the run and propagate to the caller. The runner
+    still closes a driver it opened. A supplied driver stays caller-owned.
+    """
     from . import checks  # noqa: F401  (registers the checks)
     own = driver is None
     driver = driver or open_target(profile, log=log)
     entries = []
     try:
         for item in select(groups, ids):
+            if progress is not None:
+                progress('start', item, None)
             if item.id in profile['skip']:
-                entries.append({'id': item.id, 'group': item.group, 'status': 'unsupported',
-                                'reason': 'skipped by profile: ' + profile['skip'][item.id]})
+                entry = {'id': item.id, 'group': item.group, 'status': 'unsupported',
+                         'reason': 'skipped by profile: ' + profile['skip'][item.id]}
+                entries.append(entry)
+                if progress is not None:
+                    progress('finish', item, deepcopy(entry))
                 continue
             entry = run_one(item, profile, driver)
             if reference and item.reference and entry['status'] in ('pass', 'fail') and profile['transport']['kind'] != 'model':
@@ -476,6 +491,8 @@ def run(profile, *, driver=None, groups=None, ids=None, reference=True, log=None
                     entry['message'] = 'observations differ from the reference model'
                 entry['reference_diff'] = {k: list(v) for k, v in diff.items()}
             entries.append(entry)
+            if progress is not None:
+                progress('finish', item, deepcopy(entry))
     finally:
         if own:
             close = getattr(driver, 'close', None)
