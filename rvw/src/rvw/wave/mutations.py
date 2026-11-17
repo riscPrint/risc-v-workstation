@@ -78,8 +78,13 @@ def _identity(source, case, compile_command, simulate_command, *, project, db, b
         if not state.reusable:
             return None
         capture.tree(source, git=state.rev is not None)
+        selected_inputs = dict(elf=str(Path(elf).absolute()),
+            project=str(Path(project).absolute()), db=str(Path(db).absolute()),
+            binding=str(Path(binding).absolute()),
+            build_inputs=[str(Path(p).absolute()) for p in build_inputs])
         for path in [elf, project, db, binding, *build_inputs]:
-            path = Path(path).resolve(strict=True)
+            # Capture preserves the selected path and every symlink in its chain.
+            path = Path(path)
             if path.is_dir():
                 capture.tree(path, git=False)
             else:
@@ -93,7 +98,7 @@ def _identity(source, case, compile_command, simulate_command, *, project, db, b
         for path in sorted(Path(__file__).parents[1].rglob('*.py')):
             capture.file(path)
         capture.verify_tools()
-        options = dict(source=state.to_dict(), case=case,
+        options = dict(source=state.to_dict(), case=case, selected_inputs=selected_inputs,
             compile=list(compile_command), simulate=list(simulate_command),
             compile_cwd=str(compile_cwd), env_sha256=sha256(canonical_json(dict(env))).hexdigest(),
             reference_env_sha256=sha256(canonical_json(dict(os.environ))).hexdigest(), window=window,

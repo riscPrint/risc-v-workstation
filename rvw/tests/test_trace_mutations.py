@@ -67,9 +67,10 @@ def campaign(tmp_path, monkeypatch):
     monkeypatch.setattr(mutations, 'explain_run', lambda *a, **k: {
         'status': behavior['trace'], 'cosim': {'status': behavior['comparison'], 'trace_complete': True}, 'chains': []})
     def run(**kwargs):
+        options = dict(project='', db='', binding='', env={})
+        options.update(kwargs)
         return mutations.run_cases(source, [dict(name='one', file='Core.scala', before='original', after='mutated')],
-            ['/bin/echo', 'compile'], ['/bin/echo', 'simulate', '{out}'], work=tmp_path/'out', project='', db='', binding='',
-            env={}, **kwargs)
+            ['/bin/echo', 'compile'], ['/bin/echo', 'simulate', '{out}'], work=tmp_path/'out', **options)
     return run, calls, behavior, source, tmp_path/'out'
 
 
@@ -276,3 +277,27 @@ def test_failed_c1_cannot_earn_baseline_match(campaign, monkeypatch):
     monkeypatch.setattr(mutations, 'open_run', failed)
     assert run()[0]['status'] == 'baseline_c1_failed'
     assert len(calls) == 2
+
+
+def test_selected_elf_symlink_retarget_starts_fresh(campaign):
+    run, calls, behavior, source, work = campaign
+    behavior['comparison'] = 'match'
+    root = source.parent
+    for name in ('A.elf', 'B.elf', 'project', 'db', 'binding'):
+        (root/name).write_text(name)
+    selected = root/'current.elf'
+    selected.symlink_to('A.elf')
+    options = dict(elf=selected, project=root/'project', db=root/'db',
+                   binding=root/'binding', build_inputs=[root/'A.elf', root/'B.elf'],
+                   native_tools=['/bin/echo'], inputs_complete=True)
+    first = run(**options)
+    assert all(row['identity'] for row in first)
+    stable = run(resume=True, **options)
+    assert all(row['native_reused'] for row in stable)
+    assert len(calls) == 4
+    selected.unlink()
+    selected.symlink_to('B.elf')
+    changed = run(resume=True, **options)
+    assert len(calls) == 8
+    assert all(not row['native_reused'] for row in changed)
+    assert {r['attempt'] for r in first}.isdisjoint(r['attempt'] for r in changed)
