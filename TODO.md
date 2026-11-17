@@ -167,7 +167,7 @@ Milestones: `v0.1 public release`, `v0.2 (near term)` and `Later phases`. Ideas 
 - [#5](https://github.com/riscPrint/risc-v-workstation/issues/5) Triage the 24 SpinalChecks firings on BOOM
 - [#65](https://github.com/riscPrint/risc-v-workstation/issues/65) SpinalChecks: more check rules
 - [#66](https://github.com/riscPrint/risc-v-workstation/issues/66) SpinalChecks: TileLink and AXI protocol checks
-- [#85](https://github.com/riscPrint/risc-v-workstation/issues/85) feat(checks): generate csr behavior verification
+- [#85](https://github.com/riscPrint/risc-v-workstation/issues/85) feat(checks): generate csr behavior verification. RV32 scratch selections added for NaxRiscv and ooo-mini; RTL binding and native runs remain open.
 - [#98](https://github.com/riscPrint/risc-v-workstation/issues/98) feat(checks): verify zihpm counter behavior
 - [#142](https://github.com/riscPrint/risc-v-workstation/issues/142) feat(checks): verify register-map side-effect transactions
 - [#146](https://github.com/riscPrint/risc-v-workstation/issues/146) feat(checks): verify clock-gating controls
