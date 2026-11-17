@@ -58,7 +58,8 @@ def test_diagnostic_mcp_stays_read_only_and_smoke_is_explicit():
     tools, problems = discover({'doctor'})
     assert not problems
     tools = {tool.name: tool for tool in tools}
-    assert set(tools) == {'rvw_doctor', 'doctor_smoke'}
+    assert set(tools) == {'rvw_doctor', 'doctor_smoke', 'doctor_resolve'}
+    assert tools['doctor_resolve'].annotations['readOnlyHint']
     tool = tools['rvw_doctor']
     assert 'smoke_elf' not in tool.input_schema['properties']
     assert 'elf' not in tool.input_schema['properties']

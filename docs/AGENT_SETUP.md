@@ -515,7 +515,7 @@ Machine-readable form: `rvw agent guide --json`, MCP tool `agent_guide`, MCP res
 
 A Spinal core repository has no rvw.toml yet, or `rvw doctor` is not ready.
 
-Optional tool set: 22 tools. Load MCP profile `core` with `rvw_tools_load`. Read the tool names in `rvw agent guide --json`. Use `rvw_tools_describe` before a call.
+Optional tool set: 23 tools. Load MCP profile `core` with `rvw_tools_load`. Read the tool names in `rvw agent guide --json`. Use `rvw_tools_describe` before a call.
 
 1. **doctor**: Check the installation and the native tools. `rvw doctor --features sim,riscv-gcc,cosim --json` / MCP `rvw_doctor`
    - If exit 1 and a native tool is missing: go to `install`.
@@ -591,7 +591,7 @@ Optional tool set: 58 tools. Load MCP profile `debug` with `rvw_tools_load`. Rea
 
 Tests pass, and the next question is what they do not exercise.
 
-Optional tool set: 84 tools. Load MCP profile `verification` with `rvw_tools_load`. Read the tool names in `rvw agent guide --json`. Use `rvw_tools_describe` before a call.
+Optional tool set: 85 tools. Load MCP profile `verification` with `rvw_tools_load`. Read the tool names in `rvw agent guide --json`. Use `rvw_tools_describe` before a call.
 
 1. **run**: Run the suite with coverage collection. `rvw regress run --tier full --rvfi-trace --out <RUN> --json` / MCP `regress_run`
    - If runs complete: go to `functional`.

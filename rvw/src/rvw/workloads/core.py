@@ -111,9 +111,29 @@ def recipe(name):
     return ASSETS / names[name]
 
 
-def build(manifest, source, out, cc, bench=None, target=None, keep_going=False):
+def build(manifest=None, source=None, out=None, cc='riscv64-unknown-elf-gcc', bench=None, target=None, keep_going=False):
     data = load(manifest)
     target = target or {}
+    if out is None:
+        raise ValueError('workload build requires out')
+    if source is None:
+        if 'revision' not in data:
+            raise ValueError('licensed workloads require an explicit local source')
+        from rvw.regress.source import ensure_pinned_source
+        # Only known public recipes may trigger acquisition. Custom manifests must
+        # match both the public URL and revision, or provide their own source.
+        matches = []
+        for name in ('embench', 'riscv-tests', 'coremark', 'zstd'):
+            known = load(recipe(name))
+            if (known['source_url'], known['revision']) == (data.get('source_url'), data['revision']):
+                matches.append(name)
+        if len(matches) != 1:
+            raise ValueError('unknown public source pin; supply --source')
+        if matches[0] == 'riscv-tests':
+            from rvw.common.dependencies import resolve
+            source = resolve('riscv-tests', acquire=True, revision=data['revision'])['path']
+        else:
+            source = ensure_pinned_source(matches[0], data['revision']).path
     source, out = Path(source).resolve(), Path(out).resolve()
     if source == out or source in out.parents:
         raise ValueError("output must be outside the source tree")

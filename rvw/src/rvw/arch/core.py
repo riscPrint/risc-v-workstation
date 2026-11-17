@@ -58,8 +58,8 @@ def selection(bench=None):
 def settings(project=None):
     p = load_project(project)
     if p is None or not p.get('arch', 'description'):
-        raise ArchError('select a project with [arch] description, sources and benchmarks')
-    for key in ('sources', 'benchmarks'):
+        raise ArchError('select a project with [arch] description and benchmarks')
+    for key in ('benchmarks',):
         if not p.get('arch', key):
             raise ArchError(f'missing arch.{key}')
     data = Path(p.get('arch', 'description')).read_bytes()
@@ -122,6 +122,13 @@ def build_abi(isa):
 def build(project=None, bench=None):
     p, _, desc = settings(project)
     names = selection(bench)
+    source = p.get('arch', 'sources')
+    if not source:
+        from rvw.common.dependencies import resolve
+        try:
+            source = str(Path(resolve('riscv-tests', acquire=True)['path']) / 'benchmarks')
+        except RuntimeError as exc:
+            raise ArchError(str(exc)) from exc
     cc = executable(os.environ.get('RVW_RISCV_CC', 'riscv64-unknown-elf-gcc'))
     compiler = tool_identity(cc)
     out = Path(p.get('arch', 'benchmarks'))
@@ -129,7 +136,7 @@ def build(project=None, bench=None):
     # Make uses the supplied GCC without picolibc or a Linux cross compiler.
     with held('arch-build'):
         invoke(['make', '-C', ROOT / 'Arch/bench', 'bare',
-                f'SRC={p.get("arch", "sources")}', f'BARE_CC={cc}',
+                f'SRC={source}', f'BARE_CC={cc}',
                 f'BUILD={out}', f'MARCH={desc["isa"]}',
                 f'ABI={build_abi(desc["isa"])}', 'BENCHES=' + ' '.join(names)], out / 'build.log')
     files = []
@@ -137,7 +144,7 @@ def build(project=None, bench=None):
         path = out / f'{name}.riscv'
         files.append({'id': name, 'path': str(path), 'sha256': digest(path.read_bytes())})
     result = {'schema': 'rvw.arch-build/1', 'config': desc['config'], 'isa': desc['isa'],
-              'sources': str(p.get('arch', 'sources')),
+              'sources': str(source),
               'backend': 'riscv-gcc', 'compiler': compiler, 'benchmarks': files}
     write_json(out / 'build.json', result)
     return result

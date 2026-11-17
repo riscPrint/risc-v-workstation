@@ -58,3 +58,16 @@ def test_refuse_archive_traversal(tmp_path):
     with pytest.raises(ValueError,match='unsafe'):
         fetch.install(record(archive),tmp_path/'prefix')
     assert not (tmp_path/'prefix').exists()
+
+
+def test_installed_payload_mutation_is_rejected(tmp_path):
+    archive = tmp_path / 'input.tgz'
+    with tarfile.open(archive, 'w:gz') as tar:
+        item = tarfile.TarInfo('bin/fixture')
+        item.size = 2
+        tar.addfile(item, io.BytesIO(b'ok'))
+    row = record(archive)
+    target = fetch.install(row, tmp_path / 'prefix')
+    (target / 'bin/fixture').write_bytes(b'changed')
+    with pytest.raises(ValueError, match='payload identity'):
+        fetch.install(row, tmp_path / 'prefix', check=True)

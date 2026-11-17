@@ -102,8 +102,21 @@ def check_settings(cfg, name):
     return dict(cycles=cycles, engine=f"smtbmc {cfg['solver']}", defines=[]) | cfg.get('check_options', {}).get(name, {})
 
 
+def resolve_config(cfg):
+    """Resolve omitted checker sources only when starting a formal operation."""
+    cfg = dict(cfg)
+    if not cfg.get('root'):
+        from rvw.common.dependencies import resolve
+        try:
+            cfg['root'] = resolve('riscv-formal', acquire=True)['path']
+        except RuntimeError as exc:
+            raise ValueError(str(exc)) from exc
+    return cfg
+
+
 def prepare(cfg, out):
     """Copy inputs into a private riscv-formal tree. Never write into the source tree."""
+    cfg = resolve_config(cfg)
     validate(cfg)
     if out.exists():
         raise ValueError("--out must not exist; use a new directory for each run")
@@ -196,7 +209,7 @@ def invoke(argv, **kwargs):
 
 def run(cfg, out, timeout, core_name):
     from .runtime import load_average, timeout_details
-    cfg = json.loads(json.dumps(cfg, default=str))
+    cfg = json.loads(json.dumps(resolve_config(cfg), default=str))
     core, identity = prepare(cfg, out)
     entries = []
     generation_start = time.monotonic()
@@ -271,6 +284,6 @@ def main(args):
             verdict = run(cfg, Path(args.out).absolute(), args.timeout, project.name)
         print(json.dumps(verdict.to_dict()) if args.json else verdict.verdict)
         return verdict.exit_code
-    except (ValueError, OSError) as exc:
+    except (ValueError, OSError, RuntimeError) as exc:
         print(f'riscv-formal: {exc}', file=sys.stderr)
         return 2

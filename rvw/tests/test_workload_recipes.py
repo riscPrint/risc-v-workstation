@@ -39,3 +39,40 @@ def test_capture_dependency_revision(tmp_path):
     destination = tmp_path / 'captured'
     core.archive_source(source, revision, destination)
     assert (destination / 'encoding.h').read_text() == 'pinned header'
+
+
+def test_omitted_public_source_resolves_pin(tmp_path, monkeypatch):
+    import pytest
+    calls = []
+    def acquire(name, *, acquire, revision):
+        assert acquire is True
+        calls.append((name, revision))
+        raise RuntimeError('acquisition fixture')
+    monkeypatch.setattr('rvw.common.dependencies.resolve', acquire)
+    with pytest.raises(RuntimeError, match='acquisition fixture'):
+        core.build(core.recipe('riscv-tests'), out=tmp_path / 'out')
+    assert calls == [('riscv-tests', core.load(core.recipe('riscv-tests'))['revision'])]
+    assert not (tmp_path / 'out').exists()
+
+
+def test_local_licensed_source_still_required(tmp_path, monkeypatch):
+    import pytest
+    data = core.load(core.recipe('riscv-tests'))
+    del data['revision']
+    data['source_sha256'] = 'a' * 64
+    manifest = tmp_path / 'licensed.json'
+    manifest.write_text(json.dumps(data))
+    monkeypatch.setattr('rvw.regress.source.ensure_pinned_source', lambda *a, **kw: pytest.fail('licensed download'))
+    with pytest.raises(ValueError, match='explicit local source'):
+        core.build(manifest, out=tmp_path / 'out')
+
+
+def test_workload_cli_and_mcp_accept_omitted_source(tmp_path, monkeypatch, capsys):
+    import pytest
+    def fail(*args, **kw):
+        raise RuntimeError('resolver fixture')
+    monkeypatch.setattr(core, 'build', fail)
+    assert main(['workloads', 'build', '--recipe', 'riscv-tests', '--out', str(tmp_path)]) == 2
+    assert json.loads(capsys.readouterr().out)['error'] == 'resolver fixture'
+    with pytest.raises(RuntimeError, match='resolver fixture'):
+        execute_json('build', recipe='riscv-tests', out=str(tmp_path))

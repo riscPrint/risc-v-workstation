@@ -11,6 +11,7 @@ def bounded(monkeypatch):
         out.mkdir()
         (out/'results.json').write_text(json.dumps(dict(tests=[],bounded_depth=20)))
     monkeypatch.setattr(riscv,'run',fake)
+    monkeypatch.setattr(riscv,'resolve_config',lambda cfg:cfg)
     monkeypatch.setattr(isa_activation,'run',lambda *a:None)
 
 

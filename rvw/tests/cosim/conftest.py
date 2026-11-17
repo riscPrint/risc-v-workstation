@@ -62,11 +62,14 @@ def irq_elf(tmp_path_factory, platform):
 
 @pytest.fixture(scope="session")
 def sail():
-    """Sail RISC-V simulator: RVW_SAIL, else the reference checkout next to this repository."""
+    """Sail RISC-V simulator: RVW_SAIL, else PATH or the managed cache."""
     found = os.environ.get("RVW_SAIL") or shutil.which("sail_riscv_sim")
     if not found:
-        local = Path(__file__).resolve().parents[4] / "ref/sail/sail-riscv-Mac-arm64/bin/sail_riscv_sim"
-        found = str(local) if local.exists() else None
+        from rvw.common.dependencies import resolve
+        try:
+            found = resolve('sail')['path']
+        except (ValueError, RuntimeError, OSError):
+            found = None
     if not found:
         pytest.skip("Sail not available (set RVW_SAIL)")
     return found

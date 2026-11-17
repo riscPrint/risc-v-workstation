@@ -17,7 +17,7 @@ from . import backends
 from .inventory import load as tool_inventory, report as inventory_report
 from .conformance import smoke_options, artifacts
 
-NATIVE_FEATURES = ('sim', 'riscv-gcc', 'cosim', 'formal', 'gem5')
+NATIVE_FEATURES = ('sim', 'riscv-gcc', 'cosim', 'formal', 'gem5', 'act4', 'riscv-tests', 'riscv-formal')
 NATIVE_FEATURES = tuple(dict.fromkeys([*NATIVE_FEATURES, *[t['flag'] for t in tool_inventory()['tools'] if t['flag'] != 'ide']]))
 FEATURES = tuple(dict.fromkeys([*NATIVE_FEATURES, *backends.GUI]))
 

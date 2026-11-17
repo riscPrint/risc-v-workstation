@@ -37,6 +37,12 @@ def probe_path(probe):
         path = str(Path(value).absolute()) if probe['kind'] == 'file' and Path(value).is_file() else shutil.which(value) if probe['kind'] == 'executable' else None
         if path:
             return path
+    if probe.get('env') == 'RVW_SAIL' and 'RVW_SAIL' not in os.environ:
+        try:
+            from rvw.common.dependencies import resolve
+            return resolve('sail')['path']
+        except (ValueError, RuntimeError, OSError, ImportError):
+            pass
     return None
 
 

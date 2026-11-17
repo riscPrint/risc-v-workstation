@@ -1,5 +1,9 @@
 # Test sources through RiscvSim
 
+Pinned verification inputs are managed by the workstation. See
+[managed verification inputs](MANAGED_VERIFICATION_INPUTS.md).
+
+
 Use the same C1 adapter for each ELF source. The adapter must load the ELF,
 provide the platform it expects, and detect its pass/fail protocol. A file name
 or a reference trace alone does not make a program self-checking.

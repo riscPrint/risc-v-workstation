@@ -13,7 +13,7 @@ def _run(args):
             value = core.verify(args.build, args.out, args.oracle, args.timeout, args.trace)
         print(json.dumps(value, indent=2))
         return 0 if value.get("status") != "fail" else 2
-    except (ValueError, OSError, KeyError, TypeError) as exc:
+    except (ValueError, OSError, KeyError, TypeError, RuntimeError) as exc:
         print(json.dumps({"status": "error", "error": str(exc)}))
         return 2
 
@@ -30,7 +30,7 @@ def register(subparsers):
             choice.add_argument("--manifest", help="local manifest; default: Embench smoke set")
             choice.add_argument("--recipe", choices=("embench", "riscv-tests", "coremark", "zstd"))
         if action == "build":
-            p.add_argument("--source", required=True)
+            p.add_argument("--source")
             p.add_argument("--out", required=True)
             p.add_argument("--cc", default="riscv64-unknown-elf-gcc")
             p.add_argument("--bench", help="comma-separated workload IDs")

@@ -1,5 +1,9 @@
 # rvw regress
 
+Pinned verification inputs are managed by the workstation. See
+[managed verification inputs](../../../../docs/MANAGED_VERIFICATION_INPUTS.md).
+
+
 Regression management for RISC-V cores: run test suites through a core's adapter, store the
 results, compare two result sets, and gate a change. It replaces the regression side of
 VCS/Xcelium flows (vManager-style result tracking, known-failure triage, accept/reject gates).

@@ -2,6 +2,8 @@
 from collections import Counter
 from hashlib import sha256
 import json
+import os
+import platform as host_platform
 from pathlib import Path
 import shutil
 
@@ -73,11 +75,62 @@ def architecture_config(data):
     return value
 
 
-def build(profile, checkout, out, timeout=900, compiler='riscv64-unknown-elf-gcc',
-          reference='sail_riscv_sim'):
+def prepare_host(checkout, cache):
+    """Use a captured macOS Z3 library in a private UDB cache."""
+    env = os.environ.copy()
+    if host_platform.system() != 'Darwin':
+        return env, None
+    brew = run_group(['brew', '--prefix', 'z3'], timeout=30, capture=True)
+    if brew.returncode or brew.timed_out:
+        raise RuntimeError('ACT4 on macOS needs Homebrew z3')
+    library = Path(brew.stdout.strip()) / 'lib/libz3.dylib'
+    # Read the installed gem's pin without loading its Linux Z3 library.
+    query = "s=Gem::Specification.find_by_name('udb'); puts File.read(File.join(s.full_gem_path,'lib/udb/Z3_VERSION')).strip"
+    env['BUNDLE_GEMFILE'] = str(Path(checkout).resolve() / 'framework/src/act/data/Gemfile')
+    env['MISE_TRUSTED_CONFIG_PATHS'] = str(Path(checkout).resolve())
+    env['BUNDLE_FROZEN'] = 'true'
+    ready = run_group(['mise', 'exec', '--no-deps', '--', 'bundle', 'check'], cwd=checkout,
+                      timeout=60, capture=True, env=env)
+    if ready.returncode or ready.timed_out:
+        installed = run_group(['mise', 'exec', '--no-deps', '--', 'bundle', 'install', '--jobs', '2'],
+                              cwd=checkout, timeout=300, capture=True, env=env)
+        if installed.returncode or installed.timed_out:
+            raise RuntimeError('ACT4 locked Ruby setup failed: ' + (installed.stderr or 'timeout'))
+    gem = run_group(['mise', 'exec', '--no-deps', '--', 'bundle', 'exec', 'ruby', '-e', query], cwd=checkout,
+                    timeout=60, capture=True, env=env)
+    version = (gem.stdout or '').strip()
+    import re
+    if gem.returncode or gem.timed_out or not re.fullmatch(r'z3-[0-9.]+', version):
+        raise RuntimeError('cannot read the installed ACT4 UDB Z3 version: ' + (gem.stderr or version or 'timeout'))
+    cpu = {'arm64': 'arm64', 'aarch64': 'arm64', 'x86_64': 'x64'}.get(host_platform.machine())
+    if not cpu:
+        raise RuntimeError('unsupported macOS ACT4 host CPU')
+    identity = dict(path=str(library.resolve()), sha256=digest(library), udb_z3_version=version)
+    dest = Path(cache) / 'udb/z3' / version / cpu
+    dest.mkdir(parents=True)
+    # Both names are used by the UDB loader and the Ruby z3 gem.
+    shutil.copyfile(library, dest / 'libz3.so')
+    (dest / 'libz3.dylib').symlink_to('libz3.so')
+    env.setdefault('UV_CACHE_DIR', str(Path.home() / '.cache/uv'))
+    env.setdefault('MISE_CACHE_DIR', str(Path.home() / '.cache/mise'))
+    env['XDG_CACHE_HOME'] = str(Path(cache).resolve())
+    return env, identity
+
+
+def build(profile, checkout=None, out=None, timeout=900, compiler='riscv64-unknown-elf-gcc',
+          reference=None):
     data, platform, selected = description(profile)
     plan = selection(profile)
+    from rvw.common.dependencies import resolve
+    if out is None:
+        raise ValueError('ACT4 build requires out')
+    if checkout is None:
+        checkout = resolve('act4', acquire=True, revision=data['revision'])['path']
+    if reference is None:
+        reference = resolve('sail', acquire=True)['path']
     checkout, out = Path(checkout).resolve(), Path(out).resolve()
+    if out == checkout or checkout in out.parents:
+        raise ValueError('ACT4 output must be outside the source checkout')
     rev = run_group(['git', '-C', str(checkout), 'rev-parse', 'HEAD'], timeout=30, capture=True)
     if rev.returncode or rev.stdout.strip() != data['revision']:
         raise ValueError('ACT4 checkout revision differs from the pinned project revision')
@@ -98,14 +151,19 @@ def build(profile, checkout, out, timeout=900, compiler='riscv64-unknown-elf-gcc
               udb_config='udb.yaml', linker_script='link.ld', dut_include_dir='.',
               include_priv_tests=data.get('include_priv_tests', bool(data.get('all_applicable'))))
     (config / 'test_config.yaml').write_text(json.dumps(tc, indent=2))
-    cmd = ['make', '-C', str(checkout), f'CONFIG_FILES={config / "test_config.yaml"}',
+    cmd = ['make', '-C', str(out / 'source'), f'CONFIG_FILES={config / "test_config.yaml"}',
            f'WORKDIR={out / "work"}', 'JOBS=2', 'FAST=True', 'EXCLUDE_EXTENSIONS=']
     if data.get('all_applicable'):
         cmd += ['EXTENSIONS=']
     else:
         cmd += ['EXTENSIONS=' + ','.join(data.get('udb_names', {}).get(x, x.upper() if len(x)==1 else x[0].upper()+x[1:]) for x in selected)]
+    # Build tools can write dependencies and generated files into the source tree.
+    # Exclude Git metadata so no private build can write through to managed Git storage.
+    shutil.copytree(checkout, out / 'source', symlinks=False,
+                    ignore=shutil.ignore_patterns('.git'))
+    env, host = prepare_host(out / 'source', out / 'host-cache')
     with (out / 'build.log').open('w') as log:
-        result = run_group(cmd, timeout=timeout, stdout=log, stderr=log)
+        result = run_group(cmd, timeout=timeout, stdout=log, stderr=log, env=env)
     elfs = out / 'work' / 'rvw-act4' / 'elfs'
     records = [dict(path=p.relative_to(elfs).as_posix(), sha256=digest(p)) for p in sorted(elfs.rglob('*.elf'))]
     tools = {}
@@ -117,7 +175,7 @@ def build(profile, checkout, out, timeout=900, compiler='riscv64-unknown-elf-gcc
     signatures = {p.relative_to(out).as_posix(): digest(p) for p in sorted((out / 'work').rglob('*.sig'))}
     manifest = dict(schema='rvw.act4-build/1', status='built' if result.returncode == 0 and records else 'error',
                     revision=data['revision'], profile_sha256=digest(profile), command=cmd,
-                    reference=reference, compiler=compiler, tools=tools, signatures=signatures, selection=plan,
+                    reference=reference, compiler=compiler, host=host, tools=tools, signatures=signatures, selection=plan,
                     files={n: digest(config / n) for n in ('rvmodel_macros.h', 'sail.json', 'link.ld', 'udb.yaml')},
                     csr_model_sha256=digest(source / data['csr_model']) if 'csr_model' in data else None,
                     tests=records, counts=dict(Counter(Path(r['path']).parent.name for r in records)))

@@ -276,3 +276,8 @@ check stays inconclusive. Setup readiness does not establish runtime success.
 environment expansion as adapter paths. A project can use the launcher's
 lock variable to select one private lock for both regression and C1 launch.
 A literal lock name keeps its current behavior.
+
+Managed verification sources are resolved at execution time, not while parsing
+a project. An omitted formal checker root or benchmark source selects the
+workstation pin. Explicit paths remain authoritative. See
+[managed verification inputs](../MANAGED_VERIFICATION_INPUTS.md).

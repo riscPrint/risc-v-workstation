@@ -72,6 +72,9 @@ def test_build_retains_reference_inputs_and_final_elf(tmp_path, monkeypatch):
     p.write_text(json.dumps(data))
     for n in data['files']:
         (tmp_path/n).write_text('fixture')
+    checkout = tmp_path / 'checkout'
+    checkout.mkdir()
+    (checkout / 'Makefile').write_text('fixture')
     out = tmp_path/'out'
     def command(argv, **kw):
         if '--version' in argv:
@@ -80,12 +83,17 @@ def test_build_retains_reference_inputs_and_final_elf(tmp_path, monkeypatch):
             return Result(0, stdout='a'*40)
         if 'status' in argv:
             return Result(0, stdout='')
+        (Path(argv[2]) / 'Makefile').write_text('build changed private source')
         elf = out/'work/rvw-act4/elfs/I/add.elf'
         elf.parent.mkdir(parents=True)
         elf.write_bytes(b'final self-check fixture')
         return Result(0)
     monkeypatch.setattr(act4, 'run_group', command)
-    report = act4.build(p, tmp_path, out)
+    monkeypatch.setattr('rvw.common.dependencies.resolve', lambda *a, **k: pytest.fail('explicit overrides must not resolve'))
+    monkeypatch.setattr(act4, 'prepare_host', lambda *a: ({}, None))
+    report = act4.build(p, checkout, out, reference='explicit-sail')
+    assert str(out / 'source') in report['command']
+    assert (checkout / 'Makefile').read_text() == 'fixture'
     assert report['status'] == 'built'
     assert report['counts'] == {'I':1}
     assert report['tools']['reference']['version'] == ['test tool 1.0']
@@ -117,3 +125,63 @@ def test_reference_extensions_can_differ_from_trace_isa(tmp_path):
     _, loaded, selected = description(p)
     assert loaded.isa == platform['isa']
     assert 'zicntr' in selected
+
+
+def test_managed_build_resolves_exact_profile_pin(tmp_path, monkeypatch):
+    from rvw.regress import act4
+    p, data = profile(tmp_path)
+    data['revision'] = 'b' * 40
+    p.write_text(json.dumps(data))
+    calls = []
+    def resolve(name, **kwargs):
+        calls.append((name, kwargs))
+        if name == 'sail':
+            raise RuntimeError('missing Sail fixture')
+        return dict(path=str(tmp_path / 'managed'))
+    monkeypatch.setattr('rvw.common.dependencies.resolve', resolve)
+    with pytest.raises(RuntimeError, match='missing Sail'):
+        act4.build(p, out=tmp_path / 'out')
+    assert calls == [('act4', dict(acquire=True, revision='b' * 40)),
+                     ('sail', dict(acquire=True))]
+    assert not (tmp_path / 'out').exists()
+
+
+def test_macos_host_cache_captures_library(tmp_path, monkeypatch):
+    from rvw.regress import act4
+    from rvw.common.proc import Result
+    prefix = tmp_path / 'brew'
+    (prefix / 'lib').mkdir(parents=True)
+    library = prefix / 'lib/libz3.dylib'
+    library.write_bytes(b'host library fixture')
+    monkeypatch.setattr(act4.host_platform, 'system', lambda: 'Darwin')
+    monkeypatch.setattr(act4.host_platform, 'machine', lambda: 'arm64')
+    def native(cmd, **kw):
+        if cmd[0] == 'brew':
+            return Result(0, stdout=str(prefix))
+        assert kw['env']['BUNDLE_GEMFILE'] == str(tmp_path / 'framework/src/act/data/Gemfile')
+        return Result(0, stdout='z3-4.16.0')
+    monkeypatch.setattr(act4, 'run_group', native)
+    monkeypatch.setenv('UV_CACHE_DIR', '/custom/uv')
+    monkeypatch.setenv('XDG_CACHE_HOME', '/original/cache')
+    env, identity = act4.prepare_host(tmp_path, tmp_path / 'private')
+    dest = tmp_path / 'private/udb/z3/z3-4.16.0/arm64/libz3.so'
+    assert dest.read_bytes() == library.read_bytes()
+    assert identity['sha256'] == digest(library)
+    library.write_bytes(b'changed later')
+    assert dest.read_bytes() == b'host library fixture'
+    assert env['UV_CACHE_DIR'] == '/custom/uv'
+    assert env['XDG_CACHE_HOME'] == str(tmp_path / 'private')
+    assert act4.os.environ['XDG_CACHE_HOME'] == '/original/cache'
+
+
+def test_act4_cli_optional_checkout_and_resolver_error(monkeypatch, tmp_path, capsys):
+    from rvw.cli import main
+    from rvw.regress.commands import act4
+    def fail(*args, **kw):
+        raise RuntimeError('resolver fixture')
+    monkeypatch.setattr(act4, 'build', fail)
+    assert main(['regress', 'act4-build', '--profile', str(tmp_path / 'profile'),
+                 '--out', str(tmp_path / 'out')]) == 2
+    assert 'resolver fixture' in capsys.readouterr().err
+    tool = next(t for t in act4.mcp_tools() if t.name == 'regress_act4_build')
+    assert 'checkout' not in tool.input_schema['required']

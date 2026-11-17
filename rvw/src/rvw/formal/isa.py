@@ -66,6 +66,8 @@ def run(cfg, out, timeout, core_name, *, unbounded=False, engines=('abc:pdr',), 
     out.mkdir(parents=True, exist_ok=False)
     rows = []
     if cfg:
+        from .riscv import resolve_config
+        cfg = resolve_config(cfg)
         bounded(cfg, out / 'bounded', timeout, core_name)
         from .isa_activation import run as activation
         activation(cfg, out / 'bounded', timeout)

@@ -1,5 +1,10 @@
 # Roadmap
 
+Pinned ACT4, riscv-tests, riscv-formal
+and Sail now use workstation-managed caches. Selected native setup checks passed. See [the input contract](docs/MANAGED_VERIFICATION_INPUTS.md).
+This changes setup and input recovery. It does not add core qualification.
+
+
 ## Purpose and scope
 
 Build open tools that match or beat commercial EDA tools for out-of-order RISC-V cores.
