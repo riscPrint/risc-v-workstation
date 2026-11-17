@@ -12,7 +12,7 @@ pytestmark = pytest.mark.fast
 from rvw.doctor.c1suite import conformance, looping_copy
 
 FAKE = r'''
-import json, os, sys, random
+import json, os, sys
 from pathlib import Path
 fault = os.environ.get('FAKE_FAULT', '')
 argv = sys.argv[1:]
@@ -28,7 +28,13 @@ def run_one(job):
         record = dict(schema='rvw.run/1', status='error', message='not an ELF')
     else:
         looping = int.from_bytes(data[84:88], 'little') == 0x6f
-        cycles = 100 if fault != 'nondeterministic' else random.randint(100, 200)
+        cycles = 100
+        if fault == 'nondeterministic':
+            # Inject a guaranteed mismatch; random draws can coincide in CI.
+            counter = Path(__file__).with_suffix('.counter')
+            sequence = int(counter.read_text()) + 1 if counter.exists() else 1
+            counter.write_text(str(sequence))
+            cycles += sequence
         limit = int(job.get('max_cycles') or 200000)
         status = 'timeout' if looping or limit < cycles else 'pass'
         if fault == 'pass_on_loop' and looping:
