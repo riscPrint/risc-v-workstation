@@ -60,6 +60,31 @@ checks (busy collisions) skip the comparison. Results are C3 in
 `OUT/results.json`. Exit 0 means all tests passed, 1 a failure, 3 inconclusive
 or no checks.
 
+Python callers can use `suite.run(..., progress=callback)` or
+`api.suite_run(..., progress=callback)` to report target check progress.
+The callback receives `(event, check, entry)`. The `start` call has `entry=None`.
+The `finish` call has a deep copy of the final result entry, after reference
+comparison. Both calls occur for each selected check, including profile skips.
+Reference execution does not emit progress calls. A callback exception stops
+the run and propagates to the caller. The runner closes a driver it opened.
+The caller must close a driver it supplied. An aborted `api.suite_run()` does
+not write new results.
+
+```python
+from rvw.debug import api
+
+
+def progress(event, check, entry):
+    if event == 'start':
+        print('BEGIN', check.id, flush=True)
+    else:
+        print('END', check.id, entry['status'],
+              entry.get('message', entry.get('reason', '')), flush=True)
+
+
+result = api.suite_run('debug-results', profile='rvw-debug.toml', progress=progress)
+```
+
 | Group | Rules |
 |---|---|
 | `dm` (#127) | dmactive reset, version, HARTSELLEN, hart enumeration and nonexistent harts, halt, resume, resumereq with haltreq, unavailable harts, ndmreset and havereset, reset-halt (cause 5 at the reset vector), hartreset, haltsum0, independent multi-hart halt, hart-array mask, halt groups (cause 6), and an independent observer: memory written by a running hart stops changing while halted |
