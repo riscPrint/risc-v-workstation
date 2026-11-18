@@ -262,3 +262,14 @@ Search honors this identity, including when two stores wrote equal values.
 Without `read_from`, search still derives candidate sources from observed
 values. All declared dependency edges must respect per-hart program order.
 These checks run before the SC witness shortcut and the general search.
+
+## Upstream scalar litmus campaign
+
+The project report `rvw.upstream-litmus/1` records the pinned source revision,
+per-file SHA-256 and applicability. Unsupported cases carry a reason.
+Applicable cases record the hart count, C1/C2 summary, timing controls, ELF
+hashes, native herd log hash and the observed final register state.
+`completion_counts` and `outcome_counts` are separate. Each case has one
+observation. A passing C1 result does not establish an ordering match.
+The profile uses zero initial memory and reserves x30/x31 for completion.
+`negative_control` records a planted forbidden outcome, not a core defect.
