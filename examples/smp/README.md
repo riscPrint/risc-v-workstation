@@ -287,8 +287,8 @@ Completion does not imply an allowed memory execution.
 
 For the pinned outcome checker, set `RVW_SMP_LITMUS_OUT=DIR` and
 `RVW_SMP_LITMUS_PREFIX=litmus-`. Use the pinned herd source and executable as
-shown above. The full applicable pinned manifest contains six tests. This is
-not the full upstream litmus repository.
+shown above. The original pinned manifest contains six tests. The larger upstream
+profile below is a separate campaign.
 
 The 2026-11-13 default-timing budget completed 28/28 RTL runs. All 16 generated
 captures are allowed by the axiomatic checker. All six observed litmus outcomes
@@ -468,3 +468,39 @@ trials used one captured RTL hash. Source capture changed only the generator
 Git comment relative to the original RTL. See `rvw/reduction-results.json`.
 This is a stage-local one-minimal result. It is not a global minimum or
 proof of a core defect. Other hart images and the hart inventory stay fixed.
+
+## Upstream scalar litmus catalog
+
+`rvw/upstream_campaign.py` reads the complete non-mixed-size test tree at
+revision `08728edcd99c7e1819d2d4c6789df6d5299ccb69`. It checks every source
+file against the pinned Git archive. It accepts straight-line scalar RV64IMA
+programs with two to eight harts, zero initial memory and final register
+projections. It preserves each accepted instruction. It initializes unspecified
+registers to zero. Registers x30 and x31 are reserved for completion.
+
+The catalog lists each unsupported case and its reason. Branches, nonstandard
+load/store acquire/release suffixes, nonzero initial memory and final memory
+projections are outside this profile. These exclusions are not passing tests.
+The profile does not claim the complete upstream suite or outcome coverage.
+
+From the workstation root, use its Python environment and the pinned external
+source checkouts:
+
+```sh
+rvw/.venv/bin/python examples/smp/rvw/upstream_campaign.py prepare --tests TESTS --out RUN_ROOT
+examples/smp/rvw/run.sh run-many --manifest RUN_ROOT/jobs.jsonl --jobs 1
+rvw/.venv/bin/python examples/smp/rvw/upstream_campaign.py summarize --tests TESTS --out RUN_ROOT --herd HERD7 --herd-source HERD_SOURCE
+```
+
+The summary checks completion, retirement counts, ELF hashes and retired
+instruction bytes. It compares each final register state with the native
+pinned herd7 result. It keeps per-case trace, ELF and herd-output hashes.
+A missing native result gives an inconclusive outcome.
+
+The 2026-11-18 run passed all 314 applicable RTL programs at seed 17.
+Native herd7 7.58 accepted all 314 observed outcomes. The programs retired
+33,504 instructions across 179 two-hart cases, 129 three-hart cases and six
+four-hart cases. Each case has one observation with default timing.
+The other 7,593 source cases are listed as unsupported. A planted forbidden
+register outcome is rejected as a checker control. This is not a core defect.
+See `rvw/upstream-results.json` for counts, hashes and exclusions.
