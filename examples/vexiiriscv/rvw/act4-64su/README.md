@@ -25,5 +25,5 @@ Use `rvw regress act4-build --profile rvw/act4-64su/profile.json --checkout
 in Sail do not establish DUT device support.
 
 Run-output JSON files with `summary_only` contain historical counts only.
-They are not inputs to `rvw plan`, `rvw evidence`, or coverage merging.
+They are not inputs to [removed CLI: `plan`], [removed CLI: `evidence`], or coverage merging.
 Regenerate full records outside the repository before using those tools.

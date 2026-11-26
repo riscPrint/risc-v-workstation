@@ -5,7 +5,7 @@ from types import SimpleNamespace
 import pytest
 from rvw.cosim.checker import check
 from rvw.cosim.platform import Platform
-from rvw.regress.random_stream import complete
+from rvw.cosim.extensions import complete_comparison as complete
 
 pytestmark = pytest.mark.fast
 

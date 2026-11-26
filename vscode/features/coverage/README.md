@@ -7,9 +7,7 @@ Owner decision #77 remains open.
 
 1. Write a JSON report with rvw. For example:
 
-   ```sh
-   rvw cov report coverage.json --json > report.json
-   ```
+   Supply a saved `coverage-report` JSON file (`cov` CLI was removed in the Nov 2026 trim).
 
 2. Run **Coverage: Open Report** from the Command Palette.
 3. Expand **Report** in **RVW Coverage** to read all fields.
@@ -91,4 +89,4 @@ field is not treated as a signal.
 
 ## Scala lines and verification plan
 
-Decorate Scala Lines reads a merged `rvw.coverage/1` file. Each mapped line shows a gutter marker with hit/total point counts and coverage types, including toggle points. Excluded points do not count. Paths resolve beside the saved file. Source identity is not checked. Clear Line Decorations removes markers. Open Functional Coverage Holes reads saved functional groups. Open Verification Plan Status reads saved `rvw plan status --json` output. The holes tree retains reported status and missing evidence. No coverage run starts.
+Decorate Scala Lines reads a merged `rvw.coverage/1` file. Each mapped line shows a gutter marker with hit/total point counts and coverage types, including toggle points. Excluded points do not count. Paths resolve beside the saved file. Source identity is not checked. Clear Line Decorations removes markers. Open Functional Coverage Holes reads saved functional groups. Open Verification Plan Status reads saved plan-status JSON output. The holes tree retains reported status and missing evidence. No coverage run starts.

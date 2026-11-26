@@ -124,7 +124,7 @@ def test_messages_bypass_dependency_install():
 
 def test_all_local_nightly_components_run():
     text = (REPO / 'scripts/ci-local.sh').read_text()
-    assert 'for component in python scala rust javascript components vip' in text
+    assert 'for component in python scala rust javascript components' in text
     assert 'scripts/ci-copy-reports.py' in text
     assert 'nice -n 10' in text
 
@@ -146,7 +146,7 @@ def test_all_tiers_have_execution_cases():
     assert 'python scripts/ci-tiers.py --tier "$mode"' in text
 
 
-@pytest.mark.parametrize('tier,count', [('native-light', 1), ('examples', 1), ('nightly', 6)])
+@pytest.mark.parametrize('tier,count', [('native-light', 1), ('examples', 1), ('nightly', 5)])
 def test_local_tier_dispatch_without_running_tools(tier, count):
     import os
     import subprocess

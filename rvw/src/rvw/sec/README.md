@@ -4,7 +4,7 @@
 Timing, caches, speculation, predictors and TLB state are in scope.
 Power and electromagnetic leakage are out of scope.
 A clean result is `no_leak_observed`. It never means `secure`.
-Formal security proofs belong to `rvw formal security`.
+Use `rvw sec` (`campaign`, `ift`, `model-check`) for supported hardware security workflows.
 
 ## Techniques at a glance
 

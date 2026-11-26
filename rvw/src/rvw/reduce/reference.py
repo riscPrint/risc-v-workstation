@@ -1,6 +1,6 @@
 """Strict Spike mismatch predicate for C1-passing reduction trials."""
 from rvw.cosim.cli import execute_json as cosim
-from rvw.regress.random_stream import complete
+from rvw.cosim.extensions import complete_comparison as complete
 
 
 def check(run, elf, platform):

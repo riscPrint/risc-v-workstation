@@ -1,6 +1,6 @@
 # CSR generation
 
-Run `rvw formal csr --model project-csr.json --out generated`.
+Use `rvw csr show` / `rvw checks generate` for CSR monitor data (`formal csr` CLI was trimmed).
 The input uses `rvw.csr/1`. `scratch.json` is a starting example for standard
 M/S scratch registers. Reset values are project choices, not spec defaults.
 Copy the file into the core project. Add its implemented and absent CSRs.
@@ -40,7 +40,7 @@ The program checks M-mode reads and absent-CSR traps. Set `assembly_safe` only
 for deterministic CSRs that can be written without changing execution state.
 Those legacy programs also check reset and zero/all-one/reset writes. They do
 not generate privilege transitions, aliases, counter timing, or full compliance.
-`coverage.json` uses the existing `rvw cov functional` group format.
+`coverage.json` follows the legacy functional group schema.
 Generation is not execution or coverage evidence.
 
 ## Decisions
@@ -93,7 +93,7 @@ selection alone is neither a DUT binding nor a compliance result.
 
 ## Shared banks and privilege sequences
 
-`rvw formal csr --model bank-example.json --out OUT` also accepts
+The CSR bank library (`rvw.formal.csr_bank`) also accepts
 `rvw.csr-bank/1`. This format declares canonical `banks` with name, width and
 reset, plus addressable `views` with bank, shift, mask and explicit write_mask.
 A view can select a catalog name for address and minimum privilege. Otherwise,

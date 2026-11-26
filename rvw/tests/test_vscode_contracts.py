@@ -34,6 +34,4 @@ def test_current_producers_match_extension_field_list(tmp_path):
             assert value['schema'] == contract['schema']
             for field, kind in contract['fields'].items():
                 assert isinstance(value[field], types[kind]), (name, field)
-    assert samples['coverage_report']['summary']['hit'] == 1
-    assert samples['functional']['retired'] == 1
-    assert samples['plan']['summary']['open'] == 1
+    assert samples['lint']['status'] in ('clean', 'findings')

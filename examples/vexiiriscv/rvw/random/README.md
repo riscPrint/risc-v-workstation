@@ -7,9 +7,7 @@ project's `core.source_repo`. Set `core.lock` and `RVW_VEX_LOCK` to `vex-dv`.
 Set `VEXIIRISCV` to that checkout. Use `nice -n 10`.
 
 ```sh
-rvw --project examples/vexiiriscv/rvw.toml regress random \
-  --settings examples/vexiiriscv/rvw/random/random.toml \
-  --seed-base 49 --seeds 1 --out NEW_DIRECTORY --json
+# [removed in Nov 2026 scope trim] rvw --project examples/vexiiriscv/rvw.toml regress random --settings examples/vexiiriscv/rvw/random/random.toml --seed-base 49 --seeds 1 --out NEW_DIRECTORY --json
 ```
 
 ## Measured results

@@ -721,12 +721,7 @@ A project wrapper must map reset, interrupts and memory waits. AXI4-Lite
 wrappers retain the existing ingress. Run software on the composed core before
 claiming CPU integration.
 
-Use `rvw uvm new --adapter adapter.json` for a custom typed bus. Its
-`rvw.uvm-adapter/1` file names a database bus, an agent profile, explicit pin
-bindings and a project scenario. The generated bench requires positive checks.
-`rvw vip list`, `vip buses` and `vip bench` expose the agent inventory and
-bench skeletons. Their MCP names are `vip_list`, `vip_buses` and `vip_bench`.
-Generation is not native qualification.
+UVM/VIP bench scaffolding was removed in the Nov 2026 workstation scope trim; use `rvw checks`, `rvw soc`, and Verilator C1/C2 adapters directly.
 
 The init probe stub shows fetch/decode flushes and measured fetch/data stalls.
 Bind actual pipeline slot IDs. After a `--probes` run, use `rvw probes check`

@@ -11,7 +11,7 @@ from rvw.common.proc import run_group
 from rvw.query.db import QueryError
 from .model import load, dumps
 
-KINDS = ('protocol', 'registers', 'vip', 'uvm', 'connectivity', 'decode', 'cdc_rdc')
+KINDS = ('protocol', 'registers', 'connectivity', 'decode', 'cdc_rdc')
 
 
 def generate(source, out, settings):
@@ -31,20 +31,6 @@ def generate(source, out, settings):
                 report = buses(entry['database'], out/kind, clocks=entry.get('clocks'))
                 row['generated'] = report['status'] == 'generated'
                 row['complete'] = report['complete']
-                row['details'] = report
-            elif kind == 'vip' and entry.get('database'):
-                from rvw.vip.catalog import buses, skeleton
-                report = []
-                for index, bus in enumerate(buses(entry['database'])['buses']):
-                    report.append(skeleton(entry['database'], out/kind/f'bus_{index}.py', bus['path'],
-                                           entry.get('clock', 'clk'), entry.get('reset', 'reset_n')))
-                row['generated'] = bool(report)
-                row['details'] = report
-                row['reason'] = 'Bench skeletons need project stimulus and expectations.'
-            elif kind == 'uvm' and entry.get('database'):
-                from rvw.uvm.scaffold import generate as uvm
-                report = uvm(entry['database'], source, out/kind, language='pyuvm')
-                row['generated'] = True
                 row['details'] = report
             elif kind == 'cdc_rdc' and entry.get('database'):
                 from rvw.query.db import DesignDB
@@ -66,29 +52,23 @@ def generate(source, out, settings):
                 metadata = json.loads((out/'protocol/composition.json').read_text())
                 row.update(generated=True, complete=False, details=dict(files=report['files'],bindings=metadata['protocol_bindings']),
                            reason='Native binds emitted; run a fresh build with assertions enabled.')
-            elif kind in ('protocol', 'vip'):
+            elif kind == 'protocol':
                 from rvw.formal.simple_bus_checks import render
                 directory = out/kind
                 directory.mkdir()
-                if kind == 'protocol':
-                    (directory/'monitors.sv').write_text(render('apb', 65, 1))
-                    bindings = []
-                    for region in model['regions']:
-                        name = region['name']
-                        pin = lambda field: name+'.io_bus_'+field
-                        bindings.append('bind ComposedSoc rvw_apb '+name+'_check ('+
-                            '.clk(clk), .reset(reset), .select('+pin('PSEL')+'), '+
-                            '.enable('+pin('PENABLE')+'), .ready('+pin('PREADY')+'), '+
-                            ".error("+pin('PSLVERROR')+"), .request({32'("+pin('PADDR')+"), "+
-                            pin('PWRITE')+', ('+pin('PWRITE')+' ? '+pin('PWDATA')+" : 32'b0)}));")
-                    (directory/'binds.sv').write_text('\n'.join(bindings)+'\n')
-                    row.update(generated=True, complete=False,
-                               reason='Peripheral binds emitted; core ingress needs its typed database binding.')
-                else:
-                    (directory/'agents.json').write_text(dumps(dict(
-                        agents=[dict(region=r['name'], protocol='apb', prefix=r['name']+'.io_bus_') for r in model['regions']],
-                        status='bindings_only', stimulus='project_owned')))
-                    row.update(generated=True, complete=False, reason='Agent bindings emitted; project bench stimulus is required.')
+                (directory/'monitors.sv').write_text(render('apb', 65, 1))
+                bindings = []
+                for region in model['regions']:
+                    name = region['name']
+                    pin = lambda field: name+'.io_bus_'+field
+                    bindings.append('bind ComposedSoc rvw_apb '+name+'_check ('+
+                        '.clk(clk), .reset(reset), .select('+pin('PSEL')+'), '+
+                        '.enable('+pin('PENABLE')+'), .ready('+pin('PREADY')+'), '+
+                        ".error("+pin('PSLVERROR')+"), .request({32'("+pin('PADDR')+"), "+
+                        pin('PWRITE')+', ('+pin('PWRITE')+' ? '+pin('PWDATA')+" : 32'b0)}));")
+                (directory/'binds.sv').write_text('\n'.join(bindings)+'\n')
+                row.update(generated=True, complete=False,
+                           reason='Peripheral binds emitted; core ingress needs its typed database binding.')
             elif kind == 'registers':
                 # Use the map's real side-effect semantics, not the architectural CSR interface.
                 registers = [dict(region=r['name'], address=r['base']+reg['offset'], **reg)
@@ -235,12 +215,6 @@ def verify(source, out, manifest=None, timeout=120):
                                          depth=entry.get('depth', 10))
                 row.update(generated=True, ran=report['ran'], result=report['status'], details=report)
                 row.pop('reason', None)
-            if row['kind'] in ('uvm', 'vip') and entry.get('composition') and entry.get('classpath_file'):
-                from .uvm_run import run as run_uvm
-                report = run_uvm(entry['composition'],out/(row['kind']+'-run'),Path(entry['classpath_file']).read_text().strip(),
-                                 build_args=entry.get('build_args',[]),idle_inputs=entry.get('idle_inputs'),timeout=timeout,expected_map=source,profile=row["kind"],lock=entry.get("lock", "sbt-soc"))
-                row.update(generated=report['generated'],ran=report['ran'],result=report['status'],details=report,complete=report['status']=='pass')
-                row.pop('reason',None)
             if row['kind'] == 'protocol' and entry.get('classpath_file') and not entry.get('command'):
                 from .protocol_proof import prove
                 report = prove(source, out/'protocol-proof', Path(entry['classpath_file']).read_text().strip(), min(timeout,30))
@@ -252,26 +226,6 @@ def verify(source, out, manifest=None, timeout=120):
                 report = prove(source, out/'decode-proof', Path(entry['classpath_file']).read_text().strip(), min(timeout,60))
                 row.update(generated=report['generated'], ran=report.get('ran',False), result=report['status'], details=report)
                 row.pop('reason',None)
-            if entry.get('capture') and row['kind'] in ('protocol', 'registers', 'vip'):
-                from .apb_capture import check
-                try:
-                    capture = entry['capture'].replace('{out}', str(out))
-                    report = check(source, root/capture)
-                    row.update(ran=True, details=report)
-                    # Finite sampled matches are not a whole-SoC verification pass.
-                    row['result'] = 'inconclusive'
-                    row['reason'] = report['scope']
-                    if row['kind'] == 'registers' and entry.get('write_read'):
-                        missing = [name for name in entry['write_read']
-                                   if not report['register_coverage'].get(name, {}).get('reads_after_write', 0)]
-                        if report['status']=='samples_match' and not missing and report['registers']['checks']>0:
-                            row.update(result='pass',complete=True,scope='Directed write/read checks for the declared registers.')
-                            row.pop('reason',None)
-                        else:
-                            row['reason'] = 'Missing checked write/read observations: '+', '.join(missing)
-
-                except AssertionError as exc:
-                    row.update(ran=True, result='fail', reason=str(exc))
             if row['result'] != 'fail':
                 execute(row, settings.get(row['kind'], {}), root, out, timeout)
         except (OSError, ValueError, KeyError, TypeError, QueryError) as exc:

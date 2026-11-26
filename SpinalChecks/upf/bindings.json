@@ -1,6 +1,0 @@
-{
-  "schema": "rvw.upf-bindings/1", "top": "Top", "event_model": "always_on_sampled",
-  "domains": {
-    "PD": {"width": 8, "clk": "clk", "reset": "reset", "power_good": "power_good", "output_valid": "output_valid", "consumer_use": "consumer_use", "value": "value"}
-  }
-}

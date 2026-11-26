@@ -14,15 +14,12 @@ def test_timeout_overrides_process_code(tmp_path, monkeypatch):
     assert seen['env'] is env and seen['timeout'] == 2 and seen['grace'] == 10
 
 
-def test_both_callers_use_shared_execution(tmp_path, monkeypatch):
+def test_common_execution_propagates_env(tmp_path, monkeypatch):
     from rvw.formal import common
-    from rvw.cov import proof
     seen = []
     def execute(argv, cwd, log, timeout=None, **kwargs):
         seen.append(kwargs['env'])
         return 124, 0.1
     monkeypatch.setattr(common, 'execute', execute)
-    monkeypatch.setattr(proof, 'execute', execute)
     assert common.run(['true'], tmp_path, tmp_path / 'a')[0] == 124
-    assert proof.run_job(['true'], tmp_path, tmp_path / 'b', 1) == 124
-    assert len(seen) == 2 and seen[1] is not None
+    assert len(seen) == 1 and seen[0] is not None

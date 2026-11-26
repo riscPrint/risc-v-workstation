@@ -15,7 +15,7 @@ MAP = ROOT/'SpinalSoc/examples/vex/soc.json'
 def test_missing_consumers_are_not_passes(tmp_path):
     result = verify(MAP, tmp_path/'out')
     assert result['status'] == 'inconclusive'
-    assert len(result['checks']) == 7
+    assert len(result['checks']) == 5
     assert all(not r['ran'] for r in result['checks'])
     assert 'decode | yes | no | inconclusive' in table(result)
 
@@ -86,39 +86,11 @@ def test_unknown_reset_never_learns_from_dut(tmp_path):
         monitor.observe(0x10000000, False, 0, 77)
 
 
-def test_apb_capture_checks_actual_response(tmp_path):
-    from rvw.soc.apb_capture import check
-    source = effects_map(tmp_path)
-    capture = tmp_path/'apb.jsonl'
-    header = dict(schema='rvw.soc-apb-samples/1',observation='rtl_peripheral_ports')
-    setup = dict(bus='uart',cycle=1,psel=1,penable=0,paddr=0,pwrite=0,pwdata=0,
-                 pready=1,prdata=255,pslverr=0)
-    access = dict(setup,cycle=2,penable=1)
-    def write(response):
-        capture.write_text('\n'.join(json.dumps(r) for r in [header,setup,dict(access,prdata=response),{'end':True}])+'\n')
-    write(255)
-    assert check(source,capture)['registers']['checks'] == 1
-    write(17)
-    with pytest.raises(AssertionError, match='SOC_REGISTER_DATA'):
-        check(source,capture)
-
-
 def test_byte_mask_does_not_clear_unselected_bits(tmp_path):
     monitor = RegisterEffects(effects_map(tmp_path))
     monitor.observe(0x10000000, True, 255, strobe=0)
     monitor.observe(0x10000000, False, 0, 255)
     assert monitor.finish()['checks'] == 1
-
-
-def test_register_environment_keeps_unknown_reads_unchecked(tmp_path):
-    from rvw.uvm.soc import SocRegisterEnvironment
-    from rvw.vip.apb import Pins
-    env = SocRegisterEnvironment(effects_map(tmp_path))
-    env.buses['uart'].sample(Pins(psel=1,penable=0,paddr=0))
-    env.buses['uart'].sample(Pins(psel=1,penable=1,paddr=0,prdata=255))
-    report = env.finish()
-    assert report['checks'] == 1
-    assert report['transfers']['uart'] == 1
 
 
 @pytest.mark.parametrize('assertions,kind,rc,status,expected', [

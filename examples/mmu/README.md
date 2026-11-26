@@ -94,7 +94,7 @@ hypervisor data masking. Debug interactions remain open.
 `random.json` creates eight deterministic programs with eight mappings and 32
 random accesses each. Select modes and seeds in the project. Bounds are 64
 pages and 128 accesses. Programs check each result and the final data state.
-All MMU builds also write `functional-groups.json` for `rvw cov functional`.
+All MMU builds also write `functional-groups.json` metadata.
 C2/2 multi-hart coverage keeps separate histories per hart and epoch. Groups
 need actual walk, protocol, pointer, hypervisor or IOMMU capture fields. Missing
 fields produce holes. Coverage observations do not establish correctness.

@@ -1,5 +1,0 @@
-# Bundle inputs for the pinned benchmark core. No RTL edits or source search hints.
-[core]
-name = "ooo-mini"
-source_env = "OOO_MINI_SOURCE"
-period = 10

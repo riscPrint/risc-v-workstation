@@ -234,7 +234,7 @@ assertions are separate, since this proof target has no legal-master
 assumptions. Normal compositions keep all protocol assertions enabled.
 
 After a private build, set `decode.classpath_file` in `rvw soc verify` to run
-this target through `rvw formal prove`. The Vex SoC map proved all seven
+this target through the bounded SBY decode runner (`decode_proof`). The Vex SoC map proved all seven
 assertions on 2026-11-13. An incorrect UART decode address failed the proof.
 This is a fabric-instance proof, not complete SoC correctness.
 

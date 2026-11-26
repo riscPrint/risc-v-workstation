@@ -146,7 +146,7 @@ Requirements are author declarations. They are not inferred from RTL.
 
 ## Accellera UVM components
 
-`rvw regress uvm --out NEW_DIRECTORY --seeds 3 --json` runs the pinned
+The legacy Accellera UVM runner (`regress uvm`, removed) ran the pinned
 Accellera UVM library with native Verilator timing and coverage.
 See [the UVM suite](../../../../Uvm/README.md) for the pin, licence checks,
 machine lock command, conformance boundary and remaining DPI/VIP gaps.
@@ -305,8 +305,7 @@ Hashes cover listed source files, not transitive includes, memory images,
 libraries or all environment inputs. Replay is not hermetic under C8.
 
 
-`rvw regress uvm-ral` generates UVM register models from `rvw.soc/1`.
-`rvw regress uvm-cpu` checks completed C1 captures through a UVM analysis
+Legacy UVM helpers (`regress uvm-ral` / `regress uvm-cpu`, removed) previously bridged UVM models to `rvw.soc/1` and C1 captures; keep pure Python monitors or cocotb adapters instead.
 subscriber and the native Spike DPI bridge. See [the UVM guide](../../../../../Uvm/README.md)
 for the strict profile and the offline replay boundary.
 

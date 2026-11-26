@@ -113,7 +113,7 @@ case "$mode" in
   native-light|examples|nightly)
     if [ "$mode" = nightly ] && [ -z "${CI_COMPONENT:-}" ]; then
       status=0
-      for component in python scala rust javascript components vip; do
+      for component in python scala rust javascript components; do
         python scripts/ci-tiers.py --tier nightly --component "$component" || status=1
       done
       exit "$status"

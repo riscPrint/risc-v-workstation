@@ -8,10 +8,7 @@ from rvw.agent.guide import load
 from rvw.lint.cli import report as lint_report
 from rvw.lint.sarif import convert as sarif
 from rvw.csim.study import run as csim_run
-from rvw.cov import code
-from rvw.cov.functional import functional
 from rvw.mcp.envelope import envelope
-from rvw.plan import VPlan
 from rvw.results.schema import Verdict, RunResult, SuiteResults, TestEntry
 
 
@@ -23,17 +20,6 @@ def produce(root):
         {'order': 0, 'insn': '0x00100093', 'mode': 3, 'rd': 1,
          'rs1_rdata': '0x0', 'rs2_rdata': '0x0'},
     ]) + '\n')
-    coverage = functional([trace])
-    (root / 'functional.json').write_text(json.dumps(coverage))
-    (root / 'Unit.v').write_text('// Unit.scala:3\nassign x=y;\n')
-    raw = root / 'coverage.dat'
-    raw.write_text("# SystemC::Coverage-3\nC '\x01f\x02Unit.v\x01l\x021\x01page\x02v_line/Unit\x01h\x02TOP.unit' 1\n")
-    merged = code.merge([f'sample={raw}'], root)
-    plan = root / 'plan.json'
-    plan.write_text(json.dumps({'schema': 'rvw.vplan/1',
-        'requirements': {'ADD': 'Observe add.'},
-        'features': [{'id': 'add', 'requirements': ['ADD'],
-                      'coverage': [{'path': 'functional.json', 'groups': ['class_mode']}]}]}))
     repo = Path(__file__).resolve().parents[2]
     database = root / 'captured.db'
     connection = sqlite3.connect(database)
@@ -51,8 +37,7 @@ def produce(root):
         tests=[TestEntry(id='pass', status='pass'), TestEntry(id='planted', status='fail')])
     return {'run': RunResult(status='fail', core='external', config='small',
                             fail_code=3, artifacts={'rvfi_trace': 'trace.jsonl'}).to_dict(),
-            'suite': suite.to_dict(), 'suite_counts': suite.counts(), 'csim_study': csim_run({'branch': {'model': 'bimodal'}}, []), 'lint': lint, 'sarif': sarif(lint), 'guide': load(), 'functional': coverage, 'coverage': merged,
-            'coverage_report': code.report(merged), 'plan': VPlan(plan).status(),
+            'suite': suite.to_dict(), 'suite_counts': suite.counts(), 'csim_study': csim_run({'branch': {'model': 'bimodal'}}, []), 'lint': lint, 'sarif': sarif(lint), 'guide': load(),
             'gates': [envelope(Verdict(verdict=v, tests=t).to_dict()) for v, t in
                       [('accept', 'pass'), ('reject', 'fail'), ('inconclusive', 'incomplete')]]}
 

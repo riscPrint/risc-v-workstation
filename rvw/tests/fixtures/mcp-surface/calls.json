@@ -14,9 +14,6 @@
   "memory_generate": {
     "arguments": {}
   },
-  "vip_list": {
-    "arguments": {}
-  },
   "workloads_list": {
     "arguments": {}
   },
@@ -183,11 +180,6 @@
       "db": "{db}"
     }
   },
-  "vip_buses": {
-    "arguments": {
-      "db": "{db}"
-    }
-  },
   "wave_info": {
     "arguments": {
       "wave": "{fixture}/input.vcd"
@@ -262,31 +254,6 @@
       "source": "{fixture}/input.vcd"
     }
   },
-  "formal_template": {
-    "arguments": {
-      "kind": "rob",
-      "out": "{out}/template"
-    }
-  },
-  "formal_csr": {
-    "arguments": {
-      "model": "{checkout}/examples/vexriscv/csr.json",
-      "out": "{out}/csr"
-    }
-  },
-  "formal_scenario_plan": {
-    "arguments": {
-      "source": "{checkout}/examples/vexriscv/scenarios/scenario.json",
-      "backend": "baremetal",
-      "out": "{out}/scenario.json"
-    }
-  },
-  "formal_sva_lower": {
-    "arguments": {
-      "source": "{fixture}/counter.sv",
-      "out": "{out}/sva"
-    }
-  },
   "soc_compose": {
     "arguments": {
       "source": "{checkout}/Uvm/examples/composed/compose.json",
@@ -303,11 +270,6 @@
     "arguments": {
       "name": "smoke",
       "out": "{out}/soc_new"
-    }
-  },
-  "uvm_list": {
-    "arguments": {
-      "manifest": "{checkout}/Uvm/examples/ral/bench.json"
     }
   },
   "sec_gadgets": {

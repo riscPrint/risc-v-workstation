@@ -47,14 +47,6 @@ def register(sub, *, regression=False):
     p.add_argument('--json', action='store_true')
     p.set_defaults(func=capabilities)
 
-    from rvw.sim.uvm import register as register_uvm
-    if regression:
-        register_uvm(sub)
-    from rvw.sim.ral import register as register_ral
-    register_ral(sub)
-    from rvw.sim.uvm_cpu import register as register_cpu
-    register_cpu(sub)
-
     from rvw.sim.hdl import PROFILES
     h = sub.add_parser('hdl', help='run a native HDL semantic component test')
     h.add_argument('manifest', type=Path)

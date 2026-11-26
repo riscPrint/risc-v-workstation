@@ -454,19 +454,6 @@ def test_build_db_tool_is_generic(monkeypatch):
         mcp_tools._build_db("x.db", entry="boom")
 
 
-def test_cov_heavy_lock_is_configurable(monkeypatch):
-    from rvw.cov import mcp_tools
-    monkeypatch.delenv("RVW_HEAVY_LOCK", raising=False)
-    assert mcp_tools.heavy_lock() == mcp_tools.DEFAULT_HEAVY_LOCK
-    monkeypatch.setenv("RVW_HEAVY_LOCK", "fpga")
-    assert mcp_tools.heavy_lock() == "fpga"
-    monkeypatch.setenv("RVW_HEAVY_LOCK", "")
-    assert mcp_tools.heavy_lock() is None
-    assert mcp_tools.heavy_lock("mine") == "mine"
-    specs = {t.name: t for t in mcp_tools.mcp_tools()}
-    assert "lock" in specs["cov_prove"].input_schema["properties"]
-
-
 # ------------------------------------------------------------------------------- typed diff, masks
 @pytest.fixture()
 def probe(probe_db):

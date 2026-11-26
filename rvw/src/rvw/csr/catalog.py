@@ -11,8 +11,8 @@ from functools import lru_cache
 
 @lru_cache(maxsize=1)
 def _catalog():
-    obj=json.loads((Path(__file__).parents[1] / 'formal' / 'csr_catalog.json').read_text())
-    supplement=json.loads((Path(__file__).parents[1] / 'formal' / 'csr_aia_catalog.json').read_text())
+    obj=json.loads((Path(__file__).with_name('csr_catalog.json')).read_text())
+    supplement=json.loads((Path(__file__).with_name('csr_aia_catalog.json')).read_text())
     if set(obj['registers']) & set(supplement['registers']):
         raise ValueError('duplicate base and supplemental CSR definitions')
     obj['registers'].update(supplement['registers'])

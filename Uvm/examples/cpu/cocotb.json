@@ -1,5 +1,0 @@
-{
- "schema":"rvw.cocotb/1", "name":"cpu_addi_fixture", "backend":"icarus",
- "top":"python_top", "sources":["fixture.sv","python_top.sv"],
- "test_module":"cocotb_test", "python_paths":["."], "requires":[]
-}

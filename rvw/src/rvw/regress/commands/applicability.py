@@ -1,8 +1,16 @@
 """Select generated suite families from explicit project capabilities."""
 import json
+import re
 from pathlib import Path
 
 from rvw.mcp.spec import ToolSpec, schema
+
+
+def _isa_extensions(isa):
+    match = re.fullmatch(r'rv(32|64)([iemafdqclbjtpvh]+)((?:_[a-z][a-z0-9]*)*)', isa)
+    if not match:
+        raise ValueError(f'expected an unversioned, expanded ISA string: {isa}')
+    return int(match[1]), set(match[2]) | set(filter(None, match[3].split('_')))
 
 
 def plan(features, catalog=None):
@@ -15,8 +23,7 @@ def plan(features, catalog=None):
         raise ValueError('capabilities must be an explicit list of strings')
     supported = set(supported)
     if 'isa' in declared:
-        from rvw.cov.isa import extensions
-        xlen, names = extensions(declared['isa'])
+        xlen, names = _isa_extensions(declared['isa'])
         supported.add(f'xlen:{xlen}')
         supported.update('ext:' + name for name in names)
     modes = declared.get('privilege_modes', '')

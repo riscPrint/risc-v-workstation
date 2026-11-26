@@ -5,8 +5,8 @@
     "exit_codes": "0 earned result; 1 failure or mismatch; 2 usage or setup error; 3 inconclusive. Never treat 3 as a pass.",
     "stop": "A step ends a workflow with `stop` when its decision says so. Record the command, exit code and log before you stop.",
     "locks": "Heavy runs hold the project lock (core.lock). Do not start a second heavy run of the same core.",
-    "integration_guide": "Follow docs/INTEGRATION_GUIDE.md for install, project binding and evidence limits. A scaffold or tool list does not qualify a core. For mapped security, use rvw/sec/flow.S with the generated flow policy and a 110-second budget. Progress reports name preparation cost. For composed SoCs, use GENERATED/verify.json and supply runtime-classpath.txt, soc.db and apb.jsonl. Fabric proof rows do not close whole-SoC verification.",
-    "verdicts": "Evidence producers own verification verdicts in their stated scope. The evidence index preserves reports. Plan summaries retain the weakest input verdict. Farm completion and guide steps do not grant verification or C4 acceptance."
+    "integration_guide": "Follow docs/INTEGRATION_GUIDE.md for install, project binding and evidence limits. A scaffold or tool list does not qualify a core. For composed SoCs, use GENERATED/verify.json and supply runtime-classpath.txt and soc.db. Fabric proof rows do not close whole-SoC verification.",
+    "verdicts": "Verification tools own verdicts in their stated scope. Run manifests record the inputs and reproduction identities; do not treat exit 3 (inconclusive) as a pass."
   },
   "workflows": [
     {
@@ -328,10 +328,9 @@
         "agent_bringup_check",
         "agent_guide",
         "cosim_check",
-        "doctor_smoke",
+        "csr_describe",
         "doctor_resolve",
-        "evidence_index",
-        "evidence_query",
+        "doctor_smoke",
         "init_scaffold",
         "job_cancel",
         "job_events",
@@ -339,11 +338,21 @@
         "job_log",
         "job_result",
         "job_status",
-        "plan_status",
         "query_build_db",
+        "regress_act4_build",
+        "regress_act4_plan",
         "regress_gate",
+        "regress_instruction_feed",
         "regress_list",
+        "regress_mmu_iommu",
+        "regress_mmu_iommu_generate",
+        "regress_plan",
+        "regress_privilege_build",
+        "regress_privilege_check",
+        "regress_privilege_reference",
+        "regress_riscv_tests_build",
         "regress_run",
+        "regress_sail_tests",
         "rvw_doctor",
         "rvw_tools_describe",
         "rvw_tools_load",
@@ -412,35 +421,12 @@
           "decide": [
             {
               "if": "mismatch at a retirement",
-              "then": "known-bug"
+              "then": "drivers"
             },
             {
               "if": "match but the run failed",
               "then": "wave",
               "note": "The failure is not architectural: look at the end condition, hang or assertion."
-            }
-          ]
-        },
-        {
-          "id": "known-bug",
-          "do": "Compare the failure signature with stored bug patterns.",
-          "cli": [
-            "bugmem",
-            "match",
-            "<BUNDLE>/report.json"
-          ],
-          "mcp": {
-            "tool": "bugmem_match"
-          },
-          "decide": [
-            {
-              "if": "a high score",
-              "then": "drivers",
-              "note": "Check the stored root cause first."
-            },
-            {
-              "if": "no match",
-              "then": "drivers"
             }
           ]
         },
@@ -608,17 +594,22 @@
       "profile": "debug",
       "tools": [
         "bisect_run",
-        "bugmem_add",
-        "bugmem_evaluate",
-        "bugmem_list",
-        "bugmem_match",
         "bundle_make",
+        "cosim_adjudicate",
+        "cosim_doctor",
+        "cosim_exchange",
+        "cosim_generate",
+        "cosim_qemu_check",
+        "cosim_vector_source",
         "debug_checks",
         "debug_ingress_check",
         "debug_interop",
         "debug_state_compare",
         "debug_suite",
         "debug_tap",
+        "fault_report",
+        "fault_run",
+        "fault_sites",
         "lsp_request",
         "query_build_hdl",
         "query_component",
@@ -644,6 +635,12 @@
         "query_type",
         "query_where",
         "reduce_run",
+        "regress_compare",
+        "regress_cosim",
+        "regress_history",
+        "regress_known_add",
+        "regress_known_list",
+        "regress_known_remove",
         "replay_pack",
         "replay_run",
         "wave_bench",
@@ -668,240 +665,26 @@
       ]
     },
     {
-      "id": "add-coverage",
-      "title": "Add coverage",
-      "when": "Tests pass, and the next question is what they do not exercise.",
-      "steps": [
-        {
-          "id": "run",
-          "do": "Run the suite with coverage collection.",
-          "cli": [
-            "regress",
-            "run",
-            "--tier",
-            "full",
-            "--rvfi-trace",
-            "--out",
-            "<RUN>",
-            "--json"
-          ],
-          "mcp": {
-            "tool": "regress_run"
-          },
-          "decide": [
-            {
-              "if": "runs complete",
-              "then": "functional"
-            }
-          ]
-        },
-        {
-          "id": "functional",
-          "do": "Measure instruction and event coverage from the C2 traces.",
-          "cli": [
-            "cov",
-            "functional",
-            "<RUN>",
-            "--json",
-            "--out",
-            "<COV>"
-          ],
-          "mcp": {
-            "tool": "cov_functional"
-          },
-          "decide": [
-            {
-              "if": "holes listed",
-              "then": "merge"
-            }
-          ]
-        },
-        {
-          "id": "merge",
-          "do": "Merge Verilator coverage into one database.",
-          "cli": [
-            "cov",
-            "merge",
-            "<RUN>"
-          ],
-          "mcp": {
-            "tool": "cov_merge"
-          },
-          "decide": [
-            {
-              "if": "a database",
-              "then": "report"
-            }
-          ]
-        },
-        {
-          "id": "report",
-          "do": "Report RTL holes against Scala source lines.",
-          "cli": [
-            "cov",
-            "report",
-            "<COVDB>"
-          ],
-          "mcp": {
-            "tool": "cov_report"
-          },
-          "decide": [
-            {
-              "if": "holes",
-              "then": "rank"
-            }
-          ]
-        },
-        {
-          "id": "rank",
-          "do": "Rank tests by unique contribution.",
-          "cli": [
-            "cov",
-            "rank",
-            "<COVDB>",
-            "--json"
-          ],
-          "mcp": {
-            "tool": "cov_rank"
-          },
-          "decide": [
-            {
-              "if": "holes remain",
-              "then": "closure"
-            }
-          ]
-        },
-        {
-          "id": "closure",
-          "do": "Select generated candidates that close holes, then add them as tests.",
-          "cli": [
-            "cov",
-            "closure",
-            "<COVDB>",
-            "--candidates",
-            "<CANDIDATES>"
-          ],
-          "mcp": {
-            "tool": "cov_closure"
-          },
-          "decide": [
-            {
-              "if": "new tests added",
-              "then": "run"
-            },
-            {
-              "if": "no candidate closes a hole",
-              "then": "done"
-            }
-          ]
-        }
-      ],
-      "profile": "verification",
-      "tools": [
-        "checks_generate",
-        "checks_plan",
-        "checks_report",
-        "cosim_adjudicate",
-        "cosim_doctor",
-        "cosim_exchange",
-        "cosim_generate",
-        "cosim_qemu_check",
-        "cosim_vector_source",
-        "cov_actions",
-        "cov_block_check",
-        "cov_campaign",
-        "cov_closure",
-        "cov_exchange",
-        "cov_fp",
-        "cov_functional",
-        "cov_generate",
-        "cov_merge",
-        "cov_mutate",
-        "cov_mutate_core",
-        "cov_probe_goals",
-        "cov_prove",
-        "cov_rank",
-        "cov_report",
-        "cov_rtl",
-        "cov_select",
-        "cov_smoke",
-        "cov_source_report",
-        "csr_describe",
-        "fault_report",
-        "fault_run",
-        "fault_sites",
-        "memory_axiomatic",
-        "memory_check",
-        "memory_concurrent_build",
-        "memory_concurrent_run",
-        "memory_concurrent_smoke",
-        "memory_directory",
-        "memory_generate",
-        "memory_images",
-        "memory_tilelink_bind",
-        "regress_act4_build",
-        "regress_riscv_tests_build",
-        "regress_act4_plan",
-        "regress_compare",
-        "regress_cosim",
-        "regress_history",
-        "regress_known_add",
-        "regress_known_list",
-        "regress_known_remove",
-        "regress_mmu_iommu",
-        "regress_mmu_iommu_generate",
-        "regress_mutation",
-        "regress_plan",
-        "regress_privilege_build",
-        "regress_privilege_check",
-        "regress_privilege_reference",
-        "regress_instruction_feed",
-        "regress_random",
-        "regress_sail_tests",
-        "sec_campaign",
-        "sec_contract",
-        "sec_fault",
-        "sec_gadgets",
-        "sec_ift",
-        "sec_ift_core",
-        "sec_isolation",
-        "sec_latency",
-        "sec_model_check",
-        "sec_spec_suite",
-        "sec_suite",
-        "uvm_build",
-        "uvm_coverage_merge",
-        "uvm_features",
-        "uvm_gate_config",
-        "uvm_list",
-        "uvm_new",
-        "uvm_qualification",
-        "uvm_regress",
-        "uvm_run",
-        "verification_plan_check",
-        "verification_plan_generate",
-        "vip_bench",
-        "vip_buses",
-        "vip_list"
-      ]
-    },
-    {
       "id": "prove-property",
       "title": "Prove a property",
-      "when": "A rule must hold for all inputs within a bound, not only for the tests.",
+      "when": "A hardware property, X-propagation check, or bounded counterexample replay must be checked cleanly.",
       "steps": [
         {
           "id": "doctor",
-          "do": "Check the formal tools.",
+          "do": "Check formal tool availability.",
           "cli": [
-            "formal",
             "doctor",
-            "--out",
-            "<OUT>",
+            "--features",
+            "formal",
             "--json"
           ],
           "mcp": {
-            "tool": "formal_doctor"
+            "tool": "rvw_doctor",
+            "args": {
+              "features": [
+                "formal"
+              ]
+            }
           },
           "decide": [
             {
@@ -911,6 +694,42 @@
             },
             {
               "if": "ready",
+              "then": "xprop"
+            }
+          ]
+        },
+        {
+          "id": "xprop",
+          "do": "Check RTL X-propagation on the declared formal target.",
+          "cli": [
+            "formal",
+            "xprop",
+            "--out",
+            "<OUT>",
+            "--depth",
+            "10",
+            "--json"
+          ],
+          "mcp": {
+            "tool": "formal_xprop",
+            "args": {
+              "out": "<OUT>",
+              "depth": 10
+            }
+          },
+          "decide": [
+            {
+              "if": "fail",
+              "then": "test-fails",
+              "note": "Unexpected unknown value propagated."
+            },
+            {
+              "if": "timeout or unknown (exit 3)",
+              "then": "stop",
+              "note": "Inconclusive."
+            },
+            {
+              "if": "pass",
               "then": "bmc"
             }
           ]
@@ -928,12 +747,17 @@
             "--json"
           ],
           "mcp": {
-            "tool": "formal_bmc"
+            "tool": "formal_bmc",
+            "args": {
+              "out": "<OUT>",
+              "depth": 20
+            }
           },
           "decide": [
             {
               "if": "fail",
-              "then": "cex"
+              "then": "test-fails",
+              "note": "Inspect counterexample in wave or sim."
             },
             {
               "if": "timeout or unknown (exit 3)",
@@ -942,140 +766,57 @@
             },
             {
               "if": "pass",
-              "then": "riscv"
+              "then": "from-sim"
             }
           ]
         },
         {
-          "id": "riscv",
-          "do": "Optional: run the declared ISA kit. Mapped single-bus Spinal RV32 init supplies the wrapper. Run smoke with --rvfi-trace, then formal isa --trace RUN/rvfi.jsonl. Review latency_measurement, memory assumptions and per-check actions. Exact instruction cycles can need check_options.cycles. Timeouts and machine-state gaps remain inconclusive.",
+          "id": "from-sim",
+          "optional": true,
+          "do": "Optional: seed formal BMC from a captured simulation cycle in VCD/FST.",
           "cli": [
             "formal",
-            "isa",
+            "from-sim",
             "--trace",
-            "<TRACE>",
+            "<VCD>",
+            "--cycle",
+            "100",
             "--out",
             "<OUT>",
+            "--depth",
+            "10",
             "--json"
           ],
           "mcp": {
-            "tool": "formal_isa"
+            "tool": "formal_from_sim",
+            "args": {
+              "trace": "<VCD>",
+              "cycle": 100,
+              "out": "<OUT>",
+              "depth": 10
+            }
           },
-          "optional": true,
           "decide": [
             {
               "if": "fail",
-              "then": "cex"
+              "then": "test-fails"
             },
             {
               "if": "pass",
               "then": "done",
-              "note": "A bounded pass is not a full ISA proof."
-            }
-          ]
-        },
-        {
-          "id": "cex",
-          "do": "Explain the counterexample and replay it in simulation.",
-          "cli": [
-            "formal",
-            "cex",
-            "--result",
-            "<OUT>",
-            "--out",
-            "<CEX>",
-            "--json"
-          ],
-          "mcp": {
-            "tool": "formal_cex"
-          },
-          "decide": [
-            {
-              "if": "a real design bug",
-              "then": "test-fails"
-            },
-            {
-              "if": "an environment assumption is missing",
-              "then": "bmc",
-              "note": "Add the assumption and say so in the result."
+              "note": "Bounded pass from sampled state."
             }
           ]
         }
       ],
       "profile": "formal",
       "tools": [
-        "formal_aiger_live",
-        "formal_app_deadlock",
-        "formal_app_live",
-        "formal_apps",
-        "formal_autocheck",
+        "checks_generate",
+        "checks_plan",
+        "checks_report",
         "formal_bmc",
-        "formal_bug_hunt",
-        "formal_buses",
-        "formal_cex",
-        "formal_connectivity",
-        "formal_counter_quotient",
-        "formal_cover_hunt",
-        "formal_cross_prove",
-        "formal_csr",
-        "formal_custom_effects",
-        "formal_custom_isa",
-        "formal_datapath",
-        "formal_datapath_kit",
-        "formal_device_events",
-        "formal_doctor",
-        "formal_engine_bench",
-        "formal_engine_race",
-        "formal_engines",
-        "formal_equiv",
-        "formal_equiv_partitions",
         "formal_from_sim",
-        "formal_ic3_lemmas",
-        "formal_initial_split",
-        "formal_internal_path",
-        "formal_isa",
-        "formal_lazy_ram",
-        "formal_liveness",
-        "formal_machine_checks",
-        "formal_model_grid",
-        "formal_model_live",
-        "formal_power",
-        "formal_profiles",
-        "formal_proof_core",
-        "formal_properties",
-        "formal_psl",
-        "formal_recheck",
-        "formal_regress",
-        "formal_relation_strengthen",
-        "formal_reset_audit",
-        "formal_revision_bench",
-        "formal_riscv",
-        "formal_riscv_abstract",
-        "formal_riscv_proof",
-        "formal_rtl_grid",
-        "formal_rtl_refine",
-        "formal_rvfi_generate",
-        "formal_sail_bitmanip",
-        "formal_sail_m",
-        "formal_sail_state",
-        "formal_sail_zicond",
-        "formal_scenario_check",
-        "formal_scenario_compile",
-        "formal_scenario_plan",
-        "formal_security_pair",
-        "formal_security_prove",
-        "formal_shortest",
-        "formal_simulate",
-        "formal_state_generate",
-        "formal_strategy",
-        "formal_sva_inspect",
-        "formal_sva_lower",
-        "formal_swarm",
-        "formal_template",
-        "formal_testplan",
-        "formal_trace_mine",
-        "formal_uf_prove",
-        "formal_upf",
+        "formal_x_context",
         "formal_x_sweep",
         "formal_xprop"
       ]
@@ -1250,28 +991,32 @@
       ],
       "profile": "soc",
       "tools": [
-        "farm_batch",
-        "farm_budget",
-        "farm_cancel",
-        "farm_classify",
-        "farm_dashboard",
-        "farm_live",
-        "farm_gate",
-        "farm_notifications",
-        "farm_observe",
-        "farm_plan",
-        "farm_queue",
-        "farm_recover",
-        "farm_run",
-        "farm_select",
-        "farm_triage",
-        "farm_workflow",
         "lint_emit",
         "lint_report",
+        "memory_axiomatic",
+        "memory_check",
+        "memory_concurrent_build",
+        "memory_concurrent_run",
+        "memory_concurrent_smoke",
+        "memory_directory",
+        "memory_generate",
+        "memory_images",
+        "memory_tilelink_bind",
         "probes_check",
         "probes_convert",
         "probes_list",
         "probes_summary",
+        "sec_campaign",
+        "sec_contract",
+        "sec_fault",
+        "sec_gadgets",
+        "sec_ift",
+        "sec_ift_core",
+        "sec_isolation",
+        "sec_latency",
+        "sec_model_check",
+        "sec_spec_suite",
+        "sec_suite",
         "sim_checkpoint",
         "sim_profile",
         "sim_resume",
@@ -1284,47 +1029,14 @@
         "soc_export_ipxact",
         "soc_feedback",
         "soc_handoff",
+        "soc_import_ip",
         "soc_mbist",
         "soc_new",
         "soc_observe",
         "soc_observe_pack",
         "soc_pair",
         "soc_peripheral",
-        "soc_import_ip",
         "soc_verify"
-      ]
-    },
-    {
-      "id": "agent-evaluation",
-      "title": "Agent evaluation",
-      "when": "Measure a bounded fixture or native repair task with independent checks.",
-      "profile": "verification",
-      "tools": [
-        "agent_bench_audit_run",
-        "agent_bench_evidence_solve",
-        "agent_bench_evidence_trial",
-        "agent_bench_native_qualify",
-        "agent_bench_repair_check",
-        "agent_bench_repair_prepare",
-        "agent_bench_trial"
-      ],
-      "steps": [
-        {
-          "id": "select",
-          "manual": true,
-          "do": "Select a task pack and its independent checks. Keep fixture scores separate from native repair evidence."
-        },
-        {
-          "id": "inspect",
-          "manual": true,
-          "do": "Describe the benchmark tool before a trial. Record budgets, partial attempts and evidence limits.",
-          "mcp": {
-            "tool": "rvw_tools_search",
-            "arguments": {
-              "keyword": "agent bench"
-            }
-          }
-        }
       ]
     }
   ]

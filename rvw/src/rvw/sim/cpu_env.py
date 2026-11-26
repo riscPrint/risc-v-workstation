@@ -7,6 +7,33 @@ from dataclasses import dataclass
 import random
 
 
+class Memory:
+    """Little-endian bounded memory with byte enables, for CPU memory agents."""
+    def __init__(self, base, size):
+        if base < 0 or size <= 0:
+            raise ValueError('memory needs nonnegative base and positive size')
+        self.base, self.data = base, bytearray(size)
+
+    def offset(self, address, size):
+        offset = address - self.base
+        if size <= 0 or offset < 0 or offset + size > len(self.data):
+            raise ValueError('memory access outside declared region')
+        return offset
+
+    def read(self, address, size):
+        offset = self.offset(address, size)
+        return int.from_bytes(self.data[offset:offset+size], 'little')
+
+    def write(self, address, value, size, mask=None):
+        offset = self.offset(address, size)
+        mask = (1 << size) - 1 if mask is None else mask
+        if value < 0 or value >= 1 << (size*8) or mask < 0 or mask >= 1 << size:
+            raise ValueError('data or mask exceeds transfer width')
+        for i in range(size):
+            if mask & (1 << i):
+                self.data[offset+i] = (value >> (8*i)) & 255
+
+
 @dataclass(frozen=True)
 class MemoryReply:
     data: int
@@ -16,7 +43,6 @@ class MemoryReply:
 
 class CpuMemory:
     def __init__(self, base, size, *, seed=1, max_wait=3, fetch_errors=()):
-        from rvw.sim.uvm_models import Memory
         if type(max_wait) is not int or max_wait < 0:
             raise ValueError('max_wait must be a nonnegative integer')
         self.memory = Memory(base, size)

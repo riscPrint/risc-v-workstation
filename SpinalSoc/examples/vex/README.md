@@ -82,5 +82,5 @@ Use the private `VEXRISCV` copy and native tool environment above. The build
 uses `sbt-soc` with private outputs, four JVM processors and a 3 GiB heap.
 Its source compile has a four-minute limit. Preparation then
 extracts fresh typed databases and runs the CPU. Connectivity uses captured
-RTL through `rvw formal connectivity`. The report preserves failed proofs,
+RTL via `rvw soc check --connections`. The report preserves failed proofs,
 missing bindings, activation gaps and structural lint findings.

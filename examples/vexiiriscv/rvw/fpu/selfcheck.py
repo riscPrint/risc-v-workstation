@@ -6,12 +6,57 @@ import json
 import random
 import subprocess
 import sys
+from functools import lru_cache
 from pathlib import Path
 
 from rvw.common.riscv import decode
 from rvw.cosim.elf import Elf
-from rvw.cov.fp import encodings, format_width
+from rvw.cosim.extensions import has_extension
 from programs import VALUES, envelope
+
+
+def format_width(name):
+    parts = name.split('.')
+    for part in parts[1:]:
+        if part in ('s', 'w'):
+            if part == 'w' and name.startswith('fcvt.'):
+                continue
+            return 32
+        if part == 'd':
+            return 64
+    return 64 if 'fld' in name or 'fsd' in name else 32
+
+
+@lru_cache(maxsize=8)
+def encodings(xlen=64, isa=None):
+    def _is_fp(d):
+        return d.cls == 'float' or d.dest_bank == 'f' or any(bank == 'f' for bank, _ in d.sources)
+
+    def _allowed(name):
+        if isa is None:
+            return True
+        if not (has_extension(isa, 'f') or has_extension(isa, 'g')):
+            return False
+        if ('.d' in name or 'fld' in name or 'fsd' in name) and not (has_extension(isa, 'd') or has_extension(isa, 'g')):
+            return False
+        if name.startswith('c.'):
+            required = 'zcd' if ('fld' in name or 'fsd' in name) else 'zcf'
+            return has_extension(isa, 'c') or required in isa.lower().split('_')
+        return True
+
+    words = [(f7 << 25) | (rs2 << 20) | (1 << 15) | (rm << 12) | (3 << 7) | 0x53
+             for f7 in range(128) for rs2 in range(4) for rm in range(8)]
+    words += [(4 << 27) | (fmt << 25) | (2 << 20) | (1 << 15) | (3 << 7) | op
+              for fmt in (0, 1) for op in (0x43, 0x47, 0x4b, 0x4f)]
+    words += [(f3 << 12) | (1 << 15) | (3 << 7) | op for f3 in (2, 3) for op in (7, 0x27)]
+    words += [(f3 << 13) | (1 << 7) | (1 << 2) for f3 in (1, 3, 5, 7)]
+    words += [(f3 << 13) | ((9 << 7) if f3 < 4 else (9 << 2)) | 2 for f3 in (1, 3, 5, 7)]
+    result = {}
+    for word in words:
+        d = decode(word, xlen)
+        if _is_fp(d) and _allowed(d.mnemonic):
+            result.setdefault(d.mnemonic, word)
+    return result
 
 
 def cases(xlen, width, seed, random_cases):

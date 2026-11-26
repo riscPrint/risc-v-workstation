@@ -1,12 +1,12 @@
 """Small tool sets and workflow selection, shared by CLI and registry."""
 PROFILES = {
-    "core": {"agent", "doctor", "init", "plan", "evidence"},
-    "verification": {"regress", "cosim", "cov", "stimulus", "csr", "privilege",
-                     "memory", "verification", "verification_plan", "uvm", "vip", "checks", "sec", "fault"},
-    "formal": {"formal", "equiv", "connectivity"},
+    "core": {"agent", "doctor", "init"},
+    "verification": {"regress", "cosim", "csr", "privilege",
+                     "memory", "verification", "checks", "sec", "fault"},
+    "formal": {"formal"},
     "arch": {"arch", "csim", "ooo", "workloads", "perf", "sample"},
-    "debug": {"wave", "query", "trace", "debug", "bundle", "reduce", "bisect", "bugmem", "lsp", "replay"},
-    "soc": {"soc", "sim", "server", "farm", "lint", "probes"},
+    "debug": {"wave", "query", "trace", "debug", "bundle", "reduce", "bisect", "lsp", "replay"},
+    "soc": {"soc", "sim", "server", "lint", "probes"},
 }
 
 
@@ -15,8 +15,6 @@ CORE_CALLS = {'cosim_check', 'query_build_db', 'regress_gate', 'regress_list', '
 
 
 def profile_for(name):
-    if name.startswith('agent_bench_'):
-        return 'verification'
     if name in CORE_CALLS or name.startswith(("job_", "rvw_tools_")):
         return "core"
     prefix = name.removeprefix("rvw_").split("_", 1)[0]

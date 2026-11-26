@@ -20,7 +20,7 @@ def test_command_map_is_generated_from_real_commands(capsys):
     data = command_map()
     assert len(data["commands"]) > 100
     assert {w["id"] for w in data["workflows"]} == {
-        "bring-up", "test-fails", "add-coverage", "prove-property", "performance-question", "soc-integration", "agent-evaluation"}
+        "bring-up", "test-fails", "prove-property", "performance-question", "soc-integration"}
     assert main(["mcp", "command-map", "--json"]) == 0
     assert json.loads(capsys.readouterr().out) == data
 

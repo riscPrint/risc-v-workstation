@@ -1,5 +1,3 @@
 [
-  "arch_sched_study:native_tools:Declare inventory tool ids, or an empty tuple.",
-  "cov_mutate:native_tools:Declare inventory tool ids, or an empty tuple.",
-  "farm_batch:native_tools:Declare inventory tool ids, or an empty tuple."
+  "arch_sched_study:native_tools:Declare inventory tool ids, or an empty tuple."
 ]

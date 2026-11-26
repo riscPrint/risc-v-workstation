@@ -97,8 +97,7 @@ def probe_argv(path, parser, tmp: Path) -> list[str]:
 # Extra arguments a command needs so the probe runs it as a one-shot command.
 EXTRA = {("mcp",): ["--list"],
          # Exercise input errors, without starting native builds or downloading sources.
-         ("agent", "bringup-check"): ["--out", "."],
-         ("regress", "uvm"): ["--archive", "missing-archive.tar.gz"]}     # without --list, `rvw mcp` starts the stdio server
+         ("agent", "bringup-check"): ["--out", "."]}     # without --list, `rvw mcp` starts the stdio server
 
 COMMANDS = sorted(json_commands(build_parser()), key=lambda c: c[0])
 
@@ -113,7 +112,7 @@ def test_probe_arguments_reach_handlers():
 @pytest.mark.fast
 def test_the_probe_sees_the_known_json_commands():
     names = {" ".join(p) for p, _ in COMMANDS}
-    for expected in ("bundle", "reduce", "bisect", "wave sample", "cov report", "regress run",
+    for expected in ("bundle", "reduce", "bisect", "wave sample", "regress run",
                      "regress known list", "cosim check", "formal bmc", "perf", "mcp"):
         assert expected in names, (expected, sorted(names))
 
@@ -219,14 +218,6 @@ def test_regress_never_writes_a_partial_document(capsys, monkeypatch, tmp_path):
                         lambda: [{"run_id": "r1", "path": str(tmp_path), "bad": object()}])
     code, out = _main(capsys, ["regress", "history", "--json"])
     assert out.out == "" and code == 2, (code, out.out[:300])
-
-
-def test_cov_writes_one_error_document_when_the_result_cannot_be_encoded(capsys, monkeypatch):
-    monkeypatch.setattr("rvw.cov.cli.calculate",
-                        lambda args: {"schema": "rvw.coverage-x/1", "points": [], "bad": float("inf")})
-    code, out = _main(capsys, ["cov", "report", "db.json", "--json"])
-    assert code == 2
-    assert strict_json(out.out)["schema"] == "rvw.coverage-error/1"
 
 
 def test_json_fallback_keeps_a_finding_status_on_exit_1(capsys):

@@ -22,7 +22,7 @@ functional groups separate. Functional links to the ALU source line are
 project declarations. They are not measured statement attribution.
 The report emits native `code_targets` and semantic `functional_targets`.
 
-The initial native holes drive `rvw cov closure` suggestions. Candidate
+The initial native holes drive [removed CLI: `cov closure`] suggestions. Candidate
 signatures come from these same four measured workloads. The best additional
 workload is `rv32ui-p-lw`. It targets
 546 initial holes. This is measured suite
@@ -36,7 +36,7 @@ for display. The source-report hash pins the original raw report.
 
 To make a new report, run the example adapter with `--rvfi-trace --coverage
 --probes`, seed 1 and zero memory latency. Qualify its full C2 trace with
-`rvw cosim check --strict`. Merge its C1 paths with `rvw cov merge`. Generate
+`rvw cosim check --strict`. Merge its C1 paths with [removed CLI: `cov merge`]. Generate
 functional coverage from the same traces and the project's ISA manifest.
 Then run `rvw cov source-report --database code.json --functional
 functional.json --bindings source-bindings.json --json`. Bind exact native
@@ -50,4 +50,4 @@ were used. The replay uses the characterized workload and seed.
 
 Historical `source-report.json`: {"status":"reported","point_universe":"46ff39b8fe06141c5ac512acfe278769a49f5e825086e5a7a2cda6b1348ce7b6","lines":{"records":356},"code_targets":{"records":5058},"functional_targets":{"records":2},"unmapped_native_points":32117,"unmapped_functional_groups":{"records":239},"native_source_states":{"entries":1},"notes":{"records":4}}.
 Raw records are no longer tracked. Regenerate outside the repository:
-`rvw cov source-report --database code.json --functional functional.json --bindings source-bindings.json --json`. Use the pinned inputs and options from [PR #1022](https://github.com/riscPrint/risc-v-workstation/pull/1022).
+[removed CLI: `cov source-report --database code.json --functional functional.json --bindings source-bindings.json --json`]. Use the pinned inputs and options from [PR #1022](https://github.com/riscPrint/risc-v-workstation/pull/1022).

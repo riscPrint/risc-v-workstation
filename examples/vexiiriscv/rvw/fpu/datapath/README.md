@@ -114,8 +114,7 @@ for op in add mul div sqrt to-int from-int; do
 ```
 
 `lane_formal.py` fixes the operation and RM before Yosys removes unused
-logic. It writes an explicit port binding and calls `rvw formal datapath`
-against the existing pinned SoftFloat dependency runner. Use `--rounding 1`
+logic. It writes an explicit port binding and used legacy `formal datapath` against the existing pinned SoftFloat dependency runner. Use `--rounding 1`
 through `4` and `--cases all` for conversion RM checks. Keep full result JSON,
 solver logs, extracted RTL and builds outside the repository.
 

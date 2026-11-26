@@ -243,12 +243,10 @@ A result applies only to the supplied program, observations and policy.
 
 Mapped Spinal RV32I/IM cores with one req/rsp bus and RVFI also get a formal ISA
 binding. Set `RISCV_FORMAL` before init or install its source checkout at
-`~/.cache/rvw/riscv-formal`. `rvw formal isa` exports fresh RTL through
-`riscv_formal.build`, then runs the selected finite instruction checks.
+`~/.cache/rvw/riscv-formal`. Check `rvw formal bmc` and core-owned formal scripts for finite BMC checks.
 See the integration guide for the memory assumptions and remaining proof gaps.
 
-For generated ISA kits, first run a smoke with `--rvfi-trace`. Then use
-`rvw formal isa --trace RUN/rvfi.jsonl --out NEW_DIR --timeout 15`.
+For generated ISA kits, first run a smoke with `--rvfi-trace`. Then run the generated core formal launcher or `rvw formal from-sim` / `rvw formal bmc`.
 The trace selects the default depth. Review `latency_measurement` in the report.
 Use a representative load/store program. An unsampled slow path can need a
 larger explicit `riscv_formal.depth` or `check_options.cycles` value.

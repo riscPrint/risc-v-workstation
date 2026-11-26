@@ -18,7 +18,8 @@ def test_each_tool_has_a_profile_and_workflow():
         covered |= names
     assert registry.tools.keys() <= covered
     assert all(profile_for(name) in PROFILES for name in registry.tools)
-    assert profile_for('agent_bench_trial') == 'verification'
+    assert profile_for('regress_run') == 'core'
+    assert profile_for('formal_bmc') == 'formal'
     assert profile_for('replay_pack') == 'debug'
 
 
