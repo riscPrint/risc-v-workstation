@@ -5,32 +5,6 @@
       "workflows": "array"
     }
   },
-  "functional": {
-    "schema": "rvw.functional-coverage/1",
-    "fields": {
-      "groups": "object",
-      "retired": "number"
-    }
-  },
-  "coverage": {
-    "schema": "rvw.coverage/1",
-    "fields": {
-      "points": "array"
-    }
-  },
-  "coverage_report": {
-    "schema": "rvw.coverage-report/1",
-    "fields": {
-      "summary": "object"
-    }
-  },
-  "plan": {
-    "schema": "rvw.plan-status/1",
-    "fields": {
-      "features": "array",
-      "summary": "object"
-    }
-  },
   "gate": {
     "schema": "rvw.verdict/2",
     "fields": {

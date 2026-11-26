@@ -1,5 +1,0 @@
-{
-  "schema": "rvw.cocotb/1", "name": "seeded_soc", "backend": "verilator",
-  "top": "SeededSoc", "sources": ["rtl/SeededSoc.v"],
-  "test_module": "connected_test", "python_paths": ["."], "requires": ["timer"]
-}

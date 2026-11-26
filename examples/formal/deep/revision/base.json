@@ -1,9 +1,0 @@
-{
-  "top": "top",
-  "sources": [
-    {
-      "path": "base.sv",
-      "sha256": "268e059476c9ac11c53fb16df0eb5d759dd1a8e1e0e1fc1a0c9eb18cf3255da7"
-    }
-  ]
-}

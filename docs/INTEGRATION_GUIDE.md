@@ -252,7 +252,7 @@ the [profile and findings](../rvw/configs/act4/boom/README.md).
 | VexiiRiscv supervisor | 319 | 49 | 34 |
 | VexiiRiscv supervisor with generated random/PMP suites | 717 | 447 | 24 |
 
-These are `rvw cov functional` merges. Each includes 49 riscv-tests traces.
+These are [removed CLI: `cov functional`] merges. Each includes 49 riscv-tests traces.
 The 717-trace merge also includes four freshly run random privilege
 programs and 394 PMP programs. All 398 have complete strict matches.
 Per-extension and operand holes are in the linked coverage review.
@@ -297,8 +297,8 @@ validation. See [probes](../rvw/src/rvw/probes/README.md).
 ## 8. Collect coverage
 
 ```sh
-rvw cov --help
-rvw cov functional run/first/rvfi.jsonl --manifest isa.json --source-root riscv-opcodes --json
+# [removed in Nov 2026 scope trim] rvw cov --help
+# [removed in Nov 2026 scope trim] rvw cov functional run/first/rvfi.jsonl --manifest isa.json --source-root riscv-opcodes --json
 ```
 
 Working means the report identifies its denominator, source manifest and actual
@@ -443,7 +443,7 @@ The constrained Verilator UVM example also needs Z3 from `--with-formal`.
 Supply a design database, SoC map and exact pin bindings.
 
 ```sh
-rvw uvm new --db design.db --soc map.json --out run/new-bench
+# [removed in Nov 2026 scope trim] rvw uvm new --db design.db --soc map.json --out run/new-bench
 rvw regress cocotb run/new-bench/bench.json --out run/new-bench-result
 ```
 
@@ -454,11 +454,11 @@ evidence. Full imported VIP, native debug and HDL DPI/VPI backdoor support
 remain unqualified. DRAM, PCIe and Ethernet optional model contracts have mock
 callback tests; projects still supply their native models and bridges.
 See [UVM](../Uvm/README.md) and [VIP](../rvw/src/rvw/vip/README.md).
-Use `rvw vip list`, `rvw vip buses --db design.db` and
-`rvw vip bench --db design.db --out bench.py`. MCP exposes `vip_list`,
+Use [removed CLI: `vip list`], [removed CLI: `vip buses --db design.db`] and
+[removed CLI: `vip bench --db design.db --out bench.py`]. MCP exposes `vip_list`,
 `vip_buses` and `vip_bench`. The bench remains a skeleton until it has project
 reset, stimulus and expected results. For a custom typed bus, use
-`rvw uvm new --adapter adapter.json` with a project scenario and explicit pins.
+[removed CLI: `uvm new --adapter adapter.json`] with a project scenario and explicit pins.
 
 ## 14. Run regressions at scale
 
@@ -482,9 +482,9 @@ nice -n 10 "$RVW_HOME/rvw/.venv/bin/python" \
   "$RVW_HOME/examples/regression-scale/submit.py" \
   --manifest jobs.jsonl --adapter '["/absolute/core/rvw/run.sh"]' \
   --root run/queue --shards 2
-rvw farm queue --root run/queue --operation work
-rvw farm queue --root run/queue --operation work
-rvw farm live --root run/queue --owner local --out run/history.html
+# [removed in Nov 2026 scope trim] rvw farm queue --root run/queue --operation work
+# [removed in Nov 2026 scope trim] rvw farm queue --root run/queue --operation work
+# [removed in Nov 2026 scope trim] rvw farm live --root run/queue --owner local --out run/history.html
 ```
 
 Each `work` call executes one job. Start at most three simulation workers on
@@ -523,14 +523,14 @@ not unique tests. CPU charges use declared cores, not measured CPU time.
 The native check received HTTP 401 without a token. Another owner saw zero
 jobs. Drill-down retained failures and C5 summaries. The static export contains
 that owner's recorded evidence and has no access control. Review it before
-sharing. See the historical whole-history dashboard (seven queue records and 221 observations; regenerate with `rvw farm live --root HISTORY --owner native --out OUTPUT.html`) and
+sharing. See the historical whole-history dashboard (seven queue records and 221 observations; regenerate with [removed CLI: `farm live --root HISTORY --owner native --out OUTPUT.html`]) and
 [single fault run](examples/regression-dashboard-run.html).
 
 ```sh
-rvw farm serve --root run/queue --tokens tokens.json
-rvw farm triage --root CANDIDATE --baseline BASE --bundles BUNDLES --core-env VEXRISCV
-rvw farm observe --db design.db --root BASE --wave-prefix TOP.Module --out observations.json
-rvw farm select --db design.db --changed '["src/Elaboration.scala"]' --catalogue observations-with-coverage-ranking.json --seconds 2
+# [removed in Nov 2026 scope trim] rvw farm serve --root run/queue --tokens tokens.json
+# [removed in Nov 2026 scope trim] rvw farm triage --root CANDIDATE --baseline BASE --bundles BUNDLES --core-env VEXRISCV
+# [removed in Nov 2026 scope trim] rvw farm observe --db design.db --root BASE --wave-prefix TOP.Module --out observations.json
+# [removed in Nov 2026 scope trim] rvw farm select --db design.db --changed '["src/Elaboration.scala"]' --catalogue observations-with-coverage-ranking.json --seconds 2
 ```
 
 Triage binds first differences to captured ELF and C2 bytes. It emits exact
@@ -558,10 +558,10 @@ All attempts remain charged. Read C1/C3 outcomes and C4 reports separately.
 A missing rate or denominator leaves the corresponding unit cost null.
 
 ```sh
-rvw farm gate --base BASE --candidate CANDIDATE --project PROJECT --tier TIER --rvfi-trace --out run/verdict.json
-rvw evidence index --root run --db run/evidence.sqlite
-rvw evidence query --db run/evidence.sqlite --schema rvw.verdict
-rvw plan status verification-plan.json --out run/status.json --json
+# [removed in Nov 2026 scope trim] rvw farm gate --base BASE --candidate CANDIDATE --project PROJECT --tier TIER --rvfi-trace --out run/verdict.json
+# [removed in Nov 2026 scope trim] rvw evidence index --root run --db run/evidence.sqlite
+# [removed in Nov 2026 scope trim] rvw evidence query --db run/evidence.sqlite --schema rvw.verdict
+# [removed in Nov 2026 scope trim] rvw plan status verification-plan.json --out run/status.json --json
 ```
 
 Use a project tier that exactly names the stored ISA manifest, seeds and
@@ -806,7 +806,7 @@ into C1. Rebuild when the current identity differs. Review input declarations
 when you add external dependencies.
 
 Declare protocol meaning in a `rvw.hdl-ports/1` project file. Use `--port-map`
-with `rvw vip buses`, `rvw vip bench`, or `rvw uvm new`. A checks generation
+with [removed CLI: `vip buses`], [removed CLI: `vip bench`], or [removed CLI: `uvm new`]. A checks generation
 manifest can supply `database` and `port_map` in its `buses` entry. See the
 [declared channel contract](contracts/vip.md#declared-plain-hdl-channels).
 A port map does not define memory response behavior.
@@ -1003,9 +1003,9 @@ For an SV bench, list sources in dependency order in `bench.json`. Add the
 project's tests and required checks. Use a fresh build and run directory:
 
 ```sh
-rvw uvm build bench.json --out /tmp/project-uvm-build --timeout 1800
-rvw uvm regress --build /tmp/project-uvm-build --seeds 1 3 --out /tmp/project-uvm-runs
-rvw uvm gate-config --build /tmp/project-uvm-build --source-repo "$PWD" --out /tmp/project-uvm-core.toml --seeds 1 3
+# [removed in Nov 2026 scope trim] rvw uvm build bench.json --out /tmp/project-uvm-build --timeout 1800
+# [removed in Nov 2026 scope trim] rvw uvm regress --build /tmp/project-uvm-build --seeds 1 3 --out /tmp/project-uvm-runs
+# [removed in Nov 2026 scope trim] rvw uvm gate-config --build /tmp/project-uvm-build --source-repo "$PWD" --out /tmp/project-uvm-core.toml --seeds 1 3
 rvw regress gate --core /tmp/project-uvm-core.toml --tier quick --base-rev COMMIT --cand-rev COMMIT --no-cache --json
 ```
 
@@ -1059,16 +1059,16 @@ source copy and a private lock for native runs.
    A later commit PC needs a model for intervening traps. A simulation callback
    cannot supply hardware inputs to a formal job.
 2. For a core without RVFI, map architectural snapshots with
-   `rvw formal state-generate MAP.json --out MONITOR`. The snapshots must span
+   [removed CLI: `formal state-generate MAP.json --out MONITOR`]. The snapshots must span
    one instruction event. Include trapping instruction records when required. Compare the generated stream with an independent
    observation in simulation. Run bounded equivalence. Keep a mismatch as a
    failure until its cause is resolved.
 3. For native RVFI, generate the project wrapper with
-   `rvw formal rvfi-generate BINDING.json --out PROJECT`. The state generator
+   [removed CLI: `formal rvfi-generate BINDING.json --out PROJECT`]. The state generator
    already writes a project. Declare source files, signal maps, ISA, retirement
    channels, checks and cycle settings in project data. Declare bus service
    assumptions explicitly. Do not assume the property under test.
-4. Run `rvw formal isa --project PROJECT --out OUT --timeout 150`. This runs the
+4. Run [removed CLI: `formal isa --project PROJECT --out OUT --timeout 150`]. This runs the
    selected bounded instruction and consistency checks. It also runs an
    instruction-specific activation cover. It lists unselected instructions
    and missing retirement-channel checks as unsupported gaps. A general
@@ -1079,7 +1079,7 @@ source copy and a private lock for native runs.
    must supply aligned observations. The current writeback flush flag alone
    does not prove that an earlier killed instruction cannot retire.
 6. Select generated Sail models through `riscv_formal.instruction_models`.
-   `rvw formal sail-m --model MODEL --compiler SAIL --out MODELS` generates
+   [removed CLI: `formal sail-m --model MODEL --compiler SAIL --out MODELS`] generates
    RV32 M arithmetic slices. Keep `RISCV_FORMAL_ALTOPS` disabled for actual M
    arithmetic. Keep source, compiler, primitive-binding and final model hashes.
    Expression slices do not independently verify full machine state.
@@ -1316,8 +1316,8 @@ separate antecedent-cover job. Use the same reset and environment assumptions
 in both jobs. A cover not reached within N cycles is not an unreachability proof.
 
 ```sh
-rvw formal regress regress.toml --jobs 3 --timeout 60 --proof-cache proof-cache --out proof-1 --json
-rvw formal regress regress.toml --jobs 3 --timeout 60 --proof-cache proof-cache --out proof-2 --json
+# [removed in Nov 2026 scope trim] rvw formal regress regress.toml --jobs 3 --timeout 60 --proof-cache proof-cache --out proof-1 --json
+# [removed in Nov 2026 scope trim] rvw formal regress regress.toml --jobs 3 --timeout 60 --proof-cache proof-cache --out proof-2 --json
 ```
 
 Keep C3, JUnit and the per-property logs. Read `formal_status` and the depth.
@@ -1385,7 +1385,7 @@ backpressure. Instruction identity and eventual retirement remain open.
 
 ### Review mined candidates
 
-`rvw formal trace-mine` emits Scala DSL candidates from pre-edge signal samples.
+[removed CLI: `formal trace-mine`] emits Scala DSL candidates from pre-edge signal samples.
 Supply a manifest with unsigned signal widths. Pass one `--trace` per program.
 Trace boundaries prevent false transitions between independent runs. The tool
 drops refuted candidates and candidates with too few active samples.
@@ -1403,7 +1403,7 @@ The generated [SVA support table](../rvw/src/rvw/formal/TEMPORAL_SUPPORT.md)
 identifies tested subsets. Default clocking and default disable conditions are
 module-local subsets. Nested eventual milestones accept two to eight ordered
 Boolean terms. General nested unbounded composition and formal reset
-cancellation remain unsupported. `rvw formal cross-prove` checks a Boolean two-clock
+cancellation remain unsupported. [removed CLI: `formal cross-prove`] checks a Boolean two-clock
 implication in a discrete global-step model. It samples pre-update values and
 adds no clock fairness. Positive native induction jobs and negative jobs cover
 both implication forms. This does not qualify full multi-clock SVA or events
@@ -1525,7 +1525,7 @@ core signal names in project files. Do not derive the observed result from the
 reference model. First compare the observer with independent native evidence.
 Then run instruction assertions and instruction-activation covers.
 
-`rvw formal isa` prints the instruction, machine-state and adapter-conformance
+[removed CLI: `formal isa`] prints the instruction, machine-state and adapter-conformance
 rows. It also lists unselected checks as unsupported. A bounded check is not an
 unbounded proof. A general retirement cover does not establish activation of
 each instruction. A timeout stays inconclusive. It must not become a bounded
@@ -1719,9 +1719,9 @@ private locks and nice priority 15.
 For a new core, prepare a project-owned RVFI binding or architectural-state map:
 
 ```sh
-rvw formal rvfi-generate core-binding.json --out PROJECT
+# [removed in Nov 2026 scope trim] rvw formal rvfi-generate core-binding.json --out PROJECT
 # Alternative for an independently observed state map:
-rvw formal state-generate core-state.json --out STATE_PROJECT
+# [removed in Nov 2026 scope trim] rvw formal state-generate core-state.json --out STATE_PROJECT
 scripts/with-lock.sh vex-conn nice -n 15 \
   rvw formal isa --project PROJECT --out SIGNOFF --timeout 20
 ```
@@ -1790,7 +1790,7 @@ Reproduce the PicoRV32 state-map generation and finite stream comparison:
 ```sh
 rvw/.venv/bin/python examples/picorv32/formal/prepare.py \
   --source "$PICORV32" --riscv-formal "$RISCV_FORMAL" --out PICO_CAPTURE
-rvw formal state-generate PICO_CAPTURE/state-map.json --out PICO_PROJECT
+# [removed in Nov 2026 scope trim] rvw formal state-generate PICO_CAPTURE/state-map.json --out PICO_PROJECT
 scripts/with-lock.sh vex-conn nice -n 15 rvw/.venv/bin/python \
   examples/picorv32/formal/suite.py --source "$PICORV32" \
   --riscv-formal "$RISCV_FORMAL" --tests "$RISCV_TESTS/isa/rv32ui" \
@@ -1984,7 +1984,7 @@ Replace this port list with the complete design port list. Add only reviewed
 legal transitions. Use a short initial depth and property budget:
 
 ```sh
-rvw formal autocheck autocheck.json --out run/autocheck  --kind fsm_state --max-properties 8 --depth 8 --timeout 10 --json
+# [removed in Nov 2026 scope trim] rvw formal autocheck autocheck.json --out run/autocheck  --kind fsm_state --max-properties 8 --depth 8 --timeout 10 --json
 ```
 
 For constant-value asynchronous-reset flip-flops, add
@@ -2054,7 +2054,7 @@ checkout before init. Without it, the generated root is
 `riscv_formal.root` path. It must contain `checks` and `insns`.
 
 ```sh
-rvw formal isa --trace rvw/out/first/rvfi.jsonl --out rvw/out/isa-first --timeout 15 --json
+# [removed in Nov 2026 scope trim] rvw formal isa --trace rvw/out/first/rvfi.jsonl --out rvw/out/isa-first --timeout 15 --json
 ```
 
 The command exports fresh RTL before checking add, load, store and retirement
@@ -2113,9 +2113,9 @@ The tested pair here is Python 3.13 with cocotb 2.1 and pyuvm 4.0.
 Export the mapped RTL, then select the design database:
 
 ```sh
-rvw uvm new --db rvw/out/design.db --soc soc.json/soc.json --out rvw/out/cpu-bench
+# [removed in Nov 2026 scope trim] rvw uvm new --db rvw/out/design.db --soc soc.json/soc.json --out rvw/out/cpu-bench
 rvw regress cocotb rvw/out/cpu-bench/bench.json --out rvw/out/cpu-bench-run --timeout 110
-rvw vip bench --db rvw/out/design.db --out rvw/out/cpu-vip.py
+# [removed in Nov 2026 scope trim] rvw vip bench --db rvw/out/design.db --out rvw/out/cpu-vip.py
 ```
 
 For a mapped RV32 req/rsp core with RVFI, these commands use the declared bus
@@ -2167,7 +2167,7 @@ mutants with formal equivalence before you report a confirmed test gap.
 
 | Step | Command | Evidence required |
 |---|---|---|
-| Measure your tests | `rvw cov mutate-core`; `rvw regress mutation` | Passing control, mutant build status, test-specific detection evidence, strict Spike results and survivor equivalence results. Native example studies and qualified pinned sets remain open. |
+| Measure your tests | [removed CLI: `cov mutate-core`]; [removed CLI: `regress mutation`] | Passing control, mutant build status, test-specific detection evidence, strict Spike results and survivor equivalence results. Native example studies and qualified pinned sets remain open. |
 
 ### VexRiscv mutation study
 
@@ -2251,8 +2251,8 @@ For the farm HTTP service, save a separate token-to-owner file:
 ```sh
 nice -n 15 rvw farm serve --root /srv/queue \
   --tokens /srv/private/farm-tokens.json --host 127.0.0.1 --port 18765
-rvw farm budget --root /srv/queue --scope agent:alice --limits '{"jobs":20,"wall_seconds":3600}'
-rvw farm budget --root /srv/queue --scope agent:bob --limits '{"jobs":10,"wall_seconds":1800}'
+# [removed in Nov 2026 scope trim] rvw farm budget --root /srv/queue --scope agent:alice --limits '{"jobs":20,"wall_seconds":3600}'
+# [removed in Nov 2026 scope trim] rvw farm budget --root /srv/queue --scope agent:bob --limits '{"jobs":10,"wall_seconds":1800}'
 ```
 
 Use `POST /runs` with a command argument array, timeout, retry count and priority.
@@ -2262,7 +2262,7 @@ The root page supplies the live dashboard. Run one queue attempt per worker:
 
 ```sh
 nice -n 15 rvw farm queue --root /srv/queue --operation work
-rvw farm queue --root /srv/queue --operation recover
+# [removed in Nov 2026 scope trim] rvw farm queue --root /srv/queue --operation recover
 ```
 
 Repeat `work` under your supervisor when more jobs are queued.

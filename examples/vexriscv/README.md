@@ -136,8 +136,8 @@ Pass `--soc-map DIR/sim-map.json` to `rvw/run.sh run` to use the generated RAM m
 The adapter saves the map and captures accepted instruction and data bus requests.
 
 `isa.json` declares the adapter trace ISA and pins the opcode coverage source.
-Extension versions remain null until verified. Use it with `rvw cov isa-check`
-and `rvw cov functional --manifest`; see the coverage tool README. It does not
+Extension versions remain null until verified. Use it with [removed CLI: `cov isa-check`]
+and [removed CLI: `cov functional --manifest`]; see the coverage tool README. It does not
 certify VexRiscv ISA compliance or change the adapter configuration.
 
 ## RTL event coverage
@@ -201,7 +201,7 @@ From `rvw/`, run the following command with `RVW_HOME` and `VEXRISCV` set:
 sources. It emits an exact-instance `rvw.rtl-plan/1`. Its event domain is
 speculative. Fetch acceptance does not establish instruction retirement.
 The example binds the design identity to the emitted RTL SHA-256.
-Sample the declared signals before each rising edge. Run `rvw cov rtl` on the
+Sample the declared signals before each rising edge. Run [removed CLI: `cov rtl`] on the
 plan and those samples. The exporter does not collect samples by itself.
 
 The cosim platform declares M-only privilege, no PMP, zero PMP CSR reads, and
@@ -209,7 +209,7 @@ instruction-valued `mtval` on ECALL. The adapter uses the same choices.
 
 ### CSR model selection
 
-`rvw formal csr --model examples/vexriscv/csr.json --out out/vex-csr`
+[removed CLI: `formal csr --model examples/vexriscv/csr.json --out out/vex-csr`]
 selects M-only scratch access data from the pinned standard catalog. Run this
 from the workstation root. The model declares unknown `mscratch` reset storage and absent
 `sscratch`. The safe program first writes zero to establish a known value. It generates the existing independent monitor and assembly tests.
@@ -230,7 +230,7 @@ binding checks accepted M-mode scratch accesses only. Denied instructions,
 aliases, other catalog CSRs and privilege transitions still need bindings.
 
 To generate a minimal RVFI wrapper from port data, set `RISCV_FORMAL` to the
-upstream checkout. Run `rvw formal rvfi-generate formal/binding.json --out OUT`
+upstream checkout. Run [removed CLI: `formal rvfi-generate formal/binding.json --out OUT`]
 from this directory. The generated wrapper has unconstrained bus inputs.
 Review its environment before a formal campaign. The existing
 `formal/rvw.toml` and `formal/wrapper.sv.in` retain their separate bus assumptions.
@@ -886,7 +886,7 @@ The native regression verifies that the findings retain failure status.
 The external instruction and data command ports have explicit stable contracts.
 Their generated bindings passed Verilator elaboration. Run `rvw/checks-formal.py`
 with `--rtl`, `--generated` and `--out` to prepare separate assertions. Run the
-resulting `regress.toml` with `rvw formal regress MANIFEST --out NEW_DIR --jobs 3`.
+resulting `regress.toml` with [removed CLI: `formal regress MANIFEST --out NEW_DIR --jobs 3`].
 Eight native SBY properties passed through depth 6 with two reset clocks. They
 cover four packed command checks. No unbounded proof or activation evidence was
 obtained. Other design inputs remain arbitrary. The native run used a private
@@ -992,17 +992,12 @@ From the workstation root, prepare and run the checks:
 ```sh
 rvw/.venv/bin/python examples/vexriscv/rvw/core-properties.py \
   --rtl /tmp/vex-properties/rtl --out /tmp/vex-properties/jobs --depth 12
-rvw formal regress /tmp/vex-properties/jobs/regress.toml \
-  --jobs 3 --timeout 20 --proof-cache /tmp/vex-properties/cache \
-  --out /tmp/vex-properties/proof-1 --json
-rvw formal regress /tmp/vex-properties/jobs/regress.toml \
-  --jobs 3 --timeout 20 --proof-cache /tmp/vex-properties/cache \
-  --out /tmp/vex-properties/proof-2 --json
+# [removed in Nov 2026 scope trim] rvw formal regress /tmp/vex-properties/jobs/regress.toml --jobs 3 --timeout 20 --proof-cache /tmp/vex-properties/cache --out /tmp/vex-properties/proof-1 --json
+# [removed in Nov 2026 scope trim] rvw formal regress /tmp/vex-properties/jobs/regress.toml --jobs 3 --timeout 20 --proof-cache /tmp/vex-properties/cache --out /tmp/vex-properties/proof-2 --json
 scripts/with-lock.sh vex-sva nice -n 10 rvw/.venv/bin/python \
   examples/vexriscv/rvw/core-properties-sim.py --rtl /tmp/vex-properties/rtl \
   --out /tmp/vex-properties/sim examples/vexriscv/rvw/out/isa/rv32ui-p-add
-rvw cov merge add=/tmp/vex-properties/sim/rv32ui-p-add/coverage.dat \
-  --source-root /tmp/vex-properties/sim --json
+# [removed in Nov 2026 scope trim] rvw cov merge add=/tmp/vex-properties/sim/rv32ui-p-add/coverage.dat --source-root /tmp/vex-properties/sim --json
 ```
 
 Pass all 49 aligned ISA ELFs to the simulation script for the full example
@@ -1079,8 +1074,7 @@ scripts/with-lock.sh vex-sva nice -n 10 rvw/.venv/bin/python \
 scripts/with-lock.sh vex-sva nice -n 10 rvw/.venv/bin/python \
   examples/vexriscv/rvw/core-progress.py formal --rtl RTL_DIRECTORY \
   --out NEW_FORMAL_DIRECTORY
-rvw formal regress NEW_FORMAL_DIRECTORY/regress.toml --jobs 1 --timeout 60 \
-  --proof-cache PROOF_CACHE --out NEW_REGRESS_DIRECTORY --json
+# [removed in Nov 2026 scope trim] rvw formal regress NEW_FORMAL_DIRECTORY/regress.toml --jobs 1 --timeout 60 --proof-cache PROOF_CACHE --out NEW_REGRESS_DIRECTORY --json
 ```
 
 Repeat the regression with a new output directory to check the exact cache.
@@ -1096,7 +1090,7 @@ This does not prove unbounded liveness or fetched-instruction identity.
 operand, native-counter and probe evidence. Run it from the workstation root:
 
 ```sh
-rvw plan status examples/vexriscv/verification-plan.json --json
+# [removed in Nov 2026 scope trim] rvw plan status examples/vexriscv/verification-plan.json --json
 ```
 
 [The saved status](verification-status.json) comes from real native results.

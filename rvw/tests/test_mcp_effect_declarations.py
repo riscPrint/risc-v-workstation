@@ -21,11 +21,8 @@ def test_declared_native_tools_use_inventory_names(registry):
 
 
 @pytest.mark.parametrize('name', [
-    'bugmem_add', 'bugmem_match', 'bugmem_list', 'bugmem_evaluate',
     'perf_report', 'perf_compare', 'probes_list', 'probes_summary',
-    'probes_convert', 'checks_generate', 'checks_report',
-    'verification_plan_generate', 'verification_plan_check',
-    'vip_list', 'vip_buses', 'vip_bench', 'lsp_request',
+    'probes_convert', 'checks_generate', 'checks_report', 'lsp_request',
 ])
 def test_data_provider_declarations(name, registry):
     tool = registry.tools[name]
@@ -58,10 +55,8 @@ def test_formal_declarations(registry):
     tools = [tool for name, tool in registry.tools.items() if name.startswith('formal_')]
     assert tools
     assert all(tool.side_effects and tool.native_tools is not None for tool in tools)
-    assert registry.tools['formal_csr'].native_tools == ()
-    assert registry.tools['formal_doctor'].native_tools == ()
-    assert 'EQY' in registry.tools['formal_equiv'].native_tools
-    assert registry.tools['formal_sail_state'].native_tools == ('Sail',)
+    assert registry.tools['formal_bmc'].native_tools
+    assert 'long-running' in registry.tools['formal_x_context'].side_effects
 
 
 def test_architecture_declarations_keep_inventory_gap_explicit(registry):
@@ -75,20 +70,17 @@ def test_architecture_declarations_keep_inventory_gap_explicit(registry):
     assert registry.tools['workloads_verify'].native_tools == ('Spike', 'QEMU')
 
 
-def test_regression_and_coverage_declarations(registry):
-    tools = [tool for name, tool in registry.tools.items() if name.startswith(('regress_', 'cov_'))]
+def test_regression_declarations(registry):
+    tools = [tool for name, tool in registry.tools.items() if name.startswith('regress_')]
     assert tools and all(tool.side_effects for tool in tools)
-    assert {tool.name for tool in tools if tool.native_tools is None} == {'cov_mutate'}
-    assert 'MCY' in registry.tools['cov_mutate'].side_effects
+    assert all(tool.native_tools is not None for tool in tools)
     assert registry.tools['regress_privilege_build'].native_tools == ('RISC-V GCC',)
-    assert registry.tools['cov_report'].native_tools == ()
 
 
-def test_soc_uvm_and_snapshot_declarations(registry):
-    tools = [tool for name, tool in registry.tools.items() if name.startswith(('soc_', 'uvm_', 'sim_'))]
+def test_soc_and_snapshot_declarations(registry):
+    tools = [tool for name, tool in registry.tools.items() if name.startswith(('soc_', 'sim_'))]
     assert tools and all(tool.side_effects and tool.native_tools is not None for tool in tools)
     assert registry.tools['soc_peripheral'].side_effects == 'read-only'
-    assert registry.tools['uvm_build'].native_tools == ('Verilator',)
     assert registry.tools['sim_profile'].side_effects == 'read-only'
     assert 'adapter' in registry.tools['sim_resume'].side_effects
 
@@ -138,36 +130,22 @@ def test_sec_effects_and_native_requirements(name, registry):
     assert tool.native_tools is not None
 
 
-@pytest.mark.parametrize('name', ['farm_plan', 'farm_live', 'farm_workflow', 'farm_select', 'farm_triage', 'farm_budget', 'farm_batch', 'farm_queue', 'farm_run', 'farm_notifications', 'farm_classify', 'farm_dashboard', 'farm_recover', 'farm_cancel'])
-def test_farm_effects_and_native_requirements(name, registry):
-    tool = registry.tools[name]
-    assert tool.side_effects
-    assert (tool.native_tools is None) == (name == 'farm_batch')
-
-
-@pytest.mark.parametrize('name', ['agent_bench_native_qualify', 'agent_bench_repair_prepare', 'agent_bench_repair_check', 'agent_bench_trial'])
-def test_agent_bench_effects_and_native_requirements(name, registry):
-    tool = registry.tools[name]
-    assert tool.side_effects
-    assert (tool.native_tools is None) == (name == 'farm_batch')
-
-
 @pytest.mark.parametrize('name', ['bisect_run'])
 def test_bisect_effects_and_native_requirements(name, registry):
     tool = registry.tools[name]
     assert tool.side_effects
-    assert (tool.native_tools is None) == (name == 'farm_batch')
+    assert tool.native_tools is not None
 
 
 @pytest.mark.parametrize('name', ['bundle_make'])
 def test_bundle_effects_and_native_requirements(name, registry):
     tool = registry.tools[name]
     assert tool.side_effects
-    assert (tool.native_tools is None) == (name == 'farm_batch')
+    assert tool.native_tools is not None
 
 
 @pytest.mark.parametrize('name', ['reduce_run'])
 def test_reduce_effects_and_native_requirements(name, registry):
     tool = registry.tools[name]
     assert tool.side_effects
-    assert (tool.native_tools is None) == (name == 'farm_batch')
+    assert tool.native_tools is not None

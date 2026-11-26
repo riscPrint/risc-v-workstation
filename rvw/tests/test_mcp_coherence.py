@@ -119,10 +119,9 @@ def test_native_job_migration_is_bounded():
 def test_core_effect_declarations_follow_handlers():
     registry, problems = Registry.discover()
     assert not problems
-    for name in ('agent_guide', 'evidence_query', 'job_status', 'job_log', 'job_list'):
+    for name in ('agent_guide', 'job_status', 'job_log', 'job_list'):
         tool = registry.tools[name]
         assert tool.side_effects.startswith('read-only')
         assert tool.native_tools == ()
-    assert 'writes' in registry.tools['plan_status'].side_effects
-    assert 'writes' in registry.tools['evidence_index'].side_effects
+    assert 'writes' in registry.tools['bundle_make'].side_effects
     assert 'terminates' in registry.tools['job_cancel'].side_effects

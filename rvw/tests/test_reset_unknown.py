@@ -22,12 +22,6 @@ def test_async_refusal_has_shared_configuration_hint():
         instrument(design, 'dut')
 
 
-def test_autocheck_exposes_event_reset_flags():
-    from rvw.formal.apps_mcp import mcp_tools
-    tool = next(t for t in mcp_tools() if t.name == 'formal_autocheck')
-    assert {'event_model', 'async_reset'} <= tool.input_schema['properties'].keys()
-
-
 def test_unused_netname_slice_needs_no_driver():
     design = netlist('0')
     design['modules']['dut']['netnames']['temporary'] = {'bits': [999]}

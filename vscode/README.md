@@ -146,12 +146,12 @@ They are format samples. They are not native core qualification results.
 |---|---|---|---|
 | Regression | C4 raw and common envelope decisions work; C1/C3 serializers feed the loaders | `rvw regress gate --tier quick --base-rev BASE --json` | Native C3 and gate campaign; live window |
 | Project results | C4 uses the retained decision; C3 shows producer test counts | Same C4 command; `rvw regress run --tier quick --out RUN --json`; `rvw bundle RUN` | Native C1/C3/C5 files; live explorer |
-| Coverage | Current merge, report, functional and plan producers work on small inputs | `rvw cov merge TEST=coverage.dat --out merged.json --json`; `rvw cov report merged.json --json`; `rvw cov functional trace.jsonl --json`; `rvw plan status plan.json --json` | Native coverage; live gutters and source paths |
+| Coverage UI | Legacy coverage tree/gutter UI retained for saved files (legacy cov/plan CLIs removed in Nov 2026 trim) | `rvw agent guide --json` | Saved coverage artifacts |
 | Lint | Current rules/structural report and SARIF produce equal diagnostics on a captured database | `rvw lint --settings settings.json --sarif lint.sarif --json` | Fresh VexRiscv CDC/RDC; live Problems and quick-fixes |
 | Workstation | Current agent guide loads all workflows and steps | `rvw agent guide --json` | Live activity bar and saved checklist state |
 | LSP | See the stdio test below | `rvw lsp --db design.db --lint-settings settings.json` | Fresh VexRiscv database and live client |
 | Cosim | Native output check NOT RUN | `rvw cosim check --elf ELF --trace trace.jsonl --json` | Native mismatch; live disassembly jump |
-| Formal | Native output check NOT RUN | `rvw formal regress manifest.toml --out FORMAL --json`; `rvw formal autocheck manifest.json --out AUTO --json` | Native properties, activation results and proof core; live highlights |
+| Formal | Native BMC and X-prop checks | `rvw formal bmc --out FORMAL --depth 20 --json`; `rvw formal xprop --out XPROP --depth 10 --json` | Native BMC/xprop results; live highlights |
 | Architecture | Current study schema works without native execution; result and aggregate layout have unit checks | `rvw csim run study.json trace.csim --json`; `rvw csim sweep study.json trace.csim --param branch.model=bimodal,gshare --json` | Native study table; live report |
 | Performance | Native output check NOT RUN | `rvw perf kanata.log --json` | Native report and pipeline; live grid |
 | Wave | Native output check NOT RUN | `rvw wave find wave.vcd valid --json`; `rvw wave session save session.json --wave wave.vcd --query query.rvwq.json --json`; `rvw wave session open session.json --json` | Native wave, query and session; live viewer |

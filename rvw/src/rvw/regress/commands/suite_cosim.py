@@ -38,7 +38,7 @@ ALLOW = {'reset': ('csr', 'csr_reset_unknown'), 'irq': ('irq', 'irq'), 'mmio': (
 
 def matched(comparison, run, allow):
     """A complete match. Each applied mask or synchronization must have an allowed reason."""
-    from rvw.regress.random_stream import complete
+    from rvw.cosim.extensions import complete_comparison as complete
     reasons = {ALLOW[k][1] for k in allow}
     reason = lambda item: item.get('reason') if isinstance(item, dict) else None  # noqa: E731
     if any(reason(m) not in reasons for m in comparison.get('applied_masks', [])):

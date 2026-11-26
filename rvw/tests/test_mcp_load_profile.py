@@ -15,18 +15,18 @@ def tool(name):
 
 
 def test_load_profile_adds_only_new_tools_and_refuses_unknown():
-    r = Registry([tool("cov_report"), tool("query_drivers"), tool("agent_guide")], profile="core")
-    assert "cov_report" not in r.tools and "agent_guide" in r.tools
-    assert r.load_profile("verification") == ["cov_report"]
-    assert r.load_profile("verification") == []
-    assert r.call("cov_report", {}) == {"ok": "cov_report"}
+    r = Registry([tool("formal_bmc"), tool("query_drivers"), tool("agent_guide")], profile="core")
+    assert "formal_bmc" not in r.tools and "agent_guide" in r.tools
+    assert r.load_profile("formal") == ["formal_bmc"]
+    assert r.load_profile("formal") == []
+    assert r.call("formal_bmc", {}) == {"ok": "formal_bmc"}
     out = json.loads(r.call_json("rvw_tools_load", {"profile": "debug"})[0])
     assert out["added"] == ["query_drivers"] or out.get("data", {}).get("added") == ["query_drivers"]
     with pytest.raises(ToolError, match="unknown profile"):
         r.load_profile("nope")
 
 
-def test_stdio_core_profile_loads_verification_and_notifies():
+def test_stdio_core_profile_loads_formal_and_notifies():
     pytest.importorskip("mcp")
     from mcp import ClientSession, StdioServerParameters
     from mcp.client.stdio import stdio_client
@@ -44,9 +44,9 @@ def test_stdio_core_profile_loads_verification_and_notifies():
                 caps = init.capabilities.tools
                 assert caps and (getattr(caps, "list_changed", None) or getattr(caps, "listChanged", None))
                 before = {t.name for t in (await s.list_tools()).tools}
-                assert "rvw_tools_load" in before and "cov_report" not in before
-                await s.call_tool("rvw_tools_load", {"profile": "verification"})
+                assert "rvw_tools_load" in before and "formal_bmc" not in before
+                await s.call_tool("rvw_tools_load", {"profile": "formal"})
                 after = {t.name for t in (await s.list_tools()).tools}
-                assert "cov_report" in after and "cosim_check" in after
+                assert "formal_bmc" in after and "formal_xprop" in after
     anyio.run(session)
     assert any("tools/list_changed" in str(m) or "ToolListChanged" in str(m) for m in seen), seen

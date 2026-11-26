@@ -1196,9 +1196,7 @@ an M-mode CSR. Field access entries do not grant lower-mode CSR access.
 
 Generate the monitor and assembly with:
 
-```sh
-rvw formal csr --model csr.json --out rvw/out/csr
-```
+Use `rvw csr show` / `rvw checks generate` for CSR selection data (`formal csr` CLI subcommand was trimmed).
 
 This selection is input data. Generation does not show that the monitor is
 bound to RTL or that the program passed on the core. It does not cover RV64,

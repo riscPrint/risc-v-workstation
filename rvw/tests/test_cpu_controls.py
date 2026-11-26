@@ -42,18 +42,3 @@ def test_control_failure_clears_requests():
         lambda value: events.append(('irq',value)),lambda value: events.append(('debug',value)))
     with pytest.raises(RuntimeError): asyncio.run(controls.random_requests(1,8))
     assert events == [('irq',0),('debug',0)]
-
-
-def test_pyuvm_control_sequence_uses_project_callbacks():
-    import importlib.util
-    from pathlib import Path
-    pyuvm = pytest.importorskip('pyuvm')
-    path = Path(__file__).resolve().parents[2]/'Uvm/pyuvm/cpu_env.py'
-    spec = importlib.util.spec_from_file_location('rvw_pyuvm_cpu', path)
-    module = importlib.util.module_from_spec(spec); spec.loader.exec_module(module)
-    controls, events = controller()
-    seqr = pyuvm.uvm_sequencer('control_test_seqr',None); seqr.controls=controls
-    seq = module.RandomControlSequence(count=3,allowed_irqs=8)
-    asyncio.run(seq.start(seqr))
-    assert events[-2:] == [('irq',0),('debug',0)]
-    assert any(value for name,value in events if name in ('irq','debug'))

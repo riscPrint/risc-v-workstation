@@ -37,7 +37,7 @@ def private_table(node, definitions):
 
 def test_no_second_private_catalog_or_address_table():
     definitions = catalog()['registers']
-    allowed = {'formal/csr_catalog.json', 'formal/csr_aia_catalog.json'}
+    allowed = {'csr/csr_catalog.json', 'csr/csr_aia_catalog.json'}
     src = ROOT / 'rvw/src/rvw'
     for path in src.rglob('*.json'):
         obj = json.loads(path.read_text())

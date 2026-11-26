@@ -30,9 +30,9 @@ def test_boolean_run_is_an_execution_flag():
 def test_provider_aliases_are_explicit_and_optional():
     registry, problems = Registry.discover()
     assert not problems
-    for name in ('soc_audit', 'soc_feedback', 'soc_handoff', 'soc_mbist', 'farm_dashboard'):
+    for name in ('soc_audit', 'soc_feedback', 'soc_handoff', 'soc_mbist'):
         tool = registry.tools[name]
-        canonical, old = ('run_id', 'run') if name == 'farm_dashboard' else ('db', 'db_path')
+        canonical, old = ('db', 'db_path')
         assert canonical in tool.input_schema['properties']
         assert tool.input_schema['properties'][old]['x-alias-for'] == canonical
         arguments = {k: 'fixture' for k in tool.input_schema['required']}

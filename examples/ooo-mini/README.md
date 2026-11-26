@@ -57,12 +57,12 @@ They do not establish whole-core proof or release qualification.
 | Kanata conversion | Allocation, issue, commit and squash view | The trap/counter sample has 49 retirements, 24 flushed instructions, two open instructions at termination and zero orphan events. A trapping head is flushed, not retired. |
 | `rvw csim compare-rtl` | Predictor comparison with project parameters | Four smoke branches were compared. Conditional direction has zero disagreements. One jump has a target-status classification difference. The model remains approximate. |
 | Scala property DSL, `rvw checks generate --all` | Properties beside RTL and project-bound microarchitecture checks | Fourteen properties feed 19 native monitors. Eight SV binds check bounds, free/live disjointness, age order, byte forwarding and recovery FIFO order. All 50 default ISA runs pass with these binds and Verilator assertions enabled. No check fires. ROB16 uses the Scala monitors only. |
-| `rvw formal regress` | Small bounded checks from generated assertions | Five depth-8 bounded-pass observations have reached covers. Overall remains `unknown`: input closure and universal activation are not certified. Predicate covers do not prove every logical antecedent occurred. |
-| `rvw formal isa` | Direct RTL RVFI instruction-check wrapper | ADD, LUI and retirement cover timed out after 15 seconds at depth 8. No ISA check closed. No unbounded proof was run. |
+| [removed CLI: `formal regress`] | Small bounded checks from generated assertions | Five depth-8 bounded-pass observations have reached covers. Overall remains `unknown`: input closure and universal activation are not certified. Predicate covers do not prove every logical antecedent occurred. |
+| [removed CLI: `formal isa`] | Direct RTL RVFI instruction-check wrapper | ADD, LUI and retirement cover timed out after 15 seconds at depth 8. No ISA check closed. No unbounded proof was run. |
 | `rvw ooo` | A trace-driven timing estimate and structural experiment | Three programs ran on both ROB sizes. The window test predicts a 1.774 IPC ratio and measures 1.206. The model overpredicts the benefit. No accuracy qualification is claimed. |
 | `rvw fault` | Confirmed register injection and C2 classification | Four flips in rename/ROB registers: two detected, two safe, none unresolved. This is a four-sample exercise. |
 | `rvw lint`, SpinalDB | Native lint, rule findings and clock/reset inventory | 100 active findings and 159 unresolved generated-temporary candidates remain. The database has 501 registers and one clock. No structural CDC/RDC crossings were found. This is not clean lint or CDC signoff. |
-| `rvw cov` | Raw code points and functional observations | Smoke and trap programs hit 3,436 of 5,121 code points. Line coverage is 60.24%; branch coverage is 71.37%. Functional coverage records 52 mnemonic/mode bins on ISA traces. No complete mnemonic expectation plan is declared. |
+| [removed CLI: `cov`] | Raw code points and functional observations | Smoke and trap programs hit 3,436 of 5,121 code points. Line coverage is 60.24%; branch coverage is 71.37%. Functional coverage records 52 mnemonic/mode bins on ISA traces. No complete mnemonic expectation plan is declared. |
 | `rvw regress gate` | Committed negative and positive controls | The three-program gate with seed 17 rejects a planted multiplier bit error for one new failure and accepts the committed repair. No waiver or allow-missing flag is used. |
 
 Detailed tables: [ISA](isa-results.json), [interfaces](interfaces-results.json),
@@ -123,14 +123,13 @@ Generate formal RTL and the design database before their tools:
 rvw checks generate --all --out rvw/out/lint-bindings
 rvw lint --settings lint.json --json
 python3 rvw/prepare-formal.py
-rvw formal regress rvw/out/formal-jobs/regress.toml \
-  --out rvw/out/formal --jobs 2 --timeout 15
+# [removed in Nov 2026 scope trim] rvw formal regress rvw/out/formal-jobs/regress.toml --out rvw/out/formal --jobs 2 --timeout 15
 ```
 
 Set `RISCV_FORMAL` to a pinned riscv-formal checkout only for the ISA profile:
 
 ```sh
-rvw formal isa --project formal.toml --out rvw/out/isa-formal --timeout 15
+# [removed in Nov 2026 scope trim] rvw formal isa --project formal.toml --out rvw/out/isa-formal --timeout 15
 ```
 
 The wrapper leaves RAM data arbitrary. It does not prove the memory system.
@@ -444,7 +443,7 @@ an M-mode CSR. Field access entries do not grant lower-mode CSR access.
 Generate the monitor and assembly with:
 
 ```sh
-rvw formal csr --model csr.json --out rvw/out/csr
+# [removed in Nov 2026 scope trim] rvw formal csr --model csr.json --out rvw/out/csr
 ```
 
 This selection is input data. Generation does not show that the monitor is

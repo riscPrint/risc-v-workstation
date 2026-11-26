@@ -40,12 +40,6 @@ def mcp_tools():
                  handler("rvw.regress.sail_tests","sail-tests"),long=True, side_effects='long-running; launches a supplied Sail endpoint; writes generated programs under work_dir', native_tools=()),
         ToolSpec('regress_mmu_iommu_generate', 'Generate decoded IOMMU translation, isolation, queue and MSI scenario data. This is not a DUT run.', schema({'seed': I, 'mode': {**S, 'enum': ['sv39', 'sv48', 'sv57']}}), generate, annotations=RO, side_effects='read-only', native_tools=()),
         ToolSpec('regress_mmu_iommu', 'Compare decoded IOMMU scenario steps with independently captured device responses. A consistent result requires C1 binding. Raw context and register conformance remain unsupported.', schema({'description': S, 'observations': S, 'result': S}, ['description']), mcp_run, annotations=RO, side_effects='read-only', native_tools=()),
-        ToolSpec("regress_random", "Generate pinned riscv-dv programs, compile project runtime, run C1 and compare complete C2 with Spike. Only qualified runs earn functional coverage. Generator, compiler, adapter and comparison errors remain separate.",
-                 schema({**CORE, "settings": S, "out": S, "config": S,
-                         "seeds": {**I, "minimum": 1, "default": 1},
-                         "seed_base": {**I, "default": 1}, "resume": B,
-                         "jobs": {**I, "minimum": 1, "maximum": 4, "default": 1}}, ["out"]),
-                 handler("rvw.regress.random_stream"), long=True, side_effects='long-running; launches generator, compiler, project adapter and Spike; writes campaign under out', native_tools=('riscv-dv', 'RISC-V GCC', 'Spike')),
         ToolSpec("regress_list", "Discover a core's suites, tiers and configurations before running; pass suite to list test IDs.",
                  schema({**CORE, "suite": S}), _call("list"), annotations=RO, side_effects='read-only', native_tools=()),
         ToolSpec("regress_run", "Run suites or a tier through the core adapter, resume/cache results, or preview with dry_run. "

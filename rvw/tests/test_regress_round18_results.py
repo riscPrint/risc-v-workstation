@@ -62,7 +62,7 @@ def test_direct_suite_validates_owner(fake, tmp_path, defect, as_file):
         find_results(suite)
 
 
-@pytest.mark.parametrize("reader", ["compare", "gate", "mcp", "coverage"])
+@pytest.mark.parametrize("reader", ["compare", "gate", "mcp"])
 def test_direct_unfinished_suite_refused_by_all_readers(fake, rvw, tmp_path, reader):
     base = tmp_path / "base"
     _run(fake, base)
@@ -70,11 +70,7 @@ def test_direct_unfinished_suite_refused_by_all_readers(fake, rvw, tmp_path, rea
     suite = _run(fake, out)
     # A resumed invocation clears finished before replacing old suite results.
     _break(out, "unfinished")
-    if reader == "coverage":
-        from rvw.cov.code import inputs
-        with pytest.raises(SchemaError, match="incomplete"):
-            inputs([str(suite)])
-    elif reader == "mcp":
+    if reader == "mcp":
         from rvw.mcp.registry import Registry
         registry, errors = Registry.discover({"regress"})
         assert not errors

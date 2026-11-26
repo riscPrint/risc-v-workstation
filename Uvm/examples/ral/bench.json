@@ -1,7 +1,0 @@
-{
- "schema":"rvw.uvm/1", "name":"ral_fixture", "top":"top",
- "sources":["../../base/rvw_ral_pkg.sv","top.sv"],
- "register_map":"../../tests/registers.json",
- "tests":["ral_smoke"],
- "build_args":["-MAKEFLAGS","OPT_FAST=-O0 OPT_SLOW=-O0"]
-}

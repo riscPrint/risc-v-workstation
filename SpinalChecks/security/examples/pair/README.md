@@ -1,12 +1,6 @@
 # Two-copy security examples
 
-These self-contained fixtures use `rvw formal security pair`. Run one with:
-
-```sh
-rvw formal security pair \
-  --manifest SpinalChecks/security/examples/pair/speculation-1-safe.json \
-  --out /tmp/speculation-safe --timeout 60
-```
+Self-contained security leakage fixtures used by `rvw/tests/formal/test_security_seeded_fixtures.py` (standalone `formal security pair` CLI was removed; use `rvw sec` for active security workflows).
 
 The safe fixtures must prove. The leaky fixtures must fail with a trace. Use a
 new output directory for each run. The manifests declare every observed port,

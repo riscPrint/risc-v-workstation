@@ -9,9 +9,7 @@ results. Its checker and test mappings remain unassigned.
 Set `RISCV_PROFILES` to that source checkout. Set `RVW_ISA_MANIFEST` to the
 core's ISA declaration. Run:
 
-```sh
-rvw formal profiles examples/profiles/profiles.example.json --out profile-report
-```
+Historical profile catalog schema example (`examples/profiles/profiles.example.json`; `formal profiles` catalog CLI was trimmed).
 
 The command writes a source index and per-document catalogs. Assign and review
 checker/test mappings before catalog adoption. Declare base or standalone

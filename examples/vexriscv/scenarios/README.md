@@ -38,10 +38,7 @@ rvw/.venv/bin/python examples/vexriscv/scenarios/run.py check --out rvw/out/scen
 
 The generic generation command is also available:
 
-```sh
-rvw formal scenario-compile --source examples/vexriscv/scenarios/scenario.json \
-  --finisher 0x10001000 --out rvw/out/scenario-source --json
-```
+Historical directed scenario definition (`examples/vexriscv/scenarios/scenario.json`; `formal scenario-compile` CLI subcommand was trimmed).
 
 Generation reports `generated`. It does not execute either backend.
 

@@ -139,3 +139,15 @@ def vector_sources(insn):
     if op in (7, 0x27) and f3 in (0, 5, 6, 7):
         return rs1, rs2 if (insn >> 26) & 3 == 2 else 0
     return None
+
+
+def complete_comparison(comparison, run):
+    """Return True iff strict cosim completed all retired instructions without masks."""
+    return (comparison.get('status') == 'match'
+            and comparison.get('synchronized', 0) == 0
+            and comparison.get('trace_complete') is True
+            and comparison.get('end_status') == 'pass'
+            and comparison.get('instructions', 0) > 0
+            and type(comparison.get('retirements', comparison['instructions'])) is int
+            and 0 <= comparison.get('retirements', comparison['instructions']) <= comparison['instructions']
+            and comparison.get('retirements', comparison['instructions']) == run.instret)

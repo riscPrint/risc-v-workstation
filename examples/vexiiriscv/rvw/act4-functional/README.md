@@ -1,6 +1,6 @@
 # ACT4 and riscv-tests functional coverage
 
-These reports use `rvw cov functional` on native C2 traces from 2026-11-13.
+These reports use [removed CLI: `cov functional`] on native C2 traces from 2026-11-13.
 The coverage plan is the command's default plan. Coverage includes boot,
 test code and signature checks. Failed prefixes remain in `merged.json`.
 This is not a certification result or isolated test body coverage.
@@ -22,9 +22,9 @@ and all merged bin counts. Raw traces remain external build artifacts.
 Run this procedure with the actual C2 paths from the C1 result records:
 
 ```sh
-rvw cov functional ACT4_TRACE_PATHS --platform PLATFORM --json > act4.json
-rvw cov functional ISA_TRACE_PATHS --platform PLATFORM --json > riscv-tests.json
-rvw cov functional act4.json riscv-tests.json --platform PLATFORM --json > merged.json
+# [removed in Nov 2026 scope trim] rvw cov functional ACT4_TRACE_PATHS --platform PLATFORM --json > act4.json
+# [removed in Nov 2026 scope trim] rvw cov functional ISA_TRACE_PATHS --platform PLATFORM --json > riscv-tests.json
+# [removed in Nov 2026 scope trim] rvw cov functional act4.json riscv-tests.json --platform PLATFORM --json > merged.json
 ```
 
 Replace the uppercase terms with paths. Keep one XLEN/ISA context per
@@ -58,29 +58,29 @@ generated PMP programs. It has 717 observed and 447 qualified traces.
 The historical counts above remain unchanged. Raw corpora are no longer tracked.
 
 Run-output JSON files with `summary_only` contain historical counts only.
-They are not inputs to `rvw plan`, `rvw evidence`, or coverage merging.
+They are not inputs to [removed CLI: `plan`], [removed CLI: `evidence`], or coverage merging.
 Regenerate full records outside the repository before using those tools.
 
 Historical `machine/corpus.json`: {"core":"vexiiriscv","date":"2026-11-13","observed_traces":107,"path_policy":"paths rebased for publication; source hashes identify original bytes","profile":"machine","qualified_traces":107,"raw_trace_hashes":true,"scope":"whole C2 execution including boot and signature checks; failed prefixes remain in merged.json; not test-body coverage","verification":"unique C2 content; exact SHA membership; summed retired records and all bin counts checked"}.
 Raw records are no longer tracked. Regenerate outside the repository:
-`rvw cov functional TRACE_PATHS --platform PLATFORM --json`. Use the pinned inputs and options from [PR #1153](https://github.com/riscPrint/risc-v-workstation/pull/1153).
+[removed CLI: `cov functional TRACE_PATHS --platform PLATFORM --json`]. Use the pinned inputs and options from [PR #1153](https://github.com/riscPrint/risc-v-workstation/pull/1153).
 
 Historical `machine/merged.json`: {"groups":{"entries":10},"notes":{"records":8},"retired":186927,"traces":{"entries":107},"unknown_encodings":{"entries":0}}.
 Raw records are no longer tracked. Regenerate outside the repository:
-`rvw cov functional TRACE_PATHS --platform PLATFORM --json`. Use the pinned inputs and options from [PR #1153](https://github.com/riscPrint/risc-v-workstation/pull/1153).
+[removed CLI: `cov functional TRACE_PATHS --platform PLATFORM --json`]. Use the pinned inputs and options from [PR #1153](https://github.com/riscPrint/risc-v-workstation/pull/1153).
 
 Historical `machine/qualified.json`: {"groups":{"entries":10},"notes":{"records":8},"retired":186927,"traces":{"entries":107},"unknown_encodings":{"entries":0}}.
 Raw records are no longer tracked. Regenerate outside the repository:
-`rvw cov functional TRACE_PATHS --platform PLATFORM --json`. Use the pinned inputs and options from [PR #1153](https://github.com/riscPrint/risc-v-workstation/pull/1153).
+[removed CLI: `cov functional TRACE_PATHS --platform PLATFORM --json`]. Use the pinned inputs and options from [PR #1153](https://github.com/riscPrint/risc-v-workstation/pull/1153).
 
 Historical `supervisor/corpus.json`: {"core":"vexiiriscv","date":"2026-11-13","observed_traces":319,"path_policy":"paths rebased for publication; source hashes identify original bytes","profile":"supervisor","qualified_traces":49,"raw_trace_hashes":true,"scope":"whole C2 execution including boot and signature checks; failed prefixes remain in merged.json; not test-body coverage","verification":"unique C2 content; exact SHA membership; summed retired records and all bin counts checked"}.
 Raw records are no longer tracked. Regenerate outside the repository:
-`rvw cov functional TRACE_PATHS --platform PLATFORM --json`. Use the pinned inputs and options from [PR #1153](https://github.com/riscPrint/risc-v-workstation/pull/1153).
+[removed CLI: `cov functional TRACE_PATHS --platform PLATFORM --json`]. Use the pinned inputs and options from [PR #1153](https://github.com/riscPrint/risc-v-workstation/pull/1153).
 
 Historical `supervisor/merged.json`: {"groups":{"entries":10},"notes":{"records":8},"retired":334592,"traces":{"entries":319},"unknown_encodings":{"entries":0}}.
 Raw records are no longer tracked. Regenerate outside the repository:
-`rvw cov functional TRACE_PATHS --platform PLATFORM --json`. Use the pinned inputs and options from [PR #1153](https://github.com/riscPrint/risc-v-workstation/pull/1153).
+[removed CLI: `cov functional TRACE_PATHS --platform PLATFORM --json`]. Use the pinned inputs and options from [PR #1153](https://github.com/riscPrint/risc-v-workstation/pull/1153).
 
 Historical `supervisor/qualified.json`: {"groups":{"entries":10},"notes":{"records":8},"retired":17735,"traces":{"entries":49},"unknown_encodings":{"entries":0}}.
 Raw records are no longer tracked. Regenerate outside the repository:
-`rvw cov functional TRACE_PATHS --platform PLATFORM --json`. Use the pinned inputs and options from [PR #1153](https://github.com/riscPrint/risc-v-workstation/pull/1153).
+[removed CLI: `cov functional TRACE_PATHS --platform PLATFORM --json`]. Use the pinned inputs and options from [PR #1153](https://github.com/riscPrint/risc-v-workstation/pull/1153).

@@ -6,7 +6,7 @@ from pathlib import Path
 from rvw.cosim.cli import execute_json
 from rvw.cosim.platform import Platform
 from rvw.results import load_run
-from rvw.regress.random_stream import complete
+from rvw.cosim.extensions import complete_comparison as complete
 from rvw.sec.common import native
 from rvw.sec.core_adapter import compile_elf, reference, render
 from rvw.runs.elf import Elf

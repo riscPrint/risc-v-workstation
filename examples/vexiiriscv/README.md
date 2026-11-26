@@ -255,7 +255,7 @@ write initializes the independent read model. The generated assembly covers
 scratch read/write/set/clear behavior and the absent-CSR illegal-instruction trap.
 
 The optional `rvwvexii.CsrChecksRuntime MODEL OUT none|read ELF...` installs
-one native `csr.read` check. Build `MODEL` and assembly with `rvw formal csr`.
+one native `csr.read` check. Build `MODEL` and assembly with [removed CLI: `formal csr`].
 Compile the assembly with the example linker script. Run each ELF on Spike with
 `--isa=rv32im_zicsr_zifencei --priv=m`. Run the native entry under `vex-csr`
 and the sbt lock, with nice priority 10. Select a private `VEXIIRISCV` source
@@ -572,7 +572,7 @@ shared aliases, hardware/software update races or whole-core equivalence.
 operand, native-counter and probe evidence. Run it from the workstation root:
 
 ```sh
-rvw plan status examples/vexiiriscv/verification-plan.json --json
+# [removed in Nov 2026 scope trim] rvw plan status examples/vexiiriscv/verification-plan.json --json
 ```
 
 The saved status (historical counts and regeneration command in the example README) comes from real native results.
@@ -869,12 +869,12 @@ Raw records are no longer tracked. Regenerate outside the repository:
 `rvw regress run --project examples/vexiiriscv/rvw32.toml --suite pmp --rvfi-trace --out RUN_ROOT; rvw regress cosim RUN_ROOT --platform examples/vexiiriscv/rvw/platform32.json`. Use the pinned inputs and options from [PR #1111](https://github.com/riscPrint/risc-v-workstation/pull/1111).
 
 Run-output JSON files with `summary_only` contain historical counts only.
-They are not inputs to `rvw plan`, `rvw evidence`, or coverage merging.
+They are not inputs to [removed CLI: `plan`], [removed CLI: `evidence`], or coverage merging.
 Regenerate full records outside the repository before using those tools.
 
 Historical `verification-status.json`: {"status":"reported","features":{"records":7,"statuses":{"reported_closed":4,"open":3}},"notes":{"records":2},"unassigned_requirements":{"records":0},"summary":{"features":7,"reported_closed":4,"open":3,"holes":5082,"unassigned_requirements":0}}.
 Raw records are no longer tracked. Regenerate outside the repository:
-`rvw plan status examples/vexiiriscv/verification-plan.json --json`. Use the pinned inputs and options from [PR #1145](https://github.com/riscPrint/risc-v-workstation/pull/1145).
+[removed CLI: `plan status examples/vexiiriscv/verification-plan.json --json`]. Use the pinned inputs and options from [PR #1145](https://github.com/riscPrint/risc-v-workstation/pull/1145).
 
 ## RV32 and RV64 evidence
 

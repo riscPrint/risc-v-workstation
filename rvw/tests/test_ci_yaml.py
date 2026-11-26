@@ -43,7 +43,7 @@ def test_native_markers_use_real_inventory_names():
 
 def test_every_tier_command_points_to_a_real_directory():
     ci = runpy.run_path(str(ROOT / 'scripts/ci-tiers.py'))
-    for component in ('python', 'scala', 'rust', 'javascript', 'components', 'vip'):
+    for component in ('python', 'scala', 'rust', 'javascript', 'components'):
         for _, cwd, command in ci['commands']('nightly', component):
             assert cwd.is_dir()
             assert command

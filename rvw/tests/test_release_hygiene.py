@@ -123,7 +123,6 @@ def test_path_check_allows_neutral_examples():
     ('SpinalChecks/boom/from-sim.sh', [], 'ENV_SH'),
     ('SpinalChecks/boom/run-suite.sh', [], 'ENV_SH'),
     ('SpinalChecks/boom/xprop.sh', [], 'ENV_SH'),
-    ('rvw/examples/coverage/collect-boom.sh', ['out'], 'SPINAL_BOOM'),
 ])
 def test_boom_helpers_name_missing_configuration(script, args, variable):
     env = dict(os.environ)

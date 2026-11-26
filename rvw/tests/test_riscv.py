@@ -2,7 +2,6 @@
 import pytest
 
 from rvw.common.riscv import classify, decode, integer_sources
-from rvw.cov.functional import decode as cov_decode
 
 
 @pytest.mark.parametrize("word, mnemonic, cls, sources, dest", [
@@ -47,12 +46,6 @@ def test_integer_sources_and_classify():
     assert classify(None) == "unknown" and classify(0x0000) == "unknown"
 
 
-def test_cov_uses_the_shared_decoder():
-    # Review finding: three decoders; cov's called fcvt.s.w (reads x10) `unknown`.
-    assert cov_decode(0xd0057553) == {"mnemonic": "fcvt.s.w", "class": "float", "uses": [("x", 10)],
-                                      "dest_bank": "f", "length": 4}
-
-
 @pytest.mark.parametrize("base,mnemonic", [(0x0502, "c.slli"), (0x8101, "c.srli"), (0x8501, "c.srai")])
 def test_compressed_shift_amounts_by_xlen(base, mnemonic):
     for shamt in range(64):
@@ -61,7 +54,7 @@ def test_compressed_shift_amounts_by_xlen(base, mnemonic):
         d = decode(word, 32)
         assert d.mnemonic == ("unknown" if shamt >= 32 else mnemonic)
         if shamt >= 32:
-            assert d.sources == () and cov_decode(word, 32)["class"] == "unknown"
+            assert d.sources == ()
 
 
 @pytest.mark.parametrize("word,rv32,rv64", [
@@ -85,19 +78,6 @@ def test_compressed_shift_amounts_by_xlen(base, mnemonic):
 def test_compressed_reserved_forms_and_hints(word, rv32, rv64):
     assert decode(word, 32).mnemonic == rv32
     assert decode(word, 64).mnemonic == rv64
-
-
-def test_rv32_reserved_shifts_stay_out_of_coverage_bins(tmp_path):
-    import json
-    from rvw.cov.functional import functional
-    words = [0x1506, 0x9105, 0x9505]
-    header = dict(schema="rvw.rvfi/1", xlen=32, isa="rv32imc", core="fixture")
-    rows = [dict(order=i, insn=hex(word), mode=3, rd=0, trap=True) for i, word in enumerate(words)]
-    trace = tmp_path / "rv32.jsonl"
-    trace.write_text("\n".join(map(json.dumps, [header, *rows])) + "\n")
-    report = functional([trace])
-    assert report["unknown_encodings"] == {hex(word): 1 for word in words}
-    assert report["unqualified"]["mnemonic_mode"] == [{"bin": ["unknown", "M"], "count": 3}]
 
 
 # Round 15: forms with a rounding-mode field named reserved rm values (5, 6) as valid
@@ -133,21 +113,6 @@ def test_reserved_rounding_modes_are_unknown(mnemonic, word):
 def test_reported_reserved_fadd_is_unknown():
     assert decode(0x003150d3).mnemonic == "unknown" and classify(0x003150d3) == "unknown"
     assert decode(0x003170d3).mnemonic == "fadd.s"      # same word with rm=7 (DYN)
-
-
-def test_reserved_rounding_mode_stays_out_of_coverage_bins(tmp_path):
-    import json
-    from rvw.cov.functional import functional
-    header = dict(schema="rvw.rvfi/1", xlen=64, isa="rv64imafdc_zicsr", core="fixture", config="t", elf="x")
-    row = dict(order=0, cycle=0, pc="0x80000000", pc_next="0x80000004", insn="0x3150d3", mode=3, trap=True,
-               intr=False, halt=False, rs1=0, rs1_rdata="0x0", rs2=0, rs2_rdata="0x0", rd=0, rd_wdata="0x0",
-               mem_addr="0x0", mem_rmask=0, mem_wmask=0, mem_rdata="0x0", mem_wdata="0x0", mem_fault=False)
-    trace = tmp_path / "t.jsonl"
-    trace.write_text(json.dumps(header) + "\n" + json.dumps(row) + "\n")
-    report = functional([trace])
-    bins = [h["bin"][0] for h in report["unqualified"]["mnemonic_mode"]]
-    assert "fadd.s" not in bins and bins == ["unknown"], bins
-    assert report["unknown_encodings"] == {"0x3150d3": 1}
 
 
 @pytest.mark.parametrize("word,xlen", [

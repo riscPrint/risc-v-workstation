@@ -123,135 +123,6 @@ def test_regress_cancel_kills_adapter_and_releases_lock(registry, fake, tmp_path
     assert not (tmp_path / "locks/fake-test.lock").exists()  # the old-style directory too
 
 
-def dat(path, counts):
-    path.write_text('# SystemC::Coverage-3\n' + ''.join(
-        f"C '\x01f\x02logic.v\x01l\x02{n}\x01page\x02v_line/Unit\x01h\x02TOP.unit' {count}\n"
-        for n, count in enumerate(counts, 1)))
-    return path
-
-
-def test_cov_merge_report_rank_select_and_functional(registry, tmp_path, rvw):
-    a, b = dat(tmp_path / "a.dat", [1, 0]), dat(tmp_path / "b.dat", [0, 2])
-    inputs = [f"A={a}", f"B={b}"]
-    database = tmp_path / "coverage.json"
-    data = call(registry, "cov_merge", inputs=inputs, source_root=str(tmp_path), out=str(database))
-    assert data == rvw("cov", "merge", *inputs, "--source-root", tmp_path, "--json")[2]
-    assert data == json.loads(database.read_text())
-    report = call(registry, "cov_report", database=str(database))
-    assert report == rvw("cov", "report", database, "--json")[2]
-    assert report["summary"]["hit"] == 2
-    ranking = call(registry, "cov_rank", database=str(database), exact=True)
-    assert ranking == rvw("cov", "rank", database, "--exact", "--json")[2]
-    assert ranking["selected"] == ["A", "B"]
-    subprocess.run(["git", "init", "-q", str(tmp_path)], check=True)
-    source = tmp_path / "Unit.scala"
-    for value in (1, 2):
-        source.write_text(f"val a={value}\n")
-        subprocess.run(["git", "-C", str(tmp_path), "add", "Unit.scala"], check=True)
-        subprocess.run(["git", "-C", str(tmp_path), "-c", "user.name=Test", "-c", "user.email=t@x",
-                        "commit", "-qm", "fixture"], check=True)
-    selected = call(registry, "cov_select", database=str(database), diff="HEAD~1..HEAD", repo=str(tmp_path))
-    assert selected == rvw("cov", "select", database, "--diff", "HEAD~1..HEAD", "--repo", tmp_path, "--json")[2]
-    assert selected["fallback_all"] and selected["tests"] == ["A", "B"]
-    trace = tmp_path / "trace.jsonl"
-    trace.write_text(json.dumps({"schema": "rvw.rvfi/1", "xlen": 64, "isa": "rv64imc"}) + '\n' +
-                     json.dumps({"order": 0, "insn": "0x00100093", "mode": 3, "rd": 1}) + '\n')
-    functional = call(registry, "cov_functional", traces=[str(trace)])
-    assert functional == rvw("cov", "functional", trace, "--json")[2]
-    assert functional["retired"] == 1
-
-
-@pytest.mark.parametrize('sim,eq,observed', [('FAIL', 'FAIL', 'killed'),
-                                          ('PASS', 'PASS', 'equivalent'),
-                                          ('PASS', 'FAIL', 'survived')])
-def test_cov_mutation_report(registry, tmp_path, rvw, monkeypatch, sim, eq, observed):
-    monkeypatch.setenv("RVW_LOCK_DIR", str(tmp_path / "locks"))
-    (tmp_path / "database").mkdir()
-    (tmp_path / "config.mcy").write_text("[options]\nsize 1\n")
-    with sqlite3.connect(tmp_path / "database/db.sqlite3") as db:
-        db.executescript('CREATE TABLE mutations(mutation_id INTEGER, mutation TEXT);'
-                         'CREATE TABLE tags(mutation_id INTEGER, tag TEXT);'
-                         'CREATE TABLE results(mutation_id INTEGER, test TEXT, result TEXT);'
-                         'CREATE TABLE queue(mutation_id INTEGER, test TEXT, running INTEGER);'
-                         'INSERT INTO mutations VALUES(0,"mutate -mode none");'
-                         'INSERT INTO results VALUES(0,"sim","PASS");'
-                         'INSERT INTO results VALUES(0,"eq","PASS");'
-                         'INSERT INTO mutations VALUES(1,"mutate -mode inv");')
-        db.executemany('INSERT INTO results VALUES(1,?,?)', [('sim', sim), ('eq', eq)])
-    actual = call(registry, "cov_mutate", project=str(tmp_path), test=['sim'], equivalence_test=['eq'])
-    rc, _, cli = rvw("cov", "mutate", tmp_path, "--test", "sim", "--equivalence-test", "eq", "--json")
-    assert actual == cli
-    assert rc == 3 and actual['status'] == 'inconclusive'
-    assert actual['cause'] == 'input_not_captured:mcy_dependencies'
-    assert all(actual['counts'][state] == 0 for state in ('killed', 'survived', 'equivalent', 'control'))
-    assert actual['observed_counts'][observed] == 1
-    assert actual['observed_counts']['control'] == 1 and not actual['control_failures']
-
-
-@pytest.mark.skipif(not shutil.which("yosys"), reason="yosys not on PATH (source spinal-boom/env.sh)")
-def test_cov_prove_job(registry, tmp_path, monkeypatch, rvw):
-    # Synthetic solver status files test dispatch/provenance, not real proof evidence. The vacuity
-    # guard elaborates the harness with the real Yosys.
-    tools = tmp_path / "bin"
-    tools.mkdir()
-    for tool in ("sby", "z3"):
-        path = tools / tool
-        path.write_text(f"#!{sys.executable}\n" +
-                        "import sys, shutil\nfrom pathlib import Path\n"
-                        "if '-d' not in sys.argv: print('fixture-version'); sys.exit(0)\n"
-                        "out = Path(sys.argv[sys.argv.index('-d') + 1])\n"
-                        "out.mkdir()\n"
-                        "src = out / 'src'; src.mkdir()\n"
-                        "for source in Path(sys.argv[-1]).read_text().split('[files]\\n', 1)[1].splitlines():\n"
-                        " if source.strip(): shutil.copyfile(source, src / Path(source).name)\n"
-                        "sanity = 'sanity' in Path(sys.argv[-1]).name or 'cone' in Path(sys.argv[-1]).name\n"
-                        "cover = 'mode cover' in Path(sys.argv[-1]).read_text() and not sanity\n"
-                        "(out / 'status').write_text('FAIL' if cover else 'PASS')\n"
-                        "sys.exit(2 if cover else 0)\n")
-        path.chmod(0o755)
-    monkeypatch.setenv("PATH", str(tools) + os.pathsep + os.environ["PATH"])
-    monkeypatch.setenv("RVW_LOCK_DIR", str(tmp_path / "locks"))
-    database, config, out = tmp_path / "coverage.json", tmp_path / "proof.json", tmp_path / "proof"
-    (tmp_path / "logic.v").write_text("module fixture_logic; endmodule\n")
-    data = call(registry, "cov_merge", inputs=[str(dat(tmp_path / "a.dat", [0]))],
-                source_root=str(tmp_path), out=str(database))
-    # The sanity state must be a real harness signal (an undeclared name is a free wire).
-    (tmp_path / "harness.sv").write_text("module fixture(input clk);\nreg state = 0;\n"
-                                         "always @(posedge clk) begin state <= !state;\n// RVW_POINT\nend\nendmodule\n")
-    config.write_text(json.dumps({"sources": ["logic.v"], "harness": "harness.sv", "top": "fixture",
-                                  "sanity_state": ["state"], "reset": None,  # no reset: stated, not guessed
-                                  "points": [{"point_id": data["points"][0]["id"],
-                                              "expression": "state && 1'b0", "reason": "synthetic fixture"}]}))
-    result = call(registry, "cov_prove", database=str(database), config=str(config), work_dir=str(out))
-    assert result == json.loads((out / "exclusions.json").read_text())
-    assert result["point_universe"] == data["point_universe"]
-    point = result["points"][0]
-    assert point["unreachable"] and point["jobs"]["cover"]["status"] == "FAIL"
-    assert point["jobs"]["prove"]["status"] == "PASS" and point["cone"]["signals"] == ["state"]
-    assert result["sanity"]["passed"] and result["sanity"]["expression"] == "!$initstate && !$stable({state})"
-    shutil.rmtree(out)
-    assert result == rvw("cov", "prove", database, "--config", config, "--work-dir", out, "--json")[2]
-    expected = {"sby", "yosys", "z3", "yosys-smtbmc", "yosys-witness", "bash", "yices-smt2"}
-    # OSS CAD Suite uses a tabbypy3 launcher. Homebrew ships Python directly.
-    uses_tabby = "tabbypy3" in Path(shutil.which("yosys-smtbmc")).read_text()
-    if uses_tabby:
-        expected.add("tabbypy3")
-    assert set(result["tools"]) == expected
-    assert set(result["tool_bindings"]) == set(result["tools"])
-    for name, binding in result["tool_bindings"].items():
-        assert result["tools"][name]["executable"] == binding["input"]["resolved"]
-        assert result["tools"][name]["sha256"] == binding["input"]["sha256"]
-    # The release launcher runs the bound shell and Python, including solver probes.
-    smtbmc = Path(result["tool_bindings"]["yosys-smtbmc"]["command"]["path"]).read_text()
-    if uses_tabby:
-        assert result["tools"]["bash"]["executable"] in smtbmc
-        assert result["tool_bindings"]["tabbypy3"]["command"]["path"] in smtbmc
-    else:
-        assert "tabbypy3" not in smtbmc
-        assert result["tools"]["yosys-smtbmc"]["executable"] in smtbmc
-    assert not lock_status("boom", tmp_path / "locks")["held"]
-
-
 def test_perf_tools_match_cli(registry, tmp_path, rvw):
     path = tmp_path / "trace.log"
     path.write_text("Kanata\t0004\nC=\t0\nI\t0\t0\t0\nL\t0\t0\t80000000: addi a0,a0,1\n"
@@ -278,32 +149,13 @@ def test_bad_arguments_and_failed_jobs(registry):
 
 
 def test_long_and_readonly_annotations(registry):
-    for name in ("regress_run", "regress_gate", "cosim_check", "cosim_generate", "cov_merge", "cov_report",
-                 "cov_rank", "cov_select", "cov_functional", "cov_prove", "cov_mutate", "perf_report", "perf_compare"):
+    for name in ("regress_run", "regress_gate", "cosim_check", "cosim_generate",
+                 "formal_bmc", "formal_xprop", "perf_report", "perf_compare"):
         spec = registry.tools[name]
         assert spec.long and spec.wants_job
     for name in ("regress_list", "regress_history", "regress_known_list", "cosim_check",
-                 "cov_report", "cov_rank", "cov_select", "cov_functional", "perf_report", "perf_compare"):
+                 "formal_x_context", "perf_report", "perf_compare"):
         assert registry.tools[name].annotations["readOnlyHint"]
-
-
-def test_cov_error_json_and_readonly_arguments(registry, rvw, tmp_path):
-    missing = str(tmp_path / "missing.json")
-    # A missing capture exits 3 with an inconclusive cause; MCP fails the job (C7).
-    code, _, printed = rvw("cov", "report", missing, "--json")
-    assert code == 3 and printed["schema"] == "rvw.coverage-error/1"
-    assert printed["status"] == "inconclusive" and printed["cause"].startswith("input_not_captured:")
-    for tool, args in (("cov_report", {"database": missing}), ("cov_rank", {"database": missing}),
-                       ("cov_select", {"database": missing, "diff": "A..B"}),
-                       ("cov_functional", {"traces": [missing]})):
-        _, started, error = registry.call_json(tool, args)
-        assert not error
-        status = registry.call("job_status", {"job_id": started["job_id"], "wait_s": 60})
-        assert status["status"] == "failed" and "missing.json" in status["error"], (tool, status)
-    # Read-only tools reject write options even through Registry without SDK schema checks.
-    _, result, error = registry.call_json("cov_report", {"database": missing, "out": str(tmp_path / "bad.json")})
-    assert error and "out" in result["error"] and "job_id" not in result
-    assert not (tmp_path / "bad.json").exists()
 
 
 def test_tool_declarations_do_not_import_sdk():
@@ -315,10 +167,10 @@ class BlockSDK:
             raise AssertionError('MCP SDK imported by tool declaration')
 sys.meta_path.insert(0, BlockSDK())
 from rvw.mcp.registry import Registry
-registry, problems = Registry.discover({'regress', 'cosim', 'cov', 'perf', 'wave', 'bundle', 'reduce', 'bisect'})
+registry, problems = Registry.discover({'regress', 'cosim', 'formal', 'perf', 'wave', 'bundle', 'reduce', 'bisect'})
 assert not problems, problems
 # Structural check, not a fixed count: the count changes with every new tool.
-packages = ('regress', 'cosim', 'cov', 'perf', 'wave', 'bundle', 'reduce', 'bisect')
+packages = ('regress', 'cosim', 'formal', 'perf', 'wave', 'bundle', 'reduce', 'bisect')
 for name, spec in registry.tools.items():
     assert spec.name == name and spec.description.strip(), name
     assert spec.input_schema.get('type') == 'object' and callable(spec.handler), name
@@ -338,8 +190,8 @@ def test_worker_cancel_unwinds_private_solver_group(tmp_path):
     solver.write_text(f"import os, pathlib, time\npathlib.Path({str(marker)!r}).write_text(str(os.getpid()))\ntime.sleep(30)\n")
 
     def solve(job):
-        return run_function(job, "rvw.cov.proof", "run_job",
-                            {"argv": [sys.executable, str(solver)], "cwd": str(tmp_path),
+        return run_function(job, "rvw.formal.common", "run",
+                            {"cmd": [sys.executable, str(solver)], "cwd": str(tmp_path),
                              "log": str(tmp_path / "solver.log"), "timeout": 60})
     registry = Registry([ToolSpec("fixture_solve", "test solver cancellation", schema({}), solve, long=True)])
     try:

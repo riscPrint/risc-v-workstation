@@ -2,12 +2,8 @@
 
 HELP = {
  'protocol': {'command':'Run the generated monitors on RTL. Publish fresh rvw.soc-verify-evidence/1 with positive checks and status pass. A generated bind file alone is insufficient.'},
- 'registers': {'capture':'Path to independently sampled peripheral APB JSONL from a native run.',
+ 'registers': {'command':'Run project register read/write checks and publish fresh rvw.soc-verify-evidence/1 with positive checks and status pass.',
                'write_read':'List region.register names that need checked reads after writes. Or bind a command that publishes scoped native evidence.'},
- 'vip': {'composition':'Path to the project soc-compose JSON with one device binder per map region.',
-         'classpath_file':'Path to a file containing the compiled SpinalSoc runtime classpath. Supply idle_inputs for exported inputs.'},
- 'uvm': {'composition':'Path to the project soc-compose JSON with one device binder per map region.',
-         'classpath_file':'Path to a file containing the compiled SpinalSoc runtime classpath. Supply idle_inputs for exported inputs.'},
  'decode': {'classpath_file':'Path to a file containing the SpinalSoc runtime classpath. The built-in consumer proves Fabric.connect for the selected windows.'},
  'connectivity': {'database':'Path to a SpinalDB database of the elaborated SoC.',
                   'manifest':'Path to the formal connection table, with source, target, clock/reset and activation bindings.'},

@@ -12,7 +12,7 @@ from rvw.cli import build_parser
 from rvw.mcp.registry import Registry
 
 ROOT = Path(__file__).resolve().parents[2]
-WORKFLOWS = {'bring-up', 'test-fails', 'add-coverage', 'prove-property', 'performance-question', 'soc-integration', 'agent-evaluation'}
+WORKFLOWS = {'bring-up', 'test-fails', 'prove-property', 'performance-question', 'soc-integration'}
 
 
 def test_playbook_is_valid_and_complete():
@@ -67,8 +67,8 @@ def test_guide_resource_over_mcp_stdio():
                 assert 'rvw://agent/guide' in uris and 'rvw://agent/guide/bring-up' in uris
                 body = await s.read_resource('rvw://agent/guide/bring-up')
                 assert json.loads(body.contents[0].text)['workflows'][0]['id'] == 'bring-up'
-                result = await s.call_tool('agent_guide', {'workflow': 'add-coverage'})
-                assert json.loads(result.content[0].text)['workflows'][0]['id'] == 'add-coverage'
+                result = await s.call_tool('agent_guide', {'workflow': 'prove-property'})
+                assert json.loads(result.content[0].text)['workflows'][0]['id'] == 'prove-property'
     anyio.run(session)
 
 

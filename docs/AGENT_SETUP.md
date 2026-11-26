@@ -508,14 +508,14 @@ Machine-readable form: `rvw agent guide --json`, MCP tool `agent_guide`, MCP res
 - Exit codes: 0 earned result; 1 failure or mismatch; 2 usage or setup error; 3 inconclusive. Never treat 3 as a pass.
 - Stop: A step ends a workflow with `stop` when its decision says so. Record the command, exit code and log before you stop.
 - Locks: Heavy runs hold the project lock (core.lock). Do not start a second heavy run of the same core.
-- Integration guide: Follow docs/INTEGRATION_GUIDE.md for install, project binding and evidence limits. A scaffold or tool list does not qualify a core. For mapped security, use rvw/sec/flow.S with the generated flow policy and a 110-second budget. Progress reports name preparation cost. For composed SoCs, use GENERATED/verify.json and supply runtime-classpath.txt, soc.db and apb.jsonl. Fabric proof rows do not close whole-SoC verification.
-- Verdicts: Evidence producers own verification verdicts in their stated scope. The evidence index preserves reports. Plan summaries retain the weakest input verdict. Farm completion and guide steps do not grant verification or C4 acceptance.
+- Integration guide: Follow docs/INTEGRATION_GUIDE.md for install, project binding and evidence limits. A scaffold or tool list does not qualify a core. For composed SoCs, use GENERATED/verify.json and supply runtime-classpath.txt and soc.db. Fabric proof rows do not close whole-SoC verification.
+- Verdicts: Verification tools own verdicts in their stated scope. Run manifests record the inputs and reproduction identities; do not treat exit 3 (inconclusive) as a pass.
 
 ### New core bring-up (`bring-up`)
 
 A Spinal core repository has no rvw.toml yet, or `rvw doctor` is not ready.
 
-Optional tool set: 23 tools. Load MCP profile `core` with `rvw_tools_load`. Read the tool names in `rvw agent guide --json`. Use `rvw_tools_describe` before a call.
+Optional tool set: 32 tools. Load MCP profile `core` with `rvw_tools_load`. Read the tool names in `rvw agent guide --json`. Use `rvw_tools_describe` before a call.
 
 1. **doctor**: Check the installation and the native tools. `rvw doctor --features sim,riscv-gcc,cosim --json` / MCP `rvw_doctor`
    - If exit 1 and a native tool is missing: go to `install`.
@@ -553,7 +553,7 @@ Optional tool set: 23 tools. Load MCP profile `core` with `rvw_tools_load`. Read
 
 A C1 run or a regression test reports fail, assert, timeout or rvfi_error.
 
-Optional tool set: 58 tools. Load MCP profile `debug` with `rvw_tools_load`. Read the tool names in `rvw agent guide --json`. Use `rvw_tools_describe` before a call.
+Optional tool set: 69 tools. Load MCP profile `debug` with `rvw_tools_load`. Read the tool names in `rvw agent guide --json`. Use `rvw_tools_describe` before a call.
 
 1. **identity**: Check the source revision, RTL hash, ELF hash, config and seed of the failing run and each cited artifact. Reject stale waves, wrong ELFs and incomplete runs before cause analysis. (manual)
    - If identities match and the failure is reproduced: go to `bundle`.
@@ -562,70 +562,48 @@ Optional tool set: 58 tools. Load MCP profile `debug` with `rvw_tools_load`. Rea
    - If the bundle has a C2 trace: go to `cosim`.
    - If no C2 trace: go to `stop`. Rerun the test with --rvfi-trace.
 3. **cosim**: Find the first instruction where the core and Spike differ. `rvw cosim check --elf <ELF> --trace <RUN>/rvfi.jsonl --json` / MCP `cosim_check`
-   - If mismatch at a retirement: go to `known-bug`.
+   - If mismatch at a retirement: go to `drivers`.
    - If match but the run failed: go to `wave`. The failure is not architectural: look at the end condition, hang or assertion.
-4. **known-bug**: Compare the failure signature with stored bug patterns. `rvw bugmem match <BUNDLE>/report.json` / MCP `bugmem_match`
-   - If a high score: go to `drivers`. Check the stored root cause first.
-   - If no match: go to `drivers`.
-5. **drivers**: Ask what drives the wrong register or signal. `rvw query drivers <SIGNAL> --json` / MCP `query_drivers`
+4. **drivers**: Ask what drives the wrong register or signal. `rvw query drivers <SIGNAL> --json` / MCP `query_drivers`
    - If the driver logic is clear: go to `wave`.
-6. **wave**: Explain the wrong value at the failing cycle. `rvw wave why <WAVE> <SIGNAL> --at <TIME> --json` / MCP `wave_why`
+5. **wave**: Explain the wrong value at the failing cycle. `rvw wave why <WAVE> <SIGNAL> --at <TIME> --json` / MCP `wave_why`
    - If the cause is a Scala statement: go to `fix`.
    - If no observed statement explains the value: go to `stop`. Keep the cause unknown. Static drivers alone do not prove a dynamic cause.
-7. **fix**: Edit the core. Keep the change small. Do not edit the workstation. (manual)
+6. **fix**: Edit the core. Keep the change small. Do not edit the workstation. (manual)
    - If edited: go to `reproduce`.
-8. **reproduce**: Rerun the failing test and the required passing tests with the repair. Use a new output directory. Keep all results. `rvw regress run --tier quick --rvfi-trace --out <REPAIRED_RUN> --json` / MCP `regress_run`
+7. **reproduce**: Rerun the failing test and the required passing tests with the repair. Use a new output directory. Keep all results. `rvw regress run --tier quick --rvfi-trace --out <REPAIRED_RUN> --json` / MCP `regress_run`
    - If the failing test passes and the required passing tests stay passing: go to `gate`.
    - If a test fails: go to `bundle`.
    - If coverage is incomplete: go to `stop`. Do not report a repair.
-9. **gate**: Judge the fix on the committed revision. `rvw regress gate --tier quick --base-rev <REV> --json` / MCP `regress_gate`
+8. **gate**: Judge the fix on the committed revision. `rvw regress gate --tier quick --base-rev <REV> --json` / MCP `regress_gate`
    - If reject: go to `bundle`.
    - If inconclusive (exit 3): go to `stop`. Do not claim a fix.
    - If accept: go to `done`.
-10. **reduce** (optional): Optional: shrink a long failing program before debugging. `rvw reduce <RUN> --json` / MCP `reduce_run`
+9. **reduce** (optional): Optional: shrink a long failing program before debugging. `rvw reduce <RUN> --json` / MCP `reduce_run`
    - If a smaller reproduction: go to `bundle`.
-11. **bisect** (optional): Optional: find the commit that introduced a regression. `rvw bisect <RUN> --good <REV> --json` / MCP `bisect_run`
+10. **bisect** (optional): Optional: find the commit that introduced a regression. `rvw bisect <RUN> --good <REV> --json` / MCP `bisect_run`
    - If a first bad commit: go to `drivers`.
-
-### Add coverage (`add-coverage`)
-
-Tests pass, and the next question is what they do not exercise.
-
-Optional tool set: 85 tools. Load MCP profile `verification` with `rvw_tools_load`. Read the tool names in `rvw agent guide --json`. Use `rvw_tools_describe` before a call.
-
-1. **run**: Run the suite with coverage collection. `rvw regress run --tier full --rvfi-trace --out <RUN> --json` / MCP `regress_run`
-   - If runs complete: go to `functional`.
-2. **functional**: Measure instruction and event coverage from the C2 traces. `rvw cov functional <RUN> --json --out <COV>` / MCP `cov_functional`
-   - If holes listed: go to `merge`.
-3. **merge**: Merge Verilator coverage into one database. `rvw cov merge <RUN>` / MCP `cov_merge`
-   - If a database: go to `report`.
-4. **report**: Report RTL holes against Scala source lines. `rvw cov report <COVDB>` / MCP `cov_report`
-   - If holes: go to `rank`.
-5. **rank**: Rank tests by unique contribution. `rvw cov rank <COVDB> --json` / MCP `cov_rank`
-   - If holes remain: go to `closure`.
-6. **closure**: Select generated candidates that close holes, then add them as tests. `rvw cov closure <COVDB> --candidates <CANDIDATES>` / MCP `cov_closure`
-   - If new tests added: go to `run`.
-   - If no candidate closes a hole: go to `done`.
 
 ### Prove a property (`prove-property`)
 
-A rule must hold for all inputs within a bound, not only for the tests.
+A hardware property, X-propagation check, or bounded counterexample replay must be checked cleanly.
 
-Optional tool set: 74 tools. Load MCP profile `formal` with `rvw_tools_load`. Read the tool names in `rvw agent guide --json`. Use `rvw_tools_describe` before a call.
+Optional tool set: 8 tools. Load MCP profile `formal` with `rvw_tools_load`. Read the tool names in `rvw agent guide --json`. Use `rvw_tools_describe` before a call.
 
-1. **doctor**: Check the formal tools. `rvw formal doctor --out <OUT> --json` / MCP `formal_doctor`
+1. **doctor**: Check formal tool availability. `rvw doctor --features formal --json` / MCP `rvw_doctor`
    - If a solver is missing: go to `stop`. Install with scripts/install.sh --with-formal.
-   - If ready: go to `bmc`.
-2. **bmc**: Run bounded model checking on the generated or declared checks. `rvw formal bmc --out <OUT> --depth 20 --json` / MCP `formal_bmc`
-   - If fail: go to `cex`.
+   - If ready: go to `xprop`.
+2. **xprop**: Check RTL X-propagation on the declared formal target. `rvw formal xprop --out <OUT> --depth 10 --json` / MCP `formal_xprop`
+   - If fail: go to `test-fails`. Unexpected unknown value propagated.
+   - If timeout or unknown (exit 3): go to `stop`. Inconclusive.
+   - If pass: go to `bmc`.
+3. **bmc**: Run bounded model checking on the generated or declared checks. `rvw formal bmc --out <OUT> --depth 20 --json` / MCP `formal_bmc`
+   - If fail: go to `test-fails`. Inspect counterexample in wave or sim.
    - If timeout or unknown (exit 3): go to `stop`. Bounded and inconclusive. Not a proof.
-   - If pass: go to `riscv`.
-3. **riscv** (optional): Optional: run the declared ISA kit. Mapped single-bus Spinal RV32 init supplies the wrapper. Run smoke with --rvfi-trace, then formal isa --trace RUN/rvfi.jsonl. Review latency_measurement, memory assumptions and per-check actions. Exact instruction cycles can need check_options.cycles. Timeouts and machine-state gaps remain inconclusive. `rvw formal isa --trace <TRACE> --out <OUT> --json` / MCP `formal_isa`
-   - If fail: go to `cex`.
-   - If pass: go to `done`. A bounded pass is not a full ISA proof.
-4. **cex**: Explain the counterexample and replay it in simulation. `rvw formal cex --result <OUT> --out <CEX> --json` / MCP `formal_cex`
-   - If a real design bug: go to `test-fails`.
-   - If an environment assumption is missing: go to `bmc`. Add the assumption and say so in the result.
+   - If pass: go to `from-sim`.
+4. **from-sim** (optional): Optional: seed formal BMC from a captured simulation cycle in VCD/FST. `rvw formal from-sim --trace <VCD> --cycle 100 --out <OUT> --depth 10 --json` / MCP `formal_from_sim`
+   - If fail: go to `test-fails`.
+   - If pass: go to `done`. Bounded pass from sampled state.
 
 ### Performance question (`performance-question`)
 
@@ -647,19 +625,10 @@ Optional tool set: 61 tools. Load MCP profile `arch` with `rvw_tools_load`. Read
 
 A project needs peripheral, lint, multi-run or simulation infrastructure checks.
 
-Optional tool set: 42 tools. Load MCP profile `soc` with `rvw_tools_load`. Read the tool names in `rvw agent guide --json`. Use `rvw_tools_describe` before a call.
+Optional tool set: 46 tools. Load MCP profile `soc` with `rvw_tools_load`. Read the tool names in `rvw agent guide --json`. Use `rvw_tools_describe` before a call.
 
 1. **review**: Review the project map, adapter and required evidence. Choose the tools listed for this workflow. (manual)
 2. **discover**: Describe the selected tool. Load its profile. Keep transport completion separate from verification. MCP `rvw_tools_search`
-
-### Agent evaluation (`agent-evaluation`)
-
-Measure a bounded fixture or native repair task with independent checks.
-
-Optional tool set: 7 tools. Load MCP profile `verification` with `rvw_tools_load`. Read the tool names in `rvw agent guide --json`. Use `rvw_tools_describe` before a call.
-
-1. **select**: Select a task pack and its independent checks. Keep fixture scores separate from native repair evidence. (manual)
-2. **inspect**: Describe the benchmark tool before a trial. Record budgets, partial attempts and evidence limits. MCP `rvw_tools_search`
 
 <!-- rvw agent guide: end -->
 

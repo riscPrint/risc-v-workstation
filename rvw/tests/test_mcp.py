@@ -16,7 +16,7 @@ from rvw.mcp.spec import ToolSpec, schema
 ADDED_TOOLS = {
     "regress_list", "regress_run", "regress_compare", "regress_gate", "regress_history",
     "regress_known_list", "regress_known_add", "regress_known_remove", "cosim_check", "cosim_generate",
-    "cov_merge", "cov_report", "cov_rank", "cov_select", "cov_functional", "cov_prove", "cov_mutate",
+    "formal_bmc", "formal_from_sim", "formal_xprop", "formal_x_context", "formal_x_sweep",
     "perf_report", "perf_compare",
     "wave_info", "wave_list", "wave_changes", "wave_sample", "wave_cut",
     "bundle_make", "reduce_run", "bisect_run",

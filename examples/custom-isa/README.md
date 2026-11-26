@@ -9,9 +9,7 @@ mutants. Neither file qualifies a real core.
 `3623fe661ae35c6c80ac221f14d85be76aa870f1`. Place the files at their listed paths
 under a base directory. Copy this manifest there as `sources.json`.
 
-```sh
-rvw formal custom-isa examples/custom-isa/xadd.json --out custom-out --backend-sources BASES
-```
+Custom ISA backend scaffolding (`rvw/src/rvw/cosim/custom.py`, `examples/custom-isa/xadd.json`); the standalone `formal custom-isa` CLI subcommand was trimmed.
 
 The generated `backends/gcc.patch` and `backends/llvm.patch` include the parent
 integration. `compiler-patches/` holds the generated RV32I example patches.

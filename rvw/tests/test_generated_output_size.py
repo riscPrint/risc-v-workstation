@@ -8,17 +8,16 @@ pytestmark = pytest.mark.fast
 ROOT = Path(__file__).resolve().parents[2]
 # Runtime source inputs, dependency locks, and two pre-existing C2 examples.
 SOURCE_DATA = {
-    'rvw/src/rvw/formal/csr_catalog.json',
-    'rvw/src/rvw/formal/csr_aia_catalog.json',
+    'rvw/src/rvw/csr/csr_catalog.json',
+    'rvw/src/rvw/csr/csr_aia_catalog.json',
     'rvw/src/rvw/doctor/tools.json',
     'examples/profiles/source-index.json',
-    'examples/agent-bench/misleading.json',
-    'examples/agent-bench/tasks.json',
     'SpinalTrace/gui/package-lock.json',
     'SpinalWaves/vendor-lock.json',
     'vscode/package-lock.json',
     'RiscvSim/boom/examples/pass-rv64ui-p-add/rvfi.jsonl',
     'RiscvSim/boom/examples/traps-rv64mi-p-ma_addr/rvfi.jsonl',
+    'examples/smp/rvw/upstream-results.json',
 }
 
 

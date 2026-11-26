@@ -53,24 +53,6 @@ def test_cdc_reports_findings_and_declared_library_gaps():
     assert row['status']=='inconclusive' and 'MissingSynchronizer' in row['reason']
 
 
-def test_vip_generates_one_test_per_mmio_bus(tmp_path):
-    import json
-    from pathlib import Path
-    from rvw.uvm.composed import generate
-    from rvw.soc.vip_bench import generate as vip
-    root = Path(__file__).resolve().parents[2]
-    directory = tmp_path/'benches'
-    generate(root/'SpinalSoc/examples/vex/compose.json',directory,directory/'rtl/VerificationSoc.v')
-    groups = vip(directory)
-    assert set(groups)=={'uart','clint','plic','finisher'}
-    assert all(groups.values())
-    assert json.loads((directory/'bindings.json').read_text())['bus_tests']==groups
-    text = (directory/'test_composed.py').read_text()
-    compile(text,'test_composed.py','exec')
-    assert '@pyuvm.test()' not in text
-    assert "@cocotb.test(name='bus_'+bus_name)" in text
-
-
 @pytest.mark.parametrize('checks,status,expected',[(31,'pass','pass'),(1,'pass','inconclusive'),(31,'fail','fail')])
 def test_protocol_bound_requires_all_binds(tmp_path,monkeypatch,checks,status,expected):
     import json

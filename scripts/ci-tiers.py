@@ -63,8 +63,6 @@ def commands(tier, component):
         return [('javascript', ROOT / 'vscode', ['bash', '-e', '-c', 'npm ci; npm run typecheck; npm run build; npm test'])]
     if component == 'components':
         return [('ComponentSims', ROOT, pytest + ['ComponentSims/tests', '-q', '-ra', '--junitxml=component-results.xml'])]
-    if component == 'vip':
-        return [('Uvm/vip', ROOT, pytest + ['rvw/tests', '-k', 'vip or uvm', '-q', '-ra', '--junitxml=vip-results.xml'])]
     raise ValueError('unknown tier component')
 
 
@@ -75,7 +73,7 @@ def needs_python_report(tier, component):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--tier', choices=TIERS, required=True)
-    parser.add_argument('--component', default='python', choices=['python', 'scala', 'rust', 'javascript', 'components', 'vip'])
+    parser.add_argument('--component', default='python', choices=['python', 'scala', 'rust', 'javascript', 'components'])
     parser.add_argument('--plan', action='store_true')
     parser.add_argument('--tools-only', action='store_true')
     args = parser.parse_args()
@@ -114,7 +112,7 @@ def main():
         if args.component != 'python' and args.tier == 'nightly':
             import runpy
             summary = runpy.run_path(str(ROOT / 'scripts/ci-test-summary.py'))
-            reports = list(cwd.glob('**/target/test-reports/*.xml')) if args.component == 'scala' else [ROOT / ('component-results.xml' if args.component == 'components' else 'vip-results.xml')] if args.component in ('components', 'vip') else []
+            reports = list(cwd.glob('**/target/test-reports/*.xml')) if args.component == 'scala' else [ROOT / 'component-results.xml'] if args.component == 'components' else []
             for report in reports:
                 if not report.is_file():
                     emit(f'{name}: test report missing; counts unavailable.')

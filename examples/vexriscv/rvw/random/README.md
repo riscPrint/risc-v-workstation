@@ -14,9 +14,7 @@ Set both `core.lock` and `RVW_VEX_LOCK` to `vex-dv` for these private runs.
 Use `nice -n 10`. Keep outputs inside this worktree or the private core copy.
 
 ```sh
-rvw --project examples/vexriscv/rvw.toml regress random \
-  --settings examples/vexriscv/rvw/random/random.toml \
-  --seed-base 49 --seeds 1 --out NEW_DIRECTORY --json
+# [removed in Nov 2026 scope trim] rvw --project examples/vexriscv/rvw.toml regress random --settings examples/vexriscv/rvw/random/random.toml --seed-base 49 --seeds 1 --out NEW_DIRECTORY --json
 ```
 
 ## Measured results

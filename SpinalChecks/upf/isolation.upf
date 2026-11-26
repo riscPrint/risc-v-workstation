@@ -1,3 +1,0 @@
-upf_version 2.1
-create_power_domain PD -elements {core}
-set_isolation ISO -domain PD -applies_to outputs -clamp_value 0 -isolation_signal iso -isolation_sense high

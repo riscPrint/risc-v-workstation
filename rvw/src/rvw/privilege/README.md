@@ -82,7 +82,7 @@ The programs restore the device interrupt state before reporting completion.
 These cases do not test physical clock stop, delayed external input or reset.
 They are a bounded increment for #149 and do not close that issue.
 
-Builds also write `functional-groups.json` for `rvw cov functional --config`.
+Builds also write `functional-groups.json` observation domain descriptors.
 It describes CSR/mode, trap and interrupt observation domains. Observed bins
 measure trace activity. Use `privilege check` for architectural pass groups.
 An observed hit alone never establishes a correct outcome.

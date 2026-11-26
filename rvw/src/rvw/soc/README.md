@@ -194,7 +194,7 @@ The importer checks its subset; it does not run full XSD validation.
 
 ### Concurrent device events
 
-`rvw formal device-events --model soc.json --trace events.json --out result.json`
+The legacy `formal device-events` helper
 checks independent register state across concurrent masters. MCP:
 `formal_device_events`. The map is the existing `rvw.soc/1` format.
 The trace uses `rvw.device-events/1`, `linearization=accepted_request`, and an
@@ -255,11 +255,9 @@ do not establish behavior between transactions or under concurrent bus masters.
 
 Use `rvw soc check MAP --bindings BINDINGS --db DB --connections TABLE` to
 include structural connectivity checks in the memory-map report. TABLE uses
-the CSV, JSON or TOML format of `rvw formal connectivity`. The report retains
+the CSV, JSON or TOML format of `rvw.soc.connectivity`. The report retains
 map/bridge transaction checks and adds endpoint resolution, input influence
-and input hashes. Structural paths do not prove bridge behavior. Run the same
-table with `rvw formal connectivity --run --proof-mode prove` to request
-value-transfer proofs. Real retirement/bus pairing and source provenance are
+and input hashes. Structural paths do not prove bridge behavior. Enable `cone_cut` / connectivity settings in `rvw soc verify` to request structural & bounded proofs. Real retirement/bus pairing and source provenance are
 still required for a mapped DUT integration claim.
 
 ## Spinal composition
@@ -310,8 +308,7 @@ Dimensions must match the database. Test enable must resolve to one bit.
 Repair signals must resolve. Output includes memory ports, their clock/reset
 domains, undeclared memories and functional-mode isolation obligations.
 Isolation is `not_run`. The command returns inconclusive (3). It performs no
-BIST insertion and makes no manufacturing-test readiness claim. Supply the
-connection declarations to `rvw formal connectivity` for separate proofs.
+BIST insertion and makes no manufacturing-test readiness claim. Pass connection declarations to `rvw soc check --connections`.
 
 ## Fabric and SoC audit
 
@@ -329,7 +326,7 @@ Each port needs PADDR, PSEL, PENABLE, PWRITE, PWDATA, PRDATA and PREADY.
 
 The report distinguishes disjoint map arithmetic from unrun RTL decode proof.
 IRQ paths use `rvw formal` connectivity resolution. A sibling
-`OUT.connections.json` can be used with `rvw formal connectivity --run`.
+`OUT.connections.json` can be passed to `rvw soc check --connections`.
 The audit remains inconclusive until behavioral and proof evidence exists.
 
 ## Composition fragments
@@ -457,7 +454,7 @@ Missing end records, pending transfers and unexercised buses remain visible.
 A `decode` entry can supply `classpath_file`. It must contain the classpath
 of a private SpinalSoc build that includes `rvwsoc.FabricProofGenerate`.
 The consumer elaborates the real `Fabric.connect` implementation with every
-map window. It then runs `rvw formal prove` with a bounded wall time. All
+map window. It then invokes SymbiYosys BMC via `rvw.formal.common` with a bounded wall time. All
 requests and peripheral responses are free. The proof covers one-hot decode,
 exact window selection and unmapped error completion. It does not substitute
 map arithmetic for RTL proof. Core and peripheral state are outside this

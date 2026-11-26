@@ -529,7 +529,7 @@ It reports proved, counterexample or inconclusive with the checked bound.
 
 ## Counterexample what-if replay
 
-`rvw formal cex --result OUT/bmc --edit bad@0=0 --out OUT/whatif` replays a
+[removed CLI: `formal cex --result OUT/bmc --edit bad@0=0 --out OUT/whatif`] replays a
 captured BMC witness with Yosys `sim`. It keeps the original inputs and constraints.
 It writes VCD/FST and can call SpinalWaves, Surfer and SpinalTrace with matching
 metadata. Replay never earns a proof pass. See the [command guide](../rvw/src/rvw/formal/README.md#counterexample-what-if-replay)
@@ -589,7 +589,7 @@ Their trigger semantics are outside this increment.
 
 ### Sequential equivalence
 
-`rvw formal equiv` compares two exported RTL revisions with eqy and native ABC.
+[removed CLI: `formal equiv`] compares two exported RTL revisions with eqy and native ABC.
 It supports one clock, aligned synchronous reset, automatic register names and
 manual pairs. Unknown partitions and unmatched state stay inconclusive. See the
 [formal README](../rvw/src/rvw/formal/README.md#sequential-equivalence-first-increment-issue-18)
@@ -673,7 +673,7 @@ The reference has zero-cycle and one-cycle paths with injected transfer faults.
 
 This emits `connectivity.value` assertions for simulation or a formal backend.
 Simulation checks exercised transfers only. It is not a structural proof.
-`rvw formal connectivity` resolves required and forbidden endpoints through
+[removed CLI: `formal connectivity`] resolves required and forbidden endpoints through
 SpinalDB. Its optional native campaign checks bounded top-port transfers and
 forbidden influence. It retains unresolved endpoints, opaque cones and limits
 as incomplete. See [the formal command guide](../rvw/src/rvw/formal/README.md#declared-connectivity-107).
@@ -708,9 +708,9 @@ unsupported. The SBY campaign runner does not depend on this frontend.
 
 ## Capacity monitors and free-list proofs
 
-`rvw formal template` generates reusable ROB/credit, free-list, rename, issue and
-LSQ safety monitors. `rvw formal contracts` checks typed interfaces, neighbour
-guarantees and a closed composition. `rvw formal strengthen` proves mined unsigned
+[removed CLI: `formal template`] generates reusable ROB/credit, free-list, rename, issue and
+LSQ safety monitors. [removed CLI: `formal contracts`] checks typed interfaces, neighbour
+guarantees and a closed composition. [removed CLI: `formal strengthen`] proves mined unsigned
 bounds before adding them as joint assertions. See the
 [capacity commands and limits](../rvw/src/rvw/formal/README.md#capacity-templates-and-contracts).
 
@@ -848,7 +848,7 @@ checks do not qualify whole-core CDC or analog metastability behavior.
 [security/](security/README.md) contains the native `rvw_ift` Yosys pass.
 It adds value-sensitive data and control taint to mapped Boolean gates and
 rising-edge registers. It is optional. It does not change core source files.
-See `rvw formal security` for bounded Spike contracts and sampled ADD timing.
+See [removed CLI: `formal security`] for bounded Spike contracts and sampled ADD timing.
 
 ## Finite coherence model
 
@@ -875,7 +875,7 @@ existing full-width write behavior.
 
 ### Checked state-encoding tables
 
-Use `rvw formal equiv --state-encoding FILE` or the `state_encoding` input of
+Use [removed CLI: `formal equiv --state-encoding FILE`] or the `state_encoding` input of
 MCP `formal_equiv` to compare different finite register encodings:
 
 ```json
@@ -911,8 +911,7 @@ mapping is finite and explicit. This is not automatic state recoding inference.
 Run a conservative reset analysis without a solver:
 
 ```sh
-rvw formal reset-audit --rtl unit.v --top Unit --clock clk --reset reset \
-  --cycles 4 --out /tmp/unit-reset-audit
+# [removed in Nov 2026 scope trim] rvw formal reset-audit --rtl unit.v --top Unit --clock clk --reset reset --cycles 4 --out /tmp/unit-reset-audit
 ```
 
 The MCP tool is `formal_reset_audit`. `--reset-active low` selects active-low
@@ -934,7 +933,7 @@ correctness claim is made.
 
 `analysis_status: complete` means the inventory finished. Overall `status`
 remains `inconclusive`, with exit 1. The tool does not emit C1/C4 acceptance.
-Use the initialization kind of `rvw formal security pair` for a native proof
+Use the initialization kind of [removed CLI: `formal security pair`] for a native proof
 that independent initial states cannot change declared outputs after reset.
 The reset audit refuses latches, other clocks, clock-as-data logic, memories,
 blackboxes, embedded formal properties and explicit initial attributes.
@@ -944,7 +943,7 @@ blackboxes, embedded formal properties and explicit initial attributes.
 The JSON report retains each discovered TileLink bus's qualified class name,
 component path, live local RTL signals and library width/options. This permits
 exact type binding when a design database stores only the simple class `Bus`.
-Use the report with `rvw formal buses --type-report` or a project bus
+Use the report with [removed CLI: `formal buses --type-report`] or a project bus
 `type_report` entry. No class is inferred from port spelling.
 
 ### Coherent probe checks
@@ -1029,7 +1028,7 @@ They do not transfer ISA support or check coverage between designs.
 
 The [expanded formal record](connected-depth4-results.json) contains every
 selected ID: 57 VexRiscv, 25 VexiiRiscv and 17 SoC. Each job selects one fail
-signal and keeps the full hierarchy. The run used `rvw formal regress` with
+signal and keeps the full hierarchy. The run used [removed CLI: `formal regress`] with
 `--jobs 3 --timeout 60`. The regression status remains `unknown` because these
 are bounded passes. No property activation was measured.
 
@@ -1054,7 +1053,7 @@ formal RTL and its inventory without running a simulation. The SoC entry is
 `example.Run 17 20000`, with `RVW_SOC_CHECKS_OUT` set to the capture directory.
 Use `scripts/prepare-connected-formal.py --rtl DIR --inventory CHECKS_JSON
 --out NEW_DIR --check-id ID` to prepare a selected check. Then run
-`rvw formal regress NEW_DIR/regress.toml --out RESULT_DIR --timeout 60 --jobs 1`.
+[removed CLI: `formal regress NEW_DIR/regress.toml --out RESULT_DIR --timeout 60 --jobs 1`].
 The helper requires formal-mode RTL and a one-bit local fail signal. It removes
 native assertions before loading the separate selected assertion. The regression
 runner checks that one assertion remains. The current helper uses rising clocks
@@ -1186,7 +1185,7 @@ Neither is passing check evidence. Zero firings remain a separate observation.
 
 The connected-formal preparer emits a separate cover job for each trigger.
 It attaches that job with `activation_sby` at the assertion BMC depth.
-The existing `rvw formal regress` runner records reached, bounded cover misses,
+The existing [removed CLI: `formal regress`] runner records reached, bounded cover misses,
 timeouts and errors. `rvw checks report` and MCP `checks_report` expose these
 observations. Proof and bounded counts require a reached formal trigger.
 The historical table above has unmeasured activation. Its 99 bounded engine
@@ -1201,7 +1200,7 @@ These are helper assertions, not assumed DUT behavior.
 
 Run `scripts/export-portfolio.py PREPARED` to normalize each selected job
 into self-contained RTLIL and write a hashed `portfolio.json`.
-Run `rvw formal engine-race --manifest PREPARED/0/portfolio.json --out RESULT --timeout 30`.
+Run [removed CLI: `formal engine-race --manifest PREPARED/0/portfolio.json --out RESULT --timeout 30`].
 The plan selects three engines: SMTBMC Yices, SMTBMC Z3 and ABC PDR.
 Run one race at a time to keep at most three SBY processes.
 Preparation does not establish proof. A failed or timed-out normalization has
@@ -1342,7 +1341,7 @@ It infers a same-object CSR state rule for CSR reads and capacity/occupancy
 rules for FIFO ordering. Explicit `--helper-id ID` values are also supported.
 Helpers must share the primary module instance and clock domain. All helpers
 are asserted. None becomes an assumption. The script exports a portfolio plan.
-Run that plan with `rvw formal engine-race`. The single-assertion regress
+Run that plan with [removed CLI: `formal engine-race`]. The single-assertion regress
 runner rejects these groups by design.
 
 The [joint CSR record](csr-helper-results.json) has an ABC PDR pass for the

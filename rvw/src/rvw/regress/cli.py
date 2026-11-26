@@ -68,8 +68,6 @@ def register(sub) -> None:
 
     from rvw.sim.cli import register as register_sim
     register_sim(rs, regression=True)
-    from . import random_stream
-    random_stream.register(rs)
     from . import sail_tests
     sail_tests.register(rs)
     from rvw.privilege.cli import register as register_privilege

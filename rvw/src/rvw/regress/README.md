@@ -717,7 +717,7 @@ observation must not waive a strict mismatch or grant architectural coverage.
 
 ## Accellera UVM components
 
-`rvw regress uvm --out NEW_DIRECTORY --seed 1 --seeds 3 --json` runs a
+[removed CLI: `regress uvm --out NEW_DIRECTORY --seed 1 --seeds 3 --json`] runs a
 bounded native SystemVerilog UVM suite. Use the machine lock for compilation.
 See [the UVM suite](../../../../Uvm/README.md) for dependencies, checksum and
 licence checks, supported test scope and limits. It writes standalone C3.
@@ -760,8 +760,8 @@ Vector memory operations with multiple accesses remain outside the scalar
 memory effect interface and are refused by Spike. These limits can make a
 full vector suite inconclusive. They must not be converted to passes.
 
-`rvw regress uvm-ral` generates UVM register models from `rvw.soc/1`.
-`rvw regress uvm-cpu` checks completed C1 captures through a UVM analysis
+[removed CLI: `regress uvm-ral`] generates UVM register models from `rvw.soc/1`.
+[removed CLI: `regress uvm-cpu`] checks completed C1 captures through a UVM analysis
 subscriber and the native Spike DPI bridge. See [the UVM guide](../../../../../Uvm/README.md)
 for the strict profile and the offline replay boundary.
 
@@ -816,8 +816,7 @@ the bounded profile disables compressed instructions, branches and memory
 streams. It does not cover the full ISA or privilege matrix.
 
 ```sh
-rvw --project /path/to/core regress random --settings /path/to/core/random.toml \
-  --seed-base 48 --seeds 2 --out /tmp/random-48 --json
+# [removed in Nov 2026 scope trim] rvw --project /path/to/core regress random --settings /path/to/core/random.toml --seed-base 48 --seeds 2 --out /tmp/random-48 --json
 ```
 
 The MCP equivalent is `regress_random`. Both use the C1 regression runner,
@@ -899,7 +898,7 @@ and permission faults. Each program checks values, exact fault cause/tval/PC
 and final physical data. Build and run these ELFs through the existing C1
 suite adapter. Limits are 64 pages and 128 accesses per program.
 
-Every MMU build emits `functional-groups.json`. Pass it to `rvw cov functional`
+Every MMU build emits `functional-groups.json`. Pass it to [removed CLI: `cov functional`]
 with the C2 traces. Groups consume actual walk/protocol/IOMMU captures,
 hypervisor translations and pointer CSR snapshots. C2/2 multi-hart histories
 are separate per hart and epoch. Missing captures produce holes. Observation
@@ -1095,7 +1094,7 @@ from `match`, and exits 1. New traces require review. Gate waivers are separate.
 
 ## Persistent random batches and resume
 
-`rvw regress random --jobs 4` compiles the seeded payloads, then submits all
+[removed CLI: `regress random --jobs 4`] compiles the seeded payloads, then submits all
 compiled programs through one C1 suite. Persistent adapters reuse one server
 per worker. The run seed for memory timing is `seed_base`; each payload retains
 its own generator seed. Generator and compiler failures do not prevent other
@@ -1124,7 +1123,7 @@ Both derive every choice from `target_profile` (`rvw/src/rvw/regress/dv_inject.p
 Random interrupt schedules remain open.
 Set `[run_options] coverage = true` to request native code coverage through
 the existing C1 adapter. Set top-level `mem_latency` for a fixed memory delay.
-Use `rvw cov functional` and `rvw cov merge` on qualified C1 artifacts to merge
+Use [removed CLI: `cov functional`] and [removed CLI: `cov merge`] on qualified C1 artifacts to merge
 random and directed evidence. Keep code and functional denominators separate.
 
 The pinned pygen memory stream needs compatibility corrections. Its original
